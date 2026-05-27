@@ -41,6 +41,8 @@ import type {
   AuditPackageExportResponse,
   UpdateStaffPersonRequest,
   UpdatePersonEmploymentStatusRequest,
+  BulkPersonImportRequest,
+  BulkPersonImportResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -126,6 +128,18 @@ export async function updatePersonEmploymentStatus(
     body: JSON.stringify(request),
   })
   return parseJsonResponse<StaffPersonDetailResponse>(response, 'Failed to update employment status')
+}
+
+export async function importPeopleBulk(
+  accessToken: string,
+  request: BulkPersonImportRequest,
+): Promise<BulkPersonImportResponse> {
+  const response = await fetch(`${apiBase}/api/people/import`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<BulkPersonImportResponse>(response, 'Failed to import people')
 }
 
 export async function getOrgUnits(accessToken: string): Promise<OrgUnitResponse[]> {

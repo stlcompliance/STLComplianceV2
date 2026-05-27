@@ -70,6 +70,41 @@ export interface UpdatePersonEmploymentStatusRequest {
   reason: string | null
 }
 
+export interface BulkPersonImportRowRequest {
+  givenName: string
+  familyName: string
+  primaryEmail: string
+  employmentStatus?: string
+  primaryOrgUnitId?: string | null
+  managerPersonId?: string | null
+  managerEmail?: string | null
+  jobTitle?: string | null
+}
+
+export interface BulkPersonImportRequest {
+  people: BulkPersonImportRowRequest[]
+  dryRun?: boolean
+}
+
+export interface BulkPersonImportRowResult {
+  rowIndex: number
+  primaryEmail: string
+  status: string
+  personId: string | null
+  errorCode: string | null
+  message: string | null
+}
+
+export interface BulkPersonImportResponse {
+  importId: string
+  dryRun: boolean
+  totalRows: number
+  createdCount: number
+  validatedCount: number
+  errorCount: number
+  results: BulkPersonImportRowResult[]
+}
+
 export interface OrgUnitResponse {
   orgUnitId: string
   unitType: string

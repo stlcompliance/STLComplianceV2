@@ -48,6 +48,7 @@ import {
 import { clearSession, loadSession, canExportAuditPackage } from '../auth/sessionStorage'
 import { CertificationPanel } from '../components/CertificationPanel'
 import { AuditPackageExportPanel } from '../components/AuditPackageExportPanel'
+import { PersonBulkImportPanel } from '../components/PersonBulkImportPanel'
 import { canManagePeople, PersonProfileEditorPanel } from '../components/PersonProfileEditorPanel'
 import { canManageIncidents, IncidentsPanel } from '../components/IncidentsPanel'
 import { canOverrideReadiness, ReadinessPanel } from '../components/ReadinessPanel'
@@ -1016,6 +1017,14 @@ export function HomePage() {
         }}
         onStatusChange={async (orgUnitId, status) => {
           await updateOrgUnitStatusMutation.mutateAsync({ orgUnitId, status })
+        }}
+      />
+
+      <PersonBulkImportPanel
+        accessToken={session!.accessToken}
+        canImport={canManagePeopleProfiles}
+        onComplete={() => {
+          void queryClient.invalidateQueries({ queryKey: ['staffarr-people', session?.accessToken] })
         }}
       />
 

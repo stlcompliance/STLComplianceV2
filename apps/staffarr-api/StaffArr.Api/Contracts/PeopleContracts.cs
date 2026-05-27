@@ -47,6 +47,37 @@ public sealed record UpdatePersonEmploymentStatusRequest(
     string EmploymentStatus,
     string? Reason);
 
+public sealed record BulkPersonImportRowRequest(
+    string GivenName,
+    string FamilyName,
+    string PrimaryEmail,
+    string EmploymentStatus = "active",
+    Guid? PrimaryOrgUnitId = null,
+    Guid? ManagerPersonId = null,
+    string? ManagerEmail = null,
+    string? JobTitle = null);
+
+public sealed record BulkPersonImportRequest(
+    IReadOnlyList<BulkPersonImportRowRequest> People,
+    bool DryRun = false);
+
+public sealed record BulkPersonImportRowResult(
+    int RowIndex,
+    string PrimaryEmail,
+    string Status,
+    Guid? PersonId,
+    string? ErrorCode,
+    string? Message);
+
+public sealed record BulkPersonImportResponse(
+    Guid ImportId,
+    bool DryRun,
+    int TotalRows,
+    int CreatedCount,
+    int ValidatedCount,
+    int ErrorCount,
+    IReadOnlyList<BulkPersonImportRowResult> Results);
+
 public sealed record OrgUnitResponse(
     Guid OrgUnitId,
     string UnitType,

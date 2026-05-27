@@ -120,5 +120,19 @@ public static class PeopleEndpoints
                 cancellationToken));
         })
         .WithName("UpdateStaffPersonEmploymentStatus");
+
+        people.MapPost("/import", async (
+            BulkPersonImportRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            PeopleBulkImportService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.ImportAsync(tenantId, actorUserId, request, cancellationToken));
+        })
+        .WithName("BulkImportStaffPeople");
     }
 }
