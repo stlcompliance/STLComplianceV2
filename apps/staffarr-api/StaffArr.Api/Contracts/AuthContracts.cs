@@ -12,6 +12,8 @@ public sealed record HandoffSessionResponse(
     Guid TenantId,
     string TenantSlug,
     Guid SessionId,
+    string TenantRoleKey,
+    bool IsPlatformAdmin,
     IReadOnlyList<string> Entitlements);
 
 public sealed record StaffArrSessionBootstrapResponse(
@@ -19,6 +21,8 @@ public sealed record StaffArrSessionBootstrapResponse(
     Guid PersonId,
     Guid TenantId,
     Guid SessionId,
+    string TenantRoleKey,
+    bool IsPlatformAdmin,
     string ProductKey,
     bool HasStaffArrEntitlement,
     IReadOnlyList<string> Entitlements);
@@ -29,6 +33,10 @@ public sealed record StaffArrMeResponse(
     string Email,
     string DisplayName,
     Guid TenantId,
+    string TenantRoleKey,
+    bool IsPlatformAdmin,
     string ProductKey,
     bool HasStaffArrEntitlement,
+    string? PrimaryOrgUnitName,
+    string? JobTitle,
     IReadOnlyList<string> Entitlements);

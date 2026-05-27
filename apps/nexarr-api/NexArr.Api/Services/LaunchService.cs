@@ -206,6 +206,14 @@ public sealed class LaunchService(
             .Where(e => e.TenantId == record.TenantId && e.Status == EntitlementStatuses.Active)
             .Select(e => e.ProductKey)
             .ToListAsync(cancellationToken);
+        var membershipRoleKey = await db.TenantMemberships
+            .AsNoTracking()
+            .Where(m => m.TenantId == record.TenantId && m.UserId == record.UserId && m.IsActive)
+            .Select(m => m.RoleKey)
+            .FirstOrDefaultAsync(cancellationToken);
+        var tenantRoleKey = !string.IsNullOrWhiteSpace(membershipRoleKey)
+            ? membershipRoleKey
+            : (record.User.IsPlatformAdmin ? "platform_admin" : "tenant_member");
 
         await audit.WriteAsync(
             "launch.handoff.redeem",
@@ -224,6 +232,8 @@ public sealed class LaunchService(
             record.Tenant.Slug,
             record.TargetProductKey,
             record.SessionId,
+            tenantRoleKey,
+            record.User.IsPlatformAdmin,
             entitlements,
             record.CallbackUrl);
     }

@@ -10,7 +10,8 @@
 | 6 | NexArr platform-admin APIs + suite platform-admin UI | M2/M3 (partial) | Complete | `5c4934b` |
 | 7 | Suite unified dashboard (M3 widgets on `/app`) | M3 (partial) | Complete | `5c293e8` |
 | 8 | StaffArr shell + NexArr handoff redeem | M3 (partial) | Complete | `see latest Worker 8 commit` |
+| 9 | StaffArr people directory + person profile core | M4 (partial) | Complete | `pending` |
 
-## Next slice (Worker 8)
+## Next slice (Worker 10)
 
-Recommended: **Worker 9** build first StaffArr domain module (training roster/readiness) on top of shell session bootstrap.
+Recommended: **Worker 10** implement StaffArr org hierarchy management write flows (`/api/org-units` create/update + UI org tree editor) to unblock assignment-heavy slices.

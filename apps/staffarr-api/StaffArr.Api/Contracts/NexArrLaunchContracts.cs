@@ -10,5 +10,7 @@ public sealed record NexArrHandoffRedeemedResponse(
     string TenantSlug,
     string TargetProductKey,
     Guid SessionId,
+    string TenantRoleKey,
+    bool IsPlatformAdmin,
     IReadOnlyList<string> Entitlements,
     string? CallbackUrl);

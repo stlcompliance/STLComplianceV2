@@ -39,6 +39,9 @@ public static class ClaimsPrincipalExtensions
         return sessionId;
     }
 
+    public static string GetTenantRoleKey(this ClaimsPrincipal principal) =>
+        principal.FindFirstValue(StlClaimTypes.TenantRoleKey) ?? string.Empty;
+
     public static bool IsPlatformAdmin(this ClaimsPrincipal principal) =>
         bool.TryParse(principal.FindFirstValue(StlClaimTypes.PlatformAdmin), out var isAdmin) && isAdmin;
 

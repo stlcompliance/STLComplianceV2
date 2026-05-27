@@ -13,7 +13,12 @@ using StaffArrRedeemRequest = StaffArr.Api.Contracts.RedeemHandoffRequest;
 using StaffArrSessionBootstrapResponse = StaffArr.Api.Contracts.StaffArrSessionBootstrapResponse;
 using StaffArrMeResponse = StaffArr.Api.Contracts.StaffArrMeResponse;
 using StaffArrHandoffSessionResponse = StaffArr.Api.Contracts.HandoffSessionResponse;
+using StaffPersonSummaryResponse = StaffArr.Api.Contracts.StaffPersonSummaryResponse;
+using StaffPersonDetailResponse = StaffArr.Api.Contracts.StaffPersonDetailResponse;
+using CreateStaffPersonRequest = StaffArr.Api.Contracts.CreateStaffPersonRequest;
 using StaffArrTokenService = StaffArr.Api.Services.StaffArrTokenService;
+using StaffArrDbContext = StaffArr.Api.Data.StaffArrDbContext;
+using StaffPerson = StaffArr.Api.Entities.StaffPerson;
 using STLCompliance.Shared.Contracts;
 
 namespace STLCompliance.StaffArr.Auth.Tests;
@@ -111,7 +116,8 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         var session = (await redeemResponse.Content.ReadFromJsonAsync<StaffArrHandoffSessionResponse>())!;
         Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
         Assert.Equal(PlatformSeeder.DemoAdminUserId, session.UserId);
-        Assert.Equal(PlatformSeeder.DemoAdminUserId, session.PersonId);
+        Assert.NotEqual(Guid.Empty, session.PersonId);
+        Assert.Contains(session.TenantRoleKey, new[] { "tenant_admin", "platform_admin" });
         Assert.Contains("staffarr", session.Entitlements);
 
         var meRequest = new HttpRequestMessage(HttpMethod.Get, "/api/me");
@@ -121,6 +127,7 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         var me = await meResponse.Content.ReadFromJsonAsync<StaffArrMeResponse>();
         Assert.NotNull(me);
         Assert.True(me.HasStaffArrEntitlement);
+        Assert.Contains(me.TenantRoleKey, new[] { "tenant_admin", "platform_admin" });
         Assert.Equal(session.PersonId, me.PersonId);
     }
 
@@ -166,15 +173,82 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
     [Fact]
     public async Task Session_bootstrap_returns_claim_backed_identity()
     {
-        var token = CreateStaffArrAccessToken(["staffarr", "nexarr"]);
+        var token = CreateStaffArrAccessToken(["staffarr", "nexarr"], tenantRoleKey: "tenant_admin");
         var request = Authorized(HttpMethod.Get, "/api/session", token);
         var response = await _staffarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         var payload = await response.Content.ReadFromJsonAsync<StaffArrSessionBootstrapResponse>();
         Assert.NotNull(payload);
         Assert.Equal(PlatformSeeder.DemoAdminUserId, payload.UserId);
-        Assert.Equal(PlatformSeeder.DemoAdminUserId, payload.PersonId);
+        Assert.NotEqual(Guid.Empty, payload.PersonId);
+        Assert.Equal("tenant_admin", payload.TenantRoleKey);
         Assert.True(payload.HasStaffArrEntitlement);
+    }
+
+    [Fact]
+    public async Task People_directory_denies_member_role()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_member");
+        var request = Authorized(HttpMethod.Get, "/api/people", token);
+        var response = await _staffarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task People_directory_returns_records_for_tenant_admin()
+    {
+        await SeedStaffPersonAsync(Guid.NewGuid(), "Directory User", "directory.user@example.com");
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var request = Authorized(HttpMethod.Get, "/api/people", token);
+        var response = await _staffarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var payload = await response.Content.ReadFromJsonAsync<IReadOnlyList<StaffPersonSummaryResponse>>();
+        Assert.NotNull(payload);
+        Assert.NotEmpty(payload);
+    }
+
+    [Fact]
+    public async Task People_profile_allows_self_access_for_member_role()
+    {
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Member User", "member.user@example.com", externalUserId: PlatformSeeder.DemoAdminUserId);
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_member", personId: personId);
+        var request = Authorized(HttpMethod.Get, $"/api/people/{personId}", token);
+        var response = await _staffarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var payload = await response.Content.ReadFromJsonAsync<StaffPersonDetailResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal(personId, payload.PersonId);
+    }
+
+    [Fact]
+    public async Task People_create_validates_input_and_permissions()
+    {
+        var memberToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
+        var deniedRequest = Authorized(HttpMethod.Post, "/api/people", memberToken);
+        deniedRequest.Content = JsonContent.Create(new CreateStaffPersonRequest(
+            "No",
+            "Write",
+            "no.write@example.com",
+            "active",
+            null,
+            null,
+            "Inspector"));
+        var deniedResponse = await _staffarrClient.SendAsync(deniedRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, deniedResponse.StatusCode);
+
+        var adminToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var badRequest = Authorized(HttpMethod.Post, "/api/people", adminToken);
+        badRequest.Content = JsonContent.Create(new CreateStaffPersonRequest(
+            "Bad",
+            "Email",
+            "not-an-email",
+            "active",
+            null,
+            null,
+            null));
+        var badResponse = await _staffarrClient.SendAsync(badRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, badResponse.StatusCode);
     }
 
     private async Task<string> CreateHandoffAsync()
@@ -223,17 +297,21 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         return issued.AccessToken;
     }
 
-    private string CreateStaffArrAccessToken(IReadOnlyList<string> entitlements)
+    private string CreateStaffArrAccessToken(
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_member",
+        Guid? personId = null)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<StaffArrTokenService>();
         var (accessToken, _) = tokenService.CreateAccessToken(
             PlatformSeeder.DemoAdminUserId,
-            PlatformSeeder.DemoAdminUserId,
+            personId ?? PlatformSeeder.DemoAdminUserId,
             PlatformSeeder.DemoAdminEmail,
             "Test Admin",
             PlatformSeeder.DemoTenantId,
             Guid.NewGuid(),
+            tenantRoleKey,
             entitlements,
             isPlatformAdmin: false);
 
@@ -265,5 +343,34 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         await db.Database.EnsureCreatedAsync();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         await PlatformSeeder.SeedAsync(db, hasher);
+    }
+
+    private async Task SeedStaffPersonAsync(
+        Guid personId,
+        string displayName,
+        string email,
+        Guid? externalUserId = null)
+    {
+        using var scope = _staffarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+        var split = displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var givenName = split.FirstOrDefault() ?? "User";
+        var familyName = split.Length > 1 ? string.Join(' ', split.Skip(1)) : "Test";
+
+        db.People.Add(new StaffPerson
+        {
+            Id = personId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            ExternalUserId = externalUserId,
+            GivenName = givenName,
+            FamilyName = familyName,
+            DisplayName = displayName,
+            PrimaryEmail = email,
+            EmploymentStatus = "active",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        });
+
+        await db.SaveChangesAsync();
     }
 }

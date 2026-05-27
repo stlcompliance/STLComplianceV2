@@ -8,6 +8,8 @@ export interface HandoffSessionResponse {
   tenantId: string
   tenantSlug: string
   sessionId: string
+  tenantRoleKey: string
+  isPlatformAdmin: boolean
   entitlements: string[]
 }
 
@@ -17,7 +19,46 @@ export interface StaffArrMeResponse {
   email: string
   displayName: string
   tenantId: string
+  tenantRoleKey: string
+  isPlatformAdmin: boolean
   productKey: string
   hasStaffArrEntitlement: boolean
+  primaryOrgUnitName: string | null
+  jobTitle: string | null
   entitlements: string[]
+}
+
+export interface StaffPersonSummaryResponse {
+  personId: string
+  externalUserId: string | null
+  displayName: string
+  primaryEmail: string
+  employmentStatus: string
+  primaryOrgUnitId: string | null
+  primaryOrgUnitName: string | null
+  managerPersonId: string | null
+  jobTitle: string | null
+}
+
+export interface StaffPersonDetailResponse {
+  personId: string
+  externalUserId: string | null
+  givenName: string
+  familyName: string
+  displayName: string
+  primaryEmail: string
+  employmentStatus: string
+  primaryOrgUnitId: string | null
+  primaryOrgUnitName: string | null
+  managerPersonId: string | null
+  jobTitle: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OrgUnitResponse {
+  orgUnitId: string
+  unitType: string
+  name: string
+  parentOrgUnitId: string | null
 }

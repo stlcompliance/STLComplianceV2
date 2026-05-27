@@ -19,6 +19,10 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<StaffArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();
         builder.Services.AddScoped<MeService>();
+        builder.Services.AddScoped<StaffArrAuthorizationService>();
+        builder.Services.AddScoped<PersonProvisioningService>();
+        builder.Services.AddScoped<PeopleService>();
+        builder.Services.AddScoped<OrgUnitService>();
 
         var frontendOrigin = builder.Configuration["Cors:StaffArrFrontendOrigin"] ?? "http://localhost:5175";
         builder.Services.AddCors(options =>

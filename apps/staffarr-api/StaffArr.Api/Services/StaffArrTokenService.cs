@@ -16,6 +16,7 @@ public sealed class StaffArrTokenService(IOptions<StlJwtOptions> options, IConfi
         string displayName,
         Guid tenantId,
         Guid sessionId,
+        string tenantRoleKey,
         IReadOnlyList<string> entitlements,
         bool isPlatformAdmin)
     {
@@ -31,6 +32,7 @@ public sealed class StaffArrTokenService(IOptions<StlJwtOptions> options, IConfi
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(StlClaimTypes.TenantId, tenantId.ToString()),
             new(StlClaimTypes.SessionId, sessionId.ToString()),
+            new(StlClaimTypes.TenantRoleKey, tenantRoleKey),
             new(StlClaimTypes.PersonId, personId.ToString()),
             new(StlClaimTypes.Entitlements, string.Join(',', entitlements)),
             new(StlClaimTypes.PlatformAdmin, isPlatformAdmin.ToString().ToLowerInvariant())

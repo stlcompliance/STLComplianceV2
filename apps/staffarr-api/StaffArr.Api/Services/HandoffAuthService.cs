@@ -6,7 +6,8 @@ namespace StaffArr.Api.Services;
 
 public sealed class HandoffAuthService(
     NexArrHandoffClient nexArrHandoff,
-    StaffArrTokenService tokenService)
+    StaffArrTokenService tokenService,
+    PersonProvisioningService personProvisioning)
 {
     private const string ProductKey = "staffarr";
 
@@ -38,27 +39,35 @@ public sealed class HandoffAuthService(
                 403);
         }
 
-        var personId = redeemed.UserId;
+        var person = await personProvisioning.EnsurePersonAsync(
+            redeemed.TenantId,
+            redeemed.UserId,
+            redeemed.Email,
+            redeemed.DisplayName,
+            cancellationToken);
         var (accessToken, expiresAt) = tokenService.CreateAccessToken(
             redeemed.UserId,
-            personId,
+            person.Id,
             redeemed.Email,
             redeemed.DisplayName,
             redeemed.TenantId,
             redeemed.SessionId,
+            redeemed.TenantRoleKey,
             redeemed.Entitlements,
-            isPlatformAdmin: false);
+            redeemed.IsPlatformAdmin);
 
         return new HandoffSessionResponse(
             accessToken,
             expiresAt,
             redeemed.UserId,
-            personId,
+            person.Id,
             redeemed.Email,
             redeemed.DisplayName,
             redeemed.TenantId,
             redeemed.TenantSlug,
             redeemed.SessionId,
+            redeemed.TenantRoleKey,
+            redeemed.IsPlatformAdmin,
             redeemed.Entitlements);
     }
 }
