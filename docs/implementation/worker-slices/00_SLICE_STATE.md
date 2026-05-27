@@ -197,7 +197,7 @@
 
 | 110 | M13 nightly live k6 all PO scenarios (`StlLoadTestLiveScenarioCatalog`, theory-based Load live tests ×7, seven-API health gate, e2e-nightly workflow, docs) | M13 (partial) | Complete | `8ef05f6` |
 
-| 111 | StaffArr person export bundle (`GET /api/people/export` CSV/JSON/ZIP, import-compatible CSV, managerEmail resolution, `PersonExportPanel`, integration + frontend tests, docs) | M4 (partial) | Complete | `pending` |
+| 111 | StaffArr person export bundle (`GET /api/people/export` CSV/JSON/ZIP, import-compatible CSV, managerEmail resolution, `PersonExportPanel`, integration + frontend tests, docs) | M4 (partial) | Complete | `9abb7d9` |
 
 ## Next slice (Worker 112)
 
