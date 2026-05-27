@@ -9,6 +9,7 @@ using NexArr.Api.Services;
 using StaffArr.Api.Contracts;
 using STLCompliance.E2E.Support;
 using STLCompliance.Shared.Auth;
+using SupplyArr.Api.Contracts;
 
 namespace STLCompliance.E2E.Live;
 
@@ -73,6 +74,59 @@ public sealed class TenantIsolationLiveTests
 
         var crossTenantResponse = await staffarrClient.SendAsync(
             HttpTestClient.Authorized(HttpMethod.Get, $"/api/people/{created.PersonId}", tenantBToken));
+
+        Assert.Equal(HttpStatusCode.NotFound, crossTenantResponse.StatusCode);
+    }
+
+    [SkippableFact]
+    public async Task Live_SupplyArr_cross_tenant_vendor_get_returns_not_found()
+    {
+        Skip.IfNot(LiveServiceProbe.LiveModeEnabled, "Set E2E_LIVE=1 to run live tenant isolation probes.");
+
+        var endpoints = LiveServiceEndpoints.FromEnvironment();
+        Skip.IfNot(
+            await LiveServiceProbe.IsNexArrAvailableAsync(endpoints)
+                && await LiveServiceProbe.IsReachableAsync(endpoints.SupplyArr),
+            "NexArr and SupplyArr APIs must be reachable for live tenant isolation.");
+
+        using var nexarrClient = new HttpClient { BaseAddress = endpoints.NexArr, Timeout = TimeSpan.FromSeconds(15) };
+        using var supplyarrClient = new HttpClient { BaseAddress = endpoints.SupplyArr, Timeout = TimeSpan.FromSeconds(15) };
+
+        var loginResponse = await nexarrClient.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                PlatformSeeder.DemoAdminEmail,
+                PlatformSeeder.DemoAdminPassword,
+                PlatformSeeder.DemoTenantId));
+        loginResponse.EnsureSuccessStatusCode();
+
+        var tenantAToken = MintUserJwt(
+            E2ETenants.TenantAId,
+            PlatformSeeder.DemoAdminUserId,
+            PlatformSeeder.DemoAdminUserId,
+            ["supplyarr"],
+            "tenant_admin");
+
+        var createVendorRequest = HttpTestClient.Authorized(HttpMethod.Post, "/api/vendors", tenantAToken);
+        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+            $"live-iso-{Guid.NewGuid():N}".Substring(0, 12),
+            "Live Isolation Vendor",
+            "Live Isolation Vendor LLC",
+            null,
+            "Live tenant isolation probe"));
+        var createVendorResponse = await supplyarrClient.SendAsync(createVendorRequest);
+        createVendorResponse.EnsureSuccessStatusCode();
+        var created = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+
+        var tenantBToken = MintUserJwt(
+            E2ETenants.TenantBId,
+            E2ETenants.TenantBUserId,
+            E2ETenants.TenantBPersonId,
+            ["supplyarr"],
+            "tenant_admin");
+
+        var crossTenantResponse = await supplyarrClient.SendAsync(
+            HttpTestClient.Authorized(HttpMethod.Get, $"/api/vendors/{created.PartyId}", tenantBToken));
 
         Assert.Equal(HttpStatusCode.NotFound, crossTenantResponse.StatusCode);
     }

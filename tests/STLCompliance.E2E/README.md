@@ -21,7 +21,7 @@ Live tests probe real `/health` endpoints and optional NexArr demo login. They *
 3. **TrainArrAssignmentCompleteFlowTests** — incident route → assignment → complete → StaffArr certification/unblock
 4. **MaintainArrWorkOrderFlowTests** — handoff → work order create → in_progress → completed
 5. **RoutArrDispatchAssignFlowTests** — trip → workflow gate block → preview → override assign
-6. **TenantIsolationFlowTests** — multi-tenant JWT/service-token denial across StaffArr, MaintainArr, RoutArr, TrainArr, Compliance Core (`Area=TenantIsolation`)
+6. **TenantIsolationFlowTests** — multi-tenant JWT/service-token denial across StaffArr, MaintainArr, RoutArr, TrainArr, Compliance Core, SupplyArr (`Area=TenantIsolation`)
 
 ## Live URL configuration
 

@@ -169,6 +169,8 @@
 
 | 95 | M13 multi-tenant isolation E2E battery (`TenantIsolationFlowTests`, `TenantIsolationLiveTests`, nightly `e2e-nightly.yml`, docs) | M13 (partial) | Complete | `pending` |
 
-## Next slice (Worker 96)
+| 96 | M13 SupplyArr tenant isolation E2E (`SupplyArr` cross-tenant GET/list, MaintainArr demand ingest 403, live SupplyArr probe, docs) | M13 (partial) | Complete | `pending` |
 
-Recommended: **M13 operational hardening** — load-test harness once SLOs exist, DR restore drill, SupplyArr tenant isolation in E2E battery, OTEL smoke checks.
+## Next slice (Worker 97)
+
+Recommended: **M13 operational hardening** — load-test harness once SLOs exist, DR restore drill, OTEL smoke checks.

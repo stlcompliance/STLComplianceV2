@@ -4,6 +4,7 @@ using MaintainArr.Api.Services;
 using NexArr.Api.Services;
 using RoutArr.Api.Services;
 using StaffArr.Api.Services;
+using SupplyArr.Api.Services;
 using TrainArr.Api.Services;
 
 namespace STLCompliance.E2E.Support;
@@ -51,6 +52,14 @@ internal static class E2EAccessTokenHelper
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "compliance_admin") =>
         Mint<ComplianceCoreTokenService>(services, tenantId, userId, userId, entitlements, tenantRoleKey);
+
+    public static string SupplyArr(
+        IServiceProvider services,
+        Guid tenantId,
+        Guid userId,
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_admin") =>
+        Mint<SupplyArrTokenService>(services, tenantId, userId, userId, entitlements, tenantRoleKey);
 
     private static string Mint<TTokenService>(
         IServiceProvider services,
@@ -106,6 +115,16 @@ internal static class E2EAccessTokenHelper
                 entitlements,
                 isPlatformAdmin: false),
             ComplianceCoreTokenService compliance => compliance.CreateAccessToken(
+                userId,
+                personId,
+                E2ETenants.TenantAAdminEmail,
+                "E2E Isolation Admin",
+                tenantId,
+                Guid.NewGuid(),
+                tenantRoleKey,
+                entitlements,
+                isPlatformAdmin: false),
+            SupplyArrTokenService supply => supply.CreateAccessToken(
                 userId,
                 personId,
                 E2ETenants.TenantAAdminEmail,

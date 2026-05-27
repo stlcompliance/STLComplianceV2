@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\apps\nexarr-api\NexArr.Api\NexArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\routarr-api\RoutArr.Api\RoutArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\staffarr-api\StaffArr.Api\StaffArr.Api.csproj" />
+    <ProjectReference Include="..\..\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\trainarr-api\TrainArr.Api\TrainArr.Api.csproj" />
     <ProjectReference Include="..\..\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj" />
   </ItemGroup>

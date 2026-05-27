@@ -15,8 +15,11 @@ using StaffArr.Api.Data;
 using StaffArr.Api.Entities;
 using StaffArr.Api.Services;
 using STLCompliance.E2E.Support;
+using SupplyArr.Api.Contracts;
+using SupplyArr.Api.Data;
 using TrainArr.Api.Contracts;
 using StaffArrIntegration = StaffArr.Api.Endpoints.IntegrationEndpoints;
+using SupplyArrIntegration = SupplyArr.Api.Endpoints.IntegrationEndpoints;
 
 namespace STLCompliance.E2E.Flows;
 
@@ -34,12 +37,15 @@ public sealed class TenantIsolationFlowTests : IAsyncLifetime
     private WebApplicationFactory<global::RoutArr.Api.Program> _routarrFactory = null!;
     private WebApplicationFactory<global::TrainArr.Api.Program> _trainarrFactory = null!;
     private WebApplicationFactory<global::ComplianceCore.Api.Program> _complianceCoreFactory = null!;
+    private WebApplicationFactory<global::SupplyArr.Api.Program> _supplyarrFactory = null!;
     private HttpClient _staffarrClient = null!;
     private HttpClient _maintainarrClient = null!;
     private HttpClient _routarrClient = null!;
     private HttpClient _trainarrClient = null!;
     private HttpClient _complianceCoreClient = null!;
+    private HttpClient _supplyarrClient = null!;
     private string _trainarrToStaffarrTokenTenantB = null!;
+    private string _maintainarrToSupplyarrTokenTenantB = null!;
 
     public async Task InitializeAsync()
     {
@@ -49,7 +55,7 @@ public sealed class TenantIsolationFlowTests : IAsyncLifetime
             E2ETenants.TenantBId,
             "e2e-tenant-b",
             "E2E Tenant B",
-            ["staffarr", "trainarr", "maintainarr", "routarr", "compliancecore"]);
+            ["staffarr", "trainarr", "maintainarr", "routarr", "compliancecore", "supplyarr"]);
 
         var adminToken = await _nexarr.LoginAsync();
         _trainarrToStaffarrTokenTenantB = await _nexarr.IssueServiceTokenAsync(
@@ -57,6 +63,12 @@ public sealed class TenantIsolationFlowTests : IAsyncLifetime
             "trainarr",
             StaffArrIntegration.TrainingBlockerIngestActionScope,
             ["staffarr"],
+            E2ETenants.TenantBId);
+        _maintainarrToSupplyarrTokenTenantB = await _nexarr.IssueServiceTokenAsync(
+            adminToken,
+            "maintainarr",
+            SupplyArrIntegration.MaintainarrDemandIngestActionScope,
+            ["supplyarr"],
             E2ETenants.TenantBId);
 
         var signingKey = E2ENexArrHost.SigningKey;
@@ -95,6 +107,12 @@ public sealed class TenantIsolationFlowTests : IAsyncLifetime
             signingKey,
             nexarrBaseUrl);
         _complianceCoreClient = _complianceCoreFactory.CreateClient();
+
+        _supplyarrFactory = CreateProductFactory<global::SupplyArr.Api.Program, SupplyArrDbContext>(
+            $"E2E-TenantIso-SupplyArr-{Guid.NewGuid():N}",
+            signingKey,
+            nexarrBaseUrl);
+        _supplyarrClient = _supplyarrFactory.CreateClient();
     }
 
     public async Task DisposeAsync()
@@ -104,11 +122,13 @@ public sealed class TenantIsolationFlowTests : IAsyncLifetime
         _routarrClient.Dispose();
         _trainarrClient.Dispose();
         _complianceCoreClient.Dispose();
+        _supplyarrClient.Dispose();
         await _staffarrFactory.DisposeAsync();
         await _maintainarrFactory.DisposeAsync();
         await _routarrFactory.DisposeAsync();
         await _trainarrFactory.DisposeAsync();
         await _complianceCoreFactory.DisposeAsync();
+        await _supplyarrFactory.DisposeAsync();
         await _nexarr.DisposeAsync();
     }
 
@@ -264,6 +284,97 @@ public sealed class TenantIsolationFlowTests : IAsyncLifetime
         var terms = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<VocabularyTermResponse>>())!;
 
         Assert.DoesNotContain(terms, t => t.Label == "Tenant A Term");
+    }
+
+    [Fact]
+    public async Task SupplyArr_tenant_B_cannot_read_tenant_A_vendor()
+    {
+        var tenantAToken = E2EAccessTokenHelper.SupplyArr(
+            _supplyarrFactory.Services,
+            E2ETenants.TenantAId,
+            PlatformSeeder.DemoAdminUserId,
+            ["supplyarr"]);
+        var vendorId = await CreateSupplyArrVendorAsync(tenantAToken, "Tenant A Vendor");
+
+        var tenantBToken = E2EAccessTokenHelper.SupplyArr(
+            _supplyarrFactory.Services,
+            E2ETenants.TenantBId,
+            E2ETenants.TenantBUserId,
+            ["supplyarr"]);
+        var response = await _supplyarrClient.SendAsync(
+            HttpTestClient.Authorized(HttpMethod.Get, $"/api/vendors/{vendorId}", tenantBToken));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task SupplyArr_tenant_A_list_excludes_tenant_B_vendors()
+    {
+        var tenantAToken = E2EAccessTokenHelper.SupplyArr(
+            _supplyarrFactory.Services,
+            E2ETenants.TenantAId,
+            PlatformSeeder.DemoAdminUserId,
+            ["supplyarr"]);
+        await CreateSupplyArrVendorAsync(tenantAToken, "Tenant A Listed Vendor");
+
+        var tenantBToken = E2EAccessTokenHelper.SupplyArr(
+            _supplyarrFactory.Services,
+            E2ETenants.TenantBId,
+            E2ETenants.TenantBUserId,
+            ["supplyarr"]);
+        await CreateSupplyArrVendorAsync(tenantBToken, "Tenant B Hidden Vendor");
+
+        var response = await _supplyarrClient.SendAsync(
+            HttpTestClient.Authorized(HttpMethod.Get, "/api/vendors", tenantAToken));
+        response.EnsureSuccessStatusCode();
+        var vendors = (await response.Content.ReadFromJsonAsync<IReadOnlyList<ExternalPartyResponse>>())!;
+
+        Assert.Contains(vendors, v => v.DisplayName == "Tenant A Listed Vendor");
+        Assert.DoesNotContain(vendors, v => v.DisplayName == "Tenant B Hidden Vendor");
+    }
+
+    [Fact]
+    public async Task SupplyArr_service_token_scoped_to_tenant_B_rejects_tenant_A_demand_ingest()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/integrations/maintainarr-demand");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _maintainarrToSupplyarrTokenTenantB);
+        request.Content = JsonContent.Create(new IngestMaintainarrDemandRequest(
+            E2ETenants.TenantAId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "WO-TENANT-A",
+            Guid.NewGuid(),
+            "Cross-tenant demand",
+            "Cross-tenant ingest must be denied.",
+            false,
+            [
+                new IngestMaintainarrDemandLineRequest(
+                    Guid.NewGuid(),
+                    null,
+                    "ISO-PART",
+                    "Isolation part",
+                    1m,
+                    "ea",
+                    null)
+            ]));
+
+        var response = await _supplyarrClient.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    private async Task<Guid> CreateSupplyArrVendorAsync(string token, string displayName)
+    {
+        var createRequest = HttpTestClient.Authorized(HttpMethod.Post, "/api/vendors", token);
+        createRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+            $"iso-{Guid.NewGuid():N}".Substring(0, 12),
+            displayName,
+            $"{displayName} LLC",
+            null,
+            "Tenant isolation vendor"));
+        var vendor = (await (await _supplyarrClient.SendAsync(createRequest)).Content
+            .ReadFromJsonAsync<ExternalPartyResponse>())!;
+        return vendor.PartyId;
     }
 
     private async Task<Guid> SeedStaffPersonAsync(Guid tenantId, string displayName, string email)
