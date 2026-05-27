@@ -1,6 +1,6 @@
 # Implementation status
 
-Last updated: 2026-05-27 (M13 DR restore drill slice)
+Last updated: 2026-05-27 (M13 load-test harness slice)
 
 ## Milestone summary
 
@@ -18,27 +18,28 @@ Last updated: 2026-05-27 (M13 DR restore drill slice)
 | M10 — Cross-product qualification gates | In progress (Workers 36–42, 83–87) |
 | M11 — Companion app | Partial (Worker 90) |
 | M12 — Scheduled workers | In progress (Workers 44, 46–51) |
-| M13 — Ship-gate acceptance & hardening | In progress (Workers 91–99) |
+| M13 — Ship-gate acceptance & hardening | In progress (Workers 91–100) |
 
 ## Latest completed slice
 
-**M13 DR restore drill script and validation**
+**M13 load-test harness (k6 + SLO evaluator)**
 
-- **STLCompliance.Shared**: `StlProductDatabaseCatalog`, `StlDrRestoreDrillSupport`, `StlDrRestoreDrillValidator`
-- **Ops**: `scripts/ops/dr-restore-drill.ps1`, `scripts/ops/dr-restore-drill.sh` (local docker or staging Postgres)
-- **Tests**: `STLCompliance.Dr.Tests` (`Category=Dr`) — catalog/support/validator unit tests; optional live NexArr restore drill (`Category=Live`)
-- **CI**: DR unit step in `ci.yml`; live drill in `e2e-nightly.yml`
-- **Docs**: `docs/implementation/worker-slices/W99_M13_DR_RESTORE_DRILL.md`
+- **STLCompliance.Shared**: `Operations/LoadTesting/*` — SLO catalog, k6 summary parser, evaluator, API endpoints
+- **tests/load-k6**: three k6 scenarios (`api-health-liveness`, `api-health-ready`, `nexarr-platform-health`) + `slo-defaults.json`
+- **Ops**: `scripts/ops/load-test-run.ps1`, `scripts/ops/load-test-run.sh`
+- **Tests**: `STLCompliance.Load.Tests` (`Category=Load`) — 8 unit tests; optional live k6 (`Category=Live`)
+- **CI**: Load unit step in `ci.yml`; live k6 job in `e2e-nightly.yml`
+- **Docs**: `docs/implementation/worker-slices/W100_M13_LOAD_TEST_HARNESS.md`
 
 ## Build & test status
 
 | Command | Result |
 |---------|--------|
 | `dotnet build STLCompliance.slnx -c Release` | Pass |
-| `dotnet test STLCompliance.slnx -c Release --filter Category!=Live` | Pass (**637**/637) |
-| `dotnet test tests/STLCompliance.Dr.Tests/... --filter Category=Dr&Category!=Live` | Pass (9/9) |
+| `dotnet test STLCompliance.slnx -c Release --filter Category!=Live` | Pass (**646**/646, 1 skipped harness env test excluded by filter) |
+| `dotnet test tests/STLCompliance.Load.Tests/... --filter Category=Load&Category!=Live` | Pass (8/8) |
 
-## M13 ship-gate progress (Workers 91–99)
+## M13 ship-gate progress (Workers 91–100)
 
 | Item | Status | Notes |
 |------|--------|-------|
@@ -51,8 +52,8 @@ Last updated: 2026-05-27 (M13 DR restore drill slice)
 | Handoff client dedup | **Complete (W97)** | Shared `StlNexArrHandoffClient` replaces 6 duplicates |
 | OTEL / metrics wiring | **Complete (W98)** | Shared OTEL host wiring, `/health/observability`, `Category=Otel` smoke tests |
 | Recovery / DR verification | **Complete (W99)** | Restore drill scripts + validation + nightly live NexArr drill |
-| Load / performance testing | Blocked | Needs SLO definitions |
+| Load / performance testing | **Harness ready (W100)** | k6 scenarios + SLO evaluator with engineering defaults; replace when PO publishes SLOs |
 
 ## Next slice
 
-Load-test harness (k6/NBomber) after product-owner SLO targets — see `docs/implementation/worker-slices/00_SLICE_STATE.md`.
+Product-owner SLO adoption (replace engineering defaults, extend authenticated scenarios) or full seven-database DR nightly drill — see `docs/implementation/worker-slices/00_SLICE_STATE.md`.

@@ -38,6 +38,7 @@
     <Project Path="tests/STLCompliance.OpenApi.Tests/STLCompliance.OpenApi.Tests.csproj" />
     <Project Path="tests/STLCompliance.Otel.Tests/STLCompliance.Otel.Tests.csproj" />
     <Project Path="tests/STLCompliance.Dr.Tests/STLCompliance.Dr.Tests.csproj" />
+    <Project Path="tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj" />
   </Folder>
   <Folder Name="/workers/" />
   <Folder Name="/workers/compliancecore-worker/">

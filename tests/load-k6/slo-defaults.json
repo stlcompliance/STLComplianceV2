@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "status": "engineering-defaults",
+  "notes": "Replace with product-owner SLO targets when published. Canonical definitions live in StlLoadTestSloCatalog.",
+  "scenarios": [
+    {
+      "scenarioKey": "api-health-liveness",
+      "p95LatencyMsMax": 500,
+      "errorRateMax": 0.01,
+      "minRequestCount": 50
+    },
+    {
+      "scenarioKey": "api-health-ready",
+      "p95LatencyMsMax": 2000,
+      "errorRateMax": 0.02,
+      "minRequestCount": 50
+    },
+    {
+      "scenarioKey": "nexarr-platform-health",
+      "p95LatencyMsMax": 5000,
+      "errorRateMax": 0.05,
+      "minRequestCount": 20
+    }
+  ]
+}

@@ -169,6 +169,21 @@ dotnet test tests/STLCompliance.Dr.Tests/STLCompliance.Dr.Tests.csproj -c Releas
 ./scripts/ops/dr-restore-drill.ps1 -BackupDirectory C:\backups\2026-05-27 -DockerContainerName stlcompliancev2-postgres-1
 ```
 
+### Optional load test (W100)
+
+```powershell
+# Unit checks (CI default)
+dotnet test tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj -c Release --filter "Category=Load&Category!=Live"
+
+# Live k6 against docker-compose (requires k6 on PATH)
+docker compose up -d postgres nexarr-api staffarr-api trainarr-api maintainarr-api routarr-api supplyarr-api compliancecore-api
+$env:LOAD_LIVE = "1"
+dotnet test tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj -c Release --filter "Category=Load&Category=Live"
+
+# Operator full harness (all three scenarios)
+./scripts/ops/load-test-run.ps1
+```
+
 ### Frontends
 
 ```powershell
@@ -188,7 +203,7 @@ dotnet test tests/STLCompliance.Dr.Tests/STLCompliance.Dr.Tests.csproj -c Releas
 | OpenAPI CI gate | Ready | 7 snapshots, `Category=OpenApi` (W92) |
 | Docker local dev | Ready | `docker-compose.yml` APIs + postgres; frontends via Vite |
 | OTEL / metrics dashboards | **Wired** — instrumentation + smoke checks; connect Render `OTEL_EXPORTER_OTLP_ENDPOINT` when backend available |
-| Load / performance | Still blocked — needs SLO definitions |
+| Load / performance | **Harness ready (W100)** — k6 scenarios + SLO evaluator with engineering defaults; replace when PO publishes SLOs |
 | DR / backup restore | **Scripted drill** — `scripts/ops/dr-restore-drill.*`, `STLCompliance.Dr.Tests`, nightly live NexArr restore |
 | Tenant isolation soak | Open | Per-slice deny tests only |
 | STLComplianceSite (marketing) | Not started | M3 backlog |
@@ -200,7 +215,7 @@ dotnet test tests/STLCompliance.Dr.Tests/STLCompliance.Dr.Tests.csproj -c Releas
 | Item | Blocker | Unblock path |
 |------|---------|--------------|
 | **Playwright full pass** | Docker APIs + `suite-frontend` (:5174) + product frontend (:5175+) must run concurrently; not in default `docker-compose` | Add compose profile for static frontends OR document dev script; set `E2E_LIVE=1` in CI nightly |
-| **Load / performance** | No product-owner SLO targets | Define p95 latency/error budgets; add k6/NBomber project |
+| **Load / performance** | Engineering-default SLO harness (W100) — replace thresholds when PO publishes SLO document | Product owners publish SLO targets; extend k6 to authenticated flows |
 | **Metrics / tracing acceptance** | OTEL wired (W98); enable exporter on Render for dashboard validation | Enable OTEL on Render; run `scripts/ops/otel-smoke.ps1 -RequireOtelEnabled` |
 | **DR verification** | **Scripted drill (W99)** — restore scripts + validation; nightly live NexArr drill | Run full seven-database drill against staging Render snapshots on schedule |
 | **Tenant soak** | No multi-tenant parallel E2E battery | Add `STLCompliance.E2E` tenant isolation suite |
@@ -234,7 +249,7 @@ dotnet test tests/STLCompliance.Dr.Tests/STLCompliance.Dr.Tests.csproj -c Releas
 | W88–W90 | Suite shell, Render V1, Companion inbox |
 | W91–W93 | E2E harness, OpenAPI parity, platform health |
 | W94 | Playwright browser smoke scaffold + this report |
-| W97–W99 | Handoff client dedup, OTEL smoke checks, DR restore drill |
+| W97–W100 | Handoff client dedup, OTEL smoke checks, DR restore drill, load-test harness |
 
 Detailed slice notes: `docs/implementation/worker-slices/W*.md` and `docs/implementation/worker-slices/00_SLICE_STATE.md`.
 

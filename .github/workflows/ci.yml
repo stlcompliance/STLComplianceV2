@@ -35,6 +35,9 @@ jobs:
       - name: DR restore drill checks
         run: dotnet test tests/STLCompliance.Dr.Tests/STLCompliance.Dr.Tests.csproj --configuration Release --no-build --verbosity normal --filter "Category=Dr&Category!=Live"
 
+      - name: Load test harness checks
+        run: dotnet test tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj --configuration Release --no-build --verbosity normal --filter "Category=Load&Category!=Live"
+
       - name: EF migrations present
         run: |
           test -f apps/nexarr-api/NexArr.Api/Migrations/*InitialPlatformFoundation*.cs

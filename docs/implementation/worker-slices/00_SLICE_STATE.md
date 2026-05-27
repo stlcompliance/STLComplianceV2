@@ -176,6 +176,8 @@
 | 98 | M13 OTEL smoke checks (`StlOpenTelemetryExtensions`, platform metrics, `/health/observability`, `STLCompliance.Otel.Tests`, `scripts/ops/otel-smoke.ps1`, CI, docs) | M13 (partial) | Complete | `48a6dc0` |
 | 99 | M13 DR restore drill (`StlProductDatabaseCatalog`, `StlDrRestoreDrillValidator`, `scripts/ops/dr-restore-drill.ps1|.sh`, `STLCompliance.Dr.Tests`, nightly live drill, docs) | M13 (partial) | Complete | `a407120` |
 
-## Next slice (Worker 100)
+| 100 | M13 load-test harness (`StlLoadTestSloCatalog`, k6 scenarios, SLO evaluator, `scripts/ops/load-test-run.*`, `STLCompliance.Load.Tests`, nightly live k6, docs) | M13 (partial) | Complete | `pending` |
 
-Recommended: **M13 load-test harness** — k6/NBomber project once product-owner SLO targets are published (currently blocked).
+## Next slice (Worker 101)
+
+Recommended: **Product-owner SLO adoption** — replace engineering-default thresholds in `StlLoadTestSloCatalog` / `tests/load-k6/slo-defaults.json` and extend k6 scenarios to authenticated API flows once SLO document is published. Until then: **full seven-database DR nightly drill** or **Playwright compose profile** for all product frontends.
