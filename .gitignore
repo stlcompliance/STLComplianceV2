@@ -29,3 +29,4 @@ appsettings.*.local.json
 
 # TrainArr local evidence uploads
 **/trainarr-evidence/
+**/maintainarr-evidence/
