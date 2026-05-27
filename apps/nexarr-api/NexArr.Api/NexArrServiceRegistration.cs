@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using NexArr.Api.Data;
+using NexArr.Api.Options;
 using NexArr.Api.Services;
 using STLCompliance.Shared.Auth;
 
@@ -19,7 +21,10 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<ProductCatalogService>();
         builder.Services.AddScoped<EntitlementAdminService>();
         builder.Services.AddScoped<ServiceTokenAdminService>();
+        builder.Services.AddScoped<LaunchService>();
+        builder.Services.AddScoped<CallbackAllowlistAdminService>();
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
+        builder.Services.Configure<StlLaunchOptions>(builder.Configuration.GetSection(StlLaunchOptions.SectionName));
     }
 
     public static async Task InitializeAsync(WebApplication app)
@@ -36,7 +41,8 @@ public static class NexArrServiceRegistration
 
         if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
         {
-            await PlatformSeeder.SeedAsync(db, passwordHasher);
+            var launchOptions = scope.ServiceProvider.GetService<IOptions<StlLaunchOptions>>()?.Value;
+            await PlatformSeeder.SeedAsync(db, passwordHasher, launchOptions);
         }
     }
 }

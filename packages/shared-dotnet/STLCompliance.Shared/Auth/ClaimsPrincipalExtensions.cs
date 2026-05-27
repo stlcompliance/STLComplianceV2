@@ -28,6 +28,17 @@ public static class ClaimsPrincipalExtensions
         return tenantId;
     }
 
+    public static Guid GetSessionId(this ClaimsPrincipal principal)
+    {
+        var raw = principal.FindFirstValue(StlClaimTypes.SessionId);
+        if (raw is null || !Guid.TryParse(raw, out var sessionId))
+        {
+            throw new InvalidOperationException("Authenticated principal is missing a session id claim.");
+        }
+
+        return sessionId;
+    }
+
     public static bool IsPlatformAdmin(this ClaimsPrincipal principal) =>
         bool.TryParse(principal.FindFirstValue(StlClaimTypes.PlatformAdmin), out var isAdmin) && isAdmin;
 

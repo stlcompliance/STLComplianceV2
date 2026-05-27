@@ -71,4 +71,29 @@ public sealed class PlatformAuthorizationService(NexArrDbContext db)
     public static bool IsTenantAdminRole(string roleKey) =>
         string.Equals(roleKey, "tenant_admin", StringComparison.OrdinalIgnoreCase)
         || string.Equals(roleKey, "platform_admin", StringComparison.OrdinalIgnoreCase);
+
+    public async Task RequireProductLaunchAsync(
+        ClaimsPrincipal principal,
+        string productKey,
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        if (principal.IsPlatformAdmin() || principal.HasProductEntitlement(productKey))
+        {
+            if (principal.IsPlatformAdmin())
+            {
+                return;
+            }
+
+            var jwtTenantId = principal.GetTenantId();
+            if (jwtTenantId != tenantId)
+            {
+                throw new StlApiException("auth.tenant_forbidden", "Access to the requested tenant is forbidden.", 403);
+            }
+
+            return;
+        }
+
+        throw new StlApiException("auth.forbidden", "Product entitlement is required to launch this product.", 403);
+    }
 }

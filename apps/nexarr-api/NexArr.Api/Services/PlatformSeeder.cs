@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using NexArr.Api.Data;
 using NexArr.Api.Entities;
+using NexArr.Api.Options;
 
 namespace NexArr.Api.Services;
 
@@ -26,7 +28,22 @@ public static class PlatformSeeder
         ("compliancecore", "Compliance Core", 70)
     ];
 
-    public static async Task SeedAsync(NexArrDbContext db, IPasswordHasher passwordHasher, CancellationToken cancellationToken = default)
+    private static readonly (string ProductKey, string BaseUrl, string LaunchPath)[] DefaultLaunchProfiles =
+    [
+        ("nexarr", "http://localhost:5101", "/"),
+        ("staffarr", "http://localhost:5102", "/launch"),
+        ("trainarr", "http://localhost:5103", "/launch"),
+        ("maintainarr", "http://localhost:5104", "/launch"),
+        ("routarr", "http://localhost:5105", "/launch"),
+        ("supplyarr", "http://localhost:5106", "/launch"),
+        ("compliancecore", "http://localhost:5107", "/launch")
+    ];
+
+    public static async Task SeedAsync(
+        NexArrDbContext db,
+        IPasswordHasher passwordHasher,
+        StlLaunchOptions? launchOptions = null,
+        CancellationToken cancellationToken = default)
     {
         if (await db.ProductCatalog.AnyAsync(cancellationToken))
         {
@@ -122,6 +139,57 @@ public static class PlatformSeeder
             });
         }
 
+        SeedLaunchProfiles(db, launchOptions, now);
+        SeedCallbackAllowlist(db, now);
+
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void SeedLaunchProfiles(NexArrDbContext db, StlLaunchOptions? launchOptions, DateTimeOffset now)
+    {
+        foreach (var profile in DefaultLaunchProfiles)
+        {
+            var configured = launchOptions?.Products.GetValueOrDefault(profile.ProductKey);
+            db.LaunchProfiles.Add(new ProductLaunchProfile
+            {
+                ProductKey = profile.ProductKey,
+                BaseUrl = configured?.BaseUrl ?? profile.BaseUrl,
+                LaunchPath = configured?.LaunchPath ?? profile.LaunchPath,
+                IsActive = true,
+                ModifiedAt = now
+            });
+        }
+    }
+
+    private static void SeedCallbackAllowlist(NexArrDbContext db, DateTimeOffset now)
+    {
+        var suiteShellOrigin = "http://localhost:5173";
+        foreach (var product in Products)
+        {
+            db.CallbackAllowlist.Add(new ProductCallbackAllowlistEntry
+            {
+                Id = Guid.NewGuid(),
+                ProductKey = product.Key,
+                TenantId = null,
+                UrlPattern = suiteShellOrigin,
+                PatternType = CallbackPatternTypes.Origin,
+                IsActive = true,
+                CreatedAt = now,
+                ModifiedAt = now
+            });
+
+            var apiOrigin = DefaultLaunchProfiles.First(p => p.ProductKey == product.Key).BaseUrl;
+            db.CallbackAllowlist.Add(new ProductCallbackAllowlistEntry
+            {
+                Id = Guid.NewGuid(),
+                ProductKey = product.Key,
+                TenantId = DemoTenantId,
+                UrlPattern = apiOrigin,
+                PatternType = CallbackPatternTypes.Origin,
+                IsActive = true,
+                CreatedAt = now,
+                ModifiedAt = now
+            });
+        }
     }
 }
