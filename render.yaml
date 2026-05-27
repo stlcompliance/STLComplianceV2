@@ -47,7 +47,7 @@ envVarGroups:
       - key: ComplianceCore__BaseUrl
         value: http://compliancecore-api:10000
 
-  # Public onrender.com URLs for browser builds and CORS. Update after custom domains.
+  # Public onrender.com URLs for browser builds and CORS (Render-assigned hostnames).
   - name: stl-public-frontend-urls
     envVars:
       - key: SUITE_FRONTEND_URL
@@ -65,24 +65,24 @@ envVarGroups:
       - key: COMPLIANCECORE_FRONTEND_URL
         value: https://compliancecore-frontend.onrender.com
       - key: COMPANION_FRONTEND_URL
-        value: https://companion-frontend.onrender.com
+        value: https://companion-frontend-b2nm.onrender.com
 
   - name: stl-public-api-urls
     envVars:
       - key: NEXARR_PUBLIC_API_URL
-        value: https://nexarr-api.onrender.com
+        value: https://nexarr-api-jdyi.onrender.com
       - key: STAFFARR_PUBLIC_API_URL
-        value: https://staffarr-api.onrender.com
+        value: https://staffarr-api-srdo.onrender.com
       - key: TRAINARR_PUBLIC_API_URL
-        value: https://trainarr-api.onrender.com
+        value: https://trainarr-api-ae2t.onrender.com
       - key: MAINTAINARR_PUBLIC_API_URL
-        value: https://maintainarr-api.onrender.com
+        value: https://maintainarr-api-82rg.onrender.com
       - key: ROUTARR_PUBLIC_API_URL
-        value: https://routarr-api.onrender.com
+        value: https://routarr-api-ut1u.onrender.com
       - key: SUPPLYARR_PUBLIC_API_URL
-        value: https://supplyarr-api.onrender.com
+        value: https://supplyarr-api-r963.onrender.com
       - key: COMPLIANCECORE_PUBLIC_API_URL
-        value: https://compliancecore-api.onrender.com
+        value: https://compliancecore-api-qfu7.onrender.com
 
 databases:
   - name: nexarr-db
@@ -144,7 +144,7 @@ services:
       - key: Cors__SuiteFrontendOrigin
         value: https://suite-frontend.onrender.com
       - key: Cors__CompanionFrontendOrigin
-        value: https://companion-frontend.onrender.com
+        value: https://companion-frontend-b2nm.onrender.com
       - key: Launch__Products__nexarr__BaseUrl
         value: https://suite-frontend.onrender.com
       - key: Launch__Products__staffarr__BaseUrl
@@ -172,7 +172,7 @@ services:
       - key: Launch__Products__compliancecore__LaunchPath
         value: /launch
       - key: Launch__Products__companion__BaseUrl
-        value: https://companion-frontend.onrender.com
+        value: https://companion-frontend-b2nm.onrender.com
       - key: Launch__Products__companion__LaunchPath
         value: /launch
 
@@ -478,7 +478,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_NEXARR_API_URL
-        value: https://nexarr-api.onrender.com
+        value: https://nexarr-api-jdyi.onrender.com
 
   - type: web
     name: staffarr-frontend
@@ -492,7 +492,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_STAFFARR_API_BASE
-        value: https://staffarr-api.onrender.com
+        value: https://staffarr-api-srdo.onrender.com
 
   - type: web
     name: trainarr-frontend
@@ -506,7 +506,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_TRAINARR_API_BASE
-        value: https://trainarr-api.onrender.com
+        value: https://trainarr-api-ae2t.onrender.com
 
   - type: web
     name: maintainarr-frontend
@@ -520,7 +520,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_MAINTAINARR_API_BASE
-        value: https://maintainarr-api.onrender.com
+        value: https://maintainarr-api-82rg.onrender.com
 
   - type: web
     name: routarr-frontend
@@ -534,7 +534,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_ROUTARR_API_BASE
-        value: https://routarr-api.onrender.com
+        value: https://routarr-api-ut1u.onrender.com
 
   - type: web
     name: supplyarr-frontend
@@ -548,7 +548,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_SUPPLYARR_API_BASE
-        value: https://supplyarr-api.onrender.com
+        value: https://supplyarr-api-r963.onrender.com
 
   - type: web
     name: compliancecore-frontend
@@ -562,7 +562,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_COMPLIANCECORE_API_BASE
-        value: https://compliancecore-api.onrender.com
+        value: https://compliancecore-api-qfu7.onrender.com
 
   - type: web
     name: companion-frontend
@@ -576,7 +576,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_NEXARR_API_BASE
-        value: https://nexarr-api.onrender.com
+        value: https://nexarr-api-jdyi.onrender.com
       - key: VITE_MAINTAINARR_FRONTEND_BASE
         value: https://maintainarr-frontend.onrender.com
       - key: VITE_ROUTARR_FRONTEND_BASE
