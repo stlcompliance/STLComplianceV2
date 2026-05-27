@@ -54,3 +54,29 @@ public sealed record UpdateOrgUnitRequest(
 
 public sealed record UpdateOrgUnitStatusRequest(
     string Status);
+
+public sealed record OrgUnitAssignmentResponse(
+    Guid AssignmentId,
+    Guid PersonId,
+    Guid SiteOrgUnitId,
+    Guid DepartmentOrgUnitId,
+    Guid TeamOrgUnitId,
+    Guid PositionOrgUnitId,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record CreateOrgUnitAssignmentRequest(
+    Guid SiteOrgUnitId,
+    Guid DepartmentOrgUnitId,
+    Guid TeamOrgUnitId,
+    Guid PositionOrgUnitId);
+
+public sealed record UpdateOrgUnitAssignmentRequest(
+    Guid SiteOrgUnitId,
+    Guid DepartmentOrgUnitId,
+    Guid TeamOrgUnitId,
+    Guid PositionOrgUnitId);
+
+public sealed record UpdateOrgUnitAssignmentStatusRequest(
+    string Status);

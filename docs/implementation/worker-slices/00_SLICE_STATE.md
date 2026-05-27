@@ -12,7 +12,8 @@
 | 8 | StaffArr shell + NexArr handoff redeem | M3 (partial) | Complete | `see latest Worker 8 commit` |
 | 9 | StaffArr people directory + person profile core | M4 (partial) | Complete | `pending` |
 | 10 | StaffArr org hierarchy management write flows | M4 (partial) | Complete | `pending` |
+| 11 | StaffArr org-unit assignment primitives (site/department/team/position linkage + assignment write flows) | M4 (partial) | Complete | `pending` |
 
-## Next slice (Worker 10)
+## Next slice (Worker 12)
 
-Recommended: **Worker 11** implement StaffArr org-unit assignment primitives (site/department/team/position linkage) using the new hierarchy write foundations.
+Recommended: implement StaffArr manager hierarchy and manager/subordinate views using the new org-unit assignment primitives.

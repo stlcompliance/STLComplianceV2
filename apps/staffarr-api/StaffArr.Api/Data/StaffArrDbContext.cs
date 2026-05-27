@@ -10,6 +10,8 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<OrgUnit> OrgUnits => Set<OrgUnit>();
 
+    public DbSet<OrgUnitAssignment> OrgUnitAssignments => Set<OrgUnitAssignment>();
+
     public DbSet<StaffArrAuditEvent> AuditEvents => Set<StaffArrAuditEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -43,6 +45,29 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasIndex(x => new { x.TenantId, x.ExternalUserId }).IsUnique();
             entity.HasOne(x => x.PrimaryOrgUnit).WithMany().HasForeignKey(x => x.PrimaryOrgUnitId);
             entity.HasOne(x => x.Manager).WithMany().HasForeignKey(x => x.ManagerPersonId);
+        });
+
+        modelBuilder.Entity<OrgUnitAssignment>(entity =>
+        {
+            entity.ToTable("staffarr_org_unit_assignments");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new
+            {
+                x.TenantId,
+                x.PersonId,
+                x.SiteOrgUnitId,
+                x.DepartmentOrgUnitId,
+                x.TeamOrgUnitId,
+                x.PositionOrgUnitId
+            }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.Status });
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+            entity.HasOne<OrgUnit>().WithMany().HasForeignKey(x => x.SiteOrgUnitId);
+            entity.HasOne<OrgUnit>().WithMany().HasForeignKey(x => x.DepartmentOrgUnitId);
+            entity.HasOne<OrgUnit>().WithMany().HasForeignKey(x => x.TeamOrgUnitId);
+            entity.HasOne<OrgUnit>().WithMany().HasForeignKey(x => x.PositionOrgUnitId);
         });
 
         modelBuilder.Entity<StaffArrAuditEvent>(entity =>

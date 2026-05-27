@@ -1,10 +1,14 @@
 import type {
+  CreateOrgUnitAssignmentRequest,
   CreateOrgUnitRequest,
   HandoffSessionResponse,
+  OrgUnitAssignmentResponse,
   OrgUnitResponse,
   StaffArrMeResponse,
   StaffPersonDetailResponse,
   StaffPersonSummaryResponse,
+  UpdateOrgUnitAssignmentRequest,
+  UpdateOrgUnitAssignmentStatusRequest,
   UpdateOrgUnitRequest,
   UpdateOrgUnitStatusRequest,
 } from './types'
@@ -108,4 +112,55 @@ export async function updateOrgUnitStatus(
     body: JSON.stringify(request),
   })
   return parseJsonResponse<OrgUnitResponse>(response, 'Failed to update org unit status')
+}
+
+export async function getPersonOrgAssignments(
+  accessToken: string,
+  personId: string,
+): Promise<OrgUnitAssignmentResponse[]> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/org-assignments`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<OrgUnitAssignmentResponse[]>(response, 'Failed to load org assignments')
+}
+
+export async function createPersonOrgAssignment(
+  accessToken: string,
+  personId: string,
+  request: CreateOrgUnitAssignmentRequest,
+): Promise<OrgUnitAssignmentResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/org-assignments`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<OrgUnitAssignmentResponse>(response, 'Failed to create org assignment')
+}
+
+export async function updatePersonOrgAssignment(
+  accessToken: string,
+  personId: string,
+  assignmentId: string,
+  request: UpdateOrgUnitAssignmentRequest,
+): Promise<OrgUnitAssignmentResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/org-assignments/${assignmentId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<OrgUnitAssignmentResponse>(response, 'Failed to update org assignment')
+}
+
+export async function updatePersonOrgAssignmentStatus(
+  accessToken: string,
+  personId: string,
+  assignmentId: string,
+  request: UpdateOrgUnitAssignmentStatusRequest,
+): Promise<OrgUnitAssignmentResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/org-assignments/${assignmentId}/status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<OrgUnitAssignmentResponse>(response, 'Failed to update org assignment status')
 }

@@ -20,6 +20,10 @@ using OrgUnitResponse = StaffArr.Api.Contracts.OrgUnitResponse;
 using CreateOrgUnitRequest = StaffArr.Api.Contracts.CreateOrgUnitRequest;
 using UpdateOrgUnitRequest = StaffArr.Api.Contracts.UpdateOrgUnitRequest;
 using UpdateOrgUnitStatusRequest = StaffArr.Api.Contracts.UpdateOrgUnitStatusRequest;
+using OrgUnitAssignmentResponse = StaffArr.Api.Contracts.OrgUnitAssignmentResponse;
+using CreateOrgUnitAssignmentRequest = StaffArr.Api.Contracts.CreateOrgUnitAssignmentRequest;
+using UpdateOrgUnitAssignmentRequest = StaffArr.Api.Contracts.UpdateOrgUnitAssignmentRequest;
+using UpdateOrgUnitAssignmentStatusRequest = StaffArr.Api.Contracts.UpdateOrgUnitAssignmentStatusRequest;
 using StaffArrTokenService = StaffArr.Api.Services.StaffArrTokenService;
 using StaffArrDbContext = StaffArr.Api.Data.StaffArrDbContext;
 using StaffPerson = StaffArr.Api.Entities.StaffPerson;
@@ -318,6 +322,109 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         deactivateParentRequest.Content = JsonContent.Create(new UpdateOrgUnitStatusRequest("inactive"));
         var deactivateParentResponse = await _staffarrClient.SendAsync(deactivateParentRequest);
         Assert.Equal(HttpStatusCode.Conflict, deactivateParentResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Org_assignment_write_happy_path_update_and_status_flow()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Assignment User", "assignment.user@example.com");
+        var siteId = await SeedOrgUnitAsync("site", "East Site", null, "active");
+        var deptId = await SeedOrgUnitAsync("department", "Operations", siteId, "active");
+        var teamId = await SeedOrgUnitAsync("team", "Field Team", deptId, "active");
+        var positionId = await SeedOrgUnitAsync("position", "Operator", teamId, "active");
+        var position2Id = await SeedOrgUnitAsync("position", "Lead Operator", teamId, "active");
+
+        var createRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/org-assignments", token);
+        createRequest.Content = JsonContent.Create(new CreateOrgUnitAssignmentRequest(siteId, deptId, teamId, positionId));
+        var createResponse = await _staffarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<OrgUnitAssignmentResponse>())!;
+
+        var listResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/org-assignments", token));
+        listResponse.EnsureSuccessStatusCode();
+        var listed = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<OrgUnitAssignmentResponse>>())!;
+        Assert.Single(listed);
+
+        var updateRequest = Authorized(HttpMethod.Put, $"/api/people/{personId}/org-assignments/{created.AssignmentId}", token);
+        updateRequest.Content = JsonContent.Create(new UpdateOrgUnitAssignmentRequest(siteId, deptId, teamId, position2Id));
+        var updateResponse = await _staffarrClient.SendAsync(updateRequest);
+        updateResponse.EnsureSuccessStatusCode();
+        var updated = (await updateResponse.Content.ReadFromJsonAsync<OrgUnitAssignmentResponse>())!;
+        Assert.Equal(position2Id, updated.PositionOrgUnitId);
+
+        var statusRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/people/{personId}/org-assignments/{created.AssignmentId}/status",
+            token);
+        statusRequest.Content = JsonContent.Create(new UpdateOrgUnitAssignmentStatusRequest("inactive"));
+        var statusResponse = await _staffarrClient.SendAsync(statusRequest);
+        statusResponse.EnsureSuccessStatusCode();
+        var statusPayload = (await statusResponse.Content.ReadFromJsonAsync<OrgUnitAssignmentResponse>())!;
+        Assert.Equal("inactive", statusPayload.Status);
+
+        using var scope = _staffarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+        var auditEvents = await db.AuditEvents.CountAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId && x.Action.StartsWith("org_assignment."));
+        Assert.True(auditEvents >= 3);
+    }
+
+    [Fact]
+    public async Task Org_assignment_write_denies_non_writer_role()
+    {
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Denied Assignment", "assignment.denied@example.com");
+        var siteId = await SeedOrgUnitAsync("site", "Denied Site", null, "active");
+        var deptId = await SeedOrgUnitAsync("department", "Denied Department", siteId, "active");
+        var teamId = await SeedOrgUnitAsync("team", "Denied Team", deptId, "active");
+        var positionId = await SeedOrgUnitAsync("position", "Denied Position", teamId, "active");
+
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
+        var request = Authorized(HttpMethod.Post, $"/api/people/{personId}/org-assignments", token);
+        request.Content = JsonContent.Create(new CreateOrgUnitAssignmentRequest(siteId, deptId, teamId, positionId));
+        var response = await _staffarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Org_assignment_write_rejects_invalid_linkage_duplicate_and_inactive_refs()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Invalid Assignment", "assignment.invalid@example.com");
+
+        var siteAId = await SeedOrgUnitAsync("site", "Site A", null, "active");
+        var deptAId = await SeedOrgUnitAsync("department", "Dept A", siteAId, "active");
+        var teamAId = await SeedOrgUnitAsync("team", "Team A", deptAId, "active");
+        var positionAId = await SeedOrgUnitAsync("position", "Position A", teamAId, "active");
+
+        var siteBId = await SeedOrgUnitAsync("site", "Site B", null, "active");
+        var deptBId = await SeedOrgUnitAsync("department", "Dept B", siteBId, "active");
+        var inactiveTeamBId = await SeedOrgUnitAsync("team", "Team B", deptBId, "inactive");
+        var positionBId = await SeedOrgUnitAsync("position", "Position B", inactiveTeamBId, "active");
+
+        var invalidLinkRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/org-assignments", token);
+        invalidLinkRequest.Content = JsonContent.Create(new CreateOrgUnitAssignmentRequest(siteAId, deptBId, inactiveTeamBId, positionBId));
+        var invalidLinkResponse = await _staffarrClient.SendAsync(invalidLinkRequest);
+        Assert.Equal(HttpStatusCode.Conflict, invalidLinkResponse.StatusCode);
+
+        var inactiveRefRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/org-assignments", token);
+        inactiveRefRequest.Content = JsonContent.Create(new CreateOrgUnitAssignmentRequest(siteBId, deptBId, inactiveTeamBId, positionBId));
+        var inactiveRefResponse = await _staffarrClient.SendAsync(inactiveRefRequest);
+        Assert.Equal(HttpStatusCode.Conflict, inactiveRefResponse.StatusCode);
+
+        var createRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/org-assignments", token);
+        createRequest.Content = JsonContent.Create(new CreateOrgUnitAssignmentRequest(siteAId, deptAId, teamAId, positionAId));
+        var createResponse = await _staffarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+
+        var duplicateRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/org-assignments", token);
+        duplicateRequest.Content = JsonContent.Create(new CreateOrgUnitAssignmentRequest(siteAId, deptAId, teamAId, positionAId));
+        var duplicateResponse = await _staffarrClient.SendAsync(duplicateRequest);
+        Assert.Equal(HttpStatusCode.Conflict, duplicateResponse.StatusCode);
     }
 
     private async Task<string> CreateHandoffAsync()

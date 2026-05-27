@@ -1,17 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import {
+  createPersonOrgAssignment,
   createOrgUnit,
   getMe,
   getOrgUnits,
+  getPersonOrgAssignments,
   getPeople,
   getPerson,
   StaffArrApiError,
+  updatePersonOrgAssignment,
+  updatePersonOrgAssignmentStatus,
   updateOrgUnit,
   updateOrgUnitStatus,
 } from '../api/client'
 import { clearSession, loadSession } from '../auth/sessionStorage'
 import { canManageOrgHierarchy, OrgHierarchyManager } from '../components/OrgHierarchyManager'
+import { PersonOrgAssignmentsManager } from '../components/PersonOrgAssignmentsManager'
 
 export function HomePage() {
   const [searchParams] = useSearchParams()
@@ -38,11 +44,24 @@ export function HomePage() {
     queryFn: () => getOrgUnits(session!.accessToken),
     enabled: Boolean(session?.accessToken),
   })
-  const selectedPersonId = peopleQuery.data?.[0]?.personId ?? meQuery.data?.personId
+  const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
+  const fallbackPersonId = peopleQuery.data?.[0]?.personId ?? meQuery.data?.personId ?? null
+  useEffect(() => {
+    if (!selectedPersonId && fallbackPersonId) {
+      setSelectedPersonId(fallbackPersonId)
+    }
+  }, [fallbackPersonId, selectedPersonId])
+
+  const effectivePersonId = selectedPersonId ?? fallbackPersonId
   const personProfileQuery = useQuery({
-    queryKey: ['staffarr-person', session?.accessToken, selectedPersonId],
-    queryFn: () => getPerson(session!.accessToken, selectedPersonId!),
-    enabled: Boolean(session?.accessToken && selectedPersonId),
+    queryKey: ['staffarr-person', session?.accessToken, effectivePersonId],
+    queryFn: () => getPerson(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const assignmentQuery = useQuery({
+    queryKey: ['staffarr-org-assignments', session?.accessToken, effectivePersonId],
+    queryFn: () => getPersonOrgAssignments(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
   })
 
   const createOrgUnitMutation = useMutation({
@@ -70,6 +89,53 @@ export function HomePage() {
       updateOrgUnitStatus(session!.accessToken, payload.orgUnitId, { status: payload.status }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['staffarr-org-units', session?.accessToken] })
+    },
+  })
+
+  const createAssignmentMutation = useMutation({
+    mutationFn: (payload: {
+      personId: string
+      siteOrgUnitId: string
+      departmentOrgUnitId: string
+      teamOrgUnitId: string
+      positionOrgUnitId: string
+    }) =>
+      createPersonOrgAssignment(session!.accessToken, payload.personId, {
+        siteOrgUnitId: payload.siteOrgUnitId,
+        departmentOrgUnitId: payload.departmentOrgUnitId,
+        teamOrgUnitId: payload.teamOrgUnitId,
+        positionOrgUnitId: payload.positionOrgUnitId,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['staffarr-org-assignments', session?.accessToken] })
+    },
+  })
+
+  const updateAssignmentMutation = useMutation({
+    mutationFn: (payload: {
+      personId: string
+      assignmentId: string
+      siteOrgUnitId: string
+      departmentOrgUnitId: string
+      teamOrgUnitId: string
+      positionOrgUnitId: string
+    }) =>
+      updatePersonOrgAssignment(session!.accessToken, payload.personId, payload.assignmentId, {
+        siteOrgUnitId: payload.siteOrgUnitId,
+        departmentOrgUnitId: payload.departmentOrgUnitId,
+        teamOrgUnitId: payload.teamOrgUnitId,
+        positionOrgUnitId: payload.positionOrgUnitId,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['staffarr-org-assignments', session?.accessToken] })
+    },
+  })
+
+  const updateAssignmentStatusMutation = useMutation({
+    mutationFn: (payload: { personId: string; assignmentId: string; status: 'active' | 'inactive' }) =>
+      updatePersonOrgAssignmentStatus(session!.accessToken, payload.personId, payload.assignmentId, { status: payload.status }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['staffarr-org-assignments', session?.accessToken] })
     },
   })
 
@@ -117,8 +183,8 @@ export function HomePage() {
     )
   }
 
-  if (peopleQuery.isError || orgUnitsQuery.isError) {
-    const directoryError = peopleQuery.error ?? orgUnitsQuery.error
+  if (peopleQuery.isError || orgUnitsQuery.isError || assignmentQuery.isError) {
+    const directoryError = peopleQuery.error ?? orgUnitsQuery.error ?? assignmentQuery.error
     if (directoryError instanceof StaffArrApiError && (directoryError.status === 401 || directoryError.status === 403)) {
       clearSession()
     }
@@ -138,9 +204,13 @@ export function HomePage() {
   const people = peopleQuery.data ?? []
   const orgUnits = orgUnitsQuery.data ?? []
   const profile = personProfileQuery.data
+  const selectedPerson = people.find((person) => person.personId === effectivePersonId) ?? null
+  const assignments = assignmentQuery.data ?? []
   const canManageOrgUnits = canManageOrgHierarchy(me.tenantRoleKey, me.isPlatformAdmin)
   const orgMutationError =
     createOrgUnitMutation.error ?? updateOrgUnitMutation.error ?? updateOrgUnitStatusMutation.error ?? null
+  const assignmentMutationError =
+    createAssignmentMutation.error ?? updateAssignmentMutation.error ?? updateAssignmentStatusMutation.error ?? null
 
   return (
     <main className="mx-auto max-w-6xl p-8">
@@ -187,12 +257,16 @@ export function HomePage() {
             <ul className="mt-4 divide-y divide-slate-700">
               {people.map((person) => (
                 <li key={person.personId} className="flex items-center justify-between py-3">
-                  <div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPersonId(person.personId)}
+                    className="text-left"
+                  >
                     <p className="text-sm text-white">{person.displayName}</p>
                     <p className="text-xs text-slate-400">
                       {person.jobTitle ?? 'No title'} · {person.primaryEmail}
                     </p>
-                  </div>
+                  </button>
                   <span className="text-xs uppercase tracking-wide text-slate-500">{person.employmentStatus}</span>
                 </li>
               ))}
@@ -236,6 +310,41 @@ export function HomePage() {
           </dl>
         )}
       </section>
+
+      {selectedPerson ? (
+        <PersonOrgAssignmentsManager
+          personId={selectedPerson.personId}
+          personDisplayName={selectedPerson.displayName}
+          orgUnits={orgUnits}
+          assignments={assignments}
+          canManage={canManageOrgUnits}
+          isSubmitting={
+            createAssignmentMutation.isPending || updateAssignmentMutation.isPending || updateAssignmentStatusMutation.isPending
+          }
+          errorMessage={
+            assignmentMutationError instanceof StaffArrApiError
+              ? assignmentMutationError.body || assignmentMutationError.message
+              : null
+          }
+          onCreate={async (payload) => {
+            await createAssignmentMutation.mutateAsync({ personId: selectedPerson.personId, ...payload })
+          }}
+          onUpdate={async (assignmentId, payload) => {
+            await updateAssignmentMutation.mutateAsync({
+              personId: selectedPerson.personId,
+              assignmentId,
+              ...payload,
+            })
+          }}
+          onStatusChange={async (assignmentId, status) => {
+            await updateAssignmentStatusMutation.mutateAsync({
+              personId: selectedPerson.personId,
+              assignmentId,
+              status,
+            })
+          }}
+        />
+      ) : null}
 
       <OrgHierarchyManager
         orgUnits={orgUnits}

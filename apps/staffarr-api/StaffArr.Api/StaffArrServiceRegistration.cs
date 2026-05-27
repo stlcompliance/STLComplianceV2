@@ -23,6 +23,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<PersonProvisioningService>();
         builder.Services.AddScoped<PeopleService>();
         builder.Services.AddScoped<OrgUnitService>();
+        builder.Services.AddScoped<OrgUnitAssignmentService>();
         builder.Services.AddScoped<IStaffArrAuditService, StaffArrAuditService>();
 
         var frontendOrigin = builder.Configuration["Cors:StaffArrFrontendOrigin"] ?? "http://localhost:5175";

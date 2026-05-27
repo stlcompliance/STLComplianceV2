@@ -79,3 +79,33 @@ export interface UpdateOrgUnitRequest {
 export interface UpdateOrgUnitStatusRequest {
   status: 'active' | 'inactive'
 }
+
+export interface OrgUnitAssignmentResponse {
+  assignmentId: string
+  personId: string
+  siteOrgUnitId: string
+  departmentOrgUnitId: string
+  teamOrgUnitId: string
+  positionOrgUnitId: string
+  status: 'active' | 'inactive'
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateOrgUnitAssignmentRequest {
+  siteOrgUnitId: string
+  departmentOrgUnitId: string
+  teamOrgUnitId: string
+  positionOrgUnitId: string
+}
+
+export interface UpdateOrgUnitAssignmentRequest {
+  siteOrgUnitId: string
+  departmentOrgUnitId: string
+  teamOrgUnitId: string
+  positionOrgUnitId: string
+}
+
+export interface UpdateOrgUnitAssignmentStatusRequest {
+  status: 'active' | 'inactive'
+}
