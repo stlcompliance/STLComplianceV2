@@ -26,7 +26,7 @@ public sealed class LoadTestLiveTests
 
     [SkippableFact]
 
-    public async Task Api_health_liveness_k6_scenario_meets_engineering_slo()
+    public async Task Api_health_liveness_k6_scenario_meets_active_slo()
 
     {
 
@@ -88,7 +88,7 @@ public sealed class LoadTestLiveTests
 
     [SkippableFact]
 
-    public async Task Nexarr_auth_me_k6_scenario_meets_engineering_slo()
+    public async Task Nexarr_auth_me_k6_scenario_meets_active_slo()
 
     {
 

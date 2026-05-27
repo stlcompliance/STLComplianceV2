@@ -1,7 +1,7 @@
 namespace STLCompliance.Shared.Operations.LoadTesting;
 
 /// <summary>
-/// Evaluates k6 summary exports against engineering-default or custom SLO targets.
+/// Evaluates k6 summary exports against product-owner or engineering SLO targets.
 /// </summary>
 public static class StlLoadTestSloEvaluator
 {

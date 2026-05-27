@@ -1,6 +1,6 @@
 /**
  * M13 load test — all seven product API /health liveness probes.
- * Engineering-default thresholds mirror StlLoadTestSloCatalog.ApiHealthLivenessKey.
+ * Product-owner thresholds mirror StlLoadTestSloCatalog.ApiHealthLivenessKey.
  */
 import http from 'k6/http';
 import { check, sleep } from 'k6';
@@ -24,8 +24,8 @@ export const options = {
     },
   },
   thresholds: {
-    http_req_failed: ['rate<0.01'],
-    http_req_duration: ['p(95)<500'],
+    http_req_failed: ['rate<0.005'],
+    http_req_duration: ['p(95)<400'],
     http_reqs: ['count>=50'],
   },
 };

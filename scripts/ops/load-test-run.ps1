@@ -1,5 +1,13 @@
 param(
-    [ValidateSet("api-health-liveness", "api-health-ready", "nexarr-platform-health", "nexarr-auth-me", "product-auth-handoff-me", "all")]
+    [ValidateSet(
+        "api-health-liveness",
+        "api-health-ready",
+        "nexarr-platform-health",
+        "nexarr-auth-me",
+        "product-auth-handoff-me",
+        "trainarr-qualification-check",
+        "routarr-dispatch-workflow-gate",
+        "all")]
     [string]$Scenario = "all",
     [int]$Vus = 5,
     [string]$Duration = "30s",
@@ -81,7 +89,9 @@ switch ($Scenario) {
             "api-health-ready",
             "nexarr-platform-health",
             "nexarr-auth-me",
-            "product-auth-handoff-me"
+            "product-auth-handoff-me",
+            "trainarr-qualification-check",
+            "routarr-dispatch-workflow-gate"
         )
     }
     default {

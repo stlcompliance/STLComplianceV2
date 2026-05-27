@@ -10,6 +10,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 K6_DIR="$REPO_ROOT/tests/load-k6"
 
+ALL_SCENARIOS=(
+  api-health-liveness
+  api-health-ready
+  nexarr-platform-health
+  nexarr-auth-me
+  product-auth-handoff-me
+  trainarr-qualification-check
+  routarr-dispatch-workflow-gate
+)
+
 if ! command -v k6 >/dev/null 2>&1; then
   echo "k6 is not on PATH. Install from https://k6.io/docs/get-started/installation/" >&2
   exit 1
@@ -43,22 +53,16 @@ run_scenario() {
 
 dotnet build "$REPO_ROOT/tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj" -c Release -v q
 
-case "$SCENARIO" in
-  all)
-    run_scenario api-health-liveness
-    run_scenario api-health-ready
-    run_scenario nexarr-platform-health
-    run_scenario nexarr-auth-me
-    run_scenario product-auth-handoff-me
-    ;;
-  api-health-liveness|api-health-ready|nexarr-platform-health|nexarr-auth-me|product-auth-handoff-me)
-    run_scenario "$SCENARIO"
-    ;;
-  *)
-    echo "Unknown scenario: $SCENARIO" >&2
-    exit 1
-    ;;
-esac
+if [[ "$SCENARIO" == "all" ]]; then
+  for scenario_key in "${ALL_SCENARIOS[@]}"; do
+    run_scenario "$scenario_key"
+  done
+elif [[ " ${ALL_SCENARIOS[*]} " == *" $SCENARIO "* ]]; then
+  run_scenario "$SCENARIO"
+else
+  echo "Unknown scenario: $SCENARIO" >&2
+  exit 1
+fi
 
 echo ""
 echo "Load test harness completed. Summaries in $OUTPUT_DIRECTORY"

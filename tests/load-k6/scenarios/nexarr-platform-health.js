@@ -1,6 +1,6 @@
 /**
  * M13 load test — NexArr platform health aggregation endpoint.
- * Engineering-default thresholds mirror StlLoadTestSloCatalog.NexArrPlatformHealthKey.
+ * Product-owner thresholds mirror StlLoadTestSloCatalog.NexArrPlatformHealthKey.
  */
 import http from 'k6/http';
 import { check, sleep } from 'k6';
@@ -16,8 +16,8 @@ export const options = {
     },
   },
   thresholds: {
-    http_req_failed: ['rate<0.05'],
-    http_req_duration: ['p(95)<5000'],
+    http_req_failed: ['rate<0.03'],
+    http_req_duration: ['p(95)<4000'],
     http_reqs: ['count>=20'],
   },
 };

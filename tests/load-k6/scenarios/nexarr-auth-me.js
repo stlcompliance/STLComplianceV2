@@ -1,6 +1,6 @@
 /**
  * M13 load test — NexArr authenticated session bootstrap.
- * Engineering-default thresholds mirror StlLoadTestSloCatalog.NexArrAuthMeKey.
+ * Product-owner thresholds mirror StlLoadTestSloCatalog.NexArrAuthMeKey.
  */
 import { sleep } from 'k6';
 import { apiEndpoints, loadScenarioOptions } from '../lib/stl-config.js';
@@ -13,8 +13,8 @@ export const options = {
     nexarr_auth_me: loadScenarioOptions(3, '30s'),
   },
   thresholds: {
-    http_req_failed: ['rate<0.02'],
-    http_req_duration: ['p(95)<1500'],
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<1200'],
     http_reqs: ['count>=30'],
   },
 };

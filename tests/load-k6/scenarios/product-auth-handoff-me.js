@@ -1,6 +1,6 @@
 /**
  * M13 load test — cross-product handoff bootstrap (login → handoff → redeem → /api/me).
- * Engineering-default thresholds mirror StlLoadTestSloCatalog.ProductAuthHandoffMeKey.
+ * Product-owner thresholds mirror StlLoadTestSloCatalog.ProductAuthHandoffMeKey.
  */
 import { sleep } from 'k6';
 import {
@@ -23,8 +23,8 @@ export const options = {
     product_auth_handoff_me: loadScenarioOptions(2, '30s'),
   },
   thresholds: {
-    http_req_failed: ['rate<0.05'],
-    http_req_duration: ['p(95)<8000'],
+    http_req_failed: ['rate<0.03'],
+    http_req_duration: ['p(95)<6000'],
     http_reqs: ['count>=12'],
   },
 };

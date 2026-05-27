@@ -25,6 +25,15 @@ export function loadDemoCredentials() {
   };
 }
 
+export function loadJourneyDefaults() {
+  return {
+    subjectPersonId:
+      __ENV.STL_LOAD_SUBJECT_PERSON_ID || '22222222-2222-2222-2222-222222222201',
+    qualificationKey: __ENV.STL_LOAD_QUALIFICATION_KEY || 'hazmat_endorsement',
+    rulePackKey: __ENV.STL_LOAD_RULE_PACK_KEY || 'driver_qualification',
+  };
+}
+
 export function loadScenarioOptions(defaultVus, defaultDuration) {
   return {
     executor: 'constant-vus',

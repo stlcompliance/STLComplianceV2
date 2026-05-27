@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "status": "product-owner-v1",
+  "document": "docs/operations/PRODUCT_OWNER_LOAD_SLO_V1.md",
+  "profileKey": "product-owner",
+  "notes": "Canonical C# definitions live in StlLoadTestSloCatalog.ProductOwnerTargets.",
+  "scenarios": [
+    {
+      "scenarioKey": "api-health-liveness",
+      "p95LatencyMsMax": 400,
+      "errorRateMax": 0.005,
+      "minRequestCount": 50
+    },
+    {
+      "scenarioKey": "api-health-ready",
+      "p95LatencyMsMax": 1500,
+      "errorRateMax": 0.01,
+      "minRequestCount": 50
+    },
+    {
+      "scenarioKey": "nexarr-platform-health",
+      "p95LatencyMsMax": 4000,
+      "errorRateMax": 0.03,
+      "minRequestCount": 20
+    },
+    {
+      "scenarioKey": "nexarr-auth-me",
+      "p95LatencyMsMax": 1200,
+      "errorRateMax": 0.01,
+      "minRequestCount": 30
+    },
+    {
+      "scenarioKey": "product-auth-handoff-me",
+      "p95LatencyMsMax": 6000,
+      "errorRateMax": 0.03,
+      "minRequestCount": 12
+    },
+    {
+      "scenarioKey": "trainarr-qualification-check",
+      "p95LatencyMsMax": 10000,
+      "errorRateMax": 0.04,
+      "minRequestCount": 10
+    },
+    {
+      "scenarioKey": "routarr-dispatch-workflow-gate",
+      "p95LatencyMsMax": 12000,
+      "errorRateMax": 0.04,
+      "minRequestCount": 8
+    }
+  ]
+}

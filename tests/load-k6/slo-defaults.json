@@ -1,7 +1,7 @@
 {
   "version": 1,
   "status": "engineering-defaults",
-  "notes": "Replace with product-owner SLO targets when published. Canonical definitions live in StlLoadTestSloCatalog.",
+  "notes": "Development fallback profile. Active production baseline is slo-product-owner.json (STL_LOAD_SLO_PROFILE=product-owner).",
   "scenarios": [
     {
       "scenarioKey": "api-health-liveness",
@@ -32,6 +32,18 @@
       "p95LatencyMsMax": 8000,
       "errorRateMax": 0.05,
       "minRequestCount": 12
+    },
+    {
+      "scenarioKey": "trainarr-qualification-check",
+      "p95LatencyMsMax": 12000,
+      "errorRateMax": 0.05,
+      "minRequestCount": 8
+    },
+    {
+      "scenarioKey": "routarr-dispatch-workflow-gate",
+      "p95LatencyMsMax": 15000,
+      "errorRateMax": 0.05,
+      "minRequestCount": 6
     }
   ]
 }
