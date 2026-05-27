@@ -171,13 +171,19 @@ public static class PlatformSeeder
         "http://localhost:5175"
     ];
 
-    public static async Task EnsureDevSuiteShellOriginsAsync(
+    public static Task EnsureDevSuiteShellOriginsAsync(
         NexArrDbContext db,
+        CancellationToken cancellationToken = default) =>
+        EnsureSuiteShellOriginsAsync(db, SuiteShellOrigins, cancellationToken);
+
+    public static async Task EnsureSuiteShellOriginsAsync(
+        NexArrDbContext db,
+        IEnumerable<string> origins,
         CancellationToken cancellationToken = default)
     {
         foreach (var product in Products)
         {
-            foreach (var origin in SuiteShellOrigins)
+            foreach (var origin in origins.Where(static value => !string.IsNullOrWhiteSpace(value)))
             {
                 var exists = await db.CallbackAllowlist.AnyAsync(
                     e => e.ProductKey == product.Key

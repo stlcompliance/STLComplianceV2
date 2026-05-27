@@ -56,6 +56,23 @@ public static class NexArrServiceRegistration
         });
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
         builder.Services.Configure<StlLaunchOptions>(builder.Configuration.GetSection(StlLaunchOptions.SectionName));
+
+        var suiteFrontendOrigin = builder.Configuration["Cors:SuiteFrontendOrigin"] ?? "http://localhost:5174";
+        var companionFrontendOrigin = builder.Configuration["Cors:CompanionFrontendOrigin"] ?? "http://localhost:5181";
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("NexArrBrowserClients", policy =>
+            {
+                policy.WithOrigins(suiteFrontendOrigin, companionFrontendOrigin)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
+    }
+
+    public static void ConfigurePipeline(WebApplication app)
+    {
+        app.UseCors("NexArrBrowserClients");
     }
 
     public static async Task InitializeAsync(WebApplication app)
@@ -78,6 +95,17 @@ public static class NexArrServiceRegistration
         else if (app.Environment.IsProduction())
         {
             await db.Database.MigrateAsync();
+
+            var launchOptions = scope.ServiceProvider.GetService<IOptions<StlLaunchOptions>>()?.Value;
+            await PlatformSeeder.SeedAsync(db, passwordHasher, launchOptions);
+
+            var productionOrigins = new[]
+            {
+                app.Configuration["Cors:SuiteFrontendOrigin"],
+                app.Configuration["Cors:CompanionFrontendOrigin"],
+            }.Where(static origin => !string.IsNullOrWhiteSpace(origin)).Select(static origin => origin!);
+            await PlatformSeeder.EnsureSuiteShellOriginsAsync(db, productionOrigins);
+
             var bootstrap = scope.ServiceProvider.GetRequiredService<IntegrationTokenBootstrapService>();
             await bootstrap.EnsureProvisionedAsync();
         }

@@ -7,9 +7,9 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
     new ProductDescriptor("maintainarr", "MaintainArr", 5104),
     args,
     MaintainArrServiceRegistration.ConfigureServices,
+    MaintainArrServiceRegistration.ConfigurePipeline,
     async app =>
     {
-        MaintainArrServiceRegistration.ConfigurePipeline(app);
         app.MapMaintainArrAuthEndpoints();
         app.MapMaintainArrAssetClassEndpoints();
         app.MapMaintainArrAssetTypeEndpoints();

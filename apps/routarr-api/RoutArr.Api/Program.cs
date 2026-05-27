@@ -7,9 +7,9 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
     new ProductDescriptor("routarr", "RoutArr", 5105),
     args,
     RoutArrServiceRegistration.ConfigureServices,
+    RoutArrServiceRegistration.ConfigurePipeline,
     async app =>
     {
-        RoutArrServiceRegistration.ConfigurePipeline(app);
         app.MapRoutArrAuthEndpoints();
         app.MapRoutArrTripEndpoints();
         app.MapRoutArrRouteEndpoints();

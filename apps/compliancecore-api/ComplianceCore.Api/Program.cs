@@ -9,10 +9,9 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
     new ProductDescriptor("compliancecore", "Compliance Core", 5107),
     args,
     ComplianceCoreServiceRegistration.ConfigureServices,
+    ComplianceCoreServiceRegistration.ConfigurePipeline,
     async app =>
     {
-        ComplianceCoreServiceRegistration.ConfigurePipeline(app);
-
         app.MapComplianceCoreAuthEndpoints();
         app.MapComplianceCoreVocabularyEndpoints();
         app.MapComplianceCoreComplianceKeyEndpoints();

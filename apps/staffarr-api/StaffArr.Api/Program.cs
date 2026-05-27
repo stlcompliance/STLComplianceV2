@@ -7,9 +7,9 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
     new ProductDescriptor("staffarr", "StaffArr", 5102),
     args,
     StaffArrServiceRegistration.ConfigureServices,
+    StaffArrServiceRegistration.ConfigurePipeline,
     async app =>
     {
-        StaffArrServiceRegistration.ConfigurePipeline(app);
         app.MapStaffArrAuthEndpoints();
         app.MapStaffArrPeopleEndpoints();
         app.MapStaffArrManagerHierarchyEndpoints();

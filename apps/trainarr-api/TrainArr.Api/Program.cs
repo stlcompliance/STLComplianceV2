@@ -16,11 +16,11 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
 
     TrainArrServiceRegistration.ConfigureServices,
 
+    TrainArrServiceRegistration.ConfigurePipeline,
+
     async app =>
 
     {
-
-        TrainArrServiceRegistration.ConfigurePipeline(app);
 
         app.MapTrainArrAuthEndpoints();
 

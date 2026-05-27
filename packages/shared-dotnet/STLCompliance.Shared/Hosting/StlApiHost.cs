@@ -22,6 +22,7 @@ public static class StlApiHost
         ProductDescriptor product,
         string[] args,
         Action<WebApplicationBuilder>? configure = null,
+        Action<WebApplication>? configurePipeline = null,
         Func<WebApplication, Task>? mapEndpoints = null)
         where TContext : PlatformDbContext
     {
@@ -68,6 +69,7 @@ public static class StlApiHost
             var app = builder.Build();
 
             app.UseStlCorrelationId();
+            configurePipeline?.Invoke(app);
             app.UseMiddleware<ApiExceptionMiddleware>();
             if (jwtEnabled)
             {

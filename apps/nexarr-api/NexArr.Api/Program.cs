@@ -8,6 +8,7 @@ await StlApiHost.RunAsync<NexArrDbContext>(
     new ProductDescriptor("nexarr", "NexArr", 5101),
     args,
     NexArrServiceRegistration.ConfigureServices,
+    NexArrServiceRegistration.ConfigurePipeline,
     async app =>
     {
         app.MapAuthEndpoints();

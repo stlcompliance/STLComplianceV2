@@ -7,9 +7,9 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
     new ProductDescriptor("supplyarr", "SupplyArr", 5106),
     args,
     SupplyArrServiceRegistration.ConfigureServices,
+    SupplyArrServiceRegistration.ConfigurePipeline,
     async app =>
     {
-        SupplyArrServiceRegistration.ConfigurePipeline(app);
         app.MapSupplyArrAuthEndpoints();
         app.MapSupplyArrPartyRegistryEndpoints();
         app.MapSupplyArrPartCatalogEndpoints();

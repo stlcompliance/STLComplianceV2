@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { Navigate, useLocation } from 'react-router-dom'
 import { z } from 'zod'
 import { useAuth } from '../auth/AuthProvider'
+import { getNexarrApiBaseUrl } from '../api/nexarrBaseUrl'
 import { NexarrApiError } from '../api/types'
 
 const loginSchema = z.object({
@@ -48,7 +49,8 @@ export function LoginPage() {
       if (err instanceof NexarrApiError) {
         setError(err.message)
       } else {
-        setError('Sign-in failed. Check NexArr is running on port 5101.')
+        const apiBase = getNexarrApiBaseUrl() || '(same origin — dev proxy only)'
+        setError(`Sign-in failed. Could not reach NexArr at ${apiBase}.`)
       }
     }
   })

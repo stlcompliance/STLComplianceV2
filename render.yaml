@@ -141,6 +141,10 @@ services:
           name: redis
           type: keyvalue
           property: connectionString
+      - key: Cors__SuiteFrontendOrigin
+        value: https://suite-frontend.onrender.com
+      - key: Cors__CompanionFrontendOrigin
+        value: https://companion-frontend.onrender.com
       - key: Launch__Products__nexarr__BaseUrl
         value: https://suite-frontend.onrender.com
       - key: Launch__Products__staffarr__BaseUrl
