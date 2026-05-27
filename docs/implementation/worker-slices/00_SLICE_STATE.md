@@ -181,6 +181,8 @@
 
 | 102 | M13 seven-database DR nightly drill (`DrRestoreDrillLiveRunner`, `[Theory]` live restore for all `StlProductDatabaseCatalog` databases, nightly e2e job label, docs) | M13 (partial) | Complete | `15e76e7` |
 
-## Next slice (Worker 103)
+| 103 | M13 Render staging snapshot DR drill (`StlRenderStagingDrillCatalog`, staging URL env conventions, `render-staging-snapshot-fetch` + `render-staging-dr-restore-drill` scripts, `RenderStagingDrillLiveRunner`, `dr-staging-render.yml` workflow_dispatch, docs) | M13 (partial) | Complete | `pending` |
 
-Recommended: **Product-owner SLO adoption** (blocked on PO SLO document) or **authenticated k6 flows** once SLOs exist. Optional: **staging Render snapshot drill** using `scripts/ops/dr-restore-drill.*` against managed Postgres backups.
+## Next slice (Worker 104)
+
+Recommended: **Product-owner SLO adoption** (blocked on PO SLO document) or **authenticated k6 flows** once SLOs exist.

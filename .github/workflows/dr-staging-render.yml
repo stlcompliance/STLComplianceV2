@@ -1,0 +1,48 @@
+name: DR Staging Render
+
+on:
+  workflow_dispatch:
+    inputs:
+      database:
+        description: "Product database (empty = all seven)"
+        required: false
+        default: ""
+      skip_snapshot_fetch:
+        description: "Use existing backups in RENDER_STAGING_SNAPSHOT_DIRECTORY"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  staging-render-drill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Run Render staging DR restore drill
+        env:
+          RENDER_STAGING_NEXARR_DATABASE_URL: ${{ secrets.RENDER_STAGING_NEXARR_DATABASE_URL }}
+          RENDER_STAGING_STAFFARR_DATABASE_URL: ${{ secrets.RENDER_STAGING_STAFFARR_DATABASE_URL }}
+          RENDER_STAGING_TRAINARR_DATABASE_URL: ${{ secrets.RENDER_STAGING_TRAINARR_DATABASE_URL }}
+          RENDER_STAGING_MAINTAINARR_DATABASE_URL: ${{ secrets.RENDER_STAGING_MAINTAINARR_DATABASE_URL }}
+          RENDER_STAGING_ROUTARR_DATABASE_URL: ${{ secrets.RENDER_STAGING_ROUTARR_DATABASE_URL }}
+          RENDER_STAGING_SUPPLYARR_DATABASE_URL: ${{ secrets.RENDER_STAGING_SUPPLYARR_DATABASE_URL }}
+          RENDER_STAGING_COMPLIANCECORE_DATABASE_URL: ${{ secrets.RENDER_STAGING_COMPLIANCECORE_DATABASE_URL }}
+          RENDER_STAGING_SNAPSHOT_DIRECTORY: ${{ runner.temp }}/render-staging-backups
+        run: |
+          chmod +x scripts/ops/render-staging-dr-restore-drill.sh scripts/ops/render-staging-snapshot-fetch.sh scripts/ops/dr-restore-drill.sh
+          args=(--backup-directory "$RENDER_STAGING_SNAPSHOT_DIRECTORY")
+          if [[ "${{ inputs.skip_snapshot_fetch }}" == "true" ]]; then
+            args+=(--skip-snapshot-fetch)
+          fi
+          if [[ -n "${{ inputs.database }}" ]]; then
+            args+=(--database "${{ inputs.database }}")
+          fi
+          ./scripts/ops/render-staging-dr-restore-drill.sh "${args[@]}"

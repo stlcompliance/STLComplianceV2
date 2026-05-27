@@ -143,7 +143,7 @@ public sealed class RoutArrDriverAvailabilityTests : IAsyncLifetime
         Assert.Equal(trip.TripId, availability.ConflictingTrips[0].TripId);
 
         var panelResponse = await _routarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/dispatch/driver-availability", dispatcherToken));
+            Authorized(HttpMethod.Get, "/api/dispatch/driver-availability?scope=weekly", dispatcherToken));
         panelResponse.EnsureSuccessStatusCode();
         var panel = (await panelResponse.Content.ReadFromJsonAsync<DriverAvailabilityPanelResponse>())!;
 
