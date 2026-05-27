@@ -173,7 +173,7 @@
 
 | 97 | Shared NexArr handoff client dedup (`StlNexArrHandoffClient` in Shared, remove 6 duplicate clients/contracts, product DI + test wiring, docs) | M13 (partial) | Complete | `75ab4b5` |
 
-| 98 | M13 OTEL smoke checks (`StlOpenTelemetryExtensions`, platform metrics, `/health/observability`, `STLCompliance.Otel.Tests`, `scripts/ops/otel-smoke.ps1`, CI, docs) | M13 (partial) | Complete | `pending` |
+| 98 | M13 OTEL smoke checks (`StlOpenTelemetryExtensions`, platform metrics, `/health/observability`, `STLCompliance.Otel.Tests`, `scripts/ops/otel-smoke.ps1`, CI, docs) | M13 (partial) | Complete | `48a6dc0` |
 
 ## Next slice (Worker 99)
 
