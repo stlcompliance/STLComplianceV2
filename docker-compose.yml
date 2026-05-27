@@ -1,0 +1,224 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: stl
+      POSTGRES_PASSWORD: stl_dev_password
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker/postgres/init-databases.sql:/docker-entrypoint-initdb.d/01-init-databases.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stl"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  nexarr-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      args:
+        PROJECT_PATH: apps/nexarr-api/NexArr.Api/NexArr.Api.csproj
+        ASSEMBLY_NAME: NexArr.Api
+    ports:
+      - "5101:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DATABASE_URL: Host=postgres;Port=5432;Database=nexarr;Username=stl;Password=stl_dev_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  staffarr-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      args:
+        PROJECT_PATH: apps/staffarr-api/StaffArr.Api/StaffArr.Api.csproj
+        ASSEMBLY_NAME: StaffArr.Api
+    ports:
+      - "5102:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DATABASE_URL: Host=postgres;Port=5432;Database=staffarr;Username=stl;Password=stl_dev_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  trainarr-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      args:
+        PROJECT_PATH: apps/trainarr-api/TrainArr.Api/TrainArr.Api.csproj
+        ASSEMBLY_NAME: TrainArr.Api
+    ports:
+      - "5103:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DATABASE_URL: Host=postgres;Port=5432;Database=trainarr;Username=stl;Password=stl_dev_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  maintainarr-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      args:
+        PROJECT_PATH: apps/maintainarr-api/MaintainArr.Api/MaintainArr.Api.csproj
+        ASSEMBLY_NAME: MaintainArr.Api
+    ports:
+      - "5104:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DATABASE_URL: Host=postgres;Port=5432;Database=maintainarr;Username=stl;Password=stl_dev_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  routarr-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      args:
+        PROJECT_PATH: apps/routarr-api/RoutArr.Api/RoutArr.Api.csproj
+        ASSEMBLY_NAME: RoutArr.Api
+    ports:
+      - "5105:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DATABASE_URL: Host=postgres;Port=5432;Database=routarr;Username=stl;Password=stl_dev_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  supplyarr-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      args:
+        PROJECT_PATH: apps/supplyarr-api/SupplyArr.Api/SupplyArr.Api.csproj
+        ASSEMBLY_NAME: SupplyArr.Api
+    ports:
+      - "5106:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DATABASE_URL: Host=postgres;Port=5432;Database=supplyarr;Username=stl;Password=stl_dev_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  compliancecore-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      args:
+        PROJECT_PATH: apps/compliancecore-api/ComplianceCore.Api/ComplianceCore.Api.csproj
+        ASSEMBLY_NAME: ComplianceCore.Api
+    ports:
+      - "5107:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DATABASE_URL: Host=postgres;Port=5432;Database=compliancecore;Username=stl;Password=stl_dev_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  nexarr-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+      args:
+        PROJECT_PATH: workers/nexarr-worker/NexArr.Worker/NexArr.Worker.csproj
+        ASSEMBLY_NAME: NexArr.Worker
+    environment:
+      DOTNET_ENVIRONMENT: Development
+    depends_on:
+      - postgres
+      - redis
+
+  staffarr-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+      args:
+        PROJECT_PATH: workers/staffarr-worker/StaffArr.Worker/StaffArr.Worker.csproj
+        ASSEMBLY_NAME: StaffArr.Worker
+    environment:
+      DOTNET_ENVIRONMENT: Development
+    depends_on:
+      - postgres
+      - redis
+
+  trainarr-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+      args:
+        PROJECT_PATH: workers/trainarr-worker/TrainArr.Worker/TrainArr.Worker.csproj
+        ASSEMBLY_NAME: TrainArr.Worker
+    environment:
+      DOTNET_ENVIRONMENT: Development
+    depends_on:
+      - postgres
+      - redis
+
+  maintainarr-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+      args:
+        PROJECT_PATH: workers/maintainarr-worker/MaintainArr.Worker/MaintainArr.Worker.csproj
+        ASSEMBLY_NAME: MaintainArr.Worker
+    environment:
+      DOTNET_ENVIRONMENT: Development
+    depends_on:
+      - postgres
+      - redis
+
+  routarr-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+      args:
+        PROJECT_PATH: workers/routarr-worker/RoutArr.Worker/RoutArr.Worker.csproj
+        ASSEMBLY_NAME: RoutArr.Worker
+    environment:
+      DOTNET_ENVIRONMENT: Development
+    depends_on:
+      - postgres
+      - redis
+
+  supplyarr-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+      args:
+        PROJECT_PATH: workers/supplyarr-worker/SupplyArr.Worker/SupplyArr.Worker.csproj
+        ASSEMBLY_NAME: SupplyArr.Worker
+    environment:
+      DOTNET_ENVIRONMENT: Development
+    depends_on:
+      - postgres
+      - redis
+
+  compliancecore-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+      args:
+        PROJECT_PATH: workers/compliancecore-worker/ComplianceCore.Worker/ComplianceCore.Worker.csproj
+        ASSEMBLY_NAME: ComplianceCore.Worker
+    environment:
+      DOTNET_ENVIRONMENT: Development
+    depends_on:
+      - postgres
+      - redis

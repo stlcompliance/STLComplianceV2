@@ -1,0 +1,7 @@
+CREATE DATABASE nexarr;
+CREATE DATABASE staffarr;
+CREATE DATABASE trainarr;
+CREATE DATABASE maintainarr;
+CREATE DATABASE routarr;
+CREATE DATABASE supplyarr;
+CREATE DATABASE compliancecore;

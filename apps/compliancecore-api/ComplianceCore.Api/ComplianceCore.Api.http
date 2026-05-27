@@ -1,0 +1,6 @@
+@ComplianceCore.Api_HostAddress = http://localhost:5031
+
+GET {{ComplianceCore.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

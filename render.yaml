@@ -1,0 +1,267 @@
+# STL Compliance / Arr Suite — Render Blueprint (M1 foundation)
+# Schema: https://render.com/schema/render.yaml.json
+
+envVarGroups:
+  - name: stl-shared
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: Information
+      - key: OTEL_ENABLED
+        value: "false"
+  - name: stl-auth
+    envVars:
+      - key: JWT_ISSUER
+        generateValue: true
+      - key: JWT_AUDIENCE
+        value: stl-compliance-suite
+      - key: JWT_SIGNING_KEY
+        generateValue: true
+      - key: SERVICE_TOKEN_ISSUER
+        generateValue: true
+      - key: SERVICE_TOKEN_AUDIENCE
+        value: stl-compliance-services
+
+databases:
+  - name: nexarr-db
+    plan: basic-256mb
+    databaseName: nexarr
+    user: nexarr
+  - name: staffarr-db
+    plan: basic-256mb
+    databaseName: staffarr
+    user: staffarr
+  - name: trainarr-db
+    plan: basic-256mb
+    databaseName: trainarr
+    user: trainarr
+  - name: maintainarr-db
+    plan: basic-256mb
+    databaseName: maintainarr
+    user: maintainarr
+  - name: routarr-db
+    plan: basic-256mb
+    databaseName: routarr
+    user: routarr
+  - name: supplyarr-db
+    plan: basic-256mb
+    databaseName: supplyarr
+    user: supplyarr
+  - name: compliancecore-db
+    plan: basic-256mb
+    databaseName: compliancecore
+    user: compliancecore
+
+services:
+  - type: keyvalue
+    name: redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
+  - type: web
+    name: nexarr-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile.api
+    dockerContext: .
+    dockerCommand: ""
+    healthCheckPath: /health/ready
+    envVars:
+      - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nexarr-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: redis
+          type: keyvalue
+          property: connectionString
+      - key: DOCKER_BUILD_ARG_PROJECT_PATH
+        value: apps/nexarr-api/NexArr.Api/NexArr.Api.csproj
+      - key: DOCKER_BUILD_ARG_ASSEMBLY_NAME
+        value: NexArr.Api
+
+  - type: web
+    name: staffarr-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile.api
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - key: DATABASE_URL
+        fromDatabase:
+          name: staffarr-db
+          property: connectionString
+
+  - type: web
+    name: trainarr-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile.api
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - key: DATABASE_URL
+        fromDatabase:
+          name: trainarr-db
+          property: connectionString
+
+  - type: web
+    name: maintainarr-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile.api
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - key: DATABASE_URL
+        fromDatabase:
+          name: maintainarr-db
+          property: connectionString
+
+  - type: web
+    name: routarr-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile.api
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - key: DATABASE_URL
+        fromDatabase:
+          name: routarr-db
+          property: connectionString
+
+  - type: web
+    name: supplyarr-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile.api
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - key: DATABASE_URL
+        fromDatabase:
+          name: supplyarr-db
+          property: connectionString
+
+  - type: web
+    name: compliancecore-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile.api
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - key: DATABASE_URL
+        fromDatabase:
+          name: compliancecore-db
+          property: connectionString
+
+  - type: worker
+    name: nexarr-worker
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile.worker
+    dockerContext: .
+    envVars:
+      - fromGroup: stl-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nexarr-db
+          property: connectionString
+
+  - type: worker
+    name: staffarr-worker
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile.worker
+    dockerContext: .
+    envVars:
+      - fromGroup: stl-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: staffarr-db
+          property: connectionString
+
+  - type: worker
+    name: trainarr-worker
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile.worker
+    dockerContext: .
+    envVars:
+      - fromGroup: stl-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: trainarr-db
+          property: connectionString
+
+  - type: worker
+    name: maintainarr-worker
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile.worker
+    dockerContext: .
+    envVars:
+      - fromGroup: stl-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: maintainarr-db
+          property: connectionString
+
+  - type: worker
+    name: routarr-worker
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile.worker
+    dockerContext: .
+    envVars:
+      - fromGroup: stl-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: routarr-db
+          property: connectionString
+
+  - type: worker
+    name: supplyarr-worker
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile.worker
+    dockerContext: .
+    envVars:
+      - fromGroup: stl-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: supplyarr-db
+          property: connectionString
+
+  - type: worker
+    name: compliancecore-worker
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile.worker
+    dockerContext: .
+    envVars:
+      - fromGroup: stl-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: compliancecore-db
+          property: connectionString

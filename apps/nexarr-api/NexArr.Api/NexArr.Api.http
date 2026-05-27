@@ -1,0 +1,6 @@
+@NexArr.Api_HostAddress = http://localhost:5018
+
+GET {{NexArr.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

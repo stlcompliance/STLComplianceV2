@@ -1,0 +1,53 @@
+<Solution>
+  <Folder Name="/apps/" />
+  <Folder Name="/apps/compliancecore-api/">
+    <Project Path="apps/compliancecore-api/ComplianceCore.Api/ComplianceCore.Api.csproj" />
+  </Folder>
+  <Folder Name="/apps/maintainarr-api/">
+    <Project Path="apps/maintainarr-api/MaintainArr.Api/MaintainArr.Api.csproj" />
+  </Folder>
+  <Folder Name="/apps/nexarr-api/">
+    <Project Path="apps/nexarr-api/NexArr.Api/NexArr.Api.csproj" />
+  </Folder>
+  <Folder Name="/apps/routarr-api/">
+    <Project Path="apps/routarr-api/RoutArr.Api/RoutArr.Api.csproj" />
+  </Folder>
+  <Folder Name="/apps/staffarr-api/">
+    <Project Path="apps/staffarr-api/StaffArr.Api/StaffArr.Api.csproj" />
+  </Folder>
+  <Folder Name="/apps/supplyarr-api/">
+    <Project Path="apps/supplyarr-api/SupplyArr.Api/SupplyArr.Api.csproj" />
+  </Folder>
+  <Folder Name="/apps/trainarr-api/">
+    <Project Path="apps/trainarr-api/TrainArr.Api/TrainArr.Api.csproj" />
+  </Folder>
+  <Folder Name="/packages/" />
+  <Folder Name="/packages/shared-dotnet/">
+    <Project Path="packages/shared-dotnet/STLCompliance.Shared/STLCompliance.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/STLCompliance.Health.Tests/STLCompliance.Health.Tests.csproj" />
+  </Folder>
+  <Folder Name="/workers/" />
+  <Folder Name="/workers/compliancecore-worker/">
+    <Project Path="workers/compliancecore-worker/ComplianceCore.Worker/ComplianceCore.Worker.csproj" />
+  </Folder>
+  <Folder Name="/workers/maintainarr-worker/">
+    <Project Path="workers/maintainarr-worker/MaintainArr.Worker/MaintainArr.Worker.csproj" />
+  </Folder>
+  <Folder Name="/workers/nexarr-worker/">
+    <Project Path="workers/nexarr-worker/NexArr.Worker/NexArr.Worker.csproj" />
+  </Folder>
+  <Folder Name="/workers/routarr-worker/">
+    <Project Path="workers/routarr-worker/RoutArr.Worker/RoutArr.Worker.csproj" />
+  </Folder>
+  <Folder Name="/workers/staffarr-worker/">
+    <Project Path="workers/staffarr-worker/StaffArr.Worker/StaffArr.Worker.csproj" />
+  </Folder>
+  <Folder Name="/workers/supplyarr-worker/">
+    <Project Path="workers/supplyarr-worker/SupplyArr.Worker/SupplyArr.Worker.csproj" />
+  </Folder>
+  <Folder Name="/workers/trainarr-worker/">
+    <Project Path="workers/trainarr-worker/TrainArr.Worker/TrainArr.Worker.csproj" />
+  </Folder>
+</Solution>
