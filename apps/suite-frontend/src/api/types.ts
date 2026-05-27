@@ -37,6 +37,20 @@ export interface NavigationResponse {
   products: NavigationItem[]
 }
 
+export interface TenantSummary {
+  tenantId: string
+  slug: string
+  displayName: string
+  status: string
+  roleKey: string
+}
+
+export interface EntitlementSummary {
+  productKey: string
+  displayName: string
+  status: string
+}
+
 export interface LaunchContextResponse {
   tenantId: string
   tenantSlug: string

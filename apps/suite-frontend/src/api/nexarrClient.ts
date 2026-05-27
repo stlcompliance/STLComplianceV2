@@ -14,8 +14,10 @@ import type {
   LaunchContextResponse,
   LaunchDiagnosticsResponse,
   LoginRequest,
+  EntitlementSummary,
   MeResponse,
   NavigationResponse,
+  TenantSummary,
   PagedResult,
   PlatformAdminDashboardResponse,
   ProductOverviewRow,
@@ -168,6 +170,24 @@ export async function getNavigation(): Promise<NavigationResponse> {
     throw await parseError(response)
   }
   return (await response.json()) as NavigationResponse
+}
+
+export async function getMyEntitlements(): Promise<EntitlementSummary[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/me/entitlements')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as EntitlementSummary[]
+}
+
+export async function getMyTenants(): Promise<TenantSummary[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/me/tenants')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantSummary[]
 }
 
 export async function getLaunchContext(productKey: string): Promise<LaunchContextResponse> {

@@ -62,8 +62,8 @@ Env: `apps/suite-frontend/.env.example`
 
 ## Gaps / next (Worker 6+)
 
-- Unified dashboard widgets
-- NexArr platform-admin dashboard UI (`/api/platform-admin/*`)
+- ~~Unified dashboard widgets~~ (Worker 7)
+- ~~NexArr platform-admin dashboard UI (`/api/platform-admin/*`)~~ (Worker 6)
 - Shared `packages/ui` design system extraction
 - Playwright E2E against docker-compose stack
 - Product-specific embedded surfaces beyond handoff launch

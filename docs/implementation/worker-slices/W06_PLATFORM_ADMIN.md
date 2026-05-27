@@ -63,9 +63,9 @@ npm run dev
 # Sign in as admin@demo.stl — open Platform admin in sidebar
 ```
 
-## Gaps / next (Worker 7+)
+## Gaps / next (Worker 8+)
 
-- Unified suite home dashboard widgets (M3)
+- ~~Unified suite home dashboard widgets (M3)~~ (Worker 7)
 - Platform audit search/export UI
 - CRUD surfaces in suite for tenants/products/entitlements (today: NexArr APIs only; admin via API or future UI)
 - Shared `packages/ui` design system extraction
