@@ -16,6 +16,8 @@ envVarGroups:
     envVars:
       - key: AUTH_SIGNING_KEY
         generateValue: true
+      - key: SERVICE_TOKEN_SIGNING_KEY
+        generateValue: true
       - key: Auth__Issuer
         value: stl-compliance-nexarr
       - key: Auth__Audience
@@ -24,6 +26,8 @@ envVarGroups:
         value: stl-compliance-services
       - key: SERVICE_TOKEN_AUDIENCE
         value: stl-compliance-services
+      - key: STL_INTEGRATION_BOOTSTRAP_SECRET
+        generateValue: true
 
   # Render private network: web services listen on port 10000 internally.
   - name: stl-internal-api-urls
@@ -179,6 +183,8 @@ services:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
       - fromGroup: stl-internal-api-urls
+      - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: staffarr-db
@@ -186,9 +192,9 @@ services:
       - key: Cors__StaffArrFrontendOrigin
         value: https://staffarr-frontend.onrender.com
       - key: Handoff__ServiceToken
-        sync: false
+        generateValue: true
       - key: TrainArr__ServiceToken
-        sync: false
+        generateValue: true
 
   - type: web
     name: trainarr-api
@@ -201,6 +207,8 @@ services:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
       - fromGroup: stl-internal-api-urls
+      - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: trainarr-db
@@ -208,11 +216,11 @@ services:
       - key: Cors__TrainArrFrontendOrigin
         value: https://trainarr-frontend.onrender.com
       - key: Handoff__ServiceToken
-        sync: false
+        generateValue: true
       - key: StaffArr__ServiceToken
-        sync: false
+        generateValue: true
       - key: ComplianceCore__ServiceToken
-        sync: false
+        generateValue: true
       - key: EvidenceStorage__RootPath
         value: /var/data/trainarr-evidence
 
@@ -227,6 +235,8 @@ services:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
       - fromGroup: stl-internal-api-urls
+      - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: maintainarr-db
@@ -234,9 +244,9 @@ services:
       - key: Cors__MaintainArrFrontendOrigin
         value: https://maintainarr-frontend.onrender.com
       - key: Handoff__ServiceToken
-        sync: false
+        generateValue: true
       - key: SupplyArr__ServiceToken
-        sync: false
+        generateValue: true
       - key: EvidenceStorage__RootPath
         value: /var/data/maintainarr-evidence
 
@@ -251,6 +261,8 @@ services:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
       - fromGroup: stl-internal-api-urls
+      - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: routarr-db
@@ -258,15 +270,15 @@ services:
       - key: Cors__RoutArrFrontendOrigin
         value: https://routarr-frontend.onrender.com
       - key: Handoff__ServiceToken
-        sync: false
+        generateValue: true
       - key: TrainArr__ServiceToken
-        sync: false
+        generateValue: true
       - key: StaffArr__ServiceToken
-        sync: false
+        generateValue: true
       - key: MaintainArr__ServiceToken
-        sync: false
+        generateValue: true
       - key: ComplianceCore__ServiceToken
-        sync: false
+        generateValue: true
 
   - type: web
     name: supplyarr-api
@@ -279,6 +291,8 @@ services:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
       - fromGroup: stl-internal-api-urls
+      - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: supplyarr-db
@@ -286,9 +300,9 @@ services:
       - key: Cors__SupplyArrFrontendOrigin
         value: https://supplyarr-frontend.onrender.com
       - key: Handoff__ServiceToken
-        sync: false
+        generateValue: true
       - key: MaintainArr__ServiceToken
-        sync: false
+        generateValue: true
 
   - type: web
     name: compliancecore-api
@@ -301,6 +315,8 @@ services:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
       - fromGroup: stl-internal-api-urls
+      - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: compliancecore-db
@@ -308,7 +324,7 @@ services:
       - key: Cors__ComplianceCoreFrontendOrigin
         value: https://compliancecore-frontend.onrender.com
       - key: Handoff__ServiceToken
-        sync: false
+        generateValue: true
 
   # --- Cross-product scheduled jobs ---
   - type: worker
@@ -319,34 +335,39 @@ services:
     dockerContext: .
     envVars:
       - fromGroup: stl-shared
+      - fromGroup: stl-auth
+      - key: NexArr__BaseUrl
+        value: http://nexarr-api:10000
+      - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
+        value: "true"
       - key: TrainArrQualificationExpiration__TrainArrBaseUrl
         value: http://trainarr-api:10000
       - key: TrainArrQualificationExpiration__ServiceToken
-        sync: false
+        generateValue: true
       - key: StaffArrCertificationExpiration__StaffArrBaseUrl
         value: http://staffarr-api:10000
       - key: StaffArrCertificationExpiration__ServiceToken
-        sync: false
+        generateValue: true
       - key: StaffArrReadinessRollup__StaffArrBaseUrl
         value: http://staffarr-api:10000
       - key: StaffArrReadinessRollup__ServiceToken
-        sync: false
+        generateValue: true
       - key: StaffArrPermissionProjection__StaffArrBaseUrl
         value: http://staffarr-api:10000
       - key: StaffArrPermissionProjection__ServiceToken
-        sync: false
+        generateValue: true
       - key: MaintainArrPmDueScan__MaintainArrBaseUrl
         value: http://maintainarr-api:10000
       - key: MaintainArrPmDueScan__ServiceToken
-        sync: false
+        generateValue: true
       - key: SupplyArrReorderEvaluation__SupplyArrBaseUrl
         value: http://supplyarr-api:10000
       - key: SupplyArrReorderEvaluation__ServiceToken
-        sync: false
+        generateValue: true
       - key: ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl
         value: http://compliancecore-api:10000
       - key: ComplianceCoreScheduledEvaluation__ServiceToken
-        sync: false
+        generateValue: true
 
   # --- Product heartbeat workers (reserved for product-local jobs) ---
   - type: worker

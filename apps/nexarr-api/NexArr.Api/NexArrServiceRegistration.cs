@@ -21,6 +21,7 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<ProductCatalogService>();
         builder.Services.AddScoped<EntitlementAdminService>();
         builder.Services.AddScoped<ServiceTokenAdminService>();
+        builder.Services.AddScoped<IntegrationTokenBootstrapService>();
         builder.Services.AddScoped<LaunchService>();
         builder.Services.AddScoped<CallbackAllowlistAdminService>();
         builder.Services.AddScoped<PlatformAdminService>();
@@ -73,6 +74,12 @@ public static class NexArrServiceRegistration
             var launchOptions = scope.ServiceProvider.GetService<IOptions<StlLaunchOptions>>()?.Value;
             await PlatformSeeder.SeedAsync(db, passwordHasher, launchOptions);
             await PlatformSeeder.EnsureDevSuiteShellOriginsAsync(db);
+        }
+        else if (app.Environment.IsProduction())
+        {
+            await db.Database.MigrateAsync();
+            var bootstrap = scope.ServiceProvider.GetRequiredService<IntegrationTokenBootstrapService>();
+            await bootstrap.EnsureProvisionedAsync();
         }
     }
 }

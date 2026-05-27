@@ -11,6 +11,7 @@ using Serilog;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Data;
 using STLCompliance.Shared.Health;
+using STLCompliance.Shared.Integration;
 using STLCompliance.Shared.Middleware;
 
 namespace STLCompliance.Shared.Hosting;
@@ -59,6 +60,7 @@ public static class StlApiHost
             builder.Services.AddStlCorrelationId();
             builder.Services.AddStlJwtAuthentication(builder.Configuration);
             configure?.Invoke(builder);
+            builder.AddStlIntegrationTokenProvisioning();
 
             var signingKey = builder.Configuration["AUTH_SIGNING_KEY"]
                 ?? builder.Configuration[$"{StlJwtOptions.SectionName}:SigningKey"];

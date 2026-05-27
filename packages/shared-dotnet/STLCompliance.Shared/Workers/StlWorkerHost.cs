@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using STLCompliance.Shared.Hosting;
+using STLCompliance.Shared.Integration;
 
 namespace STLCompliance.Shared.Workers;
 
@@ -25,6 +26,7 @@ public static class StlWorkerHost
             builder.Services.AddSingleton(product);
             builder.Services.AddHostedService<HeartbeatWorker>();
             configure?.Invoke(builder);
+            builder.AddStlIntegrationTokenProvisioning();
 
             builder.Services.AddSerilog();
 
