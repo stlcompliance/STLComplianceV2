@@ -3,7 +3,7 @@
 | Worker | Slice | Milestone | Status | Commit |
 |--------|-------|-----------|--------|--------|
 | 1 | Platform foundation (APIs, health, EF baseline, Docker, workers) | M1 | Complete | `38d9f3ef73e8d5e8564d6b92c3863270ce7d370e` |
-| 2 | NexArr identity auth spine (login, sessions, /api/me*) | M2 (partial) | Complete | (see Worker 2 commit) |
+| 2 | NexArr identity auth spine (login, sessions, /api/me*) | M2 (partial) | Complete | `7ab1a6a` |
 
 ## Next slice (Worker 3)
 
