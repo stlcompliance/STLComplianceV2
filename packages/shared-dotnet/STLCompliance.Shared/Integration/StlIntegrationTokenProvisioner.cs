@@ -21,10 +21,36 @@ public static class StlIntegrationTokenProvisioner
             "true",
             StringComparison.OrdinalIgnoreCase);
 
-    public static string ResolveConsumerService(IConfiguration configuration) =>
-        configuration["RENDER_SERVICE_NAME"]
-        ?? configuration["STL_SERVICE_NAME"]
-        ?? string.Empty;
+    public static string ResolveConsumerService(IConfiguration configuration)
+    {
+        var configured = configuration["STL_SERVICE_NAME"];
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            return configured.Trim();
+        }
+
+        var renderName = configuration["RENDER_SERVICE_NAME"]?.Trim();
+        if (string.IsNullOrWhiteSpace(renderName))
+        {
+            return string.Empty;
+        }
+
+        // Render slugs append a random suffix (e.g. staffarr-api-srdo); catalog uses blueprint names.
+        var knownConsumers = StlIntegrationTokenCatalog.All
+            .Select(static profile => profile.ConsumerService)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var consumer in knownConsumers)
+        {
+            if (string.Equals(renderName, consumer, StringComparison.OrdinalIgnoreCase)
+                || renderName.StartsWith(consumer + "-", StringComparison.OrdinalIgnoreCase))
+            {
+                return consumer;
+            }
+        }
+
+        return renderName;
+    }
 
     public static IReadOnlyDictionary<string, string> ProvisionSynchronously(
         IConfiguration configuration,
