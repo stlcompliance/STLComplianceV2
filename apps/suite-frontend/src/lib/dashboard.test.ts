@@ -89,12 +89,14 @@ describe('buildQuickLaunchProducts', () => {
         displayName: 'NexArr',
         routePath: '/app/nexarr',
         sortOrder: 0,
+        surfaces: [],
       },
       {
         productKey: 'staffarr',
         displayName: 'StaffArr',
         routePath: '/app/staffarr',
         sortOrder: 1,
+        surfaces: [],
       },
     ]
     const products = buildQuickLaunchProducts(nav, ['nexarr', 'staffarr'])
@@ -143,12 +145,14 @@ describe('buildWhatINeedActions', () => {
       displayName: 'NexArr',
       routePath: '/app/nexarr',
       sortOrder: 0,
+      surfaces: [],
     },
     {
       productKey: 'staffarr',
       displayName: 'StaffArr',
       routePath: '/app/staffarr',
       sortOrder: 1,
+      surfaces: [],
     },
   ]
 

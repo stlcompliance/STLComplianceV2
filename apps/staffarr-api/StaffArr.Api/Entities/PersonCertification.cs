@@ -26,6 +26,8 @@ public sealed class PersonCertification : IHasTenant
 
     public Guid? ExternalPublicationId { get; set; }
 
+    public Guid? LastExternalLifecyclePublicationId { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

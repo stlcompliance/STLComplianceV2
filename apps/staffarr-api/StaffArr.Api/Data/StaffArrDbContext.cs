@@ -26,6 +26,20 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<PersonCertification> PersonCertifications => Set<PersonCertification>();
 
+    public DbSet<PersonReadinessOverride> PersonReadinessOverrides => Set<PersonReadinessOverride>();
+
+    public DbSet<PersonnelIncident> PersonnelIncidents => Set<PersonnelIncident>();
+
+    public DbSet<PersonTrainingBlocker> PersonTrainingBlockers => Set<PersonTrainingBlocker>();
+
+    public DbSet<IncidentTrainarrRouting> IncidentTrainarrRoutings => Set<IncidentTrainarrRouting>();
+
+    public DbSet<ReadinessRollup> ReadinessRollups => Set<ReadinessRollup>();
+
+    public DbSet<PersonPermissionProjection> PersonPermissionProjections => Set<PersonPermissionProjection>();
+
+    public DbSet<PersonPermissionProjectionEntry> PersonPermissionProjectionEntries => Set<PersonPermissionProjectionEntry>();
+
     public DbSet<StaffArrAuditEvent> AuditEvents => Set<StaffArrAuditEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -192,9 +206,112 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.Notes).HasMaxLength(1024);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.PersonId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.ExpiresAt });
             entity.HasIndex(x => new { x.TenantId, x.PersonId, x.CertificationDefinitionId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.ExternalPublicationId }).IsUnique()
+                .HasFilter("\"ExternalPublicationId\" IS NOT NULL");
+            entity.HasIndex(x => new { x.TenantId, x.LastExternalLifecyclePublicationId }).IsUnique()
+                .HasFilter("\"LastExternalLifecyclePublicationId\" IS NOT NULL");
             entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
             entity.HasOne<CertificationDefinition>().WithMany().HasForeignKey(x => x.CertificationDefinitionId);
+        });
+
+        modelBuilder.Entity<PersonReadinessOverride>(entity =>
+        {
+            entity.ToTable("staffarr_person_readiness_overrides");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Reason).HasMaxLength(1024).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.GrantedAt });
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+        });
+
+        modelBuilder.Entity<PersonTrainingBlocker>(entity =>
+        {
+            entity.ToTable("staffarr_person_training_blockers");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.QualificationKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.QualificationName).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.BlockerType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Message).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.TrainarrPublicationId }).IsUnique();
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+        });
+
+        modelBuilder.Entity<PersonnelIncident>(entity =>
+        {
+            entity.ToTable("staffarr_personnel_incidents");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ReasonCategoryKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Severity).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4096).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.ReportedAt });
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.ReportedAt });
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+        });
+
+        modelBuilder.Entity<IncidentTrainarrRouting>(entity =>
+        {
+            entity.ToTable("staffarr_incident_trainarr_routings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RoutingStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.FailureReason).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.IncidentId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.TrainarrRemediationId }).IsUnique();
+            entity.HasOne<PersonnelIncident>().WithMany().HasForeignKey(x => x.IncidentId);
+        });
+
+        modelBuilder.Entity<ReadinessRollup>(entity =>
+        {
+            entity.ToTable("staffarr_readiness_rollups");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScopeType).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.OrgUnitName).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ReadyPercent).HasPrecision(5, 1);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ScopeType, x.OrgUnitId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ScopeType, x.ComputedAt });
+            entity.HasOne<OrgUnit>().WithMany().HasForeignKey(x => x.OrgUnitId);
+        });
+
+        modelBuilder.Entity<PersonPermissionProjection>(entity =>
+        {
+            entity.ToTable("staffarr_person_permission_projections");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ComputedAt });
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+            entity.HasMany(x => x.Entries).WithOne(x => x.Projection).HasForeignKey(x => x.ProjectionId);
+        });
+
+        modelBuilder.Entity<PersonPermissionProjectionEntry>(entity =>
+        {
+            entity.ToTable("staffarr_person_permission_projection_entries");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PermissionKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.PermissionName).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ScopeType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ScopeValue).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new
+            {
+                x.TenantId,
+                x.PersonId,
+                x.PermissionKey,
+                x.ScopeType,
+                x.ScopeValue
+            }).IsUnique();
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
         });
 
         modelBuilder.Entity<StaffArrAuditEvent>(entity =>

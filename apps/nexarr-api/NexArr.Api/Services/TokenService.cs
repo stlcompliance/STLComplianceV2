@@ -17,7 +17,16 @@ public sealed class TokenService(IOptions<StlJwtOptions> options, IConfiguration
         PlatformUser user,
         Guid tenantId,
         Guid sessionId,
-        IReadOnlyList<string> entitlements)
+        IReadOnlyList<string> entitlements) =>
+        CreateSessionAccessToken(user, tenantId, sessionId, entitlements, string.Empty, user.Id);
+
+    public (string AccessToken, DateTimeOffset ExpiresAt) CreateSessionAccessToken(
+        PlatformUser user,
+        Guid tenantId,
+        Guid sessionId,
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey,
+        Guid personId)
     {
         var signingKey = configuration["AUTH_SIGNING_KEY"] ?? _options.SigningKey;
         var expiresAt = DateTimeOffset.UtcNow.AddMinutes(_options.AccessTokenMinutes);
@@ -31,8 +40,14 @@ public sealed class TokenService(IOptions<StlJwtOptions> options, IConfiguration
             new(StlClaimTypes.TenantId, tenantId.ToString()),
             new(StlClaimTypes.SessionId, sessionId.ToString()),
             new(StlClaimTypes.Entitlements, string.Join(',', entitlements)),
-            new(StlClaimTypes.PlatformAdmin, user.IsPlatformAdmin.ToString().ToLowerInvariant())
+            new(StlClaimTypes.PlatformAdmin, user.IsPlatformAdmin.ToString().ToLowerInvariant()),
+            new(StlClaimTypes.PersonId, personId.ToString()),
         };
+
+        if (!string.IsNullOrWhiteSpace(tenantRoleKey))
+        {
+            claims.Add(new Claim(StlClaimTypes.TenantRoleKey, tenantRoleKey));
+        }
 
         var credentials = new SigningCredentials(
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),

@@ -24,6 +24,34 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<LaunchService>();
         builder.Services.AddScoped<CallbackAllowlistAdminService>();
         builder.Services.AddScoped<PlatformAdminService>();
+        builder.Services.AddScoped<CompanionAuthService>();
+        builder.Services.AddScoped<CompanionFieldInboxService>();
+        builder.Services.AddScoped<CompanionProductClient>();
+        builder.Services.AddHttpClient(nameof(CompanionProductClient));
+        builder.Services.AddScoped<PlatformHealthService>();
+        builder.Services.AddHttpClient(PlatformHealthService.HttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(5);
+        });
+        builder.Services.Configure<CompanionProductUrlsOptions>(options =>
+        {
+            var configuration = builder.Configuration;
+            options.StaffArrBaseUrl = configuration["StaffArr__BaseUrl"] ?? options.StaffArrBaseUrl;
+            options.TrainArrBaseUrl = configuration["TrainArr__BaseUrl"] ?? options.TrainArrBaseUrl;
+            options.MaintainArrBaseUrl = configuration["MaintainArr__BaseUrl"] ?? options.MaintainArrBaseUrl;
+            options.RoutArrBaseUrl = configuration["RoutArr__BaseUrl"] ?? options.RoutArrBaseUrl;
+            options.SupplyArrBaseUrl = configuration["SupplyArr__BaseUrl"] ?? options.SupplyArrBaseUrl;
+        });
+        builder.Services.Configure<PlatformProductUrlsOptions>(options =>
+        {
+            var configuration = builder.Configuration;
+            options.StaffArrBaseUrl = configuration["StaffArr__BaseUrl"] ?? options.StaffArrBaseUrl;
+            options.TrainArrBaseUrl = configuration["TrainArr__BaseUrl"] ?? options.TrainArrBaseUrl;
+            options.MaintainArrBaseUrl = configuration["MaintainArr__BaseUrl"] ?? options.MaintainArrBaseUrl;
+            options.RoutArrBaseUrl = configuration["RoutArr__BaseUrl"] ?? options.RoutArrBaseUrl;
+            options.SupplyArrBaseUrl = configuration["SupplyArr__BaseUrl"] ?? options.SupplyArrBaseUrl;
+            options.ComplianceCoreBaseUrl = configuration["ComplianceCore__BaseUrl"] ?? options.ComplianceCoreBaseUrl;
+        });
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
         builder.Services.Configure<StlLaunchOptions>(builder.Configuration.GetSection(StlLaunchOptions.SectionName));
     }

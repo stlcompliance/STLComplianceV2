@@ -1,12 +1,14 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
 import { ReadinessPanel } from './ReadinessPanel'
 import type { PersonReadinessResponse } from '../api/types'
 
 const sampleReadiness: PersonReadinessResponse = {
   personId: '11111111-1111-1111-1111-111111111111',
   readinessStatus: 'not_ready',
+  readinessBasis: 'certifications',
   calculatedAt: '2026-05-27T12:00:00.000Z',
+  activeOverride: null,
   requirements: [
     {
       certificationDefinitionId: '22222222-2222-2222-2222-222222222222',
@@ -19,12 +21,45 @@ const sampleReadiness: PersonReadinessResponse = {
   ],
   blockers: [
     {
+      blockerSource: 'certification',
       certificationKey: 'readiness.safety_orientation',
       certificationName: 'Safety Orientation',
+      qualificationKey: null,
+      qualificationName: null,
       blockerType: 'missing',
       message: 'Safety Orientation is required but has not been granted.',
     },
   ],
+}
+
+const trainingBlockerReadiness: PersonReadinessResponse = {
+  ...sampleReadiness,
+  readinessBasis: 'training_blockers',
+  blockers: [
+    {
+      blockerSource: 'training',
+      certificationKey: null,
+      certificationName: null,
+      qualificationKey: 'qual.hazmat_remediation',
+      qualificationName: 'Hazmat Remediation',
+      blockerType: 'overdue',
+      message: 'Required hazmat remediation training is overdue.',
+    },
+    ...sampleReadiness.blockers,
+  ],
+}
+
+const overrideReadiness: PersonReadinessResponse = {
+  ...sampleReadiness,
+  readinessStatus: 'ready',
+  readinessBasis: 'manual_override',
+  activeOverride: {
+    overrideId: '33333333-3333-3333-3333-333333333333',
+    reason: 'Supervisor approved temporary assignment pending training completion.',
+    grantedAt: '2026-05-27T10:00:00.000Z',
+    expiresAt: null,
+    grantedByUserId: '44444444-4444-4444-4444-444444444444',
+  },
 }
 
 describe('ReadinessPanel', () => {
@@ -35,6 +70,11 @@ describe('ReadinessPanel', () => {
         personDisplayName="Alex Worker"
         readiness={sampleReadiness}
         isLoading={false}
+        canOverride={false}
+        isSubmittingOverride={false}
+        overrideErrorMessage={null}
+        onGrantOverride={async () => {}}
+        onClearOverride={async () => {}}
       />,
     )
 
@@ -42,5 +82,73 @@ describe('ReadinessPanel', () => {
     expect(screen.getByText('Not ready')).toBeTruthy()
     expect(screen.getByText(/Safety Orientation is required but has not been granted/i)).toBeTruthy()
     expect(screen.getByText('Missing')).toBeTruthy()
+  })
+
+  it('renders training blockers with a training label', () => {
+    render(
+      <ReadinessPanel
+        personId={trainingBlockerReadiness.personId}
+        personDisplayName="Alex Worker"
+        readiness={trainingBlockerReadiness}
+        isLoading={false}
+        canOverride={false}
+        isSubmittingOverride={false}
+        overrideErrorMessage={null}
+        onGrantOverride={async () => {}}
+        onClearOverride={async () => {}}
+      />,
+    )
+
+    expect(screen.getByText('Hazmat Remediation')).toBeTruthy()
+    expect(screen.getByText('Training')).toBeTruthy()
+    expect(screen.getByText(/Required hazmat remediation training is overdue/i)).toBeTruthy()
+  })
+
+  it('renders active override banner and clear action when authorized', () => {
+    render(
+      <ReadinessPanel
+        personId={overrideReadiness.personId}
+        personDisplayName="Alex Worker"
+        readiness={overrideReadiness}
+        isLoading={false}
+        canOverride
+        isSubmittingOverride={false}
+        overrideErrorMessage={null}
+        onGrantOverride={async () => {}}
+        onClearOverride={async () => {}}
+      />,
+    )
+
+    expect(screen.getByText(/Manual readiness override active/i)).toBeTruthy()
+    expect(screen.getByText(/Supervisor approved temporary assignment/i)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Clear override/i })).toBeTruthy()
+  })
+
+  it('submits grant override when form is completed', async () => {
+    const onGrantOverride = vi.fn().mockResolvedValue(undefined)
+
+    render(
+      <ReadinessPanel
+        personId={sampleReadiness.personId}
+        personDisplayName="Alex Worker"
+        readiness={sampleReadiness}
+        isLoading={false}
+        canOverride
+        isSubmittingOverride={false}
+        overrideErrorMessage={null}
+        onGrantOverride={onGrantOverride}
+        onClearOverride={async () => {}}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText(/Reason/i), {
+      target: { value: 'Emergency coverage approved by operations manager for 48 hours.' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Grant readiness override/i }))
+
+    expect(onGrantOverride).toHaveBeenCalledWith({
+      reason: 'Emergency coverage approved by operations manager for 48 hours.',
+      expiresAt: null,
+    })
   })
 })

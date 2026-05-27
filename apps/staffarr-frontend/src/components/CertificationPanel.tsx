@@ -36,8 +36,21 @@ function formatStatusLabel(status: string): string {
       return 'Expired'
     case 'revoked':
       return 'Revoked'
+    case 'suspended':
+      return 'Suspended'
     default:
       return status
+  }
+}
+
+function formatSourceLabel(sourceType: string): string {
+  switch (sourceType) {
+    case 'trainarr_publication':
+      return 'TrainArr qualification'
+    case 'manual':
+      return 'Manual grant'
+    default:
+      return sourceType.replaceAll('_', ' ')
   }
 }
 
@@ -136,8 +149,20 @@ export function CertificationPanel({
                 <div>
                   <p className="text-sm text-white">{certification.certificationName}</p>
                   <p className="text-xs text-slate-400">
-                    {certification.certificationKey} · {certification.category} · {certification.sourceType}
+                    {certification.certificationKey} · {certification.category} ·{' '}
+                    {formatSourceLabel(certification.sourceType)}
                   </p>
+                  {certification.externalPublicationId ? (
+                    <p className="mt-1 font-mono text-xs text-violet-300/90">
+                      TrainArr publication {certification.externalPublicationId}
+                    </p>
+                  ) : null}
+                  {certification.sourceType === 'trainarr_publication' &&
+                  certification.effectiveStatus !== 'active' ? (
+                    <p className="mt-1 text-xs text-violet-200/90">
+                      TrainArr lifecycle: {formatStatusLabel(certification.effectiveStatus)}
+                    </p>
+                  ) : null}
                   <p className="mt-1 text-xs text-slate-500">
                     Granted {new Date(certification.grantedAt).toLocaleDateString()}
                     {certification.expiresAt

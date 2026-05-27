@@ -6,8 +6,9 @@ Greenfield monorepo for the full V1 STL Compliance / Arr product suite (.NET 10 
 
 | Milestone | Status |
 |-----------|--------|
-| M1 — Render & repo foundation | **In progress (this repo slice)** |
-| M2 — NexArr platform access spine | Planned |
+| M1 — Render & repo foundation | Complete |
+| M2 — NexArr platform access spine | Partial |
+| M4 — StaffArr workforce spine | In progress (see `docs/implementation-status.md`) |
 
 ## Repository layout
 

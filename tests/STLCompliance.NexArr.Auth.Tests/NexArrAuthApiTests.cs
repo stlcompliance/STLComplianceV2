@@ -106,6 +106,9 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         var navigation = await response.Content.ReadFromJsonAsync<NavigationResponse>();
         Assert.NotNull(navigation);
         Assert.True(navigation.Products.Count >= 7);
+        var staffarr = navigation.Products.First(p => p.ProductKey.Equals("staffarr", StringComparison.OrdinalIgnoreCase));
+        Assert.NotEmpty(staffarr.Surfaces);
+        Assert.Contains(staffarr.Surfaces, s => s.SurfaceKey == "overview" && s.IsEnabled);
     }
 
     private async Task<AuthTokenResponse> LoginAsync()

@@ -1,6 +1,7 @@
 using StaffArr.Api.Contracts;
 using StaffArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Contracts;
 
 namespace StaffArr.Api.Endpoints;
 
@@ -44,6 +45,26 @@ public static class PeopleEndpoints
             return Results.Ok(await service.GetByIdAsync(tenantId, personId, cancellationToken));
         })
         .WithName("GetStaffPerson");
+
+        people.MapGet("/{personId:guid}/timeline", async (
+            Guid personId,
+            int? page,
+            int? pageSize,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            PersonTimelineService timelineService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePersonTimelineRead(context.User, personId);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await timelineService.ListPersonTimelineAsync(
+                tenantId,
+                personId,
+                page ?? 1,
+                pageSize ?? 50,
+                cancellationToken));
+        })
+        .WithName("GetPersonTimeline");
 
         people.MapPost("/", async (
             CreateStaffPersonRequest request,

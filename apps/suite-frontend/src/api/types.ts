@@ -25,11 +25,22 @@ export interface MeResponse {
   entitlements: string[]
 }
 
+export interface NavigationSurfaceItem {
+  surfaceKey: string
+  label: string
+  relativePath: string
+  iconKey: string
+  sortOrder: number
+  isEnabled: boolean
+  permissionHint: string | null
+}
+
 export interface NavigationItem {
   productKey: string
   displayName: string
   routePath: string
   sortOrder: number
+  surfaces: NavigationSurfaceItem[]
 }
 
 export interface NavigationResponse {

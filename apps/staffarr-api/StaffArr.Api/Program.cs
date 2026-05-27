@@ -18,5 +18,12 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrRoleTemplateEndpoints();
         app.MapStaffArrCertificationEndpoints();
         app.MapStaffArrReadinessEndpoints();
+        app.MapStaffArrReadinessRollupEndpoints();
+        app.MapStaffArrIncidentEndpoints();
+        app.MapStaffArrIntegrationEndpoints();
+        app.MapStaffArrInternalCertificationExpirationEndpoints();
+        app.MapStaffArrInternalReadinessRollupEndpoints();
+        app.MapStaffArrInternalPermissionProjectionEndpoints();
+        app.MapStaffArrFieldInboxEndpoints();
         await Task.CompletedTask;
     });

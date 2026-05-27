@@ -26,9 +26,17 @@ import type {
   UpdateOrgUnitStatusRequest,
   CertificationDefinitionResponse,
   PersonCertificationResponse,
+  GrantReadinessOverrideRequest,
   PersonReadinessResponse,
+  ReadinessRollupSummaryResponse,
   GrantPersonCertificationRequest,
   UpdatePersonCertificationRequest,
+  PersonnelIncidentSummaryResponse,
+  PersonnelIncidentDetailResponse,
+  CreatePersonnelIncidentRequest,
+  RouteIncidentToTrainarrResponse,
+  PagedResult,
+  PersonTimelineEntryResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -341,6 +349,21 @@ export async function getPermissionHistoryTimeline(
   return parseJsonResponse<PermissionHistoryTimelineEntryResponse[]>(response, 'Failed to load permission history')
 }
 
+export async function getPersonTimeline(
+  accessToken: string,
+  personId: string,
+  page = 1,
+  pageSize = 50,
+): Promise<PagedResult<PersonTimelineEntryResponse>> {
+  const response = await fetch(
+    `${apiBase}/api/people/${personId}/timeline?page=${page}&pageSize=${pageSize}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<PagedResult<PersonTimelineEntryResponse>>(response, 'Failed to load person timeline')
+}
+
 export async function getCertificationDefinitions(
   accessToken: string,
 ): Promise<CertificationDefinitionResponse[]> {
@@ -395,4 +418,95 @@ export async function getPersonReadiness(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PersonReadinessResponse>(response, 'Failed to load person readiness')
+}
+
+export async function getTeamReadinessRollups(
+  accessToken: string,
+  siteOrgUnitId?: string,
+): Promise<ReadinessRollupSummaryResponse[]> {
+  const query = siteOrgUnitId ? `?siteOrgUnitId=${encodeURIComponent(siteOrgUnitId)}` : ''
+  const response = await fetch(`${apiBase}/api/readiness-rollups/teams${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ReadinessRollupSummaryResponse[]>(response, 'Failed to load team readiness rollups')
+}
+
+export async function getSiteReadinessRollups(
+  accessToken: string,
+): Promise<ReadinessRollupSummaryResponse[]> {
+  const response = await fetch(`${apiBase}/api/readiness-rollups/sites`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ReadinessRollupSummaryResponse[]>(response, 'Failed to load site readiness rollups')
+}
+
+export async function grantPersonReadinessOverride(
+  accessToken: string,
+  personId: string,
+  request: GrantReadinessOverrideRequest,
+): Promise<PersonReadinessResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/readiness/override`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonReadinessResponse>(response, 'Failed to grant readiness override')
+}
+
+export async function clearPersonReadinessOverride(
+  accessToken: string,
+  personId: string,
+): Promise<PersonReadinessResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/readiness/override`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonReadinessResponse>(response, 'Failed to clear readiness override')
+}
+
+export async function listPersonnelIncidents(
+  accessToken: string,
+  personId?: string,
+): Promise<PersonnelIncidentSummaryResponse[]> {
+  const query = personId ? `?personId=${encodeURIComponent(personId)}` : ''
+  const response = await fetch(`${apiBase}/api/incidents${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonnelIncidentSummaryResponse[]>(response, 'Failed to load incidents')
+}
+
+export async function getPersonnelIncident(
+  accessToken: string,
+  incidentId: string,
+): Promise<PersonnelIncidentDetailResponse> {
+  const response = await fetch(`${apiBase}/api/incidents/${incidentId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonnelIncidentDetailResponse>(response, 'Failed to load incident')
+}
+
+export async function createPersonnelIncident(
+  accessToken: string,
+  request: CreatePersonnelIncidentRequest,
+): Promise<PersonnelIncidentDetailResponse> {
+  const response = await fetch(`${apiBase}/api/incidents`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonnelIncidentDetailResponse>(response, 'Failed to create incident')
+}
+
+export async function routePersonnelIncidentToTrainarr(
+  accessToken: string,
+  incidentId: string,
+): Promise<RouteIncidentToTrainarrResponse> {
+  const response = await fetch(`${apiBase}/api/incidents/${incidentId}/route-to-trainarr`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RouteIncidentToTrainarrResponse>(
+    response,
+    'Failed to route incident to TrainArr',
+  )
 }

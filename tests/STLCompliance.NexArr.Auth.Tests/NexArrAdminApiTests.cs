@@ -115,7 +115,7 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
         var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
 
         var request = Authorized(HttpMethod.Post, "/api/products", token);
-        request.Content = JsonContent.Create(new CreateProductRequest("companion", "Companion App", 80));
+        request.Content = JsonContent.Create(new CreateProductRequest("audit-portal", "Audit Portal", 85));
         var response = await _client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);

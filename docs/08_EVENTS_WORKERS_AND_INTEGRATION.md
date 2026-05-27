@@ -39,6 +39,7 @@ Products integrate through:
 
 | Worker | Jobs |
 |---|---|
+| shared-worker | TrainArr qualification expiration scanning, cross-product scheduled orchestration |
 | nexarr-worker | token cleanup, entitlement reconciliation, licensing checks, service token cleanup, audit rollups |
 | staffarr-worker | certification expiration, permission projection, readiness, history rollups, audit packages |
 | trainarr-worker | due training, reminders, escalation, completion validation, qualification publication |

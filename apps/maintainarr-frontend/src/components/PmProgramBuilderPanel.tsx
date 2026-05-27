@@ -1,0 +1,297 @@
+import type {
+  AssetResponse,
+  AssetTypeResponse,
+  PmProgramDetailResponse,
+  PmProgramSummaryResponse,
+  PmScheduleResponse,
+} from '../api/types'
+
+interface PmProgramBuilderPanelProps {
+  canManage: boolean
+  programs: PmProgramSummaryResponse[]
+  selectedProgram: PmProgramDetailResponse | null
+  assetTypes: AssetTypeResponse[]
+  assets: AssetResponse[]
+  availableSchedules: PmScheduleResponse[]
+  isLoading: boolean
+  isDetailLoading: boolean
+  isSchedulesLoading: boolean
+  programKey: string
+  programName: string
+  programDescription: string
+  scopeType: string
+  selectedAssetTypeId: string
+  selectedAssetId: string
+  selectedProgramId: string
+  selectedScheduleIds: string[]
+  onProgramKeyChange: (value: string) => void
+  onProgramNameChange: (value: string) => void
+  onProgramDescriptionChange: (value: string) => void
+  onScopeTypeChange: (value: string) => void
+  onSelectedAssetTypeIdChange: (value: string) => void
+  onSelectedAssetIdChange: (value: string) => void
+  onSelectedProgramIdChange: (value: string) => void
+  onSelectedScheduleIdsChange: (value: string[]) => void
+  onCreateProgram: () => void
+  onSaveSchedules: () => void
+  onActivateProgram: () => void
+  isCreatingProgram: boolean
+  isSavingSchedules: boolean
+}
+
+export function PmProgramBuilderPanel({
+  canManage,
+  programs,
+  selectedProgram,
+  assetTypes,
+  assets,
+  availableSchedules,
+  isLoading,
+  isDetailLoading,
+  isSchedulesLoading,
+  programKey,
+  programName,
+  programDescription,
+  scopeType,
+  selectedAssetTypeId,
+  selectedAssetId,
+  selectedProgramId,
+  selectedScheduleIds,
+  onProgramKeyChange,
+  onProgramNameChange,
+  onProgramDescriptionChange,
+  onScopeTypeChange,
+  onSelectedAssetTypeIdChange,
+  onSelectedAssetIdChange,
+  onSelectedProgramIdChange,
+  onSelectedScheduleIdsChange,
+  onCreateProgram,
+  onSaveSchedules,
+  onActivateProgram,
+  isCreatingProgram,
+  isSavingSchedules,
+}: PmProgramBuilderPanelProps) {
+  if (isLoading) {
+    return <p className="text-sm text-slate-400">Loading PM programs…</p>
+  }
+
+  const toggleSchedule = (scheduleId: string) => {
+    if (selectedScheduleIds.includes(scheduleId)) {
+      onSelectedScheduleIdsChange(selectedScheduleIds.filter((id) => id !== scheduleId))
+      return
+    }
+    onSelectedScheduleIdsChange([...selectedScheduleIds, scheduleId])
+  }
+
+  const scopedAssets =
+    scopeType === 'asset_type' && selectedAssetTypeId
+      ? assets.filter((asset) => asset.assetTypeId === selectedAssetTypeId)
+      : assets
+
+  return (
+    <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
+      <h2 className="text-lg font-semibold text-white">PM program builder</h2>
+      <p className="mt-1 text-sm text-slate-400">
+        Group PM schedules into programs scoped by asset type or individual asset.
+      </p>
+
+      {canManage ? (
+        <div className="mt-6 grid gap-4 rounded-lg border border-slate-700 bg-slate-950/40 p-4 md:grid-cols-3">
+          <label className="block text-sm">
+            <span className="text-slate-300">Program key</span>
+            <input
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
+              value={programKey}
+              onChange={(e) => onProgramKeyChange(e.target.value)}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-slate-300">Name</span>
+            <input
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
+              value={programName}
+              onChange={(e) => onProgramNameChange(e.target.value)}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-slate-300">Description</span>
+            <input
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
+              value={programDescription}
+              onChange={(e) => onProgramDescriptionChange(e.target.value)}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-slate-300">Scope type</span>
+            <select
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
+              value={scopeType}
+              onChange={(e) => onScopeTypeChange(e.target.value)}
+            >
+              <option value="asset_type">Asset type</option>
+              <option value="asset">Single asset</option>
+            </select>
+          </label>
+          {scopeType === 'asset_type' ? (
+            <label className="block text-sm md:col-span-2">
+              <span className="text-slate-300">Asset type</span>
+              <select
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
+                value={selectedAssetTypeId}
+                onChange={(e) => onSelectedAssetTypeIdChange(e.target.value)}
+              >
+                <option value="">Select asset type…</option>
+                {assetTypes.map((type) => (
+                  <option key={type.assetTypeId} value={type.assetTypeId}>
+                    {type.name} ({type.typeKey})
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <label className="block text-sm md:col-span-2">
+              <span className="text-slate-300">Asset</span>
+              <select
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
+                value={selectedAssetId}
+                onChange={(e) => onSelectedAssetIdChange(e.target.value)}
+              >
+                <option value="">Select asset…</option>
+                {scopedAssets.map((asset) => (
+                  <option key={asset.assetId} value={asset.assetId}>
+                    {asset.assetTag} — {asset.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <div className="md:col-span-3">
+            <button
+              type="button"
+              className="rounded bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50"
+              disabled={isCreatingProgram}
+              onClick={onCreateProgram}
+            >
+              {isCreatingProgram ? 'Creating…' : 'Create PM program'}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-6">
+        <h3 className="text-sm font-medium text-slate-300">Programs</h3>
+        {programs.length === 0 ? (
+          <p className="mt-2 text-sm text-slate-500">No PM programs yet.</p>
+        ) : (
+          <ul className="mt-2 divide-y divide-slate-800 rounded-lg border border-slate-700">
+            {programs.map((program) => (
+              <li key={program.pmProgramId}>
+                <button
+                  type="button"
+                  className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm hover:bg-slate-800/60 ${
+                    selectedProgramId === program.pmProgramId ? 'bg-slate-800/80' : ''
+                  }`}
+                  onClick={() => onSelectedProgramIdChange(program.pmProgramId)}
+                >
+                  <span>
+                    <span className="font-medium text-white">{program.name}</span>
+                    <span className="ml-2 text-slate-500">({program.programKey})</span>
+                  </span>
+                  <span className="text-slate-400">
+                    {program.scopeType === 'asset_type'
+                      ? program.assetTypeName ?? 'Asset type'
+                      : program.assetTag ?? 'Asset'}{' '}
+                    · {program.scheduleCount} schedules · {program.status}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {selectedProgramId ? (
+        <div className="mt-6 rounded-lg border border-slate-700 bg-slate-950/40 p-4">
+          {isDetailLoading ? (
+            <p className="text-sm text-slate-400">Loading program detail…</p>
+          ) : selectedProgram ? (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-base font-medium text-white">{selectedProgram.name}</h3>
+                <span className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-300">{selectedProgram.status}</span>
+              </div>
+              <p className="mt-2 text-sm text-slate-400">{selectedProgram.description || 'No description.'}</p>
+              <p className="mt-1 text-xs text-slate-500">
+                Scope:{' '}
+                {selectedProgram.scopeType === 'asset_type'
+                  ? `Asset type ${selectedProgram.assetTypeName ?? selectedProgram.assetTypeKey ?? ''}`
+                  : `Asset ${selectedProgram.assetTag ?? ''} — ${selectedProgram.assetName ?? ''}`}
+              </p>
+
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-slate-300">Assigned schedules</h4>
+                {selectedProgram.schedules.length === 0 ? (
+                  <p className="mt-2 text-sm text-slate-500">No schedules assigned yet.</p>
+                ) : (
+                  <ul className="mt-2 space-y-1 text-sm text-slate-300">
+                    {selectedProgram.schedules.map((schedule) => (
+                      <li key={schedule.pmScheduleId}>
+                        {schedule.scheduleKey} — {schedule.name} ({schedule.assetTag}) · {schedule.dueStatus}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {canManage ? (
+                <div className="mt-6">
+                  <h4 className="text-sm font-medium text-slate-300">Assign schedules</h4>
+                  {isSchedulesLoading ? (
+                    <p className="mt-2 text-sm text-slate-400">Loading available schedules…</p>
+                  ) : availableSchedules.length === 0 ? (
+                    <p className="mt-2 text-sm text-slate-500">No PM schedules match this program scope.</p>
+                  ) : (
+                    <ul className="mt-2 max-h-48 space-y-2 overflow-y-auto rounded border border-slate-700 p-3">
+                      {availableSchedules.map((schedule) => (
+                        <li key={schedule.pmScheduleId}>
+                          <label className="flex items-center gap-2 text-sm text-slate-300">
+                            <input
+                              type="checkbox"
+                              checked={selectedScheduleIds.includes(schedule.pmScheduleId)}
+                              onChange={() => toggleSchedule(schedule.pmScheduleId)}
+                            />
+                            {schedule.scheduleKey} — {schedule.name} ({schedule.assetTag})
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      className="rounded bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-600 disabled:opacity-50"
+                      disabled={isSavingSchedules}
+                      onClick={onSaveSchedules}
+                    >
+                      {isSavingSchedules ? 'Saving…' : 'Save schedule assignments'}
+                    </button>
+                    {selectedProgram.status === 'draft' ? (
+                      <button
+                        type="button"
+                        className="rounded bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50"
+                        disabled={isSavingSchedules || selectedProgram.schedules.length === 0}
+                        onClick={onActivateProgram}
+                      >
+                        Activate program
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      ) : null}
+    </section>
+  )
+}

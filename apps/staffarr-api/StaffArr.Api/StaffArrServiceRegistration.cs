@@ -1,5 +1,6 @@
 using StaffArr.Api.Options;
 using StaffArr.Api.Services;
+using STLCompliance.Shared.Auth;
 
 namespace StaffArr.Api;
 
@@ -9,6 +10,7 @@ public static class StaffArrServiceRegistration
     {
         builder.Services.Configure<NexArrClientOptions>(builder.Configuration.GetSection(NexArrClientOptions.SectionName));
         builder.Services.Configure<HandoffOptions>(builder.Configuration.GetSection(HandoffOptions.SectionName));
+        builder.Services.Configure<TrainArrClientOptions>(builder.Configuration.GetSection(TrainArrClientOptions.SectionName));
 
         builder.Services.AddHttpClient<NexArrHandoffClient>((sp, client) =>
         {
@@ -27,7 +29,25 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<OrgUnitAssignmentService>();
         builder.Services.AddScoped<RoleTemplateService>();
         builder.Services.AddScoped<CertificationService>();
+        builder.Services.AddScoped<ReadinessOverrideService>();
         builder.Services.AddScoped<ReadinessService>();
+        builder.Services.AddScoped<ReadinessRollupService>();
+        builder.Services.AddScoped<PermissionProjectionService>();
+        builder.Services.AddScoped<TrainingBlockerIngestionService>();
+        builder.Services.AddScoped<CertificationGrantIngestionService>();
+        builder.Services.AddScoped<CertificationLifecycleIngestionService>();
+        builder.Services.AddScoped<CertificationExpirationService>();
+        builder.Services.AddSingleton<StlServiceTokenValidator>();
+        builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
+        builder.Services.AddHttpClient<TrainArrIncidentRemediationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<TrainArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddScoped<IncidentService>();
+        builder.Services.AddScoped<FieldInboxService>();
+        builder.Services.AddScoped<IncidentRoutingService>();
+        builder.Services.AddScoped<PersonTimelineService>();
         builder.Services.AddScoped<IStaffArrAuditService, StaffArrAuditService>();
 
         var frontendOrigin = builder.Configuration["Cors:StaffArrFrontendOrigin"] ?? "http://localhost:5175";

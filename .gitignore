@@ -24,3 +24,6 @@ Thumbs.db
 # Secrets
 appsettings.*.local.json
 **/secrets.json
+
+# TrainArr local evidence uploads
+**/trainarr-evidence/

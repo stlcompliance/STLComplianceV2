@@ -1,6 +1,31 @@
+using SupplyArr.Api;
 using SupplyArr.Api.Data;
+using SupplyArr.Api.Endpoints;
 using STLCompliance.Shared.Hosting;
 
 await StlApiHost.RunAsync<SupplyArrDbContext>(
     new ProductDescriptor("supplyarr", "SupplyArr", 5106),
-    args);
+    args,
+    SupplyArrServiceRegistration.ConfigureServices,
+    async app =>
+    {
+        SupplyArrServiceRegistration.ConfigurePipeline(app);
+        app.MapSupplyArrAuthEndpoints();
+        app.MapSupplyArrPartyRegistryEndpoints();
+        app.MapSupplyArrPartCatalogEndpoints();
+        app.MapSupplyArrInventoryEndpoints();
+        app.MapSupplyArrPurchaseRequestEndpoints();
+        app.MapSupplyArrPurchaseOrderEndpoints();
+        app.MapSupplyArrReceivingEndpoints();
+        app.MapSupplyArrBackorderEndpoints();
+        app.MapSupplyArrVendorReturnEndpoints();
+        app.MapSupplyArrPricingSnapshotEndpoints();
+        app.MapSupplyArrLeadTimeSnapshotEndpoints();
+        app.MapSupplyArrAvailabilitySnapshotEndpoints();
+        app.MapSupplyArrReorderEvaluationEndpoints();
+        app.MapSupplyArrInternalReorderEvaluationEndpoints();
+        app.MapSupplyArrIntegrationEndpoints();
+        app.MapSupplyArrDemandRefEndpoints();
+        app.MapSupplyArrFieldInboxEndpoints();
+        await Task.CompletedTask;
+    });

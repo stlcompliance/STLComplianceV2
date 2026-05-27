@@ -79,8 +79,7 @@ public static class AuthEndpoints
 
         me.MapGet("/navigation", async (AuthService auth, HttpContext context, CancellationToken cancellationToken) =>
         {
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await auth.GetNavigationAsync(tenantId, cancellationToken));
+            return Results.Ok(await auth.GetNavigationAsync(context.User, cancellationToken));
         })
         .WithName("GetMyNavigation");
     }

@@ -1,0 +1,501 @@
+using Microsoft.EntityFrameworkCore;
+using SupplyArr.Api.Contracts;
+using SupplyArr.Api.Data;
+using SupplyArr.Api.Entities;
+using STLCompliance.Shared.Contracts;
+
+namespace SupplyArr.Api.Services;
+
+public sealed class PartRegistryService(
+    SupplyArrDbContext db,
+    ISupplyArrAuditService audit)
+{
+    private static readonly HashSet<string> AllowedStatuses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "active",
+        "inactive"
+    };
+
+    public async Task<IReadOnlyList<PartResponse>> ListAsync(
+        Guid tenantId,
+        Guid? catalogId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = db.Parts
+            .AsNoTracking()
+            .Include(x => x.PartCatalog)
+            .Include(x => x.ManufacturerAliases)
+            .Include(x => x.VendorLinks)
+            .ThenInclude(x => x.ExternalParty)
+            .Where(x => x.TenantId == tenantId);
+
+        if (catalogId is not null)
+        {
+            query = query.Where(x => x.PartCatalogId == catalogId);
+        }
+
+        var parts = await query
+            .OrderBy(x => x.DisplayName)
+            .ToListAsync(cancellationToken);
+
+        return parts.Select(Map).ToList();
+    }
+
+    public async Task<PartResponse> GetAsync(
+        Guid tenantId,
+        Guid partId,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadPartAsync(tenantId, partId, cancellationToken);
+        return Map(entity);
+    }
+
+    public async Task<PartResponse> CreateAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        CreatePartRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var partKey = NormalizePartKey(request.PartKey);
+        var exists = await db.Parts.AnyAsync(
+            x => x.TenantId == tenantId && x.PartKey == partKey,
+            cancellationToken);
+        if (exists)
+        {
+            throw new StlApiException(
+                "parts.duplicate",
+                "A part with this key already exists.",
+                409);
+        }
+
+        await ValidateCatalogAsync(tenantId, request.CatalogId, cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new Part
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartCatalogId = request.CatalogId,
+            PartKey = partKey,
+            DisplayName = NormalizeDisplayName(request.DisplayName),
+            Description = NormalizeDescription(request.Description),
+            CategoryKey = NormalizeCategoryKey(request.CategoryKey),
+            UnitOfMeasure = NormalizeUnitOfMeasure(request.UnitOfMeasure),
+            ManufacturerName = NormalizeManufacturerName(request.ManufacturerName),
+            ManufacturerPartNumber = NormalizeManufacturerPartNumber(request.ManufacturerPartNumber),
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.Parts.Add(entity);
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "part.create",
+            tenantId,
+            actorUserId,
+            "part",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return Map(await LoadPartAsync(tenantId, entity.Id, cancellationToken));
+    }
+
+    public async Task<PartResponse> UpdateAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid partId,
+        UpdatePartRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await db.Parts.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == partId,
+            cancellationToken);
+        if (entity is null)
+        {
+            throw new StlApiException("parts.not_found", "Part was not found.", 404);
+        }
+
+        await ValidateCatalogAsync(tenantId, request.CatalogId, cancellationToken);
+
+        entity.PartCatalogId = request.CatalogId;
+        entity.DisplayName = NormalizeDisplayName(request.DisplayName);
+        entity.Description = NormalizeDescription(request.Description);
+        entity.CategoryKey = NormalizeCategoryKey(request.CategoryKey);
+        entity.UnitOfMeasure = NormalizeUnitOfMeasure(request.UnitOfMeasure);
+        entity.ManufacturerName = NormalizeManufacturerName(request.ManufacturerName);
+        entity.ManufacturerPartNumber = NormalizeManufacturerPartNumber(request.ManufacturerPartNumber);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "part.update",
+            tenantId,
+            actorUserId,
+            "part",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return Map(await LoadPartAsync(tenantId, partId, cancellationToken));
+    }
+
+    public async Task<PartResponse> UpdateStatusAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid partId,
+        UpdatePartStatusRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var status = NormalizeStatus(request.Status);
+        var entity = await db.Parts.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == partId,
+            cancellationToken);
+        if (entity is null)
+        {
+            throw new StlApiException("parts.not_found", "Part was not found.", 404);
+        }
+
+        entity.Status = status;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "part.status_update",
+            tenantId,
+            actorUserId,
+            "part",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return Map(await LoadPartAsync(tenantId, partId, cancellationToken));
+    }
+
+    public async Task<PartManufacturerAliasResponse> AddManufacturerAliasAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid partId,
+        CreatePartManufacturerAliasRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var partExists = await db.Parts.AnyAsync(
+            x => x.TenantId == tenantId && x.Id == partId,
+            cancellationToken);
+        if (!partExists)
+        {
+            throw new StlApiException("parts.not_found", "Part was not found.", 404);
+        }
+
+        var aliasKey = NormalizeAliasKey(request.AliasKey);
+        var duplicate = await db.PartManufacturerAliases.AnyAsync(
+            x => x.TenantId == tenantId && x.PartId == partId && x.AliasKey == aliasKey,
+            cancellationToken);
+        if (duplicate)
+        {
+            throw new StlApiException(
+                "parts.alias_duplicate",
+                "A manufacturer alias with this key already exists for the part.",
+                409);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new PartManufacturerAlias
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartId = partId,
+            AliasKey = aliasKey,
+            ManufacturerName = NormalizeManufacturerName(request.ManufacturerName),
+            ManufacturerPartNumber = NormalizeManufacturerPartNumber(request.ManufacturerPartNumber),
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.PartManufacturerAliases.Add(entity);
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "part_manufacturer_alias.create",
+            tenantId,
+            actorUserId,
+            "part_manufacturer_alias",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return MapAlias(entity);
+    }
+
+    public async Task<PartVendorLinkResponse> AddVendorLinkAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid partId,
+        CreatePartVendorLinkRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var partExists = await db.Parts.AnyAsync(
+            x => x.TenantId == tenantId && x.Id == partId,
+            cancellationToken);
+        if (!partExists)
+        {
+            throw new StlApiException("parts.not_found", "Part was not found.", 404);
+        }
+
+        var party = await db.ExternalParties.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == request.PartyId,
+            cancellationToken);
+        if (party is null)
+        {
+            throw new StlApiException("parties.not_found", "External party was not found.", 404);
+        }
+
+        if (!string.Equals(party.PartyType, "vendor", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(party.PartyType, "supplier", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Vendor links require a vendor or supplier party.",
+                400);
+        }
+
+        var duplicate = await db.PartVendorLinks.AnyAsync(
+            x => x.TenantId == tenantId && x.PartId == partId && x.ExternalPartyId == request.PartyId,
+            cancellationToken);
+        if (duplicate)
+        {
+            throw new StlApiException(
+                "parts.vendor_link_duplicate",
+                "This part is already linked to the vendor.",
+                409);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        if (request.IsPreferred)
+        {
+            var existingPreferred = await db.PartVendorLinks
+                .Where(x => x.TenantId == tenantId && x.PartId == partId && x.IsPreferred)
+                .ToListAsync(cancellationToken);
+            foreach (var link in existingPreferred)
+            {
+                link.IsPreferred = false;
+                link.UpdatedAt = now;
+            }
+        }
+
+        var entity = new PartVendorLink
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartId = partId,
+            ExternalPartyId = request.PartyId,
+            VendorPartNumber = NormalizeVendorPartNumber(request.VendorPartNumber),
+            IsPreferred = request.IsPreferred,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.PartVendorLinks.Add(entity);
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "part_vendor_link.create",
+            tenantId,
+            actorUserId,
+            "part_vendor_link",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return MapVendorLink(entity, party);
+    }
+
+    private async Task ValidateCatalogAsync(
+        Guid tenantId,
+        Guid? catalogId,
+        CancellationToken cancellationToken)
+    {
+        if (catalogId is null)
+        {
+            return;
+        }
+
+        var exists = await db.PartCatalogs.AnyAsync(
+            x => x.TenantId == tenantId && x.Id == catalogId,
+            cancellationToken);
+        if (!exists)
+        {
+            throw new StlApiException("catalogs.not_found", "Part catalog was not found.", 404);
+        }
+    }
+
+    private async Task<Part> LoadPartAsync(
+        Guid tenantId,
+        Guid partId,
+        CancellationToken cancellationToken)
+    {
+        var entity = await db.Parts
+            .AsNoTracking()
+            .Include(x => x.PartCatalog)
+            .Include(x => x.ManufacturerAliases.OrderBy(a => a.AliasKey))
+            .Include(x => x.VendorLinks)
+            .ThenInclude(x => x.ExternalParty)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == partId, cancellationToken);
+        if (entity is null)
+        {
+            throw new StlApiException("parts.not_found", "Part was not found.", 404);
+        }
+
+        return entity;
+    }
+
+    private static PartResponse Map(Part entity) =>
+        new(
+            entity.Id,
+            entity.PartKey,
+            entity.PartCatalogId,
+            entity.PartCatalog?.CatalogKey,
+            entity.DisplayName,
+            entity.Description,
+            entity.CategoryKey,
+            entity.UnitOfMeasure,
+            entity.ManufacturerName,
+            entity.ManufacturerPartNumber,
+            entity.Status,
+            entity.ReorderPoint,
+            entity.ReorderQuantity,
+            entity.ManufacturerAliases
+                .OrderBy(x => x.AliasKey)
+                .Select(MapAlias)
+                .ToList(),
+            entity.VendorLinks
+                .OrderByDescending(x => x.IsPreferred)
+                .ThenBy(x => x.ExternalParty.DisplayName)
+                .Select(x => MapVendorLink(x, x.ExternalParty))
+                .ToList(),
+            entity.CreatedAt,
+            entity.UpdatedAt);
+
+    private static PartManufacturerAliasResponse MapAlias(PartManufacturerAlias entity) =>
+        new(
+            entity.Id,
+            entity.AliasKey,
+            entity.ManufacturerName,
+            entity.ManufacturerPartNumber,
+            entity.CreatedAt);
+
+    private static PartVendorLinkResponse MapVendorLink(PartVendorLink entity, ExternalParty party) =>
+        new(
+            entity.Id,
+            party.Id,
+            party.PartyKey,
+            party.DisplayName,
+            entity.VendorPartNumber,
+            entity.IsPreferred,
+            entity.CreatedAt);
+
+    private static string NormalizePartKey(string value)
+    {
+        var normalized = value.Trim().ToLowerInvariant();
+        if (normalized.Length < 2 || normalized.Length > 128)
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Part key must be between 2 and 128 characters.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeDisplayName(string value)
+    {
+        var trimmed = value.Trim();
+        if (trimmed.Length < 2 || trimmed.Length > 256)
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Display name must be between 2 and 256 characters.",
+                400);
+        }
+
+        return trimmed;
+    }
+
+    private static string NormalizeDescription(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+
+    private static string NormalizeCategoryKey(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "general";
+        }
+
+        var normalized = value.Trim().ToLowerInvariant();
+        if (normalized.Length > 128)
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Category key must be 128 characters or fewer.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeUnitOfMeasure(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "each";
+        }
+
+        var normalized = value.Trim().ToLowerInvariant();
+        if (normalized.Length > 32)
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Unit of measure must be 32 characters or fewer.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeManufacturerName(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+
+    private static string NormalizeManufacturerPartNumber(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+
+    private static string NormalizeAliasKey(string value)
+    {
+        var normalized = value.Trim().ToLowerInvariant();
+        if (normalized.Length < 2 || normalized.Length > 128)
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Alias key must be between 2 and 128 characters.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeVendorPartNumber(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+
+    private static string NormalizeStatus(string status)
+    {
+        var normalized = status.Trim().ToLowerInvariant();
+        if (!AllowedStatuses.Contains(normalized))
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Status must be active or inactive.",
+                400);
+        }
+
+        return normalized;
+    }
+}

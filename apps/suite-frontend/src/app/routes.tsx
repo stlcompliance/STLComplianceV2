@@ -5,7 +5,8 @@ import { AppShellLayout } from '../layouts/AppShellLayout'
 import { PlatformAdminLayout } from '../layouts/PlatformAdminLayout'
 import { HomePage } from '../pages/HomePage'
 import { LoginPage } from '../pages/LoginPage'
-import { ProductHubPage } from '../pages/ProductHubPage'
+import { ProductShellLayout } from '../layouts/ProductShellLayout'
+import { ProductSurfacePage } from '../pages/ProductSurfacePage'
 import { LaunchDiagnosticsPage } from '../pages/platform-admin/LaunchDiagnosticsPage'
 import { PlatformAdminDashboardPage } from '../pages/platform-admin/PlatformAdminDashboardPage'
 import { ProductOverviewPage } from '../pages/platform-admin/ProductOverviewPage'
@@ -28,7 +29,10 @@ export function AppRoutes() {
                 <Route path="products" element={<ProductOverviewPage />} />
               </Route>
             </Route>
-            <Route path="/app/:productKey" element={<ProductHubPage />} />
+            <Route path="/app/:productKey" element={<ProductShellLayout />}>
+              <Route index element={<ProductSurfacePage />} />
+              <Route path=":surfaceKey" element={<ProductSurfacePage />} />
+            </Route>
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/app" replace />} />

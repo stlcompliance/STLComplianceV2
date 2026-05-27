@@ -1,6 +1,7 @@
 using NexArr.Api;
 using NexArr.Api.Data;
 using NexArr.Api.Endpoints;
+using NexArr.Api.Options;
 using STLCompliance.Shared.Hosting;
 
 await StlApiHost.RunAsync<NexArrDbContext>(
@@ -16,5 +17,7 @@ await StlApiHost.RunAsync<NexArrDbContext>(
         app.MapServiceTokenEndpoints();
         app.MapLaunchEndpoints();
         app.MapPlatformAdminEndpoints();
+        app.MapPlatformHealthEndpoints();
+        app.MapCompanionEndpoints();
         await NexArrServiceRegistration.InitializeAsync(app);
     });

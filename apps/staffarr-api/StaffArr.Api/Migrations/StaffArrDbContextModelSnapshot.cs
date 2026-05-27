@@ -117,6 +117,57 @@ namespace StaffArr.Api.Migrations
                     b.ToTable("staffarr_certification_definitions", (string)null);
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.IncidentTrainarrRouting", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<Guid>("IncidentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("RoutedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RoutedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RoutingStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainarrRemediationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IncidentId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "IncidentId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "TrainarrRemediationId")
+                        .IsUnique();
+
+                    b.ToTable("staffarr_incident_trainarr_routings", (string)null);
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.OrgUnit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -372,6 +423,9 @@ namespace StaffArr.Api.Migrations
                     b.Property<Guid?>("GrantedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("LastExternalLifecyclePublicationId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Notes")
                         .HasMaxLength(1024)
                         .HasColumnType("character varying(1024)");
@@ -403,11 +457,163 @@ namespace StaffArr.Api.Migrations
 
                     b.HasIndex("TenantId");
 
+                    b.HasIndex("TenantId", "ExternalPublicationId")
+                        .IsUnique()
+                        .HasFilter("\"ExternalPublicationId\" IS NOT NULL");
+
+                    b.HasIndex("TenantId", "LastExternalLifecyclePublicationId")
+                        .IsUnique()
+                        .HasFilter("\"LastExternalLifecyclePublicationId\" IS NOT NULL");
+
                     b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.HasIndex("TenantId", "Status", "ExpiresAt");
 
                     b.HasIndex("TenantId", "PersonId", "CertificationDefinitionId", "Status");
 
                     b.ToTable("staffarr_person_certifications", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonPermissionProjection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ComputedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PermissionCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "ComputedAt");
+
+                    b.HasIndex("TenantId", "PersonId")
+                        .IsUnique();
+
+                    b.ToTable("staffarr_person_permission_projections", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonPermissionProjectionEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PermissionKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("PermissionName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProjectionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ScopeType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ScopeValue")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("ProjectionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "PersonId", "PermissionKey", "ScopeType", "ScopeValue")
+                        .IsUnique();
+
+                    b.ToTable("staffarr_person_permission_projection_entries", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonReadinessOverride", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ClearedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ClearedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("GrantedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("GrantedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "PersonId", "GrantedAt");
+
+                    b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.ToTable("staffarr_person_readiness_overrides", (string)null);
                 });
 
             modelBuilder.Entity("StaffArr.Api.Entities.PersonRoleAssignment", b =>
@@ -459,6 +665,201 @@ namespace StaffArr.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("staffarr_person_role_assignments", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonTrainingBlocker", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BlockerType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("ClearedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("QualificationKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("QualificationName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainarrPublicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "TrainarrPublicationId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.ToTable("staffarr_person_training_blockers", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonnelIncident", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReasonCategoryKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("ReportedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ReportedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "PersonId", "ReportedAt");
+
+                    b.HasIndex("TenantId", "Status", "ReportedAt");
+
+                    b.ToTable("staffarr_personnel_incidents", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.ReadinessRollup", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ComputedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("NotReadyCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("OrgUnitId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("OrgUnitName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("OverrideCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReadyCount")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("ReadyPercent")
+                        .HasPrecision(5, 1)
+                        .HasColumnType("numeric(5,1)");
+
+                    b.Property<string>("ScopeType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TotalMembers")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrgUnitId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "ScopeType", "ComputedAt");
+
+                    b.HasIndex("TenantId", "ScopeType", "OrgUnitId")
+                        .IsUnique();
+
+                    b.ToTable("staffarr_readiness_rollups", (string)null);
                 });
 
             modelBuilder.Entity("StaffArr.Api.Entities.RoleTemplate", b =>
@@ -670,6 +1071,15 @@ namespace StaffArr.Api.Migrations
                     b.ToTable("staffarr_people", (string)null);
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.IncidentTrainarrRouting", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.PersonnelIncident", null)
+                        .WithMany()
+                        .HasForeignKey("IncidentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.OrgUnit", b =>
                 {
                     b.HasOne("StaffArr.Api.Entities.OrgUnit", "ParentOrgUnit")
@@ -754,6 +1164,41 @@ namespace StaffArr.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonPermissionProjection", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonPermissionProjectionEntry", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("StaffArr.Api.Entities.PersonPermissionProjection", "Projection")
+                        .WithMany("Entries")
+                        .HasForeignKey("ProjectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Projection");
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonReadinessOverride", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.PersonRoleAssignment", b =>
                 {
                     b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
@@ -765,6 +1210,33 @@ namespace StaffArr.Api.Migrations
                     b.HasOne("StaffArr.Api.Entities.RoleTemplate", null)
                         .WithMany()
                         .HasForeignKey("RoleTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonTrainingBlocker", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonnelIncident", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.ReadinessRollup", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.OrgUnit", null)
+                        .WithMany()
+                        .HasForeignKey("OrgUnitId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -797,6 +1269,11 @@ namespace StaffArr.Api.Migrations
                     b.Navigation("Manager");
 
                     b.Navigation("PrimaryOrgUnit");
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonPermissionProjection", b =>
+                {
+                    b.Navigation("Entries");
                 });
 #pragma warning restore 612, 618
         }

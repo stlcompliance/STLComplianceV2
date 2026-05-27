@@ -1,0 +1,4464 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "SupplyArr.Api | v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost/"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "SupplyArr.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "SupplyArrRedeemHandoff",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/availability-snapshots": {
+      "get": {
+        "tags": [
+          "AvailabilitySnapshots"
+        ],
+        "operationId": "ListAvailabilitySnapshots",
+        "parameters": [
+          {
+            "name": "partVendorLinkId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "partId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vendorPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOf",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AvailabilitySnapshots"
+        ],
+        "operationId": "CreateAvailabilitySnapshot",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAvailabilitySnapshotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/availability-snapshots/{availabilitySnapshotId}": {
+      "get": {
+        "tags": [
+          "AvailabilitySnapshots"
+        ],
+        "operationId": "GetAvailabilitySnapshot",
+        "parameters": [
+          {
+            "name": "availabilitySnapshotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/backorders": {
+      "get": {
+        "tags": [
+          "Backorders"
+        ],
+        "operationId": "ListBackorders",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "purchaseOrderId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "partId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/backorders/from-purchase-order-line/{purchaseOrderLineId}": {
+      "post": {
+        "tags": [
+          "Backorders"
+        ],
+        "operationId": "CreateBackorderFromPurchaseOrderLine",
+        "parameters": [
+          {
+            "name": "purchaseOrderLineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBackorderFromPurchaseOrderLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/backorders/{backorderId}": {
+      "get": {
+        "tags": [
+          "Backorders"
+        ],
+        "operationId": "GetBackorder",
+        "parameters": [
+          {
+            "name": "backorderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/backorders/{backorderId}/cancel": {
+      "post": {
+        "tags": [
+          "Backorders"
+        ],
+        "operationId": "CancelBackorder",
+        "parameters": [
+          {
+            "name": "backorderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelBackorderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/backorders/{backorderId}/fulfill": {
+      "post": {
+        "tags": [
+          "Backorders"
+        ],
+        "operationId": "FulfillBackorder",
+        "parameters": [
+          {
+            "name": "backorderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/catalogs": {
+      "get": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "ListPartCatalogs",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "CreatePartCatalog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePartCatalogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/catalogs/{catalogId}": {
+      "get": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "GetPartCatalog",
+        "parameters": [
+          {
+            "name": "catalogId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "UpdatePartCatalog",
+        "parameters": [
+          {
+            "name": "catalogId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePartCatalogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/catalogs/{catalogId}/status": {
+      "patch": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "UpdatePartCatalogStatus",
+        "parameters": [
+          {
+            "name": "catalogId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePartCatalogStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dealers": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "ListPartiesDealers",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "CreatePartyDealers",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dealers/{partyId}": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyDealers",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "UpdatePartyDealers",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExternalPartyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dealers/{partyId}/approval-status": {
+      "patch": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "UpdatePartyApprovalStatusDealers",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExternalPartyApprovalStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dealers/{partyId}/contacts": {
+      "post": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "CreatePartyContactDealers",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePartyContactRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dealers/{partyId}/status": {
+      "patch": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "UpdatePartyStatusDealers",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExternalPartyStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/demand-refs": {
+      "get": {
+        "tags": [
+          "DemandRefs"
+        ],
+        "operationId": "ListDemandRefs",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/demand-refs/{demandRefId}": {
+      "get": {
+        "tags": [
+          "DemandRefs"
+        ],
+        "operationId": "GetDemandRef",
+        "parameters": [
+          {
+            "name": "demandRefId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/demand-refs/{demandRefId}/create-purchase-request": {
+      "post": {
+        "tags": [
+          "DemandRefs"
+        ],
+        "operationId": "CreatePurchaseRequestFromDemandRef",
+        "parameters": [
+          {
+            "name": "demandRefId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseRequestFromDemandRefRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/field-inbox": {
+      "get": {
+        "tags": [
+          "FieldInbox"
+        ],
+        "operationId": "GetSupplyArrFieldInbox",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/maintainarr-demand": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestMaintainarrDemand",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestMaintainarrDemandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/reorder/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingReorderEvaluation",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/reorder/process-evaluation": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessReorderEvaluation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessReorderEvaluationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inventory/bins/{binId}": {
+      "put": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "UpdateInventoryBin",
+        "parameters": [
+          {
+            "name": "binId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInventoryBinRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inventory/bins/{binId}/status": {
+      "patch": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "UpdateInventoryBinStatus",
+        "parameters": [
+          {
+            "name": "binId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInventoryBinStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inventory/locations": {
+      "get": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "ListInventoryLocations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "CreateInventoryLocation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInventoryLocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inventory/locations/{locationId}": {
+      "get": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "GetInventoryLocation",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "UpdateInventoryLocation",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInventoryLocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inventory/locations/{locationId}/bins": {
+      "get": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "ListInventoryBins",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "CreateInventoryBin",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInventoryBinRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inventory/locations/{locationId}/status": {
+      "patch": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "UpdateInventoryLocationStatus",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInventoryLocationStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inventory/stock": {
+      "get": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "ListPartStockLevels",
+        "parameters": [
+          {
+            "name": "locationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "binId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "partId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "UpsertPartStockLevel",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPartStockLevelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lead-time-snapshots": {
+      "get": {
+        "tags": [
+          "LeadTimeSnapshots"
+        ],
+        "operationId": "ListLeadTimeSnapshots",
+        "parameters": [
+          {
+            "name": "partVendorLinkId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "partId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vendorPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOf",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "LeadTimeSnapshots"
+        ],
+        "operationId": "CreateLeadTimeSnapshot",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLeadTimeSnapshotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lead-time-snapshots/{leadTimeSnapshotId}": {
+      "get": {
+        "tags": [
+          "LeadTimeSnapshots"
+        ],
+        "operationId": "GetLeadTimeSnapshot",
+        "parameters": [
+          {
+            "name": "leadTimeSnapshotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "SupplyArrGetMe",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parties": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "ListPartiesAll",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "CreatePartyAll",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parties/{partyId}": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyAll",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "UpdatePartyAll",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExternalPartyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parties/{partyId}/approval-status": {
+      "patch": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "UpdatePartyApprovalStatusAll",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExternalPartyApprovalStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parties/{partyId}/contacts": {
+      "post": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "CreatePartyContactAll",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePartyContactRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parties/{partyId}/status": {
+      "patch": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "UpdatePartyStatusAll",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExternalPartyStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parts": {
+      "get": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "ListParts",
+        "parameters": [
+          {
+            "name": "catalogId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "CreatePart",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parts/{partId}": {
+      "get": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "GetPart",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "UpdatePart",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parts/{partId}/manufacturer-aliases": {
+      "post": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "CreatePartManufacturerAlias",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePartManufacturerAliasRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parts/{partId}/status": {
+      "patch": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "UpdatePartStatus",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePartStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parts/{partId}/vendor-links": {
+      "post": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "CreatePartVendorLink",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePartVendorLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/pricing-snapshots": {
+      "get": {
+        "tags": [
+          "PricingSnapshots"
+        ],
+        "operationId": "ListPricingSnapshots",
+        "parameters": [
+          {
+            "name": "partVendorLinkId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "partId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vendorPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOf",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PricingSnapshots"
+        ],
+        "operationId": "CreatePricingSnapshot",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePricingSnapshotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/pricing-snapshots/{pricingSnapshotId}": {
+      "get": {
+        "tags": [
+          "PricingSnapshots"
+        ],
+        "operationId": "GetPricingSnapshot",
+        "parameters": [
+          {
+            "name": "pricingSnapshotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-orders": {
+      "get": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "operationId": "ListPurchaseOrders",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-orders/from-purchase-request/{purchaseRequestId}": {
+      "post": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "operationId": "CreatePurchaseOrderFromPurchaseRequest",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseOrderFromPurchaseRequestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-orders/{purchaseOrderId}": {
+      "get": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "operationId": "GetPurchaseOrder",
+        "parameters": [
+          {
+            "name": "purchaseOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "operationId": "UpdatePurchaseOrder",
+        "parameters": [
+          {
+            "name": "purchaseOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-orders/{purchaseOrderId}/approve": {
+      "post": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "operationId": "ApprovePurchaseOrder",
+        "parameters": [
+          {
+            "name": "purchaseOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-orders/{purchaseOrderId}/cancel": {
+      "post": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "operationId": "CancelPurchaseOrder",
+        "parameters": [
+          {
+            "name": "purchaseOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelPurchaseOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-orders/{purchaseOrderId}/issue": {
+      "post": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "operationId": "IssuePurchaseOrder",
+        "parameters": [
+          {
+            "name": "purchaseOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-orders/{purchaseOrderId}/lines": {
+      "post": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "operationId": "AddPurchaseOrderLine",
+        "parameters": [
+          {
+            "name": "purchaseOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddPurchaseOrderLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-orders/{purchaseOrderId}/lines/{lineId}": {
+      "put": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "operationId": "UpdatePurchaseOrderLine",
+        "parameters": [
+          {
+            "name": "purchaseOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseOrderLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "PurchaseOrders"
+        ],
+        "operationId": "RemovePurchaseOrderLine",
+        "parameters": [
+          {
+            "name": "purchaseOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-requests": {
+      "get": {
+        "tags": [
+          "PurchaseRequests"
+        ],
+        "operationId": "ListPurchaseRequests",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PurchaseRequests"
+        ],
+        "operationId": "CreatePurchaseRequest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseRequestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-requests/{purchaseRequestId}": {
+      "get": {
+        "tags": [
+          "PurchaseRequests"
+        ],
+        "operationId": "GetPurchaseRequest",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PurchaseRequests"
+        ],
+        "operationId": "UpdatePurchaseRequest",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseRequestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-requests/{purchaseRequestId}/approve": {
+      "post": {
+        "tags": [
+          "PurchaseRequests"
+        ],
+        "operationId": "ApprovePurchaseRequest",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-requests/{purchaseRequestId}/lines": {
+      "post": {
+        "tags": [
+          "PurchaseRequests"
+        ],
+        "operationId": "AddPurchaseRequestLine",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddPurchaseRequestLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-requests/{purchaseRequestId}/lines/{lineId}": {
+      "put": {
+        "tags": [
+          "PurchaseRequests"
+        ],
+        "operationId": "UpdatePurchaseRequestLine",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseRequestLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "PurchaseRequests"
+        ],
+        "operationId": "RemovePurchaseRequestLine",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-requests/{purchaseRequestId}/reject": {
+      "post": {
+        "tags": [
+          "PurchaseRequests"
+        ],
+        "operationId": "RejectPurchaseRequest",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectPurchaseRequestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-requests/{purchaseRequestId}/submit": {
+      "post": {
+        "tags": [
+          "PurchaseRequests"
+        ],
+        "operationId": "SubmitPurchaseRequest",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ListReceivingReceipts",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "purchaseOrderId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/exceptions/{receivingExceptionId}/resolve": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ResolveReceivingException",
+        "parameters": [
+          {
+            "name": "receivingExceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/from-purchase-order/{purchaseOrderId}": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CreateReceivingReceiptFromPurchaseOrder",
+        "parameters": [
+          {
+            "name": "purchaseOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReceivingReceiptFromPurchaseOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/{receivingReceiptId}": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "GetReceivingReceipt",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/{receivingReceiptId}/exceptions": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ListReceivingExceptions",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/{receivingReceiptId}/lines/{lineId}": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptLine",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingReceiptLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/{receivingReceiptId}/lines/{lineId}/exceptions": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CreateReceivingException",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReceivingExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/{receivingReceiptId}/post": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "PostReceivingReceipt",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reorder-evaluation": {
+      "get": {
+        "tags": [
+          "ReorderEvaluation"
+        ],
+        "operationId": "EvaluateReorderSuggestions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reorder-evaluation/create-purchase-request": {
+      "post": {
+        "tags": [
+          "ReorderEvaluation"
+        ],
+        "operationId": "CreatePurchaseRequestFromReorderSuggestions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseRequestFromReorderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reorder-evaluation/parts/{partId}/policy": {
+      "get": {
+        "tags": [
+          "ReorderEvaluation"
+        ],
+        "operationId": "GetPartReorderPolicy",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ReorderEvaluation"
+        ],
+        "operationId": "UpsertPartReorderPolicy",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPartReorderPolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/returns": {
+      "get": {
+        "tags": [
+          "Returns"
+        ],
+        "operationId": "ListVendorReturns",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendorPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "purchaseOrderId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "partId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/returns/from-purchase-order-line/{purchaseOrderLineId}": {
+      "post": {
+        "tags": [
+          "Returns"
+        ],
+        "operationId": "CreateVendorReturnFromPurchaseOrderLine",
+        "parameters": [
+          {
+            "name": "purchaseOrderLineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVendorReturnFromPurchaseOrderLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/returns/from-stock": {
+      "post": {
+        "tags": [
+          "Returns"
+        ],
+        "operationId": "CreateVendorReturnFromStock",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVendorReturnFromStockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/returns/{returnId}": {
+      "get": {
+        "tags": [
+          "Returns"
+        ],
+        "operationId": "GetVendorReturn",
+        "parameters": [
+          {
+            "name": "returnId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/returns/{returnId}/cancel": {
+      "post": {
+        "tags": [
+          "Returns"
+        ],
+        "operationId": "CancelVendorReturn",
+        "parameters": [
+          {
+            "name": "returnId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelVendorReturnRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/returns/{returnId}/post": {
+      "post": {
+        "tags": [
+          "Returns"
+        ],
+        "operationId": "PostVendorReturn",
+        "parameters": [
+          {
+            "name": "returnId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/session": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "operationId": "SupplyArrGetSessionBootstrap",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/suppliers": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "ListPartiesSuppliers",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "CreatePartySuppliers",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/suppliers/{partyId}": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartySuppliers",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "UpdatePartySuppliers",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExternalPartyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/suppliers/{partyId}/approval-status": {
+      "patch": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "UpdatePartyApprovalStatusSuppliers",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExternalPartyApprovalStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/suppliers/{partyId}/contacts": {
+      "post": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "CreatePartyContactSuppliers",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePartyContactRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/suppliers/{partyId}/status": {
+      "patch": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "UpdatePartyStatusSuppliers",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExternalPartyStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendors": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "ListPartiesVendors",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "CreatePartyVendors",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendors/{partyId}": {
+      "get": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "GetPartyVendors",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "UpdatePartyVendors",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExternalPartyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendors/{partyId}/approval-status": {
+      "patch": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "UpdatePartyApprovalStatusVendors",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExternalPartyApprovalStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendors/{partyId}/contacts": {
+      "post": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "CreatePartyContactVendors",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePartyContactRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendors/{partyId}/status": {
+      "patch": {
+        "tags": [
+          "PartyRegistry"
+        ],
+        "operationId": "UpdatePartyStatusVendors",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExternalPartyStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AddPurchaseOrderLineRequest": {
+        "required": [
+          "partId",
+          "quantityOrdered",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantityOrdered": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "AddPurchaseRequestLineRequest": {
+        "required": [
+          "partId",
+          "quantityRequested",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantityRequested": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "CancelBackorderRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "CancelPurchaseOrderRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "CancelVendorReturnRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateAvailabilitySnapshotRequest": {
+        "required": [
+          "snapshotKey",
+          "partVendorLinkId",
+          "quantityAvailable",
+          "availabilityStatus",
+          "effectiveFrom",
+          "source",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "snapshotKey": {
+            "type": "string"
+          },
+          "partVendorLinkId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantityAvailable": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "availabilityStatus": {
+            "type": "string"
+          },
+          "effectiveFrom": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "source": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateBackorderFromPurchaseOrderLineRequest": {
+        "required": [
+          "backorderKey",
+          "quantityBackordered",
+          "expectedBy",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "backorderKey": {
+            "type": "string"
+          },
+          "quantityBackordered": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "expectedBy": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateInventoryBinRequest": {
+        "required": [
+          "binKey",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "binKey": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateInventoryLocationRequest": {
+        "required": [
+          "locationKey",
+          "name",
+          "locationType",
+          "addressLine"
+        ],
+        "type": "object",
+        "properties": {
+          "locationKey": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "locationType": {
+            "type": "string"
+          },
+          "addressLine": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateLeadTimeSnapshotRequest": {
+        "required": [
+          "snapshotKey",
+          "partVendorLinkId",
+          "leadTimeDays",
+          "effectiveFrom",
+          "source",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "snapshotKey": {
+            "type": "string"
+          },
+          "partVendorLinkId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "leadTimeDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "effectiveFrom": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "source": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreatePartCatalogRequest": {
+        "required": [
+          "catalogKey",
+          "name",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "catalogKey": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "CreatePartManufacturerAliasRequest": {
+        "required": [
+          "aliasKey",
+          "manufacturerName",
+          "manufacturerPartNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "aliasKey": {
+            "type": "string"
+          },
+          "manufacturerName": {
+            "type": "string"
+          },
+          "manufacturerPartNumber": {
+            "type": "string"
+          }
+        }
+      },
+      "CreatePartRequest": {
+        "required": [
+          "partKey",
+          "catalogId",
+          "displayName",
+          "description",
+          "categoryKey",
+          "unitOfMeasure",
+          "manufacturerName",
+          "manufacturerPartNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "partKey": {
+            "type": "string"
+          },
+          "catalogId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "categoryKey": {
+            "type": "string"
+          },
+          "unitOfMeasure": {
+            "type": "string"
+          },
+          "manufacturerName": {
+            "type": "string"
+          },
+          "manufacturerPartNumber": {
+            "type": "string"
+          }
+        }
+      },
+      "CreatePartVendorLinkRequest": {
+        "required": [
+          "partyId",
+          "vendorPartNumber",
+          "isPreferred"
+        ],
+        "type": "object",
+        "properties": {
+          "partyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "vendorPartNumber": {
+            "type": "string"
+          },
+          "isPreferred": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreatePartyContactRequest": {
+        "required": [
+          "contactName",
+          "email",
+          "phone",
+          "roleLabel",
+          "isPrimary"
+        ],
+        "type": "object",
+        "properties": {
+          "contactName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "roleLabel": {
+            "type": "string"
+          },
+          "isPrimary": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreatePricingSnapshotRequest": {
+        "required": [
+          "snapshotKey",
+          "partVendorLinkId",
+          "unitPrice",
+          "currencyCode",
+          "minimumOrderQuantity",
+          "effectiveFrom",
+          "source",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "snapshotKey": {
+            "type": "string"
+          },
+          "partVendorLinkId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "unitPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currencyCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "minimumOrderQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "effectiveFrom": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "source": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreatePurchaseOrderFromPurchaseRequestRequest": {
+        "required": [
+          "orderKey",
+          "title",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "orderKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreatePurchaseRequestFromDemandRefRequest": {
+        "required": [
+          "requestKey",
+          "title",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "requestKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreatePurchaseRequestFromReorderRequest": {
+        "required": [
+          "requestKey",
+          "title",
+          "notes",
+          "partIds"
+        ],
+        "type": "object",
+        "properties": {
+          "requestKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "partIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "CreatePurchaseRequestLineRequest": {
+        "required": [
+          "partId",
+          "quantityRequested",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantityRequested": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "CreatePurchaseRequestRequest": {
+        "required": [
+          "requestKey",
+          "title",
+          "notes",
+          "vendorPartyId",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "requestKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "vendorPartyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "lines": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CreatePurchaseRequestLineRequest"
+            }
+          }
+        }
+      },
+      "CreateReceivingExceptionRequest": {
+        "required": [
+          "exceptionType",
+          "quantity",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "exceptionType": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateReceivingReceiptFromPurchaseOrderRequest": {
+        "required": [
+          "receiptKey",
+          "inventoryBinId",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "receiptKey": {
+            "type": "string"
+          },
+          "inventoryBinId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateVendorReturnFromPurchaseOrderLineRequest": {
+        "required": [
+          "returnKey",
+          "inventoryBinId",
+          "quantity",
+          "rmaNumber",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "returnKey": {
+            "type": "string"
+          },
+          "inventoryBinId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "rmaNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateVendorReturnFromStockLineRequest": {
+        "required": [
+          "partId",
+          "quantity",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateVendorReturnFromStockRequest": {
+        "required": [
+          "returnKey",
+          "vendorPartyId",
+          "inventoryBinId",
+          "rmaNumber",
+          "notes",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "returnKey": {
+            "type": "string"
+          },
+          "vendorPartyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "inventoryBinId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rmaNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateVendorReturnFromStockLineRequest"
+            }
+          }
+        }
+      },
+      "IngestMaintainarrDemandLineRequest": {
+        "required": [
+          "maintainarrDemandLineId",
+          "supplyarrPartId",
+          "partNumber",
+          "description",
+          "quantityRequested",
+          "unitOfMeasure",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "maintainarrDemandLineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrPartId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "partNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantityRequested": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "IngestMaintainarrDemandRequest": {
+        "required": [
+          "tenantId",
+          "maintainarrPublicationId",
+          "maintainarrWorkOrderId",
+          "maintainarrWorkOrderNumber",
+          "maintainarrAssetId",
+          "title",
+          "notes",
+          "createPurchaseRequestDraft",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maintainarrPublicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maintainarrWorkOrderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maintainarrWorkOrderNumber": {
+            "type": "string"
+          },
+          "maintainarrAssetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createPurchaseRequestDraft": {
+            "type": "boolean"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngestMaintainarrDemandLineRequest"
+            }
+          }
+        }
+      },
+      "ProcessReorderEvaluationRequest": {
+        "required": [
+          "tenantId",
+          "batchSize",
+          "createDraftPurchaseRequests"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "createDraftPurchaseRequests": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RedeemHandoffRequest": {
+        "required": [
+          "handoffCode"
+        ],
+        "type": "object",
+        "properties": {
+          "handoffCode": {
+            "type": "string"
+          }
+        }
+      },
+      "RejectPurchaseRequestRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateExternalPartyApprovalStatusRequest": {
+        "required": [
+          "approvalStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "approvalStatus": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateExternalPartyRequest": {
+        "required": [
+          "displayName",
+          "legalName",
+          "taxIdentifier",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "legalName": {
+            "type": "string"
+          },
+          "taxIdentifier": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateExternalPartyStatusRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateInventoryBinRequest": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateInventoryBinStatusRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateInventoryLocationRequest": {
+        "required": [
+          "name",
+          "locationType",
+          "addressLine"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "locationType": {
+            "type": "string"
+          },
+          "addressLine": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateInventoryLocationStatusRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdatePartCatalogRequest": {
+        "required": [
+          "name",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdatePartCatalogStatusRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdatePartRequest": {
+        "required": [
+          "catalogId",
+          "displayName",
+          "description",
+          "categoryKey",
+          "unitOfMeasure",
+          "manufacturerName",
+          "manufacturerPartNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "catalogId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "categoryKey": {
+            "type": "string"
+          },
+          "unitOfMeasure": {
+            "type": "string"
+          },
+          "manufacturerName": {
+            "type": "string"
+          },
+          "manufacturerPartNumber": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdatePartStatusRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdatePurchaseOrderLineRequest": {
+        "required": [
+          "quantityOrdered",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "quantityOrdered": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdatePurchaseOrderRequest": {
+        "required": [
+          "title",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdatePurchaseRequestLineRequest": {
+        "required": [
+          "quantityRequested",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "quantityRequested": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdatePurchaseRequestRequest": {
+        "required": [
+          "title",
+          "notes",
+          "vendorPartyId"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "vendorPartyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "UpdateReceivingReceiptLineRequest": {
+        "required": [
+          "quantityReceived"
+        ],
+        "type": "object",
+        "properties": {
+          "quantityReceived": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "UpsertPartReorderPolicyRequest": {
+        "required": [
+          "reorderPoint",
+          "reorderQuantity"
+        ],
+        "type": "object",
+        "properties": {
+          "reorderPoint": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "reorderQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "UpsertPartStockLevelRequest": {
+        "required": [
+          "partId",
+          "binId",
+          "quantityOnHand"
+        ],
+        "type": "object",
+        "properties": {
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "binId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantityOnHand": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health"
+    },
+    {
+      "name": "SupplyArr.Api"
+    },
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Session"
+    },
+    {
+      "name": "Me"
+    },
+    {
+      "name": "PartyRegistry"
+    },
+    {
+      "name": "PartCatalog"
+    },
+    {
+      "name": "Inventory"
+    },
+    {
+      "name": "PurchaseRequests"
+    },
+    {
+      "name": "PurchaseOrders"
+    },
+    {
+      "name": "Receiving"
+    },
+    {
+      "name": "Backorders"
+    },
+    {
+      "name": "Returns"
+    },
+    {
+      "name": "PricingSnapshots"
+    },
+    {
+      "name": "LeadTimeSnapshots"
+    },
+    {
+      "name": "AvailabilitySnapshots"
+    },
+    {
+      "name": "ReorderEvaluation"
+    },
+    {
+      "name": "Internal"
+    },
+    {
+      "name": "Integrations"
+    },
+    {
+      "name": "DemandRefs"
+    },
+    {
+      "name": "FieldInbox"
+    }
+  ]
+}

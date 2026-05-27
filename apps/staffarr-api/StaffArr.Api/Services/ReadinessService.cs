@@ -6,7 +6,10 @@ using STLCompliance.Shared.Contracts;
 
 namespace StaffArr.Api.Services;
 
-public sealed class ReadinessService(StaffArrDbContext db)
+public sealed class ReadinessService(
+    StaffArrDbContext db,
+    ReadinessOverrideService overrideService,
+    TrainingBlockerIngestionService trainingBlockerService)
 {
     public async Task<PersonReadinessResponse> GetPersonReadinessAsync(
         Guid tenantId,
@@ -57,14 +60,50 @@ public sealed class ReadinessService(StaffArrDbContext db)
             }
         }
 
-        var readinessStatus = blockers.Count == 0 ? "ready" : "not_ready";
+        var certificationReady = blockers.Count == 0;
+
+        var trainingBlockers = await trainingBlockerService.GetActiveBlockersAsync(
+            tenantId,
+            personId,
+            cancellationToken);
+        foreach (var trainingBlocker in trainingBlockers)
+        {
+            blockers.Add(MapTrainingBlocker(trainingBlocker));
+        }
+        var activeOverride = await overrideService.GetEffectiveActiveOverrideAsync(
+            tenantId,
+            personId,
+            cancellationToken);
+
+        ReadinessOverrideSummaryResponse? overrideSummary = null;
+        if (activeOverride is not null)
+        {
+            overrideSummary = new ReadinessOverrideSummaryResponse(
+                activeOverride.Id,
+                activeOverride.Reason,
+                activeOverride.GrantedAt,
+                activeOverride.ExpiresAt,
+                activeOverride.GrantedByUserId);
+        }
+
+        var hasTrainingBlockers = trainingBlockers.Count > 0;
+        var readinessStatus = (!hasTrainingBlockers && certificationReady) || activeOverride is not null
+            ? "ready"
+            : "not_ready";
+        var readinessBasis = activeOverride is not null && (!certificationReady || hasTrainingBlockers)
+            ? "manual_override"
+            : hasTrainingBlockers
+                ? "training_blockers"
+                : "certifications";
 
         return new PersonReadinessResponse(
             personId,
             readinessStatus,
+            readinessBasis,
             DateTimeOffset.UtcNow,
             requirementStatuses,
-            blockers);
+            blockers,
+            overrideSummary);
     }
 
     private static (ReadinessRequirementStatusResponse RequirementStatus, ReadinessBlockerResponse? Blocker)
@@ -150,8 +189,21 @@ public sealed class ReadinessService(StaffArrDbContext db)
         string blockerType,
         string message) =>
         new(
+            "certification",
+            blockerType,
+            message,
             requirement.CertificationKey,
             requirement.Name,
-            blockerType,
-            message);
+            null,
+            null);
+
+    private static ReadinessBlockerResponse MapTrainingBlocker(PersonTrainingBlocker blocker) =>
+        new(
+            "training",
+            blocker.BlockerType,
+            blocker.Message,
+            null,
+            null,
+            blocker.QualificationKey,
+            blocker.QualificationName);
 }

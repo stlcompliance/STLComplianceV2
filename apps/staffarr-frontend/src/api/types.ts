@@ -323,16 +323,129 @@ export interface ReadinessRequirementStatusResponse {
 }
 
 export interface ReadinessBlockerResponse {
-  certificationKey: string
-  certificationName: string
-  blockerType: 'missing' | 'expired' | 'revoked'
+  blockerSource: 'certification' | 'training'
+  blockerType:
+    | 'missing'
+    | 'expired'
+    | 'revoked'
+    | 'missing_assignment'
+    | 'overdue'
+    | 'failed'
+    | 'suspended'
   message: string
+  certificationKey: string | null
+  certificationName: string | null
+  qualificationKey: string | null
+  qualificationName: string | null
+}
+
+export interface ReadinessOverrideSummaryResponse {
+  overrideId: string
+  reason: string
+  grantedAt: string
+  expiresAt: string | null
+  grantedByUserId: string
 }
 
 export interface PersonReadinessResponse {
   personId: string
   readinessStatus: 'ready' | 'not_ready'
+  readinessBasis: 'certifications' | 'manual_override' | 'training_blockers'
   calculatedAt: string
   requirements: ReadinessRequirementStatusResponse[]
   blockers: ReadinessBlockerResponse[]
+  activeOverride: ReadinessOverrideSummaryResponse | null
+}
+
+export interface GrantReadinessOverrideRequest {
+  reason: string
+  expiresAt: string | null
+}
+
+export interface ReadinessRollupSummaryResponse {
+  orgUnitId: string
+  scopeType: 'team' | 'site'
+  orgUnitName: string
+  totalMembers: number
+  readyCount: number
+  notReadyCount: number
+  overrideCount: number
+  readyPercent: number
+  computedAt: string
+}
+
+export type PersonnelIncidentReasonCategory =
+  | 'safety'
+  | 'conduct'
+  | 'injury'
+  | 'equipment'
+  | 'training_compliance'
+  | 'policy'
+  | 'other'
+
+export type PersonnelIncidentSeverity = 'low' | 'medium' | 'high' | 'critical'
+
+export interface IncidentTrainarrRoutingResponse {
+  routingStatus: string
+  trainarrRemediationId: string
+  routedAt: string
+  routedByUserId: string
+}
+
+export interface PersonnelIncidentSummaryResponse {
+  incidentId: string
+  personId: string
+  reasonCategoryKey: PersonnelIncidentReasonCategory
+  severity: PersonnelIncidentSeverity
+  status: string
+  title: string
+  occurredAt: string
+  reportedAt: string
+  reportedByUserId: string
+  trainarrRouting: IncidentTrainarrRoutingResponse | null
+}
+
+export interface PersonnelIncidentDetailResponse extends PersonnelIncidentSummaryResponse {
+  description: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RouteIncidentToTrainarrResponse {
+  incidentId: string
+  personId: string
+  reasonCategoryKey: PersonnelIncidentReasonCategory
+  status: string
+  trainarrRouting: IncidentTrainarrRoutingResponse
+}
+
+export interface CreatePersonnelIncidentRequest {
+  personId: string
+  reasonCategoryKey: PersonnelIncidentReasonCategory
+  severity: PersonnelIncidentSeverity
+  title: string
+  description: string
+  occurredAt: string
+}
+
+export interface PagedResult<T> {
+  items: T[]
+  page: number
+  pageSize: number
+  totalCount: number
+  hasNextPage: boolean
+}
+
+export interface PersonTimelineEntryResponse {
+  entryId: string
+  personId: string
+  category: 'incident' | 'incident_routing' | 'readiness' | 'certification' | 'permission' | 'training_blocker'
+  eventType: string
+  title: string
+  detail: string | null
+  occurredAt: string
+  actorUserId: string | null
+  sourceEntityType: string
+  sourceEntityId: string
+  externalReferenceId: string | null
 }

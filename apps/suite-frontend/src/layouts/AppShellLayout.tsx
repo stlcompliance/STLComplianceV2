@@ -1,6 +1,7 @@
 import { LogOut, Shield } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { AppTopBar } from '../components/AppTopBar'
 import { ProductSwitcher } from '../components/ProductSwitcher'
 import { PermissionGate } from '../components/PermissionGate'
 import { isPlatformAdmin } from '../lib/permissions'
@@ -9,8 +10,8 @@ export function AppShellLayout() {
   const { me, logout } = useAuth()
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white/80 p-4">
+    <div className="flex min-h-screen bg-stl-sand">
+      <aside className="flex w-64 shrink-0 flex-col border-r border-slate-700/20 bg-white/90 p-4 shadow-sm">
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase tracking-wide text-stl-teal">
             STL Compliance
@@ -53,9 +54,7 @@ export function AppShellLayout() {
       </aside>
 
       <main className="flex flex-1 flex-col">
-        <header className="border-b border-slate-200 bg-white/60 px-6 py-4">
-          <h2 className="text-base font-semibold text-stl-navy">Authenticated workspace</h2>
-        </header>
+        <AppTopBar />
         <div className="flex-1 p-6">
           <Outlet />
         </div>

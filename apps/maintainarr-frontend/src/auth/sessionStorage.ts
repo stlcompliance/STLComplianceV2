@@ -1,0 +1,76 @@
+import type { HandoffSessionResponse } from '../api/types'
+
+const STORAGE_KEY = 'stl.maintainarr.session'
+
+export interface StoredMaintainArrSession {
+  accessToken: string
+  accessTokenExpiresAt: string
+  userId: string
+  personId: string
+  tenantId: string
+  tenantSlug: string
+  displayName: string
+  email: string
+}
+
+export function toStoredSession(session: HandoffSessionResponse): StoredMaintainArrSession {
+  return {
+    accessToken: session.accessToken,
+    accessTokenExpiresAt: session.accessTokenExpiresAt,
+    userId: session.userId,
+    personId: session.personId,
+    tenantId: session.tenantId,
+    tenantSlug: session.tenantSlug,
+    displayName: session.displayName,
+    email: session.email,
+  }
+}
+
+export function loadSession(): StoredMaintainArrSession | null {
+  const raw = sessionStorage.getItem(STORAGE_KEY)
+  if (!raw) {
+    return null
+  }
+  try {
+    return JSON.parse(raw) as StoredMaintainArrSession
+  } catch {
+    sessionStorage.removeItem(STORAGE_KEY)
+    return null
+  }
+}
+
+export function saveSession(session: StoredMaintainArrSession): void {
+  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session))
+}
+
+export function clearSession(): void {
+  sessionStorage.removeItem(STORAGE_KEY)
+}
+
+export function canManageAssets(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return ['tenant_admin', 'maintainarr_admin', 'maintainarr_manager'].includes(tenantRoleKey.toLowerCase())
+}
+
+export function canViewAllInspectionRuns(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canManageAssets(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canManageDefectStatus(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canManageAssets(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canCreateWorkOrders(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return [
+    'tenant_admin',
+    'maintainarr_admin',
+    'maintainarr_manager',
+    'maintainarr_technician',
+    'tenant_member',
+  ].includes(tenantRoleKey.toLowerCase())
+}
+
+export function canCloseWorkOrders(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canManageAssets(tenantRoleKey, isPlatformAdmin)
+}

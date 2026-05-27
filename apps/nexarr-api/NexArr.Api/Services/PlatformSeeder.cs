@@ -19,24 +19,27 @@ public static class PlatformSeeder
 
     private static readonly (string Key, string Name, int Order)[] Products =
     [
+        ("shared-worker", "STL Shared Worker", 5),
         ("nexarr", "NexArr", 10),
         ("staffarr", "StaffArr", 20),
         ("trainarr", "TrainArr", 30),
         ("maintainarr", "MaintainArr", 40),
         ("routarr", "RoutArr", 50),
         ("supplyarr", "SupplyArr", 60),
-        ("compliancecore", "Compliance Core", 70)
+        ("compliancecore", "Compliance Core", 70),
+        ("companion", "Companion App", 80)
     ];
 
     private static readonly (string ProductKey, string BaseUrl, string LaunchPath)[] DefaultLaunchProfiles =
     [
         ("nexarr", "http://localhost:5101", "/"),
         ("staffarr", "http://localhost:5175", "/launch"),
-        ("trainarr", "http://localhost:5103", "/launch"),
-        ("maintainarr", "http://localhost:5104", "/launch"),
-        ("routarr", "http://localhost:5105", "/launch"),
-        ("supplyarr", "http://localhost:5106", "/launch"),
-        ("compliancecore", "http://localhost:5107", "/launch")
+        ("trainarr", "http://localhost:5176", "/launch"),
+        ("maintainarr", "http://localhost:5178", "/launch"),
+        ("routarr", "http://localhost:5180", "/launch"),
+        ("supplyarr", "http://localhost:5179", "/launch"),
+        ("compliancecore", "http://localhost:5177", "/launch"),
+        ("companion", "http://localhost:5181", "/launch")
     ];
 
     public static async Task SeedAsync(
@@ -224,13 +227,21 @@ public static class PlatformSeeder
                 });
             }
 
-            var apiOrigin = DefaultLaunchProfiles.First(p => p.ProductKey == product.Key).BaseUrl;
+            var launchProfileIndex = Array.FindIndex(
+                DefaultLaunchProfiles,
+                p => string.Equals(p.ProductKey, product.Key, StringComparison.Ordinal));
+            if (launchProfileIndex < 0)
+            {
+                continue;
+            }
+
+            var launchProfile = DefaultLaunchProfiles[launchProfileIndex];
             db.CallbackAllowlist.Add(new ProductCallbackAllowlistEntry
             {
                 Id = Guid.NewGuid(),
                 ProductKey = product.Key,
                 TenantId = DemoTenantId,
-                UrlPattern = apiOrigin,
+                UrlPattern = launchProfile.BaseUrl,
                 PatternType = CallbackPatternTypes.Origin,
                 IsActive = true,
                 CreatedAt = now,

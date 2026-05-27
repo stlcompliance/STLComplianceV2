@@ -37,11 +37,21 @@ public sealed record EntitlementSummary(
     string DisplayName,
     string Status);
 
+public sealed record NavigationSurfaceItem(
+    string SurfaceKey,
+    string Label,
+    string RelativePath,
+    string IconKey,
+    int SortOrder,
+    bool IsEnabled,
+    string? PermissionHint);
+
 public sealed record NavigationItem(
     string ProductKey,
     string DisplayName,
     string RoutePath,
-    int SortOrder);
+    int SortOrder,
+    IReadOnlyList<NavigationSurfaceItem> Surfaces);
 
 public sealed record NavigationResponse(
     Guid TenantId,

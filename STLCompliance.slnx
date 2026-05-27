@@ -26,9 +26,16 @@
     <Project Path="packages/shared-dotnet/STLCompliance.Shared/STLCompliance.Shared.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj" />
     <Project Path="tests/STLCompliance.Health.Tests/STLCompliance.Health.Tests.csproj" />
     <Project Path="tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj" />
     <Project Path="tests/STLCompliance.StaffArr.Auth.Tests/STLCompliance.StaffArr.Auth.Tests.csproj" />
+    <Project Path="tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj" />
+    <Project Path="tests/STLCompliance.RoutArr.Auth.Tests/STLCompliance.RoutArr.Auth.Tests.csproj" />
+    <Project Path="tests/STLCompliance.SupplyArr.Auth.Tests/STLCompliance.SupplyArr.Auth.Tests.csproj" />
+    <Project Path="tests/STLCompliance.Shared.Worker.Tests/STLCompliance.Shared.Worker.Tests.csproj" />
+    <Project Path="tests/STLCompliance.E2E/STLCompliance.E2E.csproj" />
+    <Project Path="tests/STLCompliance.OpenApi.Tests/STLCompliance.OpenApi.Tests.csproj" />
   </Folder>
   <Folder Name="/workers/" />
   <Folder Name="/workers/compliancecore-worker/">
@@ -51,5 +58,8 @@
   </Folder>
   <Folder Name="/workers/trainarr-worker/">
     <Project Path="workers/trainarr-worker/TrainArr.Worker/TrainArr.Worker.csproj" />
+  </Folder>
+  <Folder Name="/workers/shared-worker/">
+    <Project Path="workers/shared-worker/Shared.Worker/Shared.Worker.csproj" />
   </Folder>
 </Solution>

@@ -252,7 +252,7 @@ public sealed class RoleTemplateService(
         return await QueryPersonRoleAssignmentsAsync(tenantId, personId, cancellationToken);
     }
 
-    public async Task<EffectivePermissionProjectionResponse> GetEffectivePermissionProjectionAsync(
+    public async Task<EffectivePermissionProjectionResponse> ComputeEffectivePermissionProjectionAsync(
         Guid tenantId,
         Guid personId,
         CancellationToken cancellationToken = default)

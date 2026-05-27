@@ -22,6 +22,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\apps\nexarr-api\NexArr.Api\NexArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\staffarr-api\StaffArr.Api\StaffArr.Api.csproj" />
+    <ProjectReference Include="..\..\apps\trainarr-api\TrainArr.Api\TrainArr.Api.csproj" />
+    <ProjectReference Include="..\..\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj" />
   </ItemGroup>
 
 </Project>

@@ -18,6 +18,7 @@ SupplyArr is the vendor, supply, parts, inventory, and procurement system.
 - receiving
 - pricing snapshots
 - lead-time snapshots
+- availability snapshots
 - approval workflows
 
 ## Does Not Own
@@ -42,6 +43,7 @@ SupplyArr is the vendor, supply, parts, inventory, and procurement system.
 - purchase order workflow
 - receiving
 - pricing/lead-time history
+- availability history
 - MaintainArr demand intake
 - vendor reports
 
@@ -59,6 +61,7 @@ SupplyArr is the vendor, supply, parts, inventory, and procurement system.
 - `/api/receiving`
 - `/api/pricing-snapshots`
 - `/api/lead-time-snapshots`
+- `/api/availability-snapshots`
 - `/api/demand-refs`
 - `/health`
 

@@ -1,0 +1,217 @@
+using SupplyArr.Api.Contracts;
+using SupplyArr.Api.Services;
+using STLCompliance.Shared.Auth;
+
+namespace SupplyArr.Api.Endpoints;
+
+public static class PartCatalogEndpoints
+{
+    public static void MapSupplyArrPartCatalogEndpoints(this WebApplication app)
+    {
+        MapCatalogs(app);
+        MapParts(app);
+    }
+
+    private static void MapCatalogs(WebApplication app)
+    {
+        var group = app.MapGroup("/api/catalogs").WithTags("PartCatalog").RequireAuthorization();
+
+        group.MapGet("/", async (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartCatalogService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListAsync(tenantId, cancellationToken));
+        })
+        .WithName("ListPartCatalogs");
+
+        group.MapGet("/{catalogId:guid}", async (
+            Guid catalogId,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartCatalogService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetAsync(tenantId, catalogId, cancellationToken));
+        })
+        .WithName("GetPartCatalog");
+
+        group.MapPost("/", async (
+            CreatePartCatalogRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartCatalogService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
+            return Results.Created($"/api/catalogs/{created.CatalogId}", created);
+        })
+        .WithName("CreatePartCatalog");
+
+        group.MapPut("/{catalogId:guid}", async (
+            Guid catalogId,
+            UpdatePartCatalogRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartCatalogService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpdateAsync(tenantId, actorUserId, catalogId, request, cancellationToken));
+        })
+        .WithName("UpdatePartCatalog");
+
+        group.MapPatch("/{catalogId:guid}/status", async (
+            Guid catalogId,
+            UpdatePartCatalogStatusRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartCatalogService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpdateStatusAsync(
+                tenantId,
+                actorUserId,
+                catalogId,
+                request,
+                cancellationToken));
+        })
+        .WithName("UpdatePartCatalogStatus");
+    }
+
+    private static void MapParts(WebApplication app)
+    {
+        var group = app.MapGroup("/api/parts").WithTags("PartCatalog").RequireAuthorization();
+
+        group.MapGet("/", async (
+            Guid? catalogId,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartRegistryService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListAsync(tenantId, catalogId, cancellationToken));
+        })
+        .WithName("ListParts");
+
+        group.MapGet("/{partId:guid}", async (
+            Guid partId,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartRegistryService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetAsync(tenantId, partId, cancellationToken));
+        })
+        .WithName("GetPart");
+
+        group.MapPost("/", async (
+            CreatePartRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartRegistryService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
+            return Results.Created($"/api/parts/{created.PartId}", created);
+        })
+        .WithName("CreatePart");
+
+        group.MapPut("/{partId:guid}", async (
+            Guid partId,
+            UpdatePartRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartRegistryService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpdateAsync(tenantId, actorUserId, partId, request, cancellationToken));
+        })
+        .WithName("UpdatePart");
+
+        group.MapPatch("/{partId:guid}/status", async (
+            Guid partId,
+            UpdatePartStatusRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartRegistryService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpdateStatusAsync(
+                tenantId,
+                actorUserId,
+                partId,
+                request,
+                cancellationToken));
+        })
+        .WithName("UpdatePartStatus");
+
+        group.MapPost("/{partId:guid}/manufacturer-aliases", async (
+            Guid partId,
+            CreatePartManufacturerAliasRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartRegistryService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var alias = await service.AddManufacturerAliasAsync(
+                tenantId,
+                actorUserId,
+                partId,
+                request,
+                cancellationToken);
+            return Results.Created($"/api/parts/{partId}/manufacturer-aliases/{alias.AliasId}", alias);
+        })
+        .WithName("CreatePartManufacturerAlias");
+
+        group.MapPost("/{partId:guid}/vendor-links", async (
+            Guid partId,
+            CreatePartVendorLinkRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartRegistryService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var link = await service.AddVendorLinkAsync(
+                tenantId,
+                actorUserId,
+                partId,
+                request,
+                cancellationToken);
+            return Results.Created($"/api/parts/{partId}/vendor-links/{link.LinkId}", link);
+        })
+        .WithName("CreatePartVendorLink");
+    }
+}

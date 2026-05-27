@@ -13,8 +13,17 @@ import {
   getOrgUnits,
   getPermissionTemplates,
   getPermissionHistoryTimeline,
+  getPersonTimeline,
   getPersonCertifications,
+  clearPersonReadinessOverride,
+  createPersonnelIncident,
+  routePersonnelIncidentToTrainarr,
+  getPersonnelIncident,
   getPersonReadiness,
+  getSiteReadinessRollups,
+  getTeamReadinessRollups,
+  grantPersonReadinessOverride,
+  listPersonnelIncidents,
   getPersonOrgAssignments,
   getPersonRoleAssignments,
   getRoleTemplates,
@@ -36,11 +45,17 @@ import {
 } from '../api/client'
 import { clearSession, loadSession } from '../auth/sessionStorage'
 import { CertificationPanel } from '../components/CertificationPanel'
-import { ReadinessPanel } from '../components/ReadinessPanel'
+import { canManageIncidents, IncidentsPanel } from '../components/IncidentsPanel'
+import { canOverrideReadiness, ReadinessPanel } from '../components/ReadinessPanel'
+import {
+  canViewReadinessRollups,
+  ReadinessRollupSupervisorPanel,
+} from '../components/ReadinessRollupSupervisorPanel'
 import { ManagerHierarchyPanel } from '../components/ManagerHierarchyPanel'
 import { canManageOrgHierarchy, OrgHierarchyManager } from '../components/OrgHierarchyManager'
 import { PersonOrgAssignmentsManager } from '../components/PersonOrgAssignmentsManager'
 import { PermissionProjectionTimelinePanel } from '../components/PermissionProjectionTimelinePanel'
+import { PersonTimelinePanel } from '../components/PersonTimelinePanel'
 import { RoleTemplateAssignmentPanel } from '../components/RoleTemplateAssignmentPanel'
 
 export function HomePage() {
@@ -131,6 +146,11 @@ export function HomePage() {
     queryFn: () => getPermissionHistoryTimeline(session!.accessToken, effectivePersonId!, 100),
     enabled: Boolean(session?.accessToken && effectivePersonId),
   })
+  const personTimelineQuery = useQuery({
+    queryKey: ['staffarr-person-timeline', session?.accessToken, effectivePersonId],
+    queryFn: () => getPersonTimeline(session!.accessToken, effectivePersonId!, 1, 50),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
   const certificationDefinitionsQuery = useQuery({
     queryKey: ['staffarr-certification-definitions', session?.accessToken],
     queryFn: () => getCertificationDefinitions(session!.accessToken),
@@ -145,6 +165,33 @@ export function HomePage() {
     queryKey: ['staffarr-person-readiness', session?.accessToken, effectivePersonId],
     queryFn: () => getPersonReadiness(session!.accessToken, effectivePersonId!),
     enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const canViewReadinessRollupSummaries =
+    meQuery.data != null &&
+    canViewReadinessRollups(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
+  const teamReadinessRollupsQuery = useQuery({
+    queryKey: ['staffarr-team-readiness-rollups', session?.accessToken],
+    queryFn: () => getTeamReadinessRollups(session!.accessToken),
+    enabled: Boolean(session?.accessToken && canViewReadinessRollupSummaries),
+  })
+  const siteReadinessRollupsQuery = useQuery({
+    queryKey: ['staffarr-site-readiness-rollups', session?.accessToken],
+    queryFn: () => getSiteReadinessRollups(session!.accessToken),
+    enabled: Boolean(session?.accessToken && canViewReadinessRollupSummaries),
+  })
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null)
+  useEffect(() => {
+    setSelectedIncidentId(null)
+  }, [effectivePersonId])
+  const personIncidentsQuery = useQuery({
+    queryKey: ['staffarr-person-incidents', session?.accessToken, effectivePersonId],
+    queryFn: () => listPersonnelIncidents(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const incidentDetailQuery = useQuery({
+    queryKey: ['staffarr-incident-detail', session?.accessToken, selectedIncidentId],
+    queryFn: () => getPersonnelIncident(session!.accessToken, selectedIncidentId!),
+    enabled: Boolean(session?.accessToken && selectedIncidentId),
   })
 
   const createOrgUnitMutation = useMutation({
@@ -287,6 +334,7 @@ export function HomePage() {
         queryClient.invalidateQueries({ queryKey: ['staffarr-role-templates', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-permission-history', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
       ])
     },
   })
@@ -302,6 +350,7 @@ export function HomePage() {
         queryClient.invalidateQueries({ queryKey: ['staffarr-role-assignments', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-permission-history', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
       ])
     },
   })
@@ -313,6 +362,7 @@ export function HomePage() {
         queryClient.invalidateQueries({ queryKey: ['staffarr-role-assignments', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-permission-history', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
       ])
     },
   })
@@ -334,6 +384,7 @@ export function HomePage() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['staffarr-person-certifications', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-person-readiness', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
       ])
     },
   })
@@ -354,6 +405,51 @@ export function HomePage() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['staffarr-person-certifications', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-person-readiness', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+      ])
+    },
+  })
+  const grantReadinessOverrideMutation = useMutation({
+    mutationFn: (payload: { personId: string; reason: string; expiresAt: string | null }) =>
+      grantPersonReadinessOverride(session!.accessToken, payload.personId, {
+        reason: payload.reason,
+        expiresAt: payload.expiresAt,
+      }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-readiness', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+      ])
+    },
+  })
+  const clearReadinessOverrideMutation = useMutation({
+    mutationFn: (personId: string) => clearPersonReadinessOverride(session!.accessToken, personId),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-readiness', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+      ])
+    },
+  })
+  const createIncidentMutation = useMutation({
+    mutationFn: (payload: Parameters<typeof createPersonnelIncident>[1]) =>
+      createPersonnelIncident(session!.accessToken, payload),
+    onSuccess: async (created) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-incidents', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+      ])
+      setSelectedIncidentId(created.incidentId)
+    },
+  })
+  const routeIncidentToTrainarrMutation = useMutation({
+    mutationFn: (incidentId: string) =>
+      routePersonnelIncidentToTrainarr(session!.accessToken, incidentId),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-incidents', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-incident-detail', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
       ])
     },
   })
@@ -462,10 +558,15 @@ export function HomePage() {
   const roleAssignments = roleAssignmentsQuery.data ?? []
   const effectivePermissions = effectivePermissionsQuery.data ?? null
   const permissionHistory = permissionHistoryQuery.data ?? []
+  const personTimelineEntries = personTimelineQuery.data?.items ?? []
+  const personTimelineTotalCount = personTimelineQuery.data?.totalCount ?? 0
   const certificationDefinitions = certificationDefinitionsQuery.data ?? []
   const personCertifications = personCertificationsQuery.data ?? []
   const canManageOrgUnits = canManageOrgHierarchy(me.tenantRoleKey, me.isPlatformAdmin)
   const canManageHierarchy = canManageOrgUnits
+  const canOverridePersonReadiness = canOverrideReadiness(me.tenantRoleKey, me.isPlatformAdmin)
+  const canManagePersonIncidents = canManageIncidents(me.tenantRoleKey, me.isPlatformAdmin)
+  const personIncidents = personIncidentsQuery.data ?? []
   const orgMutationError =
     createOrgUnitMutation.error ?? updateOrgUnitMutation.error ?? updateOrgUnitStatusMutation.error ?? null
   const assignmentMutationError =
@@ -480,6 +581,10 @@ export function HomePage() {
     null
   const certificationMutationError =
     grantCertificationMutation.error ?? updateCertificationMutation.error ?? null
+  const readinessOverrideMutationError =
+    grantReadinessOverrideMutation.error ?? clearReadinessOverrideMutation.error ?? null
+  const incidentMutationError =
+    createIncidentMutation.error ?? routeIncidentToTrainarrMutation.error ?? null
 
   return (
     <main className="mx-auto max-w-6xl p-8">
@@ -488,6 +593,21 @@ export function HomePage() {
         <h1 className="mt-1 text-3xl font-semibold text-white">StaffArr</h1>
         <p className="mt-2 text-slate-400">People directory and profile workspace</p>
       </header>
+
+      {canViewReadinessRollupSummaries ? (
+        <ReadinessRollupSupervisorPanel
+          teamRollups={teamReadinessRollupsQuery.data ?? []}
+          siteRollups={siteReadinessRollupsQuery.data ?? []}
+          isLoading={teamReadinessRollupsQuery.isLoading || siteReadinessRollupsQuery.isLoading}
+          errorMessage={
+            teamReadinessRollupsQuery.error instanceof StaffArrApiError
+              ? teamReadinessRollupsQuery.error.body || teamReadinessRollupsQuery.error.message
+              : siteReadinessRollupsQuery.error instanceof StaffArrApiError
+                ? siteReadinessRollupsQuery.error.body || siteReadinessRollupsQuery.error.message
+                : null
+          }
+        />
+      ) : null}
 
       <section className="mt-8 grid gap-6 lg:grid-cols-3">
         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
@@ -716,6 +836,59 @@ export function HomePage() {
           personDisplayName={selectedPerson.displayName}
           readiness={personReadinessQuery.data ?? null}
           isLoading={personReadinessQuery.isLoading}
+          canOverride={canOverridePersonReadiness}
+          isSubmittingOverride={
+            grantReadinessOverrideMutation.isPending || clearReadinessOverrideMutation.isPending
+          }
+          overrideErrorMessage={
+            readinessOverrideMutationError instanceof StaffArrApiError
+              ? readinessOverrideMutationError.body || readinessOverrideMutationError.message
+              : null
+          }
+          onGrantOverride={async (payload) => {
+            await grantReadinessOverrideMutation.mutateAsync({
+              personId: selectedPerson.personId,
+              ...payload,
+            })
+          }}
+          onClearOverride={async () => {
+            await clearReadinessOverrideMutation.mutateAsync(selectedPerson.personId)
+          }}
+        />
+      ) : null}
+
+      {selectedPerson ? (
+        <IncidentsPanel
+          personId={selectedPerson.personId}
+          personDisplayName={selectedPerson.displayName}
+          incidents={personIncidents}
+          selectedIncident={incidentDetailQuery.data ?? null}
+          isLoading={personIncidentsQuery.isLoading}
+          isLoadingDetail={incidentDetailQuery.isLoading}
+          canManage={canManagePersonIncidents}
+          isSubmitting={createIncidentMutation.isPending}
+          isRouting={routeIncidentToTrainarrMutation.isPending}
+          errorMessage={
+            incidentMutationError instanceof StaffArrApiError
+              ? incidentMutationError.body || incidentMutationError.message
+              : null
+          }
+          onSelectIncident={setSelectedIncidentId}
+          onCreateIncident={async (payload) => {
+            await createIncidentMutation.mutateAsync(payload)
+          }}
+          onRouteToTrainarr={async (incidentId) => {
+            await routeIncidentToTrainarrMutation.mutateAsync(incidentId)
+          }}
+        />
+      ) : null}
+
+      {selectedPerson ? (
+        <PersonTimelinePanel
+          personDisplayName={selectedPerson.displayName}
+          entries={personTimelineEntries}
+          totalCount={personTimelineTotalCount}
+          isLoading={personTimelineQuery.isLoading}
         />
       ) : null}
 

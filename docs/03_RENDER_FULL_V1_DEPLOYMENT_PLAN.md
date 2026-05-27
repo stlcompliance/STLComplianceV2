@@ -87,3 +87,5 @@ Anything prefixed with VITE_ is public to the browser. Secrets never go into fro
 ## render.yaml
 
 render.yaml defines static sites, APIs, workers, databases, Redis/Key Value, environment groups, build commands, start commands, and health checks. It is the infrastructure source of truth.
+
+V1 hardened Blueprint (Worker 89): 7 static frontends, `shared-worker`, env groups (`stl-shared`, `stl-auth`, `stl-internal-api-urls`, public URL groups), `/health/ready` on all APIs, internal `http://{service}:10000` cross-product URLs, `sync: false` integration tokens. See `docs/deployment/ENV_VARS_V1.md` and `docs/implementation/worker-slices/W89_RENDER_V1_DEPLOYMENT_HARDENING.md`.

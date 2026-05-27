@@ -39,6 +39,22 @@ public sealed class StaffArrAuthorizationService
         throw new StlApiException("auth.forbidden", "People directory access requires a tenant role with people.read scope.", 403);
     }
 
+    public void RequirePersonTimelineRead(ClaimsPrincipal principal, Guid personId)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (principal.GetPersonId() == personId)
+        {
+            return;
+        }
+
+        RequirePeopleRead(principal);
+    }
+
     public void RequirePeopleWrite(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
@@ -177,6 +193,82 @@ public sealed class StaffArrAuthorizationService
 
     public void RequireReadinessRead(ClaimsPrincipal principal, Guid personId) =>
         RequireCertificationRead(principal, personId);
+
+    public void RequireReadinessRollupRead(ClaimsPrincipal principal) =>
+        RequireCertificationRead(principal);
+
+    public void RequireReadinessOverrideWrite(ClaimsPrincipal principal)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Readiness override requires staffarr.readiness.override scope.",
+            403);
+    }
+
+    public void RequireIncidentsRead(ClaimsPrincipal principal, Guid? personId = null)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        var roleKey = principal.GetTenantRoleKey();
+        if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
+        {
+            return;
+        }
+
+        if (personId is Guid requestedPersonId
+            && MatchesRole(roleKey, "tenant_member")
+            && principal.GetPersonId() == requestedPersonId)
+        {
+            return;
+        }
+
+        if (personId is null && MatchesRole(roleKey, "tenant_member"))
+        {
+            throw new StlApiException(
+                "auth.forbidden",
+                "Incident list access requires staffarr.incidents.manage scope or a personId filter for self.",
+                403);
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Incident read access requires staffarr.incidents.manage scope.",
+            403);
+    }
+
+    public void RequireIncidentsManageWrite(ClaimsPrincipal principal)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Incident intake requires staffarr.incidents.manage scope.",
+            403);
+    }
 
     private static bool CanWriteByRole(string roleKey) =>
         MatchesRole(roleKey, "platform_admin", "tenant_admin", "staffarr_admin", "hr_admin");

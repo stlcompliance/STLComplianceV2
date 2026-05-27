@@ -1,0 +1,1846 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "RoutArr.Api | v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost/"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "RoutArr.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/asset-dispatchability/check": {
+      "post": {
+        "tags": [
+          "AssetDispatchability"
+        ],
+        "operationId": "CheckAssetDispatchability",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetDispatchabilityCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "RoutArrRedeemHandoff",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch-workflow-gates/check": {
+      "post": {
+        "tags": [
+          "DispatchWorkflowGates"
+        ],
+        "operationId": "CheckDispatchWorkflowGates",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispatchWorkflowGateCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/assignments/preview": {
+      "post": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "PreviewDispatchAssignment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispatchAssignmentPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/board": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "GetDispatchBoard",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/bulk/apply": {
+      "post": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "ApplyBulkDispatch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkDispatchApplyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/bulk/preview": {
+      "post": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "PreviewBulkDispatch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkDispatchPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/calendar": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "GetRouteCalendar",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/closeout/apply": {
+      "post": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "ApplyDispatchCloseout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispatchCloseoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/closeout/preview": {
+      "post": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "PreviewDispatchCloseout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispatchCloseoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/closeout/summary": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "GetDispatchCloseoutSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/driver-availability": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "GetDriverAvailabilityPanel",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/equipment-availability": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "GetEquipmentAvailabilityPanel",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-availability": {
+      "get": {
+        "tags": [
+          "DriverAvailability"
+        ],
+        "operationId": "ListDriverAvailability",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "DriverAvailability"
+        ],
+        "operationId": "CreateDriverAvailability",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDriverAvailabilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-availability/{availabilityId}": {
+      "get": {
+        "tags": [
+          "DriverAvailability"
+        ],
+        "operationId": "GetDriverAvailability",
+        "parameters": [
+          {
+            "name": "availabilityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "DriverAvailability"
+        ],
+        "operationId": "UpdateDriverAvailability",
+        "parameters": [
+          {
+            "name": "availabilityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDriverAvailabilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "DriverAvailability"
+        ],
+        "operationId": "DeleteDriverAvailability",
+        "parameters": [
+          {
+            "name": "availabilityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-eligibility/check": {
+      "post": {
+        "tags": [
+          "DriverEligibility"
+        ],
+        "operationId": "CheckDriverEligibility",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DriverEligibilityCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/equipment-availability": {
+      "get": {
+        "tags": [
+          "EquipmentAvailability"
+        ],
+        "operationId": "ListEquipmentAvailability",
+        "parameters": [
+          {
+            "name": "vehicleRefKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "EquipmentAvailability"
+        ],
+        "operationId": "CreateEquipmentAvailability",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEquipmentAvailabilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/equipment-availability/{availabilityId}": {
+      "get": {
+        "tags": [
+          "EquipmentAvailability"
+        ],
+        "operationId": "GetEquipmentAvailability",
+        "parameters": [
+          {
+            "name": "availabilityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "EquipmentAvailability"
+        ],
+        "operationId": "UpdateEquipmentAvailability",
+        "parameters": [
+          {
+            "name": "availabilityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEquipmentAvailabilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "EquipmentAvailability"
+        ],
+        "operationId": "DeleteEquipmentAvailability",
+        "parameters": [
+          {
+            "name": "availabilityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/field-inbox": {
+      "get": {
+        "tags": [
+          "FieldInbox"
+        ],
+        "operationId": "GetRoutArrFieldInbox",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "RoutArrGetMe",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/routes": {
+      "get": {
+        "tags": [
+          "Routes"
+        ],
+        "operationId": "ListRoutes",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "routeStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Routes"
+        ],
+        "operationId": "CreateRoute",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRouteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/routes/{routeId}": {
+      "get": {
+        "tags": [
+          "Routes"
+        ],
+        "operationId": "GetRoute",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/routes/{routeId}/link-trip": {
+      "patch": {
+        "tags": [
+          "Routes"
+        ],
+        "operationId": "LinkRouteTrip",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkRouteTripRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/routes/{routeId}/stops": {
+      "post": {
+        "tags": [
+          "Routes"
+        ],
+        "operationId": "AddRouteStop",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddRouteStopRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/routes/{routeId}/stops/reorder": {
+      "put": {
+        "tags": [
+          "Routes"
+        ],
+        "operationId": "ReorderRouteStops",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderRouteStopsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/session": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "operationId": "RoutArrGetSessionBootstrap",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/stops": {
+      "get": {
+        "tags": [
+          "Stops"
+        ],
+        "operationId": "ListRouteStops",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/stops/{stopId}/status": {
+      "patch": {
+        "tags": [
+          "Stops"
+        ],
+        "operationId": "UpdateRouteStopStatus",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRouteStopStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips": {
+      "get": {
+        "tags": [
+          "Trips"
+        ],
+        "operationId": "ListTrips",
+        "parameters": [
+          {
+            "name": "dispatchStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "operationId": "CreateTrip",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTripRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}": {
+      "get": {
+        "tags": [
+          "Trips"
+        ],
+        "operationId": "GetTrip",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}/assign-driver": {
+      "patch": {
+        "tags": [
+          "Trips"
+        ],
+        "operationId": "AssignTripDriver",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTripDriverRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}/assign-vehicle": {
+      "patch": {
+        "tags": [
+          "Trips"
+        ],
+        "operationId": "AssignTripVehicle",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignTripVehicleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}/status": {
+      "patch": {
+        "tags": [
+          "Trips"
+        ],
+        "operationId": "UpdateTripDispatchStatus",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTripDispatchStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AddRouteStopRequest": {
+        "required": [
+          "stopKey",
+          "label",
+          "addressLabel",
+          "stopType",
+          "sequenceNumber",
+          "scheduledArrivalAt"
+        ],
+        "type": "object",
+        "properties": {
+          "stopKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "addressLabel": {
+            "type": "string"
+          },
+          "stopType": {
+            "type": "string"
+          },
+          "sequenceNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "scheduledArrivalAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "AssetDispatchabilityCheckRequest": {
+        "type": "object",
+        "properties": {
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assetTag": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "AssignTripDriverRequest": {
+        "required": [
+          "driverPersonId"
+        ],
+        "type": "object",
+        "properties": {
+          "driverPersonId": {
+            "type": "string"
+          },
+          "ignoreAvailabilityConflicts": {
+            "type": "boolean",
+            "default": false
+          },
+          "ignoreEligibilityBlocks": {
+            "type": "boolean",
+            "default": false
+          },
+          "ignoreWorkflowGateBlocks": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "AssignTripVehicleRequest": {
+        "required": [
+          "vehicleRefKey"
+        ],
+        "type": "object",
+        "properties": {
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ignoreAvailabilityConflicts": {
+            "type": "boolean",
+            "default": false
+          },
+          "ignoreDispatchabilityBlocks": {
+            "type": "boolean",
+            "default": false
+          },
+          "ignoreWorkflowGateBlocks": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "BulkDispatchActionItem": {
+        "required": [
+          "tripId",
+          "driverPersonId",
+          "vehicleRefKey",
+          "dispatchStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "tripId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "driverPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dispatchStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "BulkDispatchApplyRequest": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkDispatchActionItem"
+            }
+          },
+          "ignoreAvailabilityConflicts": {
+            "type": "boolean",
+            "default": false
+          },
+          "ignoreEligibilityBlocks": {
+            "type": "boolean",
+            "default": false
+          },
+          "ignoreDispatchabilityBlocks": {
+            "type": "boolean",
+            "default": false
+          },
+          "ignoreWorkflowGateBlocks": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "BulkDispatchPreviewRequest": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkDispatchActionItem"
+            }
+          }
+        }
+      },
+      "CreateDriverAvailabilityRequest": {
+        "required": [
+          "personId",
+          "availabilityStatus",
+          "startsAt",
+          "endsAt",
+          "reason",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string"
+          },
+          "availabilityStatus": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateEquipmentAvailabilityRequest": {
+        "required": [
+          "vehicleRefKey",
+          "availabilityStatus",
+          "startsAt",
+          "endsAt",
+          "reason",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "vehicleRefKey": {
+            "type": "string"
+          },
+          "availabilityStatus": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateRouteRequest": {
+        "required": [
+          "title",
+          "description",
+          "tripId",
+          "stops"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "tripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "stops": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CreateRouteStopRequest"
+            }
+          }
+        }
+      },
+      "CreateRouteStopRequest": {
+        "required": [
+          "stopKey",
+          "label",
+          "addressLabel",
+          "stopType",
+          "sequenceNumber",
+          "scheduledArrivalAt"
+        ],
+        "type": "object",
+        "properties": {
+          "stopKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "addressLabel": {
+            "type": "string"
+          },
+          "stopType": {
+            "type": "string"
+          },
+          "sequenceNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "scheduledArrivalAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateTripLoadRequest": {
+        "required": [
+          "loadKey",
+          "description",
+          "loadType",
+          "sequenceNumber",
+          "originLabel",
+          "destinationLabel"
+        ],
+        "type": "object",
+        "properties": {
+          "loadKey": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "loadType": {
+            "type": "string"
+          },
+          "sequenceNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "originLabel": {
+            "type": "string"
+          },
+          "destinationLabel": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateTripRequest": {
+        "required": [
+          "title",
+          "description",
+          "vehicleRefKey",
+          "scheduledStartAt",
+          "scheduledEndAt",
+          "loads"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "scheduledStartAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "scheduledEndAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "loads": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CreateTripLoadRequest"
+            }
+          }
+        }
+      },
+      "DispatchAssignmentPreviewRequest": {
+        "required": [
+          "tripId",
+          "assignmentKind",
+          "driverPersonId",
+          "vehicleRefKey"
+        ],
+        "type": "object",
+        "properties": {
+          "tripId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assignmentKind": {
+            "type": "string"
+          },
+          "driverPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "DispatchCloseoutRequest": {
+        "required": [
+          "scope",
+          "remainingTripDisposition",
+          "openStopDisposition"
+        ],
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "remainingTripDisposition": {
+            "type": "string"
+          },
+          "openStopDisposition": {
+            "type": "string"
+          }
+        }
+      },
+      "DispatchWorkflowGateCheckRequest": {
+        "required": [
+          "tripId"
+        ],
+        "type": "object",
+        "properties": {
+          "tripId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "driverPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assignmentKind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "DriverEligibilityCheckRequest": {
+        "required": [
+          "personId"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string"
+          },
+          "qualificationKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rulePackKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "LinkRouteTripRequest": {
+        "required": [
+          "tripId"
+        ],
+        "type": "object",
+        "properties": {
+          "tripId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "RedeemHandoffRequest": {
+        "required": [
+          "handoffCode"
+        ],
+        "type": "object",
+        "properties": {
+          "handoffCode": {
+            "type": "string"
+          }
+        }
+      },
+      "ReorderRouteStopsRequest": {
+        "required": [
+          "stopIds"
+        ],
+        "type": "object",
+        "properties": {
+          "stopIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "UpdateDriverAvailabilityRequest": {
+        "required": [
+          "availabilityStatus",
+          "startsAt",
+          "endsAt",
+          "reason",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "availabilityStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateEquipmentAvailabilityRequest": {
+        "required": [
+          "availabilityStatus",
+          "startsAt",
+          "endsAt",
+          "reason",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "availabilityStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateRouteStopStatusRequest": {
+        "required": [
+          "stopStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "stopStatus": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateTripDispatchStatusRequest": {
+        "required": [
+          "dispatchStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "dispatchStatus": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health"
+    },
+    {
+      "name": "RoutArr.Api"
+    },
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Session"
+    },
+    {
+      "name": "Me"
+    },
+    {
+      "name": "Trips"
+    },
+    {
+      "name": "Routes"
+    },
+    {
+      "name": "Stops"
+    },
+    {
+      "name": "Dispatch"
+    },
+    {
+      "name": "DriverAvailability"
+    },
+    {
+      "name": "EquipmentAvailability"
+    },
+    {
+      "name": "DriverEligibility"
+    },
+    {
+      "name": "AssetDispatchability"
+    },
+    {
+      "name": "DispatchWorkflowGates"
+    },
+    {
+      "name": "FieldInbox"
+    }
+  ]
+}

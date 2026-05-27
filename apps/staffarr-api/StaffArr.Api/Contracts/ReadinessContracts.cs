@@ -3,9 +3,11 @@ namespace StaffArr.Api.Contracts;
 public sealed record PersonReadinessResponse(
     Guid PersonId,
     string ReadinessStatus,
+    string ReadinessBasis,
     DateTimeOffset CalculatedAt,
     IReadOnlyList<ReadinessRequirementStatusResponse> Requirements,
-    IReadOnlyList<ReadinessBlockerResponse> Blockers);
+    IReadOnlyList<ReadinessBlockerResponse> Blockers,
+    ReadinessOverrideSummaryResponse? ActiveOverride);
 
 public sealed record ReadinessRequirementStatusResponse(
     Guid CertificationDefinitionId,
@@ -16,7 +18,10 @@ public sealed record ReadinessRequirementStatusResponse(
     DateTimeOffset? ExpiresAt);
 
 public sealed record ReadinessBlockerResponse(
-    string CertificationKey,
-    string CertificationName,
+    string BlockerSource,
     string BlockerType,
-    string Message);
+    string Message,
+    string? CertificationKey,
+    string? CertificationName,
+    string? QualificationKey,
+    string? QualificationName);

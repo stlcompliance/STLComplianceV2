@@ -75,9 +75,14 @@ public static class StlApiHost
 
             app.UseAuthorization();
 
-            if (app.Environment.IsDevelopment())
+            var exposeOpenApi = app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing");
+            if (exposeOpenApi)
             {
                 app.MapOpenApi();
+            }
+
+            if (app.Environment.IsDevelopment())
+            {
                 await ApplyMigrationsAsync<TContext>(app);
             }
 
@@ -122,7 +127,7 @@ public static class StlApiHost
                 key = descriptor.ProductKey,
                 health = "/health",
                 ready = "/health/ready",
-                openapi = app.Environment.IsDevelopment() ? "/openapi/v1.json" : null
+                openapi = exposeOpenApi ? "/openapi/v1.json" : null
             })).AllowAnonymous();
 
             if (mapEndpoints is not null)

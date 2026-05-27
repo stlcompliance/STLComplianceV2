@@ -24,12 +24,21 @@ public static class StlJwtAuthenticationExtensions
         var options = configuration.GetSection(StlJwtOptions.SectionName).Get<StlJwtOptions>() ?? new StlJwtOptions();
         services.Configure<StlJwtOptions>(configuration.GetSection(StlJwtOptions.SectionName));
 
-        var signingKey = configuration["AUTH_SIGNING_KEY"] ?? options.SigningKey;
+        var signingKey = configuration["AUTH_SIGNING_KEY"]
+            ?? configuration["JWT_SIGNING_KEY"]
+            ?? options.SigningKey;
         if (string.IsNullOrWhiteSpace(signingKey) || signingKey.Length < 32)
         {
             services.AddAuthorization();
             return services;
         }
+
+        var issuer = configuration["JWT_ISSUER"]
+            ?? configuration[$"{StlJwtOptions.SectionName}:Issuer"]
+            ?? options.Issuer;
+        var audience = configuration["JWT_AUDIENCE"]
+            ?? configuration[$"{StlJwtOptions.SectionName}:Audience"]
+            ?? options.Audience;
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(jwt =>
@@ -38,9 +47,9 @@ public static class StlJwtAuthenticationExtensions
                 jwt.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = options.Issuer,
+                    ValidIssuer = issuer,
                     ValidateAudience = true,
-                    ValidAudience = options.Audience,
+                    ValidAudience = audience,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),

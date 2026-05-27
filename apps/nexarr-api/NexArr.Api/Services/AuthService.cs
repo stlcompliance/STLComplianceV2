@@ -162,20 +162,33 @@ public sealed class AuthService(
     }
 
     public async Task<NavigationResponse> GetNavigationAsync(
-        Guid tenantId,
+        ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
-        var products = await db.Entitlements
+        var tenantId = principal.GetTenantId();
+        var entitlements = principal.GetEntitlements();
+        var isPlatformAdmin = principal.IsPlatformAdmin();
+
+        var catalogProducts = await db.Entitlements
             .AsNoTracking()
             .Where(e => e.TenantId == tenantId && e.Status == EntitlementStatuses.Active)
             .Join(db.ProductCatalog.AsNoTracking().Where(p => p.IsActive), e => e.ProductKey, p => p.ProductKey, (e, p) => p)
             .OrderBy(p => p.SortOrder)
-            .Select(p => new NavigationItem(
-                p.ProductKey,
-                p.DisplayName,
-                $"/app/{p.ProductKey}",
-                p.SortOrder))
             .ToListAsync(cancellationToken);
+
+        var products = catalogProducts
+            .Select(p =>
+            {
+                var entitled = entitlements.Contains(p.ProductKey, StringComparer.OrdinalIgnoreCase);
+                var surfaces = ProductSurfaceCatalog.BuildSurfaces(p.ProductKey, entitled, isPlatformAdmin);
+                return new NavigationItem(
+                    p.ProductKey,
+                    p.DisplayName,
+                    $"/app/{p.ProductKey}",
+                    p.SortOrder,
+                    surfaces);
+            })
+            .ToList();
 
         return new NavigationResponse(tenantId, products);
     }

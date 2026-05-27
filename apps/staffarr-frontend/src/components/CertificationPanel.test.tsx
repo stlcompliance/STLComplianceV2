@@ -42,6 +42,60 @@ describe('CertificationPanel', () => {
     cleanup()
   })
 
+  it('renders TrainArr publication source label', () => {
+    render(
+      <CertificationPanel
+        personId="person-1"
+        personDisplayName="Alex"
+        definitions={definitions}
+        certifications={[
+          {
+            ...certifications[0],
+            sourceType: 'trainarr_publication',
+            externalPublicationId: 'pub-trainarr-1',
+            notes: 'Granted via TrainArr assignment completion.',
+          },
+        ]}
+        canManage={false}
+        isSubmitting={false}
+        errorMessage={null}
+        onGrantCertification={vi.fn().mockResolvedValue(undefined)}
+        onUpdateCertification={vi.fn().mockResolvedValue(undefined)}
+      />,
+    )
+
+    expect(screen.getByText(/TrainArr qualification/i)).toBeTruthy()
+    expect(screen.getByText(/pub-trainarr-1/i)).toBeTruthy()
+  })
+
+  it('renders TrainArr lifecycle status for revoked publication grants', () => {
+    render(
+      <CertificationPanel
+        personId="person-1"
+        personDisplayName="Alex"
+        definitions={definitions}
+        certifications={[
+          {
+            ...certifications[0],
+            sourceType: 'trainarr_publication',
+            status: 'revoked',
+            effectiveStatus: 'revoked',
+            externalPublicationId: 'pub-trainarr-revoked',
+            notes: 'TrainArr revoke: Qualification revoked after policy violation.',
+          },
+        ]}
+        canManage={false}
+        isSubmitting={false}
+        errorMessage={null}
+        onGrantCertification={vi.fn().mockResolvedValue(undefined)}
+        onUpdateCertification={vi.fn().mockResolvedValue(undefined)}
+      />,
+    )
+
+    expect(screen.getByText(/TrainArr lifecycle: Revoked/i)).toBeTruthy()
+    expect(screen.getByText(/pub-trainarr-revoked/i)).toBeTruthy()
+  })
+
   it('renders certification records and readiness catalog entries', () => {
     render(
       <CertificationPanel

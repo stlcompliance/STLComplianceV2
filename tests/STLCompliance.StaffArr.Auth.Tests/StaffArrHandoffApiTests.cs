@@ -44,6 +44,11 @@ using PersonCertificationResponse = StaffArr.Api.Contracts.PersonCertificationRe
 using GrantPersonCertificationRequest = StaffArr.Api.Contracts.GrantPersonCertificationRequest;
 using UpdatePersonCertificationRequest = StaffArr.Api.Contracts.UpdatePersonCertificationRequest;
 using PersonReadinessResponse = StaffArr.Api.Contracts.PersonReadinessResponse;
+using GrantReadinessOverrideRequest = StaffArr.Api.Contracts.GrantReadinessOverrideRequest;
+using CreatePersonnelIncidentRequest = StaffArr.Api.Contracts.CreatePersonnelIncidentRequest;
+using PersonnelIncidentSummaryResponse = StaffArr.Api.Contracts.PersonnelIncidentSummaryResponse;
+using PersonnelIncidentDetailResponse = StaffArr.Api.Contracts.PersonnelIncidentDetailResponse;
+using PersonTimelineEntryResponse = StaffArr.Api.Contracts.PersonTimelineEntryResponse;
 using StaffArrTokenService = StaffArr.Api.Services.StaffArrTokenService;
 using StaffArrDbContext = StaffArr.Api.Data.StaffArrDbContext;
 using StaffPerson = StaffArr.Api.Entities.StaffPerson;
@@ -871,9 +876,15 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
 
         Assert.Equal("not_ready", readiness.ReadinessStatus);
         Assert.Equal(3, readiness.Blockers.Count);
-        Assert.Contains(readiness.Blockers, x => x.CertificationKey == "readiness.safety_orientation");
-        Assert.Contains(readiness.Blockers, x => x.CertificationKey == "readiness.hazmat_awareness");
-        Assert.Contains(readiness.Blockers, x => x.CertificationKey == "readiness.equipment_operator");
+        Assert.Contains(
+            readiness.Blockers,
+            x => x.BlockerSource == "certification" && x.CertificationKey == "readiness.safety_orientation");
+        Assert.Contains(
+            readiness.Blockers,
+            x => x.BlockerSource == "certification" && x.CertificationKey == "readiness.hazmat_awareness");
+        Assert.Contains(
+            readiness.Blockers,
+            x => x.BlockerSource == "certification" && x.CertificationKey == "readiness.equipment_operator");
         Assert.All(readiness.Blockers, x => Assert.Equal("missing", x.BlockerType));
     }
 
@@ -940,7 +951,8 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
 
         Assert.Equal("not_ready", readiness.ReadinessStatus);
         var safetyBlocker = Assert.Single(
-            readiness.Blockers.Where(x => x.CertificationKey == "readiness.safety_orientation"));
+            readiness.Blockers.Where(x =>
+                x.BlockerSource == "certification" && x.CertificationKey == "readiness.safety_orientation"));
         Assert.Equal("expired", safetyBlocker.BlockerType);
         Assert.Contains("expired", safetyBlocker.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -981,6 +993,350 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         var request = Authorized(HttpMethod.Get, $"/api/people/{targetPersonId}/readiness", memberToken);
         var response = await _staffarrClient.SendAsync(request);
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Person_readiness_override_grants_ready_status_with_manual_basis_while_blockers_remain()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Override Ready User", "readiness.override@example.com");
+
+        await _staffarrClient.SendAsync(Authorized(HttpMethod.Get, "/api/certifications", token));
+
+        var grantRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/readiness/override", token);
+        grantRequest.Content = JsonContent.Create(new GrantReadinessOverrideRequest(
+            "Operations manager approved temporary assignment pending scheduled training.",
+            null));
+        var grantResponse = await _staffarrClient.SendAsync(grantRequest);
+        grantResponse.EnsureSuccessStatusCode();
+        var readiness = (await grantResponse.Content.ReadFromJsonAsync<PersonReadinessResponse>())!;
+
+        Assert.Equal("ready", readiness.ReadinessStatus);
+        Assert.Equal("manual_override", readiness.ReadinessBasis);
+        Assert.NotNull(readiness.ActiveOverride);
+        Assert.NotEmpty(readiness.Blockers);
+    }
+
+    [Fact]
+    public async Task Person_readiness_override_clear_restores_not_ready_without_certifications()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "hr_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Override Clear User", "readiness.override.clear@example.com");
+
+        await _staffarrClient.SendAsync(Authorized(HttpMethod.Get, "/api/certifications", token));
+
+        var grantRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/readiness/override", token);
+        grantRequest.Content = JsonContent.Create(new GrantReadinessOverrideRequest(
+            "Temporary coverage while training class is scheduled next week.",
+            null));
+        await _staffarrClient.SendAsync(grantRequest);
+
+        var clearRequest = Authorized(HttpMethod.Delete, $"/api/people/{personId}/readiness/override", token);
+        var clearResponse = await _staffarrClient.SendAsync(clearRequest);
+        clearResponse.EnsureSuccessStatusCode();
+        var readiness = (await clearResponse.Content.ReadFromJsonAsync<PersonReadinessResponse>())!;
+
+        Assert.Equal("not_ready", readiness.ReadinessStatus);
+        Assert.Equal("certifications", readiness.ReadinessBasis);
+        Assert.Null(readiness.ActiveOverride);
+    }
+
+    [Fact]
+    public async Task Person_readiness_override_denies_supervisor_role()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Override Denied User", "readiness.override.denied@example.com");
+
+        var grantRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/readiness/override", token);
+        grantRequest.Content = JsonContent.Create(new GrantReadinessOverrideRequest(
+            "Supervisor should not be able to grant readiness overrides.",
+            null));
+        var response = await _staffarrClient.SendAsync(grantRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Person_readiness_override_rejects_past_expiration()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Override Validation User", "readiness.override.validation@example.com");
+
+        var grantRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/readiness/override", token);
+        grantRequest.Content = JsonContent.Create(new GrantReadinessOverrideRequest(
+            "Validation should reject overrides that already expired.",
+            DateTimeOffset.UtcNow.AddMinutes(-5)));
+        var response = await _staffarrClient.SendAsync(grantRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Personnel_incident_intake_creates_list_and_detail_records()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "hr_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Incident Subject", "incident.subject@example.com");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/incidents", token);
+        createRequest.Content = JsonContent.Create(new CreatePersonnelIncidentRequest(
+            personId,
+            "safety",
+            "high",
+            "Forklift near-miss in warehouse aisle",
+            "Operator reported a near collision while reversing; no injuries but process review required.",
+            DateTimeOffset.UtcNow.AddHours(-2)));
+        var createResponse = await _staffarrClient.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = (await createResponse.Content.ReadFromJsonAsync<PersonnelIncidentDetailResponse>())!;
+
+        var listResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/incidents?personId={personId}", token));
+        listResponse.EnsureSuccessStatusCode();
+        var incidents = (await listResponse.Content.ReadFromJsonAsync<List<PersonnelIncidentSummaryResponse>>())!;
+        Assert.Contains(incidents, x => x.IncidentId == created.IncidentId);
+
+        var detailResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/incidents/{created.IncidentId}", token));
+        detailResponse.EnsureSuccessStatusCode();
+        var detail = (await detailResponse.Content.ReadFromJsonAsync<PersonnelIncidentDetailResponse>())!;
+        Assert.Equal(created.IncidentId, detail.IncidentId);
+        Assert.Equal("open", detail.Status);
+        Assert.Contains("near collision", detail.Description, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Personnel_incident_intake_denies_supervisor_role()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Incident Denied User", "incident.denied@example.com");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/incidents", token);
+        createRequest.Content = JsonContent.Create(new CreatePersonnelIncidentRequest(
+            personId,
+            "conduct",
+            "medium",
+            "Supervisor should not create incidents",
+            "Supervisor role lacks staffarr.incidents.manage scope for intake creation.",
+            DateTimeOffset.UtcNow.AddHours(-1)));
+        var response = await _staffarrClient.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Personnel_incident_list_allows_tenant_member_for_self_only()
+    {
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Self Incident User", "incident.self@example.com");
+
+        var adminToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var createRequest = Authorized(HttpMethod.Post, "/api/incidents", adminToken);
+        createRequest.Content = JsonContent.Create(new CreatePersonnelIncidentRequest(
+            personId,
+            "policy",
+            "low",
+            "Policy acknowledgment gap",
+            "Employee missed annual policy acknowledgment deadline; HR documented for follow-up coaching.",
+            DateTimeOffset.UtcNow.AddDays(-1)));
+        await _staffarrClient.SendAsync(createRequest);
+
+        var memberToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "tenant_member",
+            personId: personId);
+        var selfListResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/incidents?personId={personId}", memberToken));
+        selfListResponse.EnsureSuccessStatusCode();
+        var selfIncidents = (await selfListResponse.Content.ReadFromJsonAsync<List<PersonnelIncidentSummaryResponse>>())!;
+        Assert.NotEmpty(selfIncidents);
+
+        var allListResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/incidents", memberToken));
+        Assert.Equal(HttpStatusCode.Forbidden, allListResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Personnel_incident_intake_rejects_future_occurrence()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Incident Validation User", "incident.validation@example.com");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/incidents", token);
+        createRequest.Content = JsonContent.Create(new CreatePersonnelIncidentRequest(
+            personId,
+            "equipment",
+            "medium",
+            "Future-dated incident should fail",
+            "Validation rejects incidents with occurrence timestamps in the future.",
+            DateTimeOffset.UtcNow.AddDays(2)));
+        var response = await _staffarrClient.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Person_timeline_aggregates_incidents_readiness_certifications_and_permissions()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Timeline User", "timeline.user@example.com");
+
+        var incidentRequest = Authorized(HttpMethod.Post, "/api/incidents", token);
+        incidentRequest.Content = JsonContent.Create(new CreatePersonnelIncidentRequest(
+            personId,
+            "safety",
+            "medium",
+            "Slip hazard in receiving dock",
+            "Wet floor signage missing during inbound shift.",
+            DateTimeOffset.UtcNow.AddHours(-4)));
+        var incidentResponse = await _staffarrClient.SendAsync(incidentRequest);
+        incidentResponse.EnsureSuccessStatusCode();
+        var incident = (await incidentResponse.Content.ReadFromJsonAsync<PersonnelIncidentDetailResponse>())!;
+
+        var overrideRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/readiness/override", token);
+        overrideRequest.Content = JsonContent.Create(new GrantReadinessOverrideRequest(
+            "Temporary site access for audit support",
+            DateTimeOffset.UtcNow.AddDays(7)));
+        var overrideResponse = await _staffarrClient.SendAsync(overrideRequest);
+        overrideResponse.EnsureSuccessStatusCode();
+
+        var definitionsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/certifications", token));
+        definitionsResponse.EnsureSuccessStatusCode();
+        var definitions = (await definitionsResponse.Content.ReadFromJsonAsync<IReadOnlyList<CertificationDefinitionResponse>>())!;
+        var safetyDefinition = definitions.First(x => x.CertificationKey == "readiness.safety_orientation");
+
+        var grantRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/certifications", token);
+        grantRequest.Content = JsonContent.Create(new GrantPersonCertificationRequest(
+            safetyDefinition.CertificationDefinitionId,
+            null,
+            null,
+            "Timeline certification grant."));
+        var grantResponse = await _staffarrClient.SendAsync(grantRequest);
+        grantResponse.EnsureSuccessStatusCode();
+
+        var permissionRequest = Authorized(HttpMethod.Post, "/api/permissions", token);
+        permissionRequest.Content = JsonContent.Create(new UpsertPermissionTemplateRequest(
+            "staffarr.timeline.read",
+            "Timeline Read",
+            "Timeline test permission."));
+        var permissionResponse = await _staffarrClient.SendAsync(permissionRequest);
+        permissionResponse.EnsureSuccessStatusCode();
+        var permissionTemplate = (await permissionResponse.Content.ReadFromJsonAsync<PermissionTemplateSummaryResponse>())!;
+
+        var roleRequest = Authorized(HttpMethod.Post, "/api/roles", token);
+        roleRequest.Content = JsonContent.Create(new CreateRoleTemplateRequest(
+            "staffarr.timeline",
+            "Timeline Role",
+            "Timeline role template.",
+            [new RoleTemplatePermissionInput(permissionTemplate.PermissionTemplateId, "tenant", null)]));
+        var roleResponse = await _staffarrClient.SendAsync(roleRequest);
+        roleResponse.EnsureSuccessStatusCode();
+        var roleTemplate = (await roleResponse.Content.ReadFromJsonAsync<RoleTemplateResponse>())!;
+
+        var assignmentRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/role-assignments", token);
+        assignmentRequest.Content = JsonContent.Create(new CreatePersonRoleAssignmentRequest(
+            roleTemplate.RoleTemplateId,
+            "tenant",
+            null));
+        var assignmentResponse = await _staffarrClient.SendAsync(assignmentRequest);
+        assignmentResponse.EnsureSuccessStatusCode();
+
+        var timelineResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/timeline?page=1&pageSize=50", token));
+        timelineResponse.EnsureSuccessStatusCode();
+        var timelinePage = (await timelineResponse.Content.ReadFromJsonAsync<PagedResult<PersonTimelineEntryResponse>>())!;
+
+        Assert.True(timelinePage.TotalCount >= 4);
+        Assert.Contains(
+            timelinePage.Items,
+            x => x.Category == "incident"
+                && x.EventType == "incident_reported"
+                && x.SourceEntityId == incident.IncidentId.ToString());
+        Assert.Contains(
+            timelinePage.Items,
+            x => x.Category == "readiness" && x.EventType == "readiness_override_granted");
+        Assert.Contains(
+            timelinePage.Items,
+            x => x.Category == "certification" && x.EventType == "certification_granted");
+        Assert.Contains(
+            timelinePage.Items,
+            x => x.Category == "permission" && x.EventType == "assignment_created");
+    }
+
+    [Fact]
+    public async Task Person_timeline_pagination_returns_has_next_page_when_events_exceed_page_size()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Timeline Pagination User", "timeline.pagination@example.com");
+
+        for (var i = 0; i < 3; i++)
+        {
+            var createRequest = Authorized(HttpMethod.Post, "/api/incidents", token);
+            createRequest.Content = JsonContent.Create(new CreatePersonnelIncidentRequest(
+                personId,
+                "policy",
+                "low",
+                $"Policy follow-up #{i + 1}",
+                "Repeated policy coaching events for pagination coverage.",
+                DateTimeOffset.UtcNow.AddHours(-i - 1)));
+            var createResponse = await _staffarrClient.SendAsync(createRequest);
+            createResponse.EnsureSuccessStatusCode();
+        }
+
+        var pageOneResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/timeline?page=1&pageSize=2", token));
+        pageOneResponse.EnsureSuccessStatusCode();
+        var pageOne = (await pageOneResponse.Content.ReadFromJsonAsync<PagedResult<PersonTimelineEntryResponse>>())!;
+
+        Assert.Equal(2, pageOne.Items.Count);
+        Assert.Equal(3, pageOne.TotalCount);
+        Assert.True(pageOne.HasNextPage);
+
+        var pageTwoResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/timeline?page=2&pageSize=2", token));
+        pageTwoResponse.EnsureSuccessStatusCode();
+        var pageTwo = (await pageTwoResponse.Content.ReadFromJsonAsync<PagedResult<PersonTimelineEntryResponse>>())!;
+
+        Assert.Single(pageTwo.Items);
+        Assert.False(pageTwo.HasNextPage);
+    }
+
+    [Fact]
+    public async Task Person_timeline_allows_tenant_member_self_and_denies_other_people()
+    {
+        var selfPersonId = Guid.NewGuid();
+        var otherPersonId = Guid.NewGuid();
+        await SeedStaffPersonAsync(selfPersonId, "Timeline Self", "timeline.self@example.com");
+        await SeedStaffPersonAsync(otherPersonId, "Timeline Other", "timeline.other@example.com");
+
+        var adminToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var createRequest = Authorized(HttpMethod.Post, "/api/incidents", adminToken);
+        createRequest.Content = JsonContent.Create(new CreatePersonnelIncidentRequest(
+            selfPersonId,
+            "conduct",
+            "low",
+            "Self coaching note",
+            "Member-visible incident for timeline self-read test.",
+            DateTimeOffset.UtcNow.AddHours(-1)));
+        await _staffarrClient.SendAsync(createRequest);
+
+        var memberToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "tenant_member",
+            personId: selfPersonId);
+
+        var selfResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{selfPersonId}/timeline", memberToken));
+        selfResponse.EnsureSuccessStatusCode();
+
+        var otherResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{otherPersonId}/timeline", memberToken));
+        Assert.Equal(HttpStatusCode.Forbidden, otherResponse.StatusCode);
     }
 
     private async Task<string> CreateHandoffAsync()

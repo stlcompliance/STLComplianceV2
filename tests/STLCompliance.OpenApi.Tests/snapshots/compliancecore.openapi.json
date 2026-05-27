@@ -1,0 +1,2548 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "ComplianceCore.Api | v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost/"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "ComplianceCore.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/export": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "ExportAuditPackage",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/manifest": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetAuditPackageManifest",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "ComplianceCoreRedeemHandoff",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/citations": {
+      "get": {
+        "tags": [
+          "Citations"
+        ],
+        "operationId": "ListRegulatoryCitations",
+        "parameters": [
+          {
+            "name": "regulatoryProgramId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "rulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Citations"
+        ],
+        "operationId": "CreateRegulatoryCitation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRegulatoryCitationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/compliance-keys": {
+      "get": {
+        "tags": [
+          "ComplianceKeys"
+        ],
+        "operationId": "ListComplianceKeys",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ComplianceKeys"
+        ],
+        "operationId": "CreateComplianceKey",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateComplianceKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/csv-bundle/export": {
+      "get": {
+        "tags": [
+          "CsvBundle"
+        ],
+        "operationId": "ExportCsvBundleZip",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/csv-bundle/files/{fileName}": {
+      "get": {
+        "tags": [
+          "CsvBundle"
+        ],
+        "operationId": "ExportCsvBundleFile",
+        "parameters": [
+          {
+            "name": "fileName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/csv-bundle/import": {
+      "post": {
+        "tags": [
+          "CsvBundle"
+        ],
+        "operationId": "ImportCsvBundle",
+        "parameters": [
+          {
+            "name": "dryRun",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/csv-bundle/manifest": {
+      "get": {
+        "tags": [
+          "CsvBundle"
+        ],
+        "operationId": "GetCsvBundleManifest",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dashboards/operator": {
+      "get": {
+        "tags": [
+          "Dashboards"
+        ],
+        "operationId": "GetComplianceCoreOperatorDashboard",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/fact-definitions": {
+      "get": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "ListFactDefinitions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "CreateFactDefinition",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFactDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/fact-requirements": {
+      "get": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "ListFactRequirements",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "citationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "CreateFactRequirement",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFactRequirementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/fact-sources": {
+      "get": {
+        "tags": [
+          "FactSources"
+        ],
+        "operationId": "ListFactSources",
+        "parameters": [
+          {
+            "name": "factDefinitionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "FactSources"
+        ],
+        "operationId": "CreateFactSource",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFactSourceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/findings": {
+      "get": {
+        "tags": [
+          "Findings"
+        ],
+        "operationId": "ListComplianceFindings",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "evaluationRunId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Findings"
+        ],
+        "operationId": "CreateComplianceFinding",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateComplianceFindingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/findings/{findingId}/status": {
+      "patch": {
+        "tags": [
+          "Findings"
+        ],
+        "operationId": "UpdateComplianceFindingStatus",
+        "parameters": [
+          {
+            "name": "findingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateComplianceFindingStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/governing-bodies": {
+      "get": {
+        "tags": [
+          "RegulatoryRegistries"
+        ],
+        "operationId": "ListGoverningBodies",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RegulatoryRegistries"
+        ],
+        "operationId": "CreateGoverningBody",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGoverningBodyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/citations/lookup": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalCitationLookup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalCitationLookupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/evaluate": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalEvaluateRulePack",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalEvaluateRulePackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/evaluate/batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalEvaluateRulePackBatch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalEvaluateRulePackBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/resolve": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalResolveFacts",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalResolveFactsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/rule-packs/lookup": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalRulePackLookup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalRulePackLookupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/scheduled-evaluations/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingScheduledRuleEvaluations",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "intervalHours",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/scheduled-evaluations/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessScheduledRuleEvaluations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessScheduledRuleEvaluationsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/validate": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalValidateFacts",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalValidateFactsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/workflow-gate-check": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalWorkflowGateCheck",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalWorkflowGateCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/workflow-gate-check/batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalWorkflowGateCheckBatch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternalWorkflowGateBatchCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/jurisdictions": {
+      "get": {
+        "tags": [
+          "RegulatoryRegistries"
+        ],
+        "operationId": "ListJurisdictions",
+        "parameters": [
+          {
+            "name": "governingBodyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RegulatoryRegistries"
+        ],
+        "operationId": "CreateJurisdiction",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJurisdictionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/material-keys": {
+      "get": {
+        "tags": [
+          "MaterialKeys"
+        ],
+        "operationId": "ListMaterialKeys",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MaterialKeys"
+        ],
+        "operationId": "CreateMaterialKey",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaterialKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "ComplianceCoreGetMe",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/regulatory-mappings": {
+      "get": {
+        "tags": [
+          "RegulatoryMappings"
+        ],
+        "operationId": "ListRegulatoryMappings",
+        "parameters": [
+          {
+            "name": "regulatoryProgramId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "rulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "citationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "complianceKeyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "materialKeyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RegulatoryMappings"
+        ],
+        "operationId": "CreateRegulatoryMapping",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRegulatoryMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/regulatory-programs": {
+      "get": {
+        "tags": [
+          "RegulatoryRegistries"
+        ],
+        "operationId": "ListRegulatoryPrograms",
+        "parameters": [
+          {
+            "name": "jurisdictionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RegulatoryRegistries"
+        ],
+        "operationId": "CreateRegulatoryProgram",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRegulatoryProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-evaluations": {
+      "get": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "ListRuleEvaluations",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-evaluations/{evaluationRunId}": {
+      "get": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "GetRuleEvaluation",
+        "parameters": [
+          {
+            "name": "evaluationRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs": {
+      "get": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "ListRulePacks",
+        "parameters": [
+          {
+            "name": "regulatoryProgramId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "CreateRulePack",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRulePackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/evaluate/batch": {
+      "post": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "EvaluateRulePackBatch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRulePackBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/{rulePackId}/content": {
+      "get": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "GetRulePackContent",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "UpdateRulePackContent",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRulePackContentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/{rulePackId}/evaluate": {
+      "post": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "EvaluateRulePack",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRulePackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/{rulePackId}/status": {
+      "patch": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "UpdateRulePackStatus",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRulePackStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/session": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "operationId": "ComplianceCoreGetSessionBootstrap",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vocabulary": {
+      "get": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "ListVocabularyTerms",
+        "parameters": [
+          {
+            "name": "vocabularyTypeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "CreateVocabularyTerm",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVocabularyTermRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vocabulary/aliases": {
+      "post": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "CreateVocabularyAlias",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVocabularyAliasRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vocabulary/types": {
+      "get": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "ListVocabularyTypes",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/workflow-gates": {
+      "get": {
+        "tags": [
+          "WorkflowGates"
+        ],
+        "operationId": "ListWorkflowGates",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "WorkflowGates"
+        ],
+        "operationId": "CreateWorkflowGate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkflowGateDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/workflow-gates/check": {
+      "post": {
+        "tags": [
+          "WorkflowGates"
+        ],
+        "operationId": "CheckWorkflowGate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowGateCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/workflow-gates/check/batch": {
+      "post": {
+        "tags": [
+          "WorkflowGates"
+        ],
+        "operationId": "CheckWorkflowGateBatch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowGateBatchCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/workflow-gates/seed/dispatch": {
+      "post": {
+        "tags": [
+          "WorkflowGates"
+        ],
+        "operationId": "SeedDispatchWorkflowGates",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateComplianceFindingRequest": {
+        "required": [
+          "rulePackId",
+          "ruleEvaluationRunId",
+          "findingKey",
+          "severity",
+          "ruleKey",
+          "factKey",
+          "title",
+          "message",
+          "reasonCode"
+        ],
+        "type": "object",
+        "properties": {
+          "rulePackId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ruleEvaluationRunId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "findingKey": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "ruleKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "factKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateComplianceKeyRequest": {
+        "required": [
+          "key",
+          "label",
+          "category",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateFactDefinitionRequest": {
+        "required": [
+          "factKey",
+          "label",
+          "description",
+          "valueType"
+        ],
+        "type": "object",
+        "properties": {
+          "factKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "valueType": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateFactRequirementRequest": {
+        "required": [
+          "factDefinitionId",
+          "rulePackId",
+          "citationId",
+          "requirementKey",
+          "label",
+          "description",
+          "isRequired"
+        ],
+        "type": "object",
+        "properties": {
+          "factDefinitionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rulePackId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "citationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "requirementKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isRequired": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateFactSourceRequest": {
+        "required": [
+          "factDefinitionId",
+          "sourceKey",
+          "sourceType",
+          "label",
+          "description",
+          "productKey",
+          "productReference",
+          "configJson",
+          "priority"
+        ],
+        "type": "object",
+        "properties": {
+          "factDefinitionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceKey": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "productKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "productReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "configJson": {
+            "type": "string"
+          },
+          "priority": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "CreateGoverningBodyRequest": {
+        "required": [
+          "bodyKey",
+          "label",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "bodyKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateJurisdictionRequest": {
+        "required": [
+          "governingBodyId",
+          "jurisdictionKey",
+          "label",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "governingBodyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "jurisdictionKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateMaterialKeyRequest": {
+        "required": [
+          "key",
+          "label",
+          "category",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateRegulatoryCitationRequest": {
+        "required": [
+          "regulatoryProgramId",
+          "rulePackId",
+          "citationKey",
+          "label",
+          "sourceReference",
+          "description",
+          "supersedesCitationId"
+        ],
+        "type": "object",
+        "properties": {
+          "regulatoryProgramId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rulePackId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "citationKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "sourceReference": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "supersedesCitationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateRegulatoryMappingRequest": {
+        "required": [
+          "mappingKey",
+          "label",
+          "description",
+          "targetKind",
+          "regulatoryProgramId",
+          "rulePackId",
+          "citationId",
+          "factDefinitionId",
+          "complianceKeyId",
+          "materialKeyId"
+        ],
+        "type": "object",
+        "properties": {
+          "mappingKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "targetKind": {
+            "type": "string"
+          },
+          "regulatoryProgramId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rulePackId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "citationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "factDefinitionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "complianceKeyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "materialKeyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateRegulatoryProgramRequest": {
+        "required": [
+          "jurisdictionId",
+          "programKey",
+          "label",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "jurisdictionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "programKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateRulePackRequest": {
+        "required": [
+          "regulatoryProgramId",
+          "packKey",
+          "label",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "regulatoryProgramId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateVocabularyAliasRequest": {
+        "required": [
+          "vocabularyTermId",
+          "aliasText"
+        ],
+        "type": "object",
+        "properties": {
+          "vocabularyTermId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "aliasText": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateVocabularyTermRequest": {
+        "required": [
+          "termKey",
+          "label",
+          "vocabularyTypeKey",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "termKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "vocabularyTypeKey": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateWorkflowGateDefinitionRequest": {
+        "required": [
+          "gateKey",
+          "label",
+          "description",
+          "rulePackId"
+        ],
+        "type": "object",
+        "properties": {
+          "gateKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "rulePackId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "EvaluateRulePackBatchItem": {
+        "required": [
+          "rulePackKey"
+        ],
+        "type": "object",
+        "properties": {
+          "rulePackKey": {
+            "type": "string"
+          },
+          "facts": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "EvaluateRulePackBatchRequest": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvaluateRulePackBatchItem"
+            }
+          },
+          "facts": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "emitFindings": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "EvaluateRulePackRequest": {
+        "required": [
+          "facts"
+        ],
+        "type": "object",
+        "properties": {
+          "facts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "emitFindings": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "InternalCitationLookupRequest": {
+        "required": [
+          "tenantId",
+          "citationIds"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "citationIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "InternalEvaluateRulePackBatchItem": {
+        "required": [
+          "rulePackKey"
+        ],
+        "type": "object",
+        "properties": {
+          "rulePackKey": {
+            "type": "string"
+          },
+          "context": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "InternalEvaluateRulePackBatchRequest": {
+        "required": [
+          "tenantId",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InternalEvaluateRulePackBatchItem"
+            }
+          },
+          "context": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "emitFindings": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "InternalEvaluateRulePackRequest": {
+        "required": [
+          "tenantId",
+          "rulePackKey",
+          "context"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rulePackKey": {
+            "type": "string"
+          },
+          "context": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "emitFindings": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "InternalResolveFactsRequest": {
+        "required": [
+          "tenantId",
+          "factKeys",
+          "context"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "factKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "context": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "InternalRulePackLookupRequest": {
+        "required": [
+          "tenantId",
+          "rulePackKeys"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rulePackKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "InternalValidateFactsRequest": {
+        "required": [
+          "tenantId",
+          "factKeys"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "factKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "InternalWorkflowGateBatchCheckItem": {
+        "required": [
+          "gateKey"
+        ],
+        "type": "object",
+        "properties": {
+          "gateKey": {
+            "type": "string"
+          },
+          "context": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "InternalWorkflowGateBatchCheckRequest": {
+        "required": [
+          "tenantId",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InternalWorkflowGateBatchCheckItem"
+            }
+          },
+          "context": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "emitFindings": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "InternalWorkflowGateCheckRequest": {
+        "required": [
+          "tenantId",
+          "gateKey",
+          "context"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "gateKey": {
+            "type": "string"
+          },
+          "context": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "emitFindings": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ProcessScheduledRuleEvaluationsRequest": {
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "intervalHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "emitFindings": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "RedeemHandoffRequest": {
+        "required": [
+          "handoffCode"
+        ],
+        "type": "object",
+        "properties": {
+          "handoffCode": {
+            "type": "string"
+          }
+        }
+      },
+      "RuleDefinitionDto": {
+        "required": [
+          "ruleKey",
+          "label",
+          "type",
+          "factKey",
+          "expectedValue"
+        ],
+        "type": "object",
+        "properties": {
+          "ruleKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "factKey": {
+            "type": "string"
+          },
+          "expectedValue": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RulePackContentBody": {
+        "required": [
+          "schemaVersion",
+          "logic",
+          "rules"
+        ],
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "logic": {
+            "type": "string"
+          },
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RuleDefinitionDto"
+            }
+          }
+        }
+      },
+      "UpdateComplianceFindingStatusRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateRulePackContentRequest": {
+        "required": [
+          "content"
+        ],
+        "type": "object",
+        "properties": {
+          "content": {
+            "$ref": "#/components/schemas/RulePackContentBody"
+          }
+        }
+      },
+      "UpdateRulePackStatusRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "WorkflowGateBatchCheckItem": {
+        "required": [
+          "gateKey"
+        ],
+        "type": "object",
+        "properties": {
+          "gateKey": {
+            "type": "string"
+          },
+          "facts": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "context": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "WorkflowGateBatchCheckRequest": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowGateBatchCheckItem"
+            }
+          },
+          "facts": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "context": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "emitFindings": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "WorkflowGateCheckRequest": {
+        "required": [
+          "gateKey",
+          "facts",
+          "context"
+        ],
+        "type": "object",
+        "properties": {
+          "gateKey": {
+            "type": "string"
+          },
+          "facts": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "context": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "emitFindings": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health"
+    },
+    {
+      "name": "ComplianceCore.Api"
+    },
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Session"
+    },
+    {
+      "name": "Me"
+    },
+    {
+      "name": "Vocabulary"
+    },
+    {
+      "name": "ComplianceKeys"
+    },
+    {
+      "name": "MaterialKeys"
+    },
+    {
+      "name": "RegulatoryRegistries"
+    },
+    {
+      "name": "RulePacks"
+    },
+    {
+      "name": "Citations"
+    },
+    {
+      "name": "FactCatalog"
+    },
+    {
+      "name": "RegulatoryMappings"
+    },
+    {
+      "name": "RuleEvaluation"
+    },
+    {
+      "name": "FactSources"
+    },
+    {
+      "name": "Internal"
+    },
+    {
+      "name": "Findings"
+    },
+    {
+      "name": "WorkflowGates"
+    },
+    {
+      "name": "CsvBundle"
+    },
+    {
+      "name": "AuditPackages"
+    },
+    {
+      "name": "Dashboards"
+    }
+  ]
+}

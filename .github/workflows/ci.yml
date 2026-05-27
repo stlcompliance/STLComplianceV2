@@ -24,7 +24,10 @@ jobs:
         run: dotnet build STLCompliance.slnx --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test STLCompliance.slnx --configuration Release --no-build --verbosity normal
+        run: dotnet test STLCompliance.slnx --configuration Release --no-build --verbosity normal --filter "Category!=Live"
+
+      - name: OpenAPI parity
+        run: dotnet test tests/STLCompliance.OpenApi.Tests/STLCompliance.OpenApi.Tests.csproj --configuration Release --no-build --verbosity normal --filter "Category=OpenApi"
 
       - name: EF migrations present
         run: |

@@ -11,6 +11,14 @@ public interface ITokenService
         Guid sessionId,
         IReadOnlyList<string> entitlements);
 
+    (string AccessToken, DateTimeOffset ExpiresAt) CreateSessionAccessToken(
+        PlatformUser user,
+        Guid tenantId,
+        Guid sessionId,
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey,
+        Guid personId);
+
     string GenerateRefreshToken();
 
     string HashRefreshToken(string refreshToken);

@@ -165,7 +165,7 @@ public static class RoleTemplateEndpoints
             Guid personId,
             HttpContext context,
             StaffArrAuthorizationService authorization,
-            RoleTemplateService service,
+            PermissionProjectionService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePermissionProjectionRead(context.User, personId);

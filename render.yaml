@@ -1,5 +1,6 @@
-# STL Compliance / Arr Suite — Render Blueprint (M1 foundation)
+# STL Compliance / Arr Suite — Render Blueprint (V1 hardened)
 # Schema: https://render.com/schema/render.yaml.json
+# Env reference: docs/deployment/ENV_VARS_V1.md
 
 envVarGroups:
   - name: stl-shared
@@ -10,18 +11,74 @@ envVarGroups:
         value: Information
       - key: OTEL_ENABLED
         value: "false"
+
   - name: stl-auth
     envVars:
-      - key: JWT_ISSUER
+      - key: AUTH_SIGNING_KEY
         generateValue: true
-      - key: JWT_AUDIENCE
+      - key: Auth__Issuer
+        value: stl-compliance-nexarr
+      - key: Auth__Audience
         value: stl-compliance-suite
-      - key: JWT_SIGNING_KEY
-        generateValue: true
       - key: SERVICE_TOKEN_ISSUER
-        generateValue: true
+        value: stl-compliance-services
       - key: SERVICE_TOKEN_AUDIENCE
         value: stl-compliance-services
+
+  # Render private network: web services listen on port 10000 internally.
+  - name: stl-internal-api-urls
+    envVars:
+      - key: NexArr__BaseUrl
+        value: http://nexarr-api:10000
+      - key: StaffArr__BaseUrl
+        value: http://staffarr-api:10000
+      - key: TrainArr__BaseUrl
+        value: http://trainarr-api:10000
+      - key: MaintainArr__BaseUrl
+        value: http://maintainarr-api:10000
+      - key: RoutArr__BaseUrl
+        value: http://routarr-api:10000
+      - key: SupplyArr__BaseUrl
+        value: http://supplyarr-api:10000
+      - key: ComplianceCore__BaseUrl
+        value: http://compliancecore-api:10000
+
+  # Public onrender.com URLs for browser builds and CORS. Update after custom domains.
+  - name: stl-public-frontend-urls
+    envVars:
+      - key: SUITE_FRONTEND_URL
+        value: https://suite-frontend.onrender.com
+      - key: STAFFARR_FRONTEND_URL
+        value: https://staffarr-frontend.onrender.com
+      - key: TRAINARR_FRONTEND_URL
+        value: https://trainarr-frontend.onrender.com
+      - key: MAINTAINARR_FRONTEND_URL
+        value: https://maintainarr-frontend.onrender.com
+      - key: ROUTARR_FRONTEND_URL
+        value: https://routarr-frontend.onrender.com
+      - key: SUPPLYARR_FRONTEND_URL
+        value: https://supplyarr-frontend.onrender.com
+      - key: COMPLIANCECORE_FRONTEND_URL
+        value: https://compliancecore-frontend.onrender.com
+      - key: COMPANION_FRONTEND_URL
+        value: https://companion-frontend.onrender.com
+
+  - name: stl-public-api-urls
+    envVars:
+      - key: NEXARR_PUBLIC_API_URL
+        value: https://nexarr-api.onrender.com
+      - key: STAFFARR_PUBLIC_API_URL
+        value: https://staffarr-api.onrender.com
+      - key: TRAINARR_PUBLIC_API_URL
+        value: https://trainarr-api.onrender.com
+      - key: MAINTAINARR_PUBLIC_API_URL
+        value: https://maintainarr-api.onrender.com
+      - key: ROUTARR_PUBLIC_API_URL
+        value: https://routarr-api.onrender.com
+      - key: SUPPLYARR_PUBLIC_API_URL
+        value: https://supplyarr-api.onrender.com
+      - key: COMPLIANCECORE_PUBLIC_API_URL
+        value: https://compliancecore-api.onrender.com
 
 databases:
   - name: nexarr-db
@@ -60,6 +117,7 @@ services:
     maxmemoryPolicy: allkeys-lru
     ipAllowList: []
 
+  # --- APIs (Docker / .NET 10) ---
   - type: web
     name: nexarr-api
     runtime: docker
@@ -79,6 +137,36 @@ services:
           name: redis
           type: keyvalue
           property: connectionString
+      - key: Launch__Products__nexarr__BaseUrl
+        value: https://suite-frontend.onrender.com
+      - key: Launch__Products__staffarr__BaseUrl
+        value: https://staffarr-frontend.onrender.com
+      - key: Launch__Products__trainarr__BaseUrl
+        value: https://trainarr-frontend.onrender.com
+      - key: Launch__Products__maintainarr__BaseUrl
+        value: https://maintainarr-frontend.onrender.com
+      - key: Launch__Products__routarr__BaseUrl
+        value: https://routarr-frontend.onrender.com
+      - key: Launch__Products__supplyarr__BaseUrl
+        value: https://supplyarr-frontend.onrender.com
+      - key: Launch__Products__compliancecore__BaseUrl
+        value: https://compliancecore-frontend.onrender.com
+      - key: Launch__Products__staffarr__LaunchPath
+        value: /launch
+      - key: Launch__Products__trainarr__LaunchPath
+        value: /launch
+      - key: Launch__Products__maintainarr__LaunchPath
+        value: /launch
+      - key: Launch__Products__routarr__LaunchPath
+        value: /launch
+      - key: Launch__Products__supplyarr__LaunchPath
+        value: /launch
+      - key: Launch__Products__compliancecore__LaunchPath
+        value: /launch
+      - key: Launch__Products__companion__BaseUrl
+        value: https://companion-frontend.onrender.com
+      - key: Launch__Products__companion__LaunchPath
+        value: /launch
 
   - type: web
     name: staffarr-api
@@ -90,10 +178,17 @@ services:
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
+      - fromGroup: stl-internal-api-urls
       - key: DATABASE_URL
         fromDatabase:
           name: staffarr-db
           property: connectionString
+      - key: Cors__StaffArrFrontendOrigin
+        value: https://staffarr-frontend.onrender.com
+      - key: Handoff__ServiceToken
+        sync: false
+      - key: TrainArr__ServiceToken
+        sync: false
 
   - type: web
     name: trainarr-api
@@ -105,10 +200,21 @@ services:
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
+      - fromGroup: stl-internal-api-urls
       - key: DATABASE_URL
         fromDatabase:
           name: trainarr-db
           property: connectionString
+      - key: Cors__TrainArrFrontendOrigin
+        value: https://trainarr-frontend.onrender.com
+      - key: Handoff__ServiceToken
+        sync: false
+      - key: StaffArr__ServiceToken
+        sync: false
+      - key: ComplianceCore__ServiceToken
+        sync: false
+      - key: EvidenceStorage__RootPath
+        value: /var/data/trainarr-evidence
 
   - type: web
     name: maintainarr-api
@@ -120,10 +226,19 @@ services:
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
+      - fromGroup: stl-internal-api-urls
       - key: DATABASE_URL
         fromDatabase:
           name: maintainarr-db
           property: connectionString
+      - key: Cors__MaintainArrFrontendOrigin
+        value: https://maintainarr-frontend.onrender.com
+      - key: Handoff__ServiceToken
+        sync: false
+      - key: SupplyArr__ServiceToken
+        sync: false
+      - key: EvidenceStorage__RootPath
+        value: /var/data/maintainarr-evidence
 
   - type: web
     name: routarr-api
@@ -135,10 +250,23 @@ services:
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
+      - fromGroup: stl-internal-api-urls
       - key: DATABASE_URL
         fromDatabase:
           name: routarr-db
           property: connectionString
+      - key: Cors__RoutArrFrontendOrigin
+        value: https://routarr-frontend.onrender.com
+      - key: Handoff__ServiceToken
+        sync: false
+      - key: TrainArr__ServiceToken
+        sync: false
+      - key: StaffArr__ServiceToken
+        sync: false
+      - key: MaintainArr__ServiceToken
+        sync: false
+      - key: ComplianceCore__ServiceToken
+        sync: false
 
   - type: web
     name: supplyarr-api
@@ -150,10 +278,17 @@ services:
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
+      - fromGroup: stl-internal-api-urls
       - key: DATABASE_URL
         fromDatabase:
           name: supplyarr-db
           property: connectionString
+      - key: Cors__SupplyArrFrontendOrigin
+        value: https://supplyarr-frontend.onrender.com
+      - key: Handoff__ServiceToken
+        sync: false
+      - key: MaintainArr__ServiceToken
+        sync: false
 
   - type: web
     name: compliancecore-api
@@ -165,11 +300,55 @@ services:
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
+      - fromGroup: stl-internal-api-urls
       - key: DATABASE_URL
         fromDatabase:
           name: compliancecore-db
           property: connectionString
+      - key: Cors__ComplianceCoreFrontendOrigin
+        value: https://compliancecore-frontend.onrender.com
+      - key: Handoff__ServiceToken
+        sync: false
 
+  # --- Cross-product scheduled jobs ---
+  - type: worker
+    name: shared-worker
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./workers/shared-worker/Dockerfile
+    dockerContext: .
+    envVars:
+      - fromGroup: stl-shared
+      - key: TrainArrQualificationExpiration__TrainArrBaseUrl
+        value: http://trainarr-api:10000
+      - key: TrainArrQualificationExpiration__ServiceToken
+        sync: false
+      - key: StaffArrCertificationExpiration__StaffArrBaseUrl
+        value: http://staffarr-api:10000
+      - key: StaffArrCertificationExpiration__ServiceToken
+        sync: false
+      - key: StaffArrReadinessRollup__StaffArrBaseUrl
+        value: http://staffarr-api:10000
+      - key: StaffArrReadinessRollup__ServiceToken
+        sync: false
+      - key: StaffArrPermissionProjection__StaffArrBaseUrl
+        value: http://staffarr-api:10000
+      - key: StaffArrPermissionProjection__ServiceToken
+        sync: false
+      - key: MaintainArrPmDueScan__MaintainArrBaseUrl
+        value: http://maintainarr-api:10000
+      - key: MaintainArrPmDueScan__ServiceToken
+        sync: false
+      - key: SupplyArrReorderEvaluation__SupplyArrBaseUrl
+        value: http://supplyarr-api:10000
+      - key: SupplyArrReorderEvaluation__ServiceToken
+        sync: false
+      - key: ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl
+        value: http://compliancecore-api:10000
+      - key: ComplianceCoreScheduledEvaluation__ServiceToken
+        sync: false
+
+  # --- Product heartbeat workers (reserved for product-local jobs) ---
   - type: worker
     name: nexarr-worker
     runtime: docker
@@ -260,3 +439,134 @@ services:
         fromDatabase:
           name: compliancecore-db
           property: connectionString
+
+  # --- Static frontends (Vite / React) ---
+  - type: web
+    name: suite-frontend
+    runtime: static
+    plan: free
+    rootDir: apps/suite-frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_NEXARR_API_URL
+        value: https://nexarr-api.onrender.com
+
+  - type: web
+    name: staffarr-frontend
+    runtime: static
+    plan: free
+    rootDir: apps/staffarr-frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_STAFFARR_API_BASE
+        value: https://staffarr-api.onrender.com
+
+  - type: web
+    name: trainarr-frontend
+    runtime: static
+    plan: free
+    rootDir: apps/trainarr-frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_TRAINARR_API_BASE
+        value: https://trainarr-api.onrender.com
+
+  - type: web
+    name: maintainarr-frontend
+    runtime: static
+    plan: free
+    rootDir: apps/maintainarr-frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_MAINTAINARR_API_BASE
+        value: https://maintainarr-api.onrender.com
+
+  - type: web
+    name: routarr-frontend
+    runtime: static
+    plan: free
+    rootDir: apps/routarr-frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_ROUTARR_API_BASE
+        value: https://routarr-api.onrender.com
+
+  - type: web
+    name: supplyarr-frontend
+    runtime: static
+    plan: free
+    rootDir: apps/supplyarr-frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_SUPPLYARR_API_BASE
+        value: https://supplyarr-api.onrender.com
+
+  - type: web
+    name: compliancecore-frontend
+    runtime: static
+    plan: free
+    rootDir: apps/compliancecore-frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_COMPLIANCECORE_API_BASE
+        value: https://compliancecore-api.onrender.com
+
+  - type: web
+    name: companion-frontend
+    runtime: static
+    plan: free
+    rootDir: apps/companion-frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_NEXARR_API_BASE
+        value: https://nexarr-api.onrender.com
+      - key: VITE_MAINTAINARR_FRONTEND_BASE
+        value: https://maintainarr-frontend.onrender.com
+      - key: VITE_ROUTARR_FRONTEND_BASE
+        value: https://routarr-frontend.onrender.com
+      - key: VITE_TRAINARR_FRONTEND_BASE
+        value: https://trainarr-frontend.onrender.com
+      - key: VITE_STAFFARR_FRONTEND_BASE
+        value: https://staffarr-frontend.onrender.com
+      - key: VITE_SUPPLYARR_FRONTEND_BASE
+        value: https://supplyarr-frontend.onrender.com
