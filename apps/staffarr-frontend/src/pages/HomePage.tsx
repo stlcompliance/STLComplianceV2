@@ -6,12 +6,15 @@ import {
   createPersonRoleAssignment,
   createRoleTemplate,
   createOrgUnit,
+  getCertificationDefinitions,
   getEffectivePermissions,
   getManagerChain,
   getMe,
   getOrgUnits,
   getPermissionTemplates,
   getPermissionHistoryTimeline,
+  getPersonCertifications,
+  getPersonReadiness,
   getPersonOrgAssignments,
   getPersonRoleAssignments,
   getRoleTemplates,
@@ -19,17 +22,21 @@ import {
   getSubordinates,
   getPeople,
   getPerson,
+  grantPersonCertification,
   StaffArrApiError,
   updatePersonManager,
   updatePersonOrgAssignment,
   updatePersonOrgAssignmentStatus,
   updatePersonRoleAssignmentStatus,
+  updatePersonCertification,
   updateRoleTemplate,
   upsertPermissionTemplate,
   updateOrgUnit,
   updateOrgUnitStatus,
 } from '../api/client'
 import { clearSession, loadSession } from '../auth/sessionStorage'
+import { CertificationPanel } from '../components/CertificationPanel'
+import { ReadinessPanel } from '../components/ReadinessPanel'
 import { ManagerHierarchyPanel } from '../components/ManagerHierarchyPanel'
 import { canManageOrgHierarchy, OrgHierarchyManager } from '../components/OrgHierarchyManager'
 import { PersonOrgAssignmentsManager } from '../components/PersonOrgAssignmentsManager'
@@ -122,6 +129,21 @@ export function HomePage() {
   const permissionHistoryQuery = useQuery({
     queryKey: ['staffarr-permission-history', session?.accessToken, effectivePersonId],
     queryFn: () => getPermissionHistoryTimeline(session!.accessToken, effectivePersonId!, 100),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const certificationDefinitionsQuery = useQuery({
+    queryKey: ['staffarr-certification-definitions', session?.accessToken],
+    queryFn: () => getCertificationDefinitions(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
+  })
+  const personCertificationsQuery = useQuery({
+    queryKey: ['staffarr-person-certifications', session?.accessToken, effectivePersonId],
+    queryFn: () => getPersonCertifications(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const personReadinessQuery = useQuery({
+    queryKey: ['staffarr-person-readiness', session?.accessToken, effectivePersonId],
+    queryFn: () => getPersonReadiness(session!.accessToken, effectivePersonId!),
     enabled: Boolean(session?.accessToken && effectivePersonId),
   })
 
@@ -294,6 +316,47 @@ export function HomePage() {
       ])
     },
   })
+  const grantCertificationMutation = useMutation({
+    mutationFn: (payload: {
+      personId: string
+      certificationDefinitionId: string
+      grantedAt: string | null
+      expiresAt: string | null
+      notes: string | null
+    }) =>
+      grantPersonCertification(session!.accessToken, payload.personId, {
+        certificationDefinitionId: payload.certificationDefinitionId,
+        grantedAt: payload.grantedAt,
+        expiresAt: payload.expiresAt,
+        notes: payload.notes,
+      }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-certifications', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-readiness', session?.accessToken] }),
+      ])
+    },
+  })
+  const updateCertificationMutation = useMutation({
+    mutationFn: (payload: {
+      personId: string
+      personCertificationId: string
+      status: 'active' | 'expired' | 'revoked'
+      expiresAt: string | null
+      notes: string | null
+    }) =>
+      updatePersonCertification(session!.accessToken, payload.personId, payload.personCertificationId, {
+        status: payload.status,
+        expiresAt: payload.expiresAt,
+        notes: payload.notes,
+      }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-certifications', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-readiness', session?.accessToken] }),
+      ])
+    },
+  })
 
   if (!session) {
     return (
@@ -351,6 +414,9 @@ export function HomePage() {
     || roleAssignmentsQuery.isError
     || effectivePermissionsQuery.isError
     || permissionHistoryQuery.isError
+    || certificationDefinitionsQuery.isError
+    || personCertificationsQuery.isError
+    || personReadinessQuery.isError
   ) {
     const directoryError =
       peopleQuery.error ??
@@ -363,7 +429,10 @@ export function HomePage() {
       roleTemplatesQuery.error ??
       roleAssignmentsQuery.error ??
       effectivePermissionsQuery.error ??
-      permissionHistoryQuery.error
+      permissionHistoryQuery.error ??
+      certificationDefinitionsQuery.error ??
+      personCertificationsQuery.error ??
+      personReadinessQuery.error
     if (directoryError instanceof StaffArrApiError && (directoryError.status === 401 || directoryError.status === 403)) {
       clearSession()
     }
@@ -393,6 +462,8 @@ export function HomePage() {
   const roleAssignments = roleAssignmentsQuery.data ?? []
   const effectivePermissions = effectivePermissionsQuery.data ?? null
   const permissionHistory = permissionHistoryQuery.data ?? []
+  const certificationDefinitions = certificationDefinitionsQuery.data ?? []
+  const personCertifications = personCertificationsQuery.data ?? []
   const canManageOrgUnits = canManageOrgHierarchy(me.tenantRoleKey, me.isPlatformAdmin)
   const canManageHierarchy = canManageOrgUnits
   const orgMutationError =
@@ -407,6 +478,8 @@ export function HomePage() {
     createRoleAssignmentMutation.error ??
     updateRoleAssignmentStatusMutation.error ??
     null
+  const certificationMutationError =
+    grantCertificationMutation.error ?? updateCertificationMutation.error ?? null
 
   return (
     <main className="mx-auto max-w-6xl p-8">
@@ -634,6 +707,44 @@ export function HomePage() {
           orgUnits={orgUnits}
           projection={effectivePermissions}
           timeline={permissionHistory}
+        />
+      ) : null}
+
+      {selectedPerson ? (
+        <ReadinessPanel
+          personId={selectedPerson.personId}
+          personDisplayName={selectedPerson.displayName}
+          readiness={personReadinessQuery.data ?? null}
+          isLoading={personReadinessQuery.isLoading}
+        />
+      ) : null}
+
+      {selectedPerson ? (
+        <CertificationPanel
+          personId={selectedPerson.personId}
+          personDisplayName={selectedPerson.displayName}
+          definitions={certificationDefinitions}
+          certifications={personCertifications}
+          canManage={canManageHierarchy}
+          isSubmitting={grantCertificationMutation.isPending || updateCertificationMutation.isPending}
+          errorMessage={
+            certificationMutationError instanceof StaffArrApiError
+              ? certificationMutationError.body || certificationMutationError.message
+              : null
+          }
+          onGrantCertification={async (payload) => {
+            await grantCertificationMutation.mutateAsync({
+              personId: selectedPerson.personId,
+              ...payload,
+            })
+          }}
+          onUpdateCertification={async (personCertificationId, payload) => {
+            await updateCertificationMutation.mutateAsync({
+              personId: selectedPerson.personId,
+              personCertificationId,
+              ...payload,
+            })
+          }}
         />
       ) : null}
 

@@ -22,6 +22,10 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<PermissionHistoryEvent> PermissionHistoryEvents => Set<PermissionHistoryEvent>();
 
+    public DbSet<CertificationDefinition> CertificationDefinitions => Set<CertificationDefinition>();
+
+    public DbSet<PersonCertification> PersonCertifications => Set<PersonCertification>();
+
     public DbSet<StaffArrAuditEvent> AuditEvents => Set<StaffArrAuditEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -164,6 +168,33 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasOne<PersonRoleAssignment>().WithMany().HasForeignKey(x => x.AssignmentId);
             entity.HasOne<RoleTemplate>().WithMany().HasForeignKey(x => x.RoleTemplateId);
             entity.HasOne<PermissionTemplate>().WithMany().HasForeignKey(x => x.PermissionTemplateId);
+        });
+
+        modelBuilder.Entity<CertificationDefinition>(entity =>
+        {
+            entity.ToTable("staffarr_certification_definitions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.CertificationKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(512);
+            entity.Property(x => x.Category).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.CertificationKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<PersonCertification>(entity =>
+        {
+            entity.ToTable("staffarr_person_certifications");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SourceType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.CertificationDefinitionId, x.Status });
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+            entity.HasOne<CertificationDefinition>().WithMany().HasForeignKey(x => x.CertificationDefinitionId);
         });
 
         modelBuilder.Entity<StaffArrAuditEvent>(entity =>

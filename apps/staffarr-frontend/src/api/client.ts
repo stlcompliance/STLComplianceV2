@@ -24,6 +24,11 @@ import type {
   UpdateRoleTemplateRequest,
   UpdateOrgUnitRequest,
   UpdateOrgUnitStatusRequest,
+  CertificationDefinitionResponse,
+  PersonCertificationResponse,
+  PersonReadinessResponse,
+  GrantPersonCertificationRequest,
+  UpdatePersonCertificationRequest,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -334,4 +339,60 @@ export async function getPermissionHistoryTimeline(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PermissionHistoryTimelineEntryResponse[]>(response, 'Failed to load permission history')
+}
+
+export async function getCertificationDefinitions(
+  accessToken: string,
+): Promise<CertificationDefinitionResponse[]> {
+  const response = await fetch(`${apiBase}/api/certifications`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CertificationDefinitionResponse[]>(response, 'Failed to load certification definitions')
+}
+
+export async function getPersonCertifications(
+  accessToken: string,
+  personId: string,
+): Promise<PersonCertificationResponse[]> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/certifications`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonCertificationResponse[]>(response, 'Failed to load person certifications')
+}
+
+export async function grantPersonCertification(
+  accessToken: string,
+  personId: string,
+  request: GrantPersonCertificationRequest,
+): Promise<PersonCertificationResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/certifications`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonCertificationResponse>(response, 'Failed to grant certification')
+}
+
+export async function updatePersonCertification(
+  accessToken: string,
+  personId: string,
+  personCertificationId: string,
+  request: UpdatePersonCertificationRequest,
+): Promise<PersonCertificationResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/certifications/${personCertificationId}`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonCertificationResponse>(response, 'Failed to update certification')
+}
+
+export async function getPersonReadiness(
+  accessToken: string,
+  personId: string,
+): Promise<PersonReadinessResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/readiness`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonReadinessResponse>(response, 'Failed to load person readiness')
 }

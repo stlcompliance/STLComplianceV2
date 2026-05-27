@@ -121,6 +121,63 @@ public sealed class StaffArrAuthorizationService
             403);
     }
 
+    public void RequireCertificationRead(ClaimsPrincipal principal, Guid? personId = null)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        var roleKey = principal.GetTenantRoleKey();
+        if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
+        {
+            return;
+        }
+
+        if (personId is Guid requestedPersonId
+            && MatchesRole(roleKey, "tenant_member")
+            && principal.GetPersonId() == requestedPersonId)
+        {
+            return;
+        }
+
+        if (personId is null && MatchesRole(roleKey, "tenant_member"))
+        {
+            throw new StlApiException(
+                "auth.forbidden",
+                "Certification catalog read access requires staffarr.certifications.read scope.",
+                403);
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Certification read access requires staffarr.certifications.read scope.",
+            403);
+    }
+
+    public void RequireCertificationManageWrite(ClaimsPrincipal principal)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Certification management requires staffarr.certifications.manage scope.",
+            403);
+    }
+
+    public void RequireReadinessRead(ClaimsPrincipal principal, Guid personId) =>
+        RequireCertificationRead(principal, personId);
+
     private static bool CanWriteByRole(string roleKey) =>
         MatchesRole(roleKey, "platform_admin", "tenant_admin", "staffarr_admin", "hr_admin");
 

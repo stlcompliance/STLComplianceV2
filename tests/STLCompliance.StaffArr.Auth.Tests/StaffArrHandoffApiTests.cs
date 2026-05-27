@@ -39,6 +39,11 @@ using CreatePersonRoleAssignmentRequest = StaffArr.Api.Contracts.CreatePersonRol
 using UpdatePersonRoleAssignmentStatusRequest = StaffArr.Api.Contracts.UpdatePersonRoleAssignmentStatusRequest;
 using EffectivePermissionProjectionResponse = StaffArr.Api.Contracts.EffectivePermissionProjectionResponse;
 using PermissionHistoryTimelineEntryResponse = StaffArr.Api.Contracts.PermissionHistoryTimelineEntryResponse;
+using CertificationDefinitionResponse = StaffArr.Api.Contracts.CertificationDefinitionResponse;
+using PersonCertificationResponse = StaffArr.Api.Contracts.PersonCertificationResponse;
+using GrantPersonCertificationRequest = StaffArr.Api.Contracts.GrantPersonCertificationRequest;
+using UpdatePersonCertificationRequest = StaffArr.Api.Contracts.UpdatePersonCertificationRequest;
+using PersonReadinessResponse = StaffArr.Api.Contracts.PersonReadinessResponse;
 using StaffArrTokenService = StaffArr.Api.Services.StaffArrTokenService;
 using StaffArrDbContext = StaffArr.Api.Data.StaffArrDbContext;
 using StaffPerson = StaffArr.Api.Entities.StaffPerson;
@@ -745,6 +750,235 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
             tenantRoleKey: "tenant_member",
             personId: Guid.NewGuid());
         var request = Authorized(HttpMethod.Get, $"/api/people/{targetPersonId}/permissions/effective", memberToken);
+        var response = await _staffarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Certification_definitions_and_manual_grant_happy_path_seeds_readiness_baseline_and_grants_record()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Certification User", "certification.user@example.com");
+
+        var definitionsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/certifications", token));
+        definitionsResponse.EnsureSuccessStatusCode();
+        var definitions = (await definitionsResponse.Content.ReadFromJsonAsync<IReadOnlyList<CertificationDefinitionResponse>>())!;
+        Assert.Contains(definitions, x => x.CertificationKey == "readiness.safety_orientation");
+        Assert.Contains(definitions, x => x.CertificationKey == "readiness.hazmat_awareness");
+
+        var safetyDefinition = definitions.First(x => x.CertificationKey == "readiness.safety_orientation");
+        var grantRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/certifications", token);
+        grantRequest.Content = JsonContent.Create(new GrantPersonCertificationRequest(
+            safetyDefinition.CertificationDefinitionId,
+            null,
+            null,
+            "Manual onboarding grant."));
+        var grantResponse = await _staffarrClient.SendAsync(grantRequest);
+        grantResponse.EnsureSuccessStatusCode();
+        var granted = (await grantResponse.Content.ReadFromJsonAsync<PersonCertificationResponse>())!;
+        Assert.Equal("manual", granted.SourceType);
+        Assert.Equal("active", granted.EffectiveStatus);
+        Assert.NotNull(granted.ExpiresAt);
+
+        var listResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/certifications", token));
+        listResponse.EnsureSuccessStatusCode();
+        var list = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<PersonCertificationResponse>>())!;
+        Assert.Single(list);
+        Assert.Equal("readiness.safety_orientation", list[0].CertificationKey);
+
+        var revokeRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/people/{personId}/certifications/{granted.PersonCertificationId}",
+            token);
+        revokeRequest.Content = JsonContent.Create(new UpdatePersonCertificationRequest(
+            "revoked",
+            granted.ExpiresAt,
+            granted.Notes));
+        var revokeResponse = await _staffarrClient.SendAsync(revokeRequest);
+        revokeResponse.EnsureSuccessStatusCode();
+        var revoked = (await revokeResponse.Content.ReadFromJsonAsync<PersonCertificationResponse>())!;
+        Assert.Equal("revoked", revoked.EffectiveStatus);
+
+        using var scope = _staffarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+        var auditEvents = await db.AuditEvents.CountAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId
+                && (x.Action == "person_certification.grant" || x.Action == "person_certification.update"));
+        Assert.True(auditEvents >= 2);
+    }
+
+    [Fact]
+    public async Task Certification_grant_denies_non_writer_role()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Denied Certification User", "denied.cert.user@example.com");
+
+        var definitionsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/certifications", token));
+        definitionsResponse.EnsureSuccessStatusCode();
+        var definitions = (await definitionsResponse.Content.ReadFromJsonAsync<IReadOnlyList<CertificationDefinitionResponse>>())!;
+        var definition = definitions.First();
+
+        var grantRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/certifications", token);
+        grantRequest.Content = JsonContent.Create(new GrantPersonCertificationRequest(
+            definition.CertificationDefinitionId,
+            null,
+            null,
+            null));
+        var grantResponse = await _staffarrClient.SendAsync(grantRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, grantResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Certification_read_allows_tenant_member_self_and_denies_other_people()
+    {
+        var selfPersonId = Guid.NewGuid();
+        var otherPersonId = Guid.NewGuid();
+        await SeedStaffPersonAsync(selfPersonId, "Self Member", "self.member@example.com");
+        await SeedStaffPersonAsync(otherPersonId, "Other Member", "other.member@example.com");
+
+        var selfToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "tenant_member",
+            personId: selfPersonId);
+
+        var selfResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{selfPersonId}/certifications", selfToken));
+        selfResponse.EnsureSuccessStatusCode();
+
+        var otherResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{otherPersonId}/certifications", selfToken));
+        Assert.Equal(HttpStatusCode.Forbidden, otherResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Person_readiness_not_ready_without_certifications_lists_baseline_blockers()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Readiness Blocked User", "readiness.blocked@example.com");
+
+        await _staffarrClient.SendAsync(Authorized(HttpMethod.Get, "/api/certifications", token));
+
+        var response = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/readiness", token));
+        response.EnsureSuccessStatusCode();
+        var readiness = (await response.Content.ReadFromJsonAsync<PersonReadinessResponse>())!;
+
+        Assert.Equal("not_ready", readiness.ReadinessStatus);
+        Assert.Equal(3, readiness.Blockers.Count);
+        Assert.Contains(readiness.Blockers, x => x.CertificationKey == "readiness.safety_orientation");
+        Assert.Contains(readiness.Blockers, x => x.CertificationKey == "readiness.hazmat_awareness");
+        Assert.Contains(readiness.Blockers, x => x.CertificationKey == "readiness.equipment_operator");
+        Assert.All(readiness.Blockers, x => Assert.Equal("missing", x.BlockerType));
+    }
+
+    [Fact]
+    public async Task Person_readiness_ready_when_all_baseline_certifications_active()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Readiness Ready User", "readiness.ready@example.com");
+
+        var definitionsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/certifications", token));
+        definitionsResponse.EnsureSuccessStatusCode();
+        var definitions = (await definitionsResponse.Content.ReadFromJsonAsync<IReadOnlyList<CertificationDefinitionResponse>>())!;
+
+        foreach (var definition in definitions.Where(x => x.Category == "readiness"))
+        {
+            var grantRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/certifications", token);
+            grantRequest.Content = JsonContent.Create(new GrantPersonCertificationRequest(
+                definition.CertificationDefinitionId,
+                null,
+                null,
+                "Readiness test grant."));
+            var grantResponse = await _staffarrClient.SendAsync(grantRequest);
+            grantResponse.EnsureSuccessStatusCode();
+        }
+
+        var response = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/readiness", token));
+        response.EnsureSuccessStatusCode();
+        var readiness = (await response.Content.ReadFromJsonAsync<PersonReadinessResponse>())!;
+
+        Assert.Equal("ready", readiness.ReadinessStatus);
+        Assert.Empty(readiness.Blockers);
+        Assert.All(readiness.Requirements, x => Assert.Equal("satisfied", x.RequirementStatus));
+    }
+
+    [Fact]
+    public async Task Person_readiness_expired_certification_produces_plain_english_blocker()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Readiness Expired User", "readiness.expired@example.com");
+
+        var definitionsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/certifications", token));
+        definitionsResponse.EnsureSuccessStatusCode();
+        var definitions = (await definitionsResponse.Content.ReadFromJsonAsync<IReadOnlyList<CertificationDefinitionResponse>>())!;
+        var safetyDefinition = definitions.First(x => x.CertificationKey == "readiness.safety_orientation");
+
+        var grantRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/certifications", token);
+        grantRequest.Content = JsonContent.Create(new GrantPersonCertificationRequest(
+            safetyDefinition.CertificationDefinitionId,
+            DateTimeOffset.UtcNow.AddYears(-2),
+            DateTimeOffset.UtcNow.AddDays(-30),
+            "Expired readiness grant."));
+        var grantResponse = await _staffarrClient.SendAsync(grantRequest);
+        grantResponse.EnsureSuccessStatusCode();
+
+        var response = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/readiness", token));
+        response.EnsureSuccessStatusCode();
+        var readiness = (await response.Content.ReadFromJsonAsync<PersonReadinessResponse>())!;
+
+        Assert.Equal("not_ready", readiness.ReadinessStatus);
+        var safetyBlocker = Assert.Single(
+            readiness.Blockers.Where(x => x.CertificationKey == "readiness.safety_orientation"));
+        Assert.Equal("expired", safetyBlocker.BlockerType);
+        Assert.Contains("expired", safetyBlocker.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Person_readiness_query_surface_matches_nested_route()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Readiness Query User", "readiness.query@example.com");
+
+        await _staffarrClient.SendAsync(Authorized(HttpMethod.Get, "/api/certifications", token));
+
+        var nestedResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/readiness", token));
+        nestedResponse.EnsureSuccessStatusCode();
+        var nested = (await nestedResponse.Content.ReadFromJsonAsync<PersonReadinessResponse>())!;
+
+        var queryResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/readiness?personId={personId}", token));
+        queryResponse.EnsureSuccessStatusCode();
+        var query = (await queryResponse.Content.ReadFromJsonAsync<PersonReadinessResponse>())!;
+
+        Assert.Equal(nested.ReadinessStatus, query.ReadinessStatus);
+        Assert.Equal(nested.Blockers.Count, query.Blockers.Count);
+    }
+
+    [Fact]
+    public async Task Person_readiness_denies_unrelated_tenant_member_reads()
+    {
+        var targetPersonId = Guid.NewGuid();
+        await SeedStaffPersonAsync(targetPersonId, "Target Readiness Person", "target.readiness@example.com");
+
+        var memberToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "tenant_member",
+            personId: Guid.NewGuid());
+        var request = Authorized(HttpMethod.Get, $"/api/people/{targetPersonId}/readiness", memberToken);
         var response = await _staffarrClient.SendAsync(request);
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }

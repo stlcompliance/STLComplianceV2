@@ -16,7 +16,9 @@
 | 12 | StaffArr manager hierarchy + manager/subordinate views (hierarchy traversal, manager linkage write path, subordinate detail rollups) | M4 (partial) | Complete | `pending` |
 | 13 | StaffArr role templates + permission templates/assignment foundations (tenant-scoped template modeling, role assignment write/read paths, permission-aware UI integration) | M4 (partial) | Complete | `pending` |
 | 14 | StaffArr scoped effective-permission projection + permission history timeline (computed permission read API, timeline retrieval API, real UI projection/timeline surfaces) | M4 (partial) | Complete | `pending` |
+| 15 | StaffArr certification visibility + manual certification grant foundations (definition catalog, person certification read/grant/update APIs, readiness baseline seed, real UI integration) | M4 (partial) | Complete | `pending` |
+| 16 | StaffArr readiness calculation foundations (person readiness APIs, plain-English blockers, real UI readiness summary) | M4 (partial) | Complete | `pending` |
 
-## Next slice (Worker 13)
+## Next slice (Worker 17)
 
-Recommended: implement StaffArr certification visibility + manual certification grant foundations (person certification read surfaces, write-authorized grant/update path, and readiness integration seed data).
+Recommended: StaffArr manual readiness override foundations (`staffarr.readiness.override`, override persistence, override-aware calculation, authorized UI) or StaffArr incident intake foundations per M4 backlog priority.

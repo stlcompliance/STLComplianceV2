@@ -260,3 +260,79 @@ export interface PermissionHistoryTimelineEntryResponse {
   scopeValue: string | null
   occurredAt: string
 }
+
+export interface CertificationDefinitionResponse {
+  certificationDefinitionId: string
+  certificationKey: string
+  name: string
+  description: string | null
+  category: string
+  defaultValidityDays: number | null
+  status: 'active' | 'inactive'
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UpsertCertificationDefinitionRequest {
+  certificationKey: string
+  name: string
+  description: string | null
+  category: string
+  defaultValidityDays: number | null
+}
+
+export interface PersonCertificationResponse {
+  personCertificationId: string
+  personId: string
+  certificationDefinitionId: string
+  certificationKey: string
+  certificationName: string
+  category: string
+  sourceType: string
+  status: 'active' | 'expired' | 'revoked'
+  effectiveStatus: 'active' | 'expired' | 'revoked'
+  grantedAt: string
+  expiresAt: string | null
+  notes: string | null
+  grantedByUserId: string | null
+  externalPublicationId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface GrantPersonCertificationRequest {
+  certificationDefinitionId: string
+  grantedAt: string | null
+  expiresAt: string | null
+  notes: string | null
+}
+
+export interface UpdatePersonCertificationRequest {
+  status: 'active' | 'expired' | 'revoked'
+  expiresAt: string | null
+  notes: string | null
+}
+
+export interface ReadinessRequirementStatusResponse {
+  certificationDefinitionId: string
+  certificationKey: string
+  certificationName: string
+  requirementStatus: 'satisfied' | 'missing' | 'expired' | 'revoked'
+  recordEffectiveStatus: string | null
+  expiresAt: string | null
+}
+
+export interface ReadinessBlockerResponse {
+  certificationKey: string
+  certificationName: string
+  blockerType: 'missing' | 'expired' | 'revoked'
+  message: string
+}
+
+export interface PersonReadinessResponse {
+  personId: string
+  readinessStatus: 'ready' | 'not_ready'
+  calculatedAt: string
+  requirements: ReadinessRequirementStatusResponse[]
+  blockers: ReadinessBlockerResponse[]
+}
