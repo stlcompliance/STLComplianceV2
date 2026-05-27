@@ -295,9 +295,8 @@ public sealed class LaunchService(
     {
         if (!string.IsNullOrWhiteSpace(serviceToken))
         {
-            var validation = await serviceTokenAdmin.ValidateAsync(
-                principal,
-                new ValidateServiceTokenRequest(serviceToken),
+            var validation = await serviceTokenAdmin.ValidateForHandoffRedeemAsync(
+                serviceToken,
                 cancellationToken);
 
             if (!validation.IsValid)

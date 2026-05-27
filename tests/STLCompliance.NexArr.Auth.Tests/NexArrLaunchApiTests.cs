@@ -66,7 +66,7 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         Assert.NotNull(context);
         Assert.True(context.CanLaunch);
         Assert.Equal("staffarr", context.ProductKey);
-        Assert.Contains("5102", context.BaseLaunchUrl);
+        Assert.Contains("5175", context.BaseLaunchUrl);
     }
 
     [Fact]

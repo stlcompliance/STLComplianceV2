@@ -55,4 +55,15 @@ public static class ClaimsPrincipalExtensions
 
     public static bool HasProductEntitlement(this ClaimsPrincipal principal, string productKey) =>
         principal.IsPlatformAdmin() || principal.GetEntitlements().Contains(productKey, StringComparer.OrdinalIgnoreCase);
+
+    public static Guid GetPersonId(this ClaimsPrincipal principal)
+    {
+        var raw = principal.FindFirstValue(StlClaimTypes.PersonId);
+        if (raw is not null && Guid.TryParse(raw, out var personId))
+        {
+            return personId;
+        }
+
+        return principal.GetUserId();
+    }
 }

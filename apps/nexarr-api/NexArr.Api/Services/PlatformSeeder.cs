@@ -31,7 +31,7 @@ public static class PlatformSeeder
     private static readonly (string ProductKey, string BaseUrl, string LaunchPath)[] DefaultLaunchProfiles =
     [
         ("nexarr", "http://localhost:5101", "/"),
-        ("staffarr", "http://localhost:5102", "/launch"),
+        ("staffarr", "http://localhost:5175", "/launch"),
         ("trainarr", "http://localhost:5103", "/launch"),
         ("maintainarr", "http://localhost:5104", "/launch"),
         ("routarr", "http://localhost:5105", "/launch"),
@@ -164,7 +164,8 @@ public static class PlatformSeeder
     private static readonly string[] SuiteShellOrigins =
     [
         "http://localhost:5173",
-        "http://localhost:5174"
+        "http://localhost:5174",
+        "http://localhost:5175"
     ];
 
     public static async Task EnsureDevSuiteShellOriginsAsync(

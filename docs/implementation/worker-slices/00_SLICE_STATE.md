@@ -9,7 +9,8 @@
 | 5 | Suite frontend AppShell (auth, navigation, launch) | M3 (partial) | Complete | `87c2218` |
 | 6 | NexArr platform-admin APIs + suite platform-admin UI | M2/M3 (partial) | Complete | `5c4934b` |
 | 7 | Suite unified dashboard (M3 widgets on `/app`) | M3 (partial) | Complete | `5c293e8` |
+| 8 | StaffArr shell + NexArr handoff redeem | M3 (partial) | Complete | `see latest Worker 8 commit` |
 
 ## Next slice (Worker 8)
 
-Recommended: **StaffArr shell** with handoff redeem — **or** shared `packages/ui` design system. Platform audit search/export remains a follow-on NexArr slice.
+Recommended: **Worker 9** build first StaffArr domain module (training roster/readiness) on top of shell session bootstrap.

@@ -235,8 +235,19 @@ public sealed class ServiceTokenAdminService(
         CancellationToken cancellationToken = default)
     {
         await authorization.RequireNexArrAccessAsync(principal, cancellationToken);
+        return await ValidateServiceTokenCoreAsync(request.Token, cancellationToken);
+    }
 
-        if (string.IsNullOrWhiteSpace(request.Token))
+    public Task<ServiceTokenValidationResponse> ValidateForHandoffRedeemAsync(
+        string? token,
+        CancellationToken cancellationToken = default) =>
+        ValidateServiceTokenCoreAsync(token, cancellationToken);
+
+    private async Task<ServiceTokenValidationResponse> ValidateServiceTokenCoreAsync(
+        string? token,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(token))
         {
             return Invalid("token_missing");
         }
@@ -246,7 +257,7 @@ public sealed class ServiceTokenAdminService(
         {
             var handler = new JwtSecurityTokenHandler { MapInboundClaims = false };
             var parameters = BuildValidationParameters();
-            handler.ValidateToken(request.Token, parameters, out var validatedToken);
+            handler.ValidateToken(token, parameters, out var validatedToken);
             jwt = (JwtSecurityToken)validatedToken;
         }
         catch (SecurityTokenException)
@@ -291,7 +302,7 @@ public sealed class ServiceTokenAdminService(
             return Invalid("client_inactive");
         }
 
-        if (HashToken(request.Token) != record.TokenHash)
+        if (HashToken(token) != record.TokenHash)
         {
             return Invalid("token_hash_mismatch");
         }

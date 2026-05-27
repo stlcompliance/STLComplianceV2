@@ -38,6 +38,7 @@ public static class LaunchEndpoints
         {
             return Results.Ok(await service.RedeemHandoffAsync(context.User, request, cancellationToken));
         })
+        .AllowAnonymous()
         .WithName("RedeemHandoff");
 
         group.MapPost("/callback/validate", async (
