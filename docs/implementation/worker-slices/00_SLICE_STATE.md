@@ -171,7 +171,7 @@
 
 | 96 | M13 SupplyArr tenant isolation E2E (`SupplyArr` cross-tenant GET/list, MaintainArr demand ingest 403, live SupplyArr probe, docs) | M13 (partial) | Complete | `pending` |
 
-| 97 | Shared NexArr handoff client dedup (`StlNexArrHandoffClient` in Shared, remove 6 duplicate clients/contracts, product DI + test wiring, docs) | M13 (partial) | Complete | `pending` |
+| 97 | Shared NexArr handoff client dedup (`StlNexArrHandoffClient` in Shared, remove 6 duplicate clients/contracts, product DI + test wiring, docs) | M13 (partial) | Complete | `75ab4b5` |
 
 ## Next slice (Worker 98)
 
