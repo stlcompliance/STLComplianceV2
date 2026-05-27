@@ -94,8 +94,6 @@ public static class NexArrServiceRegistration
         }
         else if (app.Environment.IsProduction())
         {
-            await db.Database.MigrateAsync();
-
             var launchOptions = scope.ServiceProvider.GetService<IOptions<StlLaunchOptions>>()?.Value;
             await PlatformSeeder.SeedAsync(db, passwordHasher, launchOptions);
 
