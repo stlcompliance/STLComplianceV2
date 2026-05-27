@@ -43,6 +43,9 @@ import type {
   UpdatePersonEmploymentStatusRequest,
   BulkPersonImportRequest,
   BulkPersonImportResponse,
+  PersonExportManifestResponse,
+  PersonExportResponse,
+  PersonExportFilters,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -140,6 +143,62 @@ export async function importPeopleBulk(
     body: JSON.stringify(request),
   })
   return parseJsonResponse<BulkPersonImportResponse>(response, 'Failed to import people')
+}
+
+function buildPeopleExportQuery(filters?: PersonExportFilters, format?: string): string {
+  const params = new URLSearchParams()
+  if (format) {
+    params.set('format', format)
+  }
+  if (filters?.employmentStatus) {
+    params.set('employmentStatus', filters.employmentStatus)
+  }
+  if (filters?.orgUnitId) {
+    params.set('orgUnitId', filters.orgUnitId)
+  }
+  const query = params.toString()
+  return query ? `?${query}` : ''
+}
+
+export async function getPeopleExportManifest(accessToken: string): Promise<PersonExportManifestResponse> {
+  const response = await fetch(`${apiBase}/api/people/export/manifest`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonExportManifestResponse>(response, 'Failed to load people export manifest')
+}
+
+export async function exportPeopleJson(
+  accessToken: string,
+  filters?: PersonExportFilters,
+): Promise<PersonExportResponse> {
+  const response = await fetch(
+    `${apiBase}/api/people/export${buildPeopleExportQuery(filters, 'json')}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<PersonExportResponse>(response, 'Failed to export people JSON')
+}
+
+export async function exportPeopleCsv(accessToken: string, filters?: PersonExportFilters): Promise<string> {
+  const response = await fetch(
+    `${apiBase}/api/people/export${buildPeopleExportQuery(filters, 'csv')}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new StaffArrApiError('Failed to export people CSV', response.status, body)
+  }
+  return response.text()
+}
+
+export async function exportPeopleZip(accessToken: string, filters?: PersonExportFilters): Promise<Blob> {
+  const response = await fetch(`${apiBase}/api/people/export${buildPeopleExportQuery(filters)}`, {
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new StaffArrApiError('Failed to export people ZIP', response.status, body)
+  }
+  return response.blob()
 }
 
 export async function getOrgUnits(accessToken: string): Promise<OrgUnitResponse[]> {

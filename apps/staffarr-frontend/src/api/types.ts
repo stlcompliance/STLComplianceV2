@@ -105,6 +105,46 @@ export interface BulkPersonImportResponse {
   results: BulkPersonImportRowResult[]
 }
 
+export interface PersonExportFormatDescriptor {
+  key: string
+  contentType: string
+  fileName: string
+  description: string
+}
+
+export interface PersonExportManifestResponse {
+  packageVersion: string
+  csvHeader: string
+  formats: PersonExportFormatDescriptor[]
+}
+
+export interface PersonExportRowItem {
+  personId: string
+  givenName: string
+  familyName: string
+  primaryEmail: string
+  employmentStatus: string
+  jobTitle: string | null
+  managerEmail: string | null
+  primaryOrgUnitId: string | null
+  primaryOrgUnitName: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PersonExportResponse {
+  exportId: string
+  tenantId: string
+  generatedAt: string
+  personCount: number
+  people: PersonExportRowItem[]
+}
+
+export interface PersonExportFilters {
+  employmentStatus?: string
+  orgUnitId?: string
+}
+
 export interface OrgUnitResponse {
   orgUnitId: string
   unitType: string

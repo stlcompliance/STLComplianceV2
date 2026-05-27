@@ -49,6 +49,7 @@ import { clearSession, loadSession, canExportAuditPackage } from '../auth/sessio
 import { CertificationPanel } from '../components/CertificationPanel'
 import { AuditPackageExportPanel } from '../components/AuditPackageExportPanel'
 import { PersonBulkImportPanel } from '../components/PersonBulkImportPanel'
+import { PersonExportPanel } from '../components/PersonExportPanel'
 import { canManagePeople, PersonProfileEditorPanel } from '../components/PersonProfileEditorPanel'
 import { canManageIncidents, IncidentsPanel } from '../components/IncidentsPanel'
 import { canOverrideReadiness, ReadinessPanel } from '../components/ReadinessPanel'
@@ -1027,6 +1028,8 @@ export function HomePage() {
           void queryClient.invalidateQueries({ queryKey: ['staffarr-people', session?.accessToken] })
         }}
       />
+
+      <PersonExportPanel accessToken={session!.accessToken} canExport={canManagePeopleProfiles} />
 
       <AuditPackageExportPanel accessToken={session!.accessToken} canExport={canExportAudit} />
 
