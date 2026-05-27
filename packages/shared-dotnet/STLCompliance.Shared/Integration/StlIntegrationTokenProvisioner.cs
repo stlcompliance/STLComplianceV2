@@ -68,6 +68,11 @@ public static class StlIntegrationTokenProvisioner
                 "STL integration token auto-provision is enabled but RENDER_SERVICE_NAME is not configured.");
         }
 
+        logger?.LogInformation(
+            "Resolving integration tokens for consumer {ConsumerService} (render={RenderServiceName}).",
+            consumerService,
+            configuration["RENDER_SERVICE_NAME"]);
+
         if (string.Equals(consumerService, "nexarr-api", StringComparison.OrdinalIgnoreCase))
         {
             return ReadExistingTokens(configuration);
@@ -76,7 +81,8 @@ public static class StlIntegrationTokenProvisioner
         var profiles = StlIntegrationTokenCatalog.ForConsumer(consumerService);
         if (profiles.Count == 0)
         {
-            return ReadExistingTokens(configuration);
+            throw new InvalidOperationException(
+                $"STL integration token auto-provision has no catalog profiles for consumer '{consumerService}'.");
         }
 
         if (HasValidProvisionedTokens(configuration, profiles))

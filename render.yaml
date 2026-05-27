@@ -190,6 +190,8 @@ services:
       - fromGroup: stl-internal-api-urls
       - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
         value: "true"
+      - key: STL_SERVICE_NAME
+        value: staffarr-api
       - key: DATABASE_URL
         fromDatabase:
           name: staffarr-db
@@ -210,6 +212,8 @@ services:
       - fromGroup: stl-internal-api-urls
       - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
         value: "true"
+      - key: STL_SERVICE_NAME
+        value: trainarr-api
       - key: DATABASE_URL
         fromDatabase:
           name: trainarr-db
@@ -232,6 +236,8 @@ services:
       - fromGroup: stl-internal-api-urls
       - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
         value: "true"
+      - key: STL_SERVICE_NAME
+        value: maintainarr-api
       - key: DATABASE_URL
         fromDatabase:
           name: maintainarr-db
@@ -254,6 +260,8 @@ services:
       - fromGroup: stl-internal-api-urls
       - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
         value: "true"
+      - key: STL_SERVICE_NAME
+        value: routarr-api
       - key: DATABASE_URL
         fromDatabase:
           name: routarr-db
@@ -274,6 +282,8 @@ services:
       - fromGroup: stl-internal-api-urls
       - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
         value: "true"
+      - key: STL_SERVICE_NAME
+        value: supplyarr-api
       - key: DATABASE_URL
         fromDatabase:
           name: supplyarr-db
@@ -294,6 +304,8 @@ services:
       - fromGroup: stl-internal-api-urls
       - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
         value: "true"
+      - key: STL_SERVICE_NAME
+        value: compliancecore-api
       - key: DATABASE_URL
         fromDatabase:
           name: compliancecore-db
@@ -315,6 +327,8 @@ services:
         value: https://nexarr-api-jdyi.onrender.com
       - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
         value: "true"
+      - key: STL_SERVICE_NAME
+        value: shared-worker
       - key: TrainArrQualificationExpiration__TrainArrBaseUrl
         value: https://trainarr-api-ae2t.onrender.com
       - key: StaffArrCertificationExpiration__StaffArrBaseUrl
