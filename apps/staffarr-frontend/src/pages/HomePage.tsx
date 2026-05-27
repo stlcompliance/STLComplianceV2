@@ -43,8 +43,9 @@ import {
   updateOrgUnit,
   updateOrgUnitStatus,
 } from '../api/client'
-import { clearSession, loadSession } from '../auth/sessionStorage'
+import { clearSession, loadSession, canExportAuditPackage } from '../auth/sessionStorage'
 import { CertificationPanel } from '../components/CertificationPanel'
+import { AuditPackageExportPanel } from '../components/AuditPackageExportPanel'
 import { canManageIncidents, IncidentsPanel } from '../components/IncidentsPanel'
 import { canOverrideReadiness, ReadinessPanel } from '../components/ReadinessPanel'
 import {
@@ -566,6 +567,7 @@ export function HomePage() {
   const canManageHierarchy = canManageOrgUnits
   const canOverridePersonReadiness = canOverrideReadiness(me.tenantRoleKey, me.isPlatformAdmin)
   const canManagePersonIncidents = canManageIncidents(me.tenantRoleKey, me.isPlatformAdmin)
+  const canExportAudit = canExportAuditPackage(me.tenantRoleKey, me.isPlatformAdmin)
   const personIncidents = personIncidentsQuery.data ?? []
   const orgMutationError =
     createOrgUnitMutation.error ?? updateOrgUnitMutation.error ?? updateOrgUnitStatusMutation.error ?? null
@@ -938,6 +940,8 @@ export function HomePage() {
           await updateOrgUnitStatusMutation.mutateAsync({ orgUnitId, status })
         }}
       />
+
+      <AuditPackageExportPanel accessToken={session!.accessToken} canExport={canExportAudit} />
 
       <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
         <h2 className="text-sm font-medium text-slate-300">Signed in</h2>

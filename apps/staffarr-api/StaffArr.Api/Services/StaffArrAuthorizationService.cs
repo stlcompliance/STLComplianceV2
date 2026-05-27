@@ -270,6 +270,30 @@ public sealed class StaffArrAuthorizationService
             403);
     }
 
+    public void RequireAuditPackageRead(ClaimsPrincipal principal)
+    {
+        RequirePeopleRead(principal);
+    }
+
+    public void RequireAuditPackageExport(ClaimsPrincipal principal)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Audit package export requires staffarr.audit.export scope.",
+            403);
+    }
+
     private static bool CanWriteByRole(string roleKey) =>
         MatchesRole(roleKey, "platform_admin", "tenant_admin", "staffarr_admin", "hr_admin");
 

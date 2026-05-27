@@ -37,6 +37,8 @@ import type {
   RouteIncidentToTrainarrResponse,
   PagedResult,
   PersonTimelineEntryResponse,
+  AuditPackageManifestResponse,
+  AuditPackageExportResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -509,4 +511,62 @@ export async function routePersonnelIncidentToTrainarr(
     response,
     'Failed to route incident to TrainArr',
   )
+}
+
+function buildAuditPackageQuery(options?: { from?: string; to?: string; format?: string }): string {
+  const params = new URLSearchParams()
+  if (options?.from) {
+    params.set('from', options.from)
+  }
+  if (options?.to) {
+    params.set('to', options.to)
+  }
+  if (options?.format) {
+    params.set('format', options.format)
+  }
+  const query = params.toString()
+  return query ? `?${query}` : ''
+}
+
+export async function getAuditPackageManifest(
+  accessToken: string,
+): Promise<AuditPackageManifestResponse> {
+  const response = await fetch(`${apiBase}/api/audit-packages/manifest`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AuditPackageManifestResponse>(response, 'Failed to load audit package manifest')
+}
+
+export async function exportAuditPackageZip(
+  accessToken: string,
+  options?: { from?: string; to?: string },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/export${buildAuditPackageQuery(options)}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new StaffArrApiError(
+      body || `Audit package export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function exportAuditPackageJson(
+  accessToken: string,
+  options?: { from?: string; to?: string },
+): Promise<AuditPackageExportResponse> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/export${buildAuditPackageQuery({ ...options, format: 'json' })}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<AuditPackageExportResponse>(response, 'Failed to export audit package JSON')
 }

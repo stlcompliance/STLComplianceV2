@@ -45,6 +45,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<FieldInboxService>();
         builder.Services.AddScoped<IncidentRoutingService>();
         builder.Services.AddScoped<PersonTimelineService>();
+        builder.Services.AddScoped<AuditPackageService>();
         builder.Services.AddScoped<IStaffArrAuditService, StaffArrAuditService>();
 
         var frontendOrigin = builder.Configuration["Cors:StaffArrFrontendOrigin"] ?? "http://localhost:5175";

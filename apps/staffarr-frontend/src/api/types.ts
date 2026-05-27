@@ -449,3 +449,40 @@ export interface PersonTimelineEntryResponse {
   sourceEntityId: string
   externalReferenceId: string | null
 }
+
+export interface AuditPackageSectionDescriptor {
+  key: string
+  fileName: string
+  label: string
+  description: string
+}
+
+export interface AuditPackageManifestResponse {
+  packageVersion: string
+  sections: AuditPackageSectionDescriptor[]
+}
+
+export interface AuditPackageCountsResponse {
+  auditEvents: number
+  people: number
+  permissionHistory: number
+  personCertifications: number
+  personnelIncidents: number
+  readinessOverrides: number
+  trainingBlockers: number
+}
+
+export interface AuditPackageExportResponse {
+  packageId: string
+  tenantId: string
+  generatedAt: string
+  dateRange: { from: string | null; to: string | null } | null
+  counts: AuditPackageCountsResponse
+  auditEvents: unknown[]
+  people: unknown[]
+  permissionHistory: unknown[]
+  personCertifications: unknown[]
+  personnelIncidents: unknown[]
+  readinessOverrides: unknown[]
+  trainingBlockers: unknown[]
+}

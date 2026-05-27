@@ -187,6 +187,8 @@
 
 | 105 | Product workspace shell session bootstrap (`ProductWorkspaceFrame`, `/api/me` bootstrap in all product `ProductWorkspaceLayout`s, compact companion variant, shared-ui + StaffArr tests, docs) | M3 (partial) | Complete | `98c09cb` |
 
-## Next slice (Worker 106)
+| 106 | StaffArr audit package export foundations (`AuditPackageService`, `/api/audit-packages` manifest + ZIP/JSON export, `staffarr.audit.export` auth, StaffArr frontend panel, integration + frontend tests, docs) | M12 (partial) | Complete | `pending` |
 
-Recommended: **StaffArr audit package export foundations** (`/api/audit-packages`) or **product-owner SLO adoption** (replace engineering-default thresholds when PO publishes SLO document).
+## Next slice (Worker 107)
+
+Recommended: **StaffArr person update/deactivate workflows** or **product-owner SLO adoption** for M13 load tests.
