@@ -189,7 +189,7 @@
 
 | 106 | StaffArr audit package export foundations (`AuditPackageService`, `/api/audit-packages` manifest + ZIP/JSON export, `staffarr.audit.export` auth, StaffArr frontend panel, integration + frontend tests, docs) | M12 (partial) | Complete | `2778bde` |
 
-| 107 | StaffArr person update/deactivate workflows (`PUT /api/people/{personId}`, `PATCH /api/people/{personId}/employment-status`, validation + audit, `PersonProfileEditorPanel`, integration + frontend tests, docs) | M4 (partial) | Complete | `pending` |
+| 107 | StaffArr person update/deactivate workflows (`PUT /api/people/{personId}`, `PATCH /api/people/{personId}/employment-status`, validation + audit, `PersonProfileEditorPanel`, integration + frontend tests, docs) | M4 (partial) | Complete | `34ef1e0` |
 
 ## Next slice (Worker 108)
 
