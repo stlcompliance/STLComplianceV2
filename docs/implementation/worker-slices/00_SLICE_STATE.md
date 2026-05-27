@@ -177,7 +177,7 @@
 | 99 | M13 DR restore drill (`StlProductDatabaseCatalog`, `StlDrRestoreDrillValidator`, `scripts/ops/dr-restore-drill.ps1|.sh`, `STLCompliance.Dr.Tests`, nightly live drill, docs) | M13 (partial) | Complete | `a407120` |
 
 | 100 | M13 load-test harness (`StlLoadTestSloCatalog`, k6 scenarios, SLO evaluator, `scripts/ops/load-test-run.*`, `STLCompliance.Load.Tests`, nightly live k6, docs) | M13 (partial) | Complete | `a081ee0` |
-| 101 | M13 Playwright compose e2e profile (`docker-compose.e2e.yml`, `Dockerfile.frontend-e2e`, all product frontend previews 5174–5180, six-product handoff Playwright smokes, `StlE2eFrontendCatalog`, nightly CI, docs) | M13 (partial) | Complete | `pending` |
+| 101 | M13 Playwright compose e2e profile (`docker-compose.e2e.yml`, `Dockerfile.frontend-e2e`, all product frontend previews 5174–5180, six-product handoff Playwright smokes, `StlE2eFrontendCatalog`, nightly CI, docs) | M13 (partial) | Complete | `44ec92f` |
 
 ## Next slice (Worker 102)
 

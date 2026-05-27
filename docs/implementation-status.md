@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 101 | M13 Playwright compose e2e profile | Complete | see git log |
+| 101 | M13 Playwright compose e2e profile | Complete | `44ec92f` (+ cleanup `fc2bd71`) |
 
 ## Program summary
 
