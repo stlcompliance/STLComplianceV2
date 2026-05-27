@@ -181,7 +181,7 @@
 
 | 102 | M13 seven-database DR nightly drill (`DrRestoreDrillLiveRunner`, `[Theory]` live restore for all `StlProductDatabaseCatalog` databases, nightly e2e job label, docs) | M13 (partial) | Complete | `15e76e7` |
 
-| 103 | M13 Render staging snapshot DR drill (`StlRenderStagingDrillCatalog`, staging URL env conventions, `render-staging-snapshot-fetch` + `render-staging-dr-restore-drill` scripts, `RenderStagingDrillLiveRunner`, `dr-staging-render.yml` workflow_dispatch, docs) | M13 (partial) | Complete | `pending` |
+| 103 | M13 Render staging snapshot DR drill (`StlRenderStagingDrillCatalog`, staging URL env conventions, `render-staging-snapshot-fetch` + `render-staging-dr-restore-drill` scripts, `RenderStagingDrillLiveRunner`, `dr-staging-render.yml` workflow_dispatch, docs) | M13 (partial) | Complete | `ad6ece7` |
 
 ## Next slice (Worker 104)
 

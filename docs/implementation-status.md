@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 103 | M13 Render staging snapshot DR drill | Complete | `pending` |
+| 103 | M13 Render staging snapshot DR drill | Complete | `ad6ece7` |
 
 ## Program summary
 
