@@ -185,7 +185,7 @@
 
 | 104 | M13 authenticated k6 load-test flows (`StlLoadTestAuthDefaults`, `nexarr-auth-me` + `product-auth-handoff-me` k6 scenarios, shared `stl-auth.js` helpers, extended SLO catalog, operator scripts, Load.Tests unit + live probes, docs) | M13 (partial) | Complete | `b2991d0` |
 
-| 105 | Product workspace shell session bootstrap (`ProductWorkspaceFrame`, `/api/me` bootstrap in all product `ProductWorkspaceLayout`s, compact companion variant, shared-ui + StaffArr tests, docs) | M3 (partial) | Complete | `pending` |
+| 105 | Product workspace shell session bootstrap (`ProductWorkspaceFrame`, `/api/me` bootstrap in all product `ProductWorkspaceLayout`s, compact companion variant, shared-ui + StaffArr tests, docs) | M3 (partial) | Complete | `98c09cb` |
 
 ## Next slice (Worker 106)
 
