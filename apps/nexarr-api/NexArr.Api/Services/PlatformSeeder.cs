@@ -161,22 +161,67 @@ public static class PlatformSeeder
         }
     }
 
-    private static void SeedCallbackAllowlist(NexArrDbContext db, DateTimeOffset now)
+    private static readonly string[] SuiteShellOrigins =
+    [
+        "http://localhost:5173",
+        "http://localhost:5174"
+    ];
+
+    public static async Task EnsureDevSuiteShellOriginsAsync(
+        NexArrDbContext db,
+        CancellationToken cancellationToken = default)
     {
-        var suiteShellOrigin = "http://localhost:5173";
         foreach (var product in Products)
         {
-            db.CallbackAllowlist.Add(new ProductCallbackAllowlistEntry
+            foreach (var origin in SuiteShellOrigins)
             {
-                Id = Guid.NewGuid(),
-                ProductKey = product.Key,
-                TenantId = null,
-                UrlPattern = suiteShellOrigin,
-                PatternType = CallbackPatternTypes.Origin,
-                IsActive = true,
-                CreatedAt = now,
-                ModifiedAt = now
-            });
+                var exists = await db.CallbackAllowlist.AnyAsync(
+                    e => e.ProductKey == product.Key
+                        && e.TenantId == null
+                        && e.UrlPattern == origin
+                        && e.IsActive,
+                    cancellationToken);
+                if (exists)
+                {
+                    continue;
+                }
+
+                var now = DateTimeOffset.UtcNow;
+                db.CallbackAllowlist.Add(new ProductCallbackAllowlistEntry
+                {
+                    Id = Guid.NewGuid(),
+                    ProductKey = product.Key,
+                    TenantId = null,
+                    UrlPattern = origin,
+                    PatternType = CallbackPatternTypes.Origin,
+                    IsActive = true,
+                    CreatedAt = now,
+                    ModifiedAt = now
+                });
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void SeedCallbackAllowlist(NexArrDbContext db, DateTimeOffset now)
+    {
+        foreach (var product in Products)
+        {
+            foreach (var suiteShellOrigin in SuiteShellOrigins)
+            {
+                db.CallbackAllowlist.Add(new ProductCallbackAllowlistEntry
+                {
+                    Id = Guid.NewGuid(),
+                    ProductKey = product.Key,
+                    TenantId = null,
+                    UrlPattern = suiteShellOrigin,
+                    PatternType = CallbackPatternTypes.Origin,
+                    IsActive = true,
+                    CreatedAt = now,
+                    ModifiedAt = now
+                });
+            }
 
             var apiOrigin = DefaultLaunchProfiles.First(p => p.ProductKey == product.Key).BaseUrl;
             db.CallbackAllowlist.Add(new ProductCallbackAllowlistEntry

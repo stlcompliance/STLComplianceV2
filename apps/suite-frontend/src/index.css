@@ -1,0 +1,16 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --color-stl-navy: #0f2744;
+  --color-stl-teal: #1a8f8a;
+  --color-stl-sand: #f4f1ea;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  background: var(--color-stl-sand);
+  color: #102033;
+}

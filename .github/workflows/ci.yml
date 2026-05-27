@@ -31,3 +31,27 @@ jobs:
           test -f apps/nexarr-api/NexArr.Api/Migrations/*InitialPlatformFoundation*.cs
           test -f apps/staffarr-api/StaffArr.Api/Migrations/*InitialPlatformFoundation*.cs
           test -f apps/compliancecore-api/ComplianceCore.Api/Migrations/*InitialPlatformFoundation*.cs
+
+  suite-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/suite-frontend/package-lock.json
+
+      - name: Install
+        working-directory: apps/suite-frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/suite-frontend
+        run: npm run build
+
+      - name: Test
+        working-directory: apps/suite-frontend
+        run: npm test

@@ -43,6 +43,7 @@ public static class NexArrServiceRegistration
         {
             var launchOptions = scope.ServiceProvider.GetService<IOptions<StlLaunchOptions>>()?.Value;
             await PlatformSeeder.SeedAsync(db, passwordHasher, launchOptions);
+            await PlatformSeeder.EnsureDevSuiteShellOriginsAsync(db);
         }
     }
 }
