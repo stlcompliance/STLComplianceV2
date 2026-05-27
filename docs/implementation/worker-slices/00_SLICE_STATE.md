@@ -191,7 +191,7 @@
 
 | 107 | StaffArr person update/deactivate workflows (`PUT /api/people/{personId}`, `PATCH /api/people/{personId}/employment-status`, validation + audit, `PersonProfileEditorPanel`, integration + frontend tests, docs) | M4 (partial) | Complete | `34ef1e0` |
 
-| 108 | M13 product-owner SLO adoption (`PRODUCT_OWNER_LOAD_SLO_V1.md`, `ProductOwnerTargets` profile, journey k6 scenarios for TrainArr qualification + RoutArr dispatch gates, operator scripts, Load.Tests, docs) | M13 (partial) | Complete | `pending` |
+| 108 | M13 product-owner SLO adoption (`PRODUCT_OWNER_LOAD_SLO_V1.md`, `ProductOwnerTargets` profile, journey k6 scenarios for TrainArr qualification + RoutArr dispatch gates, operator scripts, Load.Tests, docs) | M13 (partial) | Complete | `383f3ae` |
 
 ## Next slice (Worker 109)
 
