@@ -8,7 +8,7 @@
 | 4 | NexArr launch context, handoff codes, callback allowlist | M2 (partial) | Complete | `db3a82f` |
 | 5 | Suite frontend AppShell (auth, navigation, launch) | M3 (partial) | Complete | `87c2218` |
 | 6 | NexArr platform-admin APIs + suite platform-admin UI | M2/M3 (partial) | Complete | `5c4934b` |
-| 7 | Suite unified dashboard (M3 widgets on `/app`) | M3 (partial) | Complete | _(see Worker 7 commit)_ |
+| 7 | Suite unified dashboard (M3 widgets on `/app`) | M3 (partial) | Complete | `5c293e8` |
 
 ## Next slice (Worker 8)
 
