@@ -183,6 +183,8 @@
 
 | 103 | M13 Render staging snapshot DR drill (`StlRenderStagingDrillCatalog`, staging URL env conventions, `render-staging-snapshot-fetch` + `render-staging-dr-restore-drill` scripts, `RenderStagingDrillLiveRunner`, `dr-staging-render.yml` workflow_dispatch, docs) | M13 (partial) | Complete | `ad6ece7` |
 
-## Next slice (Worker 104)
+| 104 | M13 authenticated k6 load-test flows (`StlLoadTestAuthDefaults`, `nexarr-auth-me` + `product-auth-handoff-me` k6 scenarios, shared `stl-auth.js` helpers, extended SLO catalog, operator scripts, Load.Tests unit + live probes, docs) | M13 (partial) | Complete | `pending` |
 
-Recommended: **Product-owner SLO adoption** (blocked on PO SLO document) or **authenticated k6 flows** once SLOs exist.
+## Next slice (Worker 105)
+
+Recommended: **Product-owner SLO adoption** (replace engineering-default thresholds when PO publishes SLO document) or **cross-product k6 journey scenarios** (qualification check, dispatch gate) once SLO targets exist.

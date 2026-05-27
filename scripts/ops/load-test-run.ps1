@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("api-health-liveness", "api-health-ready", "nexarr-platform-health", "all")]
+    [ValidateSet("api-health-liveness", "api-health-ready", "nexarr-platform-health", "nexarr-auth-me", "product-auth-handoff-me", "all")]
     [string]$Scenario = "all",
     [int]$Vus = 5,
     [string]$Duration = "30s",
@@ -76,7 +76,13 @@ New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 $scenarios = @()
 switch ($Scenario) {
     "all" {
-        $scenarios = @("api-health-liveness", "api-health-ready", "nexarr-platform-health")
+        $scenarios = @(
+            "api-health-liveness",
+            "api-health-ready",
+            "nexarr-platform-health",
+            "nexarr-auth-me",
+            "product-auth-handoff-me"
+        )
     }
     default {
         $scenarios = @($Scenario)

@@ -48,8 +48,10 @@ case "$SCENARIO" in
     run_scenario api-health-liveness
     run_scenario api-health-ready
     run_scenario nexarr-platform-health
+    run_scenario nexarr-auth-me
+    run_scenario product-auth-handoff-me
     ;;
-  api-health-liveness|api-health-ready|nexarr-platform-health)
+  api-health-liveness|api-health-ready|nexarr-platform-health|nexarr-auth-me|product-auth-handoff-me)
     run_scenario "$SCENARIO"
     ;;
   *)

@@ -20,6 +20,18 @@
       "p95LatencyMsMax": 5000,
       "errorRateMax": 0.05,
       "minRequestCount": 20
+    },
+    {
+      "scenarioKey": "nexarr-auth-me",
+      "p95LatencyMsMax": 1500,
+      "errorRateMax": 0.02,
+      "minRequestCount": 30
+    },
+    {
+      "scenarioKey": "product-auth-handoff-me",
+      "p95LatencyMsMax": 8000,
+      "errorRateMax": 0.05,
+      "minRequestCount": 12
     }
   ]
 }

@@ -175,7 +175,7 @@ $env:RENDER_STAGING_NEXARR_DATABASE_URL = "postgresql://..."
 ./scripts/ops/render-staging-dr-restore-drill.ps1
 ```
 
-### Optional load test (W100)
+### Optional load test (W100 + W104)
 
 ```powershell
 # Unit checks (CI default)
@@ -186,8 +186,12 @@ docker compose up -d postgres nexarr-api staffarr-api trainarr-api maintainarr-a
 $env:LOAD_LIVE = "1"
 dotnet test tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj -c Release --filter "Category=Load&Category=Live"
 
-# Operator full harness (all three scenarios)
+# Operator full harness (all five scenarios)
 ./scripts/ops/load-test-run.ps1
+
+# Authenticated smoke only
+./scripts/ops/load-test-run.ps1 -Scenario nexarr-auth-me -Vus 2 -Duration 10s
+./scripts/ops/load-test-run.ps1 -Scenario product-auth-handoff-me -Vus 2 -Duration 15s
 ```
 
 ### Frontends
@@ -209,7 +213,7 @@ dotnet test tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj -c Re
 | OpenAPI CI gate | Ready | 7 snapshots, `Category=OpenApi` (W92) |
 | Docker local dev | Ready | `docker-compose.yml` APIs + postgres; frontends via Vite |
 | OTEL / metrics dashboards | **Wired** — instrumentation + smoke checks; connect Render `OTEL_EXPORTER_OTLP_ENDPOINT` when backend available |
-| Load / performance | **Harness ready (W100)** — k6 scenarios + SLO evaluator with engineering defaults; replace when PO publishes SLOs |
+| Load / performance | **Harness ready (W100) + authenticated flows (W104)** — k6 health + login/me + handoff bootstrap with engineering-default SLOs; replace when PO publishes SLOs |
 | DR / backup restore | **Nightly seven-DB drill (W102)** + **Render staging snapshot drill (W103)** — `render-staging-*` ops scripts, `dr-staging-render.yml` workflow_dispatch |
 | Tenant isolation soak | Open | Per-slice deny tests only |
 | STLComplianceSite (marketing) | Not started | M3 backlog |
@@ -221,7 +225,7 @@ dotnet test tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj -c Re
 | Item | Blocker | Unblock path |
 |------|---------|--------------|
 | **Playwright full pass** | Harness + compose e2e profile (W101); nightly starts all previews via `e2e-frontends-preview.sh` | Run nightly workflow; fix flaky handoff tests if any product seed/entitlement gaps |
-| **Load / performance** | Engineering-default SLO harness (W100) — replace thresholds when PO publishes SLO document | Product owners publish SLO targets; extend k6 to authenticated flows |
+| **Load / performance** | Engineering-default SLO harness (W100) with **authenticated k6 flows (W104)** — replace thresholds when product owners publish SLO document | Product owners publish SLO targets; add cross-product journey k6 scenarios |
 | **Metrics / tracing acceptance** | OTEL wired (W98); enable exporter on Render for dashboard validation | Enable OTEL on Render; run `scripts/ops/otel-smoke.ps1 -RequireOtelEnabled` |
 | **DR verification** | **Nightly seven-DB drill (W102)** on docker-compose; **staging drill scripted (W103)** | Configure GitHub secrets + run `dr-staging-render` workflow or operator `render-staging-dr-restore-drill.*` |
 | **Tenant soak** | No multi-tenant parallel E2E battery | Add `STLCompliance.E2E` tenant isolation suite |
@@ -255,7 +259,7 @@ dotnet test tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj -c Re
 | W88–W90 | Suite shell, Render V1, Companion inbox |
 | W91–W93 | E2E harness, OpenAPI parity, platform health |
 | W94 | Playwright browser smoke scaffold + this report |
-| W97–W103 | Handoff client dedup, OTEL smoke checks, DR restore drill, load-test harness, Playwright compose e2e profile, seven-database DR nightly drill, Render staging snapshot drill |
+| W97–W104 | Handoff client dedup, OTEL smoke checks, DR restore drill, load-test harness, Playwright compose e2e profile, seven-database DR nightly drill, Render staging snapshot drill, authenticated k6 flows |
 
 Detailed slice notes: `docs/implementation/worker-slices/W*.md` and `docs/implementation/worker-slices/00_SLICE_STATE.md`.
 

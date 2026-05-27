@@ -1,22 +1,23 @@
 # Implementation status (Arr ecosystem)
 
-**Last updated:** Worker 103 (2026-05-27)
+**Last updated:** Worker 104 (2026-05-27)
 
 ## Latest slice
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 103 | M13 Render staging snapshot DR drill | Complete | `ad6ece7` |
+| 104 | M13 authenticated k6 load-test flows | Complete | `pending` |
 
 ## Program summary
 
-- Workers **1–103** documented in `docs/implementation/worker-slices/00_SLICE_STATE.md`
-- **575+** Release .NET tests (`Category!=Live`) including E2E catalog tests
+- Workers **1–104** documented in `docs/implementation/worker-slices/00_SLICE_STATE.md`
+- **580+** Release .NET tests (`Category!=Live`) including E2E catalog tests
+- Load harness: five k6 scenarios (health probes + **authenticated login/me + handoff bootstrap**)
 - Playwright: suite login + **six product handoff** smokes with per-frontend skip semantics
 - DR: nightly live restore drill validates **all seven** product PostgreSQL databases
 
-## Next recommended slice (Worker 104)
+## Next recommended slice (Worker 105)
 
-**Product-owner SLO adoption** (unblocks authenticated k6 flows once PO publishes SLO targets).
+**Product-owner SLO adoption** — replace engineering-default k6 thresholds when PO publishes SLO targets; extend with cross-product journey scenarios.
 
 See `FINAL_IMPLEMENTATION_REPORT.md` for ship-gate checklist.

@@ -9,6 +9,8 @@ public static class StlLoadTestSloCatalog
     public const string ApiHealthLivenessKey = "api-health-liveness";
     public const string ApiHealthReadyKey = "api-health-ready";
     public const string NexArrPlatformHealthKey = "nexarr-platform-health";
+    public const string NexArrAuthMeKey = "nexarr-auth-me";
+    public const string ProductAuthHandoffMeKey = "product-auth-handoff-me";
 
     public static readonly IReadOnlyList<StlLoadTestSloTarget> EngineeringDefaults =
     [
@@ -33,6 +35,20 @@ public static class StlLoadTestSloCatalog
             ErrorRateMax: 0.05,
             MinRequestCount: 20,
             Notes: "Engineering placeholder — aggregates downstream /health/ready probes."),
+        new(
+            NexArrAuthMeKey,
+            "NexArr POST /api/auth/login + GET /api/me",
+            P95LatencyMsMax: 1500,
+            ErrorRateMax: 0.02,
+            MinRequestCount: 30,
+            Notes: "Engineering placeholder — authenticated NexArr session bootstrap under load."),
+        new(
+            ProductAuthHandoffMeKey,
+            "Cross-product NexArr login → handoff → redeem → GET /api/me",
+            P95LatencyMsMax: 8000,
+            ErrorRateMax: 0.05,
+            MinRequestCount: 12,
+            Notes: "Engineering placeholder — full product handoff bootstrap for all six product APIs."),
     ];
 
     public static StlLoadTestSloTarget GetByScenarioKey(string scenarioKey) =>
