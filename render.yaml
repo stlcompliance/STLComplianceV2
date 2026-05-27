@@ -29,23 +29,24 @@ envVarGroups:
       - key: STL_INTEGRATION_BOOTSTRAP_SECRET
         generateValue: true
 
-  # Render private network: web services listen on port 10000 internally.
+  # Server-to-server API URLs. Use Render-assigned public hostnames (private DNS
+  # uses suffixed hostnames like nexarr-api-jdyi, not blueprint service names).
   - name: stl-internal-api-urls
     envVars:
       - key: NexArr__BaseUrl
-        value: http://nexarr-api:10000
+        value: https://nexarr-api-jdyi.onrender.com
       - key: StaffArr__BaseUrl
-        value: http://staffarr-api:10000
+        value: https://staffarr-api-srdo.onrender.com
       - key: TrainArr__BaseUrl
-        value: http://trainarr-api:10000
+        value: https://trainarr-api-ae2t.onrender.com
       - key: MaintainArr__BaseUrl
-        value: http://maintainarr-api:10000
+        value: https://maintainarr-api-82rg.onrender.com
       - key: RoutArr__BaseUrl
-        value: http://routarr-api:10000
+        value: https://routarr-api-ut1u.onrender.com
       - key: SupplyArr__BaseUrl
-        value: http://supplyarr-api:10000
+        value: https://supplyarr-api-r963.onrender.com
       - key: ComplianceCore__BaseUrl
-        value: http://compliancecore-api:10000
+        value: https://compliancecore-api-qfu7.onrender.com
 
   # Public onrender.com URLs for browser builds and CORS (Render-assigned hostnames).
   - name: stl-public-frontend-urls
@@ -341,35 +342,35 @@ services:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
       - key: NexArr__BaseUrl
-        value: http://nexarr-api:10000
+        value: https://nexarr-api-jdyi.onrender.com
       - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
         value: "true"
       - key: TrainArrQualificationExpiration__TrainArrBaseUrl
-        value: http://trainarr-api:10000
+        value: https://trainarr-api-ae2t.onrender.com
       - key: TrainArrQualificationExpiration__ServiceToken
         generateValue: true
       - key: StaffArrCertificationExpiration__StaffArrBaseUrl
-        value: http://staffarr-api:10000
+        value: https://staffarr-api-srdo.onrender.com
       - key: StaffArrCertificationExpiration__ServiceToken
         generateValue: true
       - key: StaffArrReadinessRollup__StaffArrBaseUrl
-        value: http://staffarr-api:10000
+        value: https://staffarr-api-srdo.onrender.com
       - key: StaffArrReadinessRollup__ServiceToken
         generateValue: true
       - key: StaffArrPermissionProjection__StaffArrBaseUrl
-        value: http://staffarr-api:10000
+        value: https://staffarr-api-srdo.onrender.com
       - key: StaffArrPermissionProjection__ServiceToken
         generateValue: true
       - key: MaintainArrPmDueScan__MaintainArrBaseUrl
-        value: http://maintainarr-api:10000
+        value: https://maintainarr-api-82rg.onrender.com
       - key: MaintainArrPmDueScan__ServiceToken
         generateValue: true
       - key: SupplyArrReorderEvaluation__SupplyArrBaseUrl
-        value: http://supplyarr-api:10000
+        value: https://supplyarr-api-r963.onrender.com
       - key: SupplyArrReorderEvaluation__ServiceToken
         generateValue: true
       - key: ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl
-        value: http://compliancecore-api:10000
+        value: https://compliancecore-api-qfu7.onrender.com
       - key: ComplianceCoreScheduledEvaluation__ServiceToken
         generateValue: true
 
