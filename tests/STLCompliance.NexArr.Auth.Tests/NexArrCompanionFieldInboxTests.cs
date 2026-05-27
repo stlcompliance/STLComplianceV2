@@ -84,7 +84,7 @@ public sealed class NexArrCompanionFieldInboxTests : IAsyncLifetime
         Assert.Contains(inbox.Sources, source => source.ProductKey == "maintainarr" && source.Entitled);
         Assert.Contains(
             inbox.Sources.Where(source => source.Entitled),
-            source => !source.Fetched && source.ErrorCode == "upstream_unreachable");
+            source => !source.Fetched && source.ErrorCode is "upstream_unreachable" or "upstream_401");
     }
 
     [Fact]

@@ -233,6 +233,29 @@
         }
       }
     },
+    "/api/internal/integration-tokens": {
+      "get": {
+        "tags": [
+          "InternalIntegrationTokens"
+        ],
+        "operationId": "GetIntegrationTokensForConsumer",
+        "parameters": [
+          {
+            "name": "consumer",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/launch/callback-allowlist": {
       "get": {
         "tags": [
@@ -1387,6 +1410,9 @@
     },
     {
       "name": "NexArr.Api"
+    },
+    {
+      "name": "InternalIntegrationTokens"
     },
     {
       "name": "PlatformHealth"

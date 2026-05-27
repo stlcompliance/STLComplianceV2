@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
+using NexArr.Api.Entities;
 using NexArr.Api.Services;
 
 namespace STLCompliance.E2E.Support;
@@ -52,6 +53,46 @@ internal sealed class E2ENexArrHost : IAsyncDisposable
         await PlatformSeeder.SeedAsync(db, passwordHasher);
     }
 
+    public async Task EnsureTenantAsync(
+        Guid tenantId,
+        string slug,
+        string displayName,
+        IReadOnlyList<string> productKeys,
+        CancellationToken cancellationToken = default)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        if (await db.Tenants.AnyAsync(t => t.Id == tenantId, cancellationToken))
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        db.Tenants.Add(new Tenant
+        {
+            Id = tenantId,
+            Slug = slug,
+            DisplayName = displayName,
+            Status = TenantStatuses.Active,
+            CreatedAt = now,
+            ModifiedAt = now,
+        });
+
+        foreach (var productKey in productKeys)
+        {
+            db.Entitlements.Add(new TenantProductEntitlement
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                ProductKey = productKey,
+                Status = EntitlementStatuses.Active,
+                GrantedAt = now,
+            });
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<string> LoginAsync(string email = PlatformSeeder.DemoAdminEmail)
     {
         var response = await Client.PostAsJsonAsync(
@@ -66,8 +107,10 @@ internal sealed class E2ENexArrHost : IAsyncDisposable
         string adminToken,
         string productKey,
         string actionScope,
-        IReadOnlyList<string>? targetProducts = null)
+        IReadOnlyList<string>? targetProducts = null,
+        Guid? tenantId = null)
     {
+        var effectiveTenantId = tenantId ?? PlatformSeeder.DemoTenantId;
         var registerRequest = HttpTestClient.Authorized(HttpMethod.Post, "/api/service-tokens/clients", adminToken);
         registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
             $"{productKey}-e2e-{Guid.NewGuid():N}",
@@ -81,7 +124,7 @@ internal sealed class E2ENexArrHost : IAsyncDisposable
         var issueRequest = HttpTestClient.Authorized(HttpMethod.Post, "/api/service-tokens", adminToken);
         issueRequest.Content = JsonContent.Create(new IssueServiceTokenRequest(
             client.ServiceClientId,
-            PlatformSeeder.DemoTenantId,
+            effectiveTenantId,
             targetProducts,
             actionScope,
             30));

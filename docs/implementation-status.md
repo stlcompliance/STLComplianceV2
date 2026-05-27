@@ -1,6 +1,6 @@
 # Implementation status
 
-Last updated: 2026-05-27 (Worker 94 slice)
+Last updated: 2026-05-27 (M13 tenant isolation E2E slice)
 
 ## Milestone summary
 
@@ -18,54 +18,39 @@ Last updated: 2026-05-27 (Worker 94 slice)
 | M10 — Cross-product qualification gates | In progress (Workers 36–42, 83–87) |
 | M11 — Companion app | Partial (Worker 90) |
 | M12 — Scheduled workers | In progress (Workers 44, 46–51) |
-| M13 — Ship-gate acceptance & hardening | In progress (Workers 91–94) |
+| M13 — Ship-gate acceptance & hardening | In progress (Workers 91–95) |
 
 ## Latest completed slice
 
-**M13 Playwright browser smoke scaffold + final report** (Worker 94 / M13 partial)
+**M13 multi-tenant isolation E2E battery + nightly live CI**
 
-- **tests/e2e-playwright**: Playwright smoke for suite-frontend login → dashboard → StaffArr launch/handoff; skips when `E2E_LIVE` unset or stack unreachable
-- **FINAL_IMPLEMENTATION_REPORT.md**: Program synthesis (W17–W94), deployment readiness, blocked items
-- **Release test sweep**: 575 tests passed (`Category!=Live`)
-- **Docs**: `docs/implementation/worker-slices/W94_M13_PLAYWRIGHT_BROWSER_SMOKE.md`
+- **TenantIsolationFlowTests**: 7 integration tests across StaffArr, MaintainArr, RoutArr, TrainArr, Compliance Core
+- **TenantIsolationLiveTests**: live StaffArr cross-tenant GET probe (opt-in `E2E_LIVE`)
+- **e2e-nightly.yml**: scheduled docker-compose live API E2E + Playwright smoke
+- **Docs**: `docs/implementation/worker-slices/W95_M13_TENANT_ISOLATION_E2E.md`
 
 ## Build & test status
 
-| Command | Result (Worker 94) |
-|---------|-------------------|
-| `dotnet build STLCompliance.slnx -c Release` | Pass |
-| `dotnet test STLCompliance.slnx -c Release --filter Category!=Live` | Pass (**575**/575) |
-| `cd tests/e2e-playwright && npm test` (no `E2E_LIVE`) | 2 skipped (CI-safe) |
-| `cd tests/e2e-playwright && E2E_LIVE=1 npm test` | Not run — docker/Vite stack not up on worker host |
-
-### Per-project test counts (Release, excluding Live)
-
-| Project | Passed |
+| Command | Result |
 |---------|--------|
-| StaffArr.Auth.Tests | 114 |
-| RoutArr.Auth.Tests | 95 |
-| Shared.Worker.Tests | 93 |
-| MaintainArr.Auth.Tests | 84 |
-| ComplianceCore.Auth.Tests | 73 |
-| NexArr.Auth.Tests | 45 |
-| SupplyArr.Auth.Tests | 35 |
-| OpenApi.Tests | 14 |
-| Health.Tests | 14 |
-| E2E (Integration only) | 8 |
+| `dotnet build STLCompliance.slnx -c Release` | Pass |
+| `dotnet test STLCompliance.slnx -c Release --filter Category!=Live` | Pass (**582**/582) |
+| `dotnet test tests/STLCompliance.E2E/... --filter Area=TenantIsolation&Category=Integration` | Pass (7/7) |
 
-## M13 ship-gate progress (Workers 91–94)
+## M13 ship-gate progress (Workers 91–95)
 
 | Item | Status | Notes |
 |------|--------|-------|
 | API integration E2E harness | Complete (W91) | 5 cross-product flows + optional live smoke |
 | OpenAPI parity CI | Complete (W92) | Snapshot gate for all 7 APIs |
-| Platform health aggregation | Partial (W93) | NexArr `/api/platform/health`; metrics/tracing dashboards still open |
-| Playwright browser E2E | Scaffolded (W94) | Harness in `tests/e2e-playwright`; full pass needs docker APIs + Vite dev servers + `E2E_LIVE=1` |
-| Final implementation report | Complete (W94) | `FINAL_IMPLEMENTATION_REPORT.md` at repo root |
-| Load / performance testing | Blocked | Needs SLO definitions from product owners |
+| Platform health aggregation | Partial (W93) | NexArr `/api/platform/health` |
+| Playwright browser E2E | Scaffolded (W94) | Nightly workflow runs preview + smoke |
+| Tenant isolation soak | **Complete (W95)** | Integration battery + live StaffArr probe |
+| Nightly live E2E CI | **Complete (W95)** | `.github/workflows/e2e-nightly.yml` |
+| Load / performance testing | Blocked | Needs SLO definitions |
 | Recovery / DR verification | Open | No automated backup-restore tests |
-| Tenant isolation soak | Open | No dedicated multi-tenant E2E battery |
+| OTEL / metrics dashboards | Open | Not wired |
 
 ## Next slice
 
-M13 operational hardening — nightly live Playwright CI, load-test harness (after SLOs), DR drill, tenant soak — see `docs/implementation/worker-slices/00_SLICE_STATE.md` and `FINAL_IMPLEMENTATION_REPORT.md`.
+Load-test harness (after SLOs), DR restore drill, SupplyArr tenant isolation in E2E — see `docs/implementation/worker-slices/00_SLICE_STATE.md`.

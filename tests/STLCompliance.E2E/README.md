@@ -21,6 +21,7 @@ Live tests probe real `/health` endpoints and optional NexArr demo login. They *
 3. **TrainArrAssignmentCompleteFlowTests** — incident route → assignment → complete → StaffArr certification/unblock
 4. **MaintainArrWorkOrderFlowTests** — handoff → work order create → in_progress → completed
 5. **RoutArrDispatchAssignFlowTests** — trip → workflow gate block → preview → override assign
+6. **TenantIsolationFlowTests** — multi-tenant JWT/service-token denial across StaffArr, MaintainArr, RoutArr, TrainArr, Compliance Core (`Area=TenantIsolation`)
 
 ## Live URL configuration
 
@@ -53,9 +54,9 @@ dotnet test "tests/STLCompliance.E2E/STLCompliance.E2E.csproj" -c Release --filt
 ## Project layout
 
 ```
-Support/          Shared NexArr host, HTTP helpers, live probes
-Flows/            In-memory cross-product journey tests
-Live/             Optional docker-compose smoke tests
+Support/          Shared NexArr host, HTTP helpers, live probes, tenant constants
+Flows/            In-memory cross-product journey tests + tenant isolation battery
+Live/             Optional docker-compose smoke + tenant isolation live probe
 ```
 
 See also: `docs/implementation/worker-slices/W91_M13_E2E_VERIFICATION_HARNESS.md`.

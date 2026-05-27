@@ -167,10 +167,8 @@
 
 | 94 | M13 Playwright browser smoke scaffold (`tests/e2e-playwright` suite login→handoff→StaffArr redirect, E2E_LIVE skip semantics), `FINAL_IMPLEMENTATION_REPORT.md`, Release test sweep (575 pass), docs) | M13 (partial) | Complete | `pending` |
 
+| 95 | M13 multi-tenant isolation E2E battery (`TenantIsolationFlowTests`, `TenantIsolationLiveTests`, nightly `e2e-nightly.yml`, docs) | M13 (partial) | Complete | `pending` |
 
+## Next slice (Worker 96)
 
-## Next slice (Worker 95)
-
-
-
-Recommended: **M13 operational hardening** — nightly `E2E_LIVE` + Playwright CI job, load-test harness once SLOs exist, DR restore drill, multi-tenant isolation E2E battery.
+Recommended: **M13 operational hardening** — load-test harness once SLOs exist, DR restore drill, SupplyArr tenant isolation in E2E battery, OTEL smoke checks.

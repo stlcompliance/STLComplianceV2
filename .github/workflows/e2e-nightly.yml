@@ -1,0 +1,101 @@
+name: E2E Nightly
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  live-api-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Build
+        run: dotnet build STLCompliance.slnx -c Release
+
+      - name: Start docker-compose APIs
+        run: |
+          docker compose up -d --build postgres nexarr-api staffarr-api trainarr-api maintainarr-api routarr-api supplyarr-api compliancecore-api
+          echo "Waiting for API health..."
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:5101/health >/dev/null \
+              && curl -sf http://localhost:5102/health >/dev/null \
+              && curl -sf http://localhost:5107/health >/dev/null; then
+              echo "APIs healthy after ${i} attempts"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "API health timeout"
+          docker compose ps
+          exit 1
+
+      - name: Live E2E (health, login, tenant isolation)
+        env:
+          E2E_LIVE: "1"
+        run: dotnet test tests/STLCompliance.E2E/STLCompliance.E2E.csproj -c Release --no-build --filter "Category=Live" --verbosity normal
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
+
+  playwright-smoke:
+    runs-on: ubuntu-latest
+    needs: live-api-e2e
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            apps/suite-frontend/package-lock.json
+            apps/staffarr-frontend/package-lock.json
+
+      - name: Start docker-compose APIs
+        run: |
+          docker compose up -d --build postgres nexarr-api staffarr-api
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:5101/health >/dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1
+
+      - name: Install and build frontends
+        env:
+          VITE_NEXARR_API_URL: http://127.0.0.1:5101
+        run: |
+          cd apps/suite-frontend && npm ci && npm run build
+          cd ../staffarr-frontend && npm ci && npm run build
+
+      - name: Install Playwright
+        working-directory: tests/e2e-playwright
+        run: |
+          npm ci
+          npx playwright install chromium --with-deps
+
+      - name: Run Playwright smoke
+        env:
+          E2E_LIVE: "1"
+        run: |
+          cd apps/suite-frontend && npm run preview -- --host 127.0.0.1 --port 5174 &
+          cd ../staffarr-frontend && npm run preview -- --host 127.0.0.1 --port 5175 &
+          sleep 8
+          cd ../../tests/e2e-playwright
+          npm test
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
