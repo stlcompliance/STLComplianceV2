@@ -7,7 +7,7 @@
 | 3 | NexArr tenant/entitlement admin + service tokens | M2 (partial) | Complete | `6aa10c9` |
 | 4 | NexArr launch context, handoff codes, callback allowlist | M2 (partial) | Complete | `db3a82f` |
 | 5 | Suite frontend AppShell (auth, navigation, launch) | M3 (partial) | Complete | `87c2218` |
-| 6 | NexArr platform-admin APIs + suite platform-admin UI | M2/M3 (partial) | Complete | _(see git log after push)_ |
+| 6 | NexArr platform-admin APIs + suite platform-admin UI | M2/M3 (partial) | Complete | `5c4934b` |
 
 ## Next slice (Worker 7)
 
