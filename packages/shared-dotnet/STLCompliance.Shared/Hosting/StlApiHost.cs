@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
@@ -9,8 +8,10 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Data;
 using STLCompliance.Shared.Health;
+using STLCompliance.Shared.Middleware;
 
 namespace STLCompliance.Shared.Hosting;
 
@@ -19,7 +20,8 @@ public static class StlApiHost
     public static async Task RunAsync<TContext>(
         ProductDescriptor product,
         string[] args,
-        Action<WebApplicationBuilder>? configure = null)
+        Action<WebApplicationBuilder>? configure = null,
+        Func<WebApplication, Task>? mapEndpoints = null)
         where TContext : PlatformDbContext
     {
         Log.Logger = new LoggerConfiguration()
@@ -54,9 +56,24 @@ public static class StlApiHost
             }
 
             builder.Services.AddOpenApi();
+            builder.Services.AddStlCorrelationId();
+            builder.Services.AddStlJwtAuthentication(builder.Configuration);
             configure?.Invoke(builder);
 
+            var signingKey = builder.Configuration["AUTH_SIGNING_KEY"]
+                ?? builder.Configuration[$"{StlJwtOptions.SectionName}:SigningKey"];
+            var jwtEnabled = !string.IsNullOrWhiteSpace(signingKey) && signingKey.Length >= 32;
+
             var app = builder.Build();
+
+            app.UseStlCorrelationId();
+            app.UseMiddleware<ApiExceptionMiddleware>();
+            if (jwtEnabled)
+            {
+                app.UseAuthentication();
+            }
+
+            app.UseAuthorization();
 
             if (app.Environment.IsDevelopment())
             {
@@ -107,6 +124,11 @@ public static class StlApiHost
                 ready = "/health/ready",
                 openapi = app.Environment.IsDevelopment() ? "/openapi/v1.json" : null
             })).AllowAnonymous();
+
+            if (mapEndpoints is not null)
+            {
+                await mapEndpoints(app);
+            }
 
             var urls = builder.Configuration["ASPNETCORE_URLS"];
             if (string.IsNullOrWhiteSpace(urls) && app.Environment.IsDevelopment())

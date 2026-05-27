@@ -64,9 +64,8 @@ services:
     name: nexarr-api
     runtime: docker
     plan: starter
-    dockerfilePath: ./docker/Dockerfile.api
+    dockerfilePath: ./apps/nexarr-api/Dockerfile
     dockerContext: .
-    dockerCommand: ""
     healthCheckPath: /health/ready
     envVars:
       - fromGroup: stl-shared
@@ -80,16 +79,12 @@ services:
           name: redis
           type: keyvalue
           property: connectionString
-      - key: DOCKER_BUILD_ARG_PROJECT_PATH
-        value: apps/nexarr-api/NexArr.Api/NexArr.Api.csproj
-      - key: DOCKER_BUILD_ARG_ASSEMBLY_NAME
-        value: NexArr.Api
 
   - type: web
     name: staffarr-api
     runtime: docker
     plan: starter
-    dockerfilePath: ./docker/Dockerfile.api
+    dockerfilePath: ./apps/staffarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
     envVars:
@@ -104,7 +99,7 @@ services:
     name: trainarr-api
     runtime: docker
     plan: starter
-    dockerfilePath: ./docker/Dockerfile.api
+    dockerfilePath: ./apps/trainarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
     envVars:
@@ -119,7 +114,7 @@ services:
     name: maintainarr-api
     runtime: docker
     plan: starter
-    dockerfilePath: ./docker/Dockerfile.api
+    dockerfilePath: ./apps/maintainarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
     envVars:
@@ -134,7 +129,7 @@ services:
     name: routarr-api
     runtime: docker
     plan: starter
-    dockerfilePath: ./docker/Dockerfile.api
+    dockerfilePath: ./apps/routarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
     envVars:
@@ -149,7 +144,7 @@ services:
     name: supplyarr-api
     runtime: docker
     plan: starter
-    dockerfilePath: ./docker/Dockerfile.api
+    dockerfilePath: ./apps/supplyarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
     envVars:
@@ -164,7 +159,7 @@ services:
     name: compliancecore-api
     runtime: docker
     plan: starter
-    dockerfilePath: ./docker/Dockerfile.api
+    dockerfilePath: ./apps/compliancecore-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
     envVars:
@@ -179,7 +174,7 @@ services:
     name: nexarr-worker
     runtime: docker
     plan: starter
-    dockerfilePath: ./docker/Dockerfile.worker
+    dockerfilePath: ./workers/nexarr-worker/Dockerfile
     dockerContext: .
     envVars:
       - fromGroup: stl-shared
@@ -192,7 +187,7 @@ services:
     name: staffarr-worker
     runtime: docker
     plan: starter
-    dockerfilePath: ./docker/Dockerfile.worker
+    dockerfilePath: ./workers/staffarr-worker/Dockerfile
     dockerContext: .
     envVars:
       - fromGroup: stl-shared
@@ -205,7 +200,7 @@ services:
     name: trainarr-worker
     runtime: docker
     plan: starter
-    dockerfilePath: ./docker/Dockerfile.worker
+    dockerfilePath: ./workers/trainarr-worker/Dockerfile
     dockerContext: .
     envVars:
       - fromGroup: stl-shared
@@ -218,7 +213,7 @@ services:
     name: maintainarr-worker
     runtime: docker
     plan: starter
-    dockerfilePath: ./docker/Dockerfile.worker
+    dockerfilePath: ./workers/maintainarr-worker/Dockerfile
     dockerContext: .
     envVars:
       - fromGroup: stl-shared
@@ -231,7 +226,7 @@ services:
     name: routarr-worker
     runtime: docker
     plan: starter
-    dockerfilePath: ./docker/Dockerfile.worker
+    dockerfilePath: ./workers/routarr-worker/Dockerfile
     dockerContext: .
     envVars:
       - fromGroup: stl-shared
@@ -244,7 +239,7 @@ services:
     name: supplyarr-worker
     runtime: docker
     plan: starter
-    dockerfilePath: ./docker/Dockerfile.worker
+    dockerfilePath: ./workers/supplyarr-worker/Dockerfile
     dockerContext: .
     envVars:
       - fromGroup: stl-shared
@@ -257,7 +252,7 @@ services:
     name: compliancecore-worker
     runtime: docker
     plan: starter
-    dockerfilePath: ./docker/Dockerfile.worker
+    dockerfilePath: ./workers/compliancecore-worker/Dockerfile
     dockerContext: .
     envVars:
       - fromGroup: stl-shared

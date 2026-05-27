@@ -1,61 +1,44 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using STLCompliance.Shared.Health;
 
 namespace STLCompliance.Health.Tests;
 
-public class NexArrHealthTests : ApiHealthEndpointTests<NexArr.Api.Program>
-{
-    protected override string ExpectedProductKey => "nexarr";
-}
+public class NexArrHealthTests(WebApplicationFactory<NexArr.Api.Program> factory)
+    : ApiHealthEndpointTests<NexArr.Api.Program>(factory, "nexarr");
 
-public class StaffArrHealthTests : ApiHealthEndpointTests<StaffArr.Api.Program>
-{
-    protected override string ExpectedProductKey => "staffarr";
-}
+public class StaffArrHealthTests(WebApplicationFactory<StaffArr.Api.Program> factory)
+    : ApiHealthEndpointTests<StaffArr.Api.Program>(factory, "staffarr");
 
-public class TrainArrHealthTests : ApiHealthEndpointTests<TrainArr.Api.Program>
-{
-    protected override string ExpectedProductKey => "trainarr";
-}
+public class TrainArrHealthTests(WebApplicationFactory<TrainArr.Api.Program> factory)
+    : ApiHealthEndpointTests<TrainArr.Api.Program>(factory, "trainarr");
 
-public class MaintainArrHealthTests : ApiHealthEndpointTests<MaintainArr.Api.Program>
-{
-    protected override string ExpectedProductKey => "maintainarr";
-}
+public class MaintainArrHealthTests(WebApplicationFactory<MaintainArr.Api.Program> factory)
+    : ApiHealthEndpointTests<MaintainArr.Api.Program>(factory, "maintainarr");
 
-public class RoutArrHealthTests : ApiHealthEndpointTests<RoutArr.Api.Program>
-{
-    protected override string ExpectedProductKey => "routarr";
-}
+public class RoutArrHealthTests(WebApplicationFactory<RoutArr.Api.Program> factory)
+    : ApiHealthEndpointTests<RoutArr.Api.Program>(factory, "routarr");
 
-public class SupplyArrHealthTests : ApiHealthEndpointTests<SupplyArr.Api.Program>
-{
-    protected override string ExpectedProductKey => "supplyarr";
-}
+public class SupplyArrHealthTests(WebApplicationFactory<SupplyArr.Api.Program> factory)
+    : ApiHealthEndpointTests<SupplyArr.Api.Program>(factory, "supplyarr");
 
-public class ComplianceCoreHealthTests : ApiHealthEndpointTests<ComplianceCore.Api.Program>
-{
-    protected override string ExpectedProductKey => "compliancecore";
-}
+public class ComplianceCoreHealthTests(WebApplicationFactory<ComplianceCore.Api.Program> factory)
+    : ApiHealthEndpointTests<ComplianceCore.Api.Program>(factory, "compliancecore");
 
-public abstract class ApiHealthEndpointTests<TProgram> : IClassFixture<WebApplicationFactory<TProgram>>
+public abstract class ApiHealthEndpointTests<TProgram>(
+    WebApplicationFactory<TProgram> factory,
+    string expectedProductKey) : IClassFixture<WebApplicationFactory<TProgram>>
     where TProgram : class
 {
-    private readonly HttpClient _client;
-
-    protected ApiHealthEndpointTests(WebApplicationFactory<TProgram> factory)
-    {
-        _client = factory.WithWebHostBuilder(builder =>
+    private readonly HttpClient         _client = factory.WithWebHostBuilder(builder =>
         {
             builder.UseSetting("ConnectionStrings:Database", string.Empty);
             builder.UseSetting("DATABASE_URL", string.Empty);
+            builder.UseSetting("Auth:SigningKey", "test-signing-key-at-least-32-chars-long");
             builder.UseEnvironment("Production");
         }).CreateClient();
-    }
-
-    protected abstract string ExpectedProductKey { get; }
 
     [Fact]
     public async Task Health_liveness_returns_ok_with_product_key()
@@ -66,7 +49,7 @@ public abstract class ApiHealthEndpointTests<TProgram> : IClassFixture<WebApplic
         var payload = await response.Content.ReadFromJsonAsync<HealthResponse>();
         Assert.NotNull(payload);
         Assert.Equal("Healthy", payload.Status);
-        Assert.Equal(ExpectedProductKey, payload.Product);
+        Assert.Equal(expectedProductKey, payload.Product);
     }
 
     [Fact]
@@ -77,7 +60,7 @@ public abstract class ApiHealthEndpointTests<TProgram> : IClassFixture<WebApplic
 
         var payload = await response.Content.ReadFromJsonAsync<HealthResponse>();
         Assert.NotNull(payload);
-        Assert.Equal(ExpectedProductKey, payload.Product);
+        Assert.Equal(expectedProductKey, payload.Product);
         Assert.NotNull(payload.Checks);
         Assert.Contains("self", payload.Checks.Keys);
     }

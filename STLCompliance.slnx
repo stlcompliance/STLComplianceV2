@@ -27,6 +27,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/STLCompliance.Health.Tests/STLCompliance.Health.Tests.csproj" />
+    <Project Path="tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj" />
   </Folder>
   <Folder Name="/workers/" />
   <Folder Name="/workers/compliancecore-worker/">
