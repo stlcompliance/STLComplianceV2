@@ -154,6 +154,21 @@ $env:E2E_LIVE = "1"; npm test
 
 Without `E2E_LIVE`: **2 tests skipped** (exit 0). With `E2E_LIVE` but stack down: skipped per `beforeEach` probe.
 
+### Optional DR restore drill (W99)
+
+```powershell
+# Unit checks (CI default)
+dotnet test tests/STLCompliance.Dr.Tests/STLCompliance.Dr.Tests.csproj -c Release --filter "Category=Dr&Category!=Live"
+
+# Live NexArr restore against docker-compose postgres
+docker compose up -d postgres nexarr-api
+$env:DR_LIVE = "1"
+dotnet test tests/STLCompliance.Dr.Tests/STLCompliance.Dr.Tests.csproj -c Release --filter "Category=Dr&Category=Live"
+
+# Operator full drill (backups directory with *.custom|*.dump|*.sql per database)
+./scripts/ops/dr-restore-drill.ps1 -BackupDirectory C:\backups\2026-05-27 -DockerContainerName stlcompliancev2-postgres-1
+```
+
 ### Frontends
 
 ```powershell
@@ -172,9 +187,9 @@ Without `E2E_LIVE`: **2 tests skipped** (exit 0). With `E2E_LIVE` but stack down
 | Platform health | Ready | `GET /api/platform/health` aggregates `/health/ready` (W93) |
 | OpenAPI CI gate | Ready | 7 snapshots, `Category=OpenApi` (W92) |
 | Docker local dev | Ready | `docker-compose.yml` APIs + postgres; frontends via Vite |
-| OTEL / metrics dashboards | Not wired | `OTEL_ENABLED=false` default |
-| Load / SLO | Blocked | No k6/NBomber harness; SLOs undefined |
-| DR / backup restore tests | Open | Managed Postgres backups on Render; no automated restore test |
+| OTEL / metrics dashboards | **Wired** — instrumentation + smoke checks; connect Render `OTEL_EXPORTER_OTLP_ENDPOINT` when backend available |
+| Load / performance | Still blocked — needs SLO definitions |
+| DR / backup restore | **Scripted drill** — `scripts/ops/dr-restore-drill.*`, `STLCompliance.Dr.Tests`, nightly live NexArr restore |
 | Tenant isolation soak | Open | Per-slice deny tests only |
 | STLComplianceSite (marketing) | Not started | M3 backlog |
 
@@ -186,8 +201,8 @@ Without `E2E_LIVE`: **2 tests skipped** (exit 0). With `E2E_LIVE` but stack down
 |------|---------|--------------|
 | **Playwright full pass** | Docker APIs + `suite-frontend` (:5174) + product frontend (:5175+) must run concurrently; not in default `docker-compose` | Add compose profile for static frontends OR document dev script; set `E2E_LIVE=1` in CI nightly |
 | **Load / performance** | No product-owner SLO targets | Define p95 latency/error budgets; add k6/NBomber project |
-| **Metrics / tracing acceptance** | OTEL off; no dashboard validation | Enable OTEL on Render; add smoke checks for exporter |
-| **DR verification** | No automated restore drill | Scripted pg_restore against staging snapshot |
+| **Metrics / tracing acceptance** | OTEL wired (W98); enable exporter on Render for dashboard validation | Enable OTEL on Render; run `scripts/ops/otel-smoke.ps1 -RequireOtelEnabled` |
+| **DR verification** | **Scripted drill (W99)** — restore scripts + validation; nightly live NexArr drill | Run full seven-database drill against staging Render snapshots on schedule |
 | **Tenant soak** | No multi-tenant parallel E2E battery | Add `STLCompliance.E2E` tenant isolation suite |
 | **TrainArr dedicated test project** | Coverage via cross-product tests only | Optional `STLCompliance.TrainArr.Auth.Tests` for parity |
 | **STLComplianceSite** | Out of Arr worker scope | Separate marketing site milestone |
@@ -219,6 +234,7 @@ Without `E2E_LIVE`: **2 tests skipped** (exit 0). With `E2E_LIVE` but stack down
 | W88–W90 | Suite shell, Render V1, Companion inbox |
 | W91–W93 | E2E harness, OpenAPI parity, platform health |
 | W94 | Playwright browser smoke scaffold + this report |
+| W97–W99 | Handoff client dedup, OTEL smoke checks, DR restore drill |
 
 Detailed slice notes: `docs/implementation/worker-slices/W*.md` and `docs/implementation/worker-slices/00_SLICE_STATE.md`.
 

@@ -174,7 +174,8 @@
 | 97 | Shared NexArr handoff client dedup (`StlNexArrHandoffClient` in Shared, remove 6 duplicate clients/contracts, product DI + test wiring, docs) | M13 (partial) | Complete | `75ab4b5` |
 
 | 98 | M13 OTEL smoke checks (`StlOpenTelemetryExtensions`, platform metrics, `/health/observability`, `STLCompliance.Otel.Tests`, `scripts/ops/otel-smoke.ps1`, CI, docs) | M13 (partial) | Complete | `48a6dc0` |
+| 99 | M13 DR restore drill (`StlProductDatabaseCatalog`, `StlDrRestoreDrillValidator`, `scripts/ops/dr-restore-drill.ps1|.sh`, `STLCompliance.Dr.Tests`, nightly live drill, docs) | M13 (partial) | Complete | `pending` |
 
-## Next slice (Worker 99)
+## Next slice (Worker 100)
 
-Recommended: **M13 operational hardening** — DR restore drill script; load-test harness once SLOs exist.
+Recommended: **M13 load-test harness** — k6/NBomber project once product-owner SLO targets are published (currently blocked).

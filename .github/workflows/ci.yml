@@ -32,6 +32,9 @@ jobs:
       - name: OTEL smoke checks
         run: dotnet test tests/STLCompliance.Otel.Tests/STLCompliance.Otel.Tests.csproj --configuration Release --no-build --verbosity normal --filter "Category=Otel"
 
+      - name: DR restore drill checks
+        run: dotnet test tests/STLCompliance.Dr.Tests/STLCompliance.Dr.Tests.csproj --configuration Release --no-build --verbosity normal --filter "Category=Dr&Category!=Live"
+
       - name: EF migrations present
         run: |
           test -f apps/nexarr-api/NexArr.Api/Migrations/*InitialPlatformFoundation*.cs

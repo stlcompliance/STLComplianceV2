@@ -1,6 +1,6 @@
 # Implementation status
 
-Last updated: 2026-05-27 (M13 OTEL smoke checks slice)
+Last updated: 2026-05-27 (M13 DR restore drill slice)
 
 ## Milestone summary
 
@@ -18,27 +18,27 @@ Last updated: 2026-05-27 (M13 OTEL smoke checks slice)
 | M10 — Cross-product qualification gates | In progress (Workers 36–42, 83–87) |
 | M11 — Companion app | Partial (Worker 90) |
 | M12 — Scheduled workers | In progress (Workers 44, 46–51) |
-| M13 — Ship-gate acceptance & hardening | In progress (Workers 91–98) |
+| M13 — Ship-gate acceptance & hardening | In progress (Workers 91–99) |
 
 ## Latest completed slice
 
-**M13 OTEL smoke checks and metrics wiring**
+**M13 DR restore drill script and validation**
 
-- **STLCompliance.Shared**: `StlOpenTelemetryExtensions`, `StlPlatformMetrics`, `/health/observability` via `StlApiHost`
-- **All APIs + workers**: OTEL instrumentation when `OTEL_ENABLED=true`; OTLP or console export
-- **Tests**: `STLCompliance.Otel.Tests` (`Category=Otel`) — 7 API smoke classes + options/worker tests
-- **Ops**: `scripts/ops/otel-smoke.ps1`; CI OTEL step
-- **Docs**: `docs/implementation/worker-slices/W98_M13_OTEL_SMOKE_CHECKS.md`
+- **STLCompliance.Shared**: `StlProductDatabaseCatalog`, `StlDrRestoreDrillSupport`, `StlDrRestoreDrillValidator`
+- **Ops**: `scripts/ops/dr-restore-drill.ps1`, `scripts/ops/dr-restore-drill.sh` (local docker or staging Postgres)
+- **Tests**: `STLCompliance.Dr.Tests` (`Category=Dr`) — catalog/support/validator unit tests; optional live NexArr restore drill (`Category=Live`)
+- **CI**: DR unit step in `ci.yml`; live drill in `e2e-nightly.yml`
+- **Docs**: `docs/implementation/worker-slices/W99_M13_DR_RESTORE_DRILL.md`
 
 ## Build & test status
 
 | Command | Result |
 |---------|--------|
 | `dotnet build STLCompliance.slnx -c Release` | Pass |
-| `dotnet test STLCompliance.slnx -c Release --filter Category!=Live` | Pass (**591**/591) |
-| `dotnet test tests/STLCompliance.E2E/... --filter Area=TenantIsolation&Category=Integration` | Pass (10/10) |
+| `dotnet test STLCompliance.slnx -c Release --filter Category!=Live` | Pass (**637**/637) |
+| `dotnet test tests/STLCompliance.Dr.Tests/... --filter Category=Dr&Category!=Live` | Pass (9/9) |
 
-## M13 ship-gate progress (Workers 91–97)
+## M13 ship-gate progress (Workers 91–99)
 
 | Item | Status | Notes |
 |------|--------|-------|
@@ -50,9 +50,9 @@ Last updated: 2026-05-27 (M13 OTEL smoke checks slice)
 | Nightly live E2E CI | **Complete (W95)** | `.github/workflows/e2e-nightly.yml` |
 | Handoff client dedup | **Complete (W97)** | Shared `StlNexArrHandoffClient` replaces 6 duplicates |
 | OTEL / metrics wiring | **Complete (W98)** | Shared OTEL host wiring, `/health/observability`, `Category=Otel` smoke tests |
+| Recovery / DR verification | **Complete (W99)** | Restore drill scripts + validation + nightly live NexArr drill |
 | Load / performance testing | Blocked | Needs SLO definitions |
-| Recovery / DR verification | Open | No automated backup-restore tests |
 
 ## Next slice
 
-DR restore drill script; load-test harness (after SLOs) — see `docs/implementation/worker-slices/00_SLICE_STATE.md`.
+Load-test harness (k6/NBomber) after product-owner SLO targets — see `docs/implementation/worker-slices/00_SLICE_STATE.md`.
