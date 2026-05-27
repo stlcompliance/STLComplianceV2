@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 104 | M13 authenticated k6 load-test flows | Complete | `pending` |
+| 104 | M13 authenticated k6 load-test flows | Complete | `b2991d0` |
 
 ## Program summary
 
