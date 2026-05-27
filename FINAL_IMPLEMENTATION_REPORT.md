@@ -12,7 +12,7 @@ This report synthesizes platform delivery from Worker 17 through Worker 94, incl
 
 The Arr suite is **functionally complete at the API and integration layer** across seven product APIs, eight React frontends (suite + six products + companion), shared workers, NexArr platform spine, and Render V1 Blueprint infrastructure. **575 automated .NET tests** pass in Release configuration (excluding optional `Category=Live` probes). Cross-product journeys are covered by `STLCompliance.E2E` integration tests and OpenAPI snapshot parity gates.
 
-**Remaining ship-gate items** are environmental or operational: live browser E2E against a running docker + Vite stack, load/SLO validation, DR/backup automation, and multi-tenant soak testing. A Playwright harness exists (`tests/e2e-playwright`) and **skips cleanly** when `E2E_LIVE` is unset or services are down.
+**Remaining ship-gate items** are environmental or operational: live browser E2E full nightly pass (harness expanded W101), load/SLO validation (blocked on PO SLOs), seven-database DR nightly drill, and multi-tenant soak testing. A Playwright harness exists (`tests/e2e-playwright`) with **compose e2e profile** and six-product handoff smokes; tests **skip cleanly** when `E2E_LIVE` is unset or services are down.
 
 ---
 
@@ -143,16 +143,18 @@ $env:E2E_LIVE = "1"
 dotnet test tests/STLCompliance.E2E/STLCompliance.E2E.csproj -c Release --filter "Category=Live"
 ```
 
-### Browser E2E (Playwright, W94)
+### Browser E2E (Playwright, W94 + W101)
 
 ```powershell
-# APIs + suite dev server required
-cd apps/suite-frontend; npm run dev   # :5174
+./scripts/ops/e2e-stack-up.ps1
+./scripts/ops/e2e-frontends-preview.ps1
 cd tests/e2e-playwright; npm install; npx playwright install chromium
 $env:E2E_LIVE = "1"; npm test
 ```
 
-Without `E2E_LIVE`: **2 tests skipped** (exit 0). With `E2E_LIVE` but stack down: skipped per `beforeEach` probe.
+Optional full containerized frontends: `./scripts/ops/e2e-stack-up.ps1 -BuildFrontends` (uses `docker-compose.e2e.yml` profile `e2e`).
+
+Without `E2E_LIVE`: all specs skipped (exit 0). With `E2E_LIVE` but stack down: skipped per `beforeEach` / per-product probes.
 
 ### Optional DR restore drill (W99)
 
@@ -214,7 +216,7 @@ dotnet test tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj -c Re
 
 | Item | Blocker | Unblock path |
 |------|---------|--------------|
-| **Playwright full pass** | Docker APIs + `suite-frontend` (:5174) + product frontend (:5175+) must run concurrently; not in default `docker-compose` | Add compose profile for static frontends OR document dev script; set `E2E_LIVE=1` in CI nightly |
+| **Playwright full pass** | Harness + compose e2e profile (W101); nightly starts all previews via `e2e-frontends-preview.sh` | Run nightly workflow; fix flaky handoff tests if any product seed/entitlement gaps |
 | **Load / performance** | Engineering-default SLO harness (W100) — replace thresholds when PO publishes SLO document | Product owners publish SLO targets; extend k6 to authenticated flows |
 | **Metrics / tracing acceptance** | OTEL wired (W98); enable exporter on Render for dashboard validation | Enable OTEL on Render; run `scripts/ops/otel-smoke.ps1 -RequireOtelEnabled` |
 | **DR verification** | **Scripted drill (W99)** — restore scripts + validation; nightly live NexArr drill | Run full seven-database drill against staging Render snapshots on schedule |
@@ -249,7 +251,7 @@ dotnet test tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj -c Re
 | W88–W90 | Suite shell, Render V1, Companion inbox |
 | W91–W93 | E2E harness, OpenAPI parity, platform health |
 | W94 | Playwright browser smoke scaffold + this report |
-| W97–W100 | Handoff client dedup, OTEL smoke checks, DR restore drill, load-test harness |
+| W97–W101 | Handoff client dedup, OTEL smoke checks, DR restore drill, load-test harness, Playwright compose e2e profile |
 
 Detailed slice notes: `docs/implementation/worker-slices/W*.md` and `docs/implementation/worker-slices/00_SLICE_STATE.md`.
 

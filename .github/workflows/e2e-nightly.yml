@@ -94,7 +94,7 @@ jobs:
   playwright-smoke:
     runs-on: ubuntu-latest
     needs: live-api-e2e
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -106,24 +106,19 @@ jobs:
           cache-dependency-path: |
             apps/suite-frontend/package-lock.json
             apps/staffarr-frontend/package-lock.json
+            apps/trainarr-frontend/package-lock.json
+            apps/compliancecore-frontend/package-lock.json
+            apps/maintainarr-frontend/package-lock.json
+            apps/supplyarr-frontend/package-lock.json
+            apps/routarr-frontend/package-lock.json
 
       - name: Start docker-compose APIs
         run: |
-          docker compose up -d --build postgres nexarr-api staffarr-api
-          for i in $(seq 1 60); do
-            if curl -sf http://localhost:5101/health >/dev/null; then
-              exit 0
-            fi
-            sleep 5
-          done
-          exit 1
+          chmod +x scripts/ops/e2e-stack-up.sh scripts/ops/e2e-frontends-preview.sh
+          ./scripts/ops/e2e-stack-up.sh --apis-only
 
-      - name: Install and build frontends
-        env:
-          VITE_NEXARR_API_URL: http://127.0.0.1:5101
-        run: |
-          cd apps/suite-frontend && npm ci && npm run build
-          cd ../staffarr-frontend && npm ci && npm run build
+      - name: Start all product frontend previews
+        run: ./scripts/ops/e2e-frontends-preview.sh
 
       - name: Install Playwright
         working-directory: tests/e2e-playwright
@@ -134,12 +129,9 @@ jobs:
       - name: Run Playwright smoke
         env:
           E2E_LIVE: "1"
-        run: |
-          cd apps/suite-frontend && npm run preview -- --host 127.0.0.1 --port 5174 &
-          cd ../staffarr-frontend && npm run preview -- --host 127.0.0.1 --port 5175 &
-          sleep 8
-          cd ../../tests/e2e-playwright
-          npm test
+          E2E_SUITE_URL: http://127.0.0.1:5174
+        working-directory: tests/e2e-playwright
+        run: npm test
 
       - name: Tear down
         if: always()

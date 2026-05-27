@@ -15,6 +15,16 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    port: 5174,
+    host: true,
+    proxy: {
+      '/api': {
+        target: nexarrTarget,
+        changeOrigin: true,
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],

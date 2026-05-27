@@ -11,6 +11,7 @@ TestResults/
 # Node (future frontends)
 node_modules/
 dist/
+.e2e-preview-logs/
 .env
 .env.local
 

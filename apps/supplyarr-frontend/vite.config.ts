@@ -15,6 +15,16 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    port: 5179,
+    host: true,
+    proxy: {
+      '/api': {
+        target: supplyarrApiTarget,
+        changeOrigin: true,
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],

@@ -1,0 +1,116 @@
+# Browser E2E overlay — use with base compose:
+#   docker compose -f docker-compose.yml -f docker-compose.e2e.yml --profile e2e up -d
+# APIs use default services from docker-compose.yml; this file adds Vite preview frontends on 5174–5180.
+
+x-frontend-e2e: &frontend-e2e
+  profiles: [e2e]
+  build:
+    context: .
+    dockerfile: docker/Dockerfile.frontend-e2e
+  restart: unless-stopped
+
+services:
+  suite-frontend-e2e:
+    <<: *frontend-e2e
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-e2e
+      args:
+        FRONTEND_APP: suite-frontend
+        PREVIEW_PORT: 5174
+        API_PROXY_TARGET: http://nexarr-api:8080
+    ports:
+      - "5174:5174"
+    depends_on:
+      nexarr-api:
+        condition: service_started
+
+  staffarr-frontend-e2e:
+    <<: *frontend-e2e
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-e2e
+      args:
+        FRONTEND_APP: staffarr-frontend
+        PREVIEW_PORT: 5175
+        API_PROXY_TARGET: http://staffarr-api:8080
+    ports:
+      - "5175:5175"
+    depends_on:
+      staffarr-api:
+        condition: service_started
+
+  trainarr-frontend-e2e:
+    <<: *frontend-e2e
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-e2e
+      args:
+        FRONTEND_APP: trainarr-frontend
+        PREVIEW_PORT: 5176
+        API_PROXY_TARGET: http://trainarr-api:8080
+    ports:
+      - "5176:5176"
+    depends_on:
+      trainarr-api:
+        condition: service_started
+
+  compliancecore-frontend-e2e:
+    <<: *frontend-e2e
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-e2e
+      args:
+        FRONTEND_APP: compliancecore-frontend
+        PREVIEW_PORT: 5177
+        API_PROXY_TARGET: http://compliancecore-api:8080
+    ports:
+      - "5177:5177"
+    depends_on:
+      compliancecore-api:
+        condition: service_started
+
+  maintainarr-frontend-e2e:
+    <<: *frontend-e2e
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-e2e
+      args:
+        FRONTEND_APP: maintainarr-frontend
+        PREVIEW_PORT: 5178
+        API_PROXY_TARGET: http://maintainarr-api:8080
+    ports:
+      - "5178:5178"
+    depends_on:
+      maintainarr-api:
+        condition: service_started
+
+  supplyarr-frontend-e2e:
+    <<: *frontend-e2e
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-e2e
+      args:
+        FRONTEND_APP: supplyarr-frontend
+        PREVIEW_PORT: 5179
+        API_PROXY_TARGET: http://supplyarr-api:8080
+    ports:
+      - "5179:5179"
+    depends_on:
+      supplyarr-api:
+        condition: service_started
+
+  routarr-frontend-e2e:
+    <<: *frontend-e2e
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-e2e
+      args:
+        FRONTEND_APP: routarr-frontend
+        PREVIEW_PORT: 5180
+        API_PROXY_TARGET: http://routarr-api:8080
+    ports:
+      - "5180:5180"
+    depends_on:
+      routarr-api:
+        condition: service_started

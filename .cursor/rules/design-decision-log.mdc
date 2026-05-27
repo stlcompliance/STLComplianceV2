@@ -1,0 +1,50 @@
+---
+description: Suite architecture from docs/24_DESIGN_DECISION_LOG.md — boundaries, stack, and ownership
+alwaysApply: true
+---
+
+# Design Decision Log (Adaptive Risk Reduction)
+
+ARR means **Adaptive Risk Reduction** (not maintenance-only). The suite spans workforce, training, assets, dispatch, supply, and compliance authority.
+
+## V1 and ownership
+
+- Every product ships in V1 with a **real API, worker, database, and UI** — no domain absorption into another product’s schema or service.
+- **NexArr**: control plane — login, tenants, entitlement, licensing, launch, service authority.
+- **StaffArr**: workforce backbone — who someone is, org, permissions, readiness.
+- **Compliance Core**: authority layer — vocabulary, keys, mappings, rule context (not product workflows).
+
+## Data and integration
+
+- **Separate PostgreSQL per product**; no cross-product foreign keys.
+- Connect products via **APIs and events**, plus local mirror/reference tables — never DB constraints across services.
+
+```csharp
+// ❌ BAD — cross-product FK
+model.WorkOrder { public int SupplyArrPartId { get; set; } } // FK to SupplyArr DB
+
+// ✅ GOOD — local mirror + API/event
+model.WorkOrderPartLine {
+  public string SourceProduct { get; set; } = "SupplyArr";
+  public Guid SourcePartId { get; set; }
+  public DateTimeOffset SourceUpdatedAt { get; set; }
+}
+```
+
+## Stack
+
+- **Render first**: static sites, web services, workers, PostgreSQL, Redis-compatible Key Value; define in `render.yaml`.
+- **Docker** for .NET 10 APIs and workers.
+- **React + Vite** for suite shell, product UIs, marketing site.
+- **Lucide React** for icons (stroke set, consistent imports).
+
+## Product boundary decisions
+
+| Area | Owner | Do not |
+|------|--------|--------|
+| Procurement (vendors, PR/PO, receiving, inventory, pricing, lead times) | SupplyArr | Put in MaintainArr |
+| Driver as a person; qualification/readiness | StaffArr (+ TrainArr for training proof) | Treat as RoutArr-owned identity |
+| Training proof, completions, recertification | TrainArr → publish to StaffArr | Duplicate readiness truth in TrainArr |
+| Operational workflow and decisions | Each product API | Replace with Compliance Core workflows |
+
+Compliance Core supplies **rule context and results**; products own **facts, workflow actions, and overrides** (with permission + audit).

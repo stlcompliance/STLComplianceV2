@@ -1,6 +1,13 @@
+import { handoffProductFrontends } from './productFrontends.js'
+
 const productApis: Record<string, string> = {
   nexarr: process.env.E2E_NEXARR_URL ?? 'http://localhost:5101',
   staffarr: process.env.E2E_STAFFARR_URL ?? 'http://localhost:5102',
+  trainarr: process.env.E2E_TRAINARR_URL ?? 'http://localhost:5103',
+  maintainarr: process.env.E2E_MAINTAINARR_URL ?? 'http://localhost:5104',
+  routarr: process.env.E2E_ROUTARR_URL ?? 'http://localhost:5105',
+  supplyarr: process.env.E2E_SUPPLYARR_URL ?? 'http://localhost:5106',
+  compliancecore: process.env.E2E_COMPLIANCECORE_URL ?? 'http://localhost:5107',
 }
 
 export function isLiveModeEnabled(): boolean {
@@ -25,10 +32,30 @@ export async function isHttpOk(url: string, path = '/health'): Promise<boolean> 
   }
 }
 
+export async function isSuiteFrontendReachable(): Promise<boolean> {
+  return isHttpOk(suiteBaseUrl(), '/')
+}
+
 export async function isLiveStackReachable(): Promise<boolean> {
-  const suiteOk = await isHttpOk(suiteBaseUrl(), '/')
+  const suiteOk = await isSuiteFrontendReachable()
   const nexarrOk = await isHttpOk(productApis.nexarr, '/health')
   return suiteOk && nexarrOk
+}
+
+export async function isHandoffFrontendReachable(productKey: string): Promise<boolean> {
+  const frontend = handoffProductFrontends.find((p) => p.productKey === productKey)
+  if (!frontend) {
+    return false
+  }
+
+  return isHttpOk(frontend.baseUrl, '/')
+}
+
+export async function areAllHandoffFrontendsReachable(): Promise<boolean> {
+  const checks = await Promise.all(
+    handoffProductFrontends.map((p) => isHandoffFrontendReachable(p.productKey)),
+  )
+  return checks.every(Boolean)
 }
 
 export const demoCredentials = {
@@ -36,4 +63,12 @@ export const demoCredentials = {
   password: process.env.E2E_DEMO_PASSWORD ?? 'ChangeMe!Demo2026',
   tenantId:
     process.env.E2E_DEMO_TENANT_ID ?? '11111111-1111-1111-1111-111111111101',
+}
+
+export async function signInFromSuite(page: import('@playwright/test').Page): Promise<void> {
+  await page.goto('/login')
+  await page.getByLabel('Email').fill(demoCredentials.email)
+  await page.getByLabel('Password').fill(demoCredentials.password)
+  await page.getByRole('button', { name: 'Sign in' }).click()
+  await page.getByRole('heading', { name: /Welcome,/ }).waitFor({ timeout: 15_000 })
 }
