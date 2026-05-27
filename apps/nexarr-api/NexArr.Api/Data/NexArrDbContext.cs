@@ -14,6 +14,8 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
     public DbSet<ProductCatalogItem> ProductCatalog => Set<ProductCatalogItem>();
     public DbSet<TenantProductEntitlement> Entitlements => Set<TenantProductEntitlement>();
     public DbSet<PlatformAuditEvent> AuditEvents => Set<PlatformAuditEvent>();
+    public DbSet<ServiceClient> ServiceClients => Set<ServiceClient>();
+    public DbSet<ServiceTokenRecord> ServiceTokens => Set<ServiceTokenRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -96,6 +98,32 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.Property(x => x.ReasonCode).HasMaxLength(64);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => x.OccurredAt);
+        });
+
+        modelBuilder.Entity<ServiceClient>(entity =>
+        {
+            entity.ToTable("service_clients");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ClientKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DisplayName).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SourceProductKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.AllowedProductKeys).HasMaxLength(512).IsRequired();
+            entity.HasIndex(x => x.ClientKey).IsUnique();
+            entity.HasOne(x => x.SourceProduct).WithMany().HasForeignKey(x => x.SourceProductKey);
+        });
+
+        modelBuilder.Entity<ServiceTokenRecord>(entity =>
+        {
+            entity.ToTable("service_tokens");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Jti).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TokenHash).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.AllowedProductKeys).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.ActionScope).HasMaxLength(128);
+            entity.HasIndex(x => x.Jti).IsUnique();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.ExpiresAt);
+            entity.HasOne(x => x.ServiceClient).WithMany(x => x.Tokens).HasForeignKey(x => x.ServiceClientId);
         });
     }
 }

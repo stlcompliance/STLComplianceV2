@@ -27,4 +27,21 @@ public static class ClaimsPrincipalExtensions
 
         return tenantId;
     }
+
+    public static bool IsPlatformAdmin(this ClaimsPrincipal principal) =>
+        bool.TryParse(principal.FindFirstValue(StlClaimTypes.PlatformAdmin), out var isAdmin) && isAdmin;
+
+    public static IReadOnlyList<string> GetEntitlements(this ClaimsPrincipal principal)
+    {
+        var raw = principal.FindFirstValue(StlClaimTypes.Entitlements);
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return [];
+        }
+
+        return raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
+
+    public static bool HasProductEntitlement(this ClaimsPrincipal principal, string productKey) =>
+        principal.IsPlatformAdmin() || principal.GetEntitlements().Contains(productKey, StringComparer.OrdinalIgnoreCase);
 }

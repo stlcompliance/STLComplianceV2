@@ -14,6 +14,12 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IPlatformAuditService, PlatformAuditService>();
         builder.Services.AddScoped<AuthService>();
+        builder.Services.AddScoped<PlatformAuthorizationService>();
+        builder.Services.AddScoped<TenantAdminService>();
+        builder.Services.AddScoped<ProductCatalogService>();
+        builder.Services.AddScoped<EntitlementAdminService>();
+        builder.Services.AddScoped<ServiceTokenAdminService>();
+        builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
     }
 
     public static async Task InitializeAsync(WebApplication app)

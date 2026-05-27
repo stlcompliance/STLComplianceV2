@@ -9,7 +9,10 @@ public static class PlatformSeeder
     public static readonly Guid DemoTenantId = Guid.Parse("11111111-1111-1111-1111-111111111101");
     public static readonly Guid DemoAdminUserId = Guid.Parse("22222222-2222-2222-2222-222222222201");
 
+    public static readonly Guid DemoTenantAdminUserId = Guid.Parse("22222222-2222-2222-2222-222222222202");
+
     public const string DemoAdminEmail = "admin@demo.stl";
+    public const string DemoTenantAdminEmail = "tenant-admin@demo.stl";
     public const string DemoAdminPassword = "ChangeMe!Demo2026";
 
     private static readonly (string Key, string Name, int Order)[] Products =
@@ -76,6 +79,33 @@ public static class PlatformSeeder
             TenantId = DemoTenantId,
             UserId = DemoAdminUserId,
             RoleKey = "platform_admin",
+            IsActive = true,
+            CreatedAt = now
+        });
+
+        db.Users.Add(new PlatformUser
+        {
+            Id = DemoTenantAdminUserId,
+            Email = DemoTenantAdminEmail,
+            DisplayName = "Demo Tenant Admin",
+            IsActive = true,
+            IsPlatformAdmin = false,
+            CreatedAt = now,
+            ModifiedAt = now,
+            Credential = new UserCredential
+            {
+                UserId = DemoTenantAdminUserId,
+                PasswordHash = passwordHasher.Hash(DemoAdminPassword),
+                PasswordChangedAt = now
+            }
+        });
+
+        db.TenantMemberships.Add(new TenantMembership
+        {
+            Id = Guid.Parse("33333333-3333-3333-3333-333333333302"),
+            TenantId = DemoTenantId,
+            UserId = DemoTenantAdminUserId,
+            RoleKey = "tenant_admin",
             IsActive = true,
             CreatedAt = now
         });
