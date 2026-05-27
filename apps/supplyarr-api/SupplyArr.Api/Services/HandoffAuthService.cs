@@ -1,11 +1,12 @@
 using SupplyArr.Api.Contracts;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
 
 namespace SupplyArr.Api.Services;
 
 public sealed class HandoffAuthService(
-    NexArrHandoffClient nexArrHandoff,
+    StlNexArrHandoffClient nexArrHandoff,
     SupplyArrTokenService tokenService)
 {
     private const string ProductKey = "supplyarr";

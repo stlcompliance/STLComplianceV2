@@ -1,3 +1,4 @@
+using STLCompliance.Shared.Integration;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -122,7 +123,7 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
                 services.AddDbContext<global::StaffArr.Api.Data.StaffArrDbContext>(options =>
                     options.UseInMemoryDatabase(staffArrDbName));
 
-                services.AddHttpClient<global::StaffArr.Api.Services.NexArrHandoffClient>()
+                services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
             });
         });

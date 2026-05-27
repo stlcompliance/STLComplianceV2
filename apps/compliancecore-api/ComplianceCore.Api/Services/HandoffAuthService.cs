@@ -1,11 +1,12 @@
 using ComplianceCore.Api.Contracts;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
 
 namespace ComplianceCore.Api.Services;
 
 public sealed class HandoffAuthService(
-    NexArrHandoffClient nexArrHandoff,
+    StlNexArrHandoffClient nexArrHandoff,
     ComplianceCoreTokenService tokenService)
 {
     private const string ProductKey = "compliancecore";

@@ -1,8 +1,8 @@
-namespace SupplyArr.Api.Contracts;
+namespace STLCompliance.Shared.Integration;
 
-public sealed record NexArrRedeemHandoffRequest(string HandoffCode, string? ServiceToken);
+public sealed record StlNexArrRedeemHandoffRequest(string HandoffCode, string? ServiceToken);
 
-public sealed record NexArrHandoffRedeemedResponse(
+public sealed record StlNexArrHandoffRedeemedResponse(
     Guid UserId,
     string Email,
     string DisplayName,

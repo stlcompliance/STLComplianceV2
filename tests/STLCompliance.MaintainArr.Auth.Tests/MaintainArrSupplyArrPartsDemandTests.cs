@@ -1,3 +1,4 @@
+using STLCompliance.Shared.Integration;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -99,7 +100,7 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
                 RemoveDbContext<MaintainArrDbContext>(services);
                 services.AddDbContext<MaintainArrDbContext>(options => options.UseInMemoryDatabase(maintainArrDbName));
 
-                services.AddHttpClient<global::MaintainArr.Api.Services.NexArrHandoffClient>()
+                services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
                 services.AddHttpClient<SupplyArrDemandClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => supplyarrFactoryRef!.Server.CreateHandler());
@@ -122,7 +123,7 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
                 RemoveDbContext<SupplyArrDbContext>(services);
                 services.AddDbContext<SupplyArrDbContext>(options => options.UseInMemoryDatabase(supplyArrDbName));
 
-                services.AddHttpClient<SupplyArr.Api.Services.NexArrHandoffClient>()
+                services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
                 services.AddHttpClient<MaintainArrDemandStatusClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _maintainarrFactory.Server.CreateHandler());

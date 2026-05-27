@@ -1,3 +1,4 @@
+using STLCompliance.Shared.Integration;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
@@ -64,7 +65,7 @@ public sealed class RoutArrDispatchCloseoutTests : IAsyncLifetime
                 RemoveDbContext<RoutArrDbContext>(services);
                 services.AddDbContext<RoutArrDbContext>(options => options.UseInMemoryDatabase(routArrDbName));
 
-                services.AddHttpClient<NexArrHandoffClient>()
+                services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
             });
         });

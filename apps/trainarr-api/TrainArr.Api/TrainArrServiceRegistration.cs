@@ -4,6 +4,8 @@ using TrainArr.Api.Services;
 
 using STLCompliance.Shared.Auth;
 
+using STLCompliance.Shared.Integration;
+
 
 
 namespace TrainArr.Api;
@@ -92,15 +94,7 @@ public static class TrainArrServiceRegistration
 
         });
 
-        builder.Services.AddHttpClient<NexArrHandoffClient>((sp, client) =>
-
-        {
-
-            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NexArrClientOptions>>().Value;
-
-            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
-
-        });
+        builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
         builder.Services.AddScoped<TrainArrTokenService>();
 

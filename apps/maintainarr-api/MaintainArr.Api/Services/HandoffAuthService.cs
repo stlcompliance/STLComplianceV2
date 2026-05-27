@@ -1,11 +1,12 @@
 using MaintainArr.Api.Contracts;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
 
 namespace MaintainArr.Api.Services;
 
 public sealed class HandoffAuthService(
-    NexArrHandoffClient nexArrHandoff,
+    StlNexArrHandoffClient nexArrHandoff,
     MaintainArrTokenService tokenService)
 {
     private const string ProductKey = "maintainarr";

@@ -1,11 +1,12 @@
 using StaffArr.Api.Contracts;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
 
 namespace StaffArr.Api.Services;
 
 public sealed class HandoffAuthService(
-    NexArrHandoffClient nexArrHandoff,
+    StlNexArrHandoffClient nexArrHandoff,
     StaffArrTokenService tokenService,
     PersonProvisioningService personProvisioning)
 {

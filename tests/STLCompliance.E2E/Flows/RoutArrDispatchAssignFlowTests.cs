@@ -1,3 +1,4 @@
+using STLCompliance.Shared.Integration;
 using System.Net;
 using System.Net.Http.Json;
 using ComplianceCore.Api.Contracts;
@@ -90,7 +91,7 @@ public sealed class RoutArrDispatchAssignFlowTests : IAsyncLifetime
             {
                 RemoveDbContext<RoutArrDbContext>(services);
                 services.AddDbContext<RoutArrDbContext>(options => options.UseInMemoryDatabase(routArrDbName));
-                services.AddHttpClient<global::RoutArr.Api.Services.NexArrHandoffClient>()
+                services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarr.Factory.Server.CreateHandler());
                 services.AddHttpClient<ComplianceCoreWorkflowGateClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _complianceCoreFactory.Server.CreateHandler());

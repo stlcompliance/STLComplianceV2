@@ -1,3 +1,4 @@
+using STLCompliance.Shared.Integration;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -43,7 +44,7 @@ public sealed class StaffArrReadinessFlowTests : IAsyncLifetime
             {
                 RemoveDbContext<StaffArrDbContext>(services);
                 services.AddDbContext<StaffArrDbContext>(options => options.UseInMemoryDatabase(staffArrDbName));
-                services.AddHttpClient<NexArrHandoffClient>()
+                services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarr.Factory.Server.CreateHandler());
             });
         });

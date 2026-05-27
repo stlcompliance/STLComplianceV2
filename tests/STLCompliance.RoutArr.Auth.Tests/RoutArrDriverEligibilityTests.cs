@@ -1,3 +1,4 @@
+using STLCompliance.Shared.Integration;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -100,7 +101,7 @@ public sealed class RoutArrDriverEligibilityTests : IAsyncLifetime
                 RemoveDbContext<RoutArrDbContext>(services);
                 services.AddDbContext<RoutArrDbContext>(options => options.UseInMemoryDatabase(routArrDbName));
 
-                services.AddHttpClient<NexArrHandoffClient>()
+                services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
                 services.AddHttpClient<StaffArrReadinessClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());

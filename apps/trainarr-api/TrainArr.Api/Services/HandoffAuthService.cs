@@ -1,11 +1,12 @@
 using TrainArr.Api.Contracts;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
 
 namespace TrainArr.Api.Services;
 
 public sealed class HandoffAuthService(
-    NexArrHandoffClient nexArrHandoff,
+    StlNexArrHandoffClient nexArrHandoff,
     TrainArrTokenService tokenService)
 {
     private const string ProductKey = "trainarr";

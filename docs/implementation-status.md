@@ -1,6 +1,6 @@
 # Implementation status
 
-Last updated: 2026-05-27 (M13 SupplyArr tenant isolation E2E slice)
+Last updated: 2026-05-27 (Shared NexArr handoff client dedup slice)
 
 ## Milestone summary
 
@@ -18,16 +18,16 @@ Last updated: 2026-05-27 (M13 SupplyArr tenant isolation E2E slice)
 | M10 — Cross-product qualification gates | In progress (Workers 36–42, 83–87) |
 | M11 — Companion app | Partial (Worker 90) |
 | M12 — Scheduled workers | In progress (Workers 44, 46–51) |
-| M13 — Ship-gate acceptance & hardening | In progress (Workers 91–96) |
+| M13 — Ship-gate acceptance & hardening | In progress (Workers 91–97) |
 
 ## Latest completed slice
 
-**M13 SupplyArr tenant isolation E2E battery**
+**Shared NexArr handoff client dedup**
 
-- **TenantIsolationFlowTests**: 3 new SupplyArr tests (cross-tenant GET 404, list scoping, MaintainArr demand ingest 403)
-- **TenantIsolationLiveTests**: live SupplyArr cross-tenant vendor GET probe (opt-in `E2E_LIVE`)
-- **E2EAccessTokenHelper.SupplyArr** + `SupplyArr.Api` project reference
-- **Docs**: `docs/implementation/worker-slices/W96_M13_SUPPLYARR_TENANT_ISOLATION_E2E.md`
+- **STLCompliance.Shared**: `StlNexArrHandoffClient`, redeem contracts, `AddStlNexArrHandoffClient` DI extension
+- **6 product APIs**: removed duplicate `NexArrHandoffClient` + `NexArrLaunchContracts`; wired shared client in service registration and `HandoffAuthService`
+- **Tests**: auth + E2E test hosts updated to register `StlNexArrHandoffClient`
+- **Docs**: `docs/implementation/worker-slices/W97_SHARED_NEXARR_HANDOFF_CLIENT_DEDUP.md`
 
 ## Build & test status
 
@@ -37,7 +37,7 @@ Last updated: 2026-05-27 (M13 SupplyArr tenant isolation E2E slice)
 | `dotnet test STLCompliance.slnx -c Release --filter Category!=Live` | Pass (**591**/591) |
 | `dotnet test tests/STLCompliance.E2E/... --filter Area=TenantIsolation&Category=Integration` | Pass (10/10) |
 
-## M13 ship-gate progress (Workers 91–96)
+## M13 ship-gate progress (Workers 91–97)
 
 | Item | Status | Notes |
 |------|--------|-------|
@@ -47,6 +47,7 @@ Last updated: 2026-05-27 (M13 SupplyArr tenant isolation E2E slice)
 | Playwright browser E2E | Scaffolded (W94) | Nightly workflow runs preview + smoke |
 | Tenant isolation soak | **Complete (W95–96)** | Integration battery covers all 7 product APIs |
 | Nightly live E2E CI | **Complete (W95)** | `.github/workflows/e2e-nightly.yml` |
+| Handoff client dedup | **Complete (W97)** | Shared `StlNexArrHandoffClient` replaces 6 duplicates |
 | Load / performance testing | Blocked | Needs SLO definitions |
 | Recovery / DR verification | Open | No automated backup-restore tests |
 | OTEL / metrics dashboards | Open | Not wired |

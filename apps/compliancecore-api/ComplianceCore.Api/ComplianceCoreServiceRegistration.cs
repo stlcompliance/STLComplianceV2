@@ -1,6 +1,7 @@
 using ComplianceCore.Api.Options;
 using ComplianceCore.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Integration;
 
 namespace ComplianceCore.Api;
 
@@ -13,11 +14,7 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
         builder.Services.AddSingleton<StlServiceTokenValidator>();
 
-        builder.Services.AddHttpClient<NexArrHandoffClient>((sp, client) =>
-        {
-            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NexArrClientOptions>>().Value;
-            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
-        });
+        builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
         builder.Services.AddScoped<ComplianceCoreTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();

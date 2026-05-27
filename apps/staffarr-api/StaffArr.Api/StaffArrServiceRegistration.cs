@@ -1,6 +1,7 @@
 using StaffArr.Api.Options;
 using StaffArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Integration;
 
 namespace StaffArr.Api;
 
@@ -12,11 +13,7 @@ public static class StaffArrServiceRegistration
         builder.Services.Configure<HandoffOptions>(builder.Configuration.GetSection(HandoffOptions.SectionName));
         builder.Services.Configure<TrainArrClientOptions>(builder.Configuration.GetSection(TrainArrClientOptions.SectionName));
 
-        builder.Services.AddHttpClient<NexArrHandoffClient>((sp, client) =>
-        {
-            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NexArrClientOptions>>().Value;
-            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
-        });
+        builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
         builder.Services.AddScoped<StaffArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();

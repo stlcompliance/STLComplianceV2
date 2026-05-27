@@ -1,3 +1,4 @@
+using STLCompliance.Shared.Integration;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -87,7 +88,7 @@ public sealed class RoutArrAssetDispatchabilityTests : IAsyncLifetime
                 RemoveDbContext<MaintainArrDbContext>(services);
                 services.AddDbContext<MaintainArrDbContext>(options => options.UseInMemoryDatabase(maintainArrDbName));
 
-                services.AddHttpClient<global::MaintainArr.Api.Services.NexArrHandoffClient>()
+                services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
             });
         });
@@ -114,7 +115,7 @@ public sealed class RoutArrAssetDispatchabilityTests : IAsyncLifetime
                 RemoveDbContext<RoutArrDbContext>(services);
                 services.AddDbContext<RoutArrDbContext>(options => options.UseInMemoryDatabase(routArrDbName));
 
-                services.AddHttpClient<global::RoutArr.Api.Services.NexArrHandoffClient>()
+                services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
                 services.AddHttpClient<MaintainArrAssetReadinessClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _maintainarrFactory.Server.CreateHandler());

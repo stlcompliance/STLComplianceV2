@@ -1,3 +1,4 @@
+using STLCompliance.Shared.Integration;
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
@@ -50,7 +51,7 @@ public sealed class NexArrHandoffFlowTests : IAsyncLifetime
             {
                 RemoveDbContext<StaffArrDbContext>(services);
                 services.AddDbContext<StaffArrDbContext>(options => options.UseInMemoryDatabase(staffArrDbName));
-                services.AddHttpClient<StaffArr.Api.Services.NexArrHandoffClient>()
+                services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarr.Factory.Server.CreateHandler());
             });
         });
@@ -69,7 +70,7 @@ public sealed class NexArrHandoffFlowTests : IAsyncLifetime
             {
                 RemoveDbContext<RoutArrDbContext>(services);
                 services.AddDbContext<RoutArrDbContext>(options => options.UseInMemoryDatabase(routArrDbName));
-                services.AddHttpClient<global::RoutArr.Api.Services.NexArrHandoffClient>()
+                services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarr.Factory.Server.CreateHandler());
             });
         });

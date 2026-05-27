@@ -1,6 +1,7 @@
 using RoutArr.Api.Options;
 using RoutArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Integration;
 
 namespace RoutArr.Api;
 
@@ -18,11 +19,7 @@ public static class RoutArrServiceRegistration
         builder.Services.Configure<ComplianceCoreClientOptions>(builder.Configuration.GetSection(ComplianceCoreClientOptions.SectionName));
         builder.Services.Configure<DispatchWorkflowGateOptions>(builder.Configuration.GetSection(DispatchWorkflowGateOptions.SectionName));
 
-        builder.Services.AddHttpClient<NexArrHandoffClient>((sp, client) =>
-        {
-            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NexArrClientOptions>>().Value;
-            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
-        });
+        builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
         builder.Services.AddHttpClient<TrainArrQualificationCheckClient>((sp, client) =>
         {

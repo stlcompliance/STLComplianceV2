@@ -1,3 +1,4 @@
+using STLCompliance.Shared.Integration;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -61,7 +62,7 @@ public sealed class MaintainArrPmProgramTests : IAsyncLifetime
                 RemoveDbContext<MaintainArrDbContext>(services);
                 services.AddDbContext<MaintainArrDbContext>(options => options.UseInMemoryDatabase(maintainArrDbName));
 
-                services.AddHttpClient<NexArrHandoffClient>()
+                services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
             });
         });

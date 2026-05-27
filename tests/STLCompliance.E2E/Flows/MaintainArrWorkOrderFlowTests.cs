@@ -1,3 +1,4 @@
+using STLCompliance.Shared.Integration;
 using System.Net.Http.Json;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
@@ -44,7 +45,7 @@ public sealed class MaintainArrWorkOrderFlowTests : IAsyncLifetime
             {
                 RemoveDbContext<MaintainArrDbContext>(services);
                 services.AddDbContext<MaintainArrDbContext>(options => options.UseInMemoryDatabase(maintainArrDbName));
-                services.AddHttpClient<NexArrHandoffClient>()
+                services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarr.Factory.Server.CreateHandler());
             });
         });

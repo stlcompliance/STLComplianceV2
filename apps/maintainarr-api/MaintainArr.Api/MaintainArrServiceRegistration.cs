@@ -1,6 +1,7 @@
 using MaintainArr.Api.Options;
 using MaintainArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Integration;
 
 namespace MaintainArr.Api;
 
@@ -11,11 +12,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.Configure<NexArrClientOptions>(builder.Configuration.GetSection(NexArrClientOptions.SectionName));
         builder.Services.Configure<HandoffOptions>(builder.Configuration.GetSection(HandoffOptions.SectionName));
 
-        builder.Services.AddHttpClient<NexArrHandoffClient>((sp, client) =>
-        {
-            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NexArrClientOptions>>().Value;
-            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
-        });
+        builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
         builder.Services.AddScoped<MaintainArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();

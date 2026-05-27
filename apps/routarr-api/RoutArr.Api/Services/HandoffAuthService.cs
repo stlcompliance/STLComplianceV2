@@ -1,11 +1,12 @@
 using RoutArr.Api.Contracts;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
 
 namespace RoutArr.Api.Services;
 
 public sealed class HandoffAuthService(
-    NexArrHandoffClient nexArrHandoff,
+    StlNexArrHandoffClient nexArrHandoff,
     RoutArrTokenService tokenService)
 {
     private const string ProductKey = "routarr";
