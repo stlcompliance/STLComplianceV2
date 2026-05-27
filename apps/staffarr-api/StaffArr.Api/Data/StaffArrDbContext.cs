@@ -20,6 +20,8 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<PersonRoleAssignment> PersonRoleAssignments => Set<PersonRoleAssignment>();
 
+    public DbSet<PermissionHistoryEvent> PermissionHistoryEvents => Set<PermissionHistoryEvent>();
+
     public DbSet<StaffArrAuditEvent> AuditEvents => Set<StaffArrAuditEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -141,6 +143,27 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             }).IsUnique();
             entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
             entity.HasOne<RoleTemplate>().WithMany().HasForeignKey(x => x.RoleTemplateId);
+        });
+
+        modelBuilder.Entity<PermissionHistoryEvent>(entity =>
+        {
+            entity.ToTable("staffarr_permission_history_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.AssignmentStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.RoleKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.RoleName).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.PermissionKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.PermissionName).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ScopeType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ScopeValue).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.OccurredAt });
+            entity.HasIndex(x => new { x.TenantId, x.AssignmentId, x.OccurredAt });
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+            entity.HasOne<PersonRoleAssignment>().WithMany().HasForeignKey(x => x.AssignmentId);
+            entity.HasOne<RoleTemplate>().WithMany().HasForeignKey(x => x.RoleTemplateId);
+            entity.HasOne<PermissionTemplate>().WithMany().HasForeignKey(x => x.PermissionTemplateId);
         });
 
         modelBuilder.Entity<StaffArrAuditEvent>(entity =>

@@ -187,6 +187,11 @@ public sealed class RoleTemplateService(
         db.RoleTemplates.Add(roleTemplate);
         await db.SaveChangesAsync(cancellationToken);
         await ReplaceRolePermissionMappingsAsync(tenantId, roleTemplate.Id, request.Permissions, cancellationToken);
+        await WriteRoleTemplatePermissionHistoryEventsAsync(
+            tenantId,
+            actorUserId,
+            roleTemplate.Id,
+            cancellationToken);
         await audit.WriteAsync(
             "role_template.create",
             tenantId,
@@ -221,6 +226,11 @@ public sealed class RoleTemplateService(
         await db.SaveChangesAsync(cancellationToken);
 
         await ReplaceRolePermissionMappingsAsync(tenantId, roleTemplate.Id, request.Permissions, cancellationToken);
+        await WriteRoleTemplatePermissionHistoryEventsAsync(
+            tenantId,
+            actorUserId,
+            roleTemplate.Id,
+            cancellationToken);
         await audit.WriteAsync(
             "role_template.update",
             tenantId,
@@ -240,6 +250,146 @@ public sealed class RoleTemplateService(
     {
         await EnsurePersonExistsAsync(tenantId, personId, cancellationToken);
         return await QueryPersonRoleAssignmentsAsync(tenantId, personId, cancellationToken);
+    }
+
+    public async Task<EffectivePermissionProjectionResponse> GetEffectivePermissionProjectionAsync(
+        Guid tenantId,
+        Guid personId,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsurePersonExistsAsync(tenantId, personId, cancellationToken);
+        var assignments = await db.PersonRoleAssignments
+            .AsNoTracking()
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.PersonId == personId
+                && x.Status == "active")
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+        if (assignments.Count == 0)
+        {
+            return new EffectivePermissionProjectionResponse(personId, DateTimeOffset.UtcNow, []);
+        }
+
+        var roleIds = assignments.Select(x => x.RoleTemplateId).Distinct().ToArray();
+        var roleById = await db.RoleTemplates
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && roleIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+        var mappings = await db.RoleTemplatePermissions
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && roleIds.Contains(x.RoleTemplateId))
+            .ToListAsync(cancellationToken);
+        var permissionIds = mappings.Select(x => x.PermissionTemplateId).Distinct().ToArray();
+        var permissionById = await db.PermissionTemplates
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && permissionIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        var effectiveRows = new List<(
+            string PermissionKey,
+            string PermissionName,
+            string ScopeType,
+            string? ScopeValue,
+            EffectivePermissionSourceResponse Source)>();
+        foreach (var assignment in assignments)
+        {
+            if (!roleById.TryGetValue(assignment.RoleTemplateId, out var roleTemplate))
+            {
+                continue;
+            }
+
+            if (!string.Equals(roleTemplate.Status, "active", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var roleMappings = mappings.Where(x => x.RoleTemplateId == assignment.RoleTemplateId);
+            foreach (var mapping in roleMappings)
+            {
+                if (!permissionById.TryGetValue(mapping.PermissionTemplateId, out var permissionTemplate)
+                    || !string.Equals(permissionTemplate.Status, "active", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var scopeType = mapping.ScopeType;
+                var scopeValue = mapping.ScopeValue;
+                if (!string.Equals(assignment.ScopeType, "tenant", StringComparison.OrdinalIgnoreCase))
+                {
+                    scopeType = assignment.ScopeType;
+                    scopeValue = assignment.ScopeValue;
+                }
+
+                effectiveRows.Add((
+                    permissionTemplate.PermissionKey,
+                    permissionTemplate.Name,
+                    scopeType,
+                    scopeValue,
+                    new EffectivePermissionSourceResponse(
+                        assignment.Id,
+                        assignment.RoleTemplateId,
+                        roleTemplate.RoleKey,
+                        roleTemplate.Name,
+                        assignment.Status,
+                        assignment.ScopeType,
+                        assignment.ScopeValue,
+                        assignment.CreatedAt)));
+            }
+        }
+
+        var permissions = effectiveRows
+            .GroupBy(x => $"{x.PermissionKey}|{x.ScopeType}|{x.ScopeValue}")
+            .OrderBy(x => x.Key)
+            .Select(group =>
+            {
+                var first = group.First();
+                return new EffectivePermissionResponse(
+                    first.PermissionKey,
+                    first.PermissionName,
+                    first.ScopeType,
+                    first.ScopeValue,
+                    group
+                        .Select(entry => entry.Source)
+                        .OrderByDescending(source => source.AssignedAt)
+                        .ToList());
+            })
+            .ToList();
+
+        return new EffectivePermissionProjectionResponse(personId, DateTimeOffset.UtcNow, permissions);
+    }
+
+    public async Task<IReadOnlyList<PermissionHistoryTimelineEntryResponse>> ListPermissionHistoryTimelineAsync(
+        Guid tenantId,
+        Guid personId,
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsurePersonExistsAsync(tenantId, personId, cancellationToken);
+        var boundedLimit = Math.Clamp(limit, 1, 500);
+
+        return await db.PermissionHistoryEvents
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.PersonId == personId)
+            .OrderByDescending(x => x.OccurredAt)
+            .Take(boundedLimit)
+            .Select(x => new PermissionHistoryTimelineEntryResponse(
+                x.Id,
+                x.PersonId,
+                x.AssignmentId,
+                x.RoleTemplateId,
+                x.PermissionTemplateId,
+                x.ActorUserId,
+                x.EventType,
+                x.AssignmentStatus,
+                x.RoleKey,
+                x.RoleName,
+                x.PermissionKey,
+                x.PermissionName,
+                x.ScopeType,
+                x.ScopeValue,
+                x.OccurredAt))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<PersonRoleAssignmentResponse> CreatePersonRoleAssignmentAsync(
@@ -288,6 +438,12 @@ public sealed class RoleTemplateService(
         };
         db.PersonRoleAssignments.Add(assignment);
         await db.SaveChangesAsync(cancellationToken);
+        await WritePermissionHistoryEventsForAssignmentAsync(
+            tenantId,
+            actorUserId,
+            assignment,
+            "assignment_created",
+            cancellationToken);
 
         await audit.WriteAsync(
             "person_role_assignment.create",
@@ -322,6 +478,12 @@ public sealed class RoleTemplateService(
         assignment.Status = NormalizeStatus(request.Status, "role assignment");
         assignment.UpdatedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
+        await WritePermissionHistoryEventsForAssignmentAsync(
+            tenantId,
+            actorUserId,
+            assignment,
+            "assignment_status_updated",
+            cancellationToken);
         await audit.WriteAsync(
             "person_role_assignment.status_update",
             tenantId,
@@ -429,6 +591,108 @@ public sealed class RoleTemplateService(
                     assignment.UpdatedAt);
             })
             .ToList();
+    }
+
+    private async Task WriteRoleTemplatePermissionHistoryEventsAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid roleTemplateId,
+        CancellationToken cancellationToken)
+    {
+        var activeAssignments = await db.PersonRoleAssignments
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.RoleTemplateId == roleTemplateId
+                && x.Status == "active")
+            .ToListAsync(cancellationToken);
+        foreach (var assignment in activeAssignments)
+        {
+            await WritePermissionHistoryEventsForAssignmentAsync(
+                tenantId,
+                actorUserId,
+                assignment,
+                "role_template_permissions_updated",
+                cancellationToken);
+        }
+    }
+
+    private async Task WritePermissionHistoryEventsForAssignmentAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        PersonRoleAssignment assignment,
+        string eventType,
+        CancellationToken cancellationToken)
+    {
+        var role = await db.RoleTemplates
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == assignment.RoleTemplateId,
+                cancellationToken);
+        if (role is null)
+        {
+            return;
+        }
+
+        var mappings = await db.RoleTemplatePermissions
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.RoleTemplateId == assignment.RoleTemplateId)
+            .ToListAsync(cancellationToken);
+        if (mappings.Count == 0)
+        {
+            return;
+        }
+
+        var permissionIds = mappings.Select(x => x.PermissionTemplateId).Distinct().ToArray();
+        var permissionById = await db.PermissionTemplates
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && permissionIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        var events = new List<PermissionHistoryEvent>(mappings.Count);
+        foreach (var mapping in mappings)
+        {
+            if (!permissionById.TryGetValue(mapping.PermissionTemplateId, out var permission))
+            {
+                continue;
+            }
+
+            var scopeType = mapping.ScopeType;
+            var scopeValue = mapping.ScopeValue;
+            if (!string.Equals(assignment.ScopeType, "tenant", StringComparison.OrdinalIgnoreCase))
+            {
+                scopeType = assignment.ScopeType;
+                scopeValue = assignment.ScopeValue;
+            }
+
+            events.Add(new PermissionHistoryEvent
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                PersonId = assignment.PersonId,
+                AssignmentId = assignment.Id,
+                RoleTemplateId = role.Id,
+                PermissionTemplateId = permission.Id,
+                ActorUserId = actorUserId,
+                EventType = eventType,
+                AssignmentStatus = assignment.Status,
+                RoleKey = role.RoleKey,
+                RoleName = role.Name,
+                PermissionKey = permission.PermissionKey,
+                PermissionName = permission.Name,
+                ScopeType = scopeType,
+                ScopeValue = scopeValue,
+                OccurredAt = now
+            });
+        }
+
+        if (events.Count == 0)
+        {
+            return;
+        }
+
+        db.PermissionHistoryEvents.AddRange(events);
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     private async Task EnsurePersonExistsAsync(Guid tenantId, Guid personId, CancellationToken cancellationToken)

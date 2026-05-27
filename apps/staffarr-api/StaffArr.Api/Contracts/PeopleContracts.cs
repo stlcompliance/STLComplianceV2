@@ -178,3 +178,42 @@ public sealed record CreatePersonRoleAssignmentRequest(
 
 public sealed record UpdatePersonRoleAssignmentStatusRequest(
     string Status);
+
+public sealed record EffectivePermissionSourceResponse(
+    Guid AssignmentId,
+    Guid RoleTemplateId,
+    string RoleKey,
+    string RoleName,
+    string AssignmentStatus,
+    string AssignmentScopeType,
+    string? AssignmentScopeValue,
+    DateTimeOffset AssignedAt);
+
+public sealed record EffectivePermissionResponse(
+    string PermissionKey,
+    string PermissionName,
+    string ScopeType,
+    string? ScopeValue,
+    IReadOnlyList<EffectivePermissionSourceResponse> Sources);
+
+public sealed record EffectivePermissionProjectionResponse(
+    Guid PersonId,
+    DateTimeOffset ComputedAt,
+    IReadOnlyList<EffectivePermissionResponse> Permissions);
+
+public sealed record PermissionHistoryTimelineEntryResponse(
+    Guid EventId,
+    Guid PersonId,
+    Guid AssignmentId,
+    Guid RoleTemplateId,
+    Guid PermissionTemplateId,
+    Guid? ActorUserId,
+    string EventType,
+    string AssignmentStatus,
+    string RoleKey,
+    string RoleName,
+    string PermissionKey,
+    string PermissionName,
+    string ScopeType,
+    string? ScopeValue,
+    DateTimeOffset OccurredAt);

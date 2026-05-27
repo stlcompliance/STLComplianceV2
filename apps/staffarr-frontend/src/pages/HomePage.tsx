@@ -6,10 +6,12 @@ import {
   createPersonRoleAssignment,
   createRoleTemplate,
   createOrgUnit,
+  getEffectivePermissions,
   getManagerChain,
   getMe,
   getOrgUnits,
   getPermissionTemplates,
+  getPermissionHistoryTimeline,
   getPersonOrgAssignments,
   getPersonRoleAssignments,
   getRoleTemplates,
@@ -31,6 +33,7 @@ import { clearSession, loadSession } from '../auth/sessionStorage'
 import { ManagerHierarchyPanel } from '../components/ManagerHierarchyPanel'
 import { canManageOrgHierarchy, OrgHierarchyManager } from '../components/OrgHierarchyManager'
 import { PersonOrgAssignmentsManager } from '../components/PersonOrgAssignmentsManager'
+import { PermissionProjectionTimelinePanel } from '../components/PermissionProjectionTimelinePanel'
 import { RoleTemplateAssignmentPanel } from '../components/RoleTemplateAssignmentPanel'
 
 export function HomePage() {
@@ -109,6 +112,16 @@ export function HomePage() {
   const roleAssignmentsQuery = useQuery({
     queryKey: ['staffarr-role-assignments', session?.accessToken, effectivePersonId],
     queryFn: () => getPersonRoleAssignments(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const effectivePermissionsQuery = useQuery({
+    queryKey: ['staffarr-effective-permissions', session?.accessToken, effectivePersonId],
+    queryFn: () => getEffectivePermissions(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const permissionHistoryQuery = useQuery({
+    queryKey: ['staffarr-permission-history', session?.accessToken, effectivePersonId],
+    queryFn: () => getPermissionHistoryTimeline(session!.accessToken, effectivePersonId!, 100),
     enabled: Boolean(session?.accessToken && effectivePersonId),
   })
 
@@ -205,7 +218,10 @@ export function HomePage() {
     mutationFn: (payload: { permissionKey: string; name: string; description: string | null }) =>
       upsertPermissionTemplate(session!.accessToken, payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['staffarr-permission-templates', session?.accessToken] })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-permission-templates', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
+      ])
     },
   })
   const createRoleTemplateMutation = useMutation({
@@ -220,7 +236,10 @@ export function HomePage() {
       }>
     }) => createRoleTemplate(session!.accessToken, payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['staffarr-role-templates', session?.accessToken] })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-role-templates', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
+      ])
     },
   })
   const updateRoleTemplateMutation = useMutation({
@@ -242,7 +261,11 @@ export function HomePage() {
         permissions: payload.permissions,
       }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['staffarr-role-templates', session?.accessToken] })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-role-templates', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-permission-history', session?.accessToken] }),
+      ])
     },
   })
   const createRoleAssignmentMutation = useMutation({
@@ -253,14 +276,22 @@ export function HomePage() {
       scopeValue: string | null
     }) => createPersonRoleAssignment(session!.accessToken, payload.personId, payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['staffarr-role-assignments', session?.accessToken] })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-role-assignments', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-permission-history', session?.accessToken] }),
+      ])
     },
   })
   const updateRoleAssignmentStatusMutation = useMutation({
     mutationFn: (payload: { personId: string; assignmentId: string; status: 'active' | 'inactive' }) =>
       updatePersonRoleAssignmentStatus(session!.accessToken, payload.personId, payload.assignmentId, payload.status),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['staffarr-role-assignments', session?.accessToken] })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-role-assignments', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-permission-history', session?.accessToken] }),
+      ])
     },
   })
 
@@ -318,6 +349,8 @@ export function HomePage() {
     || permissionTemplatesQuery.isError
     || roleTemplatesQuery.isError
     || roleAssignmentsQuery.isError
+    || effectivePermissionsQuery.isError
+    || permissionHistoryQuery.isError
   ) {
     const directoryError =
       peopleQuery.error ??
@@ -328,7 +361,9 @@ export function HomePage() {
       subordinateDetailQuery.error ??
       permissionTemplatesQuery.error ??
       roleTemplatesQuery.error ??
-      roleAssignmentsQuery.error
+      roleAssignmentsQuery.error ??
+      effectivePermissionsQuery.error ??
+      permissionHistoryQuery.error
     if (directoryError instanceof StaffArrApiError && (directoryError.status === 401 || directoryError.status === 403)) {
       clearSession()
     }
@@ -356,6 +391,8 @@ export function HomePage() {
   const permissionTemplates = permissionTemplatesQuery.data ?? []
   const roleTemplates = roleTemplatesQuery.data ?? []
   const roleAssignments = roleAssignmentsQuery.data ?? []
+  const effectivePermissions = effectivePermissionsQuery.data ?? null
+  const permissionHistory = permissionHistoryQuery.data ?? []
   const canManageOrgUnits = canManageOrgHierarchy(me.tenantRoleKey, me.isPlatformAdmin)
   const canManageHierarchy = canManageOrgUnits
   const orgMutationError =
@@ -588,6 +625,15 @@ export function HomePage() {
               status,
             })
           }}
+        />
+      ) : null}
+
+      {selectedPerson ? (
+        <PermissionProjectionTimelinePanel
+          personDisplayName={selectedPerson.displayName}
+          orgUnits={orgUnits}
+          projection={effectivePermissions}
+          timeline={permissionHistory}
         />
       ) : null}
 

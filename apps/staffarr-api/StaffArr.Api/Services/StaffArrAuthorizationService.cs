@@ -96,6 +96,31 @@ public sealed class StaffArrAuthorizationService
             403);
     }
 
+    public void RequirePermissionProjectionRead(ClaimsPrincipal principal, Guid personId)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        var roleKey = principal.GetTenantRoleKey();
+        if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
+        {
+            return;
+        }
+
+        if (MatchesRole(roleKey, "tenant_member") && principal.GetPersonId() == personId)
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Permission projection read access requires staffarr.permissions.read scope.",
+            403);
+    }
+
     private static bool CanWriteByRole(string roleKey) =>
         MatchesRole(roleKey, "platform_admin", "tenant_admin", "staffarr_admin", "hr_admin");
 

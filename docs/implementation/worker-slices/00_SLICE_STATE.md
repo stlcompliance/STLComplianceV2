@@ -15,7 +15,8 @@
 | 11 | StaffArr org-unit assignment primitives (site/department/team/position linkage + assignment write flows) | M4 (partial) | Complete | `pending` |
 | 12 | StaffArr manager hierarchy + manager/subordinate views (hierarchy traversal, manager linkage write path, subordinate detail rollups) | M4 (partial) | Complete | `pending` |
 | 13 | StaffArr role templates + permission templates/assignment foundations (tenant-scoped template modeling, role assignment write/read paths, permission-aware UI integration) | M4 (partial) | Complete | `pending` |
+| 14 | StaffArr scoped effective-permission projection + permission history timeline (computed permission read API, timeline retrieval API, real UI projection/timeline surfaces) | M4 (partial) | Complete | `pending` |
 
 ## Next slice (Worker 13)
 
-Recommended: implement StaffArr scoped permission projections + permission history timeline (effective permission read API, assignment history visibility, and readiness-facing permission projection foundations).
+Recommended: implement StaffArr certification visibility + manual certification grant foundations (person certification read surfaces, write-authorized grant/update path, and readiness integration seed data).

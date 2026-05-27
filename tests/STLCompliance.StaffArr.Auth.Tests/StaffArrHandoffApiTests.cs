@@ -37,6 +37,8 @@ using UpdateRoleTemplateRequest = StaffArr.Api.Contracts.UpdateRoleTemplateReque
 using PersonRoleAssignmentResponse = StaffArr.Api.Contracts.PersonRoleAssignmentResponse;
 using CreatePersonRoleAssignmentRequest = StaffArr.Api.Contracts.CreatePersonRoleAssignmentRequest;
 using UpdatePersonRoleAssignmentStatusRequest = StaffArr.Api.Contracts.UpdatePersonRoleAssignmentStatusRequest;
+using EffectivePermissionProjectionResponse = StaffArr.Api.Contracts.EffectivePermissionProjectionResponse;
+using PermissionHistoryTimelineEntryResponse = StaffArr.Api.Contracts.PermissionHistoryTimelineEntryResponse;
 using StaffArrTokenService = StaffArr.Api.Services.StaffArrTokenService;
 using StaffArrDbContext = StaffArr.Api.Data.StaffArrDbContext;
 using StaffPerson = StaffArr.Api.Entities.StaffPerson;
@@ -656,6 +658,95 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
             null));
         var assignmentResponse = await _staffarrClient.SendAsync(assignmentRequest);
         Assert.Equal(HttpStatusCode.Conflict, assignmentResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Permission_projection_and_history_timeline_reflect_assignment_and_status_changes()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Projection User", "projection.user@example.com");
+
+        var permissionRequest = Authorized(HttpMethod.Post, "/api/permissions", token);
+        permissionRequest.Content = JsonContent.Create(new UpsertPermissionTemplateRequest(
+            "staffarr.people.read",
+            "People Read",
+            "Read access."));
+        var permissionResponse = await _staffarrClient.SendAsync(permissionRequest);
+        permissionResponse.EnsureSuccessStatusCode();
+        var permissionTemplate = (await permissionResponse.Content.ReadFromJsonAsync<PermissionTemplateSummaryResponse>())!;
+
+        var roleRequest = Authorized(HttpMethod.Post, "/api/roles", token);
+        roleRequest.Content = JsonContent.Create(new CreateRoleTemplateRequest(
+            "staffarr.viewer",
+            "StaffArr Viewer",
+            "Viewer role.",
+            [new RoleTemplatePermissionInput(permissionTemplate.PermissionTemplateId, "tenant", null)]));
+        var roleResponse = await _staffarrClient.SendAsync(roleRequest);
+        roleResponse.EnsureSuccessStatusCode();
+        var roleTemplate = (await roleResponse.Content.ReadFromJsonAsync<RoleTemplateResponse>())!;
+
+        var assignmentRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/role-assignments", token);
+        assignmentRequest.Content = JsonContent.Create(new CreatePersonRoleAssignmentRequest(
+            roleTemplate.RoleTemplateId,
+            "tenant",
+            null));
+        var assignmentResponse = await _staffarrClient.SendAsync(assignmentRequest);
+        assignmentResponse.EnsureSuccessStatusCode();
+        var assignment = (await assignmentResponse.Content.ReadFromJsonAsync<PersonRoleAssignmentResponse>())!;
+
+        var projectionResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/permissions/effective", token));
+        projectionResponse.EnsureSuccessStatusCode();
+        var projection = (await projectionResponse.Content.ReadFromJsonAsync<EffectivePermissionProjectionResponse>())!;
+        Assert.Contains(projection.Permissions, p => p.PermissionKey == "staffarr.people.read" && p.ScopeType == "tenant");
+
+        var timelineResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/permissions/history?limit=20", token));
+        timelineResponse.EnsureSuccessStatusCode();
+        var timeline = (await timelineResponse.Content.ReadFromJsonAsync<IReadOnlyList<PermissionHistoryTimelineEntryResponse>>())!;
+        Assert.Contains(timeline, x => x.EventType == "assignment_created" && x.AssignmentId == assignment.AssignmentId);
+
+        var statusRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/people/{personId}/role-assignments/{assignment.AssignmentId}/status",
+            token);
+        statusRequest.Content = JsonContent.Create(new UpdatePersonRoleAssignmentStatusRequest("inactive"));
+        var statusResponse = await _staffarrClient.SendAsync(statusRequest);
+        statusResponse.EnsureSuccessStatusCode();
+
+        var projectionAfterStatusResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/permissions/effective", token));
+        projectionAfterStatusResponse.EnsureSuccessStatusCode();
+        var projectionAfterStatus =
+            (await projectionAfterStatusResponse.Content.ReadFromJsonAsync<EffectivePermissionProjectionResponse>())!;
+        Assert.DoesNotContain(projectionAfterStatus.Permissions, p => p.PermissionKey == "staffarr.people.read");
+
+        var timelineAfterStatusResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/permissions/history?limit=20", token));
+        timelineAfterStatusResponse.EnsureSuccessStatusCode();
+        var timelineAfterStatus =
+            (await timelineAfterStatusResponse.Content.ReadFromJsonAsync<IReadOnlyList<PermissionHistoryTimelineEntryResponse>>())!;
+        Assert.Contains(
+            timelineAfterStatus,
+            x => x.EventType == "assignment_status_updated"
+                && x.AssignmentId == assignment.AssignmentId
+                && x.AssignmentStatus == "inactive");
+    }
+
+    [Fact]
+    public async Task Permission_projection_denies_unrelated_tenant_member_reads()
+    {
+        var targetPersonId = Guid.NewGuid();
+        await SeedStaffPersonAsync(targetPersonId, "Target Person", "target.person@example.com");
+
+        var memberToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "tenant_member",
+            personId: Guid.NewGuid());
+        var request = Authorized(HttpMethod.Get, $"/api/people/{targetPersonId}/permissions/effective", memberToken);
+        var response = await _staffarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     private async Task<string> CreateHandoffAsync()

@@ -1,5 +1,6 @@
 import type {
   CreatePersonRoleAssignmentRequest,
+  EffectivePermissionProjectionResponse,
   CreateOrgUnitAssignmentRequest,
   CreateRoleTemplateRequest,
   CreateOrgUnitRequest,
@@ -7,6 +8,7 @@ import type {
   ManagerChainEntryResponse,
   OrgUnitAssignmentResponse,
   OrgUnitResponse,
+  PermissionHistoryTimelineEntryResponse,
   PermissionTemplateSummaryResponse,
   PersonRoleAssignmentResponse,
   PersonManagerResponse,
@@ -311,4 +313,25 @@ export async function updatePersonRoleAssignmentStatus(
     body: JSON.stringify({ status }),
   })
   return parseJsonResponse<PersonRoleAssignmentResponse>(response, 'Failed to update role assignment status')
+}
+
+export async function getEffectivePermissions(
+  accessToken: string,
+  personId: string,
+): Promise<EffectivePermissionProjectionResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/permissions/effective`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<EffectivePermissionProjectionResponse>(response, 'Failed to load effective permissions')
+}
+
+export async function getPermissionHistoryTimeline(
+  accessToken: string,
+  personId: string,
+  limit = 100,
+): Promise<PermissionHistoryTimelineEntryResponse[]> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/permissions/history?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PermissionHistoryTimelineEntryResponse[]>(response, 'Failed to load permission history')
 }

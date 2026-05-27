@@ -217,3 +217,46 @@ export interface CreatePersonRoleAssignmentRequest {
   scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
   scopeValue: string | null
 }
+
+export interface EffectivePermissionSourceResponse {
+  assignmentId: string
+  roleTemplateId: string
+  roleKey: string
+  roleName: string
+  assignmentStatus: 'active' | 'inactive'
+  assignmentScopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
+  assignmentScopeValue: string | null
+  assignedAt: string
+}
+
+export interface EffectivePermissionResponse {
+  permissionKey: string
+  permissionName: string
+  scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
+  scopeValue: string | null
+  sources: EffectivePermissionSourceResponse[]
+}
+
+export interface EffectivePermissionProjectionResponse {
+  personId: string
+  computedAt: string
+  permissions: EffectivePermissionResponse[]
+}
+
+export interface PermissionHistoryTimelineEntryResponse {
+  eventId: string
+  personId: string
+  assignmentId: string
+  roleTemplateId: string
+  permissionTemplateId: string
+  actorUserId: string | null
+  eventType: string
+  assignmentStatus: 'active' | 'inactive'
+  roleKey: string
+  roleName: string
+  permissionKey: string
+  permissionName: string
+  scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
+  scopeValue: string | null
+  occurredAt: string
+}
