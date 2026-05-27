@@ -75,9 +75,50 @@ public static class PeopleEndpoints
         {
             authorization.RequirePeopleWrite(context.User);
             var tenantId = context.User.GetTenantId();
-            var created = await service.CreateAsync(tenantId, request, cancellationToken);
+            var actorUserId = context.User.GetUserId();
+            var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Created($"/api/people/{created.PersonId}", created);
         })
         .WithName("CreateStaffPerson");
+
+        people.MapPut("/{personId:guid}", async (
+            Guid personId,
+            UpdateStaffPersonRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            PeopleService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpdateAsync(
+                tenantId,
+                personId,
+                actorUserId,
+                request,
+                cancellationToken));
+        })
+        .WithName("UpdateStaffPerson");
+
+        people.MapPatch("/{personId:guid}/employment-status", async (
+            Guid personId,
+            UpdatePersonEmploymentStatusRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            PeopleService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpdateEmploymentStatusAsync(
+                tenantId,
+                personId,
+                actorUserId,
+                request,
+                cancellationToken));
+        })
+        .WithName("UpdateStaffPersonEmploymentStatus");
     }
 }

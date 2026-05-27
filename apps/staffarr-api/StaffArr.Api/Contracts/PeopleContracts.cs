@@ -35,6 +35,18 @@ public sealed record CreateStaffPersonRequest(
     Guid? ManagerPersonId,
     string? JobTitle);
 
+public sealed record UpdateStaffPersonRequest(
+    string GivenName,
+    string FamilyName,
+    string PrimaryEmail,
+    Guid? PrimaryOrgUnitId,
+    Guid? ManagerPersonId,
+    string? JobTitle);
+
+public sealed record UpdatePersonEmploymentStatusRequest(
+    string EmploymentStatus,
+    string? Reason);
+
 public sealed record OrgUnitResponse(
     Guid OrgUnitId,
     string UnitType,

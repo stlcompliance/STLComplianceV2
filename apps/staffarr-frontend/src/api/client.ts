@@ -39,6 +39,8 @@ import type {
   PersonTimelineEntryResponse,
   AuditPackageManifestResponse,
   AuditPackageExportResponse,
+  UpdateStaffPersonRequest,
+  UpdatePersonEmploymentStatusRequest,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -98,6 +100,32 @@ export async function getPerson(accessToken: string, personId: string): Promise<
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<StaffPersonDetailResponse>(response, 'Failed to load person profile')
+}
+
+export async function updatePerson(
+  accessToken: string,
+  personId: string,
+  request: UpdateStaffPersonRequest,
+): Promise<StaffPersonDetailResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<StaffPersonDetailResponse>(response, 'Failed to update person profile')
+}
+
+export async function updatePersonEmploymentStatus(
+  accessToken: string,
+  personId: string,
+  request: UpdatePersonEmploymentStatusRequest,
+): Promise<StaffPersonDetailResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/employment-status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<StaffPersonDetailResponse>(response, 'Failed to update employment status')
 }
 
 export async function getOrgUnits(accessToken: string): Promise<OrgUnitResponse[]> {

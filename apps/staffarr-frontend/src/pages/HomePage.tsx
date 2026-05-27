@@ -31,6 +31,8 @@ import {
   getSubordinates,
   getPeople,
   getPerson,
+  updatePerson,
+  updatePersonEmploymentStatus,
   grantPersonCertification,
   StaffArrApiError,
   updatePersonManager,
@@ -46,6 +48,7 @@ import {
 import { clearSession, loadSession, canExportAuditPackage } from '../auth/sessionStorage'
 import { CertificationPanel } from '../components/CertificationPanel'
 import { AuditPackageExportPanel } from '../components/AuditPackageExportPanel'
+import { canManagePeople, PersonProfileEditorPanel } from '../components/PersonProfileEditorPanel'
 import { canManageIncidents, IncidentsPanel } from '../components/IncidentsPanel'
 import { canOverrideReadiness, ReadinessPanel } from '../components/ReadinessPanel'
 import {
@@ -410,6 +413,48 @@ export function HomePage() {
       ])
     },
   })
+  const updatePersonMutation = useMutation({
+    mutationFn: (payload: {
+      personId: string
+      givenName: string
+      familyName: string
+      primaryEmail: string
+      primaryOrgUnitId: string | null
+      managerPersonId: string | null
+      jobTitle: string | null
+    }) =>
+      updatePerson(session!.accessToken, payload.personId, {
+        givenName: payload.givenName,
+        familyName: payload.familyName,
+        primaryEmail: payload.primaryEmail,
+        primaryOrgUnitId: payload.primaryOrgUnitId,
+        managerPersonId: payload.managerPersonId,
+        jobTitle: payload.jobTitle,
+      }),
+    onSuccess: async (_, payload) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-people', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person', session?.accessToken, payload.personId] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-manager-chain', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-subordinates', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+      ])
+    },
+  })
+  const updateEmploymentStatusMutation = useMutation({
+    mutationFn: (payload: { personId: string; employmentStatus: string; reason: string | null }) =>
+      updatePersonEmploymentStatus(session!.accessToken, payload.personId, {
+        employmentStatus: payload.employmentStatus,
+        reason: payload.reason,
+      }),
+    onSuccess: async (_, payload) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-people', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person', session?.accessToken, payload.personId] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+      ])
+    },
+  })
   const grantReadinessOverrideMutation = useMutation({
     mutationFn: (payload: { personId: string; reason: string; expiresAt: string | null }) =>
       grantPersonReadinessOverride(session!.accessToken, payload.personId, {
@@ -567,6 +612,7 @@ export function HomePage() {
   const canManageHierarchy = canManageOrgUnits
   const canOverridePersonReadiness = canOverrideReadiness(me.tenantRoleKey, me.isPlatformAdmin)
   const canManagePersonIncidents = canManageIncidents(me.tenantRoleKey, me.isPlatformAdmin)
+  const canManagePeopleProfiles = canManagePeople(me.tenantRoleKey, me.isPlatformAdmin)
   const canExportAudit = canExportAuditPackage(me.tenantRoleKey, me.isPlatformAdmin)
   const personIncidents = personIncidentsQuery.data ?? []
   const orgMutationError =
@@ -587,6 +633,8 @@ export function HomePage() {
     grantReadinessOverrideMutation.error ?? clearReadinessOverrideMutation.error ?? null
   const incidentMutationError =
     createIncidentMutation.error ?? routeIncidentToTrainarrMutation.error ?? null
+  const personProfileMutationError =
+    updatePersonMutation.error ?? updateEmploymentStatusMutation.error ?? null
 
   return (
     <main className="mx-auto max-w-6xl p-8">
@@ -701,6 +749,36 @@ export function HomePage() {
           </dl>
         )}
       </section>
+
+      {profile ? (
+        <PersonProfileEditorPanel
+          profile={profile}
+          orgUnits={orgUnits}
+          peopleOptions={people.map((person) => ({
+            personId: person.personId,
+            displayName: person.displayName,
+          }))}
+          canManage={canManagePeopleProfiles}
+          isSubmitting={updatePersonMutation.isPending || updateEmploymentStatusMutation.isPending}
+          errorMessage={
+            personProfileMutationError instanceof StaffArrApiError
+              ? personProfileMutationError.body || personProfileMutationError.message
+              : null
+          }
+          onUpdate={async (request) => {
+            await updatePersonMutation.mutateAsync({
+              personId: profile.personId,
+              ...request,
+            })
+          }}
+          onEmploymentStatusChange={async (request) => {
+            await updateEmploymentStatusMutation.mutateAsync({
+              personId: profile.personId,
+              ...request,
+            })
+          }}
+        />
+      ) : null}
 
       {selectedPerson ? (
         <PersonOrgAssignmentsManager

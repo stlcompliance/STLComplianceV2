@@ -56,6 +56,20 @@ export interface StaffPersonDetailResponse {
   updatedAt: string
 }
 
+export interface UpdateStaffPersonRequest {
+  givenName: string
+  familyName: string
+  primaryEmail: string
+  primaryOrgUnitId: string | null
+  managerPersonId: string | null
+  jobTitle: string | null
+}
+
+export interface UpdatePersonEmploymentStatusRequest {
+  employmentStatus: string
+  reason: string | null
+}
+
 export interface OrgUnitResponse {
   orgUnitId: string
   unitType: string
