@@ -23,6 +23,7 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<ServiceTokenAdminService>();
         builder.Services.AddScoped<LaunchService>();
         builder.Services.AddScoped<CallbackAllowlistAdminService>();
+        builder.Services.AddScoped<PlatformAdminService>();
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
         builder.Services.Configure<StlLaunchOptions>(builder.Configuration.GetSection(StlLaunchOptions.SectionName));
     }

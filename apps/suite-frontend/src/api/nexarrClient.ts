@@ -12,9 +12,14 @@ import type {
   AuthTokenResponse,
   HandoffCreatedResponse,
   LaunchContextResponse,
+  LaunchDiagnosticsResponse,
   LoginRequest,
   MeResponse,
   NavigationResponse,
+  PagedResult,
+  PlatformAdminDashboardResponse,
+  ProductOverviewRow,
+  TenantOverviewRow,
 } from './types'
 import { NexarrApiError } from './types'
 
@@ -189,4 +194,63 @@ export async function createHandoff(
     throw await parseError(response)
   }
   return (await response.json()) as HandoffCreatedResponse
+}
+
+export async function getPlatformAdminDashboard(): Promise<PlatformAdminDashboardResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/dashboard')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformAdminDashboardResponse
+}
+
+export async function getPlatformAdminLaunchDiagnostics(
+  params: { tenantId?: string; productKey?: string; page?: number; pageSize?: number } = {},
+): Promise<LaunchDiagnosticsResponse> {
+  await ensureValidAccessToken()
+  const search = new URLSearchParams()
+  if (params.tenantId) {
+    search.set('tenantId', params.tenantId)
+  }
+  if (params.productKey) {
+    search.set('productKey', params.productKey)
+  }
+  if (params.page) {
+    search.set('page', String(params.page))
+  }
+  if (params.pageSize) {
+    search.set('pageSize', String(params.pageSize))
+  }
+  const qs = search.toString()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/launch-diagnostics${qs ? `?${qs}` : ''}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as LaunchDiagnosticsResponse
+}
+
+export async function getPlatformAdminTenantOverview(
+  page = 1,
+  pageSize = 50,
+): Promise<PagedResult<TenantOverviewRow>> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/overview/tenants?page=${page}&pageSize=${pageSize}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<TenantOverviewRow>
+}
+
+export async function getPlatformAdminProductOverview(): Promise<ProductOverviewRow[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/overview/products')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ProductOverviewRow[]
 }

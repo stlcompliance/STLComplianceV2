@@ -7,7 +7,8 @@
 | 3 | NexArr tenant/entitlement admin + service tokens | M2 (partial) | Complete | `6aa10c9` |
 | 4 | NexArr launch context, handoff codes, callback allowlist | M2 (partial) | Complete | `db3a82f` |
 | 5 | Suite frontend AppShell (auth, navigation, launch) | M3 (partial) | Complete | `87c2218` |
+| 6 | NexArr platform-admin APIs + suite platform-admin UI | M2/M3 (partial) | Complete | _(see git log after push)_ |
 
-## Next slice (Worker 6)
+## Next slice (Worker 7)
 
-NexArr platform-admin dashboard surfaces and launch diagnostics — OR suite unified dashboard / shared `packages/ui` design system — OR first product shell (e.g. StaffArr) consuming handoff redeem.
+Recommended: **Suite unified dashboard** (M3 widgets on `/app`) **or** **StaffArr shell** with handoff redeem — **or** shared `packages/ui` design system. Platform audit search/export remains a follow-on NexArr slice.

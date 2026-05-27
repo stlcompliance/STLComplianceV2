@@ -1,5 +1,5 @@
-import { LogOut } from 'lucide-react'
-import { Outlet } from 'react-router-dom'
+import { LogOut, Shield } from 'lucide-react'
+import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { ProductSwitcher } from '../components/ProductSwitcher'
 import { PermissionGate } from '../components/PermissionGate'
@@ -26,9 +26,20 @@ export function AppShellLayout() {
         <ProductSwitcher />
 
         <PermissionGate allowed={isPlatformAdmin(me)}>
-          <p className="mt-6 px-3 text-xs text-slate-500">
-            Platform admin tools (API) available via NexArr — dashboard UI in a later slice.
-          </p>
+          <NavLink
+            to="/app/platform-admin"
+            className={({ isActive }) =>
+              [
+                'mt-6 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-stl-teal/15 text-stl-navy'
+                  : 'text-slate-700 hover:bg-white/70',
+              ].join(' ')
+            }
+          >
+            <Shield className="h-4 w-4 shrink-0" aria-hidden />
+            Platform admin
+          </NavLink>
         </PermissionGate>
 
         <button
