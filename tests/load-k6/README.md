@@ -69,7 +69,7 @@ chmod +x scripts/ops/load-test-run.sh
 ## CI
 
 - **Default CI** (`Category=Load`, not Live): unit tests for SLO catalog, k6 summary parsing, and evaluator logic.
-- **Nightly** (`e2e-nightly.yml`): optional live k6 run against docker-compose when `LOAD_LIVE=1`.
+- **Nightly** (`e2e-nightly.yml`): live k6 run for all seven product-owner scenarios when `LOAD_LIVE=1` (health, auth, handoff, TrainArr qualification, RoutArr dispatch gate).
 
 ## .NET validation
 

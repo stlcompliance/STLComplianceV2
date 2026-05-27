@@ -202,6 +202,35 @@ public sealed class StlLoadTestSloEvaluatorTests
 }
 
 [Trait("Category", "Load")]
+public sealed class StlLoadTestLiveScenarioCatalogTests
+{
+    [Fact]
+    public void Live_catalog_covers_all_product_owner_scenarios()
+    {
+        Assert.Equal(7, StlLoadTestLiveScenarioCatalog.All.Count);
+
+        foreach (var target in StlLoadTestSloCatalog.ProductOwnerTargets)
+        {
+            Assert.Contains(
+                StlLoadTestLiveScenarioCatalog.All,
+                definition => definition.ScenarioKey == target.ScenarioKey);
+        }
+    }
+
+    [Fact]
+    public void ResolveLiveSloTarget_lowers_min_request_count_for_smoke()
+    {
+        var liveTarget = StlLoadTestLiveScenarioCatalog.ResolveLiveSloTarget(
+            StlLoadTestSloCatalog.ApiHealthLivenessKey);
+        var catalogTarget = StlLoadTestSloCatalog.GetByScenarioKey(
+            StlLoadTestSloCatalog.ApiHealthLivenessKey);
+
+        Assert.True(liveTarget.MinRequestCount <= catalogTarget.MinRequestCount);
+        Assert.Equal(400, liveTarget.P95LatencyMsMax);
+    }
+}
+
+[Trait("Category", "Load")]
 public sealed class LoadTestHarnessSupportTests
 {
     [SkippableFact]
