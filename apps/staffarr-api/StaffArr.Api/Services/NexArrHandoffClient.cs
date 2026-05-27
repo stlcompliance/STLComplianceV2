@@ -1,8 +1,8 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.Configuration;
 using StaffArr.Api.Contracts;
-using StaffArr.Api.Options;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
 
 namespace StaffArr.Api.Services;
 
@@ -14,7 +14,7 @@ public sealed class NexArrHandoffClient(
         string handoffCode,
         CancellationToken cancellationToken = default)
     {
-        var serviceToken = configuration["Handoff__ServiceToken"] ?? configuration["Handoff:ServiceToken"];
+        var serviceToken = StlHandoffConfiguration.ResolveServiceToken(configuration);
         if (string.IsNullOrWhiteSpace(serviceToken))
         {
             throw new StlApiException(

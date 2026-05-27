@@ -1,19 +1,20 @@
 using System.Net.Http.Json;
+using Microsoft.Extensions.Configuration;
 using MaintainArr.Api.Contracts;
-using MaintainArr.Api.Options;
 using STLCompliance.Shared.Contracts;
+using STLCompliance.Shared.Integration;
 
 namespace MaintainArr.Api.Services;
 
 public sealed class NexArrHandoffClient(
     HttpClient httpClient,
-    Microsoft.Extensions.Options.IOptions<HandoffOptions> handoffOptions)
+    IConfiguration configuration)
 {
     public async Task<NexArrHandoffRedeemedResponse> RedeemHandoffAsync(
         string handoffCode,
         CancellationToken cancellationToken = default)
     {
-        var serviceToken = handoffOptions.Value.ServiceToken;
+        var serviceToken = StlHandoffConfiguration.ResolveServiceToken(configuration);
         if (string.IsNullOrWhiteSpace(serviceToken))
         {
             throw new StlApiException(
