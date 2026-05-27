@@ -1,3 +1,4 @@
+using StaffArr.Api.Contracts;
 using StaffArr.Api.Services;
 using STLCompliance.Shared.Auth;
 
@@ -20,5 +21,52 @@ public static class OrgUnitEndpoints
             return Results.Ok(await service.ListAsync(tenantId, cancellationToken));
         })
         .WithName("ListOrgUnits");
+
+        group.MapPost("/", async (
+            CreateOrgUnitRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
+            return Results.Created($"/api/org-units/{created.OrgUnitId}", created);
+        })
+        .WithName("CreateOrgUnit");
+
+        group.MapPut("/{orgUnitId:guid}", async (
+            Guid orgUnitId,
+            UpdateOrgUnitRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var updated = await service.UpdateAsync(tenantId, actorUserId, orgUnitId, request, cancellationToken);
+            return Results.Ok(updated);
+        })
+        .WithName("UpdateOrgUnit");
+
+        group.MapPatch("/{orgUnitId:guid}/status", async (
+            Guid orgUnitId,
+            UpdateOrgUnitStatusRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            OrgUnitService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var updated = await service.UpdateStatusAsync(tenantId, actorUserId, orgUnitId, request, cancellationToken);
+            return Results.Ok(updated);
+        })
+        .WithName("UpdateOrgUnitStatus");
     }
 }

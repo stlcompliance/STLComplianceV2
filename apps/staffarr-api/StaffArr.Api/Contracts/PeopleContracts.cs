@@ -39,4 +39,18 @@ public sealed record OrgUnitResponse(
     Guid OrgUnitId,
     string UnitType,
     string Name,
+    Guid? ParentOrgUnitId,
+    string Status);
+
+public sealed record CreateOrgUnitRequest(
+    string UnitType,
+    string Name,
     Guid? ParentOrgUnitId);
+
+public sealed record UpdateOrgUnitRequest(
+    string UnitType,
+    string Name,
+    Guid? ParentOrgUnitId);
+
+public sealed record UpdateOrgUnitStatusRequest(
+    string Status);

@@ -11,7 +11,8 @@
 | 7 | Suite unified dashboard (M3 widgets on `/app`) | M3 (partial) | Complete | `5c293e8` |
 | 8 | StaffArr shell + NexArr handoff redeem | M3 (partial) | Complete | `see latest Worker 8 commit` |
 | 9 | StaffArr people directory + person profile core | M4 (partial) | Complete | `pending` |
+| 10 | StaffArr org hierarchy management write flows | M4 (partial) | Complete | `pending` |
 
 ## Next slice (Worker 10)
 
-Recommended: **Worker 10** implement StaffArr org hierarchy management write flows (`/api/org-units` create/update + UI org tree editor) to unblock assignment-heavy slices.
+Recommended: **Worker 11** implement StaffArr org-unit assignment primitives (site/department/team/position linkage) using the new hierarchy write foundations.

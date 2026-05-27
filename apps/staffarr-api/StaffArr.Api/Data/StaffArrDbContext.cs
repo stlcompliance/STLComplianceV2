@@ -10,6 +10,8 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<OrgUnit> OrgUnits => Set<OrgUnit>();
 
+    public DbSet<StaffArrAuditEvent> AuditEvents => Set<StaffArrAuditEvent>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -20,6 +22,7 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasKey(x => x.Id);
             entity.Property(x => x.UnitType).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.UnitType, x.Name }).IsUnique();
             entity.HasOne(x => x.ParentOrgUnit).WithMany().HasForeignKey(x => x.ParentOrgUnitId);
@@ -40,6 +43,19 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasIndex(x => new { x.TenantId, x.ExternalUserId }).IsUnique();
             entity.HasOne(x => x.PrimaryOrgUnit).WithMany().HasForeignKey(x => x.PrimaryOrgUnitId);
             entity.HasOne(x => x.Manager).WithMany().HasForeignKey(x => x.ManagerPersonId);
+        });
+
+        modelBuilder.Entity<StaffArrAuditEvent>(entity =>
+        {
+            entity.ToTable("staffarr_audit_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Action).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.TargetType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TargetId).HasMaxLength(128);
+            entity.Property(x => x.Result).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ReasonCode).HasMaxLength(64);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.OccurredAt);
         });
     }
 }

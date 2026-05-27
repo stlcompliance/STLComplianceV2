@@ -1,9 +1,12 @@
 import type {
+  CreateOrgUnitRequest,
   HandoffSessionResponse,
   OrgUnitResponse,
   StaffArrMeResponse,
   StaffPersonDetailResponse,
   StaffPersonSummaryResponse,
+  UpdateOrgUnitRequest,
+  UpdateOrgUnitStatusRequest,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -70,4 +73,39 @@ export async function getOrgUnits(accessToken: string): Promise<OrgUnitResponse[
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<OrgUnitResponse[]>(response, 'Failed to load org units')
+}
+
+export async function createOrgUnit(accessToken: string, request: CreateOrgUnitRequest): Promise<OrgUnitResponse> {
+  const response = await fetch(`${apiBase}/api/org-units`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<OrgUnitResponse>(response, 'Failed to create org unit')
+}
+
+export async function updateOrgUnit(
+  accessToken: string,
+  orgUnitId: string,
+  request: UpdateOrgUnitRequest,
+): Promise<OrgUnitResponse> {
+  const response = await fetch(`${apiBase}/api/org-units/${orgUnitId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<OrgUnitResponse>(response, 'Failed to update org unit')
+}
+
+export async function updateOrgUnitStatus(
+  accessToken: string,
+  orgUnitId: string,
+  request: UpdateOrgUnitStatusRequest,
+): Promise<OrgUnitResponse> {
+  const response = await fetch(`${apiBase}/api/org-units/${orgUnitId}/status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<OrgUnitResponse>(response, 'Failed to update org unit status')
 }

@@ -16,9 +16,14 @@ using StaffArrHandoffSessionResponse = StaffArr.Api.Contracts.HandoffSessionResp
 using StaffPersonSummaryResponse = StaffArr.Api.Contracts.StaffPersonSummaryResponse;
 using StaffPersonDetailResponse = StaffArr.Api.Contracts.StaffPersonDetailResponse;
 using CreateStaffPersonRequest = StaffArr.Api.Contracts.CreateStaffPersonRequest;
+using OrgUnitResponse = StaffArr.Api.Contracts.OrgUnitResponse;
+using CreateOrgUnitRequest = StaffArr.Api.Contracts.CreateOrgUnitRequest;
+using UpdateOrgUnitRequest = StaffArr.Api.Contracts.UpdateOrgUnitRequest;
+using UpdateOrgUnitStatusRequest = StaffArr.Api.Contracts.UpdateOrgUnitStatusRequest;
 using StaffArrTokenService = StaffArr.Api.Services.StaffArrTokenService;
 using StaffArrDbContext = StaffArr.Api.Data.StaffArrDbContext;
 using StaffPerson = StaffArr.Api.Entities.StaffPerson;
+using OrgUnit = StaffArr.Api.Entities.OrgUnit;
 using STLCompliance.Shared.Contracts;
 
 namespace STLCompliance.StaffArr.Auth.Tests;
@@ -251,6 +256,70 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.BadRequest, badResponse.StatusCode);
     }
 
+    [Fact]
+    public async Task Org_unit_write_happy_path_update_and_status_flow()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var createRequest = Authorized(HttpMethod.Post, "/api/org-units", token);
+        createRequest.Content = JsonContent.Create(new CreateOrgUnitRequest("department", "Operations", null));
+        var createResponse = await _staffarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<OrgUnitResponse>())!;
+
+        var updateRequest = Authorized(HttpMethod.Put, $"/api/org-units/{created.OrgUnitId}", token);
+        updateRequest.Content = JsonContent.Create(new UpdateOrgUnitRequest("department", "Operations HQ", null));
+        var updateResponse = await _staffarrClient.SendAsync(updateRequest);
+        updateResponse.EnsureSuccessStatusCode();
+        var updated = (await updateResponse.Content.ReadFromJsonAsync<OrgUnitResponse>())!;
+        Assert.Equal("Operations HQ", updated.Name);
+
+        var statusRequest = Authorized(HttpMethod.Patch, $"/api/org-units/{created.OrgUnitId}/status", token);
+        statusRequest.Content = JsonContent.Create(new UpdateOrgUnitStatusRequest("inactive"));
+        var statusResponse = await _staffarrClient.SendAsync(statusRequest);
+        statusResponse.EnsureSuccessStatusCode();
+        var statusPayload = (await statusResponse.Content.ReadFromJsonAsync<OrgUnitResponse>())!;
+        Assert.Equal("inactive", statusPayload.Status);
+
+        using var scope = _staffarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+        var auditEvents = await db.AuditEvents.CountAsync(x => x.TenantId == PlatformSeeder.DemoTenantId);
+        Assert.True(auditEvents >= 3);
+    }
+
+    [Fact]
+    public async Task Org_unit_write_denies_non_writer_role()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
+        var request = Authorized(HttpMethod.Post, "/api/org-units", token);
+        request.Content = JsonContent.Create(new CreateOrgUnitRequest("department", "Denied Unit", null));
+        var response = await _staffarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Org_unit_write_rejects_invalid_hierarchy_and_conflicts()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var rootId = await SeedOrgUnitAsync("department", "Root Unit", null, "active");
+        var childId = await SeedOrgUnitAsync("team", "Child Unit", rootId, "active");
+        await SeedOrgUnitAsync("department", "Root Unit", null, "active", tenantId: Guid.NewGuid());
+
+        var duplicateRequest = Authorized(HttpMethod.Post, "/api/org-units", token);
+        duplicateRequest.Content = JsonContent.Create(new CreateOrgUnitRequest("department", "Root Unit", null));
+        var duplicateResponse = await _staffarrClient.SendAsync(duplicateRequest);
+        Assert.Equal(HttpStatusCode.Conflict, duplicateResponse.StatusCode);
+
+        var cycleRequest = Authorized(HttpMethod.Put, $"/api/org-units/{rootId}", token);
+        cycleRequest.Content = JsonContent.Create(new UpdateOrgUnitRequest("department", "Root Unit", childId));
+        var cycleResponse = await _staffarrClient.SendAsync(cycleRequest);
+        Assert.Equal(HttpStatusCode.Conflict, cycleResponse.StatusCode);
+
+        var deactivateParentRequest = Authorized(HttpMethod.Patch, $"/api/org-units/{rootId}/status", token);
+        deactivateParentRequest.Content = JsonContent.Create(new UpdateOrgUnitStatusRequest("inactive"));
+        var deactivateParentResponse = await _staffarrClient.SendAsync(deactivateParentRequest);
+        Assert.Equal(HttpStatusCode.Conflict, deactivateParentResponse.StatusCode);
+    }
+
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
@@ -372,5 +441,30 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         });
 
         await db.SaveChangesAsync();
+    }
+
+    private async Task<Guid> SeedOrgUnitAsync(
+        string unitType,
+        string name,
+        Guid? parentOrgUnitId,
+        string status,
+        Guid? tenantId = null)
+    {
+        using var scope = _staffarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+        var orgUnit = new OrgUnit
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId ?? PlatformSeeder.DemoTenantId,
+            UnitType = unitType,
+            Name = name,
+            ParentOrgUnitId = parentOrgUnitId,
+            Status = status,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        db.OrgUnits.Add(orgUnit);
+        await db.SaveChangesAsync();
+        return orgUnit.Id;
     }
 }

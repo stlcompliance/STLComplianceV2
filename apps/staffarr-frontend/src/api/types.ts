@@ -61,4 +61,21 @@ export interface OrgUnitResponse {
   unitType: string
   name: string
   parentOrgUnitId: string | null
+  status: 'active' | 'inactive'
+}
+
+export interface CreateOrgUnitRequest {
+  unitType: string
+  name: string
+  parentOrgUnitId: string | null
+}
+
+export interface UpdateOrgUnitRequest {
+  unitType: string
+  name: string
+  parentOrgUnitId: string | null
+}
+
+export interface UpdateOrgUnitStatusRequest {
+  status: 'active' | 'inactive'
 }

@@ -14,6 +14,8 @@ public sealed class OrgUnit : IHasTenant
 
     public Guid? ParentOrgUnitId { get; set; }
 
+    public string Status { get; set; } = "active";
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }
