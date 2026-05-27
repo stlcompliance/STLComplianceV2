@@ -59,8 +59,8 @@ public static class StlApiHost
             builder.Services.AddOpenApi();
             builder.Services.AddStlCorrelationId();
             builder.Services.AddStlJwtAuthentication(builder.Configuration);
-            configure?.Invoke(builder);
             builder.AddStlIntegrationTokenProvisioning();
+            configure?.Invoke(builder);
 
             var signingKey = builder.Configuration["AUTH_SIGNING_KEY"]
                 ?? builder.Configuration[$"{StlJwtOptions.SectionName}:SigningKey"];

@@ -260,7 +260,7 @@ public sealed class ServiceTokenAdminService(
             handler.ValidateToken(token, parameters, out var validatedToken);
             jwt = (JwtSecurityToken)validatedToken;
         }
-        catch (SecurityTokenException)
+        catch (Exception) when (token is not null)
         {
             return Invalid("token_invalid");
         }

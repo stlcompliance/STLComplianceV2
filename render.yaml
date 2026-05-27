@@ -196,10 +196,6 @@ services:
           property: connectionString
       - key: Cors__StaffArrFrontendOrigin
         value: https://staffarr-frontend.onrender.com
-      - key: Handoff__ServiceToken
-        generateValue: true
-      - key: TrainArr__ServiceToken
-        generateValue: true
 
   - type: web
     name: trainarr-api
@@ -220,12 +216,6 @@ services:
           property: connectionString
       - key: Cors__TrainArrFrontendOrigin
         value: https://trainarr-frontend.onrender.com
-      - key: Handoff__ServiceToken
-        generateValue: true
-      - key: StaffArr__ServiceToken
-        generateValue: true
-      - key: ComplianceCore__ServiceToken
-        generateValue: true
       - key: EvidenceStorage__RootPath
         value: /var/data/trainarr-evidence
 
@@ -248,10 +238,6 @@ services:
           property: connectionString
       - key: Cors__MaintainArrFrontendOrigin
         value: https://maintainarr-frontend.onrender.com
-      - key: Handoff__ServiceToken
-        generateValue: true
-      - key: SupplyArr__ServiceToken
-        generateValue: true
       - key: EvidenceStorage__RootPath
         value: /var/data/maintainarr-evidence
 
@@ -274,16 +260,6 @@ services:
           property: connectionString
       - key: Cors__RoutArrFrontendOrigin
         value: https://routarr-frontend.onrender.com
-      - key: Handoff__ServiceToken
-        generateValue: true
-      - key: TrainArr__ServiceToken
-        generateValue: true
-      - key: StaffArr__ServiceToken
-        generateValue: true
-      - key: MaintainArr__ServiceToken
-        generateValue: true
-      - key: ComplianceCore__ServiceToken
-        generateValue: true
 
   - type: web
     name: supplyarr-api
@@ -304,10 +280,6 @@ services:
           property: connectionString
       - key: Cors__SupplyArrFrontendOrigin
         value: https://supplyarr-frontend.onrender.com
-      - key: Handoff__ServiceToken
-        generateValue: true
-      - key: MaintainArr__ServiceToken
-        generateValue: true
 
   - type: web
     name: compliancecore-api
@@ -328,8 +300,6 @@ services:
           property: connectionString
       - key: Cors__ComplianceCoreFrontendOrigin
         value: https://compliancecore-frontend.onrender.com
-      - key: Handoff__ServiceToken
-        generateValue: true
 
   # --- Cross-product scheduled jobs ---
   - type: worker
@@ -347,32 +317,18 @@ services:
         value: "true"
       - key: TrainArrQualificationExpiration__TrainArrBaseUrl
         value: https://trainarr-api-ae2t.onrender.com
-      - key: TrainArrQualificationExpiration__ServiceToken
-        generateValue: true
       - key: StaffArrCertificationExpiration__StaffArrBaseUrl
         value: https://staffarr-api-srdo.onrender.com
-      - key: StaffArrCertificationExpiration__ServiceToken
-        generateValue: true
       - key: StaffArrReadinessRollup__StaffArrBaseUrl
         value: https://staffarr-api-srdo.onrender.com
-      - key: StaffArrReadinessRollup__ServiceToken
-        generateValue: true
       - key: StaffArrPermissionProjection__StaffArrBaseUrl
         value: https://staffarr-api-srdo.onrender.com
-      - key: StaffArrPermissionProjection__ServiceToken
-        generateValue: true
       - key: MaintainArrPmDueScan__MaintainArrBaseUrl
         value: https://maintainarr-api-82rg.onrender.com
-      - key: MaintainArrPmDueScan__ServiceToken
-        generateValue: true
       - key: SupplyArrReorderEvaluation__SupplyArrBaseUrl
         value: https://supplyarr-api-r963.onrender.com
-      - key: SupplyArrReorderEvaluation__ServiceToken
-        generateValue: true
       - key: ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl
         value: https://compliancecore-api-qfu7.onrender.com
-      - key: ComplianceCoreScheduledEvaluation__ServiceToken
-        generateValue: true
 
   # --- Product heartbeat workers (reserved for product-local jobs) ---
   - type: worker

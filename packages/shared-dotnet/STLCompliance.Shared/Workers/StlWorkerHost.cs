@@ -25,8 +25,8 @@ public static class StlWorkerHost
             var builder = Host.CreateApplicationBuilder(args);
             builder.Services.AddSingleton(product);
             builder.Services.AddHostedService<HeartbeatWorker>();
-            configure?.Invoke(builder);
             builder.AddStlIntegrationTokenProvisioning();
+            configure?.Invoke(builder);
 
             builder.Services.AddSerilog();
 
