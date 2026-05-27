@@ -444,7 +444,7 @@ services:
   - type: web
     name: suite-frontend
     runtime: static
-    plan: free
+    plan: starter
     rootDir: apps/suite-frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
@@ -459,7 +459,7 @@ services:
   - type: web
     name: staffarr-frontend
     runtime: static
-    plan: free
+    plan: starter
     rootDir: apps/staffarr-frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
@@ -474,7 +474,7 @@ services:
   - type: web
     name: trainarr-frontend
     runtime: static
-    plan: free
+    plan: starter
     rootDir: apps/trainarr-frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
@@ -489,7 +489,7 @@ services:
   - type: web
     name: maintainarr-frontend
     runtime: static
-    plan: free
+    plan: starter
     rootDir: apps/maintainarr-frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
@@ -504,7 +504,7 @@ services:
   - type: web
     name: routarr-frontend
     runtime: static
-    plan: free
+    plan: starter
     rootDir: apps/routarr-frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
@@ -519,7 +519,7 @@ services:
   - type: web
     name: supplyarr-frontend
     runtime: static
-    plan: free
+    plan: starter
     rootDir: apps/supplyarr-frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
@@ -534,7 +534,7 @@ services:
   - type: web
     name: compliancecore-frontend
     runtime: static
-    plan: free
+    plan: starter
     rootDir: apps/compliancecore-frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
@@ -549,7 +549,7 @@ services:
   - type: web
     name: companion-frontend
     runtime: static
-    plan: free
+    plan: starter
     rootDir: apps/companion-frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
