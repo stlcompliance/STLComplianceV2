@@ -42,7 +42,7 @@ jobs:
           E2E_LIVE: "1"
         run: dotnet test tests/STLCompliance.E2E/STLCompliance.E2E.csproj -c Release --no-build --filter "Category=Live" --verbosity normal
 
-      - name: Live DR restore drill (NexArr)
+      - name: Live DR restore drill (seven product databases)
         env:
           DR_LIVE: "1"
           DR_POSTGRES_CONTAINER: stlcompliancev2-postgres-1

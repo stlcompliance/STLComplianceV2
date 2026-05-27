@@ -8,7 +8,7 @@ M13 DR restore drill — product database catalog, post-restore validation, oper
 
 - **STLCompliance.Shared** — `StlProductDatabaseCatalog`, `StlDrRestoreDrillPlan`, `StlDrRestoreDrillSupport`, `StlDrRestoreDrillValidator`
 - **Platform ops** — `scripts/ops/dr-restore-drill.ps1`, `scripts/ops/dr-restore-drill.sh`
-- **tests/STLCompliance.Dr.Tests** — catalog/support/validator unit tests (`Category=Dr`) + optional live NexArr restore drill (`Category=Live`)
+- **tests/STLCompliance.Dr.Tests** — catalog/support/validator unit tests (`Category=Dr`) + optional live restore drill per product database (`Category=Live`; expanded to all seven in W102)
 - **CI** — `Category=Dr` step in `.github/workflows/ci.yml`; live drill in `.github/workflows/e2e-nightly.yml`
 
 ## Shared additions
@@ -71,7 +71,7 @@ dotnet test tests/STLCompliance.Dr.Tests/STLCompliance.Dr.Tests.csproj -c Releas
 
 | Area | Status after this slice |
 |------|-------------------------|
-| DR / backup restore | **Scripted drill** — operator scripts + validation; nightly live NexArr drill |
+| DR / backup restore | **Scripted drill** — operator scripts + validation; see W102 for nightly live seven-database drill |
 | Load / performance | Still blocked — needs SLO definitions |
 
 ## Next slice

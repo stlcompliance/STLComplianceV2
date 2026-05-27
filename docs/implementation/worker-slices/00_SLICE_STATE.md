@@ -179,6 +179,8 @@
 | 100 | M13 load-test harness (`StlLoadTestSloCatalog`, k6 scenarios, SLO evaluator, `scripts/ops/load-test-run.*`, `STLCompliance.Load.Tests`, nightly live k6, docs) | M13 (partial) | Complete | `a081ee0` |
 | 101 | M13 Playwright compose e2e profile (`docker-compose.e2e.yml`, `Dockerfile.frontend-e2e`, all product frontend previews 5174–5180, six-product handoff Playwright smokes, `StlE2eFrontendCatalog`, nightly CI, docs) | M13 (partial) | Complete | `44ec92f` |
 
-## Next slice (Worker 102)
+| 102 | M13 seven-database DR nightly drill (`DrRestoreDrillLiveRunner`, `[Theory]` live restore for all `StlProductDatabaseCatalog` databases, nightly e2e job label, docs) | M13 (partial) | Complete | `pending` |
 
-Recommended: **full seven-database DR nightly drill** — extend `DrRestoreDrillLiveTests` beyond NexArr and wire nightly job to restore/validate all seven product databases. Until then: **Product-owner SLO adoption** (blocked on PO SLO document) or **authenticated k6 flows** once SLOs exist.
+## Next slice (Worker 103)
+
+Recommended: **Product-owner SLO adoption** (blocked on PO SLO document) or **authenticated k6 flows** once SLOs exist. Optional: **staging Render snapshot drill** using `scripts/ops/dr-restore-drill.*` against managed Postgres backups.

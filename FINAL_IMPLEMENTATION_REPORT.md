@@ -12,7 +12,7 @@ This report synthesizes platform delivery from Worker 17 through Worker 94, incl
 
 The Arr suite is **functionally complete at the API and integration layer** across seven product APIs, eight React frontends (suite + six products + companion), shared workers, NexArr platform spine, and Render V1 Blueprint infrastructure. **575 automated .NET tests** pass in Release configuration (excluding optional `Category=Live` probes). Cross-product journeys are covered by `STLCompliance.E2E` integration tests and OpenAPI snapshot parity gates.
 
-**Remaining ship-gate items** are environmental or operational: live browser E2E full nightly pass (harness expanded W101), load/SLO validation (blocked on PO SLOs), seven-database DR nightly drill, and multi-tenant soak testing. A Playwright harness exists (`tests/e2e-playwright`) with **compose e2e profile** and six-product handoff smokes; tests **skip cleanly** when `E2E_LIVE` is unset or services are down.
+**Remaining ship-gate items** are environmental or operational: live browser E2E full nightly pass (harness expanded W101), load/SLO validation (blocked on PO SLOs), staging Render snapshot DR drill (operator scripts; nightly covers docker-compose seven DBs per W102), and multi-tenant soak testing. A Playwright harness exists (`tests/e2e-playwright`) with **compose e2e profile** and six-product handoff smokes; tests **skip cleanly** when `E2E_LIVE` is unset or services are down.
 
 ---
 
@@ -162,8 +162,8 @@ Without `E2E_LIVE`: all specs skipped (exit 0). With `E2E_LIVE` but stack down: 
 # Unit checks (CI default)
 dotnet test tests/STLCompliance.Dr.Tests/STLCompliance.Dr.Tests.csproj -c Release --filter "Category=Dr&Category!=Live"
 
-# Live NexArr restore against docker-compose postgres
-docker compose up -d postgres nexarr-api
+# Live restore drill for all seven product databases (docker-compose postgres + APIs)
+docker compose up -d postgres nexarr-api staffarr-api trainarr-api maintainarr-api routarr-api supplyarr-api compliancecore-api
 $env:DR_LIVE = "1"
 dotnet test tests/STLCompliance.Dr.Tests/STLCompliance.Dr.Tests.csproj -c Release --filter "Category=Dr&Category=Live"
 
@@ -206,7 +206,7 @@ dotnet test tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj -c Re
 | Docker local dev | Ready | `docker-compose.yml` APIs + postgres; frontends via Vite |
 | OTEL / metrics dashboards | **Wired** — instrumentation + smoke checks; connect Render `OTEL_EXPORTER_OTLP_ENDPOINT` when backend available |
 | Load / performance | **Harness ready (W100)** — k6 scenarios + SLO evaluator with engineering defaults; replace when PO publishes SLOs |
-| DR / backup restore | **Scripted drill** — `scripts/ops/dr-restore-drill.*`, `STLCompliance.Dr.Tests`, nightly live NexArr restore |
+| DR / backup restore | **Nightly seven-DB drill (W102)** — `scripts/ops/dr-restore-drill.*`, `STLCompliance.Dr.Tests` live theory per product database |
 | Tenant isolation soak | Open | Per-slice deny tests only |
 | STLComplianceSite (marketing) | Not started | M3 backlog |
 
@@ -219,7 +219,7 @@ dotnet test tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj -c Re
 | **Playwright full pass** | Harness + compose e2e profile (W101); nightly starts all previews via `e2e-frontends-preview.sh` | Run nightly workflow; fix flaky handoff tests if any product seed/entitlement gaps |
 | **Load / performance** | Engineering-default SLO harness (W100) — replace thresholds when PO publishes SLO document | Product owners publish SLO targets; extend k6 to authenticated flows |
 | **Metrics / tracing acceptance** | OTEL wired (W98); enable exporter on Render for dashboard validation | Enable OTEL on Render; run `scripts/ops/otel-smoke.ps1 -RequireOtelEnabled` |
-| **DR verification** | **Scripted drill (W99)** — restore scripts + validation; nightly live NexArr drill | Run full seven-database drill against staging Render snapshots on schedule |
+| **DR verification** | **Nightly seven-DB drill (W102)** on docker-compose; staging Render snapshots still operator-run | Run `dr-restore-drill` against Render managed Postgres backups on schedule |
 | **Tenant soak** | No multi-tenant parallel E2E battery | Add `STLCompliance.E2E` tenant isolation suite |
 | **TrainArr dedicated test project** | Coverage via cross-product tests only | Optional `STLCompliance.TrainArr.Auth.Tests` for parity |
 | **STLComplianceSite** | Out of Arr worker scope | Separate marketing site milestone |
@@ -251,7 +251,7 @@ dotnet test tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj -c Re
 | W88–W90 | Suite shell, Render V1, Companion inbox |
 | W91–W93 | E2E harness, OpenAPI parity, platform health |
 | W94 | Playwright browser smoke scaffold + this report |
-| W97–W101 | Handoff client dedup, OTEL smoke checks, DR restore drill, load-test harness, Playwright compose e2e profile |
+| W97–W102 | Handoff client dedup, OTEL smoke checks, DR restore drill, load-test harness, Playwright compose e2e profile, seven-database DR nightly drill |
 
 Detailed slice notes: `docs/implementation/worker-slices/W*.md` and `docs/implementation/worker-slices/00_SLICE_STATE.md`.
 
