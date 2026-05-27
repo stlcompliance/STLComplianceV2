@@ -185,6 +185,8 @@
 
 | 104 | M13 authenticated k6 load-test flows (`StlLoadTestAuthDefaults`, `nexarr-auth-me` + `product-auth-handoff-me` k6 scenarios, shared `stl-auth.js` helpers, extended SLO catalog, operator scripts, Load.Tests unit + live probes, docs) | M13 (partial) | Complete | `b2991d0` |
 
-## Next slice (Worker 105)
+| 105 | Product workspace shell session bootstrap (`ProductWorkspaceFrame`, `/api/me` bootstrap in all product `ProductWorkspaceLayout`s, compact companion variant, shared-ui + StaffArr tests, docs) | M3 (partial) | Complete | `pending` |
 
-Recommended: **Product-owner SLO adoption** (replace engineering-default thresholds when PO publishes SLO document) or **cross-product k6 journey scenarios** (qualification check, dispatch gate) once SLO targets exist.
+## Next slice (Worker 106)
+
+Recommended: **StaffArr audit package export foundations** (`/api/audit-packages`) or **product-owner SLO adoption** (replace engineering-default thresholds when PO publishes SLO document).
