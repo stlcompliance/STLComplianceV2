@@ -48,7 +48,7 @@ public static class PlatformSeeder
         StlLaunchOptions? launchOptions = null,
         CancellationToken cancellationToken = default)
     {
-        if (await db.ProductCatalog.AnyAsync(cancellationToken))
+        if (await db.Users.AnyAsync(u => u.Email == DemoAdminEmail, cancellationToken))
         {
             return;
         }
@@ -57,6 +57,11 @@ public static class PlatformSeeder
 
         foreach (var product in Products)
         {
+            if (await db.ProductCatalog.AnyAsync(p => p.ProductKey == product.Key, cancellationToken))
+            {
+                continue;
+            }
+
             db.ProductCatalog.Add(new ProductCatalogItem
             {
                 ProductKey = product.Key,
@@ -66,15 +71,18 @@ public static class PlatformSeeder
             });
         }
 
-        db.Tenants.Add(new Tenant
+        if (!await db.Tenants.AnyAsync(t => t.Id == DemoTenantId, cancellationToken))
         {
-            Id = DemoTenantId,
-            Slug = "demo-stl",
-            DisplayName = "STL Demo Tenant",
-            Status = TenantStatuses.Active,
-            CreatedAt = now,
-            ModifiedAt = now
-        });
+            db.Tenants.Add(new Tenant
+            {
+                Id = DemoTenantId,
+                Slug = "demo-stl",
+                DisplayName = "STL Demo Tenant",
+                Status = TenantStatuses.Active,
+                CreatedAt = now,
+                ModifiedAt = now
+            });
+        }
 
         db.Users.Add(new PlatformUser
         {
@@ -132,6 +140,13 @@ public static class PlatformSeeder
 
         foreach (var product in Products)
         {
+            if (await db.Entitlements.AnyAsync(
+                    e => e.TenantId == DemoTenantId && e.ProductKey == product.Key,
+                    cancellationToken))
+            {
+                continue;
+            }
+
             db.Entitlements.Add(new TenantProductEntitlement
             {
                 Id = Guid.NewGuid(),
@@ -142,16 +157,25 @@ public static class PlatformSeeder
             });
         }
 
-        SeedLaunchProfiles(db, launchOptions, now);
+        await SeedLaunchProfilesAsync(db, launchOptions, now, cancellationToken);
         SeedCallbackAllowlist(db, now);
 
         await db.SaveChangesAsync(cancellationToken);
     }
 
-    private static void SeedLaunchProfiles(NexArrDbContext db, StlLaunchOptions? launchOptions, DateTimeOffset now)
+    private static async Task SeedLaunchProfilesAsync(
+        NexArrDbContext db,
+        StlLaunchOptions? launchOptions,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
     {
         foreach (var profile in DefaultLaunchProfiles)
         {
+            if (await db.LaunchProfiles.AnyAsync(p => p.ProductKey == profile.ProductKey, cancellationToken))
+            {
+                continue;
+            }
+
             var configured = launchOptions?.Products.GetValueOrDefault(profile.ProductKey);
             db.LaunchProfiles.Add(new ProductLaunchProfile
             {
