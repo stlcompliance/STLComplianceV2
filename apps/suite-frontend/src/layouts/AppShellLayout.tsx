@@ -10,15 +10,15 @@ export function AppShellLayout() {
   const { me, logout } = useAuth()
 
   return (
-    <div className="flex min-h-screen bg-stl-sand">
-      <aside className="flex w-64 shrink-0 flex-col border-r border-slate-700/20 bg-white/90 p-4 shadow-sm">
+    <div className="flex min-h-screen bg-[#0f172a] text-slate-100">
+      <aside className="flex w-64 shrink-0 flex-col border-r border-slate-700/70 bg-[#0a101c] p-4">
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase tracking-wide text-stl-teal">
             STL Compliance
           </p>
-          <h1 className="text-lg font-semibold text-stl-navy">Suite</h1>
+          <h1 className="text-lg font-semibold text-white">Suite</h1>
           {me && (
-            <p className="mt-1 text-xs text-slate-600">
+            <p className="mt-1 text-xs text-slate-400">
               {me.displayName} · {me.tenantDisplayName}
             </p>
           )}
@@ -33,8 +33,8 @@ export function AppShellLayout() {
               [
                 'mt-6 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-stl-teal/15 text-stl-navy'
-                  : 'text-slate-700 hover:bg-white/70',
+                  ? 'border-l-2 border-stl-teal bg-slate-800/80 pl-[10px] text-white'
+                  : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
               ].join(' ')
             }
           >
@@ -46,7 +46,7 @@ export function AppShellLayout() {
         <button
           type="button"
           onClick={() => void logout()}
-          className="mt-auto flex items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
+          className="mt-auto flex items-center gap-2 rounded-md px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/50 hover:text-white"
         >
           <LogOut className="h-4 w-4" aria-hidden />
           Sign out

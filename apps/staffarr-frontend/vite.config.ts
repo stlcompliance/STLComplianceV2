@@ -1,13 +1,24 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+const appRoot = path.dirname(fileURLToPath(import.meta.url))
 const staffarrApiTarget = process.env.VITE_STAFFARR_PROXY_TARGET ?? 'http://localhost:5102'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      '@stl/shared-ui': path.resolve(appRoot, '../../packages/shared-ui/src'),
+    },
+  },
   server: {
     port: 5175,
+    fs: {
+      allow: [path.resolve(appRoot, '../..')],
+    },
     proxy: {
       '/api': {
         target: staffarrApiTarget,

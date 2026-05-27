@@ -43,8 +43,8 @@ export function ProductSwitcher() {
                   [
                     'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                     isActive
-                      ? 'bg-stl-teal/15 text-stl-navy'
-                      : 'text-slate-700 hover:bg-white/70',
+                      ? 'border-l-2 border-stl-teal bg-slate-800/80 pl-[10px] text-white'
+                      : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
                   ].join(' ')
                 }
               >
@@ -64,7 +64,7 @@ export function ProductSwitcher() {
         )
       })}
       {launch.isError && (
-        <p className="px-3 text-xs text-red-700" role="alert">
+        <p className="px-3 text-xs text-red-300" role="alert">
           Launch failed: {(launch.error as Error).message}
         </p>
       )}
@@ -86,7 +86,7 @@ function LaunchButton({
       type="button"
       disabled={disabled}
       onClick={onLaunch}
-      className="mx-3 rounded border border-stl-teal/40 px-2 py-1 text-left text-xs text-stl-teal hover:bg-white disabled:opacity-50"
+      className="mx-3 rounded border border-stl-teal/40 px-2 py-1 text-left text-xs text-stl-teal hover:bg-slate-800/50 disabled:opacity-50"
     >
       Open {displayName} app
     </button>

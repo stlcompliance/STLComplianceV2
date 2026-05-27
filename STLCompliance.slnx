@@ -25,6 +25,7 @@
   <Folder Name="/packages/shared-dotnet/">
     <Project Path="packages/shared-dotnet/STLCompliance.Shared/STLCompliance.Shared.csproj" />
   </Folder>
+  <Folder Name="/packages/shared-ui/" />
   <Folder Name="/tests/">
     <Project Path="tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj" />
     <Project Path="tests/STLCompliance.Health.Tests/STLCompliance.Health.Tests.csproj" />

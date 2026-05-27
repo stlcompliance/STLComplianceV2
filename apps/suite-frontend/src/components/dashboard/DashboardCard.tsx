@@ -11,9 +11,9 @@ export function DashboardCard({
 }) {
   return (
     <section
-      className={`rounded-lg border border-slate-200 bg-white p-4 ${className}`.trim()}
+      className={`rounded-lg border border-slate-700 bg-slate-900/60 p-4 ${className}`.trim()}
     >
-      <h4 className="text-sm font-semibold text-stl-navy">{title}</h4>
+      <h4 className="text-sm font-semibold text-slate-100">{title}</h4>
       <div className="mt-3">{children}</div>
     </section>
   )

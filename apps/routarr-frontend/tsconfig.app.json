@@ -13,10 +13,16 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
+    "ignoreDeprecations": "6.0",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@stl/shared-ui": ["../../packages/shared-ui/src/index.ts"],
+      "@stl/shared-ui/*": ["../../packages/shared-ui/src/*"]
+    }
   },
   "include": ["src"]
 }

@@ -4,13 +4,14 @@
   --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
   --color-stl-navy: #0f2744;
   --color-stl-teal: #1a8f8a;
-  --color-stl-sand: #f4f1ea;
+  --color-stl-chrome: #0a101c;
+  --color-stl-workspace: #0f172a;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
   font-family: var(--font-sans);
-  background: var(--color-stl-sand);
-  color: #102033;
+  background: var(--color-stl-workspace);
+  color: #e2e8f0;
 }
