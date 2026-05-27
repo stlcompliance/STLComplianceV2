@@ -6,6 +6,6 @@ RUN dotnet publish apps/nexarr-api/NexArr.Api/NexArr.Api.csproj -c Release -o /a
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
-ENV ASPNETCORE_URLS=http://+:8080
-EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:10000
+EXPOSE 10000
 ENTRYPOINT ["dotnet", "NexArr.Api.dll"]
