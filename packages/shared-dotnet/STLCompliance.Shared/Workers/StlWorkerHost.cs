@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Integration;
+using STLCompliance.Shared.Observability;
 
 namespace STLCompliance.Shared.Workers;
 
@@ -26,6 +27,7 @@ public static class StlWorkerHost
             builder.Services.AddSingleton(product);
             builder.Services.AddHostedService<HeartbeatWorker>();
             builder.AddStlIntegrationTokenProvisioning();
+            builder.AddStlOpenTelemetry(product);
             configure?.Invoke(builder);
 
             builder.Services.AddSerilog();

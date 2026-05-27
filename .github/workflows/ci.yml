@@ -29,6 +29,9 @@ jobs:
       - name: OpenAPI parity
         run: dotnet test tests/STLCompliance.OpenApi.Tests/STLCompliance.OpenApi.Tests.csproj --configuration Release --no-build --verbosity normal --filter "Category=OpenApi"
 
+      - name: OTEL smoke checks
+        run: dotnet test tests/STLCompliance.Otel.Tests/STLCompliance.Otel.Tests.csproj --configuration Release --no-build --verbosity normal --filter "Category=Otel"
+
       - name: EF migrations present
         run: |
           test -f apps/nexarr-api/NexArr.Api/Migrations/*InitialPlatformFoundation*.cs

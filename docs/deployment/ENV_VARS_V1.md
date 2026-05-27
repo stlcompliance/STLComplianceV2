@@ -6,7 +6,7 @@ Reference for `render.yaml` groups and Dashboard secrets. .NET APIs use `Section
 
 | Group | Purpose |
 |-------|---------|
-| `stl-shared` | `ASPNETCORE_ENVIRONMENT`, `LOG_LEVEL`, `OTEL_ENABLED` |
+| `stl-shared` | `ASPNETCORE_ENVIRONMENT`, `LOG_LEVEL`, `OTEL_ENABLED`, `OTEL_SERVICE_NAME`, `OTEL_EXPORTER_OTLP_ENDPOINT` |
 | `stl-auth` | JWT + service-token signing (`AUTH_SIGNING_KEY`, `Auth__*`, `SERVICE_TOKEN_*`) |
 | `stl-internal-api-urls` | Private-network API base URLs (`http://{service}:10000`) for server-to-server calls |
 | `stl-public-frontend-urls` | Documented public static-site URLs (onrender.com defaults) |
@@ -16,8 +16,18 @@ Reference for `render.yaml` groups and Dashboard secrets. .NET APIs use `Section
 
 | Service type | Path |
 |--------------|------|
-| All Docker APIs | `GET /health` (liveness), `GET /health/ready` (DB readiness — Blueprint `healthCheckPath`) |
+| All Docker APIs | `GET /health` (liveness), `GET /health/ready` (DB readiness — Blueprint `healthCheckPath`), `GET /health/observability` (OTEL wiring status) |
 | Workers | Process heartbeat only (no HTTP health endpoint) |
+
+## OpenTelemetry (`stl-shared`)
+
+| Variable | Default | Notes |
+|----------|---------|-------|
+| `OTEL_ENABLED` | `false` | When `true`, APIs and workers register ASP.NET Core / HTTP / runtime instrumentation and export metrics + traces |
+| `OTEL_SERVICE_NAME` | product key (e.g. `nexarr`, `shared-worker`) | Override per service in Render Dashboard when needed |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | unset | When set (e.g. `http://otel-collector:4317`), export via OTLP; otherwise console exporter in Development/Testing only |
+
+Operational smoke script (local docker-compose): `scripts/ops/otel-smoke.ps1`. Automated smoke tests: `dotnet test tests/STLCompliance.Otel.Tests --filter Category=Otel`.
 
 ## Auth (all APIs)
 

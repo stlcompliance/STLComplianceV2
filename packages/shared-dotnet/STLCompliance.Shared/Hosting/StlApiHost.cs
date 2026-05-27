@@ -13,6 +13,7 @@ using STLCompliance.Shared.Data;
 using STLCompliance.Shared.Health;
 using STLCompliance.Shared.Integration;
 using STLCompliance.Shared.Middleware;
+using STLCompliance.Shared.Observability;
 
 namespace STLCompliance.Shared.Hosting;
 
@@ -60,6 +61,7 @@ public static class StlApiHost
             builder.Services.AddStlCorrelationId();
             builder.Services.AddStlJwtAuthentication(builder.Configuration);
             builder.AddStlIntegrationTokenProvisioning();
+            builder.AddStlOpenTelemetry(product);
             configure?.Invoke(builder);
 
             var signingKey = builder.Configuration["AUTH_SIGNING_KEY"]
@@ -89,8 +91,9 @@ public static class StlApiHost
                 await ApplyMigrationsAsync<TContext>(app);
             }
 
-            app.MapGet("/health", (ProductDescriptor descriptor) =>
+            app.MapGet("/health", (ProductDescriptor descriptor, IServiceProvider services) =>
             {
+                RecordHealthMetric(services, descriptor, "liveness");
                 var response = new HealthResponse(
                     Status: "Healthy",
                     Product: descriptor.ProductKey,
@@ -106,6 +109,7 @@ public static class StlApiHost
             {
                 ResponseWriter = async (context, report) =>
                 {
+                    RecordHealthMetric(context.RequestServices, product, "ready");
                     context.Response.ContentType = "application/json";
                     var payload = new HealthResponse(
                         Status: report.Status.ToString(),
@@ -123,6 +127,18 @@ public static class StlApiHost
                     await context.Response.WriteAsJsonAsync(payload);
                 }
             }).AllowAnonymous();
+
+            app.MapGet("/health/observability", (ProductDescriptor descriptor, IConfiguration configuration) =>
+            {
+                var status = StlOpenTelemetryExtensions.BuildStatus(
+                    configuration,
+                    descriptor,
+                    includeAspNetCoreInstrumentation: true);
+                return Results.Ok(status);
+            })
+            .WithName("GetObservabilityHealth")
+            .WithTags("Health")
+            .AllowAnonymous();
 
             app.MapGet("/", (ProductDescriptor descriptor) => Results.Ok(new
             {
@@ -165,6 +181,12 @@ public static class StlApiHost
 
     private static string GetVersion() =>
         typeof(StlApiHost).Assembly.GetName().Version?.ToString() ?? "0.0.0";
+
+    private static void RecordHealthMetric(IServiceProvider services, ProductDescriptor descriptor, string endpoint)
+    {
+        var metrics = services.GetService<StlPlatformMetrics>();
+        metrics?.RecordHealthRequest(endpoint, descriptor.ProductKey);
+    }
 
     private static async Task ApplyMigrationsAsync<TContext>(WebApplication app)
         where TContext : PlatformDbContext

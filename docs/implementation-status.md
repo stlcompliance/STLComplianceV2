@@ -1,6 +1,6 @@
 # Implementation status
 
-Last updated: 2026-05-27 (Shared NexArr handoff client dedup slice)
+Last updated: 2026-05-27 (M13 OTEL smoke checks slice)
 
 ## Milestone summary
 
@@ -18,16 +18,17 @@ Last updated: 2026-05-27 (Shared NexArr handoff client dedup slice)
 | M10 — Cross-product qualification gates | In progress (Workers 36–42, 83–87) |
 | M11 — Companion app | Partial (Worker 90) |
 | M12 — Scheduled workers | In progress (Workers 44, 46–51) |
-| M13 — Ship-gate acceptance & hardening | In progress (Workers 91–97) |
+| M13 — Ship-gate acceptance & hardening | In progress (Workers 91–98) |
 
 ## Latest completed slice
 
-**Shared NexArr handoff client dedup**
+**M13 OTEL smoke checks and metrics wiring**
 
-- **STLCompliance.Shared**: `StlNexArrHandoffClient`, redeem contracts, `AddStlNexArrHandoffClient` DI extension
-- **6 product APIs**: removed duplicate `NexArrHandoffClient` + `NexArrLaunchContracts`; wired shared client in service registration and `HandoffAuthService`
-- **Tests**: auth + E2E test hosts updated to register `StlNexArrHandoffClient`
-- **Docs**: `docs/implementation/worker-slices/W97_SHARED_NEXARR_HANDOFF_CLIENT_DEDUP.md`
+- **STLCompliance.Shared**: `StlOpenTelemetryExtensions`, `StlPlatformMetrics`, `/health/observability` via `StlApiHost`
+- **All APIs + workers**: OTEL instrumentation when `OTEL_ENABLED=true`; OTLP or console export
+- **Tests**: `STLCompliance.Otel.Tests` (`Category=Otel`) — 7 API smoke classes + options/worker tests
+- **Ops**: `scripts/ops/otel-smoke.ps1`; CI OTEL step
+- **Docs**: `docs/implementation/worker-slices/W98_M13_OTEL_SMOKE_CHECKS.md`
 
 ## Build & test status
 
@@ -48,10 +49,10 @@ Last updated: 2026-05-27 (Shared NexArr handoff client dedup slice)
 | Tenant isolation soak | **Complete (W95–96)** | Integration battery covers all 7 product APIs |
 | Nightly live E2E CI | **Complete (W95)** | `.github/workflows/e2e-nightly.yml` |
 | Handoff client dedup | **Complete (W97)** | Shared `StlNexArrHandoffClient` replaces 6 duplicates |
+| OTEL / metrics wiring | **Complete (W98)** | Shared OTEL host wiring, `/health/observability`, `Category=Otel` smoke tests |
 | Load / performance testing | Blocked | Needs SLO definitions |
 | Recovery / DR verification | Open | No automated backup-restore tests |
-| OTEL / metrics dashboards | Open | Not wired |
 
 ## Next slice
 
-Load-test harness (after SLOs), DR restore drill, OTEL smoke checks — see `docs/implementation/worker-slices/00_SLICE_STATE.md`.
+DR restore drill script; load-test harness (after SLOs) — see `docs/implementation/worker-slices/00_SLICE_STATE.md`.
