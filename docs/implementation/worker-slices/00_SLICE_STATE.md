@@ -13,7 +13,8 @@
 | 9 | StaffArr people directory + person profile core | M4 (partial) | Complete | `pending` |
 | 10 | StaffArr org hierarchy management write flows | M4 (partial) | Complete | `pending` |
 | 11 | StaffArr org-unit assignment primitives (site/department/team/position linkage + assignment write flows) | M4 (partial) | Complete | `pending` |
+| 12 | StaffArr manager hierarchy + manager/subordinate views (hierarchy traversal, manager linkage write path, subordinate detail rollups) | M4 (partial) | Complete | `pending` |
 
 ## Next slice (Worker 12)
 
-Recommended: implement StaffArr manager hierarchy and manager/subordinate views using the new org-unit assignment primitives.
+Recommended: implement StaffArr role templates + permission templates/assignment foundations (tenant-scoped role/permission modeling, assignment write paths, and permission-aware UI surfaces).

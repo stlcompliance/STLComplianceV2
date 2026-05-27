@@ -2,11 +2,15 @@ import type {
   CreateOrgUnitAssignmentRequest,
   CreateOrgUnitRequest,
   HandoffSessionResponse,
+  ManagerChainEntryResponse,
   OrgUnitAssignmentResponse,
   OrgUnitResponse,
+  PersonManagerResponse,
   StaffArrMeResponse,
   StaffPersonDetailResponse,
   StaffPersonSummaryResponse,
+  SubordinateSummaryResponse,
+  UpdatePersonManagerRequest,
   UpdateOrgUnitAssignmentRequest,
   UpdateOrgUnitAssignmentStatusRequest,
   UpdateOrgUnitRequest,
@@ -163,4 +167,53 @@ export async function updatePersonOrgAssignmentStatus(
     body: JSON.stringify(request),
   })
   return parseJsonResponse<OrgUnitAssignmentResponse>(response, 'Failed to update org assignment status')
+}
+
+export async function updatePersonManager(
+  accessToken: string,
+  personId: string,
+  request: UpdatePersonManagerRequest,
+): Promise<PersonManagerResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/manager`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonManagerResponse>(response, 'Failed to update manager')
+}
+
+export async function getManagerChain(
+  accessToken: string,
+  personId: string,
+): Promise<ManagerChainEntryResponse[]> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/manager-chain`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ManagerChainEntryResponse[]>(response, 'Failed to load manager chain')
+}
+
+export async function getSubordinates(
+  accessToken: string,
+  personId: string,
+  includeIndirect = true,
+  limit = 200,
+): Promise<SubordinateSummaryResponse[]> {
+  const response = await fetch(
+    `${apiBase}/api/people/${personId}/subordinates?includeIndirect=${includeIndirect ? 'true' : 'false'}&limit=${limit}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<SubordinateSummaryResponse[]>(response, 'Failed to load subordinates')
+}
+
+export async function getSubordinateDetail(
+  accessToken: string,
+  personId: string,
+  subordinatePersonId: string,
+): Promise<SubordinateSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/subordinates/${subordinatePersonId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<SubordinateSummaryResponse>(response, 'Failed to load subordinate detail')
 }

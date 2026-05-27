@@ -4,18 +4,23 @@ import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import {
   createPersonOrgAssignment,
   createOrgUnit,
+  getManagerChain,
   getMe,
   getOrgUnits,
   getPersonOrgAssignments,
+  getSubordinateDetail,
+  getSubordinates,
   getPeople,
   getPerson,
   StaffArrApiError,
+  updatePersonManager,
   updatePersonOrgAssignment,
   updatePersonOrgAssignmentStatus,
   updateOrgUnit,
   updateOrgUnitStatus,
 } from '../api/client'
 import { clearSession, loadSession } from '../auth/sessionStorage'
+import { ManagerHierarchyPanel } from '../components/ManagerHierarchyPanel'
 import { canManageOrgHierarchy, OrgHierarchyManager } from '../components/OrgHierarchyManager'
 import { PersonOrgAssignmentsManager } from '../components/PersonOrgAssignmentsManager'
 
@@ -62,6 +67,25 @@ export function HomePage() {
     queryKey: ['staffarr-org-assignments', session?.accessToken, effectivePersonId],
     queryFn: () => getPersonOrgAssignments(session!.accessToken, effectivePersonId!),
     enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const [selectedSubordinateId, setSelectedSubordinateId] = useState<string | null>(null)
+  useEffect(() => {
+    setSelectedSubordinateId(null)
+  }, [effectivePersonId])
+  const managerChainQuery = useQuery({
+    queryKey: ['staffarr-manager-chain', session?.accessToken, effectivePersonId],
+    queryFn: () => getManagerChain(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const subordinatesQuery = useQuery({
+    queryKey: ['staffarr-subordinates', session?.accessToken, effectivePersonId],
+    queryFn: () => getSubordinates(session!.accessToken, effectivePersonId!, true, 200),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const subordinateDetailQuery = useQuery({
+    queryKey: ['staffarr-subordinate-detail', session?.accessToken, effectivePersonId, selectedSubordinateId],
+    queryFn: () => getSubordinateDetail(session!.accessToken, effectivePersonId!, selectedSubordinateId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId && selectedSubordinateId),
   })
 
   const createOrgUnitMutation = useMutation({
@@ -138,6 +162,21 @@ export function HomePage() {
       await queryClient.invalidateQueries({ queryKey: ['staffarr-org-assignments', session?.accessToken] })
     },
   })
+  const updateManagerMutation = useMutation({
+    mutationFn: (payload: { personId: string; managerPersonId: string | null }) =>
+      updatePersonManager(session!.accessToken, payload.personId, {
+        managerPersonId: payload.managerPersonId,
+      }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-people', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-manager-chain', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-subordinates', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-subordinate-detail', session?.accessToken] }),
+      ])
+    },
+  })
 
   if (!session) {
     return (
@@ -183,8 +222,21 @@ export function HomePage() {
     )
   }
 
-  if (peopleQuery.isError || orgUnitsQuery.isError || assignmentQuery.isError) {
-    const directoryError = peopleQuery.error ?? orgUnitsQuery.error ?? assignmentQuery.error
+  if (
+    peopleQuery.isError ||
+    orgUnitsQuery.isError ||
+    assignmentQuery.isError ||
+    managerChainQuery.isError ||
+    subordinatesQuery.isError ||
+    subordinateDetailQuery.isError
+  ) {
+    const directoryError =
+      peopleQuery.error ??
+      orgUnitsQuery.error ??
+      assignmentQuery.error ??
+      managerChainQuery.error ??
+      subordinatesQuery.error ??
+      subordinateDetailQuery.error
     if (directoryError instanceof StaffArrApiError && (directoryError.status === 401 || directoryError.status === 403)) {
       clearSession()
     }
@@ -206,11 +258,16 @@ export function HomePage() {
   const profile = personProfileQuery.data
   const selectedPerson = people.find((person) => person.personId === effectivePersonId) ?? null
   const assignments = assignmentQuery.data ?? []
+  const managerChain = managerChainQuery.data ?? []
+  const subordinates = subordinatesQuery.data ?? []
+  const selectedSubordinateDetail = subordinateDetailQuery.data ?? null
   const canManageOrgUnits = canManageOrgHierarchy(me.tenantRoleKey, me.isPlatformAdmin)
+  const canManageHierarchy = canManageOrgUnits
   const orgMutationError =
     createOrgUnitMutation.error ?? updateOrgUnitMutation.error ?? updateOrgUnitStatusMutation.error ?? null
   const assignmentMutationError =
     createAssignmentMutation.error ?? updateAssignmentMutation.error ?? updateAssignmentStatusMutation.error ?? null
+  const managerMutationError = updateManagerMutation.error
 
   return (
     <main className="mx-auto max-w-6xl p-8">
@@ -341,6 +398,31 @@ export function HomePage() {
               personId: selectedPerson.personId,
               assignmentId,
               status,
+            })
+          }}
+        />
+      ) : null}
+
+      {selectedPerson ? (
+        <ManagerHierarchyPanel
+          selectedPersonId={selectedPerson.personId}
+          selectedPersonDisplayName={selectedPerson.displayName}
+          people={people}
+          managerChain={managerChain}
+          subordinates={subordinates}
+          selectedSubordinate={selectedSubordinateDetail}
+          canManage={canManageHierarchy}
+          isSubmitting={updateManagerMutation.isPending}
+          errorMessage={
+            managerMutationError instanceof StaffArrApiError
+              ? managerMutationError.body || managerMutationError.message
+              : null
+          }
+          onSelectSubordinate={(subordinatePersonId) => setSelectedSubordinateId(subordinatePersonId)}
+          onUpdateManager={async (managerPersonId) => {
+            await updateManagerMutation.mutateAsync({
+              personId: selectedPerson.personId,
+              managerPersonId,
             })
           }}
         />

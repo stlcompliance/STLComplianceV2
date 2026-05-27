@@ -43,6 +43,7 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.PrimaryEmail });
             entity.HasIndex(x => new { x.TenantId, x.ExternalUserId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ManagerPersonId });
             entity.HasOne(x => x.PrimaryOrgUnit).WithMany().HasForeignKey(x => x.PrimaryOrgUnitId);
             entity.HasOne(x => x.Manager).WithMany().HasForeignKey(x => x.ManagerPersonId);
         });

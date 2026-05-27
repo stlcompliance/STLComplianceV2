@@ -80,3 +80,34 @@ public sealed record UpdateOrgUnitAssignmentRequest(
 
 public sealed record UpdateOrgUnitAssignmentStatusRequest(
     string Status);
+
+public sealed record UpdatePersonManagerRequest(
+    Guid? ManagerPersonId);
+
+public sealed record PersonManagerResponse(
+    Guid PersonId,
+    Guid? ManagerPersonId,
+    string? ManagerDisplayName,
+    DateTimeOffset UpdatedAt);
+
+public sealed record ManagerChainEntryResponse(
+    Guid PersonId,
+    string DisplayName,
+    string PrimaryEmail,
+    string? JobTitle,
+    string? PrimaryOrgUnitName,
+    Guid? ManagerPersonId,
+    int Level);
+
+public sealed record SubordinateSummaryResponse(
+    Guid PersonId,
+    string DisplayName,
+    string PrimaryEmail,
+    string EmploymentStatus,
+    string? JobTitle,
+    string? PrimaryOrgUnitName,
+    Guid? ManagerPersonId,
+    string? ManagerDisplayName,
+    int Depth,
+    int DirectReportCount,
+    string? ActiveAssignmentPath);

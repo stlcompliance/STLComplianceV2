@@ -109,3 +109,38 @@ export interface UpdateOrgUnitAssignmentRequest {
 export interface UpdateOrgUnitAssignmentStatusRequest {
   status: 'active' | 'inactive'
 }
+
+export interface UpdatePersonManagerRequest {
+  managerPersonId: string | null
+}
+
+export interface PersonManagerResponse {
+  personId: string
+  managerPersonId: string | null
+  managerDisplayName: string | null
+  updatedAt: string
+}
+
+export interface ManagerChainEntryResponse {
+  personId: string
+  displayName: string
+  primaryEmail: string
+  jobTitle: string | null
+  primaryOrgUnitName: string | null
+  managerPersonId: string | null
+  level: number
+}
+
+export interface SubordinateSummaryResponse {
+  personId: string
+  displayName: string
+  primaryEmail: string
+  employmentStatus: string
+  jobTitle: string | null
+  primaryOrgUnitName: string | null
+  managerPersonId: string | null
+  managerDisplayName: string | null
+  depth: number
+  directReportCount: number
+  activeAssignmentPath: string | null
+}

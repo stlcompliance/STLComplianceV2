@@ -12,6 +12,7 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         StaffArrServiceRegistration.ConfigurePipeline(app);
         app.MapStaffArrAuthEndpoints();
         app.MapStaffArrPeopleEndpoints();
+        app.MapStaffArrManagerHierarchyEndpoints();
         app.MapStaffArrOrgUnitEndpoints();
         app.MapStaffArrOrgUnitAssignmentEndpoints();
         await Task.CompletedTask;

@@ -1,0 +1,86 @@
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { formatManagerMutationError, ManagerHierarchyPanel } from './ManagerHierarchyPanel'
+
+const people = [
+  {
+    personId: 'person-1',
+    externalUserId: null,
+    displayName: 'Alice Admin',
+    primaryEmail: 'alice@example.com',
+    employmentStatus: 'active',
+    primaryOrgUnitId: null,
+    primaryOrgUnitName: null,
+    managerPersonId: null,
+    jobTitle: 'Director',
+  },
+  {
+    personId: 'person-2',
+    externalUserId: null,
+    displayName: 'Bob Lead',
+    primaryEmail: 'bob@example.com',
+    employmentStatus: 'active',
+    primaryOrgUnitId: null,
+    primaryOrgUnitName: null,
+    managerPersonId: 'person-1',
+    jobTitle: 'Lead',
+  },
+]
+
+describe('ManagerHierarchyPanel', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('renders read-only fallback for non-writers', () => {
+    render(
+      <ManagerHierarchyPanel
+        selectedPersonId="person-2"
+        selectedPersonDisplayName="Bob Lead"
+        people={people}
+        managerChain={[]}
+        subordinates={[]}
+        selectedSubordinate={null}
+        canManage={false}
+        isSubmitting={false}
+        errorMessage={null}
+        onSelectSubordinate={vi.fn()}
+        onUpdateManager={vi.fn(async () => {})}
+      />,
+    )
+
+    expect(screen.getByText('Read only')).toBeTruthy()
+    expect(screen.getByText('Your role does not include manager hierarchy write permission.')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Update manager' })).toBeNull()
+  })
+
+  it('submits manager update with selected manager', async () => {
+    const onUpdateManager = vi.fn(async () => {})
+    render(
+      <ManagerHierarchyPanel
+        selectedPersonId="person-2"
+        selectedPersonDisplayName="Bob Lead"
+        people={people}
+        managerChain={[]}
+        subordinates={[]}
+        selectedSubordinate={null}
+        canManage
+        isSubmitting={false}
+        errorMessage={null}
+        onSelectSubordinate={vi.fn()}
+        onUpdateManager={onUpdateManager}
+      />,
+    )
+
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'person-1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Update manager' }))
+
+    expect(onUpdateManager).toHaveBeenCalledWith('person-1')
+  })
+
+  it('classifies mutation errors for UI copy', () => {
+    expect(formatManagerMutationError('{"status":403}')).toContain('Forbidden:')
+    expect(formatManagerMutationError('{"status":409,"code":"people.manager_cycle"}')).toContain('Conflict:')
+    expect(formatManagerMutationError('{"status":400}')).toContain('Validation:')
+  })
+})

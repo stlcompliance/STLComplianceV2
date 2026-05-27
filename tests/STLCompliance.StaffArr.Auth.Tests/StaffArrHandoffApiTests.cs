@@ -24,6 +24,10 @@ using OrgUnitAssignmentResponse = StaffArr.Api.Contracts.OrgUnitAssignmentRespon
 using CreateOrgUnitAssignmentRequest = StaffArr.Api.Contracts.CreateOrgUnitAssignmentRequest;
 using UpdateOrgUnitAssignmentRequest = StaffArr.Api.Contracts.UpdateOrgUnitAssignmentRequest;
 using UpdateOrgUnitAssignmentStatusRequest = StaffArr.Api.Contracts.UpdateOrgUnitAssignmentStatusRequest;
+using UpdatePersonManagerRequest = StaffArr.Api.Contracts.UpdatePersonManagerRequest;
+using PersonManagerResponse = StaffArr.Api.Contracts.PersonManagerResponse;
+using ManagerChainEntryResponse = StaffArr.Api.Contracts.ManagerChainEntryResponse;
+using SubordinateSummaryResponse = StaffArr.Api.Contracts.SubordinateSummaryResponse;
 using StaffArrTokenService = StaffArr.Api.Services.StaffArrTokenService;
 using StaffArrDbContext = StaffArr.Api.Data.StaffArrDbContext;
 using StaffPerson = StaffArr.Api.Entities.StaffPerson;
@@ -427,6 +431,105 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Conflict, duplicateResponse.StatusCode);
     }
 
+    [Fact]
+    public async Task Manager_hierarchy_happy_path_supports_update_chain_and_subordinate_views()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var managerId = Guid.NewGuid();
+        var leadId = Guid.NewGuid();
+        var workerId = Guid.NewGuid();
+
+        await SeedStaffPersonAsync(managerId, "Manager One", "manager.one@example.com");
+        await SeedStaffPersonAsync(leadId, "Lead One", "lead.one@example.com", managerPersonId: managerId);
+        await SeedStaffPersonAsync(workerId, "Worker One", "worker.one@example.com");
+
+        var siteId = await SeedOrgUnitAsync("site", "HQ", null, "active");
+        var deptId = await SeedOrgUnitAsync("department", "Operations", siteId, "active");
+        var teamId = await SeedOrgUnitAsync("team", "Alpha Team", deptId, "active");
+        var positionId = await SeedOrgUnitAsync("position", "Operator", teamId, "active");
+
+        var assignmentRequest = Authorized(HttpMethod.Post, $"/api/people/{workerId}/org-assignments", token);
+        assignmentRequest.Content = JsonContent.Create(new CreateOrgUnitAssignmentRequest(siteId, deptId, teamId, positionId));
+        var assignmentResponse = await _staffarrClient.SendAsync(assignmentRequest);
+        assignmentResponse.EnsureSuccessStatusCode();
+
+        var updateManagerRequest = Authorized(HttpMethod.Put, $"/api/people/{workerId}/manager", token);
+        updateManagerRequest.Content = JsonContent.Create(new UpdatePersonManagerRequest(leadId));
+        var updateManagerResponse = await _staffarrClient.SendAsync(updateManagerRequest);
+        updateManagerResponse.EnsureSuccessStatusCode();
+        var managerPayload = (await updateManagerResponse.Content.ReadFromJsonAsync<PersonManagerResponse>())!;
+        Assert.Equal(leadId, managerPayload.ManagerPersonId);
+
+        var chainResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{workerId}/manager-chain", token));
+        chainResponse.EnsureSuccessStatusCode();
+        var chain = (await chainResponse.Content.ReadFromJsonAsync<IReadOnlyList<ManagerChainEntryResponse>>())!;
+        Assert.Equal(2, chain.Count);
+        Assert.Equal(leadId, chain[0].PersonId);
+        Assert.Equal(managerId, chain[1].PersonId);
+
+        var subordinatesResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{managerId}/subordinates?includeIndirect=true", token));
+        subordinatesResponse.EnsureSuccessStatusCode();
+        var subordinateList = (await subordinatesResponse.Content.ReadFromJsonAsync<IReadOnlyList<SubordinateSummaryResponse>>())!;
+        Assert.Equal(2, subordinateList.Count);
+        Assert.Contains(subordinateList, x => x.PersonId == workerId && x.Depth == 2);
+
+        var subordinateDetailResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{managerId}/subordinates/{workerId}", token));
+        subordinateDetailResponse.EnsureSuccessStatusCode();
+        var subordinateDetail = (await subordinateDetailResponse.Content.ReadFromJsonAsync<SubordinateSummaryResponse>())!;
+        Assert.Equal(2, subordinateDetail.Depth);
+        Assert.Contains("HQ / Operations / Alpha Team / Operator", subordinateDetail.ActiveAssignmentPath);
+
+        using var scope = _staffarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+        var auditEvents = await db.AuditEvents.CountAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId && x.Action == "people.manager_update");
+        Assert.True(auditEvents >= 1);
+    }
+
+    [Fact]
+    public async Task Manager_update_denies_non_writer_role()
+    {
+        var managerId = Guid.NewGuid();
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(managerId, "Denied Manager", "denied.manager@example.com");
+        await SeedStaffPersonAsync(personId, "Denied User", "denied.user@example.com");
+
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
+        var request = Authorized(HttpMethod.Put, $"/api/people/{personId}/manager", token);
+        request.Content = JsonContent.Create(new UpdatePersonManagerRequest(managerId));
+        var response = await _staffarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Manager_update_rejects_self_cycle_and_unknown_manager()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personAId = Guid.NewGuid();
+        var personBId = Guid.NewGuid();
+
+        await SeedStaffPersonAsync(personAId, "Cycle A", "cycle.a@example.com", managerPersonId: personBId);
+        await SeedStaffPersonAsync(personBId, "Cycle B", "cycle.b@example.com");
+
+        var selfRequest = Authorized(HttpMethod.Put, $"/api/people/{personAId}/manager", token);
+        selfRequest.Content = JsonContent.Create(new UpdatePersonManagerRequest(personAId));
+        var selfResponse = await _staffarrClient.SendAsync(selfRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, selfResponse.StatusCode);
+
+        var cycleRequest = Authorized(HttpMethod.Put, $"/api/people/{personBId}/manager", token);
+        cycleRequest.Content = JsonContent.Create(new UpdatePersonManagerRequest(personAId));
+        var cycleResponse = await _staffarrClient.SendAsync(cycleRequest);
+        Assert.Equal(HttpStatusCode.Conflict, cycleResponse.StatusCode);
+
+        var missingManagerRequest = Authorized(HttpMethod.Put, $"/api/people/{personBId}/manager", token);
+        missingManagerRequest.Content = JsonContent.Create(new UpdatePersonManagerRequest(Guid.NewGuid()));
+        var missingManagerResponse = await _staffarrClient.SendAsync(missingManagerRequest);
+        Assert.Equal(HttpStatusCode.NotFound, missingManagerResponse.StatusCode);
+    }
+
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
@@ -525,7 +628,8 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         Guid personId,
         string displayName,
         string email,
-        Guid? externalUserId = null)
+        Guid? externalUserId = null,
+        Guid? managerPersonId = null)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
@@ -543,6 +647,7 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
             DisplayName = displayName,
             PrimaryEmail = email,
             EmploymentStatus = "active",
+            ManagerPersonId = managerPersonId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow
         });
