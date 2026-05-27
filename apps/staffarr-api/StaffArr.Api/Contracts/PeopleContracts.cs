@@ -111,3 +111,70 @@ public sealed record SubordinateSummaryResponse(
     int Depth,
     int DirectReportCount,
     string? ActiveAssignmentPath);
+
+public sealed record PermissionTemplateSummaryResponse(
+    Guid PermissionTemplateId,
+    string PermissionKey,
+    string Name,
+    string? Description,
+    string Status);
+
+public sealed record RoleTemplatePermissionResponse(
+    Guid MappingId,
+    Guid PermissionTemplateId,
+    string PermissionKey,
+    string PermissionName,
+    string ScopeType,
+    string? ScopeValue);
+
+public sealed record RoleTemplateResponse(
+    Guid RoleTemplateId,
+    string RoleKey,
+    string Name,
+    string? Description,
+    string Status,
+    IReadOnlyList<RoleTemplatePermissionResponse> Permissions,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record UpsertPermissionTemplateRequest(
+    string PermissionKey,
+    string Name,
+    string? Description);
+
+public sealed record RoleTemplatePermissionInput(
+    Guid PermissionTemplateId,
+    string ScopeType,
+    string? ScopeValue);
+
+public sealed record CreateRoleTemplateRequest(
+    string RoleKey,
+    string Name,
+    string? Description,
+    IReadOnlyList<RoleTemplatePermissionInput> Permissions);
+
+public sealed record UpdateRoleTemplateRequest(
+    string Name,
+    string? Description,
+    string Status,
+    IReadOnlyList<RoleTemplatePermissionInput> Permissions);
+
+public sealed record PersonRoleAssignmentResponse(
+    Guid AssignmentId,
+    Guid PersonId,
+    Guid RoleTemplateId,
+    string RoleKey,
+    string RoleName,
+    string ScopeType,
+    string? ScopeValue,
+    string Status,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record CreatePersonRoleAssignmentRequest(
+    Guid RoleTemplateId,
+    string ScopeType,
+    string? ScopeValue);
+
+public sealed record UpdatePersonRoleAssignmentStatusRequest(
+    string Status);

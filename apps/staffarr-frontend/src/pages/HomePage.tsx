@@ -3,11 +3,16 @@ import { useEffect, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import {
   createPersonOrgAssignment,
+  createPersonRoleAssignment,
+  createRoleTemplate,
   createOrgUnit,
   getManagerChain,
   getMe,
   getOrgUnits,
+  getPermissionTemplates,
   getPersonOrgAssignments,
+  getPersonRoleAssignments,
+  getRoleTemplates,
   getSubordinateDetail,
   getSubordinates,
   getPeople,
@@ -16,6 +21,9 @@ import {
   updatePersonManager,
   updatePersonOrgAssignment,
   updatePersonOrgAssignmentStatus,
+  updatePersonRoleAssignmentStatus,
+  updateRoleTemplate,
+  upsertPermissionTemplate,
   updateOrgUnit,
   updateOrgUnitStatus,
 } from '../api/client'
@@ -23,6 +31,7 @@ import { clearSession, loadSession } from '../auth/sessionStorage'
 import { ManagerHierarchyPanel } from '../components/ManagerHierarchyPanel'
 import { canManageOrgHierarchy, OrgHierarchyManager } from '../components/OrgHierarchyManager'
 import { PersonOrgAssignmentsManager } from '../components/PersonOrgAssignmentsManager'
+import { RoleTemplateAssignmentPanel } from '../components/RoleTemplateAssignmentPanel'
 
 export function HomePage() {
   const [searchParams] = useSearchParams()
@@ -86,6 +95,21 @@ export function HomePage() {
     queryKey: ['staffarr-subordinate-detail', session?.accessToken, effectivePersonId, selectedSubordinateId],
     queryFn: () => getSubordinateDetail(session!.accessToken, effectivePersonId!, selectedSubordinateId!),
     enabled: Boolean(session?.accessToken && effectivePersonId && selectedSubordinateId),
+  })
+  const permissionTemplatesQuery = useQuery({
+    queryKey: ['staffarr-permission-templates', session?.accessToken],
+    queryFn: () => getPermissionTemplates(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
+  })
+  const roleTemplatesQuery = useQuery({
+    queryKey: ['staffarr-role-templates', session?.accessToken],
+    queryFn: () => getRoleTemplates(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
+  })
+  const roleAssignmentsQuery = useQuery({
+    queryKey: ['staffarr-role-assignments', session?.accessToken, effectivePersonId],
+    queryFn: () => getPersonRoleAssignments(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
   })
 
   const createOrgUnitMutation = useMutation({
@@ -177,6 +201,68 @@ export function HomePage() {
       ])
     },
   })
+  const upsertPermissionTemplateMutation = useMutation({
+    mutationFn: (payload: { permissionKey: string; name: string; description: string | null }) =>
+      upsertPermissionTemplate(session!.accessToken, payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['staffarr-permission-templates', session?.accessToken] })
+    },
+  })
+  const createRoleTemplateMutation = useMutation({
+    mutationFn: (payload: {
+      roleKey: string
+      name: string
+      description: string | null
+      permissions: Array<{
+        permissionTemplateId: string
+        scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
+        scopeValue: string | null
+      }>
+    }) => createRoleTemplate(session!.accessToken, payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['staffarr-role-templates', session?.accessToken] })
+    },
+  })
+  const updateRoleTemplateMutation = useMutation({
+    mutationFn: (payload: {
+      roleTemplateId: string
+      name: string
+      description: string | null
+      status: 'active' | 'inactive'
+      permissions: Array<{
+        permissionTemplateId: string
+        scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
+        scopeValue: string | null
+      }>
+    }) =>
+      updateRoleTemplate(session!.accessToken, payload.roleTemplateId, {
+        name: payload.name,
+        description: payload.description,
+        status: payload.status,
+        permissions: payload.permissions,
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['staffarr-role-templates', session?.accessToken] })
+    },
+  })
+  const createRoleAssignmentMutation = useMutation({
+    mutationFn: (payload: {
+      personId: string
+      roleTemplateId: string
+      scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
+      scopeValue: string | null
+    }) => createPersonRoleAssignment(session!.accessToken, payload.personId, payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['staffarr-role-assignments', session?.accessToken] })
+    },
+  })
+  const updateRoleAssignmentStatusMutation = useMutation({
+    mutationFn: (payload: { personId: string; assignmentId: string; status: 'active' | 'inactive' }) =>
+      updatePersonRoleAssignmentStatus(session!.accessToken, payload.personId, payload.assignmentId, payload.status),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['staffarr-role-assignments', session?.accessToken] })
+    },
+  })
 
   if (!session) {
     return (
@@ -229,6 +315,9 @@ export function HomePage() {
     managerChainQuery.isError ||
     subordinatesQuery.isError ||
     subordinateDetailQuery.isError
+    || permissionTemplatesQuery.isError
+    || roleTemplatesQuery.isError
+    || roleAssignmentsQuery.isError
   ) {
     const directoryError =
       peopleQuery.error ??
@@ -236,7 +325,10 @@ export function HomePage() {
       assignmentQuery.error ??
       managerChainQuery.error ??
       subordinatesQuery.error ??
-      subordinateDetailQuery.error
+      subordinateDetailQuery.error ??
+      permissionTemplatesQuery.error ??
+      roleTemplatesQuery.error ??
+      roleAssignmentsQuery.error
     if (directoryError instanceof StaffArrApiError && (directoryError.status === 401 || directoryError.status === 403)) {
       clearSession()
     }
@@ -261,6 +353,9 @@ export function HomePage() {
   const managerChain = managerChainQuery.data ?? []
   const subordinates = subordinatesQuery.data ?? []
   const selectedSubordinateDetail = subordinateDetailQuery.data ?? null
+  const permissionTemplates = permissionTemplatesQuery.data ?? []
+  const roleTemplates = roleTemplatesQuery.data ?? []
+  const roleAssignments = roleAssignmentsQuery.data ?? []
   const canManageOrgUnits = canManageOrgHierarchy(me.tenantRoleKey, me.isPlatformAdmin)
   const canManageHierarchy = canManageOrgUnits
   const orgMutationError =
@@ -268,6 +363,13 @@ export function HomePage() {
   const assignmentMutationError =
     createAssignmentMutation.error ?? updateAssignmentMutation.error ?? updateAssignmentStatusMutation.error ?? null
   const managerMutationError = updateManagerMutation.error
+  const roleTemplateMutationError =
+    upsertPermissionTemplateMutation.error ??
+    createRoleTemplateMutation.error ??
+    updateRoleTemplateMutation.error ??
+    createRoleAssignmentMutation.error ??
+    updateRoleAssignmentStatusMutation.error ??
+    null
 
   return (
     <main className="mx-auto max-w-6xl p-8">
@@ -423,6 +525,67 @@ export function HomePage() {
             await updateManagerMutation.mutateAsync({
               personId: selectedPerson.personId,
               managerPersonId,
+            })
+          }}
+        />
+      ) : null}
+
+      {selectedPerson ? (
+        <RoleTemplateAssignmentPanel
+          personId={selectedPerson.personId}
+          personDisplayName={selectedPerson.displayName}
+          orgUnits={orgUnits}
+          permissionTemplates={permissionTemplates}
+          roleTemplates={roleTemplates}
+          roleAssignments={roleAssignments}
+          canManage={canManageHierarchy}
+          isSubmitting={
+            upsertPermissionTemplateMutation.isPending ||
+            createRoleTemplateMutation.isPending ||
+            updateRoleTemplateMutation.isPending ||
+            createRoleAssignmentMutation.isPending ||
+            updateRoleAssignmentStatusMutation.isPending
+          }
+          errorMessage={
+            roleTemplateMutationError instanceof StaffArrApiError
+              ? roleTemplateMutationError.body || roleTemplateMutationError.message
+              : null
+          }
+          onUpsertPermissionTemplate={async (payload) => {
+            await upsertPermissionTemplateMutation.mutateAsync(payload)
+          }}
+          onCreateRoleTemplate={async (payload) => {
+            await createRoleTemplateMutation.mutateAsync(payload)
+          }}
+          onUpdateRoleTemplateStatus={async (roleTemplateId, status) => {
+            const existing = roleTemplates.find((role) => role.roleTemplateId === roleTemplateId)
+            if (!existing) {
+              return
+            }
+
+            await updateRoleTemplateMutation.mutateAsync({
+              roleTemplateId,
+              name: existing.name,
+              description: existing.description,
+              status,
+              permissions: existing.permissions.map((mapping) => ({
+                permissionTemplateId: mapping.permissionTemplateId,
+                scopeType: mapping.scopeType,
+                scopeValue: mapping.scopeValue,
+              })),
+            })
+          }}
+          onCreateRoleAssignment={async (payload) => {
+            await createRoleAssignmentMutation.mutateAsync({
+              personId: selectedPerson.personId,
+              ...payload,
+            })
+          }}
+          onUpdateRoleAssignmentStatus={async (assignmentId, status) => {
+            await updateRoleAssignmentStatusMutation.mutateAsync({
+              personId: selectedPerson.personId,
+              assignmentId,
+              status,
             })
           }}
         />

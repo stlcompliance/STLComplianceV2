@@ -12,6 +12,14 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<OrgUnitAssignment> OrgUnitAssignments => Set<OrgUnitAssignment>();
 
+    public DbSet<RoleTemplate> RoleTemplates => Set<RoleTemplate>();
+
+    public DbSet<PermissionTemplate> PermissionTemplates => Set<PermissionTemplate>();
+
+    public DbSet<RoleTemplatePermission> RoleTemplatePermissions => Set<RoleTemplatePermission>();
+
+    public DbSet<PersonRoleAssignment> PersonRoleAssignments => Set<PersonRoleAssignment>();
+
     public DbSet<StaffArrAuditEvent> AuditEvents => Set<StaffArrAuditEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -69,6 +77,70 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasOne<OrgUnit>().WithMany().HasForeignKey(x => x.DepartmentOrgUnitId);
             entity.HasOne<OrgUnit>().WithMany().HasForeignKey(x => x.TeamOrgUnitId);
             entity.HasOne<OrgUnit>().WithMany().HasForeignKey(x => x.PositionOrgUnitId);
+        });
+
+        modelBuilder.Entity<RoleTemplate>(entity =>
+        {
+            entity.ToTable("staffarr_role_templates");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RoleKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(512);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.RoleKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<PermissionTemplate>(entity =>
+        {
+            entity.ToTable("staffarr_permission_templates");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PermissionKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(512);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PermissionKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<RoleTemplatePermission>(entity =>
+        {
+            entity.ToTable("staffarr_role_template_permissions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScopeType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ScopeValue).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new
+            {
+                x.TenantId,
+                x.RoleTemplateId,
+                x.PermissionTemplateId,
+                x.ScopeType,
+                x.ScopeValue
+            }).IsUnique();
+            entity.HasOne<RoleTemplate>().WithMany().HasForeignKey(x => x.RoleTemplateId);
+            entity.HasOne<PermissionTemplate>().WithMany().HasForeignKey(x => x.PermissionTemplateId);
+        });
+
+        modelBuilder.Entity<PersonRoleAssignment>(entity =>
+        {
+            entity.ToTable("staffarr_person_role_assignments");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScopeType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ScopeValue).HasMaxLength(128);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.Status });
+            entity.HasIndex(x => new
+            {
+                x.TenantId,
+                x.PersonId,
+                x.RoleTemplateId,
+                x.ScopeType,
+                x.ScopeValue
+            }).IsUnique();
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+            entity.HasOne<RoleTemplate>().WithMany().HasForeignKey(x => x.RoleTemplateId);
         });
 
         modelBuilder.Entity<StaffArrAuditEvent>(entity =>

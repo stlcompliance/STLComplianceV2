@@ -144,3 +144,76 @@ export interface SubordinateSummaryResponse {
   directReportCount: number
   activeAssignmentPath: string | null
 }
+
+export interface PermissionTemplateSummaryResponse {
+  permissionTemplateId: string
+  permissionKey: string
+  name: string
+  description: string | null
+  status: 'active' | 'inactive'
+}
+
+export interface RoleTemplatePermissionResponse {
+  mappingId: string
+  permissionTemplateId: string
+  permissionKey: string
+  permissionName: string
+  scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
+  scopeValue: string | null
+}
+
+export interface RoleTemplateResponse {
+  roleTemplateId: string
+  roleKey: string
+  name: string
+  description: string | null
+  status: 'active' | 'inactive'
+  permissions: RoleTemplatePermissionResponse[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UpsertPermissionTemplateRequest {
+  permissionKey: string
+  name: string
+  description: string | null
+}
+
+export interface RoleTemplatePermissionInput {
+  permissionTemplateId: string
+  scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
+  scopeValue: string | null
+}
+
+export interface CreateRoleTemplateRequest {
+  roleKey: string
+  name: string
+  description: string | null
+  permissions: RoleTemplatePermissionInput[]
+}
+
+export interface UpdateRoleTemplateRequest {
+  name: string
+  description: string | null
+  status: 'active' | 'inactive'
+  permissions: RoleTemplatePermissionInput[]
+}
+
+export interface PersonRoleAssignmentResponse {
+  assignmentId: string
+  personId: string
+  roleTemplateId: string
+  roleKey: string
+  roleName: string
+  scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
+  scopeValue: string | null
+  status: 'active' | 'inactive'
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreatePersonRoleAssignmentRequest {
+  roleTemplateId: string
+  scopeType: 'tenant' | 'site' | 'department' | 'team' | 'position'
+  scopeValue: string | null
+}

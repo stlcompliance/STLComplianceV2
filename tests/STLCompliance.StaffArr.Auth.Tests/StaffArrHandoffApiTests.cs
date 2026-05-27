@@ -28,6 +28,15 @@ using UpdatePersonManagerRequest = StaffArr.Api.Contracts.UpdatePersonManagerReq
 using PersonManagerResponse = StaffArr.Api.Contracts.PersonManagerResponse;
 using ManagerChainEntryResponse = StaffArr.Api.Contracts.ManagerChainEntryResponse;
 using SubordinateSummaryResponse = StaffArr.Api.Contracts.SubordinateSummaryResponse;
+using PermissionTemplateSummaryResponse = StaffArr.Api.Contracts.PermissionTemplateSummaryResponse;
+using RoleTemplateResponse = StaffArr.Api.Contracts.RoleTemplateResponse;
+using UpsertPermissionTemplateRequest = StaffArr.Api.Contracts.UpsertPermissionTemplateRequest;
+using CreateRoleTemplateRequest = StaffArr.Api.Contracts.CreateRoleTemplateRequest;
+using RoleTemplatePermissionInput = StaffArr.Api.Contracts.RoleTemplatePermissionInput;
+using UpdateRoleTemplateRequest = StaffArr.Api.Contracts.UpdateRoleTemplateRequest;
+using PersonRoleAssignmentResponse = StaffArr.Api.Contracts.PersonRoleAssignmentResponse;
+using CreatePersonRoleAssignmentRequest = StaffArr.Api.Contracts.CreatePersonRoleAssignmentRequest;
+using UpdatePersonRoleAssignmentStatusRequest = StaffArr.Api.Contracts.UpdatePersonRoleAssignmentStatusRequest;
 using StaffArrTokenService = StaffArr.Api.Services.StaffArrTokenService;
 using StaffArrDbContext = StaffArr.Api.Data.StaffArrDbContext;
 using StaffPerson = StaffArr.Api.Entities.StaffPerson;
@@ -528,6 +537,125 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         missingManagerRequest.Content = JsonContent.Create(new UpdatePersonManagerRequest(Guid.NewGuid()));
         var missingManagerResponse = await _staffarrClient.SendAsync(missingManagerRequest);
         Assert.Equal(HttpStatusCode.NotFound, missingManagerResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Role_template_and_permission_assignment_happy_path_supports_template_and_person_assignment_flows()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Role Assignment User", "role.assignment.user@example.com");
+
+        var permissionRequest = Authorized(HttpMethod.Post, "/api/permissions", token);
+        permissionRequest.Content = JsonContent.Create(new UpsertPermissionTemplateRequest(
+            "staffarr.permissions.assign",
+            "Permission Assignment",
+            "Allows assignment of permission templates."));
+        var permissionResponse = await _staffarrClient.SendAsync(permissionRequest);
+        permissionResponse.EnsureSuccessStatusCode();
+        var permissionTemplate = (await permissionResponse.Content.ReadFromJsonAsync<PermissionTemplateSummaryResponse>())!;
+
+        var roleRequest = Authorized(HttpMethod.Post, "/api/roles", token);
+        roleRequest.Content = JsonContent.Create(new CreateRoleTemplateRequest(
+            "staffarr.supervisor",
+            "StaffArr Supervisor",
+            "Supervises teams.",
+            [new RoleTemplatePermissionInput(permissionTemplate.PermissionTemplateId, "tenant", null)]));
+        var roleResponse = await _staffarrClient.SendAsync(roleRequest);
+        roleResponse.EnsureSuccessStatusCode();
+        var roleTemplate = (await roleResponse.Content.ReadFromJsonAsync<RoleTemplateResponse>())!;
+        Assert.Single(roleTemplate.Permissions);
+
+        var rolesListResponse = await _staffarrClient.SendAsync(Authorized(HttpMethod.Get, "/api/roles", token));
+        rolesListResponse.EnsureSuccessStatusCode();
+        var rolesList = (await rolesListResponse.Content.ReadFromJsonAsync<IReadOnlyList<RoleTemplateResponse>>())!;
+        Assert.Contains(rolesList, x => x.RoleTemplateId == roleTemplate.RoleTemplateId);
+
+        var assignmentRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/role-assignments", token);
+        assignmentRequest.Content = JsonContent.Create(new CreatePersonRoleAssignmentRequest(
+            roleTemplate.RoleTemplateId,
+            "tenant",
+            null));
+        var assignmentResponse = await _staffarrClient.SendAsync(assignmentRequest);
+        assignmentResponse.EnsureSuccessStatusCode();
+        var assignment = (await assignmentResponse.Content.ReadFromJsonAsync<PersonRoleAssignmentResponse>())!;
+        Assert.Equal("staffarr.supervisor", assignment.RoleKey);
+
+        var assignmentStatusRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/people/{personId}/role-assignments/{assignment.AssignmentId}/status",
+            token);
+        assignmentStatusRequest.Content = JsonContent.Create(new UpdatePersonRoleAssignmentStatusRequest("inactive"));
+        var assignmentStatusResponse = await _staffarrClient.SendAsync(assignmentStatusRequest);
+        assignmentStatusResponse.EnsureSuccessStatusCode();
+        var assignmentStatus = (await assignmentStatusResponse.Content.ReadFromJsonAsync<PersonRoleAssignmentResponse>())!;
+        Assert.Equal("inactive", assignmentStatus.Status);
+
+        using var scope = _staffarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+        var auditEvents = await db.AuditEvents.CountAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId
+                && (x.Action.StartsWith("role_template.")
+                    || x.Action.StartsWith("permission_template.")
+                    || x.Action.StartsWith("person_role_assignment.")));
+        Assert.True(auditEvents >= 3);
+    }
+
+    [Fact]
+    public async Task Role_template_write_denies_non_writer_role()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
+        var request = Authorized(HttpMethod.Post, "/api/permissions", token);
+        request.Content = JsonContent.Create(new UpsertPermissionTemplateRequest(
+            "staffarr.permissions.assign",
+            "Permission Assignment",
+            null));
+        var response = await _staffarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Role_assignment_rejects_inactive_role_templates()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Inactive Role User", "inactive.role.user@example.com");
+
+        var permissionRequest = Authorized(HttpMethod.Post, "/api/permissions", token);
+        permissionRequest.Content = JsonContent.Create(new UpsertPermissionTemplateRequest(
+            "staffarr.people.read",
+            "People Read",
+            null));
+        var permissionResponse = await _staffarrClient.SendAsync(permissionRequest);
+        permissionResponse.EnsureSuccessStatusCode();
+        var permissionTemplate = (await permissionResponse.Content.ReadFromJsonAsync<PermissionTemplateSummaryResponse>())!;
+
+        var roleRequest = Authorized(HttpMethod.Post, "/api/roles", token);
+        roleRequest.Content = JsonContent.Create(new CreateRoleTemplateRequest(
+            "staffarr.viewer",
+            "StaffArr Viewer",
+            null,
+            [new RoleTemplatePermissionInput(permissionTemplate.PermissionTemplateId, "tenant", null)]));
+        var roleResponse = await _staffarrClient.SendAsync(roleRequest);
+        roleResponse.EnsureSuccessStatusCode();
+        var roleTemplate = (await roleResponse.Content.ReadFromJsonAsync<RoleTemplateResponse>())!;
+
+        var deactivateRoleRequest = Authorized(HttpMethod.Put, $"/api/roles/{roleTemplate.RoleTemplateId}", token);
+        deactivateRoleRequest.Content = JsonContent.Create(new UpdateRoleTemplateRequest(
+            roleTemplate.Name,
+            roleTemplate.Description,
+            "inactive",
+            [new RoleTemplatePermissionInput(permissionTemplate.PermissionTemplateId, "tenant", null)]));
+        var deactivateRoleResponse = await _staffarrClient.SendAsync(deactivateRoleRequest);
+        deactivateRoleResponse.EnsureSuccessStatusCode();
+
+        var assignmentRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/role-assignments", token);
+        assignmentRequest.Content = JsonContent.Create(new CreatePersonRoleAssignmentRequest(
+            roleTemplate.RoleTemplateId,
+            "tenant",
+            null));
+        var assignmentResponse = await _staffarrClient.SendAsync(assignmentRequest);
+        Assert.Equal(HttpStatusCode.Conflict, assignmentResponse.StatusCode);
     }
 
     private async Task<string> CreateHandoffAsync()

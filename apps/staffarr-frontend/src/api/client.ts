@@ -1,18 +1,25 @@
 import type {
+  CreatePersonRoleAssignmentRequest,
   CreateOrgUnitAssignmentRequest,
+  CreateRoleTemplateRequest,
   CreateOrgUnitRequest,
   HandoffSessionResponse,
   ManagerChainEntryResponse,
   OrgUnitAssignmentResponse,
   OrgUnitResponse,
+  PermissionTemplateSummaryResponse,
+  PersonRoleAssignmentResponse,
   PersonManagerResponse,
+  RoleTemplateResponse,
   StaffArrMeResponse,
   StaffPersonDetailResponse,
   StaffPersonSummaryResponse,
   SubordinateSummaryResponse,
+  UpsertPermissionTemplateRequest,
   UpdatePersonManagerRequest,
   UpdateOrgUnitAssignmentRequest,
   UpdateOrgUnitAssignmentStatusRequest,
+  UpdateRoleTemplateRequest,
   UpdateOrgUnitRequest,
   UpdateOrgUnitStatusRequest,
 } from './types'
@@ -216,4 +223,92 @@ export async function getSubordinateDetail(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<SubordinateSummaryResponse>(response, 'Failed to load subordinate detail')
+}
+
+export async function getPermissionTemplates(accessToken: string): Promise<PermissionTemplateSummaryResponse[]> {
+  const response = await fetch(`${apiBase}/api/permissions`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PermissionTemplateSummaryResponse[]>(response, 'Failed to load permission templates')
+}
+
+export async function upsertPermissionTemplate(
+  accessToken: string,
+  request: UpsertPermissionTemplateRequest,
+): Promise<PermissionTemplateSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/permissions`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PermissionTemplateSummaryResponse>(response, 'Failed to upsert permission template')
+}
+
+export async function getRoleTemplates(accessToken: string): Promise<RoleTemplateResponse[]> {
+  const response = await fetch(`${apiBase}/api/roles`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RoleTemplateResponse[]>(response, 'Failed to load role templates')
+}
+
+export async function createRoleTemplate(
+  accessToken: string,
+  request: CreateRoleTemplateRequest,
+): Promise<RoleTemplateResponse> {
+  const response = await fetch(`${apiBase}/api/roles`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<RoleTemplateResponse>(response, 'Failed to create role template')
+}
+
+export async function updateRoleTemplate(
+  accessToken: string,
+  roleTemplateId: string,
+  request: UpdateRoleTemplateRequest,
+): Promise<RoleTemplateResponse> {
+  const response = await fetch(`${apiBase}/api/roles/${roleTemplateId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<RoleTemplateResponse>(response, 'Failed to update role template')
+}
+
+export async function getPersonRoleAssignments(
+  accessToken: string,
+  personId: string,
+): Promise<PersonRoleAssignmentResponse[]> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/role-assignments`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonRoleAssignmentResponse[]>(response, 'Failed to load role assignments')
+}
+
+export async function createPersonRoleAssignment(
+  accessToken: string,
+  personId: string,
+  request: CreatePersonRoleAssignmentRequest,
+): Promise<PersonRoleAssignmentResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/role-assignments`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonRoleAssignmentResponse>(response, 'Failed to create role assignment')
+}
+
+export async function updatePersonRoleAssignmentStatus(
+  accessToken: string,
+  personId: string,
+  assignmentId: string,
+  status: 'active' | 'inactive',
+): Promise<PersonRoleAssignmentResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/role-assignments/${assignmentId}/status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ status }),
+  })
+  return parseJsonResponse<PersonRoleAssignmentResponse>(response, 'Failed to update role assignment status')
 }
