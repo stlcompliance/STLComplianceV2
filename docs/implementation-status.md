@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 102 | M13 seven-database DR nightly drill | Complete | `pending` |
+| 102 | M13 seven-database DR nightly drill | Complete | `15e76e7` |
 
 ## Program summary
 
