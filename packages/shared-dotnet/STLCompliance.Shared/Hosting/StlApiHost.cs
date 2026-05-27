@@ -36,8 +36,7 @@ public static class StlApiHost
             var builder = WebApplication.CreateBuilder(args);
             builder.Host.UseSerilog();
 
-            var connectionString = builder.Configuration.GetConnectionString("Database")
-                ?? builder.Configuration["DATABASE_URL"];
+            var connectionString = StlDatabaseConnection.Resolve(builder.Configuration);
 
             builder.Services.AddSingleton(product);
             builder.Services.AddDbContext<TContext>(options =>
@@ -168,8 +167,7 @@ public static class StlApiHost
     private static async Task ApplyMigrationsAsync<TContext>(WebApplication app)
         where TContext : PlatformDbContext
     {
-        var connectionString = app.Configuration.GetConnectionString("Database")
-            ?? app.Configuration["DATABASE_URL"];
+        var connectionString = StlDatabaseConnection.Resolve(app.Configuration);
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {

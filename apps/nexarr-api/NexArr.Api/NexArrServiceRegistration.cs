@@ -4,6 +4,7 @@ using NexArr.Api.Data;
 using NexArr.Api.Options;
 using NexArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Data;
 
 namespace NexArr.Api;
 
@@ -59,8 +60,7 @@ public static class NexArrServiceRegistration
 
     public static async Task InitializeAsync(WebApplication app)
     {
-        if (string.IsNullOrWhiteSpace(app.Configuration.GetConnectionString("Database"))
-            && string.IsNullOrWhiteSpace(app.Configuration["DATABASE_URL"]))
+        if (string.IsNullOrWhiteSpace(StlDatabaseConnection.Resolve(app.Configuration)))
         {
             return;
         }

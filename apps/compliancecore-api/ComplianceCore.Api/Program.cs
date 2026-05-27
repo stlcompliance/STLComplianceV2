@@ -2,6 +2,7 @@ using ComplianceCore.Api;
 using ComplianceCore.Api.Data;
 using ComplianceCore.Api.Endpoints;
 using ComplianceCore.Api.Services;
+using STLCompliance.Shared.Data;
 using STLCompliance.Shared.Hosting;
 
 await StlApiHost.RunAsync<ComplianceCoreDbContext>(
@@ -35,8 +36,7 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
 
 static async Task SeedVocabularyTypesAsync(WebApplication app)
 {
-    var connectionString = app.Configuration.GetConnectionString("Database")
-        ?? app.Configuration["DATABASE_URL"];
+    var connectionString = StlDatabaseConnection.Resolve(app.Configuration);
 
     if (string.IsNullOrWhiteSpace(connectionString))
     {
