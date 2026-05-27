@@ -195,7 +195,7 @@
 
 | 109 | StaffArr bulk person onboarding import (`POST /api/people/import`, row-level validation + dry run, managerEmail resolution, `PersonBulkImportPanel`, integration + frontend tests, docs) | M4 (partial) | Complete | `9edd755` |
 
-| 110 | M13 nightly live k6 all PO scenarios (`StlLoadTestLiveScenarioCatalog`, theory-based Load live tests ×7, seven-API health gate, e2e-nightly workflow, docs) | M13 (partial) | Complete | `pending` |
+| 110 | M13 nightly live k6 all PO scenarios (`StlLoadTestLiveScenarioCatalog`, theory-based Load live tests ×7, seven-API health gate, e2e-nightly workflow, docs) | M13 (partial) | Complete | `8ef05f6` |
 
 ## Next slice (Worker 111)
 
