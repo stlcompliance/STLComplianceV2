@@ -248,6 +248,8 @@
 
 | 138 | M13 Playwright platform-admin audit export smoke (`platform-admin-audit-export-smoke.spec.ts`, suite `/app/platform-admin/audit-export`, manifest/timeline/sync ZIP+JSON+background job via internal process-batch helper, `StlE2ePlaywrightSpecCatalog`, panel test ids, docs) | M13 (partial) | Complete | `2293d6a` |
 
-## Next slice (Worker 139)
+| 139 | STLComplianceSite pricing narrative (`/pricing` licensing page, no checkout, nav/footer/resources links, SEO + sitemap, vitest, docs) | M3 (partial) | Complete | `pending` |
 
-Per milestone matrix: next M12/M13 backlog (e.g. additional product deep-link E2E, load harness journeys, or marketing/pricing narrative).
+## Next slice (Worker 140)
+
+Per milestone matrix: **M13 product deep-link E2E** (MaintainArr/RoutArr/SupplyArr when routes exist), **comparison content**, or **implementation maturity status** on marketing site.

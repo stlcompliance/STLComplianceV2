@@ -4,6 +4,7 @@ import { DataOwnershipPage } from './pages/DataOwnershipPage'
 import { DemoContactPage } from './pages/DemoContactPage'
 import { HomePage } from './pages/HomePage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { PricingPage } from './pages/PricingPage'
 import { PrivacyPage } from './pages/PrivacyPage'
 import { ProductPage } from './pages/ProductPage'
 import { ProductsHubPage } from './pages/ProductsHubPage'
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="products" element={<ProductsHubPage />} />
         <Route path="products/:productKey" element={<ProductPage />} />
         <Route path="resources" element={<ResourcesPage />} />
+        <Route path="pricing" element={<PricingPage />} />
         <Route path="security" element={<SecurityPage />} />
         <Route path="data-ownership" element={<DataOwnershipPage />} />
         <Route path="demo" element={<DemoContactPage />} />

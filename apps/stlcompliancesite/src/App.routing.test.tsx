@@ -19,6 +19,19 @@ describe('App routing', () => {
     expect(screen.getByText(/Owns/i)).toBeInTheDocument()
   })
 
+  it('renders pricing page without checkout', async () => {
+    render(
+      <MemoryRouter initialEntries={['/pricing']}>
+        <App />
+      </MemoryRouter>,
+    )
+    expect(
+      await screen.findByRole('heading', { name: /Suite licensing through NexArr/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('pricing-disclaimer')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /checkout|buy now|add to cart/i })).toBeNull()
+  })
+
   it('renders resources hub', async () => {
     render(
       <MemoryRouter initialEntries={['/resources']}>

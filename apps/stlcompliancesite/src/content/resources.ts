@@ -43,6 +43,14 @@ export const RESOURCE_LINKS: ResourceLink[] = [
     category: 'ownership',
   },
   {
+    id: 'pricing-licensing',
+    title: 'Pricing and licensing narrative',
+    summary:
+      'How NexArr tenant entitlements package the suite — no checkout or list prices on this marketing site.',
+    href: '/pricing',
+    category: 'contact',
+  },
+  {
     id: 'demo-contact',
     title: 'Demo and contact',
     summary: 'Request a walkthrough or reach the team — client-side mailto only; no tenant data is collected on this site.',

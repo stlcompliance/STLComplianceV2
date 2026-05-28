@@ -7,6 +7,7 @@ Public static marketing site for the STL Compliance / Arr suite (port **5173**).
 - Marketing and education only — **no** product APIs, auth, tenant data, or business authority
 - Client sign-in links to the suite (`VITE_SUITE_LOGIN_URL`)
 - Demo/contact is client-side (mailto), not a backend form post
+- `/pricing` explains NexArr tenant entitlements — no checkout or list prices
 
 ## Local dev
 
