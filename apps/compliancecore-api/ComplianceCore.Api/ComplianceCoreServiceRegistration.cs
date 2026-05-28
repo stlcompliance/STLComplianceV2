@@ -41,6 +41,7 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<ScheduledRuleEvaluationService>();
         builder.Services.AddScoped<WorkflowGateService>();
         builder.Services.AddScoped<DispatchWorkflowGateSeedService>();
+        builder.Services.AddScoped<LoadTestJourneySeedService>();
         builder.Services.AddScoped<CsvImportExportService>();
         builder.Services.AddScoped<AuditPackageService>();
         builder.Services.AddScoped<OperatorDashboardService>();

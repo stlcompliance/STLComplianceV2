@@ -27,6 +27,14 @@ public sealed class StlRenderStagingLoadTestSupportTests
     }
 
     [Fact]
+    public void Journey_seed_catalog_matches_load_test_defaults()
+    {
+        Assert.Equal(StlLoadTestJourneyDefaults.RulePackKey, StlLoadTestJourneySeedCatalog.RulePackKey);
+        Assert.Equal("/api/load-test-journey/seed", StlLoadTestJourneySeedCatalog.SeedEndpointPath);
+        Assert.Equal("driver_license_valid", StlLoadTestJourneySeedCatalog.DriverLicenseValidFactKey);
+    }
+
+    [Fact]
     public void Schedule_catalog_lists_seven_required_staging_api_url_env_vars()
     {
         Assert.Equal(7, StlRenderStagingLoadSoakScheduleCatalog.RequiredStagingApiUrlEnvironmentVariables.Count);

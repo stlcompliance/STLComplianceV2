@@ -51,7 +51,15 @@ export RENDER_STAGING_NEXARR_API_URL="https://nexarr-api-jdyi.onrender.com"
 ./scripts/ops/render-staging-load-soak.sh all
 ```
 
-GitHub: run workflow **Load Staging Render** manually, or rely on the **weekly schedule** (Sunday 07:00 UTC) after configuring repository secrets matching the environment variables above. Scheduled runs skip cleanly when staging API URL secrets are not configured.
+GitHub: run workflow **Load Staging Render** manually, or rely on the **weekly schedule** (Sunday 07:00 UTC) after configuring repository secrets matching the environment variables above. Scheduled runs skip cleanly when staging API URL secrets are not configured and **seed Compliance Core journey fixtures** before the soak when NexArr + Compliance Core URLs are available.
+
+### Journey seed (before staging soak)
+
+```powershell
+./scripts/ops/compliancecore-staging-journey-seed.ps1
+```
+
+Seeds `driver_qualification` rule pack content, `driver_license_valid` fact source, and dispatch workflow gates required by `trainarr-qualification-check` and `routarr-dispatch-workflow-gate` k6 scenarios. See `StlLoadTestJourneySeedCatalog`.
 
 ## CI schedule
 
