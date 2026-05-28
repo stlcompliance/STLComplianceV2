@@ -314,7 +314,7 @@
 
 | 171 | MaintainArr defect escalation worker (`maintainarr_tenant_defect_escalation_settings`, `maintainarr_defect_escalation_runs`, `maintainarr_defect_escalation_events`, internal pending/process-batch, `maintainarr.defects.escalate`, `MaintainArrDefectEscalationJob`, `DefectEscalationSettingsPanel`, defect `LastEscalatedAt`/`EscalationCount`, tests, docs) | M12 (partial) | Complete | `b01745d` |
 
-| 172 | MaintainArr asset status rollup worker (`maintainarr_tenant_asset_status_rollup_settings`, `maintainarr_asset_status_rollups`, `maintainarr_asset_status_scope_rollups`, `maintainarr_asset_status_rollup_runs`, internal pending/process-batch, `maintainarr.asset_status.rollup`, `MaintainArrAssetStatusRollupJob`, materialized-first asset readiness reads, `AssetStatusRollupSettingsPanel`, tests, docs) | M12 (partial) | Complete | `pending` |
+| 172 | MaintainArr asset status rollup worker (`maintainarr_tenant_asset_status_rollup_settings`, `maintainarr_asset_status_rollups`, `maintainarr_asset_status_scope_rollups`, `maintainarr_asset_status_rollup_runs`, internal pending/process-batch, `maintainarr.asset_status.rollup`, `MaintainArrAssetStatusRollupJob`, materialized-first asset readiness reads, `AssetStatusRollupSettingsPanel`, tests, docs) | M12 (partial) | Complete | `7d60d7b` |
 
 ## Next slice (Worker 173)
 
