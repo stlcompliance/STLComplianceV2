@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 144 | M13 Playwright/E2E expansion | Complete | `pending` |
+| 144 | M13 Playwright/E2E expansion | Complete | `4c0ac21` |
 
 ## Program summary
 
