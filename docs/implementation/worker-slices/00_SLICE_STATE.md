@@ -270,7 +270,7 @@
 
 | 149 | Companion product switcher (`ProductSwitcher` handoff mode, launch context + handoff APIs, `useCompanionProductLaunch`, tests, docs) | M11 (partial) | Complete | `f385251` |
 
-| 150 | Companion QR/barcode scan (`POST /api/companion/scan/resolve`, payload parser, `FieldScanPanel` + `@zxing/browser`, inbox highlight, tests, docs) | M11 (partial) | Complete | `pending` |
+| 150 | Companion QR/barcode scan (`POST /api/companion/scan/resolve`, payload parser, `FieldScanPanel` + `@zxing/browser`, inbox highlight, tests, docs) | M11 (partial) | Complete | `5841339` |
 
 ## Next slice (Worker 151)
 

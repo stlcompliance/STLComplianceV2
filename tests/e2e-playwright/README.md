@@ -48,6 +48,7 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 | `companion-field-inbox-operations-deep-links.spec.ts` | Companion → MaintainArr / RoutArr / SupplyArr field inbox deep links (W140) |
 | `companion-offline-queue-notification.spec.ts` | Offline acknowledge queue sync + notification/push readiness surfaces (W146) |
 | `companion-field-task-evidence.spec.ts` | TrainArr field-inbox photo evidence upload via companion API (W147) |
+| `companion-field-scan.spec.ts` | Companion manual scan resolve → field inbox task highlight (M11) |
 | `compliancecore-operator-rule-evaluate-smoke.spec.ts` | Compliance Core handoff → rule pack seed + evaluate (operator path) |
 | `suite-multi-product-handoff-journey.spec.ts` | Suite session chains StaffArr → TrainArr → Compliance Core handoffs |
 

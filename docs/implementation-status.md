@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 150 | Companion QR/barcode scan | Complete | `pending` |
+| 150 | Companion QR/barcode scan | Complete | `5841339` |
 
 ## Program summary
 
