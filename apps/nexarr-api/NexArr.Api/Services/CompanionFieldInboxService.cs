@@ -1,11 +1,14 @@
 using System.Security.Claims;
 using NexArr.Api.Contracts;
+using NexArr.Api.Entities;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
 
 namespace NexArr.Api.Services;
 
-public sealed class CompanionFieldInboxService(CompanionProductClient productClient)
+public sealed class CompanionFieldInboxService(
+    CompanionProductClient productClient,
+    CompanionNotificationEnqueueService notificationEnqueueService)
 {
     public async Task<AggregatedFieldInboxResponse> GetAsync(
         ClaimsPrincipal principal,
@@ -27,7 +30,17 @@ public sealed class CompanionFieldInboxService(CompanionProductClient productCli
                 cancellationToken));
         }
 
-        return FieldInboxRules.BuildAggregatedResponse(slices);
+        var response = FieldInboxRules.BuildAggregatedResponse(slices);
+
+        await notificationEnqueueService.TryEnqueueAsync(
+            principal.GetTenantId(),
+            CompanionNotificationEventKinds.FieldInboxRefreshed,
+            principal.GetUserId(),
+            "field_inbox",
+            principal.GetUserId(),
+            cancellationToken);
+
+        return response;
     }
 
     public static void RequireCompanionAccess(ClaimsPrincipal principal)

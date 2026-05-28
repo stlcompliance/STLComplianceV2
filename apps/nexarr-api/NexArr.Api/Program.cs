@@ -21,5 +21,7 @@ await StlApiHost.RunAsync<NexArrDbContext>(
         app.MapPlatformAdminEndpoints();
         app.MapPlatformHealthEndpoints();
         app.MapCompanionEndpoints();
+        app.MapCompanionNotificationEndpoints();
+        app.MapInternalCompanionNotificationEndpoints();
         await NexArrServiceRegistration.InitializeAsync(app);
     });

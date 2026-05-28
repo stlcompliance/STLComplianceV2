@@ -100,6 +100,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["compliancecore"],
             "compliancecore.audit_packages.generate"),
+        Profile(
+            "worker-nexarr-companion-notifications",
+            "shared-worker",
+            "NexArrCompanionNotificationDispatch__ServiceToken",
+            "shared-worker",
+            ["nexarr"],
+            "nexarr.companion.notifications.dispatch"),
     ];
 
     public static IReadOnlyList<StlIntegrationTokenProfile> ForConsumer(string consumerService) =>

@@ -30,6 +30,12 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<CompanionFieldInboxService>();
         builder.Services.AddScoped<CompanionProductClient>();
         builder.Services.AddHttpClient(nameof(CompanionProductClient));
+        builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
+        builder.Services.AddSingleton<StlServiceTokenValidator>();
+        builder.Services.AddScoped<CompanionNotificationSettingsService>();
+        builder.Services.AddScoped<CompanionNotificationEnqueueService>();
+        builder.Services.AddScoped<CompanionNotificationDispatchService>();
+        builder.Services.AddHttpClient(CompanionNotificationDispatchService.WebhookHttpClientName);
         builder.Services.AddScoped<PlatformHealthService>();
         builder.Services.AddHttpClient(PlatformHealthService.HttpClientName, client =>
         {
@@ -54,7 +60,6 @@ public static class NexArrServiceRegistration
             options.SupplyArrBaseUrl = configuration["SupplyArr__BaseUrl"] ?? options.SupplyArrBaseUrl;
             options.ComplianceCoreBaseUrl = configuration["ComplianceCore__BaseUrl"] ?? options.ComplianceCoreBaseUrl;
         });
-        builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
         builder.Services.Configure<StlLaunchOptions>(builder.Configuration.GetSection(StlLaunchOptions.SectionName));
 
         var suiteFrontendOrigin = builder.Configuration["Cors:SuiteFrontendOrigin"] ?? "http://localhost:5174";

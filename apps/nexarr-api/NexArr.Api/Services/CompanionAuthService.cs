@@ -13,6 +13,7 @@ public sealed class CompanionAuthService(
     NexArrDbContext db,
     ITokenService tokenService,
     IPlatformAuditService audit,
+    CompanionNotificationEnqueueService notificationEnqueueService,
     IOptions<StlJwtOptions> jwtOptions)
 {
     private const string ProductKey = "companion";
@@ -121,6 +122,14 @@ public sealed class CompanionAuthService(
             tenantId: record.TenantId,
             actorUserId: record.UserId,
             cancellationToken: cancellationToken);
+
+        await notificationEnqueueService.TryEnqueueAsync(
+            record.TenantId,
+            CompanionNotificationEventKinds.HandoffRedeemed,
+            record.UserId,
+            "handoff_code",
+            record.Id,
+            cancellationToken);
 
         return new CompanionSessionResponse(
             accessToken,

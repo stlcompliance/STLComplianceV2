@@ -1,7 +1,10 @@
 import type {
   AggregatedFieldInboxResponse,
   CompanionMeResponse,
+  CompanionNotificationDispatchesResponse,
+  CompanionNotificationSettingsResponse,
   CompanionSessionResponse,
+  UpsertCompanionNotificationSettingsRequest,
 } from './types'
 
 const apiBase = import.meta.env.VITE_NEXARR_API_BASE ?? ''
@@ -54,6 +57,50 @@ export async function getFieldInbox(accessToken: string): Promise<AggregatedFiel
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<AggregatedFieldInboxResponse>(response, 'Failed to load field inbox')
+}
+
+export async function getCompanionNotificationSettings(
+  accessToken: string,
+): Promise<CompanionNotificationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/companion/notification-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CompanionNotificationSettingsResponse>(
+    response,
+    'Failed to load notification settings',
+  )
+}
+
+export async function upsertCompanionNotificationSettings(
+  accessToken: string,
+  body: UpsertCompanionNotificationSettingsRequest,
+): Promise<CompanionNotificationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/companion/notification-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<CompanionNotificationSettingsResponse>(
+    response,
+    'Failed to save notification settings',
+  )
+}
+
+export async function getCompanionNotificationDispatches(
+  accessToken: string,
+  limit = 20,
+): Promise<CompanionNotificationDispatchesResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(
+    `${apiBase}/api/companion/notification-settings/dispatches?${search}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<CompanionNotificationDispatchesResponse>(
+    response,
+    'Failed to load notification dispatches',
+  )
 }
 
 export function productLaunchUrl(productKey: string, deepLinkPath: string): string | null {

@@ -178,4 +178,16 @@ await StlWorkerHost.RunAsync(
         });
 
         builder.Services.AddHostedService<SupplyArrNotificationDispatchJob>();
+
+        builder.Services.Configure<NexArrCompanionNotificationDispatchOptions>(
+            builder.Configuration.GetSection(NexArrCompanionNotificationDispatchOptions.SectionName));
+
+        builder.Services.AddHttpClient<NexArrCompanionNotificationDispatchClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<NexArrCompanionNotificationDispatchOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.NexArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<NexArrCompanionNotificationDispatchJob>();
     });

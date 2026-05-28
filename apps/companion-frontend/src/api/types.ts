@@ -27,6 +27,39 @@ export interface FieldInboxProductSlice {
   items: FieldInboxTaskItem[]
 }
 
+export interface CompanionNotificationSettingsResponse {
+  isEnabled: boolean
+  notificationWebhookUrl: string | null
+  notifyOnHandoffRedeemed: boolean
+  notifyOnFieldInboxRefreshed: boolean
+  updatedAt: string | null
+}
+
+export interface UpsertCompanionNotificationSettingsRequest {
+  isEnabled: boolean
+  notificationWebhookUrl: string | null
+  notifyOnHandoffRedeemed: boolean
+  notifyOnFieldInboxRefreshed: boolean
+}
+
+export interface CompanionNotificationDispatchItem {
+  notificationId: string
+  eventKind: string
+  dispatchStatus: string
+  actorUserId: string | null
+  relatedEntityType: string
+  relatedEntityId: string
+  webhookHost: string | null
+  httpStatusCode: number | null
+  errorMessage: string | null
+  createdAt: string
+  dispatchedAt: string | null
+}
+
+export interface CompanionNotificationDispatchesResponse {
+  items: CompanionNotificationDispatchItem[]
+}
+
 export interface AggregatedFieldInboxResponse {
   summary: FieldInboxSummary
   items: FieldInboxTaskItem[]

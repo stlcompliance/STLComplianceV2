@@ -5,6 +5,7 @@ import { PageHeader } from '@stl/shared-ui'
 import { getFieldInbox, getMe } from '../api/client'
 import { loadSession } from '../auth/sessionStorage'
 import { FieldInboxPanel } from '../components/FieldInboxPanel'
+import { NotificationSettingsPanel } from '../components/NotificationSettingsPanel'
 import { entitledProductKeys } from '../lib/fieldInbox'
 
 export function HomePage() {
@@ -39,6 +40,9 @@ export function HomePage() {
     return <p className="text-sm text-slate-400">Loading field inbox…</p>
   }
 
+  const canManageNotifications =
+    meQuery.data.isPlatformAdmin || meQuery.data.tenantRoleKey === 'tenant_admin'
+
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <PageHeader
@@ -67,6 +71,11 @@ export function HomePage() {
           onProductFilterChange={setProductFilter}
         />
       )}
+
+      <NotificationSettingsPanel
+        accessToken={session.accessToken}
+        canManage={canManageNotifications}
+      />
     </div>
   )
 }
