@@ -28,7 +28,7 @@ All NexArr suite product UIs share one dark enterprise SaaS visual language. Pag
 </div>
 ```
 
-Definition of done: no double sidebars, no zero-height main, no full-width topbar sitting above a shortened sidebar column, content panels use dark theme (not white cards on `#0f172a`).
+Definition of done: no double sidebars, no zero-height main, no full-width topbar sitting above a shortened sidebar column, content panels use dark theme (not white cards on `#0f172a`). Product app `index.css` must include `@source "../../../packages/shared-ui/src"` so Tailwind emits shell layout utilities.
 
 Must feel like one platform across NexArr, StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, and Compliance Core.
 

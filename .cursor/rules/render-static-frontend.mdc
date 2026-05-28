@@ -14,6 +14,18 @@ Product frontends (`apps/*-frontend`) import `@stl/shared-ui` via **tsconfig pat
 
 Render runs `npm ci` in each app's `rootDir` only. **`packages/shared-ui/node_modules` is not installed** unless the build command installs it.
 
+## Tailwind v4 + aliased shared-ui
+
+Product `index.css` must tell Tailwind to scan shared shell sources, or layout utilities used only in `@stl/shared-ui` (`flex-col`, `w-64`, `min-w-0`, `shrink-0`, etc.) are omitted from the production CSS bundle — the shell collapses to a horizontal product row and a narrow main column.
+
+```css
+@import 'tailwindcss';
+
+@source "../../../packages/shared-ui/src";
+```
+
+After changing shared-ui shell classes, rebuild every product frontend and confirm `dist/assets/*.css` includes `flex-col` and `w-64`.
+
 ## Vite: single React instance (product frontends)
 
 When aliasing `@stl/shared-ui` to source, add `resolve.dedupe` so shared-ui and the app share one `react` / `react-dom` / `react-router-dom`. Without it, authenticated shells crash at runtime (`Cannot read properties of null (reading 'useContext')`) and the page stays blank after handoff.
@@ -62,3 +74,4 @@ Applies to: `staffarr-frontend`, `trainarr-frontend`, `maintainarr-frontend`, `r
 | `npm ci` EUSAGE / lock out of sync | Missing or stale `package-lock.json` |
 | Unused import TS6133 in `*.test.tsx` | Strict `noUnusedLocals`; remove or use the import |
 | Blank page after launch; console `useContext` null | Missing `resolve.dedupe` for React when bundling aliased shared-ui |
+| Horizontal product row, empty center, narrow main | Missing `@source` for `packages/shared-ui/src` in product `index.css` |
