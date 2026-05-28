@@ -170,6 +170,7 @@ public static class PurchaseOrderEndpoints
             return Results.Ok(await service.IssueAsync(
                 tenantId,
                 actorUserId,
+                context.User.GetPersonId(),
                 purchaseOrderId,
                 cancellationToken));
         })

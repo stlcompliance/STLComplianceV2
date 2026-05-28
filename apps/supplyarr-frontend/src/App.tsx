@@ -5,6 +5,7 @@ import { CatalogPage } from './pages/catalog/CatalogPage'
 import { InventoryPage } from './pages/inventory/InventoryPage'
 import { PartiesPage } from './pages/parties/PartiesPage'
 import { PlanningPage } from './pages/planning/PlanningPage'
+import { ReadinessPage } from './pages/readiness/ReadinessPage'
 import { PricingPage } from './pages/pricing/PricingPage'
 import { PurchasingPage } from './pages/purchasing/PurchasingPage'
 import { ReceivingPage } from './pages/receiving/ReceivingPage'
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="/receiving/:receivingReceiptId" element={<ReceivingWorkspacePage />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/planning" element={<PlanningPage />} />
+            <Route path="/readiness" element={<ReadinessPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

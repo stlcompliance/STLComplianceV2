@@ -5,6 +5,7 @@ import { PriceSnapshotSettingsPanel } from '../../components/PriceSnapshotSettin
 import { ProcurementCoordinationSettingsPanel } from '../../components/ProcurementCoordinationSettingsPanel'
 import { ApprovalReminderSettingsPanel } from '../../components/ApprovalReminderSettingsPanel'
 import { DemandProcessingSettingsPanel } from '../../components/DemandProcessingSettingsPanel'
+import { IntegrationEventSettingsPanel } from '../../components/IntegrationEventSettingsPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
@@ -23,6 +24,7 @@ export function SettingsSection({ state: s }: Props) {
       <ProcurementCoordinationSettingsPanel accessToken={s.accessToken} canManage={s.canManageNotifications} />
       <ApprovalReminderSettingsPanel accessToken={s.accessToken} canManage={s.canManageNotifications} />
       <DemandProcessingSettingsPanel accessToken={s.accessToken} canManage={s.canManageNotifications} />
+      <IntegrationEventSettingsPanel accessToken={s.accessToken} canManage={s.canManageNotifications} />
     </div>
   )
 }

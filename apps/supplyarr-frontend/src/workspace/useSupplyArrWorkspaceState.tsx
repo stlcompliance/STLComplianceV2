@@ -97,8 +97,17 @@ import {
   canExportVendorReports as userCanExportVendorReports,
   canReadPartsInventoryReports as userCanReadPartsInventoryReports,
   canExportPartsInventoryReports as userCanExportPartsInventoryReports,
+  canReadPurchasingReports as userCanReadPurchasingReports,
+  canExportPurchasingReports as userCanExportPurchasingReports,
+  canReadComplianceReports as userCanReadComplianceReports,
+  canExportComplianceReports as userCanExportComplianceReports,
+  canUseForgivingSearch as userCanUseForgivingSearch,
+  canReadAuditHistory as userCanReadAuditHistory,
+  canReadSupplyReadiness as userCanReadSupplyReadiness,
   canManageInventory,
   canManageParties,
+  canCreateEmergencyPurchase,
+  canManagerOverrideEmergencyPurchase,
   canManageParts,
   canManageNotificationSettings,
   loadSession,
@@ -1478,6 +1487,14 @@ export function useSupplyArrWorkspaceState() {
 
   const canApprovePr = me ? canApprovePurchaseRequests(me.tenantRoleKey, me.isPlatformAdmin) : false
 
+  const canCreateEmergencyPurchaseFlag = me
+    ? canCreateEmergencyPurchase(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+
+  const canManagerOverrideEmergencyPurchaseFlag = me
+    ? canManagerOverrideEmergencyPurchase(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+
   const canCreatePo = me ? canCreatePurchaseOrders(me.tenantRoleKey, me.isPlatformAdmin) : false
 
   const canApprovePo = me ? canApprovePurchaseOrders(me.tenantRoleKey, me.isPlatformAdmin) : false
@@ -1502,6 +1519,34 @@ export function useSupplyArrWorkspaceState() {
 
   const canExportPartsInventoryReports = me
     ? userCanExportPartsInventoryReports(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+
+  const canReadPurchasingReports = me
+    ? userCanReadPurchasingReports(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+
+  const canExportPurchasingReports = me
+    ? userCanExportPurchasingReports(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+
+  const canReadComplianceReports = me
+    ? userCanReadComplianceReports(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+
+  const canExportComplianceReports = me
+    ? userCanExportComplianceReports(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+
+  const canUseForgivingSearch = me
+    ? userCanUseForgivingSearch(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+
+  const canReadAuditHistory = me
+    ? userCanReadAuditHistory(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+
+  const canReadSupplyReadiness = me
+    ? userCanReadSupplyReadiness(me.tenantRoleKey, me.isPlatformAdmin)
     : false
 
   const approvedPurchaseRequests =
@@ -1749,6 +1794,8 @@ export function useSupplyArrWorkspaceState() {
     canManageInv,
     canCreatePr,
     canApprovePr,
+    canCreateEmergencyPurchase: canCreateEmergencyPurchaseFlag,
+    canManagerOverrideEmergencyPurchase: canManagerOverrideEmergencyPurchaseFlag,
     canCreatePo,
     canApprovePo,
     canReceive,
@@ -1757,6 +1804,13 @@ export function useSupplyArrWorkspaceState() {
     canExportVendorReports,
     canReadPartsInventoryReports,
     canExportPartsInventoryReports,
+    canReadPurchasingReports,
+    canExportPurchasingReports,
+    canReadComplianceReports,
+    canExportComplianceReports,
+    canUseForgivingSearch,
+    canReadAuditHistory,
+    canReadSupplyReadiness,
     approvedPurchaseRequests,
     issuedPurchaseOrders,
     issuedPurchaseOrdersWithReceived,

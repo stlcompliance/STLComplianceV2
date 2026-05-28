@@ -41,6 +41,8 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
 
     public DbSet<FactSource> FactSources => Set<FactSource>();
 
+    public DbSet<ProductFactMirror> ProductFactMirrors => Set<ProductFactMirror>();
+
     public DbSet<ComplianceFinding> ComplianceFindings => Set<ComplianceFinding>();
 
     public DbSet<WorkflowGateDefinition> WorkflowGateDefinitions => Set<WorkflowGateDefinition>();
@@ -334,6 +336,23 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
                 .WithMany()
                 .HasForeignKey(x => x.FactDefinitionId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ProductFactMirror>(entity =>
+        {
+            entity.ToTable("compliancecore_product_fact_mirrors");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SourceProduct).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.FactKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ScopeKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ValueType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.StringValue).HasMaxLength(512);
+            entity.Property(x => x.SourceEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceEventKind).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(256).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.IdempotencyKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.SourceProduct, x.FactKey, x.ScopeKey });
         });
 
         modelBuilder.Entity<RuleEvaluationRun>(entity =>

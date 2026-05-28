@@ -6,6 +6,7 @@ export const WORKSPACE_SECTIONS = [
   'receiving',
   'pricing',
   'planning',
+  'readiness',
   'reports',
   'settings',
 ] as const
@@ -36,9 +37,13 @@ export const workspaceSectionHeaders: Record<
     title: 'Planning',
     subtitle: 'Availability, reorder evaluation, and demand references',
   },
+  readiness: {
+    title: 'Supply readiness',
+    subtitle: 'Stock, procurement, demand, and compliance attention',
+  },
   reports: {
     title: 'Reports',
-    subtitle: 'Vendor, inventory, and procurement reporting',
+    subtitle: 'Vendor, inventory, procurement reporting, and audit history',
   },
   settings: { title: 'Settings', subtitle: 'Notification preferences' },
 }

@@ -8,8 +8,11 @@ namespace SupplyArr.Api.Services;
 
 public sealed class PurchaseOrderService(
     SupplyArrDbContext db,
-    MaintainArrDemandStatusCallbackService demandStatusCallbacks,
+    VendorProcurementGuardService vendorProcurementGuard,
+    StaffarrProcurementApprovalAuthorityService approvalAuthority,
+    SupplyArrDemandStatusCallbackCoordinator demandStatusCallbacks,
     ProcurementNotificationEnqueueService notificationEnqueue,
+    IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
     public async Task<IReadOnlyList<PurchaseOrderResponse>> ListAsync(
@@ -84,6 +87,12 @@ public sealed class PurchaseOrderService(
                 "Approved purchase request must have a vendor before creating a purchase order.",
                 400);
         }
+
+        await vendorProcurementGuard.EnsureVendorAllowedForScopeAsync(
+            tenantId,
+            purchaseRequest.VendorPartyId.Value,
+            VendorRestrictionScopes.PurchaseOrders,
+            cancellationToken);
 
         if (purchaseRequest.Lines.Count == 0)
         {
@@ -341,6 +350,7 @@ public sealed class PurchaseOrderService(
     public async Task<PurchaseOrderResponse> IssueAsync(
         Guid tenantId,
         Guid actorUserId,
+        Guid actorPersonId,
         Guid purchaseOrderId,
         CancellationToken cancellationToken = default)
     {
@@ -352,6 +362,19 @@ public sealed class PurchaseOrderService(
                 "Only approved purchase orders can be issued.",
                 409);
         }
+
+        await vendorProcurementGuard.EnsureVendorAllowedForScopeAsync(
+            tenantId,
+            entity.VendorPartyId,
+            VendorRestrictionScopes.PurchaseOrders,
+            cancellationToken);
+
+        await approvalAuthority.EnsureCanIssuePurchaseOrderAsync(
+            tenantId,
+            actorUserId,
+            actorPersonId,
+            entity,
+            cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         entity.Status = PurchaseOrderStatuses.Issued;
@@ -382,6 +405,14 @@ public sealed class PurchaseOrderService(
             "purchase_order",
             entity.Id,
             cancellationToken);
+
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.PurchaseOrderIssued,
+            "purchase_order",
+            entity.Id,
+            new IntegrationOutboxPayload(tenantId, $"Purchase order issued: {entity.OrderKey}", entity.VendorPartyId),
+            cancellationToken: cancellationToken);
 
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }

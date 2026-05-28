@@ -29,6 +29,12 @@ public sealed record PurchaseRequestResponse(
     DateTimeOffset? RejectedAt,
     Guid? RejectedByUserId,
     string RejectionReason,
+    bool IsEmergency,
+    string EmergencyReason,
+    DateTimeOffset? EmergencyExpeditedAt,
+    bool ManagerOverrideApproved,
+    string ManagerOverrideJustification,
+    DateTimeOffset? ManagerOverrideApprovedAt,
     IReadOnlyList<PurchaseRequestLineResponse> Lines,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);

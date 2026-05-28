@@ -28,6 +28,12 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
     public DbSet<TrainingAssignment> TrainingAssignments => Set<TrainingAssignment>();
 
+    public DbSet<TrainingAssignmentMaterialDemandLine> TrainingAssignmentMaterialDemandLines =>
+        Set<TrainingAssignmentMaterialDemandLine>();
+
+    public DbSet<TrainingAssignmentMaterialDemandStatusEvent> TrainingAssignmentMaterialDemandStatusEvents =>
+        Set<TrainingAssignmentMaterialDemandStatusEvent>();
+
 
 
     public DbSet<TrainingProgram> TrainingPrograms => Set<TrainingProgram>();
@@ -259,6 +265,42 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
                 .OnDelete(DeleteBehavior.Cascade);
 
+        });
+
+        modelBuilder.Entity<TrainingAssignmentMaterialDemandLine>(entity =>
+        {
+            entity.ToTable("trainarr_training_assignment_material_demand_lines");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PartNumber).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.QuantityRequested).HasPrecision(18, 4);
+            entity.Property(x => x.UnitOfMeasure).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ProcurementStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ProcurementStatusMessage).HasMaxLength(512);
+            entity.Property(x => x.QuantityReceived).HasPrecision(18, 4);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TrainingAssignmentId });
+            entity.HasIndex(x => new { x.TenantId, x.TrainingAssignmentId, x.LineNumber });
+            entity.HasIndex(x => new { x.TenantId, x.TrainarrPublicationId });
+            entity.HasIndex(x => new { x.TenantId, x.ProcurementStatus });
+            entity.HasOne(x => x.TrainingAssignment)
+                .WithMany()
+                .HasForeignKey(x => x.TrainingAssignmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TrainingAssignmentMaterialDemandStatusEvent>(entity =>
+        {
+            entity.ToTable("trainarr_training_assignment_material_demand_status_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ProcurementStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Message).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TrainarrPublicationId, x.OccurredAt });
+            entity.HasIndex(x => new { x.TenantId, x.SupplyarrCallbackPublicationId }).IsUnique();
         });
 
         modelBuilder.Entity<QualificationIssue>(entity =>

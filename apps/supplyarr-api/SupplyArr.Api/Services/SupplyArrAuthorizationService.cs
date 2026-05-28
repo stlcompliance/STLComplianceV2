@@ -347,6 +347,81 @@ public sealed class SupplyArrAuthorizationService
     public void RequireDemandProcessingRead(ClaimsPrincipal principal) =>
         RequireDemandRefRead(principal);
 
+    public void RequireIntegrationEventSettingsManage(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
+    public void RequireRfqRead(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestRead(principal);
+
+    public void RequireRfqManage(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestCreate(principal);
+
+    public void RequireRfqAward(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestApprove(principal);
+
+    public void RequireSupplierOnboardingRead(ClaimsPrincipal principal) =>
+        RequirePartiesRead(principal);
+
+    public void RequireSupplierOnboardingManage(ClaimsPrincipal principal) =>
+        RequirePartiesManage(principal);
+
+    public void RequireSupplierOnboardingReview(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestApprove(principal);
+
+    public void RequireEmergencyPurchaseRead(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestRead(principal);
+
+    public void RequireEmergencyPurchaseCreate(ClaimsPrincipal principal)
+    {
+        RequireSupplyArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "supplyarr_admin",
+                "supplyarr_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Emergency purchase creation requires manager or administrator role.",
+            403);
+    }
+
+    public void RequireEmergencyPurchaseExpedite(ClaimsPrincipal principal) =>
+        RequireEmergencyPurchaseCreate(principal);
+
+    public void RequireEmergencyPurchaseOverrideApprove(ClaimsPrincipal principal)
+    {
+        RequireSupplyArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "supplyarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Emergency purchase manager override requires tenant or SupplyArr administrator role.",
+            403);
+    }
+
+    public void RequireEmergencyPurchaseIssueOrder(ClaimsPrincipal principal) =>
+        RequireEmergencyPurchaseCreate(principal);
+
     public void RequireVendorReportRead(ClaimsPrincipal principal) =>
         RequirePartiesRead(principal);
 
@@ -358,6 +433,70 @@ public sealed class SupplyArrAuthorizationService
 
     public void RequirePartsInventoryReportExport(ClaimsPrincipal principal) =>
         RequireInventoryRead(principal);
+
+    public void RequirePurchasingReportRead(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestRead(principal);
+
+    public void RequirePurchasingReportExport(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestRead(principal);
+
+    public void RequireComplianceReportRead(ClaimsPrincipal principal) =>
+        RequirePartiesRead(principal);
+
+    public void RequireComplianceReportExport(ClaimsPrincipal principal) =>
+        RequirePartiesRead(principal);
+
+    public void RequireForgivingSearch(ClaimsPrincipal principal) =>
+        RequirePartiesRead(principal);
+
+    public void RequireAuditHistoryRead(ClaimsPrincipal principal)
+    {
+        RequireSupplyArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "supplyarr_admin",
+                "supplyarr_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Audit history read requires SupplyArr admin or manager access.",
+            403);
+    }
+
+    public void RequireSupplyReadinessRead(ClaimsPrincipal principal)
+    {
+        RequireSupplyArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "supplyarr_admin",
+                "supplyarr_manager",
+                "supplyarr_clerk",
+                "supplyarr_buyer",
+                "tenant_member"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Supply readiness dashboard requires SupplyArr read access.",
+            403);
+    }
 
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));

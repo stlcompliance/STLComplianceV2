@@ -10,6 +10,7 @@ public sealed class MaintainArrDemandIntakeService(
     SupplyArrDbContext db,
     PurchaseRequestService purchaseRequests,
     MaintainArrDemandStatusCallbackService demandStatusCallbacks,
+    IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
     public async Task<MaintainarrDemandIntakeResponse> IngestAsync(
@@ -87,6 +88,16 @@ public sealed class MaintainArrDemandIntakeService(
             "maintainarr_demand_ref",
             entity.Id.ToString(),
             request.MaintainarrWorkOrderId.ToString(),
+            cancellationToken: cancellationToken);
+
+        await integrationOutbox.TryEnqueueAsync(
+            request.TenantId,
+            IntegrationOutboxEventKinds.MaintainarrDemandReceived,
+            "maintainarr_demand_ref",
+            entity.Id,
+            new IntegrationOutboxPayload(
+                request.TenantId,
+                $"MaintainArr demand received: {entity.MaintainarrWorkOrderNumber}"),
             cancellationToken: cancellationToken);
 
         var createdPurchaseRequestDraft = false;

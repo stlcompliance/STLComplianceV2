@@ -206,5 +206,10 @@ public sealed class FactSourceService(
         {
             return;
         }
+
+        if (string.Equals(sourceType, FactSourceTypes.ProductMirror, StringComparison.Ordinal))
+        {
+            return;
+        }
     }
 }

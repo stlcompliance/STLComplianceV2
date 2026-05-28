@@ -49,14 +49,70 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<DemandProcessingSettingsService>();
         builder.Services.AddScoped<DemandProcessingWorkerService>();
         builder.Services.AddScoped<DemandProcessingService>();
+        builder.Services.AddScoped<IntegrationEventSettingsService>();
+        builder.Services.AddScoped<IntegrationEventProcessingService>();
+        builder.Services.AddScoped<IntegrationOutboxEnqueueService>();
+        builder.Services.AddScoped<IntegrationInboxEnqueueService>();
+        builder.Services.AddScoped<RfqService>();
+        builder.Services.AddScoped<PartyComplianceDocumentService>();
+        builder.Services.AddScoped<SupplierOnboardingService>();
+        builder.Services.AddScoped<VendorProcurementGuardService>();
+        builder.Services.AddScoped<VendorRestrictionService>();
+        builder.Services.AddScoped<SupplierIncidentService>();
+        builder.Services.AddScoped<WarrantyClaimService>();
+        builder.Services.AddScoped<ProcurementExceptionService>();
+        builder.Services.AddScoped<StaffarrProcurementApprovalAuthorityService>();
+        builder.Services.AddHttpClient<StaffArrProcurementApprovalAuthorityClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddScoped<EmergencyPurchaseService>();
         builder.Services.AddScoped<VendorReportService>();
         builder.Services.AddScoped<PartsInventoryReportService>();
+        builder.Services.AddScoped<PurchasingReportService>();
+        builder.Services.AddScoped<ComplianceReportService>();
+        builder.Services.AddScoped<SupplyReadinessService>();
+        builder.Services.AddScoped<ForgivingSearchService>();
+        builder.Services.AddScoped<AuditHistoryService>();
         builder.Services.AddScoped<MaintainArrDemandIntakeService>();
+        builder.Services.AddScoped<RoutArrDemandIntakeService>();
+        builder.Services.AddScoped<TrainArrDemandIntakeService>();
+        builder.Services.AddScoped<StaffArrDemandIntakeService>();
         builder.Services.AddScoped<MaintainArrDemandStatusCallbackService>();
+        builder.Services.AddScoped<RoutArrDemandStatusCallbackService>();
+        builder.Services.AddScoped<TrainArrDemandStatusCallbackService>();
+        builder.Services.AddScoped<StaffArrDemandStatusCallbackService>();
+        builder.Services.AddScoped<SupplyArrDemandStatusCallbackCoordinator>();
         builder.Services.Configure<MaintainArrClientOptions>(builder.Configuration.GetSection(MaintainArrClientOptions.SectionName));
+        builder.Services.Configure<RoutArrClientOptions>(builder.Configuration.GetSection(RoutArrClientOptions.SectionName));
+        builder.Services.Configure<TrainArrClientOptions>(builder.Configuration.GetSection(TrainArrClientOptions.SectionName));
+        builder.Services.Configure<StaffArrClientOptions>(builder.Configuration.GetSection(StaffArrClientOptions.SectionName));
+        builder.Services.Configure<ComplianceCoreClientOptions>(builder.Configuration.GetSection(ComplianceCoreClientOptions.SectionName));
+        builder.Services.AddHttpClient<ComplianceCoreFactPublicationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ComplianceCoreClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddScoped<ComplianceCoreFactPublisherService>();
         builder.Services.AddHttpClient<MaintainArrDemandStatusClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<MaintainArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddHttpClient<RoutArrDemandStatusClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RoutArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddHttpClient<TrainArrDemandStatusClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<TrainArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddHttpClient<StaffArrDemandStatusClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
         builder.Services.AddScoped<ISupplyArrAuditService, SupplyArrAuditService>();

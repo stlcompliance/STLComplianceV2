@@ -13,6 +13,20 @@ interface DemandProcessingSettingsPanelProps {
   canManage: boolean
 }
 
+const SOURCE_LABELS: { key: keyof SourceFlags; label: string }[] = [
+  { key: 'processMaintainarrDemandRefs', label: 'MaintainArr work-order demand' },
+  { key: 'processRoutarrDemandRefs', label: 'RoutArr trip parts demand' },
+  { key: 'processTrainarrDemandRefs', label: 'TrainArr assignment materials demand' },
+  { key: 'processStaffarrDemandRefs', label: 'StaffArr incident supply demand' },
+]
+
+type SourceFlags = {
+  processMaintainarrDemandRefs: boolean
+  processRoutarrDemandRefs: boolean
+  processTrainarrDemandRefs: boolean
+  processStaffarrDemandRefs: boolean
+}
+
 export function DemandProcessingSettingsPanel({
   accessToken,
   canManage,
@@ -24,6 +38,12 @@ export function DemandProcessingSettingsPanel({
   const [minHoursBeforeProcessing, setMinHoursBeforeProcessing] = useState(0)
   const [stalenessHours, setStalenessHours] = useState(4)
   const [notifyOnPrDraftCreated, setNotifyOnPrDraftCreated] = useState(true)
+  const [sourceFlags, setSourceFlags] = useState<SourceFlags>({
+    processMaintainarrDemandRefs: true,
+    processRoutarrDemandRefs: false,
+    processTrainarrDemandRefs: false,
+    processStaffarrDemandRefs: false,
+  })
 
   const settingsQuery = useQuery({
     queryKey: ['supplyarr-demand-processing-settings', accessToken],
@@ -53,6 +73,12 @@ export function DemandProcessingSettingsPanel({
     setMinHoursBeforeProcessing(data.minHoursBeforeProcessing)
     setStalenessHours(data.stalenessHours)
     setNotifyOnPrDraftCreated(data.notifyOnPrDraftCreated)
+    setSourceFlags({
+      processMaintainarrDemandRefs: data.processMaintainarrDemandRefs,
+      processRoutarrDemandRefs: data.processRoutarrDemandRefs,
+      processTrainarrDemandRefs: data.processTrainarrDemandRefs,
+      processStaffarrDemandRefs: data.processStaffarrDemandRefs,
+    })
     setInitialized(true)
   }, [initialized, settingsQuery.data, settingsQuery.isLoading])
 
@@ -64,6 +90,7 @@ export function DemandProcessingSettingsPanel({
         minHoursBeforeProcessing,
         stalenessHours,
         notifyOnPrDraftCreated,
+        ...sourceFlags,
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['supplyarr-demand-processing-settings', accessToken] })
@@ -84,14 +111,15 @@ export function DemandProcessingSettingsPanel({
     >
       <h2 className="text-lg font-semibold text-slate-50">Demand processing worker</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Scheduled stock checks on MaintainArr demand references with optional auto PR draft creation.
+        Scheduled stock checks on received demand references from enabled sources, with optional auto PR draft
+        creation when stock is short.
       </p>
 
       {settingsQuery.isLoading && <p className="mt-3 text-sm text-slate-500">Loading settings…</p>}
 
       {settingsQuery.data && (
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <label className="flex items-center gap-2 text-sm text-slate-300">
+          <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
             <input
               type="checkbox"
               checked={isEnabled}
@@ -99,7 +127,24 @@ export function DemandProcessingSettingsPanel({
             />
             Enable demand processing worker
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-300">
+          <fieldset className="md:col-span-2">
+            <legend className="text-sm font-medium text-slate-300">Demand sources</legend>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {SOURCE_LABELS.map(({ key, label }) => (
+                <label key={key} className="flex items-center gap-2 text-sm text-slate-400">
+                  <input
+                    type="checkbox"
+                    checked={sourceFlags[key]}
+                    onChange={(event) =>
+                      setSourceFlags((prev) => ({ ...prev, [key]: event.target.checked }))
+                    }
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
             <input
               type="checkbox"
               checked={autoCreatePrDraftWhenShort}
@@ -135,7 +180,7 @@ export function DemandProcessingSettingsPanel({
               checked={notifyOnPrDraftCreated}
               onChange={(event) => setNotifyOnPrDraftCreated(event.target.checked)}
             />
-            Notify when auto PR draft is created
+            Notify when auto PR draft is created (MaintainArr webhook only)
           </label>
           <button
             type="button"
@@ -152,6 +197,15 @@ export function DemandProcessingSettingsPanel({
         <div className="mt-4 rounded-md border border-slate-800 p-3 text-sm">
           <h3 className="font-medium text-slate-200">Pending processing</h3>
           <p className="text-slate-500">{pendingQuery.data.items.length} demand references due</p>
+          {pendingQuery.data.items.length > 0 && (
+            <ul className="mt-2 space-y-1 text-xs text-slate-500">
+              {pendingQuery.data.items.slice(0, 5).map((item) => (
+                <li key={item.demandRefId}>
+                  {item.demandRefSource}: {item.sourceRefKey} · {item.title}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 

@@ -1322,6 +1322,176 @@ namespace TrainArr.Api.Migrations
                     b.ToTable("trainarr_training_assignments", (string)null);
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingAssignmentMaterialDemandLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset?>("LastProcurementStatusAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("LineNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("PartNumber")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ProcurementStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ProcurementStatusMessage")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("QuantityReceived")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("QuantityRequested")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid?>("SupplyarrDemandRefId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SupplyarrPartId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SupplyarrPurchaseOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SupplyarrPurchaseRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TrainarrPublicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainingAssignmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UnitOfMeasure")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TrainingAssignmentId");
+
+                    b.HasIndex("TenantId", "ProcurementStatus");
+
+                    b.HasIndex("TenantId", "TrainarrPublicationId")
+                        .HasDatabaseName("IX_trainarr_training_assignment_material_demand_lines_TenantI~1");
+
+                    b.HasIndex("TenantId", "TrainingAssignmentId")
+                        .HasDatabaseName("IX_trainarr_training_assignment_material_demand_lines_TenantI~2");
+
+                    b.HasIndex("TenantId", "TrainingAssignmentId", "LineNumber")
+                        .HasDatabaseName("IX_trainarr_training_assignment_material_demand_lines_TenantI~3");
+
+                    b.ToTable("trainarr_training_assignment_material_demand_lines", (string)null);
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingAssignmentMaterialDemandStatusEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProcurementStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("SupplyarrCallbackPublicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SupplyarrDemandRefId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SupplyarrPurchaseOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SupplyarrPurchaseRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SupplyarrReceivingReceiptId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainarrPublicationId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "SupplyarrCallbackPublicationId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_trainarr_training_assignment_material_demand_status_events~1");
+
+                    b.HasIndex("TenantId", "TrainarrPublicationId", "OccurredAt")
+                        .HasDatabaseName("IX_trainarr_training_assignment_material_demand_status_events~2");
+
+                    b.ToTable("trainarr_training_assignment_material_demand_status_events", (string)null);
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingCitationAttachment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1853,6 +2023,17 @@ namespace TrainArr.Api.Migrations
                     b.Navigation("StaffarrIncidentRemediation");
 
                     b.Navigation("TrainingDefinition");
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingAssignmentMaterialDemandLine", b =>
+                {
+                    b.HasOne("TrainArr.Api.Entities.TrainingAssignment", "TrainingAssignment")
+                        .WithMany()
+                        .HasForeignKey("TrainingAssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TrainingAssignment");
                 });
 
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingEvaluation", b =>

@@ -8,7 +8,10 @@ namespace SupplyArr.Api.Services;
 public sealed class DemandProcessingWorkerService(
     SupplyArrDbContext db,
     DemandProcessingSettingsService settingsService,
-    MaintainArrDemandIntakeService demandIntake,
+    MaintainArrDemandIntakeService maintainArrDemandIntake,
+    RoutArrDemandIntakeService routArrDemandIntake,
+    TrainArrDemandIntakeService trainArrDemandIntake,
+    StaffArrDemandIntakeService staffArrDemandIntake,
     ProcurementNotificationEnqueueService notificationEnqueue,
     ISupplyArrAuditService audit)
 {
@@ -36,7 +39,8 @@ public sealed class DemandProcessingWorkerService(
         var items = candidates
             .Select(x => new PendingDemandProcessingItem(
                 x.DemandRefId,
-                x.MaintainarrWorkOrderNumber,
+                x.DemandRefSource,
+                x.SourceRefKey,
                 x.Title,
                 x.ReceivedAt,
                 x.LastProcessedAt,
@@ -174,26 +178,27 @@ public sealed class DemandProcessingWorkerService(
         var settings = await settingsService.LoadSnapshotAsync(candidate.TenantId, cancellationToken)
             ?? throw new InvalidOperationException("Demand processing settings are not configured for this tenant.");
 
-        var demandRef = await db.MaintainArrDemandRefs
-            .Include(x => x.Lines)
-            .FirstOrDefaultAsync(
-                x => x.TenantId == candidate.TenantId && x.Id == candidate.DemandRefId,
-                cancellationToken)
+        if (!settings.IsSourceEnabled(candidate.DemandRefSource))
+        {
+            throw new InvalidOperationException($"Demand processing is disabled for source {candidate.DemandRefSource}.");
+        }
+
+        var snapshot = await LoadDemandRefSnapshotAsync(candidate, cancellationToken)
             ?? throw new InvalidOperationException("Demand reference was not found.");
 
-        if (demandRef.PurchaseRequestId.HasValue)
+        if (snapshot.PurchaseRequestId.HasValue)
         {
             throw new InvalidOperationException("Demand reference already has a purchase request.");
         }
 
-        if (!string.Equals(demandRef.Status, MaintainArrDemandRefStatuses.Received, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(snapshot.Status, snapshot.ReceivedStatus, StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException("Demand reference is not in received status.");
         }
 
         var stockTotals = await LoadStockTotalsAsync(candidate.TenantId, cancellationToken);
-        var lineSummaries = BuildLineSummaries(demandRef.Lines, stockTotals);
-        var linesTotalCount = demandRef.Lines.Count;
+        var lineSummaries = BuildLineSummaries(snapshot.Lines, stockTotals);
+        var linesTotalCount = snapshot.Lines.Count;
         var linesCatalogCount = lineSummaries.Count(x => x.PartId.HasValue);
         var linesShortCount = lineSummaries.Count(x => x.PartId.HasValue && x.IsShort);
 
@@ -214,16 +219,7 @@ public sealed class DemandProcessingWorkerService(
             && string.Equals(outcome, DemandProcessingOutcomes.StockShort, StringComparison.OrdinalIgnoreCase)
             && linesCatalogCount > 0)
         {
-            var draft = await demandIntake.CreatePurchaseRequestFromDemandRefAsync(
-                candidate.TenantId,
-                WorkerActorUserId,
-                candidate.DemandRefId,
-                new CreatePurchaseRequestFromDemandRefRequest(
-                    $"auto-demand-{demandRef.MaintainarrWorkOrderNumber}-{demandRef.MaintainarrPublicationId:N}".ToLowerInvariant(),
-                    $"MaintainArr WO {demandRef.MaintainarrWorkOrderNumber} (auto)",
-                    demandRef.Notes),
-                cancellationToken);
-
+            var draft = await CreateAutoPurchaseRequestDraftAsync(snapshot, cancellationToken);
             purchaseRequestId = draft.PurchaseRequestId;
             outcome = DemandProcessingOutcomes.PrDrafted;
             recommendedAction = DemandProcessingRecommendedActions.PrAutoCreated;
@@ -233,7 +229,8 @@ public sealed class DemandProcessingWorkerService(
                 linesCatalogCount,
                 linesTotalCount);
 
-            if (settings.NotifyOnPrDraftCreated)
+            if (settings.NotifyOnPrDraftCreated
+                && string.Equals(candidate.DemandRefSource, DemandRefSources.MaintainArr, StringComparison.OrdinalIgnoreCase))
             {
                 notificationDispatchId = await notificationEnqueue.TryEnqueueRepeatableAsync(
                     candidate.TenantId,
@@ -258,21 +255,23 @@ public sealed class DemandProcessingWorkerService(
                 Id = Guid.NewGuid(),
                 TenantId = candidate.TenantId,
                 DemandRefId = candidate.DemandRefId,
+                DemandRefSource = candidate.DemandRefSource,
                 CreatedAt = now,
             };
             db.DemandProcessingStates.Add(state);
         }
 
-        state.MaintainarrWorkOrderNumber = demandRef.MaintainarrWorkOrderNumber;
-        state.Title = demandRef.Title;
+        state.DemandRefSource = candidate.DemandRefSource;
+        state.MaintainarrWorkOrderNumber = snapshot.SourceRefKey;
+        state.Title = snapshot.Title;
         state.ProcessingOutcome = outcome;
         state.RecommendedAction = recommendedAction;
         state.LinesTotalCount = linesTotalCount;
         state.LinesCatalogCount = linesCatalogCount;
         state.LinesShortCount = linesShortCount;
-        state.PurchaseRequestId = purchaseRequestId ?? demandRef.PurchaseRequestId;
+        state.PurchaseRequestId = purchaseRequestId ?? snapshot.PurchaseRequestId;
         state.LastProcessingMessage = processingMessage;
-        state.DemandReceivedAt = demandRef.ReceivedAt;
+        state.DemandReceivedAt = snapshot.ReceivedAt;
         state.LastProcessedAt = asOfUtc;
         state.UpdatedAt = now;
 
@@ -280,13 +279,203 @@ public sealed class DemandProcessingWorkerService(
 
         return new DemandProcessingResult(
             candidate.DemandRefId,
-            demandRef.MaintainarrWorkOrderNumber,
+            candidate.DemandRefSource,
+            snapshot.SourceRefKey,
             outcome,
             recommendedAction,
             linesShortCount,
             purchaseRequestId,
             notificationDispatchId);
     }
+
+    private async Task<PurchaseRequestResponse> CreateAutoPurchaseRequestDraftAsync(
+        DemandRefProcessingSnapshot snapshot,
+        CancellationToken cancellationToken) =>
+        snapshot.Source switch
+        {
+            DemandRefSources.MaintainArr => await maintainArrDemandIntake.CreatePurchaseRequestFromDemandRefAsync(
+                snapshot.TenantId,
+                WorkerActorUserId,
+                snapshot.DemandRefId,
+                new CreatePurchaseRequestFromDemandRefRequest(
+                    snapshot.AutoRequestKey,
+                    snapshot.AutoTitle,
+                    snapshot.Notes),
+                cancellationToken),
+            DemandRefSources.RoutArr => await routArrDemandIntake.CreatePurchaseRequestFromDemandRefAsync(
+                snapshot.TenantId,
+                WorkerActorUserId,
+                snapshot.DemandRefId,
+                new CreatePurchaseRequestFromRoutarrDemandRefRequest(
+                    snapshot.AutoRequestKey,
+                    snapshot.AutoTitle,
+                    snapshot.Notes),
+                cancellationToken),
+            DemandRefSources.TrainArr => await trainArrDemandIntake.CreatePurchaseRequestFromDemandRefAsync(
+                snapshot.TenantId,
+                WorkerActorUserId,
+                snapshot.DemandRefId,
+                new CreatePurchaseRequestFromTrainarrDemandRefRequest(
+                    snapshot.AutoRequestKey,
+                    snapshot.AutoTitle,
+                    snapshot.Notes),
+                cancellationToken),
+            DemandRefSources.StaffArr => await staffArrDemandIntake.CreatePurchaseRequestFromDemandRefAsync(
+                snapshot.TenantId,
+                WorkerActorUserId,
+                snapshot.DemandRefId,
+                new CreatePurchaseRequestFromStaffarrDemandRefRequest(
+                    snapshot.AutoRequestKey,
+                    snapshot.AutoTitle,
+                    snapshot.Notes),
+                cancellationToken),
+            _ => throw new InvalidOperationException($"Unsupported demand reference source: {snapshot.Source}"),
+        };
+
+    private async Task<DemandRefProcessingSnapshot?> LoadDemandRefSnapshotAsync(
+        PendingDemandProcessingCandidate candidate,
+        CancellationToken cancellationToken)
+    {
+        return candidate.DemandRefSource switch
+        {
+            DemandRefSources.MaintainArr => await LoadMaintainarrSnapshotAsync(candidate, cancellationToken),
+            DemandRefSources.RoutArr => await LoadRoutarrSnapshotAsync(candidate, cancellationToken),
+            DemandRefSources.TrainArr => await LoadTrainarrSnapshotAsync(candidate, cancellationToken),
+            DemandRefSources.StaffArr => await LoadStaffarrSnapshotAsync(candidate, cancellationToken),
+            _ => null,
+        };
+    }
+
+    private async Task<DemandRefProcessingSnapshot?> LoadMaintainarrSnapshotAsync(
+        PendingDemandProcessingCandidate candidate,
+        CancellationToken cancellationToken)
+    {
+        var entity = await db.MaintainArrDemandRefs
+            .Include(x => x.Lines)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == candidate.TenantId && x.Id == candidate.DemandRefId,
+                cancellationToken);
+
+        if (entity is null)
+        {
+            return null;
+        }
+
+        return new DemandRefProcessingSnapshot(
+            DemandRefSources.MaintainArr,
+            entity.TenantId,
+            entity.Id,
+            entity.MaintainarrWorkOrderNumber,
+            entity.Title,
+            entity.Notes,
+            entity.Status,
+            MaintainArrDemandRefStatuses.Received,
+            entity.PurchaseRequestId,
+            entity.ReceivedAt,
+            $"auto-demand-{entity.MaintainarrWorkOrderNumber}-{entity.MaintainarrPublicationId:N}".ToLowerInvariant(),
+            $"MaintainArr WO {entity.MaintainarrWorkOrderNumber} (auto)",
+            MapLines(entity.Lines.Select(x => (x.Id, x.LineNumber, x.PartId, x.PartNumber, x.QuantityRequested))));
+    }
+
+    private async Task<DemandRefProcessingSnapshot?> LoadRoutarrSnapshotAsync(
+        PendingDemandProcessingCandidate candidate,
+        CancellationToken cancellationToken)
+    {
+        var entity = await db.RoutArrDemandRefs
+            .Include(x => x.Lines)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == candidate.TenantId && x.Id == candidate.DemandRefId,
+                cancellationToken);
+
+        if (entity is null)
+        {
+            return null;
+        }
+
+        return new DemandRefProcessingSnapshot(
+            DemandRefSources.RoutArr,
+            entity.TenantId,
+            entity.Id,
+            entity.RoutarrTripNumber,
+            entity.Title,
+            entity.Notes,
+            entity.Status,
+            RoutArrDemandRefStatuses.Received,
+            entity.PurchaseRequestId,
+            entity.ReceivedAt,
+            $"routarr-{entity.RoutarrTripNumber}-{entity.RoutarrPublicationId:N}".ToLowerInvariant(),
+            $"RoutArr trip {entity.RoutarrTripNumber} (auto)",
+            MapLines(entity.Lines.Select(x => (x.Id, x.LineNumber, x.PartId, x.PartNumber, x.QuantityRequested))));
+    }
+
+    private async Task<DemandRefProcessingSnapshot?> LoadTrainarrSnapshotAsync(
+        PendingDemandProcessingCandidate candidate,
+        CancellationToken cancellationToken)
+    {
+        var entity = await db.TrainArrDemandRefs
+            .Include(x => x.Lines)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == candidate.TenantId && x.Id == candidate.DemandRefId,
+                cancellationToken);
+
+        if (entity is null)
+        {
+            return null;
+        }
+
+        return new DemandRefProcessingSnapshot(
+            DemandRefSources.TrainArr,
+            entity.TenantId,
+            entity.Id,
+            entity.TrainarrAssignmentRefKey,
+            entity.Title,
+            entity.Notes,
+            entity.Status,
+            TrainArrDemandRefStatuses.Received,
+            entity.PurchaseRequestId,
+            entity.ReceivedAt,
+            $"trainarr-{entity.TrainarrAssignmentRefKey}-{entity.TrainarrPublicationId:N}".ToLowerInvariant(),
+            $"TrainArr assignment {entity.TrainarrAssignmentRefKey} (auto)",
+            MapLines(entity.Lines.Select(x => (x.Id, x.LineNumber, x.PartId, x.PartNumber, x.QuantityRequested))));
+    }
+
+    private async Task<DemandRefProcessingSnapshot?> LoadStaffarrSnapshotAsync(
+        PendingDemandProcessingCandidate candidate,
+        CancellationToken cancellationToken)
+    {
+        var entity = await db.StaffArrDemandRefs
+            .Include(x => x.Lines)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == candidate.TenantId && x.Id == candidate.DemandRefId,
+                cancellationToken);
+
+        if (entity is null)
+        {
+            return null;
+        }
+
+        return new DemandRefProcessingSnapshot(
+            DemandRefSources.StaffArr,
+            entity.TenantId,
+            entity.Id,
+            entity.StaffarrIncidentTitle,
+            entity.Title,
+            entity.Notes,
+            entity.Status,
+            StaffArrDemandRefStatuses.Received,
+            entity.PurchaseRequestId,
+            entity.ReceivedAt,
+            $"staffarr-{entity.StaffarrIncidentId:N}-{entity.StaffarrPublicationId:N}".ToLowerInvariant(),
+            $"StaffArr incident {entity.StaffarrIncidentTitle} (auto)",
+            MapLines(entity.Lines.Select(x => (x.Id, x.LineNumber, x.PartId, x.PartNumber, x.QuantityRequested))));
+    }
+
+    private static IReadOnlyList<DemandRefProcessingLine> MapLines(
+        IEnumerable<(Guid Id, int LineNumber, Guid? PartId, string PartNumber, decimal QuantityRequested)> lines) =>
+        lines
+            .OrderBy(x => x.LineNumber)
+            .Select(x => new DemandRefProcessingLine(x.Id, x.LineNumber, x.PartId, x.PartNumber, x.QuantityRequested))
+            .ToList();
 
     private async Task<IReadOnlyList<PendingDemandProcessingCandidate>> LoadPendingCandidatesAsync(
         Guid? tenantId,
@@ -316,22 +505,242 @@ public sealed class DemandProcessingWorkerService(
             .Where(x => enabledTenantIds.Contains(x.TenantId))
             .ToDictionaryAsync(x => x.DemandRefId, x => x, cancellationToken);
 
-        var receivedStatus = MaintainArrDemandRefStatuses.Received;
+        var candidates = new List<PendingDemandProcessingCandidate>();
+
+        if (enabledTenantIds.Any(t => settingsByTenant[t].ProcessMaintainarrDemandRefs))
+        {
+            candidates.AddRange(await LoadMaintainarrPendingAsync(
+                enabledTenantIds,
+                settingsByTenant,
+                stateLookup,
+                asOfUtc,
+                stalenessHours,
+                cancellationToken));
+        }
+
+        if (enabledTenantIds.Any(t => settingsByTenant[t].ProcessRoutarrDemandRefs))
+        {
+            candidates.AddRange(await LoadRoutarrPendingAsync(
+                enabledTenantIds,
+                settingsByTenant,
+                stateLookup,
+                asOfUtc,
+                stalenessHours,
+                cancellationToken));
+        }
+
+        if (enabledTenantIds.Any(t => settingsByTenant[t].ProcessTrainarrDemandRefs))
+        {
+            candidates.AddRange(await LoadTrainarrPendingAsync(
+                enabledTenantIds,
+                settingsByTenant,
+                stateLookup,
+                asOfUtc,
+                stalenessHours,
+                cancellationToken));
+        }
+
+        if (enabledTenantIds.Any(t => settingsByTenant[t].ProcessStaffarrDemandRefs))
+        {
+            candidates.AddRange(await LoadStaffarrPendingAsync(
+                enabledTenantIds,
+                settingsByTenant,
+                stateLookup,
+                asOfUtc,
+                stalenessHours,
+                cancellationToken));
+        }
+
+        return candidates
+            .OrderBy(x => x.LastProcessedAt ?? DateTimeOffset.MinValue)
+            .ThenBy(x => x.ReceivedAt)
+            .Take(batchSize)
+            .ToList();
+    }
+
+    private Task<IReadOnlyList<PendingDemandProcessingCandidate>> LoadMaintainarrPendingAsync(
+        IReadOnlyList<Guid> enabledTenantIds,
+        IReadOnlyDictionary<Guid, TenantDemandProcessingSettings> settingsByTenant,
+        IReadOnlyDictionary<Guid, DemandProcessingState> stateLookup,
+        DateTimeOffset asOfUtc,
+        int stalenessHours,
+        CancellationToken cancellationToken) =>
+        LoadMaintainarrPendingCoreAsync(enabledTenantIds, settingsByTenant, stateLookup, asOfUtc, stalenessHours, cancellationToken);
+
+    private async Task<IReadOnlyList<PendingDemandProcessingCandidate>> LoadMaintainarrPendingCoreAsync(
+        IReadOnlyList<Guid> enabledTenantIds,
+        IReadOnlyDictionary<Guid, TenantDemandProcessingSettings> settingsByTenant,
+        IReadOnlyDictionary<Guid, DemandProcessingState> stateLookup,
+        DateTimeOffset asOfUtc,
+        int stalenessHours,
+        CancellationToken cancellationToken)
+    {
+        var tenantFilter = enabledTenantIds
+            .Where(t => settingsByTenant[t].ProcessMaintainarrDemandRefs)
+            .ToList();
+
         var demandRefs = await db.MaintainArrDemandRefs
             .AsNoTracking()
-            .Where(x => enabledTenantIds.Contains(x.TenantId)
-                && x.Status == receivedStatus
+            .Where(x => tenantFilter.Contains(x.TenantId)
+                && x.Status == MaintainArrDemandRefStatuses.Received
                 && x.PurchaseRequestId == null)
             .Select(x => new
             {
                 x.TenantId,
                 x.Id,
-                x.MaintainarrWorkOrderNumber,
+                SourceRefKey = x.MaintainarrWorkOrderNumber,
                 x.Title,
                 x.ReceivedAt,
             })
             .ToListAsync(cancellationToken);
 
+        return CollectDueCandidates(
+            demandRefs.Select(x => (x.TenantId, x.Id, DemandRefSources.MaintainArr, x.SourceRefKey, x.Title, x.ReceivedAt)),
+            settingsByTenant,
+            stateLookup,
+            asOfUtc,
+            stalenessHours);
+    }
+
+    private Task<IReadOnlyList<PendingDemandProcessingCandidate>> LoadRoutarrPendingAsync(
+        IReadOnlyList<Guid> enabledTenantIds,
+        IReadOnlyDictionary<Guid, TenantDemandProcessingSettings> settingsByTenant,
+        IReadOnlyDictionary<Guid, DemandProcessingState> stateLookup,
+        DateTimeOffset asOfUtc,
+        int stalenessHours,
+        CancellationToken cancellationToken) =>
+        LoadRoutarrPendingCoreAsync(enabledTenantIds, settingsByTenant, stateLookup, asOfUtc, stalenessHours, cancellationToken);
+
+    private async Task<IReadOnlyList<PendingDemandProcessingCandidate>> LoadRoutarrPendingCoreAsync(
+        IReadOnlyList<Guid> enabledTenantIds,
+        IReadOnlyDictionary<Guid, TenantDemandProcessingSettings> settingsByTenant,
+        IReadOnlyDictionary<Guid, DemandProcessingState> stateLookup,
+        DateTimeOffset asOfUtc,
+        int stalenessHours,
+        CancellationToken cancellationToken)
+    {
+        var tenantFilter = enabledTenantIds
+            .Where(t => settingsByTenant[t].ProcessRoutarrDemandRefs)
+            .ToList();
+
+        var demandRefs = await db.RoutArrDemandRefs
+            .AsNoTracking()
+            .Where(x => tenantFilter.Contains(x.TenantId)
+                && x.Status == RoutArrDemandRefStatuses.Received
+                && x.PurchaseRequestId == null)
+            .Select(x => new
+            {
+                x.TenantId,
+                x.Id,
+                SourceRefKey = x.RoutarrTripNumber,
+                x.Title,
+                x.ReceivedAt,
+            })
+            .ToListAsync(cancellationToken);
+
+        return CollectDueCandidates(
+            demandRefs.Select(x => (x.TenantId, x.Id, DemandRefSources.RoutArr, x.SourceRefKey, x.Title, x.ReceivedAt)),
+            settingsByTenant,
+            stateLookup,
+            asOfUtc,
+            stalenessHours);
+    }
+
+    private Task<IReadOnlyList<PendingDemandProcessingCandidate>> LoadTrainarrPendingAsync(
+        IReadOnlyList<Guid> enabledTenantIds,
+        IReadOnlyDictionary<Guid, TenantDemandProcessingSettings> settingsByTenant,
+        IReadOnlyDictionary<Guid, DemandProcessingState> stateLookup,
+        DateTimeOffset asOfUtc,
+        int stalenessHours,
+        CancellationToken cancellationToken) =>
+        LoadTrainarrPendingCoreAsync(enabledTenantIds, settingsByTenant, stateLookup, asOfUtc, stalenessHours, cancellationToken);
+
+    private async Task<IReadOnlyList<PendingDemandProcessingCandidate>> LoadTrainarrPendingCoreAsync(
+        IReadOnlyList<Guid> enabledTenantIds,
+        IReadOnlyDictionary<Guid, TenantDemandProcessingSettings> settingsByTenant,
+        IReadOnlyDictionary<Guid, DemandProcessingState> stateLookup,
+        DateTimeOffset asOfUtc,
+        int stalenessHours,
+        CancellationToken cancellationToken)
+    {
+        var tenantFilter = enabledTenantIds
+            .Where(t => settingsByTenant[t].ProcessTrainarrDemandRefs)
+            .ToList();
+
+        var demandRefs = await db.TrainArrDemandRefs
+            .AsNoTracking()
+            .Where(x => tenantFilter.Contains(x.TenantId)
+                && x.Status == TrainArrDemandRefStatuses.Received
+                && x.PurchaseRequestId == null)
+            .Select(x => new
+            {
+                x.TenantId,
+                x.Id,
+                SourceRefKey = x.TrainarrAssignmentRefKey,
+                x.Title,
+                x.ReceivedAt,
+            })
+            .ToListAsync(cancellationToken);
+
+        return CollectDueCandidates(
+            demandRefs.Select(x => (x.TenantId, x.Id, DemandRefSources.TrainArr, x.SourceRefKey, x.Title, x.ReceivedAt)),
+            settingsByTenant,
+            stateLookup,
+            asOfUtc,
+            stalenessHours);
+    }
+
+    private Task<IReadOnlyList<PendingDemandProcessingCandidate>> LoadStaffarrPendingAsync(
+        IReadOnlyList<Guid> enabledTenantIds,
+        IReadOnlyDictionary<Guid, TenantDemandProcessingSettings> settingsByTenant,
+        IReadOnlyDictionary<Guid, DemandProcessingState> stateLookup,
+        DateTimeOffset asOfUtc,
+        int stalenessHours,
+        CancellationToken cancellationToken) =>
+        LoadStaffarrPendingCoreAsync(enabledTenantIds, settingsByTenant, stateLookup, asOfUtc, stalenessHours, cancellationToken);
+
+    private async Task<IReadOnlyList<PendingDemandProcessingCandidate>> LoadStaffarrPendingCoreAsync(
+        IReadOnlyList<Guid> enabledTenantIds,
+        IReadOnlyDictionary<Guid, TenantDemandProcessingSettings> settingsByTenant,
+        IReadOnlyDictionary<Guid, DemandProcessingState> stateLookup,
+        DateTimeOffset asOfUtc,
+        int stalenessHours,
+        CancellationToken cancellationToken)
+    {
+        var tenantFilter = enabledTenantIds
+            .Where(t => settingsByTenant[t].ProcessStaffarrDemandRefs)
+            .ToList();
+
+        var demandRefs = await db.StaffArrDemandRefs
+            .AsNoTracking()
+            .Where(x => tenantFilter.Contains(x.TenantId)
+                && x.Status == StaffArrDemandRefStatuses.Received
+                && x.PurchaseRequestId == null)
+            .Select(x => new
+            {
+                x.TenantId,
+                x.Id,
+                SourceRefKey = x.StaffarrIncidentTitle,
+                x.Title,
+                x.ReceivedAt,
+            })
+            .ToListAsync(cancellationToken);
+
+        return CollectDueCandidates(
+            demandRefs.Select(x => (x.TenantId, x.Id, DemandRefSources.StaffArr, x.SourceRefKey, x.Title, x.ReceivedAt)),
+            settingsByTenant,
+            stateLookup,
+            asOfUtc,
+            stalenessHours);
+    }
+
+    private static IReadOnlyList<PendingDemandProcessingCandidate> CollectDueCandidates(
+        IEnumerable<(Guid TenantId, Guid Id, string Source, string SourceRefKey, string Title, DateTimeOffset ReceivedAt)> demandRefs,
+        IReadOnlyDictionary<Guid, TenantDemandProcessingSettings> settingsByTenant,
+        IReadOnlyDictionary<Guid, DemandProcessingState> stateLookup,
+        DateTimeOffset asOfUtc,
+        int stalenessHours)
+    {
         var candidates = new List<PendingDemandProcessingCandidate>();
 
         foreach (var demandRef in demandRefs)
@@ -342,6 +751,11 @@ public sealed class DemandProcessingWorkerService(
             }
 
             var settings = DemandProcessingSettingsService.ToSnapshot(settingsEntity);
+            if (!settings.IsSourceEnabled(demandRef.Source))
+            {
+                continue;
+            }
+
             stateLookup.TryGetValue(demandRef.Id, out var state);
             var lastProcessedAt = state?.LastProcessedAt;
 
@@ -358,22 +772,19 @@ public sealed class DemandProcessingWorkerService(
             candidates.Add(new PendingDemandProcessingCandidate(
                 demandRef.TenantId,
                 demandRef.Id,
-                demandRef.MaintainarrWorkOrderNumber,
+                demandRef.Source,
+                demandRef.SourceRefKey,
                 demandRef.Title,
                 demandRef.ReceivedAt,
                 lastProcessedAt,
                 state?.ProcessingOutcome));
         }
 
-        return candidates
-            .OrderBy(x => x.LastProcessedAt ?? DateTimeOffset.MinValue)
-            .ThenBy(x => x.ReceivedAt)
-            .Take(batchSize)
-            .ToList();
+        return candidates;
     }
 
     private static IReadOnlyList<DemandProcessingLineSummary> BuildLineSummaries(
-        IEnumerable<MaintainArrDemandRefLine> lines,
+        IEnumerable<DemandRefProcessingLine> lines,
         IReadOnlyDictionary<Guid, (decimal OnHand, decimal Reserved)> stockTotals)
     {
         return lines
@@ -390,7 +801,7 @@ public sealed class DemandProcessingWorkerService(
                 }
 
                 return new DemandProcessingLineSummary(
-                    line.Id,
+                    line.LineId,
                     line.LineNumber,
                     line.PartId,
                     line.PartNumber,
@@ -423,9 +834,32 @@ public sealed class DemandProcessingWorkerService(
     private sealed record PendingDemandProcessingCandidate(
         Guid TenantId,
         Guid DemandRefId,
-        string MaintainarrWorkOrderNumber,
+        string DemandRefSource,
+        string SourceRefKey,
         string Title,
         DateTimeOffset ReceivedAt,
         DateTimeOffset? LastProcessedAt,
         string? LastProcessingOutcome);
+
+    private sealed record DemandRefProcessingLine(
+        Guid LineId,
+        int LineNumber,
+        Guid? PartId,
+        string PartNumber,
+        decimal QuantityRequested);
+
+    private sealed record DemandRefProcessingSnapshot(
+        string Source,
+        Guid TenantId,
+        Guid DemandRefId,
+        string SourceRefKey,
+        string Title,
+        string Notes,
+        string Status,
+        string ReceivedStatus,
+        Guid? PurchaseRequestId,
+        DateTimeOffset ReceivedAt,
+        string AutoRequestKey,
+        string AutoTitle,
+        IReadOnlyList<DemandRefProcessingLine> Lines);
 }

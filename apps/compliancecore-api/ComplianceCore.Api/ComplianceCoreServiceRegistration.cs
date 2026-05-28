@@ -36,6 +36,8 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<RuleEvaluationService>();
         builder.Services.AddScoped<RulePackBatchEvaluationService>();
         builder.Services.AddScoped<FactSourceService>();
+        builder.Services.AddScoped<ProductFactMirrorService>();
+        builder.Services.AddScoped<ProductFactIngestionService>();
         builder.Services.AddScoped<FactResolveService>();
         builder.Services.AddScoped<InternalRuleEvaluationService>();
         builder.Services.AddScoped<ScheduledRuleEvaluationService>();

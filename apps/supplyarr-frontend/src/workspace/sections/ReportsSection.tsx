@@ -1,4 +1,7 @@
+import { AuditHistoryPanel } from '../../components/AuditHistoryPanel'
+import { ComplianceReportsPanel } from '../../components/ComplianceReportsPanel'
 import { PartsInventoryReportsPanel } from '../../components/PartsInventoryReportsPanel'
+import { PurchasingReportsPanel } from '../../components/PurchasingReportsPanel'
 import { VendorReportsPanel } from '../../components/VendorReportsPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
@@ -17,6 +20,17 @@ export function ReportsSection({ state: s }: Props) {
         canRead={s.canReadPartsInventoryReports}
         canExport={s.canExportPartsInventoryReports}
       />
+      <PurchasingReportsPanel
+        accessToken={s.accessToken}
+        canRead={s.canReadPurchasingReports}
+        canExport={s.canExportPurchasingReports}
+      />
+      <ComplianceReportsPanel
+        accessToken={s.accessToken}
+        canRead={s.canReadComplianceReports}
+        canExport={s.canExportComplianceReports}
+      />
+      <AuditHistoryPanel accessToken={s.accessToken} canRead={s.canReadAuditHistory} />
     </div>
   )
 }

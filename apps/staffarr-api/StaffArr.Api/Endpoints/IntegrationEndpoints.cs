@@ -18,6 +18,11 @@ public static class IntegrationEndpoints
 
     public const string TrainarrPersonHistoryReadActionScope = PersonnelHistoryService.IntegrationReadActionScope;
 
+    public const string SupplyarrDemandStatusIngestActionScope = "staffarr.demand_status.write";
+
+    public const string SupplyarrProcurementApprovalAuthorityReadActionScope =
+        ProcurementApprovalAuthorityService.ReadAuthorityActionScope;
+
     public static void MapStaffArrIntegrationEndpoints(this WebApplication app)
     {
         var integrations = app.MapGroup("/api/integrations").WithTags("Integrations");
@@ -247,5 +252,64 @@ public static class IntegrationEndpoints
             return Results.Ok(await service.GetSummaryAsync(tenantId, personId, cancellationToken));
         })
         .WithName("TrainarrPersonHistorySummary");
+
+        integrations.MapPost("/supplyarr-demand-status", async (
+            IngestSupplyarrDemandStatusRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            IncidentSupplyDemandStatusIngestionService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "supplyarr",
+                    RequiredTargetProduct = "staffarr",
+                    TenantId = request.TenantId,
+                    RequiredActionScope = SupplyarrDemandStatusIngestActionScope
+                });
+
+            var result = await service.IngestAsync(request, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("IngestSupplyarrDemandStatus");
+
+        integrations.MapGet("/procurement-approval-authority", async (
+            Guid tenantId,
+            Guid? personId,
+            Guid? externalUserId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            ProcurementApprovalAuthorityService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "supplyarr",
+                    RequiredTargetProduct = "staffarr",
+                    TenantId = tenantId,
+                    RequiredActionScope = SupplyarrProcurementApprovalAuthorityReadActionScope
+                });
+
+            if (personId is null && externalUserId is null)
+            {
+                return Results.BadRequest(new
+                {
+                    code = "procurement_approval_authority.validation",
+                    message = "Provide personId or externalUserId query parameter."
+                });
+            }
+
+            if (personId is Guid requestedPersonId)
+            {
+                return Results.Ok(await service.GetByPersonIdAsync(tenantId, requestedPersonId, cancellationToken));
+            }
+
+            return Results.Ok(await service.GetByExternalUserIdAsync(tenantId, externalUserId!.Value, cancellationToken));
+        })
+        .WithName("SupplyarrProcurementApprovalAuthority");
     }
 }

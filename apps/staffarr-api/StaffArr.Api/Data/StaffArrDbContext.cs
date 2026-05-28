@@ -30,6 +30,10 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<PersonnelIncident> PersonnelIncidents => Set<PersonnelIncident>();
 
+    public DbSet<IncidentSupplyDemandLine> IncidentSupplyDemandLines => Set<IncidentSupplyDemandLine>();
+
+    public DbSet<IncidentSupplyDemandStatusEvent> IncidentSupplyDemandStatusEvents => Set<IncidentSupplyDemandStatusEvent>();
+
     public DbSet<PersonnelNote> PersonnelNotes => Set<PersonnelNote>();
 
     public DbSet<PersonnelDocument> PersonnelDocuments => Set<PersonnelDocument>();
@@ -275,6 +279,42 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasIndex(x => new { x.TenantId, x.PersonId, x.ReportedAt });
             entity.HasIndex(x => new { x.TenantId, x.Status, x.ReportedAt });
             entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+        });
+
+        modelBuilder.Entity<IncidentSupplyDemandLine>(entity =>
+        {
+            entity.ToTable("staffarr_incident_supply_demand_lines");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PartNumber).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.QuantityRequested).HasPrecision(18, 4);
+            entity.Property(x => x.UnitOfMeasure).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ProcurementStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ProcurementStatusMessage).HasMaxLength(512);
+            entity.Property(x => x.QuantityReceived).HasPrecision(18, 4);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.IncidentId });
+            entity.HasIndex(x => new { x.TenantId, x.IncidentId, x.LineNumber });
+            entity.HasIndex(x => new { x.TenantId, x.StaffarrPublicationId });
+            entity.HasIndex(x => new { x.TenantId, x.ProcurementStatus });
+            entity.HasOne(x => x.Incident)
+                .WithMany()
+                .HasForeignKey(x => x.IncidentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<IncidentSupplyDemandStatusEvent>(entity =>
+        {
+            entity.ToTable("staffarr_incident_supply_demand_status_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ProcurementStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Message).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.StaffarrPublicationId, x.OccurredAt });
+            entity.HasIndex(x => new { x.TenantId, x.SupplyarrCallbackPublicationId }).IsUnique();
         });
 
         modelBuilder.Entity<PersonnelNote>(entity =>

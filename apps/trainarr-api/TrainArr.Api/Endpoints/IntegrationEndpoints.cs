@@ -10,6 +10,8 @@ public static class IntegrationEndpoints
 
     public const string RoutarrQualificationCheckActionScope = "trainarr.qualification_checks.dispatch";
 
+    public const string SupplyarrDemandStatusIngestActionScope = "trainarr.demand_status.write";
+
     public static void MapTrainArrIntegrationEndpoints(this WebApplication app)
     {
         var integrations = app.MapGroup("/api/integrations").WithTags("Integrations");
@@ -70,5 +72,27 @@ public static class IntegrationEndpoints
             return Results.Ok(result);
         })
         .WithName("RoutarrQualificationCheck");
+
+        integrations.MapPost("/supplyarr-demand-status", async (
+            IngestSupplyarrDemandStatusRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            TrainingAssignmentMaterialDemandStatusIngestionService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "supplyarr",
+                    RequiredTargetProduct = "trainarr",
+                    TenantId = request.TenantId,
+                    RequiredActionScope = SupplyarrDemandStatusIngestActionScope
+                });
+
+            var result = await service.IngestAsync(request, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("IngestSupplyarrDemandStatus");
     }
 }

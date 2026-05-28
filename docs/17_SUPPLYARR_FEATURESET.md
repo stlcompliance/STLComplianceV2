@@ -45,6 +45,9 @@ SupplyArr is the vendor, supply, parts, inventory, and procurement system.
 - pricing/lead-time history
 - availability history
 - MaintainArr demand intake
+- RoutArr demand intake
+- TrainArr demand intake
+- StaffArr demand intake
 - vendor reports
 
 ## Required API Surfaces

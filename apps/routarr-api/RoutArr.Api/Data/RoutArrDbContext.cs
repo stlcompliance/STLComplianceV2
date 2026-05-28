@@ -10,6 +10,10 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
 
     public DbSet<TripLoad> TripLoads => Set<TripLoad>();
 
+    public DbSet<TripPartsDemandLine> TripPartsDemandLines => Set<TripPartsDemandLine>();
+
+    public DbSet<TripPartsDemandStatusEvent> TripPartsDemandStatusEvents => Set<TripPartsDemandStatusEvent>();
+
     public DbSet<DispatchRoute> Routes => Set<DispatchRoute>();
 
     public DbSet<RouteStop> RouteStops => Set<RouteStop>();
@@ -72,6 +76,42 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
                 .WithMany(x => x.Loads)
                 .HasForeignKey(x => x.TripId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TripPartsDemandLine>(entity =>
+        {
+            entity.ToTable("routarr_trip_parts_demand_lines");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PartNumber).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.QuantityRequested).HasPrecision(18, 4);
+            entity.Property(x => x.UnitOfMeasure).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ProcurementStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ProcurementStatusMessage).HasMaxLength(512);
+            entity.Property(x => x.QuantityReceived).HasPrecision(18, 4);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TripId });
+            entity.HasIndex(x => new { x.TenantId, x.TripId, x.LineNumber });
+            entity.HasIndex(x => new { x.TenantId, x.RoutarrPublicationId });
+            entity.HasIndex(x => new { x.TenantId, x.ProcurementStatus });
+            entity.HasOne(x => x.Trip)
+                .WithMany(x => x.PartsDemandLines)
+                .HasForeignKey(x => x.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TripPartsDemandStatusEvent>(entity =>
+        {
+            entity.ToTable("routarr_trip_parts_demand_status_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ProcurementStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Message).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.RoutarrPublicationId, x.OccurredAt });
+            entity.HasIndex(x => new { x.TenantId, x.SupplyarrCallbackPublicationId }).IsUnique();
         });
 
         modelBuilder.Entity<DispatchRoute>(entity =>

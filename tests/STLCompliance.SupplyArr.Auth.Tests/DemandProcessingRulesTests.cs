@@ -65,6 +65,26 @@ public sealed class DemandProcessingRulesTests
     }
 
     [Fact]
+    public void IsSourceEnabled_respects_per_source_flags()
+    {
+        var settings = new TenantDemandProcessingSettingsSnapshot(
+            IsEnabled: true,
+            AutoCreatePrDraftWhenShort: false,
+            MinHoursBeforeProcessing: 0,
+            StalenessHours: 4,
+            NotifyOnPrDraftCreated: false,
+            ProcessMaintainarrDemandRefs: true,
+            ProcessRoutarrDemandRefs: false,
+            ProcessTrainarrDemandRefs: true,
+            ProcessStaffarrDemandRefs: false);
+
+        Assert.True(settings.IsSourceEnabled(DemandRefSources.MaintainArr));
+        Assert.False(settings.IsSourceEnabled(DemandRefSources.RoutArr));
+        Assert.True(settings.IsSourceEnabled(DemandRefSources.TrainArr));
+        Assert.False(settings.IsSourceEnabled("unknown"));
+    }
+
+    [Fact]
     public void ResolveOutcome_returns_no_catalog_parts_when_none_linked()
     {
         var (outcome, action) = DemandProcessingRules.ResolveOutcome(2, 0, 0);

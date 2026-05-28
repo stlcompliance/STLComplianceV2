@@ -27,6 +27,7 @@ public static class TrainArrServiceRegistration
         builder.Services.Configure<NexArrClientOptions>(builder.Configuration.GetSection(NexArrClientOptions.SectionName));
 
         builder.Services.Configure<HandoffOptions>(builder.Configuration.GetSection(HandoffOptions.SectionName));
+        builder.Services.Configure<SupplyArrClientOptions>(builder.Configuration.GetSection(SupplyArrClientOptions.SectionName));
 
         builder.Services.Configure<EvidenceStorageOptions>(builder.Configuration.GetSection(EvidenceStorageOptions.SectionName));
 
@@ -106,6 +107,12 @@ public static class TrainArrServiceRegistration
 
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
+        builder.Services.AddHttpClient<SupplyArrDemandClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<SupplyArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+
         builder.Services.AddScoped<TrainArrTokenService>();
 
         builder.Services.AddScoped<HandoffAuthService>();
@@ -168,6 +175,8 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<TrainingProgramService>();
 
         builder.Services.AddScoped<TrainingAssignmentService>();
+        builder.Services.AddScoped<TrainingAssignmentMaterialDemandService>();
+        builder.Services.AddScoped<TrainingAssignmentMaterialDemandStatusIngestionService>();
         builder.Services.AddScoped<FieldInboxService>();
 
         builder.Services.AddSingleton<TrainArrEvidenceStorageService>();

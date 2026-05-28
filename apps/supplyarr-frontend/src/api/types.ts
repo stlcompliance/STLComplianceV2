@@ -218,9 +218,43 @@ export interface PurchaseRequestResponse {
   rejectedAt: string | null
   rejectedByUserId: string | null
   rejectionReason: string
+  isEmergency: boolean
+  emergencyReason: string
+  emergencyExpeditedAt: string | null
+  managerOverrideApproved: boolean
+  managerOverrideJustification: string
+  managerOverrideApprovedAt: string | null
   lines: PurchaseRequestLineResponse[]
   createdAt: string
   updatedAt: string
+}
+
+export interface EmergencyPurchaseResponse {
+  purchaseRequestId: string
+  requestKey: string
+  title: string
+  notes: string
+  status: string
+  vendorPartyId: string | null
+  vendorPartyKey: string | null
+  vendorDisplayName: string | null
+  emergencyReason: string
+  emergencyExpeditedAt: string | null
+  managerOverrideApproved: boolean
+  managerOverrideJustification: string
+  managerOverrideApprovedAt: string | null
+  linkedPurchaseOrderId: string | null
+  linkedPurchaseOrderKey: string | null
+  lines: PurchaseRequestLineResponse[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface IssueEmergencyPurchaseOrderResponse {
+  purchaseRequestId: string
+  purchaseOrderId: string
+  emergencyPurchase: EmergencyPurchaseResponse
+  purchaseOrder: PurchaseOrderResponse
 }
 
 export interface CreatePurchaseRequestLineRequest {
@@ -456,6 +490,91 @@ export interface CreateVendorReturnFromStockLineRequest {
   partId: string
   quantity: number
   notes?: string | null
+}
+
+export interface WarrantyClaimResponse {
+  warrantyClaimId: string
+  claimKey: string
+  status: string
+  claimType: string
+  vendorPartyId: string
+  vendorPartyKey: string
+  vendorDisplayName: string
+  partId: string
+  partKey: string
+  partDisplayName: string
+  purchaseOrderId: string | null
+  purchaseOrderKey: string | null
+  purchaseOrderLineId: string | null
+  receivingReceiptId: string | null
+  receivingReceiptKey: string | null
+  receivingReceiptLineId: string | null
+  quantityClaimed: number
+  problemDescription: string
+  vendorRmaNumber: string
+  vendorDisposition: string
+  vendorResponseNotes: string
+  closureNotes: string
+  denialReason: string
+  createdByUserId: string
+  submittedByUserId: string | null
+  submittedAt: string | null
+  vendorRespondedByUserId: string | null
+  vendorRespondedAt: string | null
+  closedByUserId: string | null
+  closedAt: string | null
+  deniedByUserId: string | null
+  deniedAt: string | null
+  cancellationReason: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateWarrantyClaimRequest {
+  claimKey: string
+  claimType: string
+  vendorPartyId: string
+  partId: string
+  quantityClaimed: number
+  problemDescription: string
+  purchaseOrderId?: string | null
+  purchaseOrderLineId?: string | null
+  receivingReceiptId?: string | null
+  receivingReceiptLineId?: string | null
+  vendorRmaNumber?: string | null
+}
+
+export interface UpdateWarrantyClaimRequest {
+  claimType: string
+  quantityClaimed: number
+  problemDescription: string
+  purchaseOrderId?: string | null
+  purchaseOrderLineId?: string | null
+  receivingReceiptId?: string | null
+  receivingReceiptLineId?: string | null
+  vendorRmaNumber?: string | null
+}
+
+export interface SubmitWarrantyClaimRequest {
+  notes?: string | null
+}
+
+export interface RecordWarrantyClaimVendorResponseRequest {
+  vendorDisposition: string
+  vendorResponseNotes: string
+  vendorRmaNumber?: string | null
+}
+
+export interface CloseWarrantyClaimRequest {
+  closureNotes: string
+}
+
+export interface DenyWarrantyClaimRequest {
+  denialReason: string
+}
+
+export interface CancelWarrantyClaimRequest {
+  reason: string
 }
 
 export interface CreateVendorReturnFromStockRequest {
@@ -991,7 +1110,394 @@ export interface DemandProcessingSettingsResponse {
   minHoursBeforeProcessing: number
   stalenessHours: number
   notifyOnPrDraftCreated: boolean
+  processMaintainarrDemandRefs: boolean
+  processRoutarrDemandRefs: boolean
+  processTrainarrDemandRefs: boolean
+  processStaffarrDemandRefs: boolean
   updatedAt: string | null
+}
+
+export interface IntegrationEventSettingsResponse {
+  tenantId: string
+  isEnabled: boolean
+  maxAttempts: number
+  retryIntervalMinutes: number
+  updatedAt: string
+}
+
+export interface UpsertIntegrationEventSettingsRequest {
+  isEnabled: boolean
+  maxAttempts: number
+  retryIntervalMinutes: number
+}
+
+export interface IntegrationEventItemResponse {
+  eventId: string
+  direction: string
+  eventKind: string
+  idempotencyKey: string
+  sourceProduct: string | null
+  relatedEntityType: string
+  relatedEntityId: string | null
+  processingStatus: string
+  attemptCount: number
+  errorMessage: string | null
+  createdAt: string
+  processedAt: string | null
+}
+
+export interface IntegrationEventsListResponse {
+  items: IntegrationEventItemResponse[]
+}
+
+export interface RfqLineResponse {
+  lineId: string
+  lineNumber: number
+  partId: string
+  partKey: string
+  partDisplayName: string
+  quantityRequested: number
+  unitOfMeasure: string
+  notes: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RfqVendorInvitationResponse {
+  invitationId: string
+  vendorPartyId: string
+  vendorPartyKey: string
+  vendorDisplayName: string
+  status: string
+  invitedAt: string
+}
+
+export interface VendorQuoteLineResponse {
+  quoteLineId: string
+  rfqLineId: string
+  rfqLineNumber: number
+  partId: string
+  partKey: string
+  unitPrice: number
+  quantityQuoted: number
+  lineTotal: number
+  leadTimeDays: number | null
+  notes: string
+}
+
+export interface VendorQuoteResponse {
+  vendorQuoteId: string
+  rfqId: string
+  vendorPartyId: string
+  vendorPartyKey: string
+  vendorDisplayName: string
+  quoteKey: string
+  status: string
+  currencyCode: string
+  totalAmount: number | null
+  leadTimeDays: number | null
+  notes: string
+  submittedAt: string | null
+  lines: VendorQuoteLineResponse[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RfqResponse {
+  rfqId: string
+  rfqKey: string
+  title: string
+  notes: string
+  status: string
+  requestedByUserId: string
+  submittedAt: string | null
+  awardedVendorPartyId: string | null
+  awardedVendorDisplayName: string | null
+  selectedVendorQuoteId: string | null
+  purchaseRequestId: string | null
+  awardedAt: string | null
+  lines: RfqLineResponse[]
+  invitations: RfqVendorInvitationResponse[]
+  quotes: VendorQuoteResponse[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RfqQuoteLineMetric {
+  vendorQuoteId: string
+  vendorPartyId: string
+  vendorDisplayName: string
+  quoteStatus: string
+  unitPrice: number | null
+  lineTotal: number | null
+  leadTimeDays: number | null
+  isLowestPrice: boolean
+  isFastestLeadTime: boolean
+}
+
+export interface RfqLineComparisonRow {
+  rfqLineId: string
+  lineNumber: number
+  partId: string
+  partKey: string
+  partDisplayName: string
+  quantityRequested: number
+  quotes: RfqQuoteLineMetric[]
+}
+
+export interface RfqQuoteSummary {
+  vendorQuoteId: string
+  vendorPartyId: string
+  vendorDisplayName: string
+  status: string
+  totalAmount: number | null
+  maxLeadTimeDays: number | null
+  linesQuoted: number
+  isSelected: boolean
+}
+
+export interface RfqQuoteComparisonResponse {
+  rfqId: string
+  rfqKey: string
+  status: string
+  lines: RfqLineComparisonRow[]
+  quoteSummaries: RfqQuoteSummary[]
+}
+
+export interface CreatePurchaseRequestFromRfqResponse {
+  rfqId: string
+  purchaseRequestId: string
+  purchaseRequest: PurchaseRequestResponse
+}
+
+export interface OnboardingDocumentRequirementStatus {
+  documentTypeKey: string
+  label: string
+  isRequired: boolean
+  isSatisfied: boolean
+  satisfyingDocumentId: string | null
+  satisfyingReviewStatus: string | null
+}
+
+export interface VendorRestrictionResponse {
+  restrictionId: string
+  externalPartyId: string
+  partyKey: string
+  partyDisplayName: string
+  partyType: string
+  restrictionKey: string
+  scopes: string[]
+  reason: string
+  status: string
+  effectiveFrom: string
+  effectiveUntil: string | null
+  createdByUserId: string
+  liftedByUserId: string | null
+  liftedAt: string | null
+  liftNotes: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateVendorRestrictionRequest {
+  restrictionKey: string
+  scopes: string[]
+  reason: string
+  effectiveFrom?: string | null
+  effectiveUntil?: string | null
+}
+
+export interface LiftVendorRestrictionRequest {
+  liftNotes?: string | null
+}
+
+export interface VendorRestrictionEnforcementResponse {
+  externalPartyId: string
+  isBlocked: boolean
+  blockReason: string | null
+  activeScopes: string[]
+}
+
+export interface SupplierIncidentResponse {
+  incidentId: string
+  externalPartyId: string
+  partyKey: string
+  partyDisplayName: string
+  partyType: string
+  incidentKey: string
+  title: string
+  description: string
+  incidentType: string
+  severity: string
+  status: string
+  purchaseRequestId: string | null
+  purchaseOrderId: string | null
+  receivingReceiptId: string | null
+  receivingExceptionId: string | null
+  vendorRestrictionId: string | null
+  reportedByUserId: string
+  assignedToUserId: string | null
+  resolutionNotes: string
+  resolvedByUserId: string | null
+  resolvedAt: string | null
+  closedByUserId: string | null
+  closedAt: string | null
+  cancellationReason: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateSupplierIncidentRequest {
+  externalPartyId: string
+  incidentKey: string
+  title: string
+  description: string
+  incidentType: string
+  severity: string
+  purchaseRequestId?: string | null
+  purchaseOrderId?: string | null
+  receivingReceiptId?: string | null
+  receivingExceptionId?: string | null
+  assignedToUserId?: string | null
+}
+
+export interface ResolveSupplierIncidentRequest {
+  resolutionNotes: string
+}
+
+export interface CancelSupplierIncidentRequest {
+  reason: string
+}
+
+export interface ApplySupplierIncidentProcurementRestrictionRequest {
+  restrictionKey: string
+  scopes: string[]
+  reason?: string | null
+}
+
+export interface ProcurementExceptionResponse {
+  exceptionId: string
+  exceptionKey: string
+  subjectType: string
+  subjectId: string
+  subjectKey: string
+  vendorPartyId: string | null
+  vendorPartyKey: string | null
+  vendorDisplayName: string | null
+  exceptionCategory: string
+  title: string
+  description: string
+  status: string
+  resolutionNotes: string
+  waiveJustification: string
+  waiveRejectionReason: string
+  createdByUserId: string
+  assignedToUserId: string | null
+  waiveRequestedByUserId: string | null
+  waiveRequestedAt: string | null
+  waivedByUserId: string | null
+  waivedAt: string | null
+  resolvedAt: string | null
+  closedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateProcurementExceptionRequest {
+  exceptionKey: string
+  exceptionCategory: string
+  title: string
+  description: string
+  assignedToUserId?: string | null
+}
+
+export interface ResolveProcurementExceptionRequest {
+  resolutionNotes: string
+}
+
+export interface RequestProcurementExceptionWaiveRequest {
+  waiveJustification: string
+}
+
+export interface RejectProcurementExceptionWaiveRequest {
+  reason: string
+}
+
+export interface CloseProcurementExceptionRequest {
+  resolutionNotes?: string | null
+}
+
+export interface CancelProcurementExceptionRequest {
+  reason: string
+}
+
+export interface ProcurementApprovalAuthorityGrantMirror {
+  permissionKey: string
+  permissionName: string
+  scopeType: string
+  scopeValue: string | null
+  roleKey: string
+  roleName: string
+}
+
+export interface ProcurementApprovalAuthorityMirrorResponse {
+  staffarrPersonId: string
+  externalUserId: string
+  canSubmitPurchaseRequests: boolean
+  canApprovePurchaseRequests: boolean
+  canIssuePurchaseOrders: boolean
+  maxSubmitAmount: number | null
+  maxApproveAmount: number | null
+  maxIssueAmount: number | null
+  orgUnitScopeIds: string[]
+  grants: ProcurementApprovalAuthorityGrantMirror[]
+  sourceComputedAt: string
+  refreshedAt: string
+  authoritySource: string
+}
+
+export interface SupplierOnboardingResponse {
+  onboardingId: string
+  externalPartyId: string
+  partyKey: string
+  partyType: string
+  displayName: string
+  onboardingStatus: string
+  notes: string
+  submittedAt: string | null
+  reviewedAt: string | null
+  rejectionReason: string
+  documentRequirements: OnboardingDocumentRequirementStatus[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OnboardingDocumentRequirementDefinition {
+  documentTypeKey: string
+  label: string
+  isRequired: boolean
+}
+
+export interface SupplierOnboardingDocumentRequirementsResponse {
+  requirements: OnboardingDocumentRequirementDefinition[]
+}
+
+export interface PartyComplianceDocumentResponse {
+  documentId: string
+  externalPartyId: string
+  documentKey: string
+  documentTypeKey: string
+  title: string
+  version: number
+  reviewStatus: string
+  expiresAt: string | null
+  effectiveAt: string | null
+  fileName: string
+  contentType: string
+  sizeBytes: number
+  notes: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface UpsertDemandProcessingSettingsRequest {
@@ -1000,11 +1506,16 @@ export interface UpsertDemandProcessingSettingsRequest {
   minHoursBeforeProcessing: number
   stalenessHours: number
   notifyOnPrDraftCreated: boolean
+  processMaintainarrDemandRefs: boolean
+  processRoutarrDemandRefs: boolean
+  processTrainarrDemandRefs: boolean
+  processStaffarrDemandRefs: boolean
 }
 
 export interface PendingDemandProcessingItem {
   demandRefId: string
-  maintainarrWorkOrderNumber: string
+  demandRefSource: string
+  sourceRefKey: string
   title: string
   receivedAt: string
   lastProcessedAt: string | null
@@ -1035,7 +1546,8 @@ export interface DemandProcessingRunsResponse {
 export interface DemandProcessingSummaryResponse {
   processingStateId: string
   demandRefId: string
-  maintainarrWorkOrderNumber: string
+  demandRefSource: string
+  sourceRefKey: string
   title: string
   demandRefStatus: string
   processingOutcome: string
@@ -1055,6 +1567,45 @@ export interface DemandProcessingDashboardResponse {
   stockAvailableCount: number
   prDraftedCount: number
   items: DemandProcessingSummaryResponse[]
+}
+
+export interface SupplyReadinessTotalsResponse {
+  activePartsCount: number
+  partsBelowReorderCount: number
+  stockLineCount: number
+  totalQuantityOnHand: number
+  totalQuantityReserved: number
+  totalQuantityAvailable: number
+  openBackorderCount: number
+  openPurchaseRequestCount: number
+  openPurchaseOrderCount: number
+  issuedPurchaseOrderCount: number
+  openDemandRefCount: number
+  complianceAttentionCount: number
+  activeVendorRestrictionCount: number
+  activeProcurementExceptionCount: number
+}
+
+export interface SupplyReadinessDemandRefSourceCountResponse {
+  source: string
+  openCount: number
+}
+
+export interface SupplyReadinessAttentionItemResponse {
+  category: string
+  title: string
+  detail: string
+  status: string | null
+  occurredAt: string | null
+  relatedEntityType: string | null
+  relatedEntityId: string | null
+}
+
+export interface SupplyReadinessDashboardResponse {
+  generatedAt: string
+  totals: SupplyReadinessTotalsResponse
+  demandRefsBySource: SupplyReadinessDemandRefSourceCountResponse[]
+  attentionItems: SupplyReadinessAttentionItemResponse[]
 }
 
 export interface VendorApprovalStatusSummary {
@@ -1205,5 +1756,194 @@ export interface VendorReportDetailResponse {
     isPreferred: boolean
     catalogUnitPrice: number | null
     catalogAvailabilityStatus: string | null
+  }>
+}
+
+export interface PurchasingStatusCount {
+  status: string
+  count: number
+}
+
+export interface PurchasingReportTotals {
+  purchaseRequestCount: number
+  openPurchaseRequestCount: number
+  purchaseOrderCount: number
+  openPurchaseOrderCount: number
+  issuedPurchaseOrderCount: number
+  draftReceivingReceiptCount: number
+  postedReceivingReceiptCount: number
+  openBackorderCount: number
+  openPurchaseOrderLineQuantity: number
+  purchaseOrderQuantityReceived: number
+}
+
+export interface PurchasingDocumentSummaryItem {
+  documentType: 'purchase_request' | 'purchase_order' | string
+  documentId: string
+  documentKey: string
+  title: string
+  status: string
+  vendorPartyId: string | null
+  vendorDisplayName: string
+  lineCount: number
+  quantityOrdered: number
+  quantityReceived: number
+  updatedAt: string
+}
+
+export interface PurchasingReportSummaryResponse {
+  generatedAt: string
+  totals: PurchasingReportTotals
+  purchaseRequestStatusCounts: PurchasingStatusCount[]
+  purchaseOrderStatusCounts: PurchasingStatusCount[]
+  documents: PurchasingDocumentSummaryItem[]
+}
+
+export interface PurchasingPurchaseRequestDetailResponse {
+  summary: PurchasingDocumentSummaryItem
+  lines: Array<{
+    lineId: string
+    lineNumber: number
+    partId: string
+    partKey: string
+    partDisplayName: string
+    quantityRequested: number
+    unitOfMeasure: string
+  }>
+  linkedPurchaseOrderId: string | null
+  linkedPurchaseOrderKey: string | null
+}
+
+export interface ComplianceReportTotals {
+  partyCount: number
+  documentCount: number
+  expiredCount: number
+  expiringSoonCount: number
+  reviewPendingCount: number
+  approvedCount: number
+  rejectedCount: number
+}
+
+export interface CompliancePartySummaryItem {
+  externalPartyId: string
+  partyKey: string
+  displayName: string
+  partyType: string
+  approvalStatus: string
+  compliancePosture: string
+  documentCount: number
+  expiredCount: number
+  expiringSoonCount: number
+  reviewPendingCount: number
+}
+
+export interface ComplianceDocumentSummaryItem {
+  documentId: string
+  externalPartyId: string
+  partyKey: string
+  partyDisplayName: string
+  partyType: string
+  documentKey: string
+  documentTypeKey: string
+  title: string
+  version: number
+  reviewStatus: string
+  effectiveStatus: string
+  isExpired: boolean
+  isExpiringSoon: boolean
+  expiresAt: string | null
+  updatedAt: string
+}
+
+export interface ComplianceReportSummaryResponse {
+  generatedAt: string
+  totals: ComplianceReportTotals
+  parties: CompliancePartySummaryItem[]
+  documents: ComplianceDocumentSummaryItem[]
+}
+
+export interface ForgivingSearchResultItem {
+  entityType: string
+  entityId: string
+  primaryKey: string
+  title: string
+  subtitle: string
+  deepLinkPath: string
+  matchScore: number
+}
+
+export interface AuditHistoryItem {
+  id: string
+  actorUserId: string | null
+  action: string
+  targetType: string
+  targetId: string | null
+  result: string
+  reasonCode: string | null
+  correlationId: string
+  occurredAt: string
+}
+
+export interface AuditHistoryListResponse {
+  items: AuditHistoryItem[]
+  nextCursor: string | null
+  hasMore: boolean
+}
+
+export interface ForgivingSearchResponse {
+  query: string
+  normalizedQuery: string
+  totalCount: number
+  results: ForgivingSearchResultItem[]
+}
+
+export interface CompliancePartyDetailResponse {
+  summary: CompliancePartySummaryItem
+  documents: Array<{
+    documentId: string
+    documentKey: string
+    documentTypeKey: string
+    title: string
+    version: number
+    reviewStatus: string
+    effectiveStatus: string
+    isExpired: boolean
+    isExpiringSoon: boolean
+    expiresAt: string | null
+    effectiveAt: string | null
+    fileName: string
+    contentType: string
+    sizeBytes: number
+    notes: string
+    reviewedAt: string | null
+    createdAt: string
+    updatedAt: string
+  }>
+}
+
+export interface PurchasingPurchaseOrderDetailResponse {
+  summary: PurchasingDocumentSummaryItem
+  lines: Array<{
+    lineId: string
+    lineNumber: number
+    partId: string
+    partKey: string
+    partDisplayName: string
+    quantityOrdered: number
+    quantityReceived: number
+    quantityRemaining: number
+  }>
+  receivingReceipts: Array<{
+    receivingReceiptId: string
+    receiptKey: string
+    status: string
+    postedAt: string | null
+  }>
+  backorders: Array<{
+    backorderId: string
+    backorderKey: string
+    status: string
+    quantityBackordered: number
+    quantityFulfilled: number
   }>
 }

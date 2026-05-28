@@ -8,6 +8,7 @@ namespace SupplyArr.Api.Services;
 
 public sealed class PartRegistryService(
     SupplyArrDbContext db,
+    IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
     private static readonly HashSet<string> AllowedStatuses = new(StringComparer.OrdinalIgnoreCase)
@@ -97,6 +98,14 @@ public sealed class PartRegistryService(
             "part",
             entity.Id.ToString(),
             "Succeeded",
+            cancellationToken: cancellationToken);
+
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.PartCreated,
+            "part",
+            entity.Id,
+            new IntegrationOutboxPayload(tenantId, $"Part created: {entity.PartKey}"),
             cancellationToken: cancellationToken);
 
         return Map(await LoadPartAsync(tenantId, entity.Id, cancellationToken));

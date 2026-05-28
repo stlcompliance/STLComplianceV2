@@ -146,6 +146,7 @@ public static class PurchaseRequestEndpoints
             return Results.Ok(await service.SubmitAsync(
                 tenantId,
                 actorUserId,
+                context.User.GetPersonId(),
                 purchaseRequestId,
                 cancellationToken));
         })
@@ -164,6 +165,7 @@ public static class PurchaseRequestEndpoints
             return Results.Ok(await service.ApproveAsync(
                 tenantId,
                 actorUserId,
+                context.User.GetPersonId(),
                 purchaseRequestId,
                 cancellationToken));
         })

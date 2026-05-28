@@ -6,6 +6,10 @@ public sealed record DemandProcessingSettingsResponse(
     int MinHoursBeforeProcessing,
     int StalenessHours,
     bool NotifyOnPrDraftCreated,
+    bool ProcessMaintainarrDemandRefs,
+    bool ProcessRoutarrDemandRefs,
+    bool ProcessTrainarrDemandRefs,
+    bool ProcessStaffarrDemandRefs,
     DateTimeOffset? UpdatedAt);
 
 public sealed record UpsertDemandProcessingSettingsRequest(
@@ -13,11 +17,16 @@ public sealed record UpsertDemandProcessingSettingsRequest(
     bool AutoCreatePrDraftWhenShort,
     int MinHoursBeforeProcessing,
     int StalenessHours,
-    bool NotifyOnPrDraftCreated);
+    bool NotifyOnPrDraftCreated,
+    bool ProcessMaintainarrDemandRefs,
+    bool ProcessRoutarrDemandRefs,
+    bool ProcessTrainarrDemandRefs,
+    bool ProcessStaffarrDemandRefs);
 
 public sealed record PendingDemandProcessingItem(
     Guid DemandRefId,
-    string MaintainarrWorkOrderNumber,
+    string DemandRefSource,
+    string SourceRefKey,
     string Title,
     DateTimeOffset ReceivedAt,
     DateTimeOffset? LastProcessedAt,
@@ -58,7 +67,8 @@ public sealed record DemandProcessingLineSummary(
 
 public sealed record DemandProcessingResult(
     Guid DemandRefId,
-    string MaintainarrWorkOrderNumber,
+    string DemandRefSource,
+    string SourceRefKey,
     string ProcessingOutcome,
     string RecommendedAction,
     int LinesShortCount,
@@ -83,7 +93,8 @@ public sealed record ProcessDemandProcessingResponse(
 public sealed record DemandProcessingSummaryResponse(
     Guid ProcessingStateId,
     Guid DemandRefId,
-    string MaintainarrWorkOrderNumber,
+    string DemandRefSource,
+    string SourceRefKey,
     string Title,
     string DemandRefStatus,
     string ProcessingOutcome,

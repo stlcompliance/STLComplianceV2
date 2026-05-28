@@ -53,9 +53,15 @@ public static class FactSourceTypes
     /// </summary>
     public const string ProductApi = "product_api";
 
+    /// <summary>
+    /// Rebuildable mirror rows ingested from owning product APIs (e.g. SupplyArr procurement facts).
+    /// </summary>
+    public const string ProductMirror = "product_mirror";
+
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         StaticConfig,
         ProductApi,
+        ProductMirror,
     };
 }

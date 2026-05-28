@@ -16,6 +16,7 @@ public static class RoutArrServiceRegistration
         builder.Services.Configure<StaffArrClientOptions>(builder.Configuration.GetSection(StaffArrClientOptions.SectionName));
         builder.Services.Configure<AssetDispatchabilityOptions>(builder.Configuration.GetSection(AssetDispatchabilityOptions.SectionName));
         builder.Services.Configure<MaintainArrClientOptions>(builder.Configuration.GetSection(MaintainArrClientOptions.SectionName));
+        builder.Services.Configure<SupplyArrClientOptions>(builder.Configuration.GetSection(SupplyArrClientOptions.SectionName));
         builder.Services.Configure<ComplianceCoreClientOptions>(builder.Configuration.GetSection(ComplianceCoreClientOptions.SectionName));
         builder.Services.Configure<DispatchWorkflowGateOptions>(builder.Configuration.GetSection(DispatchWorkflowGateOptions.SectionName));
 
@@ -45,6 +46,12 @@ public static class RoutArrServiceRegistration
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
 
+        builder.Services.AddHttpClient<SupplyArrDemandClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<SupplyArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+
         builder.Services.AddScoped<RoutArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();
         builder.Services.AddScoped<MeService>();
@@ -56,6 +63,8 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<BulkDispatchService>();
         builder.Services.AddScoped<DispatchCloseoutService>();
         builder.Services.AddScoped<TripService>();
+        builder.Services.AddScoped<TripPartsDemandService>();
+        builder.Services.AddScoped<TripPartsDemandStatusIngestionService>();
         builder.Services.AddScoped<LoadTestJourneySeedService>();
         builder.Services.AddScoped<RouteService>();
         builder.Services.AddScoped<DispatchBoardService>();

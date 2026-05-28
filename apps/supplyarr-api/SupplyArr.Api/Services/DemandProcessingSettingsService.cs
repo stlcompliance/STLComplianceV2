@@ -46,6 +46,10 @@ public sealed class DemandProcessingSettingsService(
         entity.MinHoursBeforeProcessing = DemandProcessingRules.NormalizeMinHours(request.MinHoursBeforeProcessing);
         entity.StalenessHours = DemandProcessingRules.NormalizeStalenessHours(request.StalenessHours);
         entity.NotifyOnPrDraftCreated = request.NotifyOnPrDraftCreated;
+        entity.ProcessMaintainarrDemandRefs = request.ProcessMaintainarrDemandRefs;
+        entity.ProcessRoutarrDemandRefs = request.ProcessRoutarrDemandRefs;
+        entity.ProcessTrainarrDemandRefs = request.ProcessTrainarrDemandRefs;
+        entity.ProcessStaffarrDemandRefs = request.ProcessStaffarrDemandRefs;
         entity.UpdatedByUserId = actorUserId;
         entity.UpdatedAt = now;
 
@@ -80,7 +84,11 @@ public sealed class DemandProcessingSettingsService(
             settings.AutoCreatePrDraftWhenShort,
             settings.MinHoursBeforeProcessing,
             settings.StalenessHours,
-            settings.NotifyOnPrDraftCreated);
+            settings.NotifyOnPrDraftCreated,
+            settings.ProcessMaintainarrDemandRefs,
+            settings.ProcessRoutarrDemandRefs,
+            settings.ProcessTrainarrDemandRefs,
+            settings.ProcessStaffarrDemandRefs);
 
     private static DemandProcessingSettingsResponse DefaultResponse() =>
         new(
@@ -89,6 +97,10 @@ public sealed class DemandProcessingSettingsService(
             MinHoursBeforeProcessing: DemandProcessingDefaults.MinHoursBeforeProcessing,
             StalenessHours: DemandProcessingDefaults.StalenessHours,
             NotifyOnPrDraftCreated: true,
+            ProcessMaintainarrDemandRefs: true,
+            ProcessRoutarrDemandRefs: false,
+            ProcessTrainarrDemandRefs: false,
+            ProcessStaffarrDemandRefs: false,
             UpdatedAt: null);
 
     private static DemandProcessingSettingsResponse MapResponse(TenantDemandProcessingSettings settings) =>
@@ -98,5 +110,9 @@ public sealed class DemandProcessingSettingsService(
             settings.MinHoursBeforeProcessing,
             settings.StalenessHours,
             settings.NotifyOnPrDraftCreated,
+            settings.ProcessMaintainarrDemandRefs,
+            settings.ProcessRoutarrDemandRefs,
+            settings.ProcessTrainarrDemandRefs,
+            settings.ProcessStaffarrDemandRefs,
             settings.UpdatedAt);
 }

@@ -8,10 +8,12 @@ namespace SupplyArr.Api.Services;
 
 public sealed class ReceivingService(
     SupplyArrDbContext db,
+    VendorProcurementGuardService vendorProcurementGuard,
     PartStockService stock,
     BackorderService backorders,
-    MaintainArrDemandStatusCallbackService demandStatusCallbacks,
+    SupplyArrDemandStatusCallbackCoordinator demandStatusCallbacks,
     ProcurementNotificationEnqueueService notificationEnqueue,
+    IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
     public async Task<IReadOnlyList<ReceivingReceiptResponse>> ListAsync(
@@ -88,6 +90,12 @@ public sealed class ReceivingService(
                 "Receiving receipts can only be created against issued purchase orders.",
                 409);
         }
+
+        await vendorProcurementGuard.EnsureVendorAllowedForScopeAsync(
+            tenantId,
+            purchaseOrder.VendorPartyId,
+            VendorRestrictionScopes.Receiving,
+            cancellationToken);
 
         var bin = await db.InventoryBins
             .Include(x => x.InventoryLocation)
@@ -337,6 +345,17 @@ public sealed class ReceivingService(
             "receiving_receipt",
             entity.Id,
             cancellationToken);
+
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.ReceivingReceiptPosted,
+            "receiving_receipt",
+            entity.Id,
+            new IntegrationOutboxPayload(
+                tenantId,
+                $"Receiving receipt posted: {entity.ReceiptKey}",
+                entity.PurchaseOrder?.VendorPartyId),
+            cancellationToken: cancellationToken);
 
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }

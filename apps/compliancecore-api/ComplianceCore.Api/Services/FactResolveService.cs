@@ -8,6 +8,7 @@ namespace ComplianceCore.Api.Services;
 
 public sealed class FactResolveService(
     ComplianceCoreDbContext db,
+    ProductFactMirrorService productFactMirrorService,
     IComplianceCoreAuditService auditService)
 {
     public const string ResolveActionScope = "compliancecore.facts.resolve";
@@ -40,7 +41,12 @@ public sealed class FactResolveService(
             }
 
             var sources = sourcesByDefinition.GetValueOrDefault(definition.Id) ?? [];
-            var match = TryResolveDefinition(definition, sources, request.Context);
+            var match = await TryResolveDefinitionAsync(
+                request.TenantId,
+                definition,
+                sources,
+                request.Context,
+                cancellationToken);
             if (match is null)
             {
                 unresolved.Add(factKey);
@@ -94,7 +100,11 @@ public sealed class FactResolveService(
                 continue;
             }
 
-            var resolvableSource = sources.FirstOrDefault(source => FactResolver.CanSourceResolve(definition, source, context: null));
+            var resolvableSource = await FindResolvableSourceAsync(
+                request.TenantId,
+                definition,
+                sources,
+                cancellationToken);
             if (resolvableSource is not null)
             {
                 results.Add(new FactValidationItem(factKey, true, null));
@@ -123,17 +133,66 @@ public sealed class FactResolveService(
         return new InternalValidateFactsResponse(request.TenantId, isValid, results);
     }
 
-    private static ResolvedFactValue? TryResolveDefinition(
+    private async Task<ResolvedFactValue?> TryResolveDefinitionAsync(
+        Guid tenantId,
         FactDefinition definition,
         IReadOnlyList<FactSource> sources,
-        IReadOnlyDictionary<string, string>? context)
+        IReadOnlyDictionary<string, string>? context,
+        CancellationToken cancellationToken)
     {
         foreach (var source in sources.OrderBy(x => x.Priority))
         {
+            if (string.Equals(source.SourceType, FactSourceTypes.ProductMirror, StringComparison.Ordinal))
+            {
+                var mirrorResolved = await productFactMirrorService.TryResolveAsync(
+                    tenantId,
+                    definition,
+                    source,
+                    context,
+                    cancellationToken);
+                if (mirrorResolved is not null)
+                {
+                    return mirrorResolved;
+                }
+
+                continue;
+            }
+
             var resolved = FactResolver.TryResolveFromSource(definition, source, context);
             if (resolved is not null)
             {
                 return resolved;
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<FactSource?> FindResolvableSourceAsync(
+        Guid tenantId,
+        FactDefinition definition,
+        IReadOnlyList<FactSource> sources,
+        CancellationToken cancellationToken)
+    {
+        foreach (var source in sources.OrderBy(x => x.Priority))
+        {
+            if (string.Equals(source.SourceType, FactSourceTypes.ProductMirror, StringComparison.Ordinal))
+            {
+                if (await productFactMirrorService.HasResolvableMirrorAsync(
+                        tenantId,
+                        definition,
+                        source,
+                        cancellationToken))
+                {
+                    return source;
+                }
+
+                continue;
+            }
+
+            if (FactResolver.CanSourceResolve(definition, source, context: null))
+            {
+                return source;
             }
         }
 

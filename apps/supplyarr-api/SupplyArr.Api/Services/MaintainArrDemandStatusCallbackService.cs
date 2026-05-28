@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
@@ -18,7 +16,7 @@ public sealed class MaintainArrDemandStatusCallbackService(
         CancellationToken cancellationToken = default) =>
         NotifyDemandRefAsync(
             demandRef,
-            WorkOrderPartsDemandStatusEventTypes.PrDrafted,
+            SupplyArrDemandStatusEventTypes.PrDrafted,
             MaintainArrDemandRefProcurementStatuses.PrDrafted,
             purchaseRequestId,
             null,
@@ -36,7 +34,7 @@ public sealed class MaintainArrDemandStatusCallbackService(
         NotifyByPurchaseRequestAsync(
             tenantId,
             purchaseRequestId,
-            WorkOrderPartsDemandStatusEventTypes.PrSubmitted,
+            SupplyArrDemandStatusEventTypes.PrSubmitted,
             MaintainArrDemandRefProcurementStatuses.PrSubmitted,
             null,
             null,
@@ -52,7 +50,7 @@ public sealed class MaintainArrDemandStatusCallbackService(
         NotifyByPurchaseRequestAsync(
             tenantId,
             purchaseRequestId,
-            WorkOrderPartsDemandStatusEventTypes.PrApproved,
+            SupplyArrDemandStatusEventTypes.PrApproved,
             MaintainArrDemandRefProcurementStatuses.PrApproved,
             null,
             null,
@@ -69,7 +67,7 @@ public sealed class MaintainArrDemandStatusCallbackService(
         NotifyByPurchaseRequestAsync(
             tenantId,
             purchaseRequestId,
-            WorkOrderPartsDemandStatusEventTypes.PrRejected,
+            SupplyArrDemandStatusEventTypes.PrRejected,
             MaintainArrDemandRefProcurementStatuses.PrRejected,
             null,
             null,
@@ -86,7 +84,7 @@ public sealed class MaintainArrDemandStatusCallbackService(
         NotifyByPurchaseRequestAsync(
             tenantId,
             purchaseRequestId,
-            WorkOrderPartsDemandStatusEventTypes.PoCreated,
+            SupplyArrDemandStatusEventTypes.PoCreated,
             MaintainArrDemandRefProcurementStatuses.PoCreated,
             purchaseOrderId,
             null,
@@ -102,7 +100,7 @@ public sealed class MaintainArrDemandStatusCallbackService(
         NotifyByPurchaseOrderAsync(
             tenantId,
             purchaseOrderId,
-            WorkOrderPartsDemandStatusEventTypes.PoIssued,
+            SupplyArrDemandStatusEventTypes.PoIssued,
             MaintainArrDemandRefProcurementStatuses.PoIssued,
             null,
             "Purchase order issued to vendor.",
@@ -130,8 +128,8 @@ public sealed class MaintainArrDemandStatusCallbackService(
 
         var fullyReceived = purchaseOrder.Lines.All(x => x.QuantityReceived >= x.QuantityOrdered);
         var eventType = fullyReceived
-            ? WorkOrderPartsDemandStatusEventTypes.ReceivingComplete
-            : WorkOrderPartsDemandStatusEventTypes.ReceivingPosted;
+            ? SupplyArrDemandStatusEventTypes.ReceivingComplete
+            : SupplyArrDemandStatusEventTypes.ReceivingPosted;
         var procurementStatus = fullyReceived
             ? MaintainArrDemandRefProcurementStatuses.ReceivedComplete
             : MaintainArrDemandRefProcurementStatuses.PartiallyReceived;
@@ -240,7 +238,7 @@ public sealed class MaintainArrDemandStatusCallbackService(
             ?? purchaseRequestId
             ?? demandRef.Id;
 
-        var callbackPublicationId = CreateCallbackPublicationId(
+        var callbackPublicationId = DemandStatusCallbackPublicationId.Create(
             demandRef.TenantId,
             demandRef.Id,
             eventType,
@@ -290,34 +288,23 @@ public sealed class MaintainArrDemandStatusCallbackService(
             .Where(x => x.TenantId == tenantId && x.PurchaseRequestId == purchaseOrder.PurchaseRequestId)
             .ToListAsync(cancellationToken);
     }
-
-    private static Guid CreateCallbackPublicationId(
-        Guid tenantId,
-        Guid demandRefId,
-        string eventType,
-        Guid sourceRecordId)
-    {
-        var input = $"{tenantId:N}:{demandRefId:N}:{eventType}:{sourceRecordId:N}";
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(input));
-        return new Guid(hash.AsSpan(0, 16));
-    }
 }
 
 public static class WorkOrderPartsDemandStatusEventTypes
 {
-    public const string PrDrafted = "pr_drafted";
+    public const string PrDrafted = SupplyArrDemandStatusEventTypes.PrDrafted;
 
-    public const string PrSubmitted = "pr_submitted";
+    public const string PrSubmitted = SupplyArrDemandStatusEventTypes.PrSubmitted;
 
-    public const string PrApproved = "pr_approved";
+    public const string PrApproved = SupplyArrDemandStatusEventTypes.PrApproved;
 
-    public const string PrRejected = "pr_rejected";
+    public const string PrRejected = SupplyArrDemandStatusEventTypes.PrRejected;
 
-    public const string PoCreated = "po_created";
+    public const string PoCreated = SupplyArrDemandStatusEventTypes.PoCreated;
 
-    public const string PoIssued = "po_issued";
+    public const string PoIssued = SupplyArrDemandStatusEventTypes.PoIssued;
 
-    public const string ReceivingPosted = "receiving_posted";
+    public const string ReceivingPosted = SupplyArrDemandStatusEventTypes.ReceivingPosted;
 
-    public const string ReceivingComplete = "receiving_complete";
+    public const string ReceivingComplete = SupplyArrDemandStatusEventTypes.ReceivingComplete;
 }

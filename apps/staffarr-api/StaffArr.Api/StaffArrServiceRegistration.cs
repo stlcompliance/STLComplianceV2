@@ -13,6 +13,7 @@ public static class StaffArrServiceRegistration
         builder.Services.Configure<NexArrClientOptions>(builder.Configuration.GetSection(NexArrClientOptions.SectionName));
         builder.Services.Configure<HandoffOptions>(builder.Configuration.GetSection(HandoffOptions.SectionName));
         builder.Services.Configure<TrainArrClientOptions>(builder.Configuration.GetSection(TrainArrClientOptions.SectionName));
+        builder.Services.Configure<SupplyArrClientOptions>(builder.Configuration.GetSection(SupplyArrClientOptions.SectionName));
 
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
@@ -44,6 +45,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<ReadinessRollupService>();
         builder.Services.AddScoped<PersonnelHistoryService>();
         builder.Services.AddScoped<PermissionProjectionService>();
+        builder.Services.AddScoped<ProcurementApprovalAuthorityService>();
         builder.Services.AddScoped<TrainingBlockerIngestionService>();
         builder.Services.AddScoped<CertificationGrantIngestionService>();
         builder.Services.AddScoped<CertificationLifecycleIngestionService>();
@@ -55,7 +57,14 @@ public static class StaffArrServiceRegistration
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<TrainArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
+        builder.Services.AddHttpClient<SupplyArrDemandClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<SupplyArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
         builder.Services.AddScoped<IncidentService>();
+        builder.Services.AddScoped<IncidentSupplyDemandService>();
+        builder.Services.AddScoped<IncidentSupplyDemandStatusIngestionService>();
         builder.Services.AddScoped<FieldInboxService>();
         builder.Services.AddScoped<IncidentRoutingService>();
         builder.Services.AddScoped<PersonTimelineService>();

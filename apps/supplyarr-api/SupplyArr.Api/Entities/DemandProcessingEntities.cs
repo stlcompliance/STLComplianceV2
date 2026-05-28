@@ -18,6 +18,14 @@ public sealed class TenantDemandProcessingSettings : IHasTenant
 
     public bool NotifyOnPrDraftCreated { get; set; } = true;
 
+    public bool ProcessMaintainarrDemandRefs { get; set; } = true;
+
+    public bool ProcessRoutarrDemandRefs { get; set; }
+
+    public bool ProcessTrainarrDemandRefs { get; set; }
+
+    public bool ProcessStaffarrDemandRefs { get; set; }
+
     public Guid? UpdatedByUserId { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
@@ -32,6 +40,8 @@ public sealed class DemandProcessingState : IHasTenant
     public Guid TenantId { get; set; }
 
     public Guid DemandRefId { get; set; }
+
+    public string DemandRefSource { get; set; } = DemandRefSources.MaintainArr;
 
     public string MaintainarrWorkOrderNumber { get; set; } = string.Empty;
 
@@ -58,8 +68,25 @@ public sealed class DemandProcessingState : IHasTenant
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }
+}
 
-    public MaintainArrDemandRef DemandRef { get; set; } = null!;
+public static class DemandRefSources
+{
+    public const string MaintainArr = "maintainarr";
+
+    public const string RoutArr = "routarr";
+
+    public const string TrainArr = "trainarr";
+
+    public const string StaffArr = "staffarr";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        MaintainArr,
+        RoutArr,
+        TrainArr,
+        StaffArr,
+    };
 }
 
 public sealed class DemandProcessingRun : IHasTenant

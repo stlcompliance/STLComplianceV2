@@ -121,6 +121,12 @@ public static class FactResolver
             return $"Product API source ({product}) requires caller context or a future product fetch extension.";
         }
 
+        if (string.Equals(source.SourceType, FactSourceTypes.ProductMirror, StringComparison.Ordinal))
+        {
+            var product = string.IsNullOrWhiteSpace(source.ProductKey) ? "product" : source.ProductKey;
+            return $"Product mirror source ({product}) has no ingested fact for this tenant and scope.";
+        }
+
         return "No active resolver for this source type.";
     }
 

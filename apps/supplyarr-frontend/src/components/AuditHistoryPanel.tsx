@@ -1,0 +1,207 @@
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { ScrollText } from 'lucide-react'
+
+import { listAuditHistory } from '../api/client'
+
+interface AuditHistoryPanelProps {
+  accessToken: string
+  canRead: boolean
+}
+
+export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelProps) {
+  const [actionFilter, setActionFilter] = useState('')
+  const [targetTypeFilter, setTargetTypeFilter] = useState('')
+  const [targetIdFilter, setTargetIdFilter] = useState('')
+  const [resultFilter, setResultFilter] = useState('')
+  const [cursor, setCursor] = useState<string | undefined>(undefined)
+  const [accumulatedItems, setAccumulatedItems] = useState<
+    Awaited<ReturnType<typeof listAuditHistory>>['items']
+  >([])
+
+  const query = useQuery({
+    queryKey: [
+      'supplyarr-audit-history',
+      accessToken,
+      actionFilter,
+      targetTypeFilter,
+      targetIdFilter,
+      resultFilter,
+      cursor,
+    ],
+    queryFn: () =>
+      listAuditHistory(accessToken, {
+        cursor,
+        action: actionFilter || undefined,
+        targetType: targetTypeFilter || undefined,
+        targetId: targetIdFilter || undefined,
+        result: resultFilter || undefined,
+        limit: 25,
+      }),
+    enabled: canRead,
+  })
+
+  useEffect(() => {
+    if (!query.data) {
+      return
+    }
+
+    if (!cursor) {
+      setAccumulatedItems(query.data.items)
+      return
+    }
+
+    setAccumulatedItems((current) => [...current, ...query.data.items])
+  }, [query.data, cursor])
+
+  if (!canRead) {
+    return null
+  }
+
+  const resetFilters = () => {
+    setCursor(undefined)
+    setAccumulatedItems([])
+    setActionFilter('')
+    setTargetTypeFilter('')
+    setTargetIdFilter('')
+    setResultFilter('')
+  }
+
+  return (
+    <section
+      className="rounded-xl border border-slate-700 bg-slate-900/80 p-5 lg:col-span-2"
+      data-testid="audit-history-panel"
+    >
+      <div className="flex gap-3">
+        <ScrollText className="mt-0.5 h-5 w-5 text-violet-400" aria-hidden />
+        <div>
+          <h2 className="text-lg font-semibold text-slate-50">Audit history</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Tenant-scoped SupplyArr actions — who, what, when, and entity references.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="text-xs text-slate-400">
+          Action contains
+          <input
+            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
+            value={actionFilter}
+            onChange={(event) => {
+              setCursor(undefined)
+              setAccumulatedItems([])
+              setActionFilter(event.target.value)
+            }}
+          />
+        </label>
+        <label className="text-xs text-slate-400">
+          Target type
+          <input
+            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
+            value={targetTypeFilter}
+            onChange={(event) => {
+              setCursor(undefined)
+              setAccumulatedItems([])
+              setTargetTypeFilter(event.target.value)
+            }}
+          />
+        </label>
+        <label className="text-xs text-slate-400">
+          Target id
+          <input
+            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
+            value={targetIdFilter}
+            onChange={(event) => {
+              setCursor(undefined)
+              setAccumulatedItems([])
+              setTargetIdFilter(event.target.value)
+            }}
+          />
+        </label>
+        <label className="text-xs text-slate-400">
+          Result
+          <select
+            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
+            value={resultFilter}
+            onChange={(event) => {
+              setCursor(undefined)
+              setAccumulatedItems([])
+              setResultFilter(event.target.value)
+            }}
+          >
+            <option value="">Any</option>
+            <option value="success">success</option>
+            <option value="failure">failure</option>
+          </select>
+        </label>
+      </div>
+
+      <div className="mt-3">
+        <button
+          type="button"
+          className="text-xs text-slate-400 underline hover:text-slate-200"
+          onClick={resetFilters}
+        >
+          Clear filters
+        </button>
+      </div>
+
+      {query.isLoading && !accumulatedItems.length && (
+        <p className="mt-3 text-sm text-slate-500">Loading audit history…</p>
+      )}
+
+      {query.isError && (
+        <p className="mt-3 text-sm text-rose-400">Failed to load audit history.</p>
+      )}
+
+      {accumulatedItems.length > 0 && (
+        <div className="mt-4 overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="text-xs uppercase text-slate-500">
+              <tr>
+                <th className="px-2 py-2">When</th>
+                <th className="px-2 py-2">Action</th>
+                <th className="px-2 py-2">Target</th>
+                <th className="px-2 py-2">Actor</th>
+                <th className="px-2 py-2">Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              {accumulatedItems.map((item) => (
+                <tr key={item.id} className="border-t border-slate-800">
+                  <td className="px-2 py-2 text-slate-400">
+                    {new Date(item.occurredAt).toLocaleString()}
+                  </td>
+                  <td className="px-2 py-2 text-slate-200">{item.action}</td>
+                  <td className="px-2 py-2 text-slate-300">
+                    {item.targetType}
+                    {item.targetId ? ` · ${item.targetId}` : ''}
+                  </td>
+                  <td className="px-2 py-2 text-slate-400">
+                    {item.actorUserId ?? 'system'}
+                  </td>
+                  <td className="px-2 py-2 capitalize text-slate-300">{item.result}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {query.data?.hasMore ? (
+        <button
+          type="button"
+          className="mt-4 rounded-md border border-slate-600 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
+          onClick={() => setCursor(query.data.nextCursor ?? undefined)}
+        >
+          Load more
+        </button>
+      ) : null}
+
+      {query.isSuccess && accumulatedItems.length === 0 && (
+        <p className="mt-3 text-sm text-slate-500">No audit events match the current filters.</p>
+      )}
+    </section>
+  )
+}

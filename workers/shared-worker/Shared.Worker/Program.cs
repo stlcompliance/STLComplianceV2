@@ -347,6 +347,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<SupplyArrDemandProcessingJob>();
 
+        builder.Services.Configure<SupplyArrIntegrationEventsOptions>(
+            builder.Configuration.GetSection(SupplyArrIntegrationEventsOptions.SectionName));
+
+        builder.Services.AddHttpClient<SupplyArrIntegrationEventsClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<SupplyArrIntegrationEventsOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.SupplyArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<SupplyArrIntegrationEventsJob>();
+
         builder.Services.Configure<SupplyArrNotificationDispatchOptions>(
             builder.Configuration.GetSection(SupplyArrNotificationDispatchOptions.SectionName));
 

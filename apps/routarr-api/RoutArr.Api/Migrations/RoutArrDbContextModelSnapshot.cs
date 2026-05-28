@@ -802,6 +802,171 @@ namespace RoutArr.Api.Migrations
                     b.ToTable("routarr_trip_loads", (string)null);
                 });
 
+            modelBuilder.Entity("RoutArr.Api.Entities.TripPartsDemandLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset?>("LastProcurementStatusAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("LineNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("PartNumber")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ProcurementStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ProcurementStatusMessage")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("QuantityReceived")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("QuantityRequested")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<Guid?>("RoutarrPublicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid?>("SupplyarrDemandRefId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SupplyarrPartId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SupplyarrPurchaseOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SupplyarrPurchaseRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TripId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UnitOfMeasure")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TripId");
+
+                    b.HasIndex("TenantId", "ProcurementStatus");
+
+                    b.HasIndex("TenantId", "RoutarrPublicationId");
+
+                    b.HasIndex("TenantId", "TripId");
+
+                    b.HasIndex("TenantId", "TripId", "LineNumber");
+
+                    b.ToTable("routarr_trip_parts_demand_lines", (string)null);
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.TripPartsDemandStatusEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ProcurementStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("RoutarrPublicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SupplyarrCallbackPublicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SupplyarrDemandRefId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SupplyarrPurchaseOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SupplyarrPurchaseRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SupplyarrReceivingReceiptId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "SupplyarrCallbackPublicationId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "RoutarrPublicationId", "OccurredAt");
+
+                    b.ToTable("routarr_trip_parts_demand_status_events", (string)null);
+                });
+
             modelBuilder.Entity("STLCompliance.Shared.Data.PlatformMetadata", b =>
                 {
                     b.Property<Guid>("Id")
@@ -888,6 +1053,17 @@ namespace RoutArr.Api.Migrations
                     b.Navigation("Trip");
                 });
 
+            modelBuilder.Entity("RoutArr.Api.Entities.TripPartsDemandLine", b =>
+                {
+                    b.HasOne("RoutArr.Api.Entities.Trip", "Trip")
+                        .WithMany("PartsDemandLines")
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Trip");
+                });
+
             modelBuilder.Entity("RoutArr.Api.Entities.DispatchRoute", b =>
                 {
                     b.Navigation("Stops");
@@ -896,6 +1072,8 @@ namespace RoutArr.Api.Migrations
             modelBuilder.Entity("RoutArr.Api.Entities.Trip", b =>
                 {
                     b.Navigation("Loads");
+
+                    b.Navigation("PartsDemandLines");
                 });
 
             modelBuilder.Entity("RoutArr.Api.Entities.TripCompletionRollup", b =>

@@ -14,7 +14,8 @@ vi.mock('../api/client', () => ({
       {
         processingStateId: 'state-1',
         demandRefId: 'ref-1',
-        maintainarrWorkOrderNumber: 'WO-DP-100',
+        demandRefSource: 'maintainarr',
+        sourceRefKey: 'WO-DP-100',
         title: 'Brake pads',
         demandRefStatus: 'received',
         processingOutcome: 'stock_short',
@@ -40,8 +41,8 @@ describe('DemandProcessingPanel', () => {
       </QueryClientProvider>,
     )
     expect(await screen.findByTestId('demand-processing-panel')).toBeInTheDocument()
-    expect(screen.getByText('MaintainArr demand processing')).toBeInTheDocument()
-    expect(await screen.findByText(/WO WO-DP-100/)).toBeInTheDocument()
+    expect(screen.getByText('Demand processing')).toBeInTheDocument()
+    expect(await screen.findByText(/maintainarr · WO-DP-100/)).toBeInTheDocument()
   })
 
   it('returns null when user cannot read', () => {

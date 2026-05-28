@@ -42,9 +42,10 @@ export function DemandProcessingPanel({ accessToken, canRead }: DemandProcessing
       className="rounded-xl border border-slate-700 bg-slate-900/80 p-5 lg:col-span-2"
       data-testid="demand-processing-panel"
     >
-      <h2 className="text-lg font-semibold text-slate-50">MaintainArr demand processing</h2>
+      <h2 className="text-lg font-semibold text-slate-50">Demand processing</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Stock availability evaluation and procurement recommendations for work-order demand references.
+        Stock availability evaluation and procurement recommendations for demand references from enabled
+        sources (MaintainArr, RoutArr, TrainArr, StaffArr).
       </p>
 
       {dashboardQuery.isLoading && (
@@ -81,7 +82,7 @@ export function DemandProcessingPanel({ accessToken, canRead }: DemandProcessing
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <div className="font-medium text-slate-100">
-                        WO {item.maintainarrWorkOrderNumber} · {item.title}
+                        {item.demandRefSource} · {item.sourceRefKey} · {item.title}
                       </div>
                       <div className="text-xs text-slate-500">
                         {item.linesShortCount} short of {item.linesCatalogCount} catalog lines

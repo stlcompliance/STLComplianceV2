@@ -8,6 +8,7 @@ namespace SupplyArr.Api.Services;
 
 public sealed class ExternalPartyService(
     SupplyArrDbContext db,
+    IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
     private static readonly HashSet<string> AllowedPartyTypes = new(StringComparer.OrdinalIgnoreCase)
@@ -307,6 +308,14 @@ public sealed class ExternalPartyService(
             "external_party",
             entity.Id.ToString(),
             "Succeeded",
+            cancellationToken: cancellationToken);
+
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.PartyCreated,
+            "external_party",
+            entity.Id,
+            new IntegrationOutboxPayload(tenantId, $"Party created: {entity.DisplayName}"),
             cancellationToken: cancellationToken);
 
         return Map(entity);

@@ -1,6 +1,7 @@
 import { BackordersPanel } from '../../components/BackordersPanel'
 import { ReceivingPanel } from '../../components/ReceivingPanel'
 import { ReturnsPanel } from '../../components/ReturnsPanel'
+import { WarrantyClaimsPanel } from '../../components/WarrantyClaimsPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
@@ -106,6 +107,13 @@ export function ReceivingSection({ state: s }: Props) {
         isCreating={s.createReturnMutation.isPending}
         isPosting={s.postReturnMutation.isPending}
         isCancelling={s.cancelReturnMutation.isPending}
+      />
+      <WarrantyClaimsPanel
+        accessToken={s.accessToken}
+        canManage={s.canReceive}
+        vendors={s.vendors}
+        parts={s.partsQuery.data ?? []}
+        issuedPurchaseOrders={s.issuedPurchaseOrdersWithReceived}
       />
     </div>
   )

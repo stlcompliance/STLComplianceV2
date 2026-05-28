@@ -6,6 +6,7 @@ import {
   Truck,
   Tags,
   LineChart,
+  Gauge,
   BarChart3,
   Settings,
 } from 'lucide-react'
@@ -21,6 +22,7 @@ export const supplyarrNavItems: ProductNavItem[] = [
   { label: 'Receiving', to: '/receiving', icon: Truck as NavIcon },
   { label: 'Pricing', to: '/pricing', icon: Tags as NavIcon },
   { label: 'Planning', to: '/planning', icon: LineChart as NavIcon },
+  { label: 'Readiness', to: '/readiness', icon: Gauge as NavIcon },
   { label: 'Reports', to: '/reports', icon: BarChart3 as NavIcon },
   { label: 'Settings', to: '/settings', icon: Settings as NavIcon },
 ]

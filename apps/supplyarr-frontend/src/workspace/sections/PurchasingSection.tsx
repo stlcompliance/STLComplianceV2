@@ -2,7 +2,11 @@ import { PurchaseOrderPanel } from '../../components/PurchaseOrderPanel'
 import { ProcurementCoordinationPanel } from '../../components/ProcurementCoordinationPanel'
 import { ApprovalRemindersPanel } from '../../components/ApprovalRemindersPanel'
 import { DemandProcessingPanel } from '../../components/DemandProcessingPanel'
+import { ProcurementExceptionsPanel } from '../../components/ProcurementExceptionsPanel'
+import { ProcurementApprovalAuthorityBanner } from '../../components/ProcurementApprovalAuthorityBanner'
 import { PurchaseRequestPanel } from '../../components/PurchaseRequestPanel'
+import { RfqPanel } from '../../components/RfqPanel'
+import { EmergencyPurchasePanel } from '../../components/EmergencyPurchasePanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
@@ -16,6 +20,24 @@ export function PurchasingSection({ state: s }: Props) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
+      <ProcurementApprovalAuthorityBanner
+        accessToken={s.accessToken}
+        canRead={s.canCreatePr || s.canApprovePr || s.canCreatePo}
+      />
+      <EmergencyPurchasePanel
+        accessToken={s.accessToken}
+        canCreate={s.canCreateEmergencyPurchase}
+        canOverrideApprove={s.canManagerOverrideEmergencyPurchase}
+        parts={s.partsQuery.data ?? []}
+        vendors={vendors}
+      />
+      <RfqPanel
+        accessToken={s.accessToken}
+        canManage={s.canCreatePr}
+        canAward={s.canApprovePr}
+        parts={s.partsQuery.data ?? []}
+        vendors={vendors}
+      />
       <PurchaseRequestPanel
         purchaseRequests={s.purchaseRequestsQuery.data ?? []}
         parts={s.partsQuery.data ?? []}
@@ -80,6 +102,13 @@ export function PurchasingSection({ state: s }: Props) {
       <DemandProcessingPanel
         accessToken={s.accessToken}
         canRead={s.canCreatePr || s.canApprovePr}
+      />
+      <ProcurementExceptionsPanel
+        accessToken={s.accessToken}
+        canManage={s.canCreatePr}
+        canApprove={s.canApprovePr}
+        purchaseRequests={s.purchaseRequestsQuery.data ?? []}
+        purchaseOrders={s.purchaseOrdersQuery.data ?? []}
       />
     </div>
   )

@@ -65,6 +65,8 @@ public sealed class SupplyArrDemandProcessingWorkerTests : IAsyncLifetime
             builder.UseSetting("ServiceToken:SigningKey", signingKey);
             builder.UseSetting("MaintainArr:BaseUrl", "http://localhost:5999");
             builder.UseSetting("MaintainArr:ServiceToken", "test-maintainarr-token");
+            builder.UseSetting("RoutArr:BaseUrl", "http://localhost:5998");
+            builder.UseSetting("RoutArr:ServiceToken", "test-routarr-token");
             builder.ConfigureServices(services =>
             {
                 RemoveDbContext<SupplyArrDbContext>(services);
@@ -80,6 +82,18 @@ public sealed class SupplyArrDemandProcessingWorkerTests : IAsyncLifetime
                         {
                             BaseUrl = "http://localhost:5999",
                             ServiceToken = "test-maintainarr-token",
+                        })));
+                services.RemoveAll<RoutArrDemandStatusClient>();
+                services.AddSingleton(_ =>
+                    new RoutArrDemandStatusClient(
+                        new HttpClient(new SuccessHttpMessageHandler())
+                        {
+                            BaseAddress = new Uri("http://localhost:5998/"),
+                        },
+                        Microsoft.Extensions.Options.Options.Create(new RoutArrClientOptions
+                        {
+                            BaseUrl = "http://localhost:5998",
+                            ServiceToken = "test-routarr-token",
                         })));
             });
         });
@@ -159,6 +173,7 @@ public sealed class SupplyArrDemandProcessingWorkerTests : IAsyncLifetime
 
         settingsEntity.IsEnabled = true;
         settingsEntity.AutoCreatePrDraftWhenShort = true;
+        settingsEntity.ProcessMaintainarrDemandRefs = true;
         settingsEntity.MinHoursBeforeProcessing = 0;
         settingsEntity.StalenessHours = 4;
         settingsEntity.NotifyOnPrDraftCreated = true;
@@ -191,6 +206,44 @@ public sealed class SupplyArrDemandProcessingWorkerTests : IAsyncLifetime
 
         var demandRef = await db.MaintainArrDemandRefs.SingleAsync(x => x.Id == demandRefId);
         Assert.Equal(MaintainArrDemandRefStatuses.PrDrafted, demandRef.Status);
+        Assert.NotNull(demandRef.PurchaseRequestId);
+    }
+
+    [Fact]
+    public async Task Process_batch_routarr_auto_creates_pr_when_source_enabled()
+    {
+        var demandRefId = await SeedRoutarrDemandRefWithShortStockAsync();
+        await UpsertSettingsAsync(
+            autoCreatePrDraftWhenShort: true,
+            processMaintainarrDemandRefs: false,
+            processRoutarrDemandRefs: true);
+
+        using var scope = _supplyarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
+        var worker = scope.ServiceProvider.GetRequiredService<DemandProcessingWorkerService>();
+        var result = await worker.ProcessBatchAsync(new ProcessDemandProcessingRequest(
+            PlatformSeeder.DemoTenantId,
+            DateTimeOffset.UtcNow,
+            25,
+            4));
+
+        Assert.Equal(1, result.CandidatesFound);
+        if (result.SkippedCount > 0)
+        {
+            Assert.Fail($"Processing skipped: {result.Skipped[0].Reason}");
+        }
+
+        Assert.Equal(1, result.ProcessedCount);
+        Assert.Equal(DemandRefSources.RoutArr, result.Processed[0].DemandRefSource);
+        Assert.Equal(DemandProcessingOutcomes.PrDrafted, result.Processed[0].ProcessingOutcome);
+        Assert.NotNull(result.Processed[0].PurchaseRequestId);
+
+        var state = await db.DemandProcessingStates.SingleAsync(x => x.DemandRefId == demandRefId);
+        Assert.Equal(DemandRefSources.RoutArr, state.DemandRefSource);
+        Assert.Equal(DemandProcessingOutcomes.PrDrafted, state.ProcessingOutcome);
+
+        var demandRef = await db.RoutArrDemandRefs.SingleAsync(x => x.Id == demandRefId);
+        Assert.Equal(RoutArrDemandRefStatuses.PrDrafted, demandRef.Status);
         Assert.NotNull(demandRef.PurchaseRequestId);
     }
 
@@ -338,7 +391,12 @@ public sealed class SupplyArrDemandProcessingWorkerTests : IAsyncLifetime
         return demandRefId;
     }
 
-    private async Task UpsertSettingsAsync(bool autoCreatePrDraftWhenShort)
+    private async Task UpsertSettingsAsync(
+        bool autoCreatePrDraftWhenShort,
+        bool processMaintainarrDemandRefs = true,
+        bool processRoutarrDemandRefs = false,
+        bool processTrainarrDemandRefs = false,
+        bool processStaffarrDemandRefs = false)
     {
         using var scope = _supplyarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
@@ -361,8 +419,115 @@ public sealed class SupplyArrDemandProcessingWorkerTests : IAsyncLifetime
         entity.MinHoursBeforeProcessing = 0;
         entity.StalenessHours = 4;
         entity.NotifyOnPrDraftCreated = true;
+        entity.ProcessMaintainarrDemandRefs = processMaintainarrDemandRefs;
+        entity.ProcessRoutarrDemandRefs = processRoutarrDemandRefs;
+        entity.ProcessTrainarrDemandRefs = processTrainarrDemandRefs;
+        entity.ProcessStaffarrDemandRefs = processStaffarrDemandRefs;
         entity.UpdatedAt = now;
         await db.SaveChangesAsync();
+    }
+
+    private async Task<Guid> SeedRoutarrDemandRefWithShortStockAsync()
+    {
+        using var scope = _supplyarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
+        var tenantId = PlatformSeeder.DemoTenantId;
+        var now = DateTimeOffset.UtcNow;
+
+        var location = new InventoryLocation
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            LocationKey = $"loc-{Guid.NewGuid():N}"[..16],
+            Name = "Main warehouse",
+            LocationType = "warehouse",
+            AddressLine = string.Empty,
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        var bin = new InventoryBin
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            InventoryLocationId = location.Id,
+            BinKey = $"bin-{Guid.NewGuid():N}"[..16],
+            Name = "A1",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        var part = new Part
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartKey = $"part-{Guid.NewGuid():N}"[..16],
+            DisplayName = "RoutArr demand part",
+            Description = string.Empty,
+            CategoryKey = "general",
+            UnitOfMeasure = "each",
+            ManufacturerName = string.Empty,
+            ManufacturerPartNumber = string.Empty,
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        var stock = new PartStockLevel
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartId = part.Id,
+            InventoryBinId = bin.Id,
+            QuantityOnHand = 0m,
+            QuantityReserved = 0m,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        var demandRefId = Guid.NewGuid();
+        var demandRef = new RoutArrDemandRef
+        {
+            Id = demandRefId,
+            TenantId = tenantId,
+            RoutarrPublicationId = Guid.NewGuid(),
+            RoutarrTripId = Guid.NewGuid(),
+            RoutarrTripNumber = "TRIP-DP-200",
+            RoutarrVehicleRefKey = "VEH-1",
+            Title = "Trip parts demand",
+            Notes = string.Empty,
+            Status = RoutArrDemandRefStatuses.Received,
+            ProcurementStatus = RoutArrDemandRefProcurementStatuses.Received,
+            ReceivedAt = now.AddHours(-2),
+            CreatedAt = now.AddHours(-2),
+            UpdatedAt = now.AddHours(-2),
+        };
+
+        demandRef.Lines.Add(new RoutArrDemandRefLine
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            DemandRefId = demandRefId,
+            LineNumber = 1,
+            RoutarrDemandLineId = Guid.NewGuid(),
+            PartId = part.Id,
+            PartNumber = part.PartKey,
+            Description = part.DisplayName,
+            QuantityRequested = 3m,
+            UnitOfMeasure = "each",
+            Notes = string.Empty,
+        });
+
+        db.InventoryLocations.Add(location);
+        db.InventoryBins.Add(bin);
+        db.Parts.Add(part);
+        db.PartStockLevels.Add(stock);
+        db.RoutArrDemandRefs.Add(demandRef);
+        await db.SaveChangesAsync();
+
+        return demandRefId;
     }
 
     private async Task UpsertNotificationSettingsAsync()

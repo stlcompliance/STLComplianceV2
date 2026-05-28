@@ -25,6 +25,7 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
         app.MapComplianceCoreRuleEvaluationEndpoints();
         app.MapComplianceCoreFactSourceEndpoints();
         app.MapComplianceCoreInternalFactEndpoints();
+        app.MapComplianceCoreProductFactIntegrationEndpoints();
         app.MapComplianceCoreInternalScheduledEvaluationEndpoints();
         app.MapComplianceCoreFindingEndpoints();
         app.MapComplianceCoreWorkflowGateEndpoints();

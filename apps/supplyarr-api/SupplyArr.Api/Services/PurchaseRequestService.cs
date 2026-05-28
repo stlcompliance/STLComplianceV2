@@ -8,8 +8,11 @@ namespace SupplyArr.Api.Services;
 
 public sealed class PurchaseRequestService(
     SupplyArrDbContext db,
-    MaintainArrDemandStatusCallbackService demandStatusCallbacks,
+    VendorProcurementGuardService vendorProcurementGuard,
+    StaffarrProcurementApprovalAuthorityService approvalAuthority,
+    SupplyArrDemandStatusCallbackCoordinator demandStatusCallbacks,
     ProcurementNotificationEnqueueService notificationEnqueue,
+    IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
     public async Task<IReadOnlyList<PurchaseRequestResponse>> ListAsync(
@@ -242,6 +245,7 @@ public sealed class PurchaseRequestService(
     public async Task<PurchaseRequestResponse> SubmitAsync(
         Guid tenantId,
         Guid actorUserId,
+        Guid actorPersonId,
         Guid purchaseRequestId,
         CancellationToken cancellationToken = default)
     {
@@ -261,6 +265,13 @@ public sealed class PurchaseRequestService(
                 "At least one line item is required before submission.",
                 400);
         }
+
+        await approvalAuthority.EnsureCanSubmitPurchaseRequestAsync(
+            tenantId,
+            actorUserId,
+            actorPersonId,
+            entity,
+            cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         entity.Status = PurchaseRequestStatuses.Submitted;
@@ -292,12 +303,21 @@ public sealed class PurchaseRequestService(
             entity.Id,
             cancellationToken);
 
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.PurchaseRequestSubmitted,
+            "purchase_request",
+            entity.Id,
+            new IntegrationOutboxPayload(tenantId, $"Purchase request submitted: {entity.RequestKey}", entity.VendorPartyId),
+            cancellationToken: cancellationToken);
+
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
 
     public async Task<PurchaseRequestResponse> ApproveAsync(
         Guid tenantId,
         Guid actorUserId,
+        Guid actorPersonId,
         Guid purchaseRequestId,
         CancellationToken cancellationToken = default)
     {
@@ -309,6 +329,13 @@ public sealed class PurchaseRequestService(
                 "Only submitted purchase requests can be approved.",
                 409);
         }
+
+        await approvalAuthority.EnsureCanApprovePurchaseRequestAsync(
+            tenantId,
+            actorUserId,
+            actorPersonId,
+            entity,
+            cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         entity.Status = PurchaseRequestStatuses.Approved;
@@ -339,6 +366,14 @@ public sealed class PurchaseRequestService(
             "purchase_request",
             entity.Id,
             cancellationToken);
+
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.PurchaseRequestApproved,
+            "purchase_request",
+            entity.Id,
+            new IntegrationOutboxPayload(tenantId, $"Purchase request approved: {entity.RequestKey}", entity.VendorPartyId),
+            cancellationToken: cancellationToken);
 
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
@@ -432,25 +467,15 @@ public sealed class PurchaseRequestService(
         }
     }
 
-    private async Task EnsureVendorPartyAsync(
+    private Task EnsureVendorPartyAsync(
         Guid tenantId,
         Guid vendorPartyId,
-        CancellationToken cancellationToken)
-    {
-        var exists = await db.ExternalParties.AnyAsync(
-            x => x.TenantId == tenantId
-                && x.Id == vendorPartyId
-                && x.PartyType == "vendor"
-                && x.Status == "active",
+        CancellationToken cancellationToken) =>
+        vendorProcurementGuard.EnsureVendorAllowedForScopeAsync(
+            tenantId,
+            vendorPartyId,
+            VendorRestrictionScopes.PurchaseRequests,
             cancellationToken);
-        if (!exists)
-        {
-            throw new StlApiException(
-                "purchase_requests.vendor.not_found",
-                "Active vendor party was not found.",
-                404);
-        }
-    }
 
     private static void EnsureEditable(PurchaseRequest entity)
     {
@@ -518,6 +543,12 @@ public sealed class PurchaseRequestService(
             entity.RejectedAt,
             entity.RejectedByUserId,
             entity.RejectionReason,
+            entity.IsEmergency,
+            entity.EmergencyReason,
+            entity.EmergencyExpeditedAt,
+            entity.ManagerOverrideApproved,
+            entity.ManagerOverrideJustification,
+            entity.ManagerOverrideApprovedAt,
             entity.Lines
                 .OrderBy(x => x.LineNumber)
                 .Select(MapLine)

@@ -34,6 +34,22 @@ public sealed class PurchaseRequest : IHasTenant
 
     public string RejectionReason { get; set; } = string.Empty;
 
+    public bool IsEmergency { get; set; }
+
+    public string EmergencyReason { get; set; } = string.Empty;
+
+    public DateTimeOffset? EmergencyExpeditedAt { get; set; }
+
+    public Guid? EmergencyExpeditedByUserId { get; set; }
+
+    public bool ManagerOverrideApproved { get; set; }
+
+    public string ManagerOverrideJustification { get; set; } = string.Empty;
+
+    public Guid? ManagerOverrideApprovedByUserId { get; set; }
+
+    public DateTimeOffset? ManagerOverrideApprovedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

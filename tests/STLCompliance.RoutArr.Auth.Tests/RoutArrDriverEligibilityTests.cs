@@ -61,7 +61,7 @@ public sealed class RoutArrDriverEligibilityTests : IAsyncLifetime
         _routarrToStaffarrToken = await IssueServiceTokenAsync(
             adminToken,
             "routarr",
-            IntegrationEndpoints.RoutarrReadinessDispatchActionScope,
+            StaffArr.Api.Endpoints.IntegrationEndpoints.RoutarrReadinessDispatchActionScope,
             ["staffarr"]);
 
         _staffarrFactory = new WebApplicationFactory<global::StaffArr.Api.Program>().WithWebHostBuilder(builder =>

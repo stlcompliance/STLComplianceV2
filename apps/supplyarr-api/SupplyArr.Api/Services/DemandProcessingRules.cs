@@ -85,4 +85,19 @@ public sealed record TenantDemandProcessingSettingsSnapshot(
     bool AutoCreatePrDraftWhenShort,
     int MinHoursBeforeProcessing,
     int StalenessHours,
-    bool NotifyOnPrDraftCreated);
+    bool NotifyOnPrDraftCreated,
+    bool ProcessMaintainarrDemandRefs,
+    bool ProcessRoutarrDemandRefs,
+    bool ProcessTrainarrDemandRefs,
+    bool ProcessStaffarrDemandRefs)
+{
+    public bool IsSourceEnabled(string demandRefSource) =>
+        demandRefSource switch
+        {
+            DemandRefSources.MaintainArr => ProcessMaintainarrDemandRefs,
+            DemandRefSources.RoutArr => ProcessRoutarrDemandRefs,
+            DemandRefSources.TrainArr => ProcessTrainarrDemandRefs,
+            DemandRefSources.StaffArr => ProcessStaffarrDemandRefs,
+            _ => false,
+        };
+}

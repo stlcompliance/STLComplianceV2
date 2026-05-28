@@ -336,6 +336,52 @@
 
 | 182 | SupplyArr parts/inventory reports (`PartsInventoryReportService`, `/api/reports/parts-inventory/summary|parts/{id}|locations/{id}|summary/export`, audit events, `PartsInventoryReportsPanel`, Reports workspace extension, integration + frontend tests, docs) | M12 (partial) | Complete | `pending` |
 
-## Next slice (Worker 183)
+| 183 | SupplyArr purchasing reports (`PurchasingReportService`, `/api/reports/purchasing/summary|purchase-requests/{id}|purchase-orders/{id}|summary/export`, audit events, `PurchasingReportsPanel`, Reports workspace extension, integration + frontend tests, docs) | M12 (partial) | Complete | `pending` |
 
-Per backlog: SupplyArr M12 remaining items (purchasing reports, compliance reports, forgiving search, audit history) or next product milestone per `02_PRODUCT_IMPLEMENTATION_BACKLOG.md`.
+| 184 | SupplyArr compliance reports (`supplyarr_party_compliance_documents`, `ComplianceReportService`, `/api/reports/compliance/summary|parties/{id}|summary/export`, audit events, `ComplianceReportsPanel`, Reports workspace extension, integration + frontend tests, docs) | M12 (partial) | Complete | `pending` |
+
+| 185 | SupplyArr forgiving search (`ForgivingSearchService`, `GET /api/search/forgiving`, normalized cross-entity matching, audit events, `ForgivingSearchBar` workspace shell, integration + frontend tests, docs) | M12 (partial) | Complete | `pending` |
+
+| 186 | SupplyArr audit history (`AuditHistoryService`, `GET /api/audit-history` cursor pagination + filters, meta-audit read, `AuditHistoryPanel` Reports workspace, integration + frontend tests, docs) | M12 (SupplyArr reporting group) | Complete | `pending` |
+
+| 187 | SupplyArr integration event outbox/inbox (`supplyarr_integration_outbox_events`, `supplyarr_integration_inbox_events`, tenant settings + processing runs, internal pending/process-batch + inbox enqueue, `SupplyArrIntegrationEventsJob`, publish hooks on parties/parts/procurement/demand, `maintainarr.demand.ingest` inbox handler, `IntegrationEventSettingsPanel`, integration + frontend tests, docs) | M8 (partial) | Complete | `pending` |
+
+| 188 | SupplyArr RFQs + quote comparison (`supplyarr_rfqs`, `supplyarr_rfq_lines`, `supplyarr_rfq_vendor_invitations`, `supplyarr_vendor_quotes`, `supplyarr_vendor_quote_lines`, `/api/rfqs` CRUD/submit/invite/quotes/compare/award/create-purchase-request, outbox hooks, `RfqPanel` Purchasing workspace, integration + frontend tests, docs) | M8 (partial) | Complete | `pending` |
+
+| 189 | SupplyArr supplier onboarding (`supplyarr_party_supplier_onboarding`, `supplyarr_tenant_supplier_onboarding_settings`, party compliance doc register/approve API, `/api/supplier-onboarding` + `/api/parties/{id}/compliance-documents`, outbox hooks, `SupplierOnboardingPanel` Parties workspace, integration + frontend tests, docs) | M8 (partial) | Complete | `pending` |
+
+| 190 | SupplyArr emergency purchase workflow (emergency fields on `supplyarr_purchase_requests`, `/api/emergency-purchases` create/expedited-submit/manager-override-approve/issue-purchase-order, stricter auth, outbox hooks, `EmergencyPurchasePanel` Purchasing workspace, integration + frontend tests, docs) | M8 (partial) | Complete | `pending` |
+
+| 191 | SupplyArr demand intake from RoutArr (`routarr_trip_parts_demand_lines`, `supplyarr_routarr_demand_refs`, integration ingest + publish, inbox `routarr.demand.ingest`, `/api/routarr-demand-refs`, cross-product tests, docs) | M10 (partial) | Complete | `pending` |
+
+| 192 | SupplyArr demand intake from TrainArr + StaffArr (`trainarr_training_assignment_material_demand_lines`, `staffarr_incident_supply_demand_lines`, `supplyarr_trainarr_demand_refs`, `supplyarr_staffarr_demand_refs`, integration ingest + inbox handlers, demand-ref APIs, cross-product tests, docs) | M10 (partial) | Complete | `pending` |
+
+| 193 | SupplyArr demand status callbacks to all sources (extend W85 to RoutArr/TrainArr/StaffArr, coordinator on PR/PO/receiving, per-product ingest + status event tables, idempotency, RoutArr + StaffArr + MaintainArr tests, docs) | M10 (partial) | Complete | `pending` |
+
+| 194 | SupplyArr demand processing multi-source auto-PR (W179 extended to RoutArr/TrainArr/StaffArr/MaintainArr, per-source tenant flags, drop MaintainArr-only FK on processing states, dashboard multi-source, supplyarr-frontend source toggles, RoutArr auto-PR test, docs) | M8/M10/M12 (partial) | Complete | `pending` |
+
+| 195 | SupplyArr M8 vendor restrictions (`supplyarr_vendor_restrictions`, scoped enforcement on PR/PO/RFQ/receiving, `/api/vendor-restrictions` + party routes, outbox + audit, `VendorRestrictionsPanel` Parties workspace, integration + frontend tests, docs) | M8 (partial) | Complete | `pending` |
+
+| 196 | SupplyArr M8 supplier incidents (`supplyarr_supplier_incidents`, status workflow, party/procurement links, apply-procurement-restriction via W195, `/api/supplier-incidents` + party routes, outbox + audit, `SupplierIncidentsPanel` Parties workspace, integration + frontend tests, docs) | M8 (partial) | Complete | `pending` |
+
+| 197 | SupplyArr M8 procurement exceptions (`supplyarr_procurement_exceptions`, PR/PO/RFQ subject workflow, investigate/resolve/waive-with-approval, `/api/procurement-exceptions` + subject routes, outbox + audit, `ProcurementExceptionsPanel` Purchasing workspace, integration + frontend tests, docs) | M8 (partial) | Complete | `pending` |
+
+| 198 | SupplyArr M10 approval authority from StaffArr (StaffArr `/api/integrations/procurement-approval-authority`, SupplyArr `supplyarr_staffarr_procurement_approval_authority_mirrors`, enforce PR submit/approve + PO issue, `/api/me/procurement-approval-authority`, `ProcurementApprovalAuthorityBanner` Purchasing workspace, cross-product tests, docs) | M10 (partial) | Complete | `pending` |
+
+| 199 | SupplyArr M10 Compliance Core fact publishing (`compliancecore_product_fact_mirrors`, `POST /api/integrations/product-facts/ingest`, `product_mirror` fact sources, SupplyArr outbox publisher + `ComplianceCoreFactPublicationClient`, `supplyarr-compliancecore` token profile, cross-product tests, docs) | M10 (partial) | Complete | `pending` |
+
+| 200 | SupplyArr M8 supply readiness dashboard (`SupplyReadinessService`, `GET /api/supply-readiness/dashboard`, audit `supplyarr.supply_readiness.dashboard`, `RequireSupplyReadinessRead`, `/readiness` workspace + `SupplyReadinessDashboardPanel`, integration + frontend tests, docs) | M8 (partial) | Complete | `pending` |
+
+| 201 | SupplyArr M8 warranty claims (`supplyarr_warranty_claims`, `/api/warranty-claims` CRUD + submit/vendor-response/close/deny/cancel, audit + outbox, `WarrantyClaimsPanel` Receiving workspace, integration + frontend tests, docs) | M8 (partial) | Complete | `pending` |
+
+## M12 SupplyArr reporting group
+
+Workers **181–186** complete the SupplyArr M12 reporting slice group (vendor, parts/inventory, purchasing, compliance reports, forgiving search, audit history).
+
+## M8 SupplyArr procurement cluster
+
+Workers **195–197** complete vendor restrictions, supplier incidents, and procurement exceptions.
+
+## Next slice (Worker 202)
+
+SupplyArr M8 procurement cluster is complete through warranty claims. Per suite backlog: **TrainArr M10 StaffArr acknowledgement tracking**, **MaintainArr M12 maintenance reports** / **executive reports**, or **NexArr M12** platform lifecycle workers as prioritized by coordinator.

@@ -20,13 +20,7 @@ public sealed class DemandProcessingService(
             .Take(100)
             .ToListAsync(cancellationToken);
 
-        var demandRefIds = states.Select(x => x.DemandRefId).ToList();
-        var demandRefStatuses = demandRefIds.Count == 0
-            ? new Dictionary<Guid, string>()
-            : await db.MaintainArrDemandRefs
-                .AsNoTracking()
-                .Where(x => x.TenantId == tenantId && demandRefIds.Contains(x.Id))
-                .ToDictionaryAsync(x => x.Id, x => x.Status, cancellationToken);
+        var demandRefStatuses = await LoadDemandRefStatusesAsync(tenantId, states, cancellationToken);
 
         var pendingResponse = await workerService.ListPendingAsync(
             tenantId,
@@ -36,7 +30,9 @@ public sealed class DemandProcessingService(
             cancellationToken);
 
         var items = states
-            .Select(state => MapSummary(state, demandRefStatuses.GetValueOrDefault(state.DemandRefId, "unknown")))
+            .Select(state => MapSummary(
+                state,
+                demandRefStatuses.GetValueOrDefault(state.DemandRefId, "unknown")))
             .ToList();
 
         return new DemandProcessingDashboardResponse(
@@ -62,17 +58,14 @@ public sealed class DemandProcessingService(
                 "Demand processing state was not found.",
                 404);
 
-        var demandRef = await db.MaintainArrDemandRefs
-            .AsNoTracking()
-            .Include(x => x.Lines)
-            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == demandRefId, cancellationToken)
-            ?? throw new STLCompliance.Shared.Contracts.StlApiException(
-                "demand_processing.demand_ref_not_found",
-                "Demand reference was not found.",
-                404);
+        var (demandRefStatus, lines) = await LoadDemandRefDetailAsync(
+            tenantId,
+            state.DemandRefSource,
+            demandRefId,
+            cancellationToken);
 
         var stockTotals = await LoadStockTotalsAsync(tenantId, cancellationToken);
-        var lines = demandRef.Lines
+        var lineSummaries = lines
             .OrderBy(x => x.LineNumber)
             .Select(line =>
             {
@@ -86,7 +79,7 @@ public sealed class DemandProcessingService(
                 }
 
                 return new DemandProcessingLineSummary(
-                    line.Id,
+                    line.LineId,
                     line.LineNumber,
                     line.PartId,
                     line.PartNumber,
@@ -97,8 +90,162 @@ public sealed class DemandProcessingService(
             .ToList();
 
         return new DemandProcessingDetailResponse(
-            MapSummary(state, demandRef.Status),
-            lines);
+            MapSummary(state, demandRefStatus),
+            lineSummaries);
+    }
+
+    private async Task<Dictionary<Guid, string>> LoadDemandRefStatusesAsync(
+        Guid tenantId,
+        IReadOnlyList<DemandProcessingState> states,
+        CancellationToken cancellationToken)
+    {
+        var result = new Dictionary<Guid, string>();
+        if (states.Count == 0)
+        {
+            return result;
+        }
+
+        var maintainarrIds = states
+            .Where(x => string.Equals(x.DemandRefSource, DemandRefSources.MaintainArr, StringComparison.OrdinalIgnoreCase))
+            .Select(x => x.DemandRefId)
+            .ToList();
+        if (maintainarrIds.Count > 0)
+        {
+            var rows = await db.MaintainArrDemandRefs
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && maintainarrIds.Contains(x.Id))
+                .Select(x => new { x.Id, x.Status })
+                .ToListAsync(cancellationToken);
+            foreach (var row in rows)
+            {
+                result[row.Id] = row.Status;
+            }
+        }
+
+        var routarrIds = states
+            .Where(x => string.Equals(x.DemandRefSource, DemandRefSources.RoutArr, StringComparison.OrdinalIgnoreCase))
+            .Select(x => x.DemandRefId)
+            .ToList();
+        if (routarrIds.Count > 0)
+        {
+            var rows = await db.RoutArrDemandRefs
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && routarrIds.Contains(x.Id))
+                .Select(x => new { x.Id, x.Status })
+                .ToListAsync(cancellationToken);
+            foreach (var row in rows)
+            {
+                result[row.Id] = row.Status;
+            }
+        }
+
+        var trainarrIds = states
+            .Where(x => string.Equals(x.DemandRefSource, DemandRefSources.TrainArr, StringComparison.OrdinalIgnoreCase))
+            .Select(x => x.DemandRefId)
+            .ToList();
+        if (trainarrIds.Count > 0)
+        {
+            var rows = await db.TrainArrDemandRefs
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && trainarrIds.Contains(x.Id))
+                .Select(x => new { x.Id, x.Status })
+                .ToListAsync(cancellationToken);
+            foreach (var row in rows)
+            {
+                result[row.Id] = row.Status;
+            }
+        }
+
+        var staffarrIds = states
+            .Where(x => string.Equals(x.DemandRefSource, DemandRefSources.StaffArr, StringComparison.OrdinalIgnoreCase))
+            .Select(x => x.DemandRefId)
+            .ToList();
+        if (staffarrIds.Count > 0)
+        {
+            var rows = await db.StaffArrDemandRefs
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && staffarrIds.Contains(x.Id))
+                .Select(x => new { x.Id, x.Status })
+                .ToListAsync(cancellationToken);
+            foreach (var row in rows)
+            {
+                result[row.Id] = row.Status;
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<(string Status, IReadOnlyList<DemandRefLineDetail>)> LoadDemandRefDetailAsync(
+        Guid tenantId,
+        string demandRefSource,
+        Guid demandRefId,
+        CancellationToken cancellationToken)
+    {
+        if (string.Equals(demandRefSource, DemandRefSources.MaintainArr, StringComparison.OrdinalIgnoreCase))
+        {
+            var demandRef = await db.MaintainArrDemandRefs
+                .AsNoTracking()
+                .Include(x => x.Lines)
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == demandRefId, cancellationToken)
+                ?? throw new STLCompliance.Shared.Contracts.StlApiException(
+                    "demand_processing.demand_ref_not_found",
+                    "Demand reference was not found.",
+                    404);
+
+            return (demandRef.Status, demandRef.Lines.Select(x => new DemandRefLineDetail(
+                x.Id, x.LineNumber, x.PartId, x.PartNumber, x.QuantityRequested)).ToList());
+        }
+
+        if (string.Equals(demandRefSource, DemandRefSources.RoutArr, StringComparison.OrdinalIgnoreCase))
+        {
+            var demandRef = await db.RoutArrDemandRefs
+                .AsNoTracking()
+                .Include(x => x.Lines)
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == demandRefId, cancellationToken)
+                ?? throw new STLCompliance.Shared.Contracts.StlApiException(
+                    "demand_processing.demand_ref_not_found",
+                    "Demand reference was not found.",
+                    404);
+
+            return (demandRef.Status, demandRef.Lines.Select(x => new DemandRefLineDetail(
+                x.Id, x.LineNumber, x.PartId, x.PartNumber, x.QuantityRequested)).ToList());
+        }
+
+        if (string.Equals(demandRefSource, DemandRefSources.TrainArr, StringComparison.OrdinalIgnoreCase))
+        {
+            var demandRef = await db.TrainArrDemandRefs
+                .AsNoTracking()
+                .Include(x => x.Lines)
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == demandRefId, cancellationToken)
+                ?? throw new STLCompliance.Shared.Contracts.StlApiException(
+                    "demand_processing.demand_ref_not_found",
+                    "Demand reference was not found.",
+                    404);
+
+            return (demandRef.Status, demandRef.Lines.Select(x => new DemandRefLineDetail(
+                x.Id, x.LineNumber, x.PartId, x.PartNumber, x.QuantityRequested)).ToList());
+        }
+
+        if (string.Equals(demandRefSource, DemandRefSources.StaffArr, StringComparison.OrdinalIgnoreCase))
+        {
+            var demandRef = await db.StaffArrDemandRefs
+                .AsNoTracking()
+                .Include(x => x.Lines)
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == demandRefId, cancellationToken)
+                ?? throw new STLCompliance.Shared.Contracts.StlApiException(
+                    "demand_processing.demand_ref_not_found",
+                    "Demand reference was not found.",
+                    404);
+
+            return (demandRef.Status, demandRef.Lines.Select(x => new DemandRefLineDetail(
+                x.Id, x.LineNumber, x.PartId, x.PartNumber, x.QuantityRequested)).ToList());
+        }
+
+        throw new STLCompliance.Shared.Contracts.StlApiException(
+            "demand_processing.demand_ref_not_found",
+            "Demand reference was not found.",
+            404);
     }
 
     private static DemandProcessingSummaryResponse MapSummary(
@@ -107,6 +254,7 @@ public sealed class DemandProcessingService(
         new(
             state.Id,
             state.DemandRefId,
+            state.DemandRefSource,
             state.MaintainarrWorkOrderNumber,
             state.Title,
             demandRefStatus,
@@ -138,4 +286,11 @@ public sealed class DemandProcessingService(
 
         return rows.ToDictionary(x => x.PartId, x => (x.OnHand, x.Reserved));
     }
+
+    private sealed record DemandRefLineDetail(
+        Guid LineId,
+        int LineNumber,
+        Guid? PartId,
+        string PartNumber,
+        decimal QuantityRequested);
 }

@@ -1,5 +1,6 @@
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Services;
+using STLCompliance.Shared.Auth;
 
 namespace SupplyArr.Api.Endpoints;
 
@@ -43,5 +44,22 @@ public static class AuthEndpoints
             return Results.Ok(await service.GetMeAsync(context.User, cancellationToken));
         })
         .WithName("SupplyArrGetMe");
+
+        me.MapGet("/procurement-approval-authority", async (
+            StaffarrProcurementApprovalAuthorityService authorityService,
+            SupplyArrAuthorizationService authorization,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePurchaseRequestRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await authorityService.GetMirrorForActorAsync(
+                tenantId,
+                context.User.GetUserId(),
+                context.User.GetPersonId(),
+                forceRefresh: false,
+                cancellationToken));
+        })
+        .WithName("SupplyArrGetProcurementApprovalAuthority");
     }
 }

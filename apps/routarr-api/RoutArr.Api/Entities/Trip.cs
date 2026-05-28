@@ -41,6 +41,8 @@ public sealed class Trip : IHasTenant
     public DateTimeOffset? CancelledAt { get; set; }
 
     public ICollection<TripLoad> Loads { get; set; } = [];
+
+    public ICollection<TripPartsDemandLine> PartsDemandLines { get; set; } = [];
 }
 
 public static class TripDispatchStatuses
