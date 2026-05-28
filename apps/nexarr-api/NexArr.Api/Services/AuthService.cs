@@ -141,12 +141,12 @@ public sealed class AuthService(
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        return await db.TenantMemberships
-            .AsNoTracking()
-            .Where(m => m.UserId == userId && m.IsActive)
-            .Join(db.Tenants.AsNoTracking(), m => m.TenantId, t => t.Id, (m, t) => new { m, t })
-            .OrderBy(x => x.t.DisplayName)
-            .Select(x => new TenantSummary(x.t.Id, x.t.Slug, x.t.DisplayName, x.t.Status, x.m.RoleKey))
+        return await (
+            from m in db.TenantMemberships.AsNoTracking()
+            where m.UserId == userId && m.IsActive
+            join t in db.Tenants.AsNoTracking() on m.TenantId equals t.Id
+            orderby t.DisplayName
+            select new TenantSummary(t.Id, t.Slug, t.DisplayName, t.Status, m.RoleKey))
             .ToListAsync(cancellationToken);
     }
 
@@ -154,12 +154,12 @@ public sealed class AuthService(
         Guid tenantId,
         CancellationToken cancellationToken = default)
     {
-        return await db.Entitlements
-            .AsNoTracking()
-            .Where(e => e.TenantId == tenantId && e.Status == EntitlementStatuses.Active)
-            .Join(db.ProductCatalog.AsNoTracking(), e => e.ProductKey, p => p.ProductKey, (e, p) => new { e, p })
-            .OrderBy(x => x.p.DisplayName)
-            .Select(x => new EntitlementSummary(x.p.ProductKey, x.p.DisplayName, x.e.Status))
+        return await (
+            from e in db.Entitlements.AsNoTracking()
+            where e.TenantId == tenantId && e.Status == EntitlementStatuses.Active
+            join p in db.ProductCatalog.AsNoTracking() on e.ProductKey equals p.ProductKey
+            orderby p.DisplayName
+            select new EntitlementSummary(p.ProductKey, p.DisplayName, e.Status))
             .ToListAsync(cancellationToken);
     }
 

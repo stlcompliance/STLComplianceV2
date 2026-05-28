@@ -21,9 +21,7 @@ public sealed class PmScheduleService(
         Guid tenantId,
         CancellationToken cancellationToken = default)
     {
-        return await QuerySchedules(tenantId)
-            .OrderBy(x => x.NextDueAt)
-            .ThenBy(x => x.ScheduleKey)
+        return await BuildScheduleQuery(tenantId, dueOnly: false)
             .ToListAsync(cancellationToken);
     }
 
@@ -31,10 +29,7 @@ public sealed class PmScheduleService(
         Guid tenantId,
         CancellationToken cancellationToken = default)
     {
-        var schedules = await QuerySchedules(tenantId)
-            .Where(x => x.DueStatus == PmDueStatuses.Due || x.DueStatus == PmDueStatuses.Overdue)
-            .OrderBy(x => x.NextDueAt)
-            .ThenBy(x => x.AssetTag)
+        var schedules = await BuildScheduleQuery(tenantId, dueOnly: true)
             .ToListAsync(cancellationToken);
 
         return await EnrichWithLinkedWorkOrdersAsync(tenantId, schedules, cancellationToken);
@@ -209,40 +204,88 @@ public sealed class PmScheduleService(
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
 
+    private IQueryable<PmScheduleResponse> BuildScheduleQuery(Guid tenantId, bool dueOnly)
+    {
+        var schedules = db.PmSchedules.AsNoTracking().Where(x => x.TenantId == tenantId);
+        if (dueOnly)
+        {
+            schedules = schedules.Where(x =>
+                x.DueStatus == PmDueStatuses.Due || x.DueStatus == PmDueStatuses.Overdue);
+
+            return
+                from schedule in schedules
+                join asset in db.Assets.AsNoTracking().Where(a => a.TenantId == tenantId)
+                    on schedule.AssetId equals asset.Id
+                join meter in db.AssetMeters.AsNoTracking().Where(m => m.TenantId == tenantId)
+                    on schedule.AssetMeterId equals meter.Id into meterJoin
+                from meter in meterJoin.DefaultIfEmpty()
+                orderby schedule.NextDueAt, asset.AssetTag
+                select new PmScheduleResponse(
+                    schedule.Id,
+                    schedule.AssetId,
+                    asset.AssetTag,
+                    asset.Name,
+                    schedule.ScheduleKey,
+                    schedule.Name,
+                    schedule.Description,
+                    schedule.ScheduleMode,
+                    schedule.AssetMeterId,
+                    meter != null ? meter.MeterKey : null,
+                    meter != null ? meter.Unit : null,
+                    schedule.IntervalUsage,
+                    schedule.NextDueAtUsage,
+                    schedule.LastCompletedUsage,
+                    schedule.IntervalDays,
+                    schedule.NextDueAt,
+                    schedule.LastCompletedAt,
+                    schedule.DueStatus,
+                    schedule.Status,
+                    schedule.LastDueScanAt,
+                    null,
+                    null,
+                    null,
+                    schedule.CreatedAt,
+                    schedule.UpdatedAt);
+        }
+
+        return
+            from schedule in schedules
+            join asset in db.Assets.AsNoTracking().Where(a => a.TenantId == tenantId)
+                on schedule.AssetId equals asset.Id
+            join meter in db.AssetMeters.AsNoTracking().Where(m => m.TenantId == tenantId)
+                on schedule.AssetMeterId equals meter.Id into meterJoin
+            from meter in meterJoin.DefaultIfEmpty()
+            orderby schedule.NextDueAt, schedule.ScheduleKey
+            select new PmScheduleResponse(
+                schedule.Id,
+                schedule.AssetId,
+                asset.AssetTag,
+                asset.Name,
+                schedule.ScheduleKey,
+                schedule.Name,
+                schedule.Description,
+                schedule.ScheduleMode,
+                schedule.AssetMeterId,
+                meter != null ? meter.MeterKey : null,
+                meter != null ? meter.Unit : null,
+                schedule.IntervalUsage,
+                schedule.NextDueAtUsage,
+                schedule.LastCompletedUsage,
+                schedule.IntervalDays,
+                schedule.NextDueAt,
+                schedule.LastCompletedAt,
+                schedule.DueStatus,
+                schedule.Status,
+                schedule.LastDueScanAt,
+                null,
+                null,
+                null,
+                schedule.CreatedAt,
+                schedule.UpdatedAt);
+    }
+
     private IQueryable<PmScheduleResponse> QuerySchedules(Guid tenantId) =>
-        from schedule in db.PmSchedules.AsNoTracking().Where(x => x.TenantId == tenantId)
-        join asset in db.Assets.AsNoTracking().Where(a => a.TenantId == tenantId)
-            on schedule.AssetId equals asset.Id
-        join meter in db.AssetMeters.AsNoTracking().Where(m => m.TenantId == tenantId)
-            on schedule.AssetMeterId equals meter.Id into meterJoin
-        from meter in meterJoin.DefaultIfEmpty()
-        orderby schedule.NextDueAt, schedule.ScheduleKey
-        select new PmScheduleResponse(
-            schedule.Id,
-            schedule.AssetId,
-            asset.AssetTag,
-            asset.Name,
-            schedule.ScheduleKey,
-            schedule.Name,
-            schedule.Description,
-            schedule.ScheduleMode,
-            schedule.AssetMeterId,
-            meter != null ? meter.MeterKey : null,
-            meter != null ? meter.Unit : null,
-            schedule.IntervalUsage,
-            schedule.NextDueAtUsage,
-            schedule.LastCompletedUsage,
-            schedule.IntervalDays,
-            schedule.NextDueAt,
-            schedule.LastCompletedAt,
-            schedule.DueStatus,
-            schedule.Status,
-            schedule.LastDueScanAt,
-            null,
-            null,
-            null,
-            schedule.CreatedAt,
-            schedule.UpdatedAt);
+        BuildScheduleQuery(tenantId, dueOnly: false);
 
     private static string NormalizeScheduleKey(string scheduleKey)
     {

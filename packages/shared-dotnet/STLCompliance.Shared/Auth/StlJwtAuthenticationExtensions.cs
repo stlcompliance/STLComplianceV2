@@ -44,6 +44,16 @@ public static class StlJwtAuthenticationExtensions
             .AddJwtBearer(jwt =>
             {
                 jwt.MapInboundClaims = false;
+                jwt.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        // Internal routes validate service tokens separately; malformed Bearer
+                        // headers must not surface as unhandled 500s from the JWT middleware.
+                        context.NoResult();
+                        return Task.CompletedTask;
+                    }
+                };
                 jwt.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
