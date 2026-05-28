@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using NexArr.Api.Contracts;
 using NexArr.Api.Options;
@@ -32,7 +33,7 @@ public static class CompanionPushEndpoints
         .WithName("GetCompanionPushVapidPublicKey");
 
         group.MapPost("/subscribe", async (
-            UpsertCompanionPushSubscriptionRequest request,
+            [FromBody] UpsertCompanionPushSubscriptionRequest request,
             CompanionPushSubscriptionService subscriptionService,
             HttpContext context,
             CancellationToken cancellationToken) =>
@@ -46,7 +47,7 @@ public static class CompanionPushEndpoints
         .WithName("SubscribeCompanionPush");
 
         group.MapDelete("/subscribe", async (
-            UnsubscribeCompanionPushRequest request,
+            [FromBody] UnsubscribeCompanionPushRequest request,
             CompanionPushSubscriptionService subscriptionService,
             HttpContext context,
             CancellationToken cancellationToken) =>

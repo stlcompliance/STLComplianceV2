@@ -126,6 +126,74 @@
         }
       }
     },
+    "/api/companion/field-tasks/evidence": {
+      "post": {
+        "tags": [
+          "CompanionFieldEvidence"
+        ],
+        "operationId": "SubmitCompanionFieldEvidence",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitCompanionFieldEvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/field-tasks/submission-status": {
+      "get": {
+        "tags": [
+          "CompanionFieldSubmissions"
+        ],
+        "operationId": "GetCompanionFieldTaskSubmissionStatus",
+        "parameters": [
+          {
+            "name": "taskKeys",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/field-tasks/validate": {
+      "post": {
+        "tags": [
+          "CompanionFieldSubmissions"
+        ],
+        "operationId": "ValidateCompanionFieldTask",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateCompanionFieldTaskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/companion/me": {
       "get": {
         "tags": [
@@ -193,6 +261,136 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/offline-actions": {
+      "get": {
+        "tags": [
+          "CompanionOffline"
+        ],
+        "operationId": "ListCompanionOfflineActions",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/offline-actions/sync": {
+      "post": {
+        "tags": [
+          "CompanionOffline"
+        ],
+        "operationId": "SyncCompanionOfflineActions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncCompanionOfflineActionsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/push/subscribe": {
+      "post": {
+        "tags": [
+          "CompanionPush"
+        ],
+        "operationId": "SubscribeCompanionPush",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertCompanionPushSubscriptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CompanionPush"
+        ],
+        "operationId": "UnsubscribeCompanionPush",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnsubscribeCompanionPushRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/push/vapid-public-key": {
+      "get": {
+        "tags": [
+          "CompanionPush"
+        ],
+        "operationId": "GetCompanionPushVapidPublicKey",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/scan/resolve": {
+      "post": {
+        "tags": [
+          "CompanionScan"
+        ],
+        "operationId": "CompanionResolveScan",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompanionScanResolveRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -376,6 +574,72 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/platform-audit-package-jobs/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingPlatformAuditPackageGenerationJobs",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/platform-audit-package-jobs/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessPlatformAuditPackageGenerationJobs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessPlatformAuditPackageGenerationJobsRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -596,6 +860,199 @@
           "Me"
         ],
         "operationId": "GetMyTenants",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/audit-packages/export": {
+      "get": {
+        "tags": [
+          "PlatformAuditPackages"
+        ],
+        "operationId": "ExportPlatformAuditPackage",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/audit-packages/jobs": {
+      "post": {
+        "tags": [
+          "PlatformAuditPackages"
+        ],
+        "operationId": "CreatePlatformAuditPackageGenerationJob",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlatformAuditPackageGenerationJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/audit-packages/jobs/{jobId}": {
+      "get": {
+        "tags": [
+          "PlatformAuditPackages"
+        ],
+        "operationId": "GetPlatformAuditPackageGenerationJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/audit-packages/jobs/{jobId}/download": {
+      "get": {
+        "tags": [
+          "PlatformAuditPackages"
+        ],
+        "operationId": "DownloadPlatformAuditPackageGenerationJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/audit-packages/manifest": {
+      "get": {
+        "tags": [
+          "PlatformAuditPackages"
+        ],
+        "operationId": "GetPlatformAuditPackageManifest",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/audit-packages/timeline": {
+      "get": {
+        "tags": [
+          "PlatformAuditPackages"
+        ],
+        "operationId": "GetPlatformAuditPackageTimeline",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1211,6 +1668,49 @@
   },
   "components": {
     "schemas": {
+      "CompanionOfflineActionItem": {
+        "required": [
+          "idempotencyKey",
+          "actionKind",
+          "taskKey",
+          "productKey",
+          "clientCreatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "actionKind": {
+            "type": "string"
+          },
+          "taskKey": {
+            "type": "string"
+          },
+          "productKey": {
+            "type": "string"
+          },
+          "clientCreatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CompanionPushSubscriptionKeysRequest": {
+        "required": [
+          "p256dh",
+          "auth"
+        ],
+        "type": "object",
+        "properties": {
+          "p256dh": {
+            "type": "string"
+          },
+          "auth": {
+            "type": "string"
+          }
+        }
+      },
       "CompanionRedeemHandoffRequest": {
         "required": [
           "handoffCode"
@@ -1219,6 +1719,23 @@
         "properties": {
           "handoffCode": {
             "type": "string"
+          }
+        }
+      },
+      "CompanionScanResolveRequest": {
+        "required": [
+          "scannedValue"
+        ],
+        "type": "object",
+        "properties": {
+          "scannedValue": {
+            "type": "string"
+          },
+          "symbology": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -1264,6 +1781,41 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CreatePlatformAuditPackageGenerationJobRequest": {
+        "required": [
+          "format",
+          "from",
+          "to",
+          "tenantId"
+        ],
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string"
+          },
+          "from": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "to": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -1440,6 +1992,39 @@
           }
         }
       },
+      "ProcessPlatformAuditPackageGenerationJobsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "RedeemHandoffRequest": {
         "required": [
           "handoffCode",
@@ -1491,6 +2076,65 @@
         "type": "object",
         "properties": {
           "refreshToken": {
+            "type": "string"
+          }
+        }
+      },
+      "SubmitCompanionFieldEvidenceRequest": {
+        "required": [
+          "taskKey",
+          "captureKind",
+          "fileName",
+          "contentType",
+          "contentBase64",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "taskKey": {
+            "type": "string"
+          },
+          "captureKind": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "contentBase64": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SyncCompanionOfflineActionsRequest": {
+        "required": [
+          "actions"
+        ],
+        "type": "object",
+        "properties": {
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanionOfflineActionItem"
+            }
+          }
+        }
+      },
+      "UnsubscribeCompanionPushRequest": {
+        "required": [
+          "endpoint"
+        ],
+        "type": "object",
+        "properties": {
+          "endpoint": {
             "type": "string"
           }
         }
@@ -1567,6 +2211,28 @@
           }
         }
       },
+      "UpsertCompanionPushSubscriptionRequest": {
+        "required": [
+          "endpoint",
+          "keys",
+          "userAgent"
+        ],
+        "type": "object",
+        "properties": {
+          "endpoint": {
+            "type": "string"
+          },
+          "keys": {
+            "$ref": "#/components/schemas/CompanionPushSubscriptionKeysRequest"
+          },
+          "userAgent": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ValidateCallbackRequest": {
         "required": [
           "productKey",
@@ -1587,6 +2253,27 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "ValidateCompanionFieldTaskRequest": {
+        "required": [
+          "taskKey",
+          "submissionKind"
+        ],
+        "type": "object",
+        "properties": {
+          "taskKey": {
+            "type": "string"
+          },
+          "submissionKind": {
+            "type": "string"
+          },
+          "productKey": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -1641,6 +2328,12 @@
       "name": "PlatformAdmin"
     },
     {
+      "name": "PlatformAuditPackages"
+    },
+    {
+      "name": "Internal"
+    },
+    {
       "name": "CompanionAuth"
     },
     {
@@ -1650,7 +2343,19 @@
       "name": "CompanionNotifications"
     },
     {
-      "name": "Internal"
+      "name": "CompanionPush"
+    },
+    {
+      "name": "CompanionOffline"
+    },
+    {
+      "name": "CompanionFieldEvidence"
+    },
+    {
+      "name": "CompanionFieldSubmissions"
+    },
+    {
+      "name": "CompanionScan"
     }
   ]
 }

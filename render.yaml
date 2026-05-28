@@ -196,6 +196,12 @@ services:
         value: https://companion-frontend-b2nm.onrender.com
       - key: Launch__Products__companion__LaunchPath
         value: /launch
+      - key: CompanionWebPush__Subject
+        value: mailto:companion-push@stlcompliance.com
+      - key: CompanionWebPush__PublicKey
+        sync: false
+      - key: CompanionWebPush__PrivateKey
+        sync: false
 
   - type: web
     name: staffarr-api

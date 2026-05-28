@@ -30,6 +30,7 @@ describe('NotificationSettingsPanel', () => {
     )
 
     expect(await screen.findByText(/Operational notifications/)).toBeInTheDocument()
+    expect(screen.getByTestId('companion-push-readiness-label')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Save notification settings/i })).toBeInTheDocument()
   })
 

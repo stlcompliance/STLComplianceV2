@@ -115,6 +115,18 @@ Issue tokens in NexArr (platform admin / service clients) with the scopes docume
 
 `Launch__Products__{product}__BaseUrl` and `Launch__Products__{product}__LaunchPath` on `nexarr-api` — public frontend URLs for handoff redirects.
 
+## Companion Web Push (`nexarr-api`)
+
+Browser push delivery for Companion operational notifications (handoff redeemed, field inbox refreshed). Set in Render Dashboard (`sync: false` in Blueprint).
+
+| Variable | Notes |
+|----------|-------|
+| `CompanionWebPush__Subject` | VAPID subject — typically `mailto:…@yourdomain.com` |
+| `CompanionWebPush__PublicKey` | VAPID public key (base64url); exposed via `GET /api/companion/push/vapid-public-key` |
+| `CompanionWebPush__PrivateKey` | VAPID private key — never expose to clients |
+
+When unset, subscribe APIs return `503 companion.push.vapid_unavailable` and dispatch falls back to webhook-only delivery.
+
 ## Static site build (Vite)
 
 | Static site | Build variable | Public API |
