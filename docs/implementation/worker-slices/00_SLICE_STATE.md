@@ -290,7 +290,7 @@
 
 | 159 | TrainArr StaffArr publish retry worker (`trainarr_tenant_staffarr_publication_settings`, `trainarr_staffarr_publication_deliveries`, outbox delivery on certification publications, internal pending/process-batch, `trainarr.staffarr_publications.retry`, `/api/staffarr-publication-settings`, `TrainArrStaffarrPublicationRetryJob`, `StaffarrPublicationSettingsPanel`, tests, docs) | M12 (partial) | Complete | `e6e63dc` |
 
-| 160 | TrainArr event processing worker (`trainarr_tenant_event_processing_settings`, `trainarr_training_domain_events`, `trainarr_person_training_history_entries`, internal pending/process-batch, `trainarr.events.process`, `/api/event-processing-settings`, `/api/person-training-history`, `TrainArrEventProcessingJob`, `EventProcessingSettingsPanel`, `PersonTrainingHistoryPanel`, tests, docs) | M12 (partial) | Complete | `4d3e7d1` |
+| 160 | TrainArr event processing worker (`trainarr_tenant_event_processing_settings`, `trainarr_training_domain_events`, `trainarr_person_training_history_entries`, internal pending/process-batch, `trainarr.events.process`, `/api/event-processing-settings`, `/api/person-training-history`, `TrainArrEventProcessingJob`, `EventProcessingSettingsPanel`, `PersonTrainingHistoryPanel`, tests, docs) | M12 (partial) | Complete | `0a4b8ca` |
 
 ## Next slice (Worker 161)
 
