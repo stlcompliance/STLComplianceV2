@@ -246,7 +246,7 @@
 
 | 137 | STLComplianceSite SEO / products hub hardening (resources section, richer products hub + maturity table, OG/Twitter/canonical SEO, build-time sitemap/robots, vitest, Render headers + `VITE_SITE_BASE_URL`, docs) | M12 (partial) | Complete | `9e40d40` |
 
-| 138 | M13 Playwright platform-admin audit export smoke (`platform-admin-audit-export-smoke.spec.ts`, suite `/app/platform-admin/audit-export`, manifest/timeline/sync ZIP+JSON+background job via internal process-batch helper, `StlE2ePlaywrightSpecCatalog`, panel test ids, docs) | M13 (partial) | Complete | `pending` |
+| 138 | M13 Playwright platform-admin audit export smoke (`platform-admin-audit-export-smoke.spec.ts`, suite `/app/platform-admin/audit-export`, manifest/timeline/sync ZIP+JSON+background job via internal process-batch helper, `StlE2ePlaywrightSpecCatalog`, panel test ids, docs) | M13 (partial) | Complete | `2293d6a` |
 
 ## Next slice (Worker 139)
 

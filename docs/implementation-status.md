@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 138 | M13 Playwright platform-admin audit export smoke | Complete | `pending` |
+| 138 | M13 Playwright platform-admin audit export smoke | Complete | `2293d6a` |
 
 ## Program summary
 
