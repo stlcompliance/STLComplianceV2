@@ -232,7 +232,7 @@
 
 | 130 | Compliance Core async audit package generation (`compliancecore_audit_package_generation_jobs`, POST/GET job APIs + download, internal process-batch, shared-worker job, `AuditPackageExportPanel` background ZIP + status, tests, docs) | M5/M12 (partial) | Complete | `ec55449` |
 
-| 131 | Companion operational notification hooks (`nexarr_companion_notification_*`, companion notification-settings APIs, internal process-batch, shared-worker job, handoff + field-inbox hooks, `companion-frontend` admin panel, tests, docs) | M12 (partial) | Complete | `pending` |
+| 131 | Companion operational notification hooks (`nexarr_companion_notification_*`, companion notification-settings APIs, internal process-batch, shared-worker job, handoff + field-inbox hooks, `companion-frontend` admin panel, tests, docs) | M12 (partial) | Complete | `fc16d20` |
 
 ## Next slice (Worker 132)
 

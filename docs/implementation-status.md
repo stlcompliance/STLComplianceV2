@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 131 | Companion operational notification hooks | Complete | `pending` |
+| 131 | Companion operational notification hooks | Complete | `fc16d20` |
 
 ## Program summary
 
