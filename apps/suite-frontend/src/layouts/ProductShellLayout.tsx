@@ -25,9 +25,9 @@ export function ProductShellLayout() {
   }
 
   return (
-    <div className="flex min-h-full gap-6">
+    <div className="flex min-h-0 gap-6">
       <aside className="w-56 shrink-0">
-        <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-3">
+        <div className="rounded-lg border border-slate-700/70 bg-[#0a101c] p-3">
           <p className="px-3 text-sm font-semibold text-white">{product?.displayName ?? normalized}</p>
           {navigationQuery.isLoading && (
             <p className="px-3 pt-2 text-xs text-slate-500">Loading navigation…</p>

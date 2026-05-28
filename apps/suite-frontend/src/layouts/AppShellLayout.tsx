@@ -11,7 +11,7 @@ export function AppShellLayout() {
 
   return (
     <div className="flex min-h-screen bg-[#0f172a] text-slate-100">
-      <aside className="flex w-64 shrink-0 flex-col border-r border-slate-700/70 bg-[#0a101c] p-4">
+      <aside className="flex w-64 shrink-0 flex-col min-h-0 overflow-y-auto border-r border-slate-700/70 bg-[#0a101c] p-4">
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase tracking-wide text-stl-teal">
             STL Compliance
@@ -53,9 +53,9 @@ export function AppShellLayout() {
         </button>
       </aside>
 
-      <main className="flex flex-1 flex-col">
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col">
         <AppTopBar />
-        <div className="flex-1 p-6">
+        <div className="min-h-0 flex-1 overflow-auto p-6">
           <Outlet />
         </div>
       </main>

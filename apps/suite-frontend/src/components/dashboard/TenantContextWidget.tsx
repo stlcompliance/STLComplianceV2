@@ -14,13 +14,13 @@ export function TenantContextWidget({
 
   return (
     <DashboardCard title="Tenant context">
-      <dl className="space-y-2 text-sm text-slate-700">
+      <dl className="space-y-2 text-sm text-slate-300">
         <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
             Active tenant
           </dt>
-          <dd className="mt-0.5 font-medium text-stl-navy">{me.tenantDisplayName}</dd>
-          <dd className="text-xs text-slate-600">
+          <dd className="mt-0.5 font-medium text-white">{me.tenantDisplayName}</dd>
+          <dd className="text-xs text-slate-400">
             {me.tenantSlug}
             {current?.roleKey ? ` · ${current.roleKey.replace(/_/g, ' ')}` : ''}
           </dd>
@@ -31,8 +31,8 @@ export function TenantContextWidget({
             <span
               className={
                 active
-                  ? 'inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800'
-                  : 'inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-900'
+                  ? 'inline-flex rounded-full bg-emerald-950/50 px-2 py-0.5 text-xs font-medium text-emerald-300'
+                  : 'inline-flex rounded-full bg-amber-950/50 px-2 py-0.5 text-xs font-medium text-amber-300'
               }
             >
               {current?.status ?? 'Unknown'}
@@ -45,7 +45,7 @@ export function TenantContextWidget({
               Memberships
             </dt>
             <dd className="mt-1">
-              <ul className="list-disc pl-4 text-xs text-slate-600">
+              <ul className="list-disc pl-4 text-xs text-slate-400">
                 {tenants.map((t) => (
                   <li key={t.tenantId}>
                     {t.displayName}

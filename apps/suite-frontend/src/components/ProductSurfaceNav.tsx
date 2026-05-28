@@ -20,7 +20,7 @@ export function ProductSurfaceNav({ productKey, surfaces }: ProductSurfaceNavPro
   }
 
   return (
-    <nav aria-label="Product surfaces" className="mt-4 flex flex-col gap-0.5 border-t border-slate-200 pt-4">
+    <nav aria-label="Product surfaces" className="mt-4 flex flex-col gap-0.5 border-t border-slate-700 pt-4">
       <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">In this product</p>
       {enabledSurfaces.map((surface) => {
         const Icon = getNavIcon(surface.iconKey)
@@ -37,9 +37,9 @@ export function ProductSurfaceNav({ productKey, surfaces }: ProductSurfaceNavPro
               [
                 'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-stl-teal/15 text-stl-navy'
-                  : 'text-slate-700 hover:bg-white/70',
-                launch ? 'border border-dashed border-stl-teal/40' : '',
+                  ? 'border-l-2 border-teal-400 bg-slate-800/80 pl-[10px] text-white'
+                  : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
+                launch ? 'border border-dashed border-teal-500/40' : '',
               ].join(' ')
             }
           >

@@ -24,6 +24,56 @@ export type ProductAppShellProps = {
   children: ReactNode
 }
 
+function WorkspaceTopBar({
+  productName,
+  productKey,
+  workspaceSubtitle,
+  tenantDisplayName,
+  userDisplayName,
+  entitlements,
+  suiteHomeUrl,
+  showCompactSwitcher,
+}: {
+  productName: string
+  productKey: string
+  workspaceSubtitle: string
+  tenantDisplayName?: string
+  userDisplayName?: string
+  entitlements: readonly string[]
+  suiteHomeUrl: string
+  showCompactSwitcher: boolean
+}) {
+  const ProductIcon = getSuiteProductIcon(productKey)
+
+  return (
+    <header className="flex shrink-0 items-center justify-between border-b border-slate-700/70 bg-[#0a101c] px-6 py-4">
+      <div className="flex min-w-0 items-center gap-3">
+        <ProductIcon className="h-5 w-5 shrink-0 text-teal-400" aria-hidden />
+        <div className="min-w-0">
+          <p className="truncate text-base font-semibold text-white">{productName}</p>
+          <p className="truncate text-xs text-slate-400">{workspaceSubtitle}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        {showCompactSwitcher ? (
+          <ProductSwitcher
+            currentProductKey={productKey}
+            entitlements={entitlements}
+            suiteHomeUrl={suiteHomeUrl}
+            layoutVariant="compact"
+          />
+        ) : null}
+        {(userDisplayName || tenantDisplayName) && (
+          <div className="hidden text-right text-sm sm:block">
+            {userDisplayName && <p className="font-medium text-slate-100">{userDisplayName}</p>}
+            {tenantDisplayName && <p className="text-xs text-slate-400">{tenantDisplayName}</p>}
+          </div>
+        )}
+      </div>
+    </header>
+  )
+}
+
 export function ProductAppShell({
   productName,
   productKey,
@@ -39,80 +89,83 @@ export function ProductAppShell({
   const showSidebar = layoutVariant === 'standard'
   const ProductIcon = getSuiteProductIcon(productKey)
 
+  if (!showSidebar) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#0f172a] text-slate-100">
+        <WorkspaceTopBar
+          productName={productName}
+          productKey={productKey}
+          workspaceSubtitle={workspaceSubtitle}
+          tenantDisplayName={tenantDisplayName}
+          userDisplayName={userDisplayName}
+          entitlements={entitlements}
+          suiteHomeUrl={suiteHomeUrl}
+          showCompactSwitcher
+        />
+        <main className="min-h-0 flex-1 overflow-auto px-4 pb-8 pt-4">{children}</main>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex min-h-screen flex-col bg-[#0f172a] text-slate-100">
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-700/70 bg-[#0a101c] px-6">
-        <div className="flex min-w-0 items-center gap-3">
-          <ProductIcon className="h-5 w-5 shrink-0 text-teal-400" aria-hidden />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">{productName}</p>
-            <p className="truncate text-xs text-slate-400">{workspaceSubtitle}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {!showSidebar ? (
-            <ProductSwitcher
-              currentProductKey={productKey}
-              entitlements={entitlements}
-              suiteHomeUrl={suiteHomeUrl}
-              layoutVariant="compact"
-            />
-          ) : null}
+    <div className="flex min-h-screen bg-[#0f172a] text-slate-100">
+      <aside className="flex w-64 shrink-0 flex-col min-h-0 overflow-y-auto border-r border-slate-700/70 bg-[#0a101c] p-4">
+        <div className="mb-4 shrink-0">
+          <p className="text-xs font-semibold uppercase tracking-wide text-teal-400">STL Compliance</p>
+          <h1 className="text-lg font-semibold text-white">{productName}</h1>
           {(userDisplayName || tenantDisplayName) && (
-            <div className="hidden text-right text-sm sm:block">
-              {userDisplayName && <p className="font-medium text-slate-100">{userDisplayName}</p>}
-              {tenantDisplayName && <p className="text-xs text-slate-400">{tenantDisplayName}</p>}
-            </div>
+            <p className="mt-1 text-xs text-slate-400">
+              {[userDisplayName, tenantDisplayName].filter(Boolean).join(' · ')}
+            </p>
           )}
         </div>
-      </header>
 
-      <div className="flex min-h-0 flex-1">
-        {showSidebar ? (
-          <aside className="flex w-56 shrink-0 flex-col border-r border-slate-700/70 bg-[#0a101c] p-4">
-            <ProductSwitcher
-              currentProductKey={productKey}
-              entitlements={entitlements}
-              suiteHomeUrl={suiteHomeUrl}
-            />
-            <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              {productName}
-            </p>
-            <nav aria-label={`${productName} navigation`} className="mt-3 flex flex-col gap-1">
-              {navItems.map((item) => {
-                const Icon = item.icon ?? ProductIcon
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    end={item.to === '/'}
-                    className={({ isActive }) =>
-                      [
-                        'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                        isActive
-                          ? 'border-l-2 border-teal-400 bg-slate-800/80 pl-[10px] text-white'
-                          : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
-                      ].join(' ')
-                    }
-                  >
-                    <Icon className="h-4 w-4 shrink-0" aria-hidden />
-                    <span>{item.label}</span>
-                  </NavLink>
-                )
-              })}
-            </nav>
-          </aside>
-        ) : null}
+        <ProductSwitcher
+          currentProductKey={productKey}
+          entitlements={entitlements}
+          suiteHomeUrl={suiteHomeUrl}
+        />
 
-        <main
-          className={
-            showSidebar
-              ? 'min-w-0 flex-1 overflow-auto p-6'
-              : 'min-w-0 flex-1 overflow-auto px-4 pb-8 pt-[max(1rem,env(safe-area-inset-top))]'
-          }
-        >
-          {children}
-        </main>
+        <p className="mt-6 px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          {productName}
+        </p>
+        <nav aria-label={`${productName} navigation`} className="mt-3 flex flex-col gap-1">
+          {navItems.map((item) => {
+            const Icon = item.icon ?? ProductIcon
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === '/'}
+                className={({ isActive }) =>
+                  [
+                    'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'border-l-2 border-teal-400 bg-slate-800/80 pl-[10px] text-white'
+                      : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
+                  ].join(' ')
+                }
+              >
+                <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                <span>{item.label}</span>
+              </NavLink>
+            )
+          })}
+        </nav>
+      </aside>
+
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <WorkspaceTopBar
+          productName={productName}
+          productKey={productKey}
+          workspaceSubtitle={workspaceSubtitle}
+          tenantDisplayName={tenantDisplayName}
+          userDisplayName={userDisplayName}
+          entitlements={entitlements}
+          suiteHomeUrl={suiteHomeUrl}
+          showCompactSwitcher={false}
+        />
+        <main className="min-h-0 flex-1 overflow-auto p-6">{children}</main>
       </div>
     </div>
   )

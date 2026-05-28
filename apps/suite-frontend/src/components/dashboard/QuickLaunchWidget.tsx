@@ -18,7 +18,7 @@ export function QuickLaunchWidget({
   if (products.length === 0) {
     return (
       <DashboardCard title="Quick launch">
-        <p className="text-sm text-slate-600">No entitled products in your navigation.</p>
+        <p className="text-sm text-slate-400">No entitled products in your navigation.</p>
       </DashboardCard>
     )
   }
@@ -31,11 +31,11 @@ export function QuickLaunchWidget({
           return (
             <li
               key={product.productKey}
-              className="flex items-center justify-between gap-2 rounded-md border border-slate-100 bg-slate-50/80 px-3 py-2"
+              className="flex items-center justify-between gap-2 rounded-md border border-slate-700 bg-slate-950/40 px-3 py-2"
             >
               <Link
                 to={product.routePath}
-                className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium text-stl-navy hover:text-stl-teal"
+                className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium text-slate-100 hover:text-teal-400"
               >
                 <Icon className="h-4 w-4 shrink-0" aria-hidden />
                 <span className="truncate">{product.displayName}</span>
@@ -45,7 +45,7 @@ export function QuickLaunchWidget({
                   type="button"
                   disabled={launch.isPending}
                   onClick={() => launch.mutate(product.productKey)}
-                  className="shrink-0 rounded border border-stl-teal/50 px-2 py-1 text-xs text-stl-teal hover:bg-white disabled:opacity-50"
+                  className="shrink-0 rounded border border-teal-500/50 px-2 py-1 text-xs text-teal-400 hover:bg-slate-800/50 disabled:opacity-50"
                 >
                   Open app
                 </button>
@@ -55,7 +55,7 @@ export function QuickLaunchWidget({
         })}
       </ul>
       {launch.isError && (
-        <p className="mt-2 text-xs text-red-700" role="alert">
+        <p className="mt-2 text-xs text-red-300" role="alert">
           Launch failed: {(launch.error as Error).message}
         </p>
       )}

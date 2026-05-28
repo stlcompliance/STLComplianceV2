@@ -23,8 +23,8 @@ export function HomePage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <header>
-        <h3 className="text-xl font-semibold text-stl-navy">Welcome, {me.displayName}</h3>
-        <p className="mt-1 text-sm text-slate-600">
+        <h3 className="text-xl font-semibold text-white">Welcome, {me.displayName}</h3>
+        <p className="mt-1 text-sm text-slate-400">
           Cross-product overview from NexArr — entitlements, tenant context, and launch paths.
         </p>
       </header>

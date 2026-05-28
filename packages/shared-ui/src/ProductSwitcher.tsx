@@ -40,13 +40,10 @@ export function ProductSwitcher({
   }
 
   return (
-    <div className="mb-6">
-      <p className="px-3 text-xs font-semibold uppercase tracking-wide text-teal-400">
-        STL Compliance
-      </p>
+    <div>
       <a
         href={suiteUrl}
-        className="mt-2 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800/50 hover:text-white"
+        className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800/50 hover:text-white"
       >
         <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
         Suite home

@@ -6,9 +6,9 @@ import { useProductLaunch } from '../../hooks/useProductLaunch'
 import { DashboardCard } from './DashboardCard'
 
 const kindStyles: Record<DashboardActionKind, string> = {
-  warning: 'border-amber-200 bg-amber-50/80',
-  action: 'border-slate-100 bg-slate-50/80',
-  info: 'border-slate-100 bg-white',
+  warning: 'border-amber-800/60 bg-amber-950/30',
+  action: 'border-slate-700 bg-slate-950/40',
+  info: 'border-slate-700 bg-slate-900/60',
 }
 
 export function WhatINeedWidget({
@@ -33,7 +33,7 @@ export function WhatINeedWidget({
   if (actions.length === 0) {
     return (
       <DashboardCard title="What you need">
-        <p className="text-sm text-slate-600">You are set — no outstanding actions.</p>
+        <p className="text-sm text-slate-400">You are set — no outstanding actions.</p>
       </DashboardCard>
     )
   }
@@ -48,16 +48,16 @@ export function WhatINeedWidget({
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-stl-navy">{action.title}</p>
+                <p className="text-sm font-medium text-white">{action.title}</p>
                 {action.description && (
-                  <p className="mt-0.5 text-xs text-slate-600">{action.description}</p>
+                  <p className="mt-0.5 text-xs text-slate-400">{action.description}</p>
                 )}
               </div>
               {action.href && action.productKey && !isInSuiteProduct(action.productKey) ? (
                 <div className="flex shrink-0 gap-2">
                   <Link
                     to={action.href}
-                    className="rounded border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-white"
+                    className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800/50"
                   >
                     Details
                   </Link>
@@ -65,7 +65,7 @@ export function WhatINeedWidget({
                     type="button"
                     disabled={launch.isPending}
                     onClick={() => launch.mutate(action.productKey!)}
-                    className="rounded bg-stl-teal px-2 py-1 text-xs font-medium text-white hover:bg-stl-teal/90 disabled:opacity-50"
+                    className="rounded bg-teal-600 px-2 py-1 text-xs font-medium text-white hover:bg-teal-500 disabled:opacity-50"
                   >
                     Launch
                   </button>
@@ -73,7 +73,7 @@ export function WhatINeedWidget({
               ) : action.href ? (
                 <Link
                   to={action.href}
-                  className="shrink-0 rounded bg-stl-teal px-2 py-1 text-xs font-medium text-white hover:bg-stl-teal/90"
+                  className="shrink-0 rounded bg-teal-600 px-2 py-1 text-xs font-medium text-white hover:bg-teal-500"
                 >
                   Open
                 </Link>

@@ -15,15 +15,15 @@ export function SessionInfoWidget({
 
   return (
     <DashboardCard title="Session">
-      <dl className="space-y-2 text-sm text-slate-700">
+      <dl className="space-y-2 text-sm text-slate-300">
         <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Signed in as</dt>
-          <dd className="mt-0.5 font-medium text-stl-navy">{me.displayName}</dd>
-          <dd className="text-xs text-slate-600">{me.email}</dd>
+          <dd className="mt-0.5 font-medium text-white">{me.displayName}</dd>
+          <dd className="text-xs text-slate-400">{me.email}</dd>
         </div>
         <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Session</dt>
-          <dd className="mt-0.5 font-mono text-xs text-slate-600">{summary.sessionId}</dd>
+          <dd className="mt-0.5 font-mono text-xs text-slate-400">{summary.sessionId}</dd>
         </div>
         <div>
           <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
@@ -39,7 +39,7 @@ export function SessionInfoWidget({
             )}
           </dd>
           {summary.isAccessExpiringSoon && (
-            <dd className="mt-1 text-xs text-amber-800">
+            <dd className="mt-1 text-xs text-amber-300">
               Renewing automatically on the next API call.
             </dd>
           )}
@@ -47,7 +47,7 @@ export function SessionInfoWidget({
         {isPlatformAdmin(me) && (
           <div>
             <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Role</dt>
-            <dd className="mt-0.5 text-xs font-medium text-stl-teal">Platform administrator</dd>
+            <dd className="mt-0.5 text-xs font-medium text-teal-400">Platform administrator</dd>
           </div>
         )}
       </dl>

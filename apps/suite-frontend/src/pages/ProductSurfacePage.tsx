@@ -36,7 +36,7 @@ export function ProductSurfacePage() {
   })
 
   if (!surface) {
-    return <p className="text-sm text-slate-600">Select a surface from the product navigation.</p>
+    return <p className="text-sm text-slate-400">Select a surface from the product navigation.</p>
   }
 
   if (!surface.isEnabled) {
@@ -50,12 +50,12 @@ export function ProductSurfacePage() {
   if (isLaunchSurface(surface)) {
     return (
       <div className="max-w-2xl space-y-4">
-        <h3 className="text-xl font-semibold text-stl-navy">{surface.label}</h3>
+        <h3 className="text-xl font-semibold text-white">{surface.label}</h3>
         {surface.permissionHint && (
-          <p className="text-sm text-slate-600">{surface.permissionHint}</p>
+          <p className="text-sm text-slate-400">{surface.permissionHint}</p>
         )}
         {contextQuery.data && (
-          <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm">
+          <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4 text-sm text-slate-300">
             <p>
               <span className="font-medium">Launch URL:</span> {contextQuery.data.launchUrl || '—'}
             </p>
@@ -73,7 +73,7 @@ export function ProductSurfacePage() {
             type="button"
             disabled={launch.isPending}
             onClick={() => launch.mutate(normalized)}
-            className="rounded-md bg-stl-teal px-4 py-2 text-sm font-medium text-white hover:bg-stl-teal/90 disabled:opacity-60"
+            className="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-60"
           >
             {launch.isPending ? 'Launching…' : 'Launch product (handoff)'}
           </button>
@@ -84,8 +84,8 @@ export function ProductSurfacePage() {
 
   return (
     <div className="max-w-3xl space-y-3">
-      <h3 className="text-xl font-semibold text-stl-navy">{surface.label}</h3>
-      <p className="text-sm text-slate-700">
+      <h3 className="text-xl font-semibold text-white">{surface.label}</h3>
+      <p className="text-sm text-slate-300">
         This in-suite surface is wired to NexArr navigation and entitlements. Product-specific
         workflows launch in the dedicated {product?.displayName ?? normalized} application when
         shipped.
