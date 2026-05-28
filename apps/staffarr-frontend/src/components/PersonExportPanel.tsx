@@ -5,9 +5,10 @@ import {
   exportPeopleCsv,
   exportPeopleJson,
   exportPeopleZip,
+  getOrgUnits,
   getPeopleExportManifest,
 } from '../api/client'
-import type { PersonExportResponse } from '../api/types'
+import type { PersonExportFilters, PersonExportResponse } from '../api/types'
 
 interface PersonExportPanelProps {
   accessToken: string
@@ -16,6 +17,7 @@ interface PersonExportPanelProps {
 
 export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelProps) {
   const [employmentStatus, setEmploymentStatus] = useState('')
+  const [orgUnitId, setOrgUnitId] = useState('')
   const [lastJsonExport, setLastJsonExport] = useState<PersonExportResponse | null>(null)
 
   const manifestQuery = useQuery({
@@ -24,12 +26,19 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
     enabled: canExport,
   })
 
+  const orgUnitsQuery = useQuery({
+    queryKey: ['staffarr-org-units', accessToken],
+    queryFn: () => getOrgUnits(accessToken),
+    enabled: canExport,
+  })
+
   const filters = {
     employmentStatus: employmentStatus || undefined,
+    orgUnitId: orgUnitId || undefined,
   }
 
   const csvExportMutation = useMutation({
-    mutationFn: () => exportPeopleCsv(accessToken, filters),
+    mutationFn: (exportFilters: PersonExportFilters) => exportPeopleCsv(accessToken, exportFilters),
     onSuccess: (csv) => {
       const blob = new Blob([csv], { type: 'text/csv' })
       const url = URL.createObjectURL(blob)
@@ -42,7 +51,7 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
   })
 
   const zipExportMutation = useMutation({
-    mutationFn: () => exportPeopleZip(accessToken, filters),
+    mutationFn: (exportFilters: PersonExportFilters) => exportPeopleZip(accessToken, exportFilters),
     onSuccess: (blob) => {
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
@@ -54,7 +63,7 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
   })
 
   const jsonExportMutation = useMutation({
-    mutationFn: () => exportPeopleJson(accessToken, filters),
+    mutationFn: (exportFilters: PersonExportFilters) => exportPeopleJson(accessToken, exportFilters),
     onSuccess: (result) => {
       setLastJsonExport(result)
     },
@@ -91,11 +100,29 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
             </select>
           </label>
 
+          <label className="block text-sm text-slate-300">
+            Primary org unit filter (optional)
+            <select
+              value={orgUnitId}
+              onChange={(event) => setOrgUnitId(event.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+            >
+              <option value="">All org units</option>
+              {(orgUnitsQuery.data ?? [])
+                .filter((unit) => unit.status === 'active')
+                .map((unit) => (
+                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
+                    {unit.unitType} · {unit.name}
+                  </option>
+                ))}
+            </select>
+          </label>
+
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               disabled={csvExportMutation.isPending}
-              onClick={() => csvExportMutation.mutate()}
+              onClick={() => csvExportMutation.mutate(filters)}
               className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
             >
               Download CSV
@@ -103,7 +130,7 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
             <button
               type="button"
               disabled={zipExportMutation.isPending}
-              onClick={() => zipExportMutation.mutate()}
+              onClick={() => zipExportMutation.mutate(filters)}
               className="rounded-md border border-slate-600 px-4 py-2 text-sm text-slate-100 hover:bg-slate-800 disabled:opacity-50"
             >
               Download ZIP bundle
@@ -111,7 +138,7 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
             <button
               type="button"
               disabled={jsonExportMutation.isPending}
-              onClick={() => jsonExportMutation.mutate()}
+              onClick={() => jsonExportMutation.mutate(filters)}
               className="rounded-md border border-slate-600 px-4 py-2 text-sm text-slate-100 hover:bg-slate-800 disabled:opacity-50"
             >
               Preview JSON export

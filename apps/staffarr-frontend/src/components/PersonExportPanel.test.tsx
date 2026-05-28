@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PersonExportPanel } from './PersonExportPanel'
+import { exportPeopleJson, getOrgUnits } from '../api/client'
 
 vi.mock('../api/client', () => ({
   getPeopleExportManifest: vi.fn().mockResolvedValue({
@@ -9,8 +10,29 @@ vi.mock('../api/client', () => ({
     csvHeader: 'givenName,familyName,primaryEmail',
     formats: [{ key: 'csv', contentType: 'text/csv', fileName: 'people.csv', description: 'CSV' }],
   }),
+  getOrgUnits: vi.fn().mockResolvedValue([
+    {
+      orgUnitId: '11111111-1111-1111-1111-111111111111',
+      unitType: 'site',
+      name: 'North Site',
+      parentOrgUnitId: null,
+      status: 'active',
+    },
+    {
+      orgUnitId: '22222222-2222-2222-2222-222222222222',
+      unitType: 'site',
+      name: 'South Site',
+      parentOrgUnitId: null,
+      status: 'inactive',
+    },
+  ]),
   exportPeopleCsv: vi.fn(),
-  exportPeopleJson: vi.fn(),
+  exportPeopleJson: vi.fn().mockResolvedValue({
+    packageVersion: '1',
+    generatedAt: '2026-05-27T12:00:00Z',
+    personCount: 1,
+    people: [],
+  }),
   exportPeopleZip: vi.fn(),
 }))
 
@@ -26,6 +48,7 @@ function renderPanel(canExport: boolean) {
 describe('PersonExportPanel', () => {
   afterEach(() => {
     cleanup()
+    vi.clearAllMocks()
   })
 
   it('shows read-only notice for non-writers', () => {
@@ -39,5 +62,28 @@ describe('PersonExportPanel', () => {
     expect(await screen.findByText(/Person export bundle/i)).toBeTruthy()
     expect(screen.getByRole('button', { name: /Download CSV/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Download ZIP bundle/i })).toBeTruthy()
+    expect(screen.getByLabelText(/Primary org unit filter/i)).toBeTruthy()
+  })
+
+  it('passes org unit filter to JSON export', async () => {
+    renderPanel(true)
+    await screen.findByRole('option', { name: /North Site/i })
+
+    const orgUnitSelect = screen.getAllByRole('combobox')[1]
+    fireEvent.change(orgUnitSelect, {
+      target: { value: '11111111-1111-1111-1111-111111111111' },
+    })
+    await waitFor(() => {
+      expect((orgUnitSelect as HTMLSelectElement).value).toBe('11111111-1111-1111-1111-111111111111')
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Preview JSON export/i }))
+
+    await waitFor(() => {
+      expect(exportPeopleJson).toHaveBeenCalledWith('token', {
+        employmentStatus: undefined,
+        orgUnitId: '11111111-1111-1111-1111-111111111111',
+      })
+    })
+    expect(getOrgUnits).toHaveBeenCalledWith('token')
   })
 })

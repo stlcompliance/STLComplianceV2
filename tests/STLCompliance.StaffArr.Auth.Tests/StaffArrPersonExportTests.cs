@@ -127,6 +127,36 @@ public class StaffArrPersonExportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task People_export_filters_by_org_unit()
+    {
+        var northSiteId = Guid.NewGuid();
+        var southSiteId = Guid.NewGuid();
+        await SeedOrgUnitAsync(northSiteId, "site", "North Site");
+        await SeedOrgUnitAsync(southSiteId, "site", "South Site");
+        await SeedPersonAsync(
+            Guid.NewGuid(),
+            "North",
+            "Worker",
+            "north.worker@example.com",
+            primaryOrgUnitId: northSiteId);
+        await SeedPersonAsync(
+            Guid.NewGuid(),
+            "South",
+            "Worker",
+            "south.worker@example.com",
+            primaryOrgUnitId: southSiteId);
+
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var response = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/export?format=json&orgUnitId={northSiteId}", token));
+        response.EnsureSuccessStatusCode();
+        var payload = (await response.Content.ReadFromJsonAsync<PersonExportResponse>())!;
+        Assert.Equal(1, payload.PersonCount);
+        Assert.Equal("north.worker@example.com", payload.People[0].PrimaryEmail);
+        Assert.Equal(northSiteId, payload.People[0].PrimaryOrgUnitId);
+    }
+
+    [Fact]
     public async Task People_export_denied_for_non_writer_role()
     {
         var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
@@ -158,7 +188,8 @@ public class StaffArrPersonExportTests : IAsyncLifetime
         string familyName,
         string email,
         Guid? managerPersonId = null,
-        string employmentStatus = "active")
+        string employmentStatus = "active",
+        Guid? primaryOrgUnitId = null)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
@@ -173,6 +204,25 @@ public class StaffArrPersonExportTests : IAsyncLifetime
             PrimaryEmail = email,
             EmploymentStatus = employmentStatus,
             ManagerPersonId = managerPersonId,
+            PrimaryOrgUnitId = primaryOrgUnitId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+        await db.SaveChangesAsync();
+    }
+
+    private async Task SeedOrgUnitAsync(Guid orgUnitId, string unitType, string name)
+    {
+        using var scope = _staffarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        db.OrgUnits.Add(new OrgUnit
+        {
+            Id = orgUnitId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            UnitType = unitType,
+            Name = name,
+            Status = "active",
             CreatedAt = now,
             UpdatedAt = now,
         });

@@ -199,7 +199,8 @@
 
 | 111 | StaffArr person export bundle (`GET /api/people/export` CSV/JSON/ZIP, import-compatible CSV, managerEmail resolution, `PersonExportPanel`, integration + frontend tests, docs) | M4 (partial) | Complete | `9abb7d9` |
 | 112 | M13 Render staging load soak (`StlRenderStagingLoadTestCatalog`, staging URL env conventions, `render-staging-load-soak` scripts, `RenderStagingLoadSoakLiveTests`, `load-staging-render.yml` workflow_dispatch, docs) | M13 (partial) | Complete | `2c5e359` |
+| 113 | StaffArr person export org-unit filter UI (`PersonExportPanel` org-unit dropdown, `orgUnitId` export filter wiring, integration + frontend tests, docs) | M4 (partial) | Complete | `pending` |
 
-## Next slice (Worker 113)
+## Next slice (Worker 114)
 
-Recommended: **StaffArr org-unit filter on person export UI**, or **scheduled weekly staging load soak in CI**.
+Recommended: **Scheduled weekly staging load soak in CI**, or **StaffArr export filter presets**.
