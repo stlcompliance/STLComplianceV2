@@ -66,6 +66,14 @@ public sealed class Defect : IHasTenant
 
 
 
+    public DateTimeOffset? LastEscalatedAt { get; set; }
+
+
+
+    public int EscalationCount { get; set; }
+
+
+
     public Asset Asset { get; set; } = null!;
 
 

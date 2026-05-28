@@ -18,6 +18,8 @@ public sealed class TenantMaintenanceNotificationSettings : IHasTenant
 
     public bool NotifyOnPmScheduleOverdue { get; set; } = true;
 
+    public bool NotifyOnDefectEscalated { get; set; } = true;
+
     public Guid? UpdatedByUserId { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
@@ -59,6 +61,8 @@ public static class MaintenanceNotificationEventKinds
     public const string PmScheduleDue = "pm_schedule_due";
 
     public const string PmScheduleOverdue = "pm_schedule_overdue";
+
+    public const string DefectEscalated = "defect_escalated";
 }
 
 public static class MaintenanceNotificationDispatchStatuses

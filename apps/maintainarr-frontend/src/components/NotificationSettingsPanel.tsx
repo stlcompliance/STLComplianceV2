@@ -20,6 +20,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
   const [notifyWorkOrderCreated, setNotifyWorkOrderCreated] = useState(true)
   const [notifyPmScheduleDue, setNotifyPmScheduleDue] = useState(true)
   const [notifyPmScheduleOverdue, setNotifyPmScheduleOverdue] = useState(true)
+  const [notifyDefectEscalated, setNotifyDefectEscalated] = useState(true)
 
   const settingsQuery = useQuery({
     queryKey: ['maintainarr-notification-settings', accessToken],
@@ -43,6 +44,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
     setNotifyWorkOrderCreated(data.notifyOnWorkOrderCreated)
     setNotifyPmScheduleDue(data.notifyOnPmScheduleDue)
     setNotifyPmScheduleOverdue(data.notifyOnPmScheduleOverdue)
+    setNotifyDefectEscalated(data.notifyOnDefectEscalated)
     setInitialized(true)
   }, [initialized, settingsQuery.data, settingsQuery.isLoading])
 
@@ -54,6 +56,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
         notifyOnWorkOrderCreated: notifyWorkOrderCreated,
         notifyOnPmScheduleDue: notifyPmScheduleDue,
         notifyOnPmScheduleOverdue: notifyPmScheduleOverdue,
+        notifyOnDefectEscalated: notifyDefectEscalated,
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['maintainarr-notification-settings', accessToken] })
@@ -123,6 +126,14 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
               onChange={(event) => setNotifyPmScheduleOverdue(event.target.checked)}
             />
             PM schedule overdue
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={notifyDefectEscalated}
+              onChange={(event) => setNotifyDefectEscalated(event.target.checked)}
+            />
+            Defect escalated
           </label>
         </fieldset>
 

@@ -26,6 +26,7 @@ public sealed class MaintenanceNotificationSettingsService(
                 NotifyOnWorkOrderCreated: true,
                 NotifyOnPmScheduleDue: true,
                 NotifyOnPmScheduleOverdue: true,
+                NotifyOnDefectEscalated: true,
                 UpdatedAt: null);
         }
 
@@ -61,6 +62,7 @@ public sealed class MaintenanceNotificationSettingsService(
         entity.NotifyOnWorkOrderCreated = request.NotifyOnWorkOrderCreated;
         entity.NotifyOnPmScheduleDue = request.NotifyOnPmScheduleDue;
         entity.NotifyOnPmScheduleOverdue = request.NotifyOnPmScheduleOverdue;
+        entity.NotifyOnDefectEscalated = request.NotifyOnDefectEscalated;
         entity.UpdatedByUserId = actorUserId;
         entity.UpdatedAt = now;
 
@@ -96,7 +98,8 @@ public sealed class MaintenanceNotificationSettingsService(
             settings.NotificationWebhookUrl,
             settings.NotifyOnWorkOrderCreated,
             settings.NotifyOnPmScheduleDue,
-            settings.NotifyOnPmScheduleOverdue);
+            settings.NotifyOnPmScheduleOverdue,
+            settings.NotifyOnDefectEscalated);
 
     private static MaintenanceNotificationSettingsResponse MapResponse(
         TenantMaintenanceNotificationSettings settings) =>
@@ -106,5 +109,6 @@ public sealed class MaintenanceNotificationSettingsService(
             settings.NotifyOnWorkOrderCreated,
             settings.NotifyOnPmScheduleDue,
             settings.NotifyOnPmScheduleOverdue,
+            settings.NotifyOnDefectEscalated,
             settings.UpdatedAt);
 }

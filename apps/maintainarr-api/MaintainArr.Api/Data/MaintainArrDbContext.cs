@@ -58,6 +58,13 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
 
     public DbSet<AuditPackageGenerationJob> AuditPackageGenerationJobs => Set<AuditPackageGenerationJob>();
 
+    public DbSet<TenantDefectEscalationSettings> TenantDefectEscalationSettings =>
+        Set<TenantDefectEscalationSettings>();
+
+    public DbSet<DefectEscalationRun> DefectEscalationRuns => Set<DefectEscalationRun>();
+
+    public DbSet<DefectEscalationEvent> DefectEscalationEvents => Set<DefectEscalationEvent>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -343,6 +350,7 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.HasIndex(x => new { x.TenantId, x.AssetId, x.Status });
             entity.HasIndex(x => new { x.TenantId, x.InspectionRunId });
             entity.HasIndex(x => new { x.TenantId, x.ReportedByUserId, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.UpdatedAt });
             entity.HasIndex(x => new { x.TenantId, x.InspectionRunId, x.ChecklistItemId })
                 .IsUnique()
                 .HasFilter("\"ChecklistItemId\" IS NOT NULL");
@@ -514,6 +522,33 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.ArtifactJson);
             entity.HasIndex(x => new { x.TenantId, x.Status, x.CreatedAt });
             entity.HasIndex(x => x.CreatedAt);
+        });
+
+        modelBuilder.Entity<TenantDefectEscalationSettings>(entity =>
+        {
+            entity.ToTable("maintainarr_tenant_defect_escalation_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<DefectEscalationRun>(entity =>
+        {
+            entity.ToTable("maintainarr_defect_escalation_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<DefectEscalationEvent>(entity =>
+        {
+            entity.ToTable("maintainarr_defect_escalation_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ActionKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PreviousSeverity).HasMaxLength(32);
+            entity.Property(x => x.NewSeverity).HasMaxLength(32);
+            entity.Property(x => x.PreviousStatus).HasMaxLength(32);
+            entity.Property(x => x.NewStatus).HasMaxLength(32);
+            entity.HasIndex(x => new { x.TenantId, x.DefectId, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
         });
     }
 }

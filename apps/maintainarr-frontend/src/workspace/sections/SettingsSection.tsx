@@ -1,5 +1,6 @@
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 import { AuditPackageExportPanel } from '../../components/AuditPackageExportPanel'
+import { DefectEscalationSettingsPanel } from '../../components/DefectEscalationSettingsPanel'
 import { NotificationSettingsPanel } from '../../components/NotificationSettingsPanel'
 
 type Props = { state: MaintainArrWorkspaceState }
@@ -9,6 +10,12 @@ export function SettingsSection({ state }: Props) {
 
   return (
     <>
+      {canManageNotifications ? (
+        <div className="mt-8">
+          <DefectEscalationSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
+        </div>
+      ) : null}
+
       {canManageNotifications ? (
         <div className="mt-8">
           <NotificationSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />

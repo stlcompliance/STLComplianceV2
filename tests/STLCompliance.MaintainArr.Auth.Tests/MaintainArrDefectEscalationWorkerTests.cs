@@ -16,21 +16,19 @@ using NexArr.Api.Services;
 
 namespace STLCompliance.MaintainArr.Auth.Tests;
 
-public sealed class MaintainArrNotificationTests : IAsyncLifetime
+public sealed class MaintainArrDefectEscalationWorkerTests : IAsyncLifetime
 {
-    private readonly List<HttpRequestMessage> _webhookRequests = [];
     private WebApplicationFactory<global::NexArr.Api.Program> _nexarrFactory = null!;
     private WebApplicationFactory<global::MaintainArr.Api.Program> _maintainarrFactory = null!;
     private HttpClient _nexarrClient = null!;
     private HttpClient _maintainarrClient = null!;
     private string _sharedWorkerToMaintainArrToken = null!;
-    private Guid _assetId;
 
     public async Task InitializeAsync()
     {
         const string signingKey = "test-signing-key-at-least-32-chars-long";
-        var nexArrDbName = $"MaintainArrNotificationNexArr-{Guid.NewGuid():N}";
-        var maintainArrDbName = $"MaintainArrNotificationMaintainArr-{Guid.NewGuid():N}";
+        var nexArrDbName = $"DefectEscalationNexArr-{Guid.NewGuid():N}";
+        var maintainArrDbName = $"DefectEscalationMaintainArr-{Guid.NewGuid():N}";
 
         _nexarrFactory = new WebApplicationFactory<global::NexArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -54,7 +52,7 @@ public sealed class MaintainArrNotificationTests : IAsyncLifetime
             adminToken,
             "shared-worker",
             ["maintainarr"],
-            MaintenanceNotificationDispatchService.ProcessNotificationsActionScope);
+            DefectEscalationWorkerService.ProcessDefectEscalationsActionScope);
 
         _maintainarrFactory = new WebApplicationFactory<global::MaintainArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -67,17 +65,10 @@ public sealed class MaintainArrNotificationTests : IAsyncLifetime
             {
                 RemoveDbContext<MaintainArrDbContext>(services);
                 services.AddDbContext<MaintainArrDbContext>(options => options.UseInMemoryDatabase(maintainArrDbName));
-                services.AddHttpClient(MaintenanceNotificationDispatchService.WebhookHttpClientName)
-                    .ConfigurePrimaryHttpMessageHandler(() => new WebhookCaptureHandler(_webhookRequests));
             });
         });
 
         _maintainarrClient = _maintainarrFactory.CreateClient();
-
-        using var scope = _maintainarrFactory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
-        await db.Database.EnsureCreatedAsync();
-        _assetId = await SeedAssetAsync(db);
     }
 
     public async Task DisposeAsync()
@@ -89,115 +80,109 @@ public sealed class MaintainArrNotificationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Work_order_create_enqueues_dispatch_and_worker_posts_webhook()
+    public async Task Process_batch_rejects_missing_service_token()
     {
-        const string webhookUrl = "https://hooks.example.test/maintainarr-work-orders";
-        await UpsertNotificationSettingsAsync(webhookUrl);
+        var response = await _maintainarrClient.PostAsJsonAsync(
+            "/api/internal/defect-escalation/process-batch",
+            new ProcessDefectEscalationsRequest(PlatformSeeder.DemoTenantId, DateTimeOffset.UtcNow, 25));
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 
-        var adminToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
-        var createRequest = Authorized(HttpMethod.Post, "/api/work-orders", adminToken);
-        createRequest.Content = JsonContent.Create(new CreateWorkOrderRequest(
-            _assetId,
-            "Notify WO",
-            "Notification test work order",
-            "medium",
-            null,
-            null));
-        var createResponse = await _maintainarrClient.SendAsync(createRequest);
-        createResponse.EnsureSuccessStatusCode();
-        var workOrder = (await createResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
-
-        using (var scope = _maintainarrFactory.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
-            var pending = await db.MaintenanceNotificationDispatches.SingleAsync(x =>
-                x.TenantId == PlatformSeeder.DemoTenantId
-                && x.EventKind == MaintenanceNotificationEventKinds.WorkOrderCreated
-                && x.RelatedEntityId == workOrder.WorkOrderId);
-            Assert.Equal(MaintenanceNotificationDispatchStatuses.Pending, pending.DispatchStatus);
-        }
+    [Fact]
+    public async Task Process_batch_escalates_stagnant_open_defect()
+    {
+        var defect = await SeedStagnantDefectAsync(hoursStagnant: 30, severity: DefectSeverities.High);
+        await UpsertEscalationSettingsAsync();
 
         var processRequest = Authorized(
             HttpMethod.Post,
-            "/api/internal/maintenance-notifications/process-batch",
+            "/api/internal/defect-escalation/process-batch",
             _sharedWorkerToMaintainArrToken);
-        processRequest.Content = JsonContent.Create(new ProcessMaintenanceNotificationsRequest(
+        processRequest.Content = JsonContent.Create(new ProcessDefectEscalationsRequest(
             PlatformSeeder.DemoTenantId,
-            null,
-            10));
+            DateTimeOffset.UtcNow,
+            25));
         var processResponse = await _maintainarrClient.SendAsync(processRequest);
         processResponse.EnsureSuccessStatusCode();
+        var body = (await processResponse.Content.ReadFromJsonAsync<ProcessDefectEscalationsResponse>())!;
+        Assert.Equal(1, body.EscalatedCount);
+        Assert.Contains(body.Escalated, x => x.DefectId == defect.Id);
 
-        Assert.Single(_webhookRequests);
-        Assert.Equal(webhookUrl, _webhookRequests[0].RequestUri?.ToString());
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var stored = await db.Defects.SingleAsync(x => x.Id == defect.Id);
+        Assert.Equal(DefectStatuses.Acknowledged, stored.Status);
+        Assert.Equal(1, stored.EscalationCount);
+        Assert.NotNull(stored.LastEscalatedAt);
 
-        using var verifyScope = _maintainarrFactory.Services.CreateScope();
-        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
-        var dispatched = await verifyDb.MaintenanceNotificationDispatches.SingleAsync(x =>
-            x.RelatedEntityId == workOrder.WorkOrderId);
-        Assert.Equal(MaintenanceNotificationDispatchStatuses.Sent, dispatched.DispatchStatus);
-        Assert.Equal(200, dispatched.HttpStatusCode);
+        var workOrder = await db.WorkOrders.SingleAsync(x => x.DefectId == defect.Id);
+        Assert.Equal(WorkOrderSources.Defect, workOrder.Source);
+
+        var events = await db.DefectEscalationEvents.Where(x => x.DefectId == defect.Id).ToListAsync();
+        Assert.Contains(events, x => x.ActionKind == DefectEscalationActionKinds.Acknowledged);
+        Assert.Contains(events, x => x.ActionKind == DefectEscalationActionKinds.WorkOrderCreated);
     }
 
     [Fact]
-    public async Task Notification_settings_put_rejects_invalid_webhook()
-    {
-        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
-        var request = Authorized(HttpMethod.Put, "/api/notification-settings", token);
-        request.Content = JsonContent.Create(new UpsertMaintenanceNotificationSettingsRequest(
-            true,
-            "not-a-url",
-            true,
-            true,
-            true,
-            true));
-
-        var response = await _maintainarrClient.SendAsync(request);
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Notification_settings_requires_admin()
+    public async Task Settings_put_requires_admin()
     {
         var memberToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
-        var response = await _maintainarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/notification-settings", memberToken));
+        var request = Authorized(HttpMethod.Put, "/api/defect-escalation-settings", memberToken);
+        request.Content = JsonContent.Create(new UpsertDefectEscalationSettingsRequest(
+            true, 168, 72, 24, 8, true, true, true, true));
+        var response = await _maintainarrClient.SendAsync(request);
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
-    public async Task Process_batch_rejects_missing_service_token()
+    public async Task Pending_preview_lists_due_defect_before_processing()
     {
-        var response = await _maintainarrClient.PostAsJsonAsync(
-            "/api/internal/maintenance-notifications/process-batch",
-            new ProcessMaintenanceNotificationsRequest(PlatformSeeder.DemoTenantId, null, 10));
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var defect = await SeedStagnantDefectAsync(hoursStagnant: 30, severity: DefectSeverities.High);
+        await UpsertEscalationSettingsAsync();
+
+        var listRequest = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"/api/internal/defect-escalation/pending?tenantId={PlatformSeeder.DemoTenantId}&batchSize=10");
+        listRequest.Headers.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            _sharedWorkerToMaintainArrToken);
+        var listResponse = await _maintainarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var pending = (await listResponse.Content.ReadFromJsonAsync<PendingDefectEscalationsResponse>())!;
+        Assert.Contains(pending.Items, x => x.DefectId == defect.Id);
     }
 
-    private async Task UpsertNotificationSettingsAsync(string webhookUrl)
+    private async Task UpsertEscalationSettingsAsync()
     {
         var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
-        var request = Authorized(HttpMethod.Put, "/api/notification-settings", token);
-        request.Content = JsonContent.Create(new UpsertMaintenanceNotificationSettingsRequest(
+        var request = Authorized(HttpMethod.Put, "/api/defect-escalation-settings", token);
+        request.Content = JsonContent.Create(new UpsertDefectEscalationSettingsRequest(
             true,
-            webhookUrl,
+            168,
+            72,
+            24,
+            8,
             true,
             true,
             true,
-            true));
+            false));
         var response = await _maintainarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
     }
 
-    private static async Task<Guid> SeedAssetAsync(MaintainArrDbContext db)
+    private async Task<Defect> SeedStagnantDefectAsync(int hoursStagnant, string severity)
     {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
         var now = DateTimeOffset.UtcNow;
+        var stagnantAt = now.AddHours(-hoursStagnant);
+
         var assetClass = new AssetClass
         {
             Id = Guid.NewGuid(),
             TenantId = PlatformSeeder.DemoTenantId,
-            ClassKey = "notify-class",
-            Name = "Notify Class",
+            ClassKey = "escalation-class",
+            Name = "Escalation Class",
             Status = "active",
             CreatedAt = now,
             UpdatedAt = now,
@@ -207,8 +192,8 @@ public sealed class MaintainArrNotificationTests : IAsyncLifetime
             Id = Guid.NewGuid(),
             TenantId = PlatformSeeder.DemoTenantId,
             AssetClassId = assetClass.Id,
-            TypeKey = "notify-type",
-            Name = "Notify Type",
+            TypeKey = "escalation-type",
+            Name = "Escalation Type",
             Status = "active",
             CreatedAt = now,
             UpdatedAt = now,
@@ -218,17 +203,33 @@ public sealed class MaintainArrNotificationTests : IAsyncLifetime
             Id = Guid.NewGuid(),
             TenantId = PlatformSeeder.DemoTenantId,
             AssetTypeId = assetType.Id,
-            AssetTag = "NOTIFY-001",
-            Name = "Notify Asset",
+            AssetTag = "ESC-001",
+            Name = "Escalation Asset",
             LifecycleStatus = "active",
             CreatedAt = now,
             UpdatedAt = now,
         };
+        var defect = new Defect
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            AssetId = asset.Id,
+            Title = "Stagnant hydraulic leak",
+            Description = "Needs escalation",
+            Severity = severity,
+            Status = DefectStatuses.Open,
+            Source = DefectSources.Manual,
+            ReportedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = stagnantAt,
+            UpdatedAt = stagnantAt,
+        };
+
         db.AssetClasses.Add(assetClass);
         db.AssetTypes.Add(assetType);
         db.Assets.Add(asset);
+        db.Defects.Add(defect);
         await db.SaveChangesAsync();
-        return asset.Id;
+        return defect;
     }
 
     private string CreateMaintainArrAccessToken(
@@ -268,8 +269,8 @@ public sealed class MaintainArrNotificationTests : IAsyncLifetime
     {
         var registerRequest = Authorized(HttpMethod.Post, "/api/service-tokens/clients", adminToken);
         registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
-            $"{sourceProduct}-notification-{Guid.NewGuid():N}",
-            $"{sourceProduct} notification test",
+            $"{sourceProduct}-defect-escalation-{Guid.NewGuid():N}",
+            $"{sourceProduct} defect escalation test",
             sourceProduct,
             allowedProducts));
         var registerResponse = await _nexarrClient.SendAsync(registerRequest);
@@ -315,17 +316,6 @@ public sealed class MaintainArrNotificationTests : IAsyncLifetime
         foreach (var descriptor in descriptors)
         {
             services.Remove(descriptor);
-        }
-    }
-
-    private sealed class WebhookCaptureHandler(List<HttpRequestMessage> captured) : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken)
-        {
-            captured.Add(request);
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
         }
     }
 }

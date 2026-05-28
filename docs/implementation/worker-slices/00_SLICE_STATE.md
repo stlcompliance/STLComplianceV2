@@ -312,6 +312,8 @@
 
 | 170 | NexArr tenant lifecycle worker (`nexarr_platform_tenant_lifecycle_settings`, `nexarr_tenant_lifecycle_runs`, internal pending/process-batch, `nexarr.tenants.lifecycle.process`, `NexArrTenantLifecycleJob`, platform-admin tenant lifecycle UI, session revoke on suspend, tests, docs) | M12 (partial) | Complete | `389221d` |
 
-## Next slice (Worker 171)
+| 171 | MaintainArr defect escalation worker (`maintainarr_tenant_defect_escalation_settings`, `maintainarr_defect_escalation_runs`, `maintainarr_defect_escalation_events`, internal pending/process-batch, `maintainarr.defects.escalate`, `MaintainArrDefectEscalationJob`, `DefectEscalationSettingsPanel`, defect `LastEscalatedAt`/`EscalationCount`, tests, docs) | M12 (partial) | Complete | `pending` |
+
+## Next slice (Worker 172)
 
 Per milestone matrix: next open backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (remaining M12 items).

@@ -358,4 +358,16 @@ await StlWorkerHost.RunAsync(
         });
 
         builder.Services.AddHostedService<NexArrTenantLifecycleJob>();
+
+        builder.Services.Configure<MaintainArrDefectEscalationOptions>(
+            builder.Configuration.GetSection(MaintainArrDefectEscalationOptions.SectionName));
+
+        builder.Services.AddHttpClient<MaintainArrDefectEscalationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<MaintainArrDefectEscalationOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.MaintainArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<MaintainArrDefectEscalationJob>();
     });

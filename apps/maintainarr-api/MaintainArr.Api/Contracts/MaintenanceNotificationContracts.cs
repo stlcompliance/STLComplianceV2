@@ -6,6 +6,7 @@ public sealed record MaintenanceNotificationSettingsResponse(
     bool NotifyOnWorkOrderCreated,
     bool NotifyOnPmScheduleDue,
     bool NotifyOnPmScheduleOverdue,
+    bool NotifyOnDefectEscalated,
     DateTimeOffset? UpdatedAt);
 
 public sealed record UpsertMaintenanceNotificationSettingsRequest(
@@ -13,7 +14,8 @@ public sealed record UpsertMaintenanceNotificationSettingsRequest(
     string? NotificationWebhookUrl,
     bool NotifyOnWorkOrderCreated,
     bool NotifyOnPmScheduleDue,
-    bool NotifyOnPmScheduleOverdue);
+    bool NotifyOnPmScheduleOverdue,
+    bool NotifyOnDefectEscalated);
 
 public sealed record MaintenanceNotificationDispatchItem(
     Guid NotificationId,

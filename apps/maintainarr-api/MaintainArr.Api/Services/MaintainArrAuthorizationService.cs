@@ -326,6 +326,11 @@ public sealed class MaintainArrAuthorizationService
             403);
     }
 
+    public void RequireDefectEscalationSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireNotificationSettingsManage(principal);
+    }
+
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }

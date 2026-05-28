@@ -28,7 +28,8 @@ public sealed class MaintenanceNotificationRulesTests
             "https://hooks.example.com/maintainarr",
             NotifyOnWorkOrderCreated: true,
             NotifyOnPmScheduleDue: false,
-            NotifyOnPmScheduleOverdue: false);
+            NotifyOnPmScheduleOverdue: false,
+            NotifyOnDefectEscalated: false);
 
         Assert.True(MaintenanceNotificationRules.ShouldNotifyForEvent(
             settings,

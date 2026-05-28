@@ -71,6 +71,7 @@ public static class MaintenanceNotificationRules
             MaintenanceNotificationEventKinds.WorkOrderCreated => settings.NotifyOnWorkOrderCreated,
             MaintenanceNotificationEventKinds.PmScheduleDue => settings.NotifyOnPmScheduleDue,
             MaintenanceNotificationEventKinds.PmScheduleOverdue => settings.NotifyOnPmScheduleOverdue,
+            MaintenanceNotificationEventKinds.DefectEscalated => settings.NotifyOnDefectEscalated,
             _ => false,
         };
 
@@ -88,4 +89,5 @@ public sealed record TenantMaintenanceNotificationSettingsSnapshot(
     string? NotificationWebhookUrl,
     bool NotifyOnWorkOrderCreated,
     bool NotifyOnPmScheduleDue,
-    bool NotifyOnPmScheduleOverdue);
+    bool NotifyOnPmScheduleOverdue,
+    bool NotifyOnDefectEscalated);

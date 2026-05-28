@@ -31,6 +31,11 @@ import type {
   AuditPackageManifestResponse,
   MaintenanceNotificationDispatchesResponse,
   MaintenanceNotificationSettingsResponse,
+  UpsertDefectEscalationSettingsRequest,
+  DefectEscalationSettingsResponse,
+  PendingDefectEscalationsResponse,
+  DefectEscalationRunsResponse,
+  DefectEscalationEventsResponse,
   MaintenanceHistoryEntryResponse,
   UpsertMaintenanceNotificationSettingsRequest,
   PagedResult,
@@ -739,6 +744,71 @@ export async function upsertMaintenanceNotificationSettings(
   return parseJsonResponse<MaintenanceNotificationSettingsResponse>(
     response,
     'Failed to save notification settings',
+  )
+}
+
+export async function getDefectEscalationSettings(
+  accessToken: string,
+): Promise<DefectEscalationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/defect-escalation-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DefectEscalationSettingsResponse>(
+    response,
+    'Failed to load defect escalation settings',
+  )
+}
+
+export async function upsertDefectEscalationSettings(
+  accessToken: string,
+  payload: UpsertDefectEscalationSettingsRequest,
+): Promise<DefectEscalationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/defect-escalation-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<DefectEscalationSettingsResponse>(
+    response,
+    'Failed to save defect escalation settings',
+  )
+}
+
+export async function getPendingDefectEscalations(
+  accessToken: string,
+): Promise<PendingDefectEscalationsResponse> {
+  const response = await fetch(`${apiBase}/api/defect-escalation-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingDefectEscalationsResponse>(
+    response,
+    'Failed to load pending defect escalations',
+  )
+}
+
+export async function getDefectEscalationRuns(
+  accessToken: string,
+  limit = 5,
+): Promise<DefectEscalationRunsResponse> {
+  const response = await fetch(`${apiBase}/api/defect-escalation-settings/runs?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DefectEscalationRunsResponse>(
+    response,
+    'Failed to load defect escalation runs',
+  )
+}
+
+export async function getDefectEscalationEvents(
+  accessToken: string,
+  limit = 5,
+): Promise<DefectEscalationEventsResponse> {
+  const response = await fetch(`${apiBase}/api/defect-escalation-settings/events?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DefectEscalationEventsResponse>(
+    response,
+    'Failed to load defect escalation events',
   )
 }
 

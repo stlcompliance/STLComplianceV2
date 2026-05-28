@@ -690,6 +690,7 @@ export interface MaintenanceNotificationSettingsResponse {
   notifyOnWorkOrderCreated: boolean
   notifyOnPmScheduleDue: boolean
   notifyOnPmScheduleOverdue: boolean
+  notifyOnDefectEscalated: boolean
   updatedAt: string | null
 }
 
@@ -699,6 +700,7 @@ export interface UpsertMaintenanceNotificationSettingsRequest {
   notifyOnWorkOrderCreated: boolean
   notifyOnPmScheduleDue: boolean
   notifyOnPmScheduleOverdue: boolean
+  notifyOnDefectEscalated: boolean
 }
 
 export interface MaintenanceNotificationDispatchItem {
@@ -717,6 +719,79 @@ export interface MaintenanceNotificationDispatchItem {
 
 export interface MaintenanceNotificationDispatchesResponse {
   items: MaintenanceNotificationDispatchItem[]
+}
+
+export interface DefectEscalationSettingsResponse {
+  isEnabled: boolean
+  lowThresholdHours: number
+  mediumThresholdHours: number
+  highThresholdHours: number
+  criticalThresholdHours: number
+  autoAcknowledgeOnEscalation: boolean
+  autoCreateWorkOrderOnEscalation: boolean
+  bumpSeverityOnRepeatEscalation: boolean
+  notifyOnEscalation: boolean
+  updatedAt: string | null
+}
+
+export interface UpsertDefectEscalationSettingsRequest {
+  isEnabled: boolean
+  lowThresholdHours: number
+  mediumThresholdHours: number
+  highThresholdHours: number
+  criticalThresholdHours: number
+  autoAcknowledgeOnEscalation: boolean
+  autoCreateWorkOrderOnEscalation: boolean
+  bumpSeverityOnRepeatEscalation: boolean
+  notifyOnEscalation: boolean
+}
+
+export interface PendingDefectEscalationItem {
+  defectId: string
+  tenantId: string
+  assetId: string
+  title: string
+  severity: string
+  status: string
+  escalationCount: number
+  stagnationAnchorUtc: string
+  thresholdHours: number
+  stagnationHours: number
+}
+
+export interface PendingDefectEscalationsResponse {
+  asOfUtc: string
+  batchSize: number
+  items: PendingDefectEscalationItem[]
+}
+
+export interface DefectEscalationRunItem {
+  runId: string
+  asOfUtc: string
+  candidatesFound: number
+  escalatedCount: number
+  skippedCount: number
+  createdAt: string
+}
+
+export interface DefectEscalationRunsResponse {
+  items: DefectEscalationRunItem[]
+}
+
+export interface DefectEscalationEventItem {
+  eventId: string
+  defectId: string
+  actionKind: string
+  previousSeverity: string | null
+  newSeverity: string | null
+  previousStatus: string | null
+  newStatus: string | null
+  workOrderId: string | null
+  createdAt: string
+}
+
+export interface DefectEscalationEventsResponse {
+  items: DefectEscalationEventItem[]
 }
 
 export interface AuditPackageSectionDescriptor {
