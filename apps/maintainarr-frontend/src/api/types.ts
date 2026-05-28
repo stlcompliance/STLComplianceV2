@@ -794,6 +794,57 @@ export interface DefectEscalationEventsResponse {
   items: DefectEscalationEventItem[]
 }
 
+export interface AssetStatusRollupSettingsResponse {
+  isEnabled: boolean
+  stalenessHours: number
+  updatedAt: string | null
+}
+
+export interface UpsertAssetStatusRollupSettingsRequest {
+  isEnabled: boolean
+  stalenessHours: number
+}
+
+export interface PendingAssetStatusRollupItem {
+  assetId: string
+  assetTag: string
+  assetName: string
+  lastComputedAt: string | null
+}
+
+export interface PendingAssetStatusRollupsResponse {
+  asOfUtc: string
+  stalenessHours: number
+  batchSize: number
+  items: PendingAssetStatusRollupItem[]
+}
+
+export interface AssetStatusRollupRunItem {
+  runId: string
+  asOfUtc: string
+  candidatesFound: number
+  refreshedCount: number
+  skippedCount: number
+  scopeRollupsRefreshed: number
+  createdAt: string
+}
+
+export interface AssetStatusRollupRunsResponse {
+  items: AssetStatusRollupRunItem[]
+}
+
+export interface AssetStatusScopeRollupSummaryResponse {
+  scopeType: string
+  scopeEntityId: string
+  scopeEntityKey: string | null
+  scopeLabel: string
+  totalAssets: number
+  readyCount: number
+  notReadyCount: number
+  readyPercent: number
+  computedAt: string
+}
+
 export interface AuditPackageSectionDescriptor {
   key: string
   fileName: string

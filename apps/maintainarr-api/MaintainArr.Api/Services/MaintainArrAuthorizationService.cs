@@ -331,6 +331,13 @@ public sealed class MaintainArrAuthorizationService
         RequireNotificationSettingsManage(principal);
     }
 
+    public void RequireAssetStatusRollupSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireNotificationSettingsManage(principal);
+    }
+
+    public void RequireAssetStatusRollupRead(ClaimsPrincipal principal) => RequireAssetsRead(principal);
+
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }

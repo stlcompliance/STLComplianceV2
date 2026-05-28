@@ -8,11 +8,25 @@ namespace MaintainArr.Api.Services;
 
 public sealed class AssetReadinessService(MaintainArrDbContext db)
 {
+    public const int DefaultMaterializedReadStalenessHours = AssetStatusRollupDefaults.StalenessHours;
+
     public async Task<AssetReadinessResponse> GetAsync(
         Guid tenantId,
         Guid assetId,
         CancellationToken cancellationToken = default)
     {
+        var asOf = DateTimeOffset.UtcNow;
+        var materialized = await TryGetMaterializedDetailAsync(
+            tenantId,
+            assetId,
+            asOf,
+            DefaultMaterializedReadStalenessHours,
+            cancellationToken);
+        if (materialized is not null)
+        {
+            return materialized;
+        }
+
         var asset = await db.Assets
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == assetId, cancellationToken);
@@ -106,6 +120,17 @@ public sealed class AssetReadinessService(MaintainArrDbContext db)
         Guid tenantId,
         CancellationToken cancellationToken = default)
     {
+        var asOf = DateTimeOffset.UtcNow;
+        var materialized = await TryListMaterializedFleetAsync(
+            tenantId,
+            asOf,
+            DefaultMaterializedReadStalenessHours,
+            cancellationToken);
+        if (materialized.Count > 0)
+        {
+            return materialized;
+        }
+
         var assets = await db.Assets
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId)
@@ -136,6 +161,73 @@ public sealed class AssetReadinessService(MaintainArrDbContext db)
                     blockers.Count,
                     primaryMessage);
             })
+            .ToList();
+    }
+
+    private async Task<AssetReadinessResponse?> TryGetMaterializedDetailAsync(
+        Guid tenantId,
+        Guid assetId,
+        DateTimeOffset asOfUtc,
+        int stalenessHours,
+        CancellationToken cancellationToken)
+    {
+        var rollup = await db.AssetStatusRollups.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.AssetId == assetId, cancellationToken);
+
+        if (rollup is null || AssetStatusRollupRules.IsStale(rollup.ComputedAt, asOfUtc, stalenessHours))
+        {
+            return null;
+        }
+
+        return new AssetReadinessResponse(
+            rollup.AssetId,
+            rollup.AssetTag,
+            rollup.AssetName,
+            rollup.LifecycleStatus,
+            rollup.ReadinessStatus,
+            rollup.ReadinessBasis,
+            rollup.ComputedAt,
+            [],
+            new AssetReadinessSignalCountsResponse(
+                rollup.OpenCriticalDefectCount,
+                rollup.OpenHighDefectCount,
+                rollup.ActiveWorkOrderCount,
+                rollup.PmDueCount,
+                rollup.PmOverdueCount,
+                rollup.FailedInspectionCount));
+    }
+
+    private async Task<IReadOnlyList<AssetReadinessSummaryResponse>> TryListMaterializedFleetAsync(
+        Guid tenantId,
+        DateTimeOffset asOfUtc,
+        int stalenessHours,
+        CancellationToken cancellationToken)
+    {
+        var rollups = await db.AssetStatusRollups.AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .OrderBy(x => x.AssetTag)
+            .ThenBy(x => x.AssetName)
+            .ToListAsync(cancellationToken);
+
+        if (rollups.Count == 0)
+        {
+            return [];
+        }
+
+        if (rollups.Any(x => AssetStatusRollupRules.IsStale(x.ComputedAt, asOfUtc, stalenessHours)))
+        {
+            return [];
+        }
+
+        return rollups
+            .Select(rollup => new AssetReadinessSummaryResponse(
+                rollup.AssetId,
+                rollup.AssetTag,
+                rollup.AssetName,
+                rollup.LifecycleStatus,
+                rollup.ReadinessStatus,
+                rollup.BlockerCount,
+                rollup.PrimaryBlockerMessage))
             .ToList();
     }
 

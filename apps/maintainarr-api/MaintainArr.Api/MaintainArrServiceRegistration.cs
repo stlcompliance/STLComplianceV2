@@ -53,6 +53,9 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<MaintenanceNotificationDispatchService>();
         builder.Services.AddScoped<DefectEscalationSettingsService>();
         builder.Services.AddScoped<DefectEscalationWorkerService>();
+        builder.Services.AddScoped<AssetStatusRollupSettingsService>();
+        builder.Services.AddScoped<AssetStatusRollupWorkerService>();
+        builder.Services.AddScoped<AssetStatusRollupService>();
         builder.Services.AddScoped<AuditPackageService>();
         builder.Services.AddScoped<AuditPackageGenerationService>();
         builder.Services.AddHttpClient(MaintenanceNotificationDispatchService.WebhookHttpClientName, client =>

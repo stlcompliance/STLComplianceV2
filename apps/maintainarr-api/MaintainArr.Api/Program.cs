@@ -36,5 +36,8 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrInternalAuditPackageGenerationEndpoints();
         app.MapMaintainArrDefectEscalationSettingsEndpoints();
         app.MapMaintainArrInternalDefectEscalationEndpoints();
+        app.MapMaintainArrAssetStatusRollupSettingsEndpoints();
+        app.MapMaintainArrAssetStatusRollupEndpoints();
+        app.MapMaintainArrInternalAssetStatusRollupEndpoints();
         await Task.CompletedTask;
     });

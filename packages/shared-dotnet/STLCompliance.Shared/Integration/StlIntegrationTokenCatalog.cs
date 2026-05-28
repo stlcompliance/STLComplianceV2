@@ -198,6 +198,20 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["nexarr"],
             "nexarr.tenants.lifecycle.process"),
+        Profile(
+            "worker-maintainarr-defect-escalation",
+            "shared-worker",
+            "MaintainArrDefectEscalation__ServiceToken",
+            "shared-worker",
+            ["maintainarr"],
+            "maintainarr.defects.escalate"),
+        Profile(
+            "worker-maintainarr-asset-status-rollup",
+            "shared-worker",
+            "MaintainArrAssetStatusRollup__ServiceToken",
+            "shared-worker",
+            ["maintainarr"],
+            "maintainarr.asset_status.rollup"),
     ];
 
     public static IReadOnlyList<StlIntegrationTokenProfile> ForConsumer(string consumerService) =>

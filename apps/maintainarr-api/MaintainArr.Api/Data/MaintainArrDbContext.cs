@@ -65,6 +65,15 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
 
     public DbSet<DefectEscalationEvent> DefectEscalationEvents => Set<DefectEscalationEvent>();
 
+    public DbSet<TenantAssetStatusRollupSettings> TenantAssetStatusRollupSettings =>
+        Set<TenantAssetStatusRollupSettings>();
+
+    public DbSet<AssetStatusRollup> AssetStatusRollups => Set<AssetStatusRollup>();
+
+    public DbSet<AssetStatusScopeRollup> AssetStatusScopeRollups => Set<AssetStatusScopeRollup>();
+
+    public DbSet<AssetStatusRollupRun> AssetStatusRollupRuns => Set<AssetStatusRollupRun>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -548,6 +557,48 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.PreviousStatus).HasMaxLength(32);
             entity.Property(x => x.NewStatus).HasMaxLength(32);
             entity.HasIndex(x => new { x.TenantId, x.DefectId, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<TenantAssetStatusRollupSettings>(entity =>
+        {
+            entity.ToTable("maintainarr_tenant_asset_status_rollup_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<AssetStatusRollup>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_status_rollups");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.AssetTag).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.AssetName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.LifecycleStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ReadinessStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ReadinessBasis).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PrimaryBlockerMessage).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ComputedAt });
+        });
+
+        modelBuilder.Entity<AssetStatusScopeRollup>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_status_scope_rollups");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScopeType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ScopeEntityKey).HasMaxLength(128);
+            entity.Property(x => x.ScopeLabel).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ReadyPercent).HasPrecision(5, 1);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ScopeType, x.ScopeEntityId, x.ScopeEntityKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ScopeType, x.ComputedAt });
+        });
+
+        modelBuilder.Entity<AssetStatusRollupRun>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_status_rollup_runs");
+            entity.HasKey(x => x.Id);
             entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
         });
     }

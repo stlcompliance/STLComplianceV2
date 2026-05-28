@@ -36,6 +36,11 @@ import type {
   PendingDefectEscalationsResponse,
   DefectEscalationRunsResponse,
   DefectEscalationEventsResponse,
+  AssetStatusRollupSettingsResponse,
+  UpsertAssetStatusRollupSettingsRequest,
+  PendingAssetStatusRollupsResponse,
+  AssetStatusRollupRunsResponse,
+  AssetStatusScopeRollupSummaryResponse,
   MaintenanceHistoryEntryResponse,
   UpsertMaintenanceNotificationSettingsRequest,
   PagedResult,
@@ -809,6 +814,70 @@ export async function getDefectEscalationEvents(
   return parseJsonResponse<DefectEscalationEventsResponse>(
     response,
     'Failed to load defect escalation events',
+  )
+}
+
+export async function getAssetStatusRollupSettings(
+  accessToken: string,
+): Promise<AssetStatusRollupSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/asset-status-rollup-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetStatusRollupSettingsResponse>(
+    response,
+    'Failed to load asset status rollup settings',
+  )
+}
+
+export async function upsertAssetStatusRollupSettings(
+  accessToken: string,
+  payload: UpsertAssetStatusRollupSettingsRequest,
+): Promise<AssetStatusRollupSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/asset-status-rollup-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<AssetStatusRollupSettingsResponse>(
+    response,
+    'Failed to save asset status rollup settings',
+  )
+}
+
+export async function getPendingAssetStatusRollups(
+  accessToken: string,
+): Promise<PendingAssetStatusRollupsResponse> {
+  const response = await fetch(`${apiBase}/api/asset-status-rollup-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingAssetStatusRollupsResponse>(
+    response,
+    'Failed to load pending asset status rollups',
+  )
+}
+
+export async function getAssetStatusRollupRuns(
+  accessToken: string,
+  limit = 5,
+): Promise<AssetStatusRollupRunsResponse> {
+  const response = await fetch(`${apiBase}/api/asset-status-rollup-settings/runs?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetStatusRollupRunsResponse>(
+    response,
+    'Failed to load asset status rollup runs',
+  )
+}
+
+export async function getFleetAssetStatusRollup(
+  accessToken: string,
+): Promise<AssetStatusScopeRollupSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/asset-status-rollups/fleet`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetStatusScopeRollupSummaryResponse>(
+    response,
+    'Failed to load fleet asset status rollup',
   )
 }
 
