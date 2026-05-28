@@ -10,6 +10,7 @@ const sampleAssignment: TrainingAssignmentSummaryResponse = {
   trainingDefinitionName: 'Annual compliance refresher',
   qualificationKey: 'annual_compliance',
   staffarrIncidentRemediationId: 'r1',
+  sourceQualificationIssueId: null,
   assignmentReason: 'incident_remediation',
   status: 'assigned',
   dueAt: null,

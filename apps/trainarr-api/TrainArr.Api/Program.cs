@@ -4,6 +4,7 @@ using TrainArr.Api.Data;
 
 using TrainArr.Api.Endpoints;
 
+using STLCompliance.Shared.Endpoints;
 using STLCompliance.Shared.Hosting;
 
 
@@ -23,6 +24,8 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
     {
 
         app.MapTrainArrAuthEndpoints();
+
+        app.MapStlProductLaunchEndpoints();
 
         app.MapTrainArrTrainingDefinitionEndpoints();
 
@@ -53,9 +56,11 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
         app.MapTrainArrIntegrationEndpoints();
 
         app.MapTrainArrInternalQualificationExpirationEndpoints();
+        app.MapTrainArrInternalRecertificationAssignmentEndpoints();
         app.MapTrainArrFieldInboxEndpoints();
         app.MapTrainArrLoadTestJourneySeedEndpoints();
         app.MapTrainArrNotificationSettingsEndpoints();
+        app.MapTrainArrRecertificationSettingsEndpoints();
         app.MapTrainArrInternalTrainingNotificationEndpoints();
 
         await Task.CompletedTask;

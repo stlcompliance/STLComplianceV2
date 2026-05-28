@@ -30,6 +30,8 @@ public sealed record TrainingAssignmentSummaryResponse(
 
     Guid? StaffarrIncidentRemediationId,
 
+    Guid? SourceQualificationIssueId,
+
     string AssignmentReason,
 
     string Status,
@@ -57,6 +59,8 @@ public sealed record TrainingAssignmentDetailResponse(
     string QualificationName,
 
     Guid? StaffarrIncidentRemediationId,
+
+    Guid? SourceQualificationIssueId,
 
     string AssignmentReason,
 

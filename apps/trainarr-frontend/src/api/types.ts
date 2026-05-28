@@ -53,6 +53,7 @@ export interface TrainingAssignmentSummaryResponse {
   trainingDefinitionName: string
   qualificationKey: string
   staffarrIncidentRemediationId: string | null
+  sourceQualificationIssueId: string | null
   assignmentReason: string
   status: string
   dueAt: string | null
@@ -466,4 +467,28 @@ export interface TrainingNotificationDispatchItem {
 
 export interface TrainingNotificationDispatchesResponse {
   items: TrainingNotificationDispatchItem[]
+}
+
+export interface RecertificationSettingsResponse {
+  isEnabled: boolean
+  leadDays: number
+  updatedAt: string | null
+}
+
+export interface UpsertRecertificationSettingsRequest {
+  isEnabled: boolean
+  leadDays: number
+}
+
+export interface RecertificationAssignmentRunItem {
+  runId: string
+  qualificationIssueId: string
+  trainingAssignmentId: string | null
+  outcome: string
+  skipReason: string | null
+  processedAt: string
+}
+
+export interface RecertificationAssignmentRunsResponse {
+  items: RecertificationAssignmentRunItem[]
 }

@@ -113,6 +113,9 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<QualificationCheckService>();
 
         builder.Services.AddScoped<LoadTestJourneySeedService>();
+        builder.Services.AddScoped<RecertificationSettingsService>();
+        builder.Services.AddScoped<RecertificationAssignmentService>();
+
         builder.Services.AddScoped<TrainingNotificationSettingsService>();
         builder.Services.AddScoped<TrainingNotificationEnqueueService>();
         builder.Services.AddScoped<TrainingNotificationDispatchService>();

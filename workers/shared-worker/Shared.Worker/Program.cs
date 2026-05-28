@@ -23,6 +23,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<TrainArrQualificationExpirationJob>();
 
+        builder.Services.Configure<TrainArrRecertificationAssignmentOptions>(
+            builder.Configuration.GetSection(TrainArrRecertificationAssignmentOptions.SectionName));
+
+        builder.Services.AddHttpClient<TrainArrRecertificationAssignmentClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<TrainArrRecertificationAssignmentOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.TrainArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<TrainArrRecertificationAssignmentJob>();
+
         builder.Services.Configure<TrainArrNotificationDispatchOptions>(
             builder.Configuration.GetSection(TrainArrNotificationDispatchOptions.SectionName));
 

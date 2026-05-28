@@ -284,6 +284,8 @@
 
 | 156 | StaffArr personnel history rollup worker (`staffarr_personnel_history_rollups` + `staffarr_personnel_history_events`, internal pending/process-batch, `staffarr.personnel.history.rollup`, `/api/person-history` + TrainArr integration read, `StaffArrPersonnelHistoryRollupJob`, `PersonHistorySummaryPanel`, tests, docs) | M12 (partial) | Complete | `cbfa6db` |
 
-## Next slice (Worker 157)
+| 157 | TrainArr recertification assignment worker (`trainarr_tenant_recertification_settings`, `trainarr_recertification_assignment_runs`, `SourceQualificationIssueId`, internal pending/process-batch, `trainarr.recertification.assign`, `/api/recertification-settings`, `TrainArrRecertificationAssignmentJob`, `RecertificationSettingsPanel`, tests, docs) | M12 (partial) | Complete | `pending` |
 
-Per milestone matrix: next open **M12** worker backlog row from `00_SLICE_STATE.md` / `02_PRODUCT_IMPLEMENTATION_BACKLOG.md`.
+## Next slice (Worker 158)
+
+Per milestone matrix: next open **M12** worker backlog row from `00_SLICE_STATE.md` / `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (TrainArr qualification recalculation worker).

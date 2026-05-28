@@ -420,6 +420,25 @@ public sealed class TrainArrAuthorizationService
             403);
     }
 
+    public void RequireRecertificationSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireTrainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Recertification settings require trainarr admin access.",
+            403);
+    }
+
     public void RequireSignoffSubmit(ClaimsPrincipal principal, Guid staffarrPersonId, string signoffRole)
     {
         RequireTrainArrEntitlement(principal);

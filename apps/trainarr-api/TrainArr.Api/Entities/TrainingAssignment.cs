@@ -36,6 +36,8 @@ public sealed class TrainingAssignment : IHasTenant
 
     public StaffarrIncidentRemediation? StaffarrIncidentRemediation { get; set; }
 
+    public Guid? SourceQualificationIssueId { get; set; }
+
 
 
     public string AssignmentReason { get; set; } = "manual";

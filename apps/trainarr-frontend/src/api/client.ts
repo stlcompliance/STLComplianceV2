@@ -33,6 +33,9 @@ import type {
   TrainingNotificationDispatchesResponse,
   TrainingNotificationSettingsResponse,
   UpsertTrainingNotificationSettingsRequest,
+  RecertificationSettingsResponse,
+  UpsertRecertificationSettingsRequest,
+  RecertificationAssignmentRunsResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_TRAINARR_API_BASE ?? ''
@@ -599,5 +602,45 @@ export async function getTrainingNotificationDispatches(
   return parseJsonResponse<TrainingNotificationDispatchesResponse>(
     response,
     'Failed to load notification dispatches',
+  )
+}
+
+export async function getRecertificationSettings(
+  accessToken: string,
+): Promise<RecertificationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/recertification-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RecertificationSettingsResponse>(
+    response,
+    'Failed to load recertification settings',
+  )
+}
+
+export async function upsertRecertificationSettings(
+  accessToken: string,
+  payload: UpsertRecertificationSettingsRequest,
+): Promise<RecertificationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/recertification-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<RecertificationSettingsResponse>(
+    response,
+    'Failed to save recertification settings',
+  )
+}
+
+export async function getRecertificationAssignmentRuns(
+  accessToken: string,
+  limit = 10,
+): Promise<RecertificationAssignmentRunsResponse> {
+  const response = await fetch(`${apiBase}/api/recertification-settings/runs?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RecertificationAssignmentRunsResponse>(
+    response,
+    'Failed to load recertification assignment runs',
   )
 }

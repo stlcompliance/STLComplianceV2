@@ -17,7 +17,8 @@ public sealed class TrainingAssignmentService(
     private static readonly HashSet<string> AllowedAssignmentReasons = new(StringComparer.OrdinalIgnoreCase)
     {
         "manual",
-        "incident_remediation"
+        "incident_remediation",
+        "recertification"
     };
 
     public static readonly HashSet<string> ActiveAssignmentStatuses = new(StringComparer.OrdinalIgnoreCase)
@@ -187,6 +188,75 @@ public sealed class TrainingAssignmentService(
         return MapDetail(loaded);
     }
 
+    public async Task<TrainingAssignmentDetailResponse> CreateRecertificationByWorkerAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid sourceQualificationIssueId,
+        Guid trainingDefinitionId,
+        Guid staffarrPersonId,
+        DateTimeOffset dueAt,
+        CancellationToken cancellationToken = default)
+    {
+        var definition = await definitionService.GetActiveDefinitionAsync(
+            tenantId,
+            trainingDefinitionId,
+            cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        var assignment = new TrainingAssignment
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            StaffarrPersonId = staffarrPersonId,
+            TrainingDefinitionId = definition.Id,
+            SourceQualificationIssueId = sourceQualificationIssueId,
+            AssignmentReason = "recertification",
+            Status = "assigned",
+            DueAt = dueAt,
+            AssignedByUserId = actorUserId,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.TrainingAssignments.Add(assignment);
+
+        var blockerMessage =
+            $"Complete recertification training: {definition.Name} before qualification expires.";
+        var publication = await publicationService.PublishTrainingBlockerAsync(
+            new CreateCertificationPublicationRequest(
+                tenantId,
+                staffarrPersonId,
+                definition.QualificationKey,
+                definition.QualificationName,
+                "missing_assignment",
+                blockerMessage,
+                dueAt),
+            cancellationToken);
+
+        assignment.BlockerPublicationId = publication.PublicationId;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "training_assignment.create.recertification",
+            tenantId,
+            actorUserId,
+            "training_assignment",
+            assignment.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        await notificationEnqueueService.TryEnqueueAsync(
+            tenantId,
+            TrainingNotificationEventKinds.AssignmentCreated,
+            assignment.StaffarrPersonId,
+            "training_assignment",
+            assignment.Id,
+            cancellationToken);
+
+        var loaded = await LoadAssignmentAsync(tenantId, assignment.Id, cancellationToken);
+        return MapDetail(loaded);
+    }
+
     public async Task<CompleteTrainingAssignmentResponse> CompleteAsync(
         Guid tenantId,
         Guid actorUserId,
@@ -290,6 +360,7 @@ public sealed class TrainingAssignmentService(
             entity.TrainingDefinition.Name,
             entity.TrainingDefinition.QualificationKey,
             entity.StaffarrIncidentRemediationId,
+            entity.SourceQualificationIssueId,
             entity.AssignmentReason,
             entity.Status,
             entity.DueAt,
@@ -305,6 +376,7 @@ public sealed class TrainingAssignmentService(
             entity.TrainingDefinition.QualificationKey,
             entity.TrainingDefinition.QualificationName,
             entity.StaffarrIncidentRemediationId,
+            entity.SourceQualificationIssueId,
             entity.AssignmentReason,
             entity.Status,
             entity.DueAt,

@@ -59,6 +59,12 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
     public DbSet<TenantTrainingNotificationSettings> TenantTrainingNotificationSettings =>
         Set<TenantTrainingNotificationSettings>();
 
+    public DbSet<TenantRecertificationSettings> TenantRecertificationSettings =>
+        Set<TenantRecertificationSettings>();
+
+    public DbSet<RecertificationAssignmentRun> RecertificationAssignmentRuns =>
+        Set<RecertificationAssignmentRun>();
+
     public DbSet<TrainingNotificationDispatch> TrainingNotificationDispatches =>
         Set<TrainingNotificationDispatch>();
 
@@ -175,6 +181,8 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
             entity.HasIndex(x => new { x.TenantId, x.StaffarrPersonId, x.CreatedAt });
 
             entity.HasIndex(x => new { x.TenantId, x.StaffarrIncidentRemediationId });
+
+            entity.HasIndex(x => new { x.TenantId, x.SourceQualificationIssueId });
 
             entity.HasOne(x => x.TrainingDefinition)
 
@@ -415,6 +423,24 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
                 x.RelatedEntityType,
                 x.RelatedEntityId,
             });
+        });
+
+        modelBuilder.Entity<TenantRecertificationSettings>(entity =>
+        {
+            entity.ToTable("trainarr_tenant_recertification_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<RecertificationAssignmentRun>(entity =>
+        {
+            entity.ToTable("trainarr_recertification_assignment_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SkipReason).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.QualificationIssueId, x.Outcome });
+            entity.HasIndex(x => new { x.TenantId, x.ProcessedAt });
         });
 
         modelBuilder.Entity<TrainArrAuditEvent>(entity =>
