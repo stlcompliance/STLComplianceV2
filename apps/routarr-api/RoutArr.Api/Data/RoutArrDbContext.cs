@@ -26,6 +26,15 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
     public DbSet<DispatchNotificationDispatch> DispatchNotificationDispatches =>
         Set<DispatchNotificationDispatch>();
 
+    public DbSet<TenantTripCompletionRollupSettings> TenantTripCompletionRollupSettings =>
+        Set<TenantTripCompletionRollupSettings>();
+
+    public DbSet<TripCompletionRollup> TripCompletionRollups => Set<TripCompletionRollup>();
+
+    public DbSet<TripCompletionEvent> TripCompletionEvents => Set<TripCompletionEvent>();
+
+    public DbSet<TripCompletionRollupRun> TripCompletionRollupRuns => Set<TripCompletionRollupRun>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -162,6 +171,52 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.CreatedAt });
             entity.HasIndex(x => new { x.TenantId, x.EventKind, x.RelatedEntityType, x.RelatedEntityId });
+        });
+
+        modelBuilder.Entity<TenantTripCompletionRollupSettings>(entity =>
+        {
+            entity.ToTable("routarr_tenant_trip_completion_rollup_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<TripCompletionRollup>(entity =>
+        {
+            entity.ToTable("routarr_trip_completion_rollups");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TripNumber).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.DispatchStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.AssignedDriverPersonId).HasMaxLength(128);
+            entity.Property(x => x.VehicleRefKey).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TripId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.CompletedAt });
+        });
+
+        modelBuilder.Entity<TripCompletionEvent>(entity =>
+        {
+            entity.ToTable("routarr_trip_completion_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Detail).HasMaxLength(1024);
+            entity.Property(x => x.SourceEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceEntityId).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TripId, x.SequenceNumber });
+            entity.HasOne(x => x.Rollup)
+                .WithMany(x => x.Events)
+                .HasForeignKey(x => x.RollupId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TripCompletionRollupRun>(entity =>
+        {
+            entity.ToTable("routarr_trip_completion_rollup_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
         });
     }
 }

@@ -25,5 +25,8 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
         app.MapRoutArrFieldInboxEndpoints();
         app.MapRoutArrNotificationSettingsEndpoints();
         app.MapRoutArrInternalDispatchNotificationEndpoints();
+        app.MapRoutArrTripCompletionRollupSettingsEndpoints();
+        app.MapRoutArrInternalTripCompletionRollupEndpoints();
+        app.MapRoutArrTripCompletionEndpoints();
         await Task.CompletedTask;
     });

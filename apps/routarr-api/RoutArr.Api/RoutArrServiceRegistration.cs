@@ -69,6 +69,9 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<DispatchNotificationSettingsService>();
         builder.Services.AddScoped<DispatchNotificationEnqueueService>();
         builder.Services.AddScoped<DispatchNotificationDispatchService>();
+        builder.Services.AddScoped<TripCompletionRollupSettingsService>();
+        builder.Services.AddScoped<TripCompletionRollupWorkerService>();
+        builder.Services.AddScoped<TripCompletionService>();
         builder.Services.AddHttpClient(DispatchNotificationDispatchService.WebhookHttpClientName, client =>
         {
             client.Timeout = TimeSpan.FromSeconds(30);

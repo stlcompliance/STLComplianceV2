@@ -251,6 +251,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<RoutArrNotificationDispatchJob>();
 
+        builder.Services.Configure<RoutArrTripCompletionRollupOptions>(
+            builder.Configuration.GetSection(RoutArrTripCompletionRollupOptions.SectionName));
+
+        builder.Services.AddHttpClient<RoutArrTripCompletionRollupClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<RoutArrTripCompletionRollupOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.RoutArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<RoutArrTripCompletionRollupJob>();
+
         builder.Services.Configure<SupplyArrReorderEvaluationOptions>(
             builder.Configuration.GetSection(SupplyArrReorderEvaluationOptions.SectionName));
 

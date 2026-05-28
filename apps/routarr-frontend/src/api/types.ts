@@ -757,3 +757,43 @@ export interface DispatchNotificationDispatchItem {
 export interface DispatchNotificationDispatchesResponse {
   items: DispatchNotificationDispatchItem[]
 }
+
+export interface TripCompletionRollupSettingsResponse {
+  isEnabled: boolean
+  stalenessHours: number
+  updatedAt: string | null
+}
+
+export interface UpsertTripCompletionRollupSettingsRequest {
+  isEnabled: boolean
+  stalenessHours: number
+}
+
+export interface PendingTripCompletionRollupItem {
+  tripId: string
+  tripNumber: string
+  title: string
+  dispatchStatus: string
+  tripUpdatedAt: string
+  lastComputedAt: string | null
+}
+
+export interface PendingTripCompletionRollupsResponse {
+  asOfUtc: string
+  stalenessHours: number
+  batchSize: number
+  items: PendingTripCompletionRollupItem[]
+}
+
+export interface TripCompletionRollupRunItem {
+  runId: string
+  asOfUtc: string
+  candidatesFound: number
+  refreshedCount: number
+  skippedCount: number
+  createdAt: string
+}
+
+export interface TripCompletionRollupRunsResponse {
+  items: TripCompletionRollupRunItem[]
+}

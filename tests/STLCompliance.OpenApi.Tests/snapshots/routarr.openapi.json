@@ -743,6 +743,120 @@
         }
       }
     },
+    "/api/internal/trip-completion-rollups/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingTripCompletionRollups",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "stalenessHours",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/trip-completion-rollups/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessTripCompletionRollups",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessTripCompletionRollupsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContext",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoff",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/load-test-journey/seed": {
       "post": {
         "tags": [
@@ -836,6 +950,19 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/route-completions": {
+      "get": {
+        "tags": [
+          "RouteCompletions"
+        ],
+        "operationId": "ListRoutArrRouteCompletions",
         "responses": {
           "200": {
             "description": "OK"
@@ -1084,6 +1211,126 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trip-completion-rollup-settings": {
+      "get": {
+        "tags": [
+          "TripCompletionRollupSettings"
+        ],
+        "operationId": "GetRoutArrTripCompletionRollupSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TripCompletionRollupSettings"
+        ],
+        "operationId": "UpsertRoutArrTripCompletionRollupSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTripCompletionRollupSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trip-completion-rollup-settings/pending": {
+      "get": {
+        "tags": [
+          "TripCompletionRollupSettings"
+        ],
+        "operationId": "ListRoutArrPendingTripCompletionRollups",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trip-completion-rollup-settings/runs": {
+      "get": {
+        "tags": [
+          "TripCompletionRollupSettings"
+        ],
+        "operationId": "ListRoutArrTripCompletionRollupRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trip-completions": {
+      "get": {
+        "tags": [
+          "TripCompletions"
+        ],
+        "operationId": "ListRoutArrTripCompletions",
+        "parameters": [
+          {
+            "name": "dispatchStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trip-completions/{tripId}": {
+      "get": {
+        "tags": [
+          "TripCompletions"
+        ],
+        "operationId": "GetRoutArrTripCompletion",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1857,6 +2104,49 @@
           }
         }
       },
+      "ProcessTripCompletionRollupsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "RedeemHandoffRequest": {
         "required": [
           "handoffCode"
@@ -2030,6 +2320,26 @@
             "type": "boolean"
           }
         }
+      },
+      "UpsertTripCompletionRollupSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
       }
     }
   },
@@ -2051,6 +2361,9 @@
     },
     {
       "name": "Me"
+    },
+    {
+      "name": "Launch"
     },
     {
       "name": "Trips"
@@ -2087,6 +2400,15 @@
     },
     {
       "name": "Internal"
+    },
+    {
+      "name": "TripCompletionRollupSettings"
+    },
+    {
+      "name": "TripCompletions"
+    },
+    {
+      "name": "RouteCompletions"
     }
   ]
 }

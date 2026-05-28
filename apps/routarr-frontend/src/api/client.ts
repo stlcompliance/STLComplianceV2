@@ -34,6 +34,10 @@ import type {
   DispatchNotificationDispatchesResponse,
   DispatchNotificationSettingsResponse,
   UpsertDispatchNotificationSettingsRequest,
+  TripCompletionRollupSettingsResponse,
+  UpsertTripCompletionRollupSettingsRequest,
+  PendingTripCompletionRollupsResponse,
+  TripCompletionRollupRunsResponse,
   TripDetailResponse,
   TripSummaryResponse,
   UpdateRouteStopStatusRequest,
@@ -462,5 +466,58 @@ export async function getDispatchNotificationDispatches(
   return parseJsonResponse<DispatchNotificationDispatchesResponse>(
     response,
     'Failed to load notification dispatches',
+  )
+}
+
+export async function getTripCompletionRollupSettings(
+  accessToken: string,
+): Promise<TripCompletionRollupSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/trip-completion-rollup-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TripCompletionRollupSettingsResponse>(
+    response,
+    'Failed to load trip completion rollup settings',
+  )
+}
+
+export async function upsertTripCompletionRollupSettings(
+  accessToken: string,
+  payload: UpsertTripCompletionRollupSettingsRequest,
+): Promise<TripCompletionRollupSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/trip-completion-rollup-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TripCompletionRollupSettingsResponse>(
+    response,
+    'Failed to save trip completion rollup settings',
+  )
+}
+
+export async function getPendingTripCompletionRollups(
+  accessToken: string,
+): Promise<PendingTripCompletionRollupsResponse> {
+  const response = await fetch(`${apiBase}/api/trip-completion-rollup-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingTripCompletionRollupsResponse>(
+    response,
+    'Failed to load pending trip completion rollups',
+  )
+}
+
+export async function getTripCompletionRollupRuns(
+  accessToken: string,
+  limit = 10,
+): Promise<TripCompletionRollupRunsResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/trip-completion-rollup-settings/runs?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TripCompletionRollupRunsResponse>(
+    response,
+    'Failed to load trip completion rollup runs',
   )
 }
