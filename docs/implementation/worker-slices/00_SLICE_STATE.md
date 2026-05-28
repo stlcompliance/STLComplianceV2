@@ -240,7 +240,7 @@
 
 | 134 | M13 Playwright deep-link E2E (`companion-field-inbox-trainarr-deep-link`, `product-trainarr-assignment-deep-link`, `StlE2ePlaywrightSpecCatalog`, companion preview 5181, `e2eApi` journey seed, `Category=E2e` catalog tests, docs) | M13 (partial) | Complete | `4783cb9` |
 
-| 135 | STLComplianceSite marketing spine (`apps/stlcompliancesite`, homepage + product pages + demo/contact + privacy/terms + security/data ownership, branding, `render.yaml` static site, CI, vitest, docs) | M3 (partial) | Complete | `pending` |
+| 135 | STLComplianceSite marketing spine (`apps/stlcompliancesite`, homepage + product pages + demo/contact + privacy/terms + security/data ownership, branding, `render.yaml` static site, CI, vitest, docs) | M3 (partial) | Complete | `2989c35` |
 
 ## Next slice (Worker 136)
 
