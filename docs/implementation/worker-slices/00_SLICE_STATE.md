@@ -288,7 +288,7 @@
 
 | 158 | TrainArr qualification recalculation worker (`trainarr_tenant_qualification_recalculation_settings`, `trainarr_qualification_recalculation_states`, `trainarr_qualification_recalculation_runs`, internal pending/process-batch, `trainarr.qualifications.recalculate`, `/api/qualification-recalculation-settings`, `TrainArrQualificationRecalculationJob`, `QualificationRecalculationSettingsPanel`, tests, docs) | M12 (partial) | Complete | `f3ecd04` |
 
-| 159 | TrainArr StaffArr publish retry worker (`trainarr_tenant_staffarr_publication_settings`, `trainarr_staffarr_publication_deliveries`, outbox delivery on certification publications, internal pending/process-batch, `trainarr.staffarr_publications.retry`, `/api/staffarr-publication-settings`, `TrainArrStaffarrPublicationRetryJob`, `StaffarrPublicationSettingsPanel`, tests, docs) | M12 (partial) | Complete | `pending` |
+| 159 | TrainArr StaffArr publish retry worker (`trainarr_tenant_staffarr_publication_settings`, `trainarr_staffarr_publication_deliveries`, outbox delivery on certification publications, internal pending/process-batch, `trainarr.staffarr_publications.retry`, `/api/staffarr-publication-settings`, `TrainArrStaffarrPublicationRetryJob`, `StaffarrPublicationSettingsPanel`, tests, docs) | M12 (partial) | Complete | `e6e63dc` |
 
 ## Next slice (Worker 160)
 
