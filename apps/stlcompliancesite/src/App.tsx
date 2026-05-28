@@ -7,6 +7,7 @@ import { NotFoundPage } from './pages/NotFoundPage'
 import { PrivacyPage } from './pages/PrivacyPage'
 import { ProductPage } from './pages/ProductPage'
 import { ProductsHubPage } from './pages/ProductsHubPage'
+import { ResourcesPage } from './pages/ResourcesPage'
 import { SecurityPage } from './pages/SecurityPage'
 import { TermsPage } from './pages/TermsPage'
 
@@ -17,6 +18,7 @@ export default function App() {
         <Route index element={<HomePage />} />
         <Route path="products" element={<ProductsHubPage />} />
         <Route path="products/:productKey" element={<ProductPage />} />
+        <Route path="resources" element={<ResourcesPage />} />
         <Route path="security" element={<SecurityPage />} />
         <Route path="data-ownership" element={<DataOwnershipPage />} />
         <Route path="demo" element={<DemoContactPage />} />

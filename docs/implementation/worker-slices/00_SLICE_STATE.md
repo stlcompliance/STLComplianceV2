@@ -244,6 +244,8 @@
 
 | 136 | NexArr platform audit export (`/api/platform-admin/audit-packages` manifest/timeline/export + async jobs, internal process-batch, shared-worker job, suite platform-admin audit export UI, tests, docs) | M12 (partial) | Complete | `414454e` |
 
-## Next slice (Worker 137)
+| 137 | STLComplianceSite SEO / products hub hardening (resources section, richer products hub + maturity table, OG/Twitter/canonical SEO, build-time sitemap/robots, vitest, Render headers + `VITE_SITE_BASE_URL`, docs) | M12 (partial) | Complete | `pending` |
 
-Per milestone matrix: **STLComplianceSite SEO / products hub hardening** (M12) or **M13 E2E** platform-admin audit export smoke — extend marketing or verification harness.
+## Next slice (Worker 138)
+
+Per milestone matrix: **M13 E2E** platform-admin audit export smoke, or next M12/M13 backlog from feature matrix.

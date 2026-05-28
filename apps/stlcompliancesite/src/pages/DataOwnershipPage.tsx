@@ -8,6 +8,7 @@ export function DataOwnershipPage() {
       <SiteSeo
         title={`Data ownership — ${siteConfig.siteName}`}
         description="How STL Compliance products own operational data, mirrors, and compliance authority boundaries."
+        path="/data-ownership"
       />
       <PageHero
         eyebrow="Data ownership"

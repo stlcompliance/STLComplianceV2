@@ -8,6 +8,7 @@ export function TermsPage() {
       <SiteSeo
         title={`Terms — ${siteConfig.siteName}`}
         description="Terms of use for the STL Compliance public marketing site."
+        path="/terms"
       />
       <PageHero
         eyebrow="Legal"

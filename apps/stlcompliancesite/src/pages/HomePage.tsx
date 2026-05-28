@@ -12,7 +12,9 @@ export function HomePage() {
     <>
       <SiteSeo
         title={`${siteConfig.siteName} — ${siteConfig.arrTagline} Suite`}
-        description="Public marketing site for the STL Compliance / Arr suite. Understand product ownership, trust posture, and how to request a walkthrough or sign in."
+        description={siteConfig.defaultDescription}
+        path="/"
+        includeOrganizationJsonLd
       />
       <PageHero
         eyebrow={siteConfig.arrTagline}
@@ -51,9 +53,14 @@ export function HomePage() {
               database foreign keys.
             </p>
           </div>
-          <Link to="/products" className="text-sm font-medium text-teal-400 hover:text-teal-300">
-            View all products →
-          </Link>
+          <div className="flex flex-wrap gap-4 text-sm font-medium">
+            <Link to="/products" className="text-teal-400 hover:text-teal-300">
+              View all products →
+            </Link>
+            <Link to="/resources" className="text-teal-400 hover:text-teal-300">
+              Resources →
+            </Link>
+          </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {featured.map((product) => (

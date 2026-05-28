@@ -1,10 +1,14 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import App from './App'
 
 describe('App routing', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it('renders TrainArr product ownership page', async () => {
     render(
       <MemoryRouter initialEntries={['/products/trainarr']}>
@@ -13,6 +17,17 @@ describe('App routing', () => {
     )
     expect(await screen.findByRole('heading', { name: 'TrainArr' })).toBeInTheDocument()
     expect(screen.getByText(/Owns/i)).toBeInTheDocument()
+  })
+
+  it('renders resources hub', async () => {
+    render(
+      <MemoryRouter initialEntries={['/resources']}>
+        <App />
+      </MemoryRouter>,
+    )
+    expect(
+      await screen.findByRole('link', { name: /Products hub and ownership map/i }),
+    ).toBeInTheDocument()
   })
 
   it('shows 404 for unknown paths', () => {

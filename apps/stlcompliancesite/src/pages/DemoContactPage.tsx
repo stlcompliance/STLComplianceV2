@@ -31,6 +31,7 @@ export function DemoContactPage() {
       <SiteSeo
         title={`Demo & contact — ${siteConfig.siteName}`}
         description="Request a walkthrough of the STL Compliance suite or contact the team. Existing customers sign in through NexArr."
+        path="/demo"
       />
       <PageHero
         eyebrow="Get started"

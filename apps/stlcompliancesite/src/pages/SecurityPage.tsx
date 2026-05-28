@@ -16,6 +16,7 @@ export function SecurityPage() {
       <SiteSeo
         title={`Security — ${siteConfig.siteName}`}
         description="Trust and security posture for the STL Compliance suite: server authority, tenant isolation, and integration boundaries."
+        path="/security"
       />
       <PageHero
         eyebrow="Trust"

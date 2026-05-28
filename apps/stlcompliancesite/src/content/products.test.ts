@@ -12,4 +12,10 @@ describe('MARKETING_PRODUCTS', () => {
   it('resolves product by key case-insensitively', () => {
     expect(getMarketingProduct('TrainArr')?.displayName).toBe('TrainArr')
   })
+
+  it('assigns category and public maturity labels', () => {
+    expect(getMarketingProduct('nexarr')?.category).toBe('control-plane')
+    expect(getMarketingProduct('companion')?.maturity).toBe('v1-partial')
+    expect(MARKETING_PRODUCTS.every((p) => p.maturityLabel.length > 0)).toBe(true)
+  })
 })

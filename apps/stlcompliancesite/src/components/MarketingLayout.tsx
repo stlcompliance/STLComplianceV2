@@ -3,6 +3,7 @@ import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
 
 const navLinks = [
   { to: '/products', label: 'Products' },
+  { to: '/resources', label: 'Resources' },
   { to: '/security', label: 'Security' },
   { to: '/data-ownership', label: 'Data ownership' },
   { to: '/demo', label: 'Demo & contact' },

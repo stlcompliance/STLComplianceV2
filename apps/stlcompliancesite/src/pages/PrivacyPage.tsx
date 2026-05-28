@@ -8,6 +8,7 @@ export function PrivacyPage() {
       <SiteSeo
         title={`Privacy — ${siteConfig.siteName}`}
         description="Privacy notice for the STL Compliance public marketing site."
+        path="/privacy"
       />
       <PageHero
         eyebrow="Legal"

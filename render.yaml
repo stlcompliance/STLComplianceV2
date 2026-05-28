@@ -494,6 +494,21 @@ services:
         value: https://suite-frontend.onrender.com/login
       - key: VITE_CONTACT_EMAIL
         value: hello@stlcompliance.com
+      - key: VITE_SITE_BASE_URL
+        value: https://stlcompliancesite.onrender.com
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
 
   - type: web
     name: suite-frontend

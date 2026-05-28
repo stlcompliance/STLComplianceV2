@@ -138,7 +138,7 @@ Static sites cannot use private network hostnames; always use public HTTPS URLs 
 
 ## Not in V1 Blueprint
 
-- **stlcompliancesite** (`apps/stlcompliancesite`, port 5173) — static marketing SPA; `VITE_SUITE_LOGIN_URL`, `VITE_CONTACT_EMAIL`; no product APIs.
+- **stlcompliancesite** (`apps/stlcompliancesite`, port 5173) — static marketing SPA; `VITE_SUITE_LOGIN_URL`, `VITE_CONTACT_EMAIL`, `VITE_SITE_BASE_URL` (canonical/OG URLs and build-time `sitemap.xml` / `robots.txt`); no product APIs.
 - **Companion app** — separate mobile slice (Worker 90+).
 
 ## Blueprint validation

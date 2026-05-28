@@ -1,18 +1,83 @@
 import { useEffect } from 'react'
 
-type SiteSeoProps = {
-  title: string
-  description: string
+import {
+
+  applyPageSeo,
+
+  buildOrganizationJsonLd,
+
+  removeJsonLdScript,
+
+  upsertJsonLd,
+
+  type PageSeoInput,
+
+} from '../lib/seo'
+
+
+
+type SiteSeoProps = PageSeoInput & {
+
+  includeOrganizationJsonLd?: boolean
+
 }
 
-export function SiteSeo({ title, description }: SiteSeoProps) {
+
+
+export function SiteSeo({
+
+  title,
+
+  description,
+
+  path,
+
+  ogType,
+
+  noIndex,
+
+  ogImagePath,
+
+  includeOrganizationJsonLd = false,
+
+}: SiteSeoProps) {
+
   useEffect(() => {
-    document.title = title
-    const meta = document.querySelector('meta[name="description"]')
-    if (meta) {
-      meta.setAttribute('content', description)
+
+    applyPageSeo({
+
+      title,
+
+      description,
+
+      path,
+
+      ogType,
+
+      noIndex,
+
+      ogImagePath,
+
+    })
+
+
+
+    if (includeOrganizationJsonLd) {
+
+      upsertJsonLd('stl-organization-jsonld', buildOrganizationJsonLd())
+
+    } else {
+
+      removeJsonLdScript('stl-organization-jsonld')
+
     }
-  }, [title, description])
+
+  }, [title, description, path, ogType, noIndex, ogImagePath, includeOrganizationJsonLd])
+
+
 
   return null
+
 }
+
+

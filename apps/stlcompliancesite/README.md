@@ -26,6 +26,12 @@ npm run preview
 npm test
 ```
 
+Build emits `dist/sitemap.xml` and `dist/robots.txt` using `VITE_SITE_BASE_URL` (defaults to production Render URL).
+
+## SEO
+
+Per-route metadata via `SiteSeo` (title, description, canonical, Open Graph, Twitter Card). Homepage includes Organization JSON-LD. Product hub includes public V1 maturity labels.
+
 ## Branding
 
 `public/stl-logo.png` is copied from `branding/STLCompliance/STL Compliance-Full-monchrome.png`. Re-copy after logo updates.
