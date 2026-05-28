@@ -230,7 +230,7 @@
 
 | 129 | SupplyArr notification settings (`supplyarr_tenant_notification_settings`, dispatch outbox, GET/PUT settings + dispatch list, internal process-batch, shared-worker job, PR/PO/receiving hooks, supplyarr-frontend panel, tests, docs) | M7/M12 (partial) | Complete | `9a59adf` |
 
-| 130 | Compliance Core async audit package generation (`compliancecore_audit_package_generation_jobs`, POST/GET job APIs + download, internal process-batch, shared-worker job, `AuditPackageExportPanel` background ZIP + status, tests, docs) | M5/M12 (partial) | Complete | `pending` |
+| 130 | Compliance Core async audit package generation (`compliancecore_audit_package_generation_jobs`, POST/GET job APIs + download, internal process-batch, shared-worker job, `AuditPackageExportPanel` background ZIP + status, tests, docs) | M5/M12 (partial) | Complete | `ec55449` |
 
 ## Next slice (Worker 131)
 

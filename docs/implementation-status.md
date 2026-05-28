@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 130 | Compliance Core async audit package generation | Complete | `pending` |
+| 130 | Compliance Core async audit package generation | Complete | `ec55449` |
 
 ## Program summary
 
