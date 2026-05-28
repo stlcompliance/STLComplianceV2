@@ -429,3 +429,40 @@ export interface RulePackImpactAssessmentResponse {
   recommendedActions: RulePackImpactRecommendedAction[]
   summary: RulePackImpactSummary
 }
+
+export interface TrainingNotificationSettingsResponse {
+  isEnabled: boolean
+  notificationWebhookUrl: string | null
+  notifyOnAssignmentCreated: boolean
+  notifyOnQualificationExpiring: boolean
+  notifyOnQualificationExpired: boolean
+  expiringLeadDays: number
+  updatedAt: string | null
+}
+
+export interface UpsertTrainingNotificationSettingsRequest {
+  isEnabled: boolean
+  notificationWebhookUrl: string | null
+  notifyOnAssignmentCreated: boolean
+  notifyOnQualificationExpiring: boolean
+  notifyOnQualificationExpired: boolean
+  expiringLeadDays: number
+}
+
+export interface TrainingNotificationDispatchItem {
+  notificationId: string
+  eventKind: string
+  dispatchStatus: string
+  staffarrPersonId: string
+  relatedEntityType: string
+  relatedEntityId: string
+  webhookHost: string | null
+  httpStatusCode: number | null
+  errorMessage: string | null
+  createdAt: string
+  dispatchedAt: string | null
+}
+
+export interface TrainingNotificationDispatchesResponse {
+  items: TrainingNotificationDispatchItem[]
+}

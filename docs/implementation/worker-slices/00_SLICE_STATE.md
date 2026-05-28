@@ -216,6 +216,8 @@
 
 | 122 | k6 optional `STL_LOAD_JOURNEY_TRIP_ID` from RoutArr seed (`resolveJourneyTripId`, `GET /api/load-test-journey/trip`, seed scripts export env, staging soak catalog, tests, docs) | M13 (partial) | Complete | `ebf326f` |
 
-## Next slice (Worker 123)
+| 123 | TrainArr notification settings foundations (`trainarr_tenant_training_notification_settings`, dispatch outbox, GET/PUT settings + dispatch list, internal process-batch, shared-worker job, assignment/expire hooks, trainarr-frontend panel, tests, docs) | M6/M12 (partial) | Complete | `f66c668` |
 
-Recommended: **TrainArr notification settings foundations**, or **Playwright shell tenant chrome after handoff**.
+## Next slice (Worker 124)
+
+Recommended: **Playwright shell tenant chrome after handoff**, or **MaintainArr notification settings** if M12 matrix prioritizes it next.

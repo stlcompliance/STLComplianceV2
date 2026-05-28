@@ -46,6 +46,13 @@ public static class StlIntegrationTokenCatalog
         Profile("handoff-compliancecore", "compliancecore-api", "Handoff__ServiceToken", "compliancecore", ["compliancecore"], "launch.redeem"),
 
         Profile("worker-trainarr-expire", "shared-worker", "TrainArrQualificationExpiration__ServiceToken", "shared-worker", ["trainarr"], "trainarr.qualifications.expire"),
+        Profile(
+            "worker-trainarr-notifications",
+            "shared-worker",
+            "TrainArrNotificationDispatch__ServiceToken",
+            "shared-worker",
+            ["trainarr"],
+            "trainarr.notifications.dispatch"),
         Profile("worker-staffarr-cert-expire", "shared-worker", "StaffArrCertificationExpiration__ServiceToken", "shared-worker", ["staffarr"], "staffarr.certifications.expire"),
         Profile("worker-staffarr-readiness", "shared-worker", "StaffArrReadinessRollup__ServiceToken", "shared-worker", ["staffarr"], "staffarr.readiness.rollup"),
         Profile("worker-staffarr-permissions", "shared-worker", "StaffArrPermissionProjection__ServiceToken", "shared-worker", ["staffarr"], "staffarr.permissions.project"),

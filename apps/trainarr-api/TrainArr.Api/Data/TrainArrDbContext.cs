@@ -56,6 +56,12 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
 
 
+    public DbSet<TenantTrainingNotificationSettings> TenantTrainingNotificationSettings =>
+        Set<TenantTrainingNotificationSettings>();
+
+    public DbSet<TrainingNotificationDispatch> TrainingNotificationDispatches =>
+        Set<TrainingNotificationDispatch>();
+
     public DbSet<TrainArrAuditEvent> AuditEvents => Set<TrainArrAuditEvent>();
 
 
@@ -381,6 +387,34 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.RulePackKey });
             entity.HasIndex(x => new { x.TenantId, x.EntityType, x.EntityId, x.RulePackKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<TenantTrainingNotificationSettings>(entity =>
+        {
+            entity.ToTable("trainarr_tenant_training_notification_settings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.NotificationWebhookUrl).HasMaxLength(2048);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<TrainingNotificationDispatch>(entity =>
+        {
+            entity.ToTable("trainarr_training_notification_dispatches");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.RelatedEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DispatchStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.WebhookHost).HasMaxLength(256);
+            entity.Property(x => x.ErrorMessage).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.CreatedAt });
+            entity.HasIndex(x => new
+            {
+                x.TenantId,
+                x.EventKind,
+                x.RelatedEntityType,
+                x.RelatedEntityId,
+            });
         });
 
         modelBuilder.Entity<TrainArrAuditEvent>(entity =>

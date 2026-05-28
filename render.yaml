@@ -349,6 +349,8 @@ services:
         value: shared-worker
       - key: TrainArrQualificationExpiration__TrainArrBaseUrl
         value: https://trainarr-api-ae2t.onrender.com
+      - key: TrainArrNotificationDispatch__TrainArrBaseUrl
+        value: https://trainarr-api-ae2t.onrender.com
       - key: StaffArrCertificationExpiration__StaffArrBaseUrl
         value: https://staffarr-api-srdo.onrender.com
       - key: StaffArrReadinessRollup__StaffArrBaseUrl

@@ -61,6 +61,10 @@ export function canManageQualifications(tenantRoleKey: string, isPlatformAdmin: 
   return canManageAssignments(tenantRoleKey, isPlatformAdmin)
 }
 
+export function canManageNotificationSettings(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canManageAssignments(tenantRoleKey, isPlatformAdmin)
+}
+
 export function canManagePrograms(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   return canManageAssignments(tenantRoleKey, isPlatformAdmin)
 }

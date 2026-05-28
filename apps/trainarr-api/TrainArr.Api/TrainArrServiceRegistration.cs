@@ -113,6 +113,14 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<QualificationCheckService>();
 
         builder.Services.AddScoped<LoadTestJourneySeedService>();
+        builder.Services.AddScoped<TrainingNotificationSettingsService>();
+        builder.Services.AddScoped<TrainingNotificationEnqueueService>();
+        builder.Services.AddScoped<TrainingNotificationDispatchService>();
+
+        builder.Services.AddHttpClient(TrainingNotificationDispatchService.WebhookHttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
 
         builder.Services.AddScoped<StaffarrIncidentRemediationService>();
 

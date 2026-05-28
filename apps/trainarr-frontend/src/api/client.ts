@@ -30,6 +30,9 @@ import type {
   TrainingRulePackRequirementResponse,
   AssessRulePackImpactRequest,
   RulePackImpactAssessmentResponse,
+  TrainingNotificationDispatchesResponse,
+  TrainingNotificationSettingsResponse,
+  UpsertTrainingNotificationSettingsRequest,
 } from './types'
 
 const apiBase = import.meta.env.VITE_TRAINARR_API_BASE ?? ''
@@ -556,5 +559,45 @@ export async function assessRulePackImpact(
   return parseJsonResponse<RulePackImpactAssessmentResponse>(
     response,
     'Failed to assess rule pack impact',
+  )
+}
+
+export async function getTrainingNotificationSettings(
+  accessToken: string,
+): Promise<TrainingNotificationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/notification-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TrainingNotificationSettingsResponse>(
+    response,
+    'Failed to load notification settings',
+  )
+}
+
+export async function upsertTrainingNotificationSettings(
+  accessToken: string,
+  payload: UpsertTrainingNotificationSettingsRequest,
+): Promise<TrainingNotificationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/notification-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TrainingNotificationSettingsResponse>(
+    response,
+    'Failed to save notification settings',
+  )
+}
+
+export async function getTrainingNotificationDispatches(
+  accessToken: string,
+  limit = 20,
+): Promise<TrainingNotificationDispatchesResponse> {
+  const response = await fetch(`${apiBase}/api/notification-settings/dispatches?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TrainingNotificationDispatchesResponse>(
+    response,
+    'Failed to load notification dispatches',
   )
 }

@@ -40,6 +40,7 @@ import {
   canManageAssignments,
   canManagePrograms,
   canAssessRulePackImpact,
+  canManageNotificationSettings,
   canManageQualifications,
   canRunBatchQualificationChecks,
   canSubmitEvaluation,
@@ -57,6 +58,7 @@ import { BatchQualificationCheckPanel } from '../components/BatchQualificationCh
 import { CitationAttachmentPanel } from '../components/CitationAttachmentPanel'
 import { RulePackRequirementPanel } from '../components/RulePackRequirementPanel'
 import { RulePackImpactPanel } from '../components/RulePackImpactPanel'
+import { NotificationSettingsPanel } from '../components/NotificationSettingsPanel'
 
 const personIdPattern =
   /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi
@@ -498,6 +500,7 @@ export function HomePage() {
   const canQualifications = canManageQualifications(me.tenantRoleKey, me.isPlatformAdmin)
   const canPrograms = canManagePrograms(me.tenantRoleKey, me.isPlatformAdmin)
   const canImpact = canAssessRulePackImpact(me.tenantRoleKey, me.isPlatformAdmin)
+  const canNotifications = canManageNotificationSettings(me.tenantRoleKey, me.isPlatformAdmin)
   const assignments = assignmentsQuery.data ?? []
   const selectedAssignment = assignmentDetailQuery.data
   const canUploadForAssignment =
@@ -685,6 +688,10 @@ export function HomePage() {
           canAssess={canImpact}
           assessment={rulePackImpactAssessment}
         />
+      ) : null}
+
+      {canNotifications ? (
+        <NotificationSettingsPanel accessToken={session.accessToken} canManage={canNotifications} />
       ) : null}
 
       {canBatchQualification && (

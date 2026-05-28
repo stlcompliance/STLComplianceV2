@@ -9,6 +9,7 @@ namespace TrainArr.Api.Services;
 public sealed class QualificationIssueService(
     TrainArrDbContext db,
     CertificationPublicationService publicationService,
+    TrainingNotificationEnqueueService notificationEnqueueService,
     ITrainArrAuditService audit)
 {
     private static readonly HashSet<string> ActiveStatuses = new(StringComparer.OrdinalIgnoreCase)
@@ -224,6 +225,17 @@ public sealed class QualificationIssueService(
             "Succeeded",
             reasonCode: targetStatus,
             cancellationToken: cancellationToken);
+
+        if (string.Equals(targetStatus, "expired", StringComparison.OrdinalIgnoreCase))
+        {
+            await notificationEnqueueService.TryEnqueueAsync(
+                tenantId,
+                TrainingNotificationEventKinds.QualificationExpired,
+                issue.StaffarrPersonId,
+                "qualification_issue",
+                issue.Id,
+                cancellationToken);
+        }
 
         return MapResponse(issue);
     }

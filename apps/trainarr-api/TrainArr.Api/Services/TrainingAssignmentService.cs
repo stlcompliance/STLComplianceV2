@@ -11,6 +11,7 @@ public sealed class TrainingAssignmentService(
     TrainingDefinitionService definitionService,
     CertificationPublicationService publicationService,
     QualificationIssueService qualificationIssueService,
+    TrainingNotificationEnqueueService notificationEnqueueService,
     ITrainArrAuditService audit)
 {
     private static readonly HashSet<string> AllowedAssignmentReasons = new(StringComparer.OrdinalIgnoreCase)
@@ -173,6 +174,14 @@ public sealed class TrainingAssignmentService(
             assignment.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
+
+        await notificationEnqueueService.TryEnqueueAsync(
+            tenantId,
+            TrainingNotificationEventKinds.AssignmentCreated,
+            assignment.StaffarrPersonId,
+            "training_assignment",
+            assignment.Id,
+            cancellationToken);
 
         var loaded = await LoadAssignmentAsync(tenantId, assignment.Id, cancellationToken);
         return MapDetail(loaded);

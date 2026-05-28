@@ -292,6 +292,72 @@
         }
       }
     },
+    "/api/internal/training-notifications/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingTrainingNotifications",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/training-notifications/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessTrainingNotifications",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessTrainingNotificationsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/load-test-journey/seed": {
       "post": {
         "tags": [
@@ -311,6 +377,67 @@
           "Me"
         ],
         "operationId": "TrainArrGetMe",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/notification-settings": {
+      "get": {
+        "tags": [
+          "NotificationSettings"
+        ],
+        "operationId": "GetTrainArrNotificationSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "NotificationSettings"
+        ],
+        "operationId": "UpsertTrainArrNotificationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTrainingNotificationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/notification-settings/dispatches": {
+      "get": {
+        "tags": [
+          "NotificationSettings"
+        ],
+        "operationId": "ListTrainArrNotificationDispatches",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1966,6 +2093,39 @@
           }
         }
       },
+      "ProcessTrainingNotificationsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "QualificationLifecycleActionRequest": {
         "required": [
           "reason"
@@ -2112,6 +2272,45 @@
           }
         }
       },
+      "UpsertTrainingNotificationSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "notificationWebhookUrl",
+          "notifyOnAssignmentCreated",
+          "notifyOnQualificationExpiring",
+          "notifyOnQualificationExpired",
+          "expiringLeadDays"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "notificationWebhookUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notifyOnAssignmentCreated": {
+            "type": "boolean"
+          },
+          "notifyOnQualificationExpiring": {
+            "type": "boolean"
+          },
+          "notifyOnQualificationExpired": {
+            "type": "boolean"
+          },
+          "expiringLeadDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "UpsertTrainingRulePackRequirementRequest": {
         "required": [
           "rulePackKey"
@@ -2191,6 +2390,9 @@
     },
     {
       "name": "FieldInbox"
+    },
+    {
+      "name": "NotificationSettings"
     }
   ]
 }
