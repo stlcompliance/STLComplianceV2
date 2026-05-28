@@ -274,7 +274,7 @@
 
 | 151 | Companion server-side field task validation (`POST /api/companion/field-tasks/validate`, `CompanionFieldTaskValidationService`, plain denied catalog, offline sync + evidence enforcement, companion preflight + plain error UI, tests, docs) | M11 (partial) | Complete | `38b45c4` |
 
-| 152 | Companion offline sync hardening (per-item sync rejections, partial batch results, queue cap 50, retryable vs permanent client handling, tests, docs) | M11 (partial) | Complete | `pending` |
+| 152 | Companion offline sync hardening (per-item sync rejections, partial batch results, queue cap 50, retryable vs permanent client handling, tests, docs) | M11 (partial) | Complete | `e0b8bd2` |
 
 ## Next slice (Worker 153)
 

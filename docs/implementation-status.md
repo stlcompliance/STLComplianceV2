@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 152 | Companion offline sync hardening | Complete | `pending` |
+| 152 | Companion offline sync hardening | Complete | `e0b8bd2` |
 
 ## Program summary
 
