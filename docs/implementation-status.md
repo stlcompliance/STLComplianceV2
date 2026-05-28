@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 126 | StaffArr audit package export + timeline | Complete | `pending` |
+| 126 | StaffArr audit package export + timeline | Complete | `6e3bf19` |
 
 ## Program summary
 

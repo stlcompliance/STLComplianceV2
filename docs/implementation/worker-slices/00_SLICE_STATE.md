@@ -222,7 +222,7 @@
 
 | 125 | MaintainArr notification settings foundations (`maintainarr_tenant_notification_settings`, dispatch outbox, GET/PUT settings + dispatch list, internal process-batch, shared-worker job, work order/PM hooks, maintainarr-frontend panel, tests, docs) | M12 (partial) | Complete | `20f4ed2` |
 
-| 126 | StaffArr audit package export + timeline (`GET /api/audit-packages/export` ZIP/JSON, `GET /api/audit-packages/timeline` paginated audit browse, date filters, `AuditPackageExportPanel` timeline preview, tests, docs; builds on W106 `2778bde`) | M4/M12 (partial) | Complete | `pending` |
+| 126 | StaffArr audit package export + timeline (`GET /api/audit-packages/export` ZIP/JSON, `GET /api/audit-packages/timeline` paginated audit browse, date filters, `AuditPackageExportPanel` timeline preview, tests, docs; builds on W106 `2778bde`) | M4/M12 (partial) | Complete | `6e3bf19` |
 
 ## Next slice (Worker 127)
 
