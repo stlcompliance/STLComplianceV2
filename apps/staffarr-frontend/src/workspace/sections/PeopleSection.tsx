@@ -1,5 +1,6 @@
 import { StaffArrApiError } from '../../api/client'
 import { PersonProfileEditorPanel } from '../../components/PersonProfileEditorPanel'
+import { PersonLookupPanel } from '../../components/PersonLookupPanel'
 import { PersonTimelinePanel } from '../../components/PersonTimelinePanel'
 import { PersonnelNotesPanel } from '../../components/PersonnelNotesPanel'
 import { PersonnelDocumentsPanel } from '../../components/PersonnelDocumentsPanel'
@@ -173,6 +174,15 @@ export function PeopleSection({ state }: Props) {
           contentUrlFor={(documentId) =>
             s.personnelDocumentContentUrl(s.selectedPerson!.personId, documentId)
           }
+        />
+      ) : null}
+
+      {s.selectedPerson ? (
+        <PersonLookupPanel
+          personId={s.selectedPerson.personId}
+          personDisplayName={s.selectedPerson.displayName}
+          lookup={s.personLookupQuery.data ?? null}
+          isLoading={s.personLookupQuery.isLoading}
         />
       ) : null}
 

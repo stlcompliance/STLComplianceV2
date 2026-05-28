@@ -280,6 +280,8 @@
 
 | 154 | StaffArr personnel notes + documents foundations (`staffarr_personnel_notes`, `staffarr_personnel_documents`, note/document APIs with visibility + file storage, person timeline integration, People workspace UI, tests, docs) | M4 (partial) | Complete | `0a0e25f` |
 
-## Next slice (Worker 155)
+| 155 | StaffArr product-facing person lookup API (`PersonLookupService`, `/api/person-lookup` + nested lookup routes, TrainArr `/api/integrations/person-lookup`, `staffarr.person.lookup`, `PersonLookupPanel`, tests, docs) | M4 (partial) | Complete | `pending` |
 
-Per milestone matrix: next open **M4** or **M12** worker backlog row from implementation status.
+## Next slice (Worker 156)
+
+Per milestone matrix: next open **M12** worker backlog row from implementation status (personnel history rollup worker recommended after W155 person lookup).

@@ -14,6 +14,8 @@ public static class IntegrationEndpoints
 
     public const string RoutarrReadinessDispatchActionScope = "staffarr.readiness.dispatch_gate";
 
+    public const string TrainarrPersonLookupActionScope = "staffarr.person.lookup";
+
     public static void MapStaffArrIntegrationEndpoints(this WebApplication app)
     {
         var integrations = app.MapGroup("/api/integrations").WithTags("Integrations");
@@ -128,5 +130,51 @@ public static class IntegrationEndpoints
             return Results.Ok(result);
         })
         .WithName("RoutarrReadinessCheck");
+
+        integrations.MapGet("/person-lookup", async (
+            Guid tenantId,
+            Guid? personId,
+            string? email,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            PersonLookupService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "trainarr",
+                    RequiredTargetProduct = "staffarr",
+                    TenantId = tenantId,
+                    RequiredActionScope = TrainarrPersonLookupActionScope
+                });
+
+            if (personId is null && string.IsNullOrWhiteSpace(email))
+            {
+                return Results.BadRequest(new
+                {
+                    code = "person_lookup.validation",
+                    message = "Provide personId or email query parameter."
+                });
+            }
+
+            if (personId is Guid requestedPersonId)
+            {
+                if (requestedPersonId == Guid.Empty)
+                {
+                    return Results.BadRequest(new
+                    {
+                        code = "person_lookup.validation",
+                        message = "personId must be a valid identifier."
+                    });
+                }
+
+                return Results.Ok(await service.GetByPersonIdAsync(tenantId, requestedPersonId, cancellationToken));
+            }
+
+            return Results.Ok(await service.GetByEmailAsync(tenantId, email!, cancellationToken));
+        })
+        .WithName("TrainarrPersonLookup");
     }
 }

@@ -57,6 +57,41 @@ export interface StaffPersonDetailResponse {
   updatedAt: string
 }
 
+export interface PersonLookupOrgAssignmentResponse {
+  assignmentId: string
+  siteOrgUnitId: string
+  siteName: string
+  departmentOrgUnitId: string
+  departmentName: string
+  teamOrgUnitId: string
+  teamName: string
+  positionOrgUnitId: string
+  positionName: string
+  assignmentPath: string
+}
+
+export interface PersonLookupPlacementResponse {
+  primaryOrgUnitId: string | null
+  primaryOrgUnitName: string | null
+  primaryOrgUnitType: string | null
+  managerPersonId: string | null
+  managerDisplayName: string | null
+  activeAssignments: PersonLookupOrgAssignmentResponse[]
+}
+
+export interface PersonLookupResponse {
+  personId: string
+  externalUserId: string | null
+  givenName: string
+  familyName: string
+  displayName: string
+  primaryEmail: string
+  employmentStatus: string
+  jobTitle: string | null
+  placement: PersonLookupPlacementResponse
+  lookedUpAt: string
+}
+
 export interface UpdateStaffPersonRequest {
   givenName: string
   familyName: string

@@ -59,6 +59,7 @@ import type {
   PersonExportDeliveryNotificationsResponse,
   PersonExportScheduleResponse,
   UpsertPersonExportScheduleRequest,
+  PersonLookupResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -594,6 +595,16 @@ export async function getPersonReadiness(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PersonReadinessResponse>(response, 'Failed to load person readiness')
+}
+
+export async function getPersonLookup(
+  accessToken: string,
+  personId: string,
+): Promise<PersonLookupResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/lookup`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonLookupResponse>(response, 'Failed to load person lookup')
 }
 
 export async function getTeamReadinessRollups(

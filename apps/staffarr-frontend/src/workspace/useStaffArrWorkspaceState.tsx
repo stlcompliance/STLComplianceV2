@@ -27,6 +27,7 @@ import {
   createPersonnelDocument,
   personnelDocumentContentUrl,
   getPersonReadiness,
+  getPersonLookup,
   getSiteReadinessRollups,
   getTeamReadinessRollups,
   grantPersonReadinessOverride,
@@ -169,6 +170,11 @@ export function useStaffArrWorkspaceState() {
   const personReadinessQuery = useQuery({
     queryKey: ['staffarr-person-readiness', session?.accessToken, effectivePersonId],
     queryFn: () => getPersonReadiness(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const personLookupQuery = useQuery({
+    queryKey: ['staffarr-person-lookup', session?.accessToken, effectivePersonId],
+    queryFn: () => getPersonLookup(session!.accessToken, effectivePersonId!),
     enabled: Boolean(session?.accessToken && effectivePersonId),
   })
   const canViewReadinessRollupSummaries =
@@ -640,6 +646,7 @@ export function useStaffArrWorkspaceState() {
     certificationDefinitionsQuery,
     personCertificationsQuery,
     personReadinessQuery,
+    personLookupQuery,
     canViewReadinessRollupSummaries,
     teamReadinessRollupsQuery,
     siteReadinessRollupsQuery,

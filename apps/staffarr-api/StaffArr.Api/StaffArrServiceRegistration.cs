@@ -22,6 +22,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<StaffArrAuthorizationService>();
         builder.Services.AddScoped<PersonProvisioningService>();
         builder.Services.AddScoped<PeopleService>();
+        builder.Services.AddScoped<PersonLookupService>();
         builder.Services.AddScoped<PeopleBulkImportService>();
         builder.Services.AddScoped<PeopleExportService>();
         builder.Services.AddScoped<PersonExportPresetService>();

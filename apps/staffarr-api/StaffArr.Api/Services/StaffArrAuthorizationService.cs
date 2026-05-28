@@ -56,6 +56,22 @@ public sealed class StaffArrAuthorizationService
         RequirePeopleRead(principal);
     }
 
+    public void RequirePersonLookupRead(ClaimsPrincipal principal, Guid personId)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (principal.GetPersonId() == personId)
+        {
+            return;
+        }
+
+        RequirePeopleRead(principal);
+    }
+
     public void RequirePeopleWrite(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
