@@ -50,8 +50,12 @@ export function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="rounded-2xl border border-amber-500/30 bg-amber-950/20 px-5 py-4 text-sm text-amber-100">
           <strong className="font-semibold">V1 implementation maturity:</strong> the suite ships
-          real APIs, databases, workers, and authenticated product UIs. This site is marketing and
-          education only — it does not grant access, store tenant data, or execute product workflows.
+          real APIs, databases, workers, and authenticated product UIs.{' '}
+          <Link to="/maturity" className="font-semibold text-teal-300 underline hover:text-teal-200">
+            View public maturity snapshot →
+          </Link>{' '}
+          This site is marketing and education only — it does not grant access, store tenant data, or
+          execute product workflows.
         </div>
       </section>
 

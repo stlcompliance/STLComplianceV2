@@ -14,6 +14,7 @@ describe('RESOURCE_LINKS', () => {
 
     expect(resourcesByCategory('suite').length).toBeGreaterThan(0)
     expect(RESOURCE_LINKS.some((link) => link.id === 'compare-approaches')).toBe(true)
+    expect(RESOURCE_LINKS.some((link) => link.id === 'implementation-maturity')).toBe(true)
 
   })
 

@@ -254,6 +254,8 @@
 
 | 141 | STLComplianceSite comparison content (`/compare` vs spreadsheets/point tools, nav/footer/resources, SEO + sitemap, vitest, docs) | M3/M12 (partial) | Complete | `d9897a9` |
 
-## Next slice (Worker 142)
+| 142 | STLComplianceSite implementation maturity status (`/maturity` product + milestone snapshot, nav/footer/resources, SEO + sitemap, vitest, docs) | M3/M12 (partial) | Complete | `pending` |
 
-Per milestone matrix: **implementation maturity status** page (public honesty surface) or **k6/load harness** journey extensions.
+## Next slice (Worker 143)
+
+Per milestone matrix: **k6/load harness** journey extensions or additional M13 Playwright/E2E coverage.

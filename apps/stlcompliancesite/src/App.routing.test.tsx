@@ -19,6 +19,20 @@ describe('App routing', () => {
     expect(screen.getByText(/Owns/i)).toBeInTheDocument()
   })
 
+  it('renders maturity page with program snapshot', async () => {
+    render(
+      <MemoryRouter initialEntries={['/maturity']}>
+        <App />
+      </MemoryRouter>,
+    )
+    expect(
+      await screen.findByRole('heading', { name: /V1 maturity by product and milestone/i }),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('maturity-disclaimer')).toBeInTheDocument()
+    expect(screen.getByTestId('program-milestone-table')).toBeInTheDocument()
+    expect(screen.getByTestId('maturity-product-companion')).toBeInTheDocument()
+  })
+
   it('renders compare page with honest disclaimer', async () => {
     render(
       <MemoryRouter initialEntries={['/compare']}>

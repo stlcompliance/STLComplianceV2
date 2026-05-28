@@ -4,6 +4,7 @@ import { siteConfig, suiteLoginUrl } from '../lib/siteConfig'
 const navLinks = [
   { to: '/products', label: 'Products' },
   { to: '/compare', label: 'Compare' },
+  { to: '/maturity', label: 'V1 maturity' },
   { to: '/pricing', label: 'Pricing' },
   { to: '/resources', label: 'Resources' },
   { to: '/security', label: 'Security' },
@@ -58,6 +59,9 @@ export function MarketingLayout() {
           <div className="flex flex-wrap gap-4">
             <Link to="/compare" className="hover:text-teal-300">
               Compare
+            </Link>
+            <Link to="/maturity" className="hover:text-teal-300">
+              V1 maturity
             </Link>
             <Link to="/pricing" className="hover:text-teal-300">
               Pricing

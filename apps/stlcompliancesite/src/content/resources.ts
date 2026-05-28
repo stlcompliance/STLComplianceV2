@@ -43,6 +43,14 @@ export const RESOURCE_LINKS: ResourceLink[] = [
     category: 'ownership',
   },
   {
+    id: 'implementation-maturity',
+    title: 'V1 implementation maturity status',
+    summary:
+      'Public snapshot of program progress by product and milestone — aligned to implementation docs, not live tenant data.',
+    href: '/maturity',
+    category: 'suite',
+  },
+  {
     id: 'compare-approaches',
     title: 'Compare spreadsheets, point tools, and the suite',
     summary:
