@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 124 | Playwright tenant chrome after handoff | Complete | `pending` |
+| 124 | Playwright tenant chrome after handoff | Complete | `fdac1d7` |
 
 ## Program summary
 
