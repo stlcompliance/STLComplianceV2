@@ -326,6 +326,8 @@
 
 | 177 | SupplyArr procurement coordination worker (`supplyarr_tenant_procurement_coordination_settings`, `supplyarr_procurement_coordination_records`, `supplyarr_procurement_coordination_events`, `supplyarr_procurement_coordination_runs`, internal pending/process-batch, `supplyarr.procurement.coordination`, `/api/procurement-coordination` + settings, `SupplyArrProcurementCoordinationJob`, `ProcurementCoordinationSettingsPanel`, `ProcurementCoordinationPanel`, tests, docs) | M12 (partial) | Complete | `0cddc33` |
 
-## Next slice (Worker 178)
+| 178 | SupplyArr approval reminder worker (`supplyarr_tenant_approval_reminder_settings`, `supplyarr_approval_reminder_states`, `supplyarr_approval_reminder_runs`, internal pending/process-batch, `supplyarr.approval_reminders.dispatch`, `/api/approval-reminders` + settings, `SupplyArrApprovalRemindersJob`, `ApprovalReminderSettingsPanel`, `ApprovalRemindersPanel`, notification outbox integration, tests, docs) | M12 (partial) | Complete | `pending` |
 
-Per backlog: SupplyArr `[M12] approval reminder worker` — see `02_PRODUCT_IMPLEMENTATION_BACKLOG.md`.
+## Next slice (Worker 179)
+
+Per backlog: SupplyArr `[M12] demand processing worker`.

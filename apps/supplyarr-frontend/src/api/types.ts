@@ -861,3 +861,77 @@ export interface ProcurementCoordinationRunItem {
 export interface ProcurementCoordinationRunsResponse {
   items: ProcurementCoordinationRunItem[]
 }
+
+export interface ApprovalReminderSettingsResponse {
+  isEnabled: boolean
+  prReminderAfterHours: number
+  poReminderAfterHours: number
+  reminderCooldownHours: number
+  maxRemindersPerSubject: number
+  notifyOnPrApprovalReminder: boolean
+  notifyOnPoApprovalReminder: boolean
+  updatedAt: string | null
+}
+
+export interface UpsertApprovalReminderSettingsRequest {
+  isEnabled: boolean
+  prReminderAfterHours: number
+  poReminderAfterHours: number
+  reminderCooldownHours: number
+  maxRemindersPerSubject: number
+  notifyOnPrApprovalReminder: boolean
+  notifyOnPoApprovalReminder: boolean
+}
+
+export interface PendingApprovalReminderItem {
+  subjectType: string
+  subjectId: string
+  documentKey: string
+  title: string
+  documentStatus: string
+  pendingSince: string
+  lastReminderSentAt: string | null
+  reminderCount: number
+  hoursPending: number
+  hoursUntilNextReminder: number
+}
+
+export interface PendingApprovalRemindersResponse {
+  asOfUtc: string
+  batchSize: number
+  items: PendingApprovalReminderItem[]
+}
+
+export interface ApprovalReminderRunItem {
+  runId: string
+  asOfUtc: string
+  candidatesFound: number
+  remindersSentCount: number
+  skippedCount: number
+  createdAt: string
+}
+
+export interface ApprovalReminderRunsResponse {
+  items: ApprovalReminderRunItem[]
+}
+
+export interface ApprovalReminderSummaryResponse {
+  reminderStateId: string
+  subjectType: string
+  subjectId: string
+  documentKey: string
+  title: string
+  documentStatus: string
+  vendorPartyId: string | null
+  pendingSince: string
+  lastReminderSentAt: string | null
+  reminderCount: number
+  hoursPending: number
+  isOverdue: boolean
+}
+
+export interface ApprovalRemindersDashboardResponse {
+  overdueCount: number
+  pendingCount: number
+  items: ApprovalReminderSummaryResponse[]
+}

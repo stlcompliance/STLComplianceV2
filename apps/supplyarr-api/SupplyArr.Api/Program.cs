@@ -38,5 +38,8 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrProcurementCoordinationSettingsEndpoints();
         app.MapSupplyArrInternalProcurementCoordinationEndpoints();
         app.MapSupplyArrProcurementCoordinationEndpoints();
+        app.MapSupplyArrApprovalReminderSettingsEndpoints();
+        app.MapSupplyArrInternalApprovalReminderEndpoints();
+        app.MapSupplyArrApprovalReminderEndpoints();
         await Task.CompletedTask;
     });

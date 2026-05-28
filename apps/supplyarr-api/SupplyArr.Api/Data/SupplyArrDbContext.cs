@@ -85,6 +85,13 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
 
     public DbSet<ProcurementCoordinationRun> ProcurementCoordinationRuns => Set<ProcurementCoordinationRun>();
 
+    public DbSet<TenantApprovalReminderSettings> TenantApprovalReminderSettings =>
+        Set<TenantApprovalReminderSettings>();
+
+    public DbSet<ApprovalReminderState> ApprovalReminderStates => Set<ApprovalReminderState>();
+
+    public DbSet<ApprovalReminderRun> ApprovalReminderRuns => Set<ApprovalReminderRun>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -720,6 +727,35 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
         modelBuilder.Entity<ProcurementCoordinationRun>(entity =>
         {
             entity.ToTable("supplyarr_procurement_coordination_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<TenantApprovalReminderSettings>(entity =>
+        {
+            entity.ToTable("supplyarr_tenant_approval_reminder_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<ApprovalReminderState>(entity =>
+        {
+            entity.ToTable("supplyarr_approval_reminder_states");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SubjectType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.DocumentKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.DocumentStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.LastReminderEventKind).HasMaxLength(64);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.SubjectType, x.SubjectId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.LastReminderSentAt });
+        });
+
+        modelBuilder.Entity<ApprovalReminderRun>(entity =>
+        {
+            entity.ToTable("supplyarr_approval_reminder_runs");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.CreatedAt });

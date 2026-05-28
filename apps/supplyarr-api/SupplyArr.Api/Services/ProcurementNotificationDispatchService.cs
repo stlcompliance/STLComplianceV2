@@ -229,6 +229,20 @@ public sealed class ProcurementNotificationDispatchService(
                 vendorPartyId = item.VendorPartyId,
                 receivingReceiptId = item.RelatedEntityId,
             },
+            ProcurementNotificationEventKinds.PurchaseRequestApprovalReminder => new
+            {
+                @event = "supplyarr.purchase_request.approval_reminder",
+                tenantId = item.TenantId,
+                vendorPartyId = item.VendorPartyId,
+                purchaseRequestId = item.RelatedEntityId,
+            },
+            ProcurementNotificationEventKinds.PurchaseOrderApprovalReminder => new
+            {
+                @event = "supplyarr.purchase_order.approval_reminder",
+                tenantId = item.TenantId,
+                vendorPartyId = item.VendorPartyId,
+                purchaseOrderId = item.RelatedEntityId,
+            },
             _ => new
             {
                 @event = "supplyarr.notification.unknown",

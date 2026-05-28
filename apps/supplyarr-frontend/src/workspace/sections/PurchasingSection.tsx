@@ -1,5 +1,6 @@
 import { PurchaseOrderPanel } from '../../components/PurchaseOrderPanel'
 import { ProcurementCoordinationPanel } from '../../components/ProcurementCoordinationPanel'
+import { ApprovalRemindersPanel } from '../../components/ApprovalRemindersPanel'
 import { PurchaseRequestPanel } from '../../components/PurchaseRequestPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
@@ -68,6 +69,10 @@ export function PurchasingSection({ state: s }: Props) {
         isIssuing={s.issuePurchaseOrderMutation.isPending}
       />
       <ProcurementCoordinationPanel
+        accessToken={s.accessToken}
+        canRead={s.canCreatePr || s.canApprovePr || s.canCreatePo}
+      />
+      <ApprovalRemindersPanel
         accessToken={s.accessToken}
         canRead={s.canCreatePr || s.canApprovePr || s.canCreatePo}
       />

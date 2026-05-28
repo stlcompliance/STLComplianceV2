@@ -332,6 +332,12 @@ public sealed class SupplyArrAuthorizationService
     public void RequireProcurementCoordinationRead(ClaimsPrincipal principal) =>
         RequirePurchaseRequestRead(principal);
 
+    public void RequireApprovalReminderSettingsManage(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
+    public void RequireApprovalReminderRead(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestRead(principal);
+
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }

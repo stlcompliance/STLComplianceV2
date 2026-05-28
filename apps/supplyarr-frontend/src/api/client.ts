@@ -60,6 +60,11 @@ import type {
   UpsertProcurementCoordinationSettingsRequest,
   PendingProcurementCoordinationResponse,
   ProcurementCoordinationRunsResponse,
+  ApprovalReminderSettingsResponse,
+  UpsertApprovalReminderSettingsRequest,
+  PendingApprovalRemindersResponse,
+  ApprovalReminderRunsResponse,
+  ApprovalRemindersDashboardResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_SUPPLYARR_API_BASE ?? ''
@@ -1039,5 +1044,72 @@ export async function getProcurementCoordinationRuns(
   return parseJsonResponse<ProcurementCoordinationRunsResponse>(
     response,
     'Failed to load procurement coordination runs',
+  )
+}
+
+export async function getApprovalRemindersDashboard(
+  accessToken: string,
+  includeUpcoming = false,
+): Promise<ApprovalRemindersDashboardResponse> {
+  const search = new URLSearchParams({ includeUpcoming: String(includeUpcoming) })
+  const response = await fetch(`${apiBase}/api/approval-reminders?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ApprovalRemindersDashboardResponse>(
+    response,
+    'Failed to load approval reminders dashboard',
+  )
+}
+
+export async function getApprovalReminderSettings(
+  accessToken: string,
+): Promise<ApprovalReminderSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/approval-reminder-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ApprovalReminderSettingsResponse>(
+    response,
+    'Failed to load approval reminder settings',
+  )
+}
+
+export async function upsertApprovalReminderSettings(
+  accessToken: string,
+  payload: UpsertApprovalReminderSettingsRequest,
+): Promise<ApprovalReminderSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/approval-reminder-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<ApprovalReminderSettingsResponse>(
+    response,
+    'Failed to save approval reminder settings',
+  )
+}
+
+export async function getPendingApprovalReminders(
+  accessToken: string,
+): Promise<PendingApprovalRemindersResponse> {
+  const response = await fetch(`${apiBase}/api/approval-reminder-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingApprovalRemindersResponse>(
+    response,
+    'Failed to load pending approval reminders',
+  )
+}
+
+export async function getApprovalReminderRuns(
+  accessToken: string,
+  limit = 5,
+): Promise<ApprovalReminderRunsResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/approval-reminder-settings/runs?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ApprovalReminderRunsResponse>(
+    response,
+    'Failed to load approval reminder runs',
   )
 }

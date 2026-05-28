@@ -63,6 +63,10 @@ public static class ProcurementNotificationEventKinds
     public const string PurchaseOrderIssued = "purchase_order_issued";
 
     public const string ReceivingReceiptPosted = "receiving_receipt_posted";
+
+    public const string PurchaseRequestApprovalReminder = "purchase_request_approval_reminder";
+
+    public const string PurchaseOrderApprovalReminder = "purchase_order_approval_reminder";
 }
 
 public static class ProcurementNotificationDispatchStatuses

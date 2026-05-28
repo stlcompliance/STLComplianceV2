@@ -240,6 +240,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["supplyarr"],
             "supplyarr.procurement.coordination"),
+        Profile(
+            "worker-supplyarr-approval-reminders",
+            "shared-worker",
+            "SupplyArrApprovalReminders__ServiceToken",
+            "shared-worker",
+            ["supplyarr"],
+            "supplyarr.approval_reminders.dispatch"),
     ];
 
     public static IReadOnlyList<StlIntegrationTokenProfile> ForConsumer(string consumerService) =>
