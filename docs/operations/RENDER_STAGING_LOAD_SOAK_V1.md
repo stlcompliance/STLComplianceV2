@@ -51,7 +51,18 @@ export RENDER_STAGING_NEXARR_API_URL="https://nexarr-api-jdyi.onrender.com"
 ./scripts/ops/render-staging-load-soak.sh all
 ```
 
-GitHub: run workflow **Load Staging Render** after configuring repository secrets matching the environment variables above.
+GitHub: run workflow **Load Staging Render** manually, or rely on the **weekly schedule** (Sunday 07:00 UTC) after configuring repository secrets matching the environment variables above. Scheduled runs skip cleanly when staging API URL secrets are not configured.
+
+## CI schedule
+
+| Setting | Value |
+|---------|-------|
+| Workflow | `Load Staging Render` (`.github/workflows/load-staging-render.yml`) |
+| Cron (UTC) | `0 7 * * 0` (Sunday 07:00 — after docker-compose nightly at 06:00) |
+| Trigger | `schedule` + `workflow_dispatch` |
+| Secret gate | Skips soak when any `RENDER_STAGING_*_API_URL` secret is missing |
+
+Canonical C# definitions: `StlRenderStagingLoadSoakScheduleCatalog`.
 
 ## Soak defaults
 

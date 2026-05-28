@@ -1,6 +1,8 @@
 name: Load Staging Render
 
 on:
+  schedule:
+    - cron: "0 7 * * 0"
   workflow_dispatch:
     inputs:
       scenario:
@@ -25,7 +27,48 @@ on:
           - "true"
 
 jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    outputs:
+      run_soak: ${{ steps.evaluate.outputs.run_soak }}
+    steps:
+      - name: Evaluate staging soak secrets
+        id: evaluate
+        env:
+          RENDER_STAGING_NEXARR_API_URL: ${{ secrets.RENDER_STAGING_NEXARR_API_URL }}
+          RENDER_STAGING_STAFFARR_API_URL: ${{ secrets.RENDER_STAGING_STAFFARR_API_URL }}
+          RENDER_STAGING_TRAINARR_API_URL: ${{ secrets.RENDER_STAGING_TRAINARR_API_URL }}
+          RENDER_STAGING_MAINTAINARR_API_URL: ${{ secrets.RENDER_STAGING_MAINTAINARR_API_URL }}
+          RENDER_STAGING_ROUTARR_API_URL: ${{ secrets.RENDER_STAGING_ROUTARR_API_URL }}
+          RENDER_STAGING_SUPPLYARR_API_URL: ${{ secrets.RENDER_STAGING_SUPPLYARR_API_URL }}
+          RENDER_STAGING_COMPLIANCECORE_API_URL: ${{ secrets.RENDER_STAGING_COMPLIANCECORE_API_URL }}
+        run: |
+          missing=()
+          for var in \
+            RENDER_STAGING_NEXARR_API_URL \
+            RENDER_STAGING_STAFFARR_API_URL \
+            RENDER_STAGING_TRAINARR_API_URL \
+            RENDER_STAGING_MAINTAINARR_API_URL \
+            RENDER_STAGING_ROUTARR_API_URL \
+            RENDER_STAGING_SUPPLYARR_API_URL \
+            RENDER_STAGING_COMPLIANCECORE_API_URL
+          do
+            if [[ -z "${!var}" ]]; then
+              missing+=("$var")
+            fi
+          done
+
+          if ((${#missing[@]} > 0)); then
+            echo "Render staging load soak skipped — missing secrets: ${missing[*]}"
+            echo "run_soak=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Render staging load soak secrets ready."
+            echo "run_soak=true" >> "$GITHUB_OUTPUT"
+          fi
+
   staging-render-load-soak:
+    needs: evaluate
+    if: needs.evaluate.outputs.run_soak == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -58,20 +101,21 @@ jobs:
           STL_LOAD_QUALIFICATION_KEY: ${{ secrets.RENDER_STAGING_LOAD_QUALIFICATION_KEY }}
           STL_LOAD_RULE_PACK_KEY: ${{ secrets.RENDER_STAGING_LOAD_RULE_PACK_KEY }}
           RENDER_STAGING_LOAD_OUTPUT_DIRECTORY: ${{ runner.temp }}/render-staging-load
-          RENDER_STAGING_SKIP_HEALTH_GATE: ${{ inputs.skip_health_gate }}
+          RENDER_STAGING_SKIP_HEALTH_GATE: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_health_gate || 'false' }}
         run: |
           chmod +x scripts/ops/render-staging-load-soak.sh scripts/ops/load-test-run.sh
-          scenario="${{ inputs.scenario }}"
+          scenario="${{ github.event_name == 'workflow_dispatch' && inputs.scenario || 'all' }}"
           if [[ -z "$scenario" ]]; then
             scenario="all"
           fi
-          STL_LOAD_VUS="${{ inputs.vus }}" STL_LOAD_DURATION="${{ inputs.duration }}" \
+          STL_LOAD_VUS="${{ github.event_name == 'workflow_dispatch' && inputs.vus || '5' }}" \
+          STL_LOAD_DURATION="${{ github.event_name == 'workflow_dispatch' && inputs.duration || '30s' }}" \
             ./scripts/ops/render-staging-load-soak.sh "$scenario"
 
       - name: Upload k6 summaries
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: render-staging-load-summaries
+          name: render-staging-load-summaries-${{ github.run_id }}
           path: ${{ runner.temp }}/render-staging-load
           if-no-files-found: ignore

@@ -27,6 +27,69 @@ public sealed class StlRenderStagingLoadTestSupportTests
     }
 
     [Fact]
+    public void Schedule_catalog_lists_seven_required_staging_api_url_env_vars()
+    {
+        Assert.Equal(7, StlRenderStagingLoadSoakScheduleCatalog.RequiredStagingApiUrlEnvironmentVariables.Count);
+        Assert.Equal(
+            StlRenderStagingLoadTestCatalog.All.Count,
+            StlRenderStagingLoadSoakScheduleCatalog.RequiredStagingApiUrlEnvironmentVariables.Count);
+        Assert.Equal("0 7 * * 0", StlRenderStagingLoadSoakScheduleCatalog.WeeklyCronUtc);
+    }
+
+    [Fact]
+    public void AreStagingApiUrlsConfigured_returns_false_when_any_url_missing()
+    {
+        var previous = new Dictionary<string, string?>();
+        try
+        {
+            foreach (var environmentVariable in StlRenderStagingLoadSoakScheduleCatalog.RequiredStagingApiUrlEnvironmentVariables)
+            {
+                previous[environmentVariable] = Environment.GetEnvironmentVariable(environmentVariable);
+                Environment.SetEnvironmentVariable(environmentVariable, null);
+            }
+
+            Assert.False(StlRenderStagingLoadSoakScheduleCatalog.AreStagingApiUrlsConfigured());
+            Assert.Contains(
+                "RENDER_STAGING_NEXARR_API_URL",
+                StlRenderStagingLoadSoakScheduleCatalog.GetMissingStagingApiUrlEnvironmentVariables());
+        }
+        finally
+        {
+            foreach (var (environmentVariable, value) in previous)
+            {
+                Environment.SetEnvironmentVariable(environmentVariable, value);
+            }
+        }
+    }
+
+    [Fact]
+    public void AreStagingApiUrlsConfigured_returns_true_when_all_urls_present()
+    {
+        var previous = new Dictionary<string, string?>();
+        try
+        {
+            foreach (var entry in StlRenderStagingLoadTestCatalog.All)
+            {
+                previous[entry.SourceApiUrlEnvironmentVariable] =
+                    Environment.GetEnvironmentVariable(entry.SourceApiUrlEnvironmentVariable);
+                Environment.SetEnvironmentVariable(
+                    entry.SourceApiUrlEnvironmentVariable,
+                    $"https://{entry.RenderApiServiceName}.onrender.com");
+            }
+
+            Assert.True(StlRenderStagingLoadSoakScheduleCatalog.AreStagingApiUrlsConfigured());
+            Assert.Empty(StlRenderStagingLoadSoakScheduleCatalog.GetMissingStagingApiUrlEnvironmentVariables());
+        }
+        finally
+        {
+            foreach (var (environmentVariable, value) in previous)
+            {
+                Environment.SetEnvironmentVariable(environmentVariable, value);
+            }
+        }
+    }
+
+    [Fact]
     public void ResolveEndpointsFromEnvironment_maps_render_urls_to_k6_env()
     {
         var previous = new Dictionary<string, string?>();
