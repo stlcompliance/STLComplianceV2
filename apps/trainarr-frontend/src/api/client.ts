@@ -40,6 +40,10 @@ import type {
   UpsertQualificationRecalculationSettingsRequest,
   QualificationRecalculationStatesResponse,
   QualificationRecalculationRunsResponse,
+  RulePackImpactSettingsResponse,
+  UpsertRulePackImpactSettingsRequest,
+  RulePackImpactStatesResponse,
+  RulePackImpactRunsResponse,
   StaffarrPublicationSettingsResponse,
   UpsertStaffarrPublicationSettingsRequest,
   StaffarrPublicationDeliveriesResponse,
@@ -706,6 +710,59 @@ export async function getQualificationRecalculationRuns(
   return parseJsonResponse<QualificationRecalculationRunsResponse>(
     response,
     'Failed to load qualification recalculation runs',
+  )
+}
+
+export async function getRulePackImpactSettings(
+  accessToken: string,
+): Promise<RulePackImpactSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/rule-pack-impact-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RulePackImpactSettingsResponse>(
+    response,
+    'Failed to load rule pack impact settings',
+  )
+}
+
+export async function upsertRulePackImpactSettings(
+  accessToken: string,
+  payload: UpsertRulePackImpactSettingsRequest,
+): Promise<RulePackImpactSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/rule-pack-impact-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<RulePackImpactSettingsResponse>(
+    response,
+    'Failed to save rule pack impact settings',
+  )
+}
+
+export async function getRulePackImpactStates(
+  accessToken: string,
+  limit = 10,
+): Promise<RulePackImpactStatesResponse> {
+  const response = await fetch(`${apiBase}/api/rule-pack-impact-settings/states?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RulePackImpactStatesResponse>(
+    response,
+    'Failed to load rule pack impact states',
+  )
+}
+
+export async function getRulePackImpactRuns(
+  accessToken: string,
+  limit = 10,
+): Promise<RulePackImpactRunsResponse> {
+  const response = await fetch(`${apiBase}/api/rule-pack-impact-settings/runs?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RulePackImpactRunsResponse>(
+    response,
+    'Failed to load rule pack impact runs',
   )
 }
 

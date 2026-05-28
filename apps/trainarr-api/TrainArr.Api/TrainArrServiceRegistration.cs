@@ -117,6 +117,8 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<RecertificationAssignmentService>();
         builder.Services.AddScoped<QualificationRecalculationSettingsService>();
         builder.Services.AddScoped<QualificationRecalculationService>();
+        builder.Services.AddScoped<RulePackImpactSettingsService>();
+        builder.Services.AddScoped<RulePackImpactWorkerService>();
 
         builder.Services.AddScoped<StaffarrPublicationSettingsService>();
         builder.Services.AddScoped<StaffarrPublicationRetryService>();

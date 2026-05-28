@@ -47,6 +47,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<TrainArrQualificationRecalculationJob>();
 
+        builder.Services.Configure<TrainArrRulePackImpactOptions>(
+            builder.Configuration.GetSection(TrainArrRulePackImpactOptions.SectionName));
+
+        builder.Services.AddHttpClient<TrainArrRulePackImpactClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<TrainArrRulePackImpactOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.TrainArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<TrainArrRulePackImpactJob>();
+
         builder.Services.Configure<TrainArrStaffarrPublicationRetryOptions>(
             builder.Configuration.GetSection(TrainArrStaffarrPublicationRetryOptions.SectionName));
 

@@ -61,6 +61,13 @@ public static class StlIntegrationTokenCatalog
             ["trainarr"],
             "trainarr.qualifications.recalculate"),
         Profile(
+            "worker-trainarr-rulepack-impact",
+            "shared-worker",
+            "TrainArrRulePackImpact__ServiceToken",
+            "shared-worker",
+            ["trainarr"],
+            "trainarr.rulepack_impact.scan"),
+        Profile(
             "worker-trainarr-staffarr-publish-retry",
             "shared-worker",
             "TrainArrStaffarrPublicationRetry__ServiceToken",

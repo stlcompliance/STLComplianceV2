@@ -58,11 +58,13 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
         app.MapTrainArrInternalQualificationExpirationEndpoints();
         app.MapTrainArrInternalRecertificationAssignmentEndpoints();
         app.MapTrainArrInternalQualificationRecalculationEndpoints();
+        app.MapTrainArrInternalRulePackImpactEndpoints();
         app.MapTrainArrFieldInboxEndpoints();
         app.MapTrainArrLoadTestJourneySeedEndpoints();
         app.MapTrainArrNotificationSettingsEndpoints();
         app.MapTrainArrRecertificationSettingsEndpoints();
         app.MapTrainArrQualificationRecalculationSettingsEndpoints();
+        app.MapTrainArrRulePackImpactSettingsEndpoints();
         app.MapTrainArrStaffarrPublicationSettingsEndpoints();
         app.MapTrainArrEventProcessingSettingsEndpoints();
         app.MapTrainArrPersonTrainingHistoryEndpoints();

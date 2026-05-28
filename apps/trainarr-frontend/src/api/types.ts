@@ -548,6 +548,50 @@ export interface QualificationRecalculationRunsResponse {
   items: QualificationRecalculationRunItem[]
 }
 
+export interface RulePackImpactSettingsResponse {
+  isEnabled: boolean
+  stalenessHours: number
+  autoUpdateRequirementBaselines: boolean
+  updatedAt: string | null
+}
+
+export interface UpsertRulePackImpactSettingsRequest {
+  isEnabled: boolean
+  stalenessHours: number
+  autoUpdateRequirementBaselines: boolean
+}
+
+export interface RulePackImpactStateItem {
+  rulePackKey: string
+  requiresAttention: boolean
+  hasDrift: boolean
+  triggers: string[]
+  baselineVersionNumber: number | null
+  currentVersionNumber: number | null
+  baselineStatus: string | null
+  currentStatus: string | null
+  activeAssignmentCount: number
+  activeQualificationCount: number
+  computedAt: string
+}
+
+export interface RulePackImpactStatesResponse {
+  items: RulePackImpactStateItem[]
+}
+
+export interface RulePackImpactRunItem {
+  runId: string
+  rulePackKey: string
+  outcome: string
+  requiresAttention: boolean
+  skipReason: string | null
+  processedAt: string
+}
+
+export interface RulePackImpactRunsResponse {
+  items: RulePackImpactRunItem[]
+}
+
 export interface StaffarrPublicationSettingsResponse {
   isEnabled: boolean
   maxAttempts: number

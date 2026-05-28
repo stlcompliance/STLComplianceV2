@@ -153,6 +153,7 @@ services:
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
+      - fromGroup: stl-internal-api-urls
       - key: DATABASE_URL
         fromDatabase:
           name: nexarr-db
@@ -368,6 +369,12 @@ services:
       - key: TrainArrRecertificationAssignment__TrainArrBaseUrl
         value: https://trainarr-api-ae2t.onrender.com
       - key: TrainArrQualificationRecalculation__TrainArrBaseUrl
+        value: https://trainarr-api-ae2t.onrender.com
+      - key: TrainArrStaffarrPublicationRetry__TrainArrBaseUrl
+        value: https://trainarr-api-ae2t.onrender.com
+      - key: TrainArrEventProcessing__TrainArrBaseUrl
+        value: https://trainarr-api-ae2t.onrender.com
+      - key: TrainArrRulePackImpact__TrainArrBaseUrl
         value: https://trainarr-api-ae2t.onrender.com
       - key: TrainArrNotificationDispatch__TrainArrBaseUrl
         value: https://trainarr-api-ae2t.onrender.com

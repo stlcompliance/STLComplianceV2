@@ -294,6 +294,8 @@
 
 | 161 | TrainArr notification dispatch worker enhancements (retry policy on settings/dispatches, expanded lifecycle event kinds + webhooks, domain-event fan-out to notification outbox, `NotificationSettingsPanel` updates, tests, docs; builds on W123) | M12 (partial) | Complete | `b2d4d2a` |
 
-## Next slice (Worker 162)
+| 162 | TrainArr rule-pack impact worker (`trainarr_tenant_rule_pack_impact_settings`, `trainarr_rule_pack_impact_states`, `trainarr_rule_pack_impact_runs`, internal pending/process-batch, `trainarr.rulepack_impact.scan`, `/api/rule-pack-impact-settings`, `TrainArrRulePackImpactJob`, `RulePackImpactSettingsPanel`, tests, docs; builds on W42) | M12 (partial) | Complete | `pending` |
 
-Per milestone matrix: next open **M12** TrainArr backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (rule-pack impact worker, evidence retention worker, or orphan reference detection worker).
+## Next slice (Worker 163)
+
+Per milestone matrix: next open **M12** TrainArr backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (evidence retention worker or orphan reference detection worker).

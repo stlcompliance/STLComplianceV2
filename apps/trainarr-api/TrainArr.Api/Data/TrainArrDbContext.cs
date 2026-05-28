@@ -71,6 +71,15 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
     public DbSet<QualificationRecalculationRun> QualificationRecalculationRuns =>
         Set<QualificationRecalculationRun>();
 
+    public DbSet<TenantRulePackImpactSettings> TenantRulePackImpactSettings =>
+        Set<TenantRulePackImpactSettings>();
+
+    public DbSet<RulePackImpactState> RulePackImpactStates =>
+        Set<RulePackImpactState>();
+
+    public DbSet<RulePackImpactRun> RulePackImpactRuns =>
+        Set<RulePackImpactRun>();
+
     public DbSet<RecertificationAssignmentRun> RecertificationAssignmentRuns =>
         Set<RecertificationAssignmentRun>();
 
@@ -496,6 +505,38 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
             entity.Property(x => x.SkipReason).HasMaxLength(512);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.QualificationIssueId });
+            entity.HasIndex(x => new { x.TenantId, x.ProcessedAt });
+        });
+
+        modelBuilder.Entity<TenantRulePackImpactSettings>(entity =>
+        {
+            entity.ToTable("trainarr_tenant_rule_pack_impact_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<RulePackImpactState>(entity =>
+        {
+            entity.ToTable("trainarr_rule_pack_impact_states");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RulePackKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Triggers).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.BaselineStatus).HasMaxLength(32);
+            entity.Property(x => x.CurrentStatus).HasMaxLength(32);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.RulePackKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ComputedAt });
+        });
+
+        modelBuilder.Entity<RulePackImpactRun>(entity =>
+        {
+            entity.ToTable("trainarr_rule_pack_impact_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RulePackKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SkipReason).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.RulePackKey });
             entity.HasIndex(x => new { x.TenantId, x.ProcessedAt });
         });
 
