@@ -268,7 +268,7 @@
 
 | 148 | Companion clear submission state (`nexarr_companion_field_submissions`, submission-status API, inbox status chips + activity toasts, offline/evidence integration, tests, docs) | M11 (partial) | Complete | `da42bf4` |
 
-| 149 | Companion product switcher (`ProductSwitcher` handoff mode, launch context + handoff APIs, `useCompanionProductLaunch`, tests, docs) | M11 (partial) | Complete | `pending` |
+| 149 | Companion product switcher (`ProductSwitcher` handoff mode, launch context + handoff APIs, `useCompanionProductLaunch`, tests, docs) | M11 (partial) | Complete | `f385251` |
 
 ## Next slice (Worker 150)
 

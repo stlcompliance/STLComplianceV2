@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 149 | Companion product switcher | Complete | `pending` |
+| 149 | Companion product switcher | Complete | `f385251` |
 
 ## Program summary
 
