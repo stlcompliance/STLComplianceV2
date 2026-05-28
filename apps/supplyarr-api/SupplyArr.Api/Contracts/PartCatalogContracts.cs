@@ -38,6 +38,8 @@ public sealed record PartVendorLinkResponse(
     string? CatalogCurrencyCode,
     decimal? CatalogMinimumOrderQuantity,
     int? CatalogLeadTimeDays,
+    decimal? CatalogQuantityAvailable,
+    string? CatalogAvailabilityStatus,
     DateTimeOffset CreatedAt);
 
 public sealed record PartResponse(

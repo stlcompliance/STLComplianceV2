@@ -379,6 +379,51 @@ public sealed class PartRegistryService(
         return MapVendorLink(link, link.ExternalParty);
     }
 
+    public async Task<PartVendorLinkResponse> UpsertVendorLinkCatalogAvailabilityAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid partId,
+        Guid linkId,
+        UpsertPartVendorLinkCatalogAvailabilityRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var link = await db.PartVendorLinks
+            .Include(x => x.ExternalParty)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.PartId == partId && x.Id == linkId,
+                cancellationToken);
+        if (link is null)
+        {
+            throw new StlApiException("parts.vendor_link.not_found", "Part vendor link was not found.", 404);
+        }
+
+        if (request.CatalogQuantityAvailable is null && string.IsNullOrWhiteSpace(request.CatalogAvailabilityStatus))
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Catalog availability requires quantity and/or status.",
+                400);
+        }
+
+        link.CatalogQuantityAvailable = AvailabilitySnapshotCaptureRules.NormalizeOptionalQuantity(
+            request.CatalogQuantityAvailable);
+        link.CatalogAvailabilityStatus = AvailabilitySnapshotCaptureRules.NormalizeOptionalStatus(
+            request.CatalogAvailabilityStatus);
+        link.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "part_vendor_link.catalog_availability.upsert",
+            tenantId,
+            actorUserId,
+            "part_vendor_link",
+            link.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return MapVendorLink(link, link.ExternalParty);
+    }
+
     private async Task ValidateCatalogAsync(
         Guid tenantId,
         Guid? catalogId,
@@ -465,6 +510,8 @@ public sealed class PartRegistryService(
             entity.CatalogCurrencyCode,
             entity.CatalogMinimumOrderQuantity,
             entity.CatalogLeadTimeDays,
+            entity.CatalogQuantityAvailable,
+            entity.CatalogAvailabilityStatus,
             entity.CreatedAt);
 
     private static decimal NormalizeCatalogUnitPrice(decimal unitPrice)

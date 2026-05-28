@@ -38,6 +38,8 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<PriceSnapshotWorkerService>();
         builder.Services.AddScoped<LeadTimeSnapshotSettingsService>();
         builder.Services.AddScoped<LeadTimeSnapshotWorkerService>();
+        builder.Services.AddScoped<AvailabilitySnapshotSettingsService>();
+        builder.Services.AddScoped<AvailabilitySnapshotWorkerService>();
         builder.Services.AddScoped<ProcurementCoordinationSettingsService>();
         builder.Services.AddScoped<ProcurementCoordinationWorkerService>();
         builder.Services.AddScoped<ProcurementCoordinationService>();

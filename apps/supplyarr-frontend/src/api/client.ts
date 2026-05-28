@@ -55,6 +55,10 @@ import type {
   UpsertLeadTimeSnapshotSettingsRequest,
   PendingLeadTimeSnapshotCapturesResponse,
   LeadTimeSnapshotRunsResponse,
+  AvailabilitySnapshotSettingsResponse,
+  UpsertAvailabilitySnapshotSettingsRequest,
+  PendingAvailabilitySnapshotCapturesResponse,
+  AvailabilitySnapshotRunsResponse,
   ProcurementCoordinationDashboardResponse,
   ProcurementCoordinationSettingsResponse,
   UpsertProcurementCoordinationSettingsRequest,
@@ -982,6 +986,59 @@ export async function getLeadTimeSnapshotRuns(
   return parseJsonResponse<LeadTimeSnapshotRunsResponse>(
     response,
     'Failed to load lead-time snapshot runs',
+  )
+}
+
+export async function getAvailabilitySnapshotSettings(
+  accessToken: string,
+): Promise<AvailabilitySnapshotSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/availability-snapshot-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AvailabilitySnapshotSettingsResponse>(
+    response,
+    'Failed to load availability snapshot settings',
+  )
+}
+
+export async function upsertAvailabilitySnapshotSettings(
+  accessToken: string,
+  payload: UpsertAvailabilitySnapshotSettingsRequest,
+): Promise<AvailabilitySnapshotSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/availability-snapshot-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<AvailabilitySnapshotSettingsResponse>(
+    response,
+    'Failed to save availability snapshot settings',
+  )
+}
+
+export async function getPendingAvailabilitySnapshotCaptures(
+  accessToken: string,
+): Promise<PendingAvailabilitySnapshotCapturesResponse> {
+  const response = await fetch(`${apiBase}/api/availability-snapshot-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingAvailabilitySnapshotCapturesResponse>(
+    response,
+    'Failed to load pending availability snapshot captures',
+  )
+}
+
+export async function getAvailabilitySnapshotRuns(
+  accessToken: string,
+  limit = 10,
+): Promise<AvailabilitySnapshotRunsResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/availability-snapshot-settings/runs?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AvailabilitySnapshotRunsResponse>(
+    response,
+    'Failed to load availability snapshot runs',
   )
 }
 

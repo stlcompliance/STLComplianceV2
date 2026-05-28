@@ -74,6 +74,14 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
 
     public DbSet<LeadTimeSnapshotRun> LeadTimeSnapshotRuns => Set<LeadTimeSnapshotRun>();
 
+    public DbSet<TenantAvailabilitySnapshotSettings> TenantAvailabilitySnapshotSettings =>
+        Set<TenantAvailabilitySnapshotSettings>();
+
+    public DbSet<PartVendorAvailabilityCaptureState> PartVendorAvailabilityCaptureStates =>
+        Set<PartVendorAvailabilityCaptureState>();
+
+    public DbSet<AvailabilitySnapshotRun> AvailabilitySnapshotRuns => Set<AvailabilitySnapshotRun>();
+
     public DbSet<TenantProcurementCoordinationSettings> TenantProcurementCoordinationSettings =>
         Set<TenantProcurementCoordinationSettings>();
 
@@ -211,6 +219,8 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.Property(x => x.CatalogUnitPrice).HasPrecision(18, 4);
             entity.Property(x => x.CatalogCurrencyCode).HasMaxLength(3).IsRequired();
             entity.Property(x => x.CatalogMinimumOrderQuantity).HasPrecision(18, 4);
+            entity.Property(x => x.CatalogQuantityAvailable).HasPrecision(18, 4);
+            entity.Property(x => x.CatalogAvailabilityStatus).HasMaxLength(32);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.PartId });
             entity.HasIndex(x => new { x.TenantId, x.PartId, x.ExternalPartyId }).IsUnique();
@@ -682,6 +692,35 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
         modelBuilder.Entity<LeadTimeSnapshotRun>(entity =>
         {
             entity.ToTable("supplyarr_lead_time_snapshot_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<TenantAvailabilitySnapshotSettings>(entity =>
+        {
+            entity.ToTable("supplyarr_tenant_availability_snapshot_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<PartVendorAvailabilityCaptureState>(entity =>
+        {
+            entity.ToTable("supplyarr_part_vendor_availability_capture_states");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.LastCapturedAvailabilityStatus).HasMaxLength(32);
+            entity.Property(x => x.LastCapturedQuantityAvailable).HasPrecision(18, 4);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PartVendorLinkId }).IsUnique();
+            entity.HasOne(x => x.PartVendorLink)
+                .WithMany()
+                .HasForeignKey(x => x.PartVendorLinkId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AvailabilitySnapshotRun>(entity =>
+        {
+            entity.ToTable("supplyarr_availability_snapshot_runs");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.CreatedAt });

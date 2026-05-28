@@ -326,6 +326,9 @@ public sealed class SupplyArrAuthorizationService
     public void RequireLeadTimeSnapshotSettingsManage(ClaimsPrincipal principal) =>
         RequireNotificationSettingsManage(principal);
 
+    public void RequireAvailabilitySnapshotSettingsManage(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
     public void RequireProcurementCoordinationSettingsManage(ClaimsPrincipal principal) =>
         RequireNotificationSettingsManage(principal);
 

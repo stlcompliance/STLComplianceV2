@@ -114,6 +114,59 @@ public sealed class AvailabilitySnapshotService(
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
 
+    public async Task<AvailabilitySnapshotResponse> CreateWorkerCaptureAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid partVendorLinkId,
+        decimal? quantityAvailable,
+        string availabilityStatus,
+        DateTimeOffset effectiveFrom,
+        CancellationToken cancellationToken = default)
+    {
+        var link = await LoadVendorLinkAsync(tenantId, partVendorLinkId, cancellationToken);
+        var normalizedQuantity = AvailabilitySnapshotCaptureRules.NormalizeOptionalQuantity(quantityAvailable);
+        var normalizedStatus = AvailabilitySnapshotCaptureRules.NormalizeOptionalStatus(availabilityStatus)
+            ?? AvailabilityStatuses.InStock;
+        var snapshotKey = AvailabilitySnapshotCaptureRules.BuildWorkerSnapshotKey(partVendorLinkId, effectiveFrom);
+
+        await CloseOpenSnapshotsAsync(
+            tenantId,
+            link.Id,
+            effectiveFrom,
+            cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new PartVendorAvailabilitySnapshot
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartVendorLinkId = link.Id,
+            SnapshotKey = snapshotKey,
+            QuantityAvailable = normalizedQuantity,
+            AvailabilityStatus = normalizedStatus,
+            EffectiveFrom = effectiveFrom,
+            EffectiveTo = null,
+            Source = SnapshotSources.VendorFeed,
+            Notes = "Automated vendor catalog availability capture.",
+            CreatedByUserId = actorUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.PartVendorAvailabilitySnapshots.Add(entity);
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "availability_snapshot.worker_capture",
+            tenantId,
+            actorUserId,
+            "availability_snapshot",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return await GetAsync(tenantId, entity.Id, cancellationToken);
+    }
+
     private IQueryable<PartVendorAvailabilitySnapshot> BaseQuery(Guid tenantId) =>
         db.PartVendorAvailabilitySnapshots
             .AsNoTracking()
