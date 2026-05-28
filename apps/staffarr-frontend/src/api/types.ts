@@ -145,6 +145,19 @@ export interface PersonExportFilters {
   orgUnitId?: string
 }
 
+export interface PersonExportPresetResponse {
+  employmentStatus: string | null
+  orgUnitId: string | null
+  presetKey: string | null
+  updatedAt: string
+}
+
+export interface UpsertPersonExportPresetRequest {
+  employmentStatus?: string
+  orgUnitId?: string | null
+  presetKey?: string | null
+}
+
 export interface OrgUnitResponse {
   orgUnitId: string
   unitType: string

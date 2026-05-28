@@ -46,6 +46,8 @@ import type {
   PersonExportManifestResponse,
   PersonExportResponse,
   PersonExportFilters,
+  PersonExportPresetResponse,
+  UpsertPersonExportPresetRequest,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -199,6 +201,31 @@ export async function exportPeopleZip(accessToken: string, filters?: PersonExpor
     throw new StaffArrApiError('Failed to export people ZIP', response.status, body)
   }
   return response.blob()
+}
+
+export async function getPersonExportPreset(accessToken: string): Promise<PersonExportPresetResponse | null> {
+  const response = await fetch(`${apiBase}/api/people/export/preset`, {
+    headers: authHeaders(accessToken),
+  })
+  if (response.status === 404) {
+    return null
+  }
+  return parseJsonResponse<PersonExportPresetResponse>(response, 'Failed to load tenant export preset')
+}
+
+export async function upsertPersonExportPreset(
+  accessToken: string,
+  request: UpsertPersonExportPresetRequest,
+): Promise<PersonExportPresetResponse> {
+  const response = await fetch(`${apiBase}/api/people/export/preset`, {
+    method: 'PUT',
+    headers: {
+      ...authHeaders(accessToken),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonExportPresetResponse>(response, 'Failed to save tenant export preset')
 }
 
 export async function getOrgUnits(accessToken: string): Promise<OrgUnitResponse[]> {

@@ -23,6 +23,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<PeopleService>();
         builder.Services.AddScoped<PeopleBulkImportService>();
         builder.Services.AddScoped<PeopleExportService>();
+        builder.Services.AddScoped<PersonExportPresetService>();
         builder.Services.AddScoped<ManagerHierarchyService>();
         builder.Services.AddScoped<OrgUnitService>();
         builder.Services.AddScoped<OrgUnitAssignmentService>();

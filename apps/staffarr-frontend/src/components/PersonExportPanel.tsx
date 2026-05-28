@@ -1,5 +1,5 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 
 import {
   exportPeopleCsv,
@@ -7,13 +7,18 @@ import {
   exportPeopleZip,
   getOrgUnits,
   getPeopleExportManifest,
+  getPersonExportPreset,
+  upsertPersonExportPreset,
 } from '../api/client'
 import type { PersonExportFilters, PersonExportResponse } from '../api/types'
 import {
   PERSON_EXPORT_FILTER_PRESETS,
   applyPersonExportFilterPreset,
   describeActiveExportFilters,
+  describeTenantExportPreset,
+  inferPersonExportFilterPresetKey,
   isPersonExportFilterPresetEnabled,
+  personExportPresetResponseToState,
   resolvePersonExportFilters,
   type PersonExportFilterPresetKey,
 } from '../lib/personExportFilterPresets'
@@ -24,8 +29,10 @@ interface PersonExportPanelProps {
 }
 
 export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelProps) {
+  const queryClient = useQueryClient()
   const [employmentStatus, setEmploymentStatus] = useState('')
   const [orgUnitId, setOrgUnitId] = useState('')
+  const [filtersInitialized, setFiltersInitialized] = useState(false)
   const [lastJsonExport, setLastJsonExport] = useState<PersonExportResponse | null>(null)
 
   const manifestQuery = useQuery({
@@ -40,6 +47,26 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
     enabled: canExport,
   })
 
+  const tenantPresetQuery = useQuery({
+    queryKey: ['staffarr-people-export-preset', accessToken],
+    queryFn: () => getPersonExportPreset(accessToken),
+    enabled: canExport,
+  })
+
+  useEffect(() => {
+    if (filtersInitialized || tenantPresetQuery.isLoading || tenantPresetQuery.data === undefined) {
+      return
+    }
+
+    if (tenantPresetQuery.data) {
+      const state = personExportPresetResponseToState(tenantPresetQuery.data)
+      setEmploymentStatus(state.employmentStatus)
+      setOrgUnitId(state.orgUnitId)
+    }
+
+    setFiltersInitialized(true)
+  }, [filtersInitialized, tenantPresetQuery.data, tenantPresetQuery.isLoading])
+
   const filters = resolvePersonExportFilters({ employmentStatus, orgUnitId })
 
   const applyPreset = (presetKey: PersonExportFilterPresetKey) => {
@@ -47,6 +74,27 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
     setEmploymentStatus(next.employmentStatus)
     setOrgUnitId(next.orgUnitId)
   }
+
+  const applyTenantDefault = () => {
+    if (!tenantPresetQuery.data) {
+      return
+    }
+    const state = personExportPresetResponseToState(tenantPresetQuery.data)
+    setEmploymentStatus(state.employmentStatus)
+    setOrgUnitId(state.orgUnitId)
+  }
+
+  const saveTenantPresetMutation = useMutation({
+    mutationFn: () =>
+      upsertPersonExportPreset(accessToken, {
+        employmentStatus: filters.employmentStatus,
+        orgUnitId: filters.orgUnitId ?? null,
+        presetKey: inferPersonExportFilterPresetKey({ employmentStatus, orgUnitId }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staffarr-people-export-preset', accessToken] })
+    },
+  })
 
   const csvExportMutation = useMutation({
     mutationFn: (exportFilters: PersonExportFilters) => exportPeopleCsv(accessToken, exportFilters),
@@ -117,6 +165,36 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
               })}
             </div>
             <p className="text-xs text-slate-500">{describeActiveExportFilters({ employmentStatus, orgUnitId })}</p>
+          </div>
+
+          <div className="space-y-2 rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+            <p className="text-sm text-slate-300">Tenant export default</p>
+            {tenantPresetQuery.data ? (
+              <p className="text-xs text-slate-500">{describeTenantExportPreset(tenantPresetQuery.data)}</p>
+            ) : (
+              <p className="text-xs text-slate-500">No tenant default saved yet.</p>
+            )}
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={saveTenantPresetMutation.isPending}
+                onClick={() => saveTenantPresetMutation.mutate()}
+                className="rounded-md border border-slate-600 px-3 py-1.5 text-xs text-slate-100 hover:bg-slate-800 disabled:opacity-50"
+              >
+                Save tenant default
+              </button>
+              <button
+                type="button"
+                disabled={!tenantPresetQuery.data}
+                onClick={applyTenantDefault}
+                className="rounded-md border border-slate-600 px-3 py-1.5 text-xs text-slate-100 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Apply tenant default
+              </button>
+            </div>
+            {saveTenantPresetMutation.isSuccess ? (
+              <p className="text-xs text-emerald-400">Tenant default saved.</p>
+            ) : null}
           </div>
 
           <label className="block text-sm text-slate-300">

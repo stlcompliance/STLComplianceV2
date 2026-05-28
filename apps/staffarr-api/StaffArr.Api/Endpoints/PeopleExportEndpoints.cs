@@ -1,3 +1,4 @@
+using StaffArr.Api.Contracts;
 using StaffArr.Api.Services;
 using STLCompliance.Shared.Auth;
 
@@ -67,5 +68,33 @@ public static class PeopleExportEndpoints
                 $"staffarr-people-export-{DateTime.UtcNow:yyyyMMddHHmmss}.zip");
         })
         .WithName("ExportStaffArrPeople");
+
+        exports.MapGet("/preset", async (
+            StaffArrAuthorizationService authorization,
+            PersonExportPresetService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var preset = await service.GetAsync(tenantId, cancellationToken);
+            return preset is null ? Results.NotFound() : Results.Ok(preset);
+        })
+        .WithName("GetStaffArrPeopleExportPreset");
+
+        exports.MapPut("/preset", async (
+            UpsertPersonExportPresetRequest request,
+            StaffArrAuthorizationService authorization,
+            PersonExportPresetService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var preset = await service.UpsertAsync(tenantId, actorUserId, request, cancellationToken);
+            return Results.Ok(preset);
+        })
+        .WithName("UpsertStaffArrPeopleExportPreset");
     }
 }

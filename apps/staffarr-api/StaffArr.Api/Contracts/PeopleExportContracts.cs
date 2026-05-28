@@ -34,3 +34,14 @@ public sealed record PersonExportResponse(
 public sealed record PersonExportFilterRequest(
     string? EmploymentStatus,
     Guid? OrgUnitId);
+
+public sealed record PersonExportPresetResponse(
+    string? EmploymentStatus,
+    Guid? OrgUnitId,
+    string? PresetKey,
+    DateTimeOffset UpdatedAt);
+
+public sealed record UpsertPersonExportPresetRequest(
+    string? EmploymentStatus,
+    Guid? OrgUnitId,
+    string? PresetKey);

@@ -42,6 +42,8 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<StaffArrAuditEvent> AuditEvents => Set<StaffArrAuditEvent>();
 
+    public DbSet<TenantPersonExportPreset> TenantPersonExportPresets => Set<TenantPersonExportPreset>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -325,6 +327,16 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.ReasonCode).HasMaxLength(64);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => x.OccurredAt);
+        });
+
+        modelBuilder.Entity<TenantPersonExportPreset>(entity =>
+        {
+            entity.ToTable("staffarr_tenant_person_export_presets");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EmploymentStatus).HasMaxLength(32);
+            entity.Property(x => x.PresetKey).HasMaxLength(64);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+            entity.HasOne(x => x.OrgUnit).WithMany().HasForeignKey(x => x.OrgUnitId);
         });
     }
 }

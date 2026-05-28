@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PersonExportPanel } from './PersonExportPanel'
-import { exportPeopleJson, getOrgUnits } from '../api/client'
+import { exportPeopleJson, getOrgUnits, getPersonExportPreset, upsertPersonExportPreset } from '../api/client'
 
 vi.mock('../api/client', () => ({
   getPeopleExportManifest: vi.fn().mockResolvedValue({
@@ -26,6 +26,13 @@ vi.mock('../api/client', () => ({
       status: 'inactive',
     },
   ]),
+  getPersonExportPreset: vi.fn().mockResolvedValue(null),
+  upsertPersonExportPreset: vi.fn().mockResolvedValue({
+    employmentStatus: 'active',
+    orgUnitId: '11111111-1111-1111-1111-111111111111',
+    presetKey: 'active-at-org-unit',
+    updatedAt: '2026-05-27T12:00:00Z',
+  }),
   exportPeopleCsv: vi.fn(),
   exportPeopleJson: vi.fn().mockResolvedValue({
     packageVersion: '1',
@@ -65,6 +72,40 @@ describe('PersonExportPanel', () => {
     expect(screen.getByLabelText(/Primary org unit filter/i)).toBeTruthy()
     expect(screen.getByRole('button', { name: /Active workforce/i })).toBeTruthy()
     expect((screen.getByRole('button', { name: /Active at org unit/i }) as HTMLButtonElement).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: /Save tenant default/i })).toBeTruthy()
+  })
+
+  it('loads tenant export preset on mount', async () => {
+    vi.mocked(getPersonExportPreset).mockResolvedValueOnce({
+      employmentStatus: 'inactive',
+      orgUnitId: null,
+      presetKey: 'inactive-records',
+      updatedAt: '2026-05-27T12:00:00Z',
+    })
+
+    renderPanel(true)
+    await waitFor(() => {
+      expect(getPersonExportPreset).toHaveBeenCalledWith('token')
+    })
+    await waitFor(() => {
+      expect(screen.getByText(/Filtering by status inactive/i)).toBeTruthy()
+    })
+  })
+
+  it('saves tenant export preset from current filters', async () => {
+    renderPanel(true)
+    await screen.findByRole('option', { name: /North Site/i })
+
+    fireEvent.click(screen.getByRole('button', { name: /Active workforce/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Save tenant default/i }))
+
+    await waitFor(() => {
+      expect(upsertPersonExportPreset).toHaveBeenCalledWith('token', {
+        employmentStatus: 'active',
+        orgUnitId: null,
+        presetKey: 'active-workforce',
+      })
+    })
   })
 
   it('applies active-at-org-unit preset and exports combined filters', async () => {

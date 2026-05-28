@@ -103,3 +103,54 @@ export function describeActiveExportFilters(state: PersonExportFilterState): str
   }
   return `Filtering by ${parts.join(' and ')}`
 }
+
+export function inferPersonExportFilterPresetKey(
+  state: PersonExportFilterState,
+): PersonExportFilterPresetKey | null {
+  for (const preset of PERSON_EXPORT_FILTER_PRESETS) {
+    const applied = applyPersonExportFilterPreset(preset.key, state)
+    if (
+      applied.employmentStatus === state.employmentStatus &&
+      applied.orgUnitId === state.orgUnitId
+    ) {
+      return preset.key
+    }
+  }
+
+  return null
+}
+
+export interface StoredPersonExportPreset {
+  employmentStatus: string | null
+  orgUnitId: string | null
+  presetKey: string | null
+  updatedAt: string
+}
+
+export function personExportPresetResponseToState(
+  preset: StoredPersonExportPreset,
+): PersonExportFilterState {
+  if (preset.presetKey) {
+    const presetKey = preset.presetKey as PersonExportFilterPresetKey
+    const base = applyPersonExportFilterPreset(presetKey, {
+      employmentStatus: preset.employmentStatus ?? '',
+      orgUnitId: preset.orgUnitId ?? '',
+    })
+    if (presetKey === 'active-at-org-unit' && preset.orgUnitId) {
+      return { employmentStatus: base.employmentStatus, orgUnitId: preset.orgUnitId }
+    }
+    return base
+  }
+
+  return {
+    employmentStatus: preset.employmentStatus ?? '',
+    orgUnitId: preset.orgUnitId ?? '',
+  }
+}
+
+export function describeTenantExportPreset(preset: StoredPersonExportPreset): string {
+  const state = personExportPresetResponseToState(preset)
+  const summary = describeActiveExportFilters(state)
+  const savedAt = new Date(preset.updatedAt).toLocaleString()
+  return `Tenant default: ${summary} (saved ${savedAt})`
+}
