@@ -256,7 +256,7 @@
 
 | 142 | STLComplianceSite implementation maturity status (`/maturity` product + milestone snapshot, nav/footer/resources, SEO + sitemap, vitest, docs) | M3/M12 (partial) | Complete | `be0e623` |
 
-| 143 | M13 k6 journey extensions (StaffArr readiness, SupplyArr procurement PR, MaintainArr work order, Compliance Core evaluate, stl-journey/config, SLO/live/staging catalogs, ops scripts, Load.Tests, docs) | M13 (partial) | Complete | `pending` |
+| 143 | M13 k6 journey extensions (StaffArr readiness, SupplyArr procurement PR, MaintainArr work order, Compliance Core evaluate, stl-journey/config, SLO/live/staging catalogs, ops scripts, Load.Tests, docs) | M13 (partial) | Complete | `d4217e4` |
 
 ## Next slice (Worker 144)
 

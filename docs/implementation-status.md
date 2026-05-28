@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 143 | M13 k6 load harness journey extensions | Complete | `pending` |
+| 143 | M13 k6 load harness journey extensions | Complete | `d4217e4` |
 
 ## Program summary
 
