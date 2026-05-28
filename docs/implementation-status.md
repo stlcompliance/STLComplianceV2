@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 147 | Companion field evidence capture | Complete | `pending` |
+| 147 | Companion field evidence capture | Complete | `e68e2e8` |
 
 ## Program summary
 
