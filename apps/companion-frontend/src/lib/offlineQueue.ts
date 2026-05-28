@@ -1,6 +1,15 @@
+import { MAX_OFFLINE_QUEUE_SIZE } from './offlineSyncOutcome'
+
 export const OFFLINE_QUEUE_STORAGE_KEY = 'stl-companion-offline-queue-v1'
 
 export const OFFLINE_ACTION_FIELD_INBOX_ACKNOWLEDGE = 'field_inbox.acknowledge'
+
+export class OfflineQueueCapacityError extends Error {
+  constructor() {
+    super(`Offline queue is full (max ${MAX_OFFLINE_QUEUE_SIZE} pending acknowledgments).`)
+    this.name = 'OfflineQueueCapacityError'
+  }
+}
 
 export interface QueuedOfflineAction {
   idempotencyKey: string
@@ -59,6 +68,10 @@ export function enqueueFieldInboxAcknowledge(input: {
     return existing
   }
 
+  if (snapshot.pending.length >= MAX_OFFLINE_QUEUE_SIZE) {
+    throw new OfflineQueueCapacityError()
+  }
+
   const action: QueuedOfflineAction = {
     idempotencyKey: crypto.randomUUID(),
     actionKind: OFFLINE_ACTION_FIELD_INBOX_ACKNOWLEDGE,
@@ -84,6 +97,25 @@ export function markSyncSuccess(syncedKeys: ReadonlySet<string>): void {
   snapshot.pending = snapshot.pending.filter((item) => !syncedKeys.has(item.idempotencyKey))
   snapshot.lastSyncedAt = new Date().toISOString()
   snapshot.lastSyncError = null
+  writeRaw(snapshot)
+}
+
+export function markSyncPartial(input: {
+  syncedKeys: ReadonlySet<string>
+  permanentRejectedKeys: ReadonlySet<string>
+  lastSyncError: string | null
+}): void {
+  const snapshot = readRaw()
+  snapshot.pending = snapshot.pending.filter(
+    (item) =>
+      !input.syncedKeys.has(item.idempotencyKey)
+      && !input.permanentRejectedKeys.has(item.idempotencyKey),
+  )
+  if (input.syncedKeys.size > 0) {
+    snapshot.lastSyncedAt = new Date().toISOString()
+  }
+
+  snapshot.lastSyncError = input.lastSyncError
   writeRaw(snapshot)
 }
 

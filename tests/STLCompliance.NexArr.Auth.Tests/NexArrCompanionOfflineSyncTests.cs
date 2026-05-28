@@ -115,7 +115,45 @@ public sealed class NexArrCompanionOfflineSyncTests : IAsyncLifetime
         ]));
 
         var response = await _client.SendAsync(syncRequest);
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        response.EnsureSuccessStatusCode();
+        var payload = (await response.Content.ReadFromJsonAsync<SyncCompanionOfflineActionsResponse>())!;
+        Assert.Equal(0, payload.Accepted);
+        Assert.Equal(1, payload.Rejected);
+        Assert.Equal("companion.offline_actions.unsupported_kind", payload.RejectedItems[0].ReasonCode);
+    }
+
+    [Fact]
+    public async Task Sync_accepts_valid_actions_and_rejects_invalid_in_same_batch()
+    {
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var validKey = $"offline-mixed-valid-{Guid.NewGuid():N}";
+        var invalidKey = $"offline-mixed-invalid-{Guid.NewGuid():N}";
+        var response = await _client.SendAsync(Authorized(
+            HttpMethod.Post,
+            "/api/companion/offline-actions/sync",
+            token,
+            new SyncCompanionOfflineActionsRequest(
+            [
+                new CompanionOfflineActionItem(
+                    validKey,
+                    CompanionOfflineActionKinds.FieldInboxAcknowledge,
+                    $"trainarr:assignment:{AssignmentId:D}",
+                    "trainarr",
+                    DateTimeOffset.UtcNow),
+                new CompanionOfflineActionItem(
+                    invalidKey,
+                    CompanionOfflineActionKinds.FieldInboxAcknowledge,
+                    "trainarr:assignment:abc",
+                    "trainarr",
+                    DateTimeOffset.UtcNow),
+            ])));
+
+        response.EnsureSuccessStatusCode();
+        var payload = (await response.Content.ReadFromJsonAsync<SyncCompanionOfflineActionsResponse>())!;
+        Assert.Equal(1, payload.Accepted);
+        Assert.Equal(1, payload.Rejected);
+        Assert.Contains(payload.Synced, item => item.IdempotencyKey == validKey);
+        Assert.Contains(payload.RejectedItems, item => item.IdempotencyKey == invalidKey);
     }
 
     private async Task<string> LoginAsync(string email)
@@ -128,10 +166,15 @@ public sealed class NexArrCompanionOfflineSyncTests : IAsyncLifetime
         return payload.AccessToken;
     }
 
-    private static HttpRequestMessage Authorized(HttpMethod method, string url, string token)
+    private static HttpRequestMessage Authorized(HttpMethod method, string url, string token, object? body = null)
     {
         var request = new HttpRequestMessage(method, url);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        if (body is not null)
+        {
+            request.Content = JsonContent.Create(body);
+        }
+
         return request;
     }
 

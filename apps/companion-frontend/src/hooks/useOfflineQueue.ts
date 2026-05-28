@@ -5,11 +5,15 @@ import { companionPlainReason } from '../lib/companionPlainReason'
 import {
   enqueueFieldInboxAcknowledge,
   getOfflineQueueSnapshot,
-  markSyncFailure,
-  markSyncSuccess,
+  markSyncPartial,
+  OfflineQueueCapacityError,
   type OfflineQueueSnapshot,
   type QueuedOfflineAction,
 } from '../lib/offlineQueue'
+import {
+  partitionRejectedItems,
+  summarizeOfflineSyncOutcome,
+} from '../lib/offlineSyncOutcome'
 import { pushSubmissionToast, setLocalSubmission } from '../lib/submissionState'
 
 export function useOfflineQueue(
@@ -52,7 +56,21 @@ export function useOfflineQueue(
       })
 
       const syncedKeys = new Set(response.synced.map((item) => item.idempotencyKey))
-      markSyncSuccess(syncedKeys)
+      const { retryableKeys, permanentKeys } = partitionRejectedItems(response.rejectedItems)
+      const summary = summarizeOfflineSyncOutcome(response)
+      const lastSyncError =
+        response.rejected > 0 && retryableKeys.size > 0
+          ? response.rejectedItems.find((item) => retryableKeys.has(item.idempotencyKey))
+              ?.reasonMessage ?? 'Some acknowledgments could not sync yet.'
+          : response.rejected > 0
+            ? response.rejectedItems[0]?.reasonMessage ?? 'Some acknowledgments could not sync.'
+            : null
+
+      markSyncPartial({
+        syncedKeys,
+        permanentRejectedKeys: permanentKeys,
+        lastSyncError,
+      })
 
       for (const item of response.synced) {
         setLocalSubmission({
@@ -63,22 +81,39 @@ export function useOfflineQueue(
         })
       }
 
-      const syncedCount = response.accepted + response.duplicates
-      if (syncedCount > 0) {
-        pushSubmissionToast({
-          tone: 'success',
-          message:
-            syncedCount === 1
-              ? 'Field acknowledgment synced.'
-              : `${syncedCount} field acknowledgments synced.`,
+      for (const item of response.rejectedItems) {
+        setLocalSubmission({
+          taskKey:
+            snapshot.pending.find((pending) => pending.idempotencyKey === item.idempotencyKey)
+              ?.taskKey ?? '',
+          kind: 'acknowledge',
+          phase: retryableKeys.has(item.idempotencyKey) ? 'queued' : 'failed',
+          message: item.reasonMessage,
         })
+      }
+
+      if (summary) {
+        pushSubmissionToast({
+          tone: response.rejected > 0 && syncedKeys.size === 0 ? 'error' : 'success',
+          message: summary,
+        })
+      }
+
+      for (const item of response.rejectedItems) {
+        if (!retryableKeys.has(item.idempotencyKey)) {
+          pushSubmissionToast({ tone: 'error', message: item.reasonMessage })
+        }
       }
 
       refresh()
       options?.onSyncComplete?.()
     } catch (error) {
       const message = companionPlainReason(error, 'Offline sync failed')
-      markSyncFailure(message)
+      markSyncPartial({
+        syncedKeys: new Set(),
+        permanentRejectedKeys: new Set(),
+        lastSyncError: message,
+      })
 
       for (const item of snapshot.pending) {
         setLocalSubmission({
@@ -128,24 +163,32 @@ export function useOfflineQueue(
         }
       }
 
-      const action = enqueueFieldInboxAcknowledge(input)
-      setLocalSubmission({
-        taskKey: input.taskKey,
-        kind: 'acknowledge',
-        phase: isOnline ? 'syncing' : 'queued',
-        message: isOnline ? undefined : 'Queued for sync when back online.',
-      })
-      pushSubmissionToast({
-        tone: 'info',
-        message: isOnline
-          ? `Syncing acknowledgment for “${input.title}”.`
-          : `Queued acknowledgment for “${input.title}”.`,
-      })
-      refresh()
-      if (isOnline) {
-        void syncPending().catch(() => undefined)
+      try {
+        const action = enqueueFieldInboxAcknowledge(input)
+        setLocalSubmission({
+          taskKey: input.taskKey,
+          kind: 'acknowledge',
+          phase: isOnline ? 'syncing' : 'queued',
+          message: isOnline ? undefined : 'Queued for sync when back online.',
+        })
+        pushSubmissionToast({
+          tone: 'info',
+          message: isOnline
+            ? `Syncing acknowledgment for “${input.title}”.`
+            : `Queued acknowledgment for “${input.title}”.`,
+        })
+        refresh()
+        if (isOnline) {
+          void syncPending().catch(() => undefined)
+        }
+        return action
+      } catch (error) {
+        if (error instanceof OfflineQueueCapacityError) {
+          pushSubmissionToast({ tone: 'error', message: error.message })
+        }
+
+        throw error
       }
-      return action
     },
     [accessToken, isOnline, refresh, syncPending],
   )

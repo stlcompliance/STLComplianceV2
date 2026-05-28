@@ -105,10 +105,18 @@ export interface CompanionOfflineActionSyncedItem {
   syncedAt: string
 }
 
+export interface CompanionOfflineActionRejectedItem {
+  idempotencyKey: string
+  reasonCode: string
+  reasonMessage: string
+}
+
 export interface SyncCompanionOfflineActionsResponse {
   accepted: number
   duplicates: number
+  rejected: number
   synced: CompanionOfflineActionSyncedItem[]
+  rejectedItems: CompanionOfflineActionRejectedItem[]
 }
 
 export interface CompanionOfflineActionsListResponse {

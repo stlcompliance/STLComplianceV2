@@ -10,10 +10,17 @@ public sealed record CompanionOfflineActionItem(
 public sealed record SyncCompanionOfflineActionsRequest(
     IReadOnlyList<CompanionOfflineActionItem> Actions);
 
+public sealed record CompanionOfflineActionRejectedItem(
+    string IdempotencyKey,
+    string ReasonCode,
+    string ReasonMessage);
+
 public sealed record SyncCompanionOfflineActionsResponse(
     int Accepted,
     int Duplicates,
-    IReadOnlyList<CompanionOfflineActionSyncedItem> Synced);
+    int Rejected,
+    IReadOnlyList<CompanionOfflineActionSyncedItem> Synced,
+    IReadOnlyList<CompanionOfflineActionRejectedItem> RejectedItems);
 
 public sealed record CompanionOfflineActionSyncedItem(
     string IdempotencyKey,

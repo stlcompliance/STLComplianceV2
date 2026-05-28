@@ -110,9 +110,11 @@ public sealed class NexArrCompanionFieldValidationTests : IAsyncLifetime
                     DateTimeOffset.UtcNow),
             ])));
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var body = await response.Content.ReadAsStringAsync();
-        Assert.Contains("not recognized", body, StringComparison.OrdinalIgnoreCase);
+        response.EnsureSuccessStatusCode();
+        var payload = (await response.Content.ReadFromJsonAsync<SyncCompanionOfflineActionsResponse>())!;
+        Assert.Equal(0, payload.Accepted);
+        Assert.Equal(1, payload.Rejected);
+        Assert.Contains("not recognized", payload.RejectedItems[0].ReasonMessage, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

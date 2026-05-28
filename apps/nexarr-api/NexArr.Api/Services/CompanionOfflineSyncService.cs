@@ -25,7 +25,7 @@ public sealed class CompanionOfflineSyncService(
 
         if (request.Actions.Count == 0)
         {
-            return new SyncCompanionOfflineActionsResponse(0, 0, []);
+            return new SyncCompanionOfflineActionsResponse(0, 0, 0, [], []);
         }
 
         if (request.Actions.Count > 50)
@@ -38,50 +38,63 @@ public sealed class CompanionOfflineSyncService(
 
         var accepted = 0;
         var duplicates = 0;
+        var rejected = 0;
         var synced = new List<CompanionOfflineActionSyncedItem>();
+        var rejectedItems = new List<CompanionOfflineActionRejectedItem>();
         var newlyAccepted = new List<CompanionOfflineAction>();
 
         foreach (var action in request.Actions)
         {
-            ValidateAction(action);
-            await validation.EnsureAllowedAsync(
-                principal,
-                accessToken,
-                action.TaskKey,
-                CompanionFieldSubmissionKinds.Acknowledge,
-                action.ProductKey,
-                cancellationToken);
-
-            var existing = await db.CompanionOfflineActions.AsNoTracking()
-                .FirstOrDefaultAsync(
-                    x => x.TenantId == tenantId && x.IdempotencyKey == action.IdempotencyKey,
+            try
+            {
+                ValidateAction(action);
+                await validation.EnsureAllowedAsync(
+                    principal,
+                    accessToken,
+                    action.TaskKey,
+                    CompanionFieldSubmissionKinds.Acknowledge,
+                    action.ProductKey,
                     cancellationToken);
 
-            if (existing is not null)
-            {
-                duplicates++;
-                synced.Add(ToSyncedItem(existing));
-                continue;
+                var existing = await db.CompanionOfflineActions.AsNoTracking()
+                    .FirstOrDefaultAsync(
+                        x => x.TenantId == tenantId && x.IdempotencyKey == action.IdempotencyKey,
+                        cancellationToken);
+
+                if (existing is not null)
+                {
+                    duplicates++;
+                    synced.Add(ToSyncedItem(existing));
+                    continue;
+                }
+
+                var now = DateTimeOffset.UtcNow;
+                var entity = new CompanionOfflineAction
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    UserId = userId,
+                    IdempotencyKey = action.IdempotencyKey.Trim(),
+                    ActionKind = action.ActionKind.Trim().ToLowerInvariant(),
+                    TaskKey = action.TaskKey.Trim(),
+                    ProductKey = action.ProductKey.Trim().ToLowerInvariant(),
+                    ClientCreatedAt = action.ClientCreatedAt,
+                    SyncedAt = now,
+                };
+
+                db.CompanionOfflineActions.Add(entity);
+                accepted++;
+                newlyAccepted.Add(entity);
+                synced.Add(ToSyncedItem(entity));
             }
-
-            var now = DateTimeOffset.UtcNow;
-            var entity = new CompanionOfflineAction
+            catch (StlApiException ex)
             {
-                Id = Guid.NewGuid(),
-                TenantId = tenantId,
-                UserId = userId,
-                IdempotencyKey = action.IdempotencyKey.Trim(),
-                ActionKind = action.ActionKind.Trim().ToLowerInvariant(),
-                TaskKey = action.TaskKey.Trim(),
-                ProductKey = action.ProductKey.Trim().ToLowerInvariant(),
-                ClientCreatedAt = action.ClientCreatedAt,
-                SyncedAt = now,
-            };
-
-            db.CompanionOfflineActions.Add(entity);
-            accepted++;
-            newlyAccepted.Add(entity);
-            synced.Add(ToSyncedItem(entity));
+                rejected++;
+                rejectedItems.Add(new CompanionOfflineActionRejectedItem(
+                    action.IdempotencyKey.Trim(),
+                    ex.Code,
+                    ex.Message));
+            }
         }
 
         if (accepted > 0)
@@ -103,7 +116,12 @@ public sealed class CompanionOfflineSyncService(
             }
         }
 
-        return new SyncCompanionOfflineActionsResponse(accepted, duplicates, synced);
+        return new SyncCompanionOfflineActionsResponse(
+            accepted,
+            duplicates,
+            rejected,
+            synced,
+            rejectedItems);
     }
 
     public async Task<CompanionOfflineActionsListResponse> ListRecentAsync(
@@ -135,18 +153,27 @@ public sealed class CompanionOfflineSyncService(
     {
         if (string.IsNullOrWhiteSpace(action.IdempotencyKey))
         {
-            throw new StlApiException("companion.offline_actions.idempotency_required", "Idempotency key is required.", 400);
+            throw new StlApiException(
+                "companion.offline_actions.idempotency_required",
+                CompanionDeniedReasonCatalog.ToPlainMessage("companion.offline_actions.idempotency_required"),
+                400);
         }
 
         if (string.IsNullOrWhiteSpace(action.TaskKey) || string.IsNullOrWhiteSpace(action.ProductKey))
         {
-            throw new StlApiException("companion.offline_actions.task_required", "Task key and product key are required.", 400);
+            throw new StlApiException(
+                "companion.offline_actions.task_required",
+                CompanionDeniedReasonCatalog.ToPlainMessage("companion.offline_actions.task_required"),
+                400);
         }
 
         var kind = action.ActionKind.Trim().ToLowerInvariant();
         if (!string.Equals(kind, CompanionOfflineActionKinds.FieldInboxAcknowledge, StringComparison.Ordinal))
         {
-            throw new StlApiException("companion.offline_actions.unsupported_kind", "Unsupported offline action kind.", 400);
+            throw new StlApiException(
+                "companion.offline_actions.unsupported_kind",
+                CompanionDeniedReasonCatalog.ToPlainMessage("companion.offline_actions.unsupported_kind"),
+                400);
         }
     }
 
