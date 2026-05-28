@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PersonExportPanel } from './PersonExportPanel'
-import { exportPeopleJson, getOrgUnits, getPersonExportPreset, getPersonExportSchedule, upsertPersonExportPreset, upsertPersonExportSchedule } from '../api/client'
+import { exportPeopleJson, getOrgUnits, getPersonExportPreset, upsertPersonExportPreset, upsertPersonExportSchedule } from '../api/client'
 
 vi.mock('../api/client', () => ({
   getPeopleExportManifest: vi.fn().mockResolvedValue({
