@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 120 | RoutArr staging trip mirror seed for dispatch gate k6 | Complete | `pending` |
+| 120 | RoutArr staging trip mirror seed for dispatch gate k6 | Complete | `6a2cd3f` |
 
 ## Program summary
 

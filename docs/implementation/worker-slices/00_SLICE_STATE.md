@@ -210,7 +210,7 @@
 
 | 119 | StaffArr export scheduled delivery foundations (`TenantPersonExportSchedule`, internal delivery batch API, delivery run audit, shared-worker job, `PersonExportPanel` schedule UI, tests, docs) | M4/M12 (partial) | Complete | `a70db60` |
 
-| 120 | RoutArr staging trip mirror seed for dispatch gate k6 journeys (`LoadTestJourneySeedService`, `POST /api/load-test-journey/seed`, planned trip mirror for demo subject, operator scripts, load-staging pre-step, tests, docs) | M9/M13 (partial) | Complete | `pending` |
+| 120 | RoutArr staging trip mirror seed for dispatch gate k6 journeys (`LoadTestJourneySeedService`, `POST /api/load-test-journey/seed`, planned trip mirror for demo subject, operator scripts, load-staging pre-step, tests, docs) | M9/M13 (partial) | Complete | `6a2cd3f` |
 
 ## Next slice (Worker 121)
 
