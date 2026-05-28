@@ -328,6 +328,8 @@
 
 | 178 | SupplyArr approval reminder worker (`supplyarr_tenant_approval_reminder_settings`, `supplyarr_approval_reminder_states`, `supplyarr_approval_reminder_runs`, internal pending/process-batch, `supplyarr.approval_reminders.dispatch`, `/api/approval-reminders` + settings, `SupplyArrApprovalRemindersJob`, `ApprovalReminderSettingsPanel`, `ApprovalRemindersPanel`, notification outbox integration, tests, docs) | M12 (partial) | Complete | `8c325d8` |
 
-## Next slice (Worker 179)
+| 179 | SupplyArr demand processing worker (`supplyarr_tenant_demand_processing_settings`, `supplyarr_demand_processing_states`, `supplyarr_demand_processing_runs`, internal pending/process-batch, `supplyarr.demand.process`, `/api/demand-processing` + settings, `SupplyArrDemandProcessingJob`, `DemandProcessingSettingsPanel`, `DemandProcessingPanel`, stock check + auto PR draft + notification integration, tests, docs) | M12 (partial) | Complete | `pending` |
 
-Per backlog: SupplyArr `[M12] demand processing worker`.
+## Next slice (Worker 180)
+
+Per backlog: next M12 SupplyArr or cross-product slice per milestone plan — see `02_PRODUCT_IMPLEMENTATION_BACKLOG.md`.

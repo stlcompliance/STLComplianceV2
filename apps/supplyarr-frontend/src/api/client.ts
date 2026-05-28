@@ -65,6 +65,11 @@ import type {
   PendingApprovalRemindersResponse,
   ApprovalReminderRunsResponse,
   ApprovalRemindersDashboardResponse,
+  DemandProcessingSettingsResponse,
+  UpsertDemandProcessingSettingsRequest,
+  PendingDemandProcessingResponse,
+  DemandProcessingRunsResponse,
+  DemandProcessingDashboardResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_SUPPLYARR_API_BASE ?? ''
@@ -1111,5 +1116,70 @@ export async function getApprovalReminderRuns(
   return parseJsonResponse<ApprovalReminderRunsResponse>(
     response,
     'Failed to load approval reminder runs',
+  )
+}
+
+export async function getDemandProcessingDashboard(
+  accessToken: string,
+): Promise<DemandProcessingDashboardResponse> {
+  const response = await fetch(`${apiBase}/api/demand-processing`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DemandProcessingDashboardResponse>(
+    response,
+    'Failed to load demand processing dashboard',
+  )
+}
+
+export async function getDemandProcessingSettings(
+  accessToken: string,
+): Promise<DemandProcessingSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/demand-processing-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DemandProcessingSettingsResponse>(
+    response,
+    'Failed to load demand processing settings',
+  )
+}
+
+export async function upsertDemandProcessingSettings(
+  accessToken: string,
+  payload: UpsertDemandProcessingSettingsRequest,
+): Promise<DemandProcessingSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/demand-processing-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<DemandProcessingSettingsResponse>(
+    response,
+    'Failed to save demand processing settings',
+  )
+}
+
+export async function getPendingDemandProcessing(
+  accessToken: string,
+): Promise<PendingDemandProcessingResponse> {
+  const response = await fetch(`${apiBase}/api/demand-processing-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingDemandProcessingResponse>(
+    response,
+    'Failed to load pending demand processing',
+  )
+}
+
+export async function getDemandProcessingRuns(
+  accessToken: string,
+  limit = 5,
+): Promise<DemandProcessingRunsResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/demand-processing-settings/runs?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DemandProcessingRunsResponse>(
+    response,
+    'Failed to load demand processing runs',
   )
 }

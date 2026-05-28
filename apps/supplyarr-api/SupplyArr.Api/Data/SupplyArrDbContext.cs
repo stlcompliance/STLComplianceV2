@@ -92,6 +92,13 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
 
     public DbSet<ApprovalReminderRun> ApprovalReminderRuns => Set<ApprovalReminderRun>();
 
+    public DbSet<TenantDemandProcessingSettings> TenantDemandProcessingSettings =>
+        Set<TenantDemandProcessingSettings>();
+
+    public DbSet<DemandProcessingState> DemandProcessingStates => Set<DemandProcessingState>();
+
+    public DbSet<DemandProcessingRun> DemandProcessingRuns => Set<DemandProcessingRun>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -756,6 +763,39 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
         modelBuilder.Entity<ApprovalReminderRun>(entity =>
         {
             entity.ToTable("supplyarr_approval_reminder_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<TenantDemandProcessingSettings>(entity =>
+        {
+            entity.ToTable("supplyarr_tenant_demand_processing_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<DemandProcessingState>(entity =>
+        {
+            entity.ToTable("supplyarr_demand_processing_states");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.MaintainarrWorkOrderNumber).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ProcessingOutcome).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.RecommendedAction).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.LastProcessingMessage).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.DemandRefId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.LastProcessedAt });
+            entity.HasOne(x => x.DemandRef)
+                .WithMany()
+                .HasForeignKey(x => x.DemandRefId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<DemandProcessingRun>(entity =>
+        {
+            entity.ToTable("supplyarr_demand_processing_runs");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.CreatedAt });

@@ -109,6 +109,8 @@ Issue tokens in NexArr (platform admin / service clients) with the scopes docume
 | `SupplyArrProcurementCoordination__ServiceToken` | scope `supplyarr.procurement.coordination` |
 | `SupplyArrApprovalReminders__SupplyArrBaseUrl` | `http://supplyarr-api:10000` |
 | `SupplyArrApprovalReminders__ServiceToken` | scope `supplyarr.approval_reminders.dispatch` |
+| `SupplyArrDemandProcessing__SupplyArrBaseUrl` | `http://supplyarr-api:10000` |
+| `SupplyArrDemandProcessing__ServiceToken` | scope `supplyarr.demand.process` |
 | `ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl` | `http://compliancecore-api:10000` |
 | `ComplianceCoreScheduledEvaluation__ServiceToken` | scope `compliancecore.rules.evaluate.scheduled` |
 | `NexArrServiceTokenCleanup__NexArrBaseUrl` | `http://nexarr-api:10000` |

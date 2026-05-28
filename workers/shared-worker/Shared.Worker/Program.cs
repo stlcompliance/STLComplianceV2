@@ -323,6 +323,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<SupplyArrApprovalRemindersJob>();
 
+        builder.Services.Configure<SupplyArrDemandProcessingOptions>(
+            builder.Configuration.GetSection(SupplyArrDemandProcessingOptions.SectionName));
+
+        builder.Services.AddHttpClient<SupplyArrDemandProcessingClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<SupplyArrDemandProcessingOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.SupplyArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<SupplyArrDemandProcessingJob>();
+
         builder.Services.Configure<SupplyArrNotificationDispatchOptions>(
             builder.Configuration.GetSection(SupplyArrNotificationDispatchOptions.SectionName));
 

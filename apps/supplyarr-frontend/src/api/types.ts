@@ -935,3 +935,75 @@ export interface ApprovalRemindersDashboardResponse {
   pendingCount: number
   items: ApprovalReminderSummaryResponse[]
 }
+
+export interface DemandProcessingSettingsResponse {
+  isEnabled: boolean
+  autoCreatePrDraftWhenShort: boolean
+  minHoursBeforeProcessing: number
+  stalenessHours: number
+  notifyOnPrDraftCreated: boolean
+  updatedAt: string | null
+}
+
+export interface UpsertDemandProcessingSettingsRequest {
+  isEnabled: boolean
+  autoCreatePrDraftWhenShort: boolean
+  minHoursBeforeProcessing: number
+  stalenessHours: number
+  notifyOnPrDraftCreated: boolean
+}
+
+export interface PendingDemandProcessingItem {
+  demandRefId: string
+  maintainarrWorkOrderNumber: string
+  title: string
+  receivedAt: string
+  lastProcessedAt: string | null
+  lastProcessingOutcome: string | null
+}
+
+export interface PendingDemandProcessingResponse {
+  asOfUtc: string
+  stalenessHours: number
+  batchSize: number
+  items: PendingDemandProcessingItem[]
+}
+
+export interface DemandProcessingRunItem {
+  runId: string
+  asOfUtc: string
+  candidatesFound: number
+  processedCount: number
+  prDraftsCreatedCount: number
+  skippedCount: number
+  createdAt: string
+}
+
+export interface DemandProcessingRunsResponse {
+  items: DemandProcessingRunItem[]
+}
+
+export interface DemandProcessingSummaryResponse {
+  processingStateId: string
+  demandRefId: string
+  maintainarrWorkOrderNumber: string
+  title: string
+  demandRefStatus: string
+  processingOutcome: string
+  recommendedAction: string
+  linesTotalCount: number
+  linesCatalogCount: number
+  linesShortCount: number
+  purchaseRequestId: string | null
+  lastProcessingMessage: string | null
+  demandReceivedAt: string
+  lastProcessedAt: string
+}
+
+export interface DemandProcessingDashboardResponse {
+  pendingCount: number
+  stockShortCount: number
+  stockAvailableCount: number
+  prDraftedCount: number
+  items: DemandProcessingSummaryResponse[]
+}

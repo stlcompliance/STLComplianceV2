@@ -243,6 +243,12 @@ public sealed class ProcurementNotificationDispatchService(
                 vendorPartyId = item.VendorPartyId,
                 purchaseOrderId = item.RelatedEntityId,
             },
+            ProcurementNotificationEventKinds.MaintainArrDemandPrDrafted => new
+            {
+                @event = "supplyarr.maintainarr_demand.pr_drafted",
+                tenantId = item.TenantId,
+                demandRefId = item.RelatedEntityId,
+            },
             _ => new
             {
                 @event = "supplyarr.notification.unknown",

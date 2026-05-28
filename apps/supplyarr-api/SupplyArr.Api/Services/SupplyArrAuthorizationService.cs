@@ -338,6 +338,12 @@ public sealed class SupplyArrAuthorizationService
     public void RequireApprovalReminderRead(ClaimsPrincipal principal) =>
         RequirePurchaseRequestRead(principal);
 
+    public void RequireDemandProcessingSettingsManage(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
+    public void RequireDemandProcessingRead(ClaimsPrincipal principal) =>
+        RequireDemandRefRead(principal);
+
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }
