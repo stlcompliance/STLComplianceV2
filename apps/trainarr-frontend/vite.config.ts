@@ -10,6 +10,7 @@ const trainarrApiTarget = process.env.VITE_TRAINARR_PROXY_TARGET ?? 'http://loca
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
+    dedupe: ['react', 'react-dom', 'react-router-dom'],
     alias: {
       '@stl/shared-ui': path.resolve(appRoot, '../../packages/shared-ui/src'),
     },

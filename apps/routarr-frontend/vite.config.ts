@@ -10,6 +10,7 @@ const routarrApiTarget = process.env.VITE_ROUTARR_PROXY_TARGET ?? 'http://localh
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
+    dedupe: ['react', 'react-dom', 'react-router-dom'],
     alias: {
       '@stl/shared-ui': path.resolve(appRoot, '../../packages/shared-ui/src'),
     },

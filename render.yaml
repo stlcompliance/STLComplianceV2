@@ -466,6 +466,8 @@ services:
     envVars:
       - key: VITE_STAFFARR_API_BASE
         value: https://staffarr-api-srdo.onrender.com
+      - key: VITE_SUITE_URL
+        value: https://suite-frontend.onrender.com
 
   - type: web
     name: trainarr-frontend
@@ -480,6 +482,8 @@ services:
     envVars:
       - key: VITE_TRAINARR_API_BASE
         value: https://trainarr-api-ae2t.onrender.com
+      - key: VITE_SUITE_URL
+        value: https://suite-frontend.onrender.com
 
   - type: web
     name: maintainarr-frontend
@@ -494,6 +498,8 @@ services:
     envVars:
       - key: VITE_MAINTAINARR_API_BASE
         value: https://maintainarr-api-82rg.onrender.com
+      - key: VITE_SUITE_URL
+        value: https://suite-frontend.onrender.com
 
   - type: web
     name: routarr-frontend
@@ -508,6 +514,8 @@ services:
     envVars:
       - key: VITE_ROUTARR_API_BASE
         value: https://routarr-api-ut1u.onrender.com
+      - key: VITE_SUITE_URL
+        value: https://suite-frontend.onrender.com
 
   - type: web
     name: supplyarr-frontend
@@ -522,6 +530,8 @@ services:
     envVars:
       - key: VITE_SUPPLYARR_API_BASE
         value: https://supplyarr-api-r963.onrender.com
+      - key: VITE_SUITE_URL
+        value: https://suite-frontend.onrender.com
 
   - type: web
     name: compliancecore-frontend
@@ -536,6 +546,8 @@ services:
     envVars:
       - key: VITE_COMPLIANCECORE_API_BASE
         value: https://compliancecore-api-qfu7.onrender.com
+      - key: VITE_SUITE_URL
+        value: https://suite-frontend.onrender.com
 
   - type: web
     name: companion-frontend
@@ -560,3 +572,5 @@ services:
         value: https://staffarr-frontend.onrender.com
       - key: VITE_SUPPLYARR_FRONTEND_BASE
         value: https://supplyarr-frontend.onrender.com
+      - key: VITE_SUITE_URL
+        value: https://suite-frontend.onrender.com

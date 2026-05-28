@@ -17,10 +17,6 @@ const navItems: ProductNavItem[] = [{ label: 'People workspace', to: '/' }]
 export function ProductWorkspaceLayout() {
   const [searchParams] = useSearchParams()
   const handoff = searchParams.get('handoff')
-  if (handoff) {
-    return <Navigate to={`/launch?handoff=${encodeURIComponent(handoff)}`} replace />
-  }
-
   const session = loadSession()
 
   const meQuery = useQuery({
@@ -35,6 +31,10 @@ export function ProductWorkspaceLayout() {
       clearSession()
     }
   }, [meQuery.isError, meQuery.error])
+
+  if (handoff) {
+    return <Navigate to={`/launch?handoff=${encodeURIComponent(handoff)}`} replace />
+  }
 
   const bootstrapError = meQuery.isError
     ? resolveProductWorkspaceBootstrapError(meQuery.error)

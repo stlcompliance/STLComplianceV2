@@ -10,6 +10,8 @@ const staffarrApiTarget = process.env.VITE_STAFFARR_PROXY_TARGET ?? 'http://loca
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
+    // shared-ui is aliased to source; dedupe prevents a second React copy (blank UI / useContext crash).
+    dedupe: ['react', 'react-dom', 'react-router-dom'],
     alias: {
       '@stl/shared-ui': path.resolve(appRoot, '../../packages/shared-ui/src'),
     },

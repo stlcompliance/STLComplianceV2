@@ -14,6 +14,19 @@ Product frontends (`apps/*-frontend`) import `@stl/shared-ui` via **tsconfig pat
 
 Render runs `npm ci` in each app's `rootDir` only. **`packages/shared-ui/node_modules` is not installed** unless the build command installs it.
 
+## Vite: single React instance (product frontends)
+
+When aliasing `@stl/shared-ui` to source, add `resolve.dedupe` so shared-ui and the app share one `react` / `react-dom` / `react-router-dom`. Without it, authenticated shells crash at runtime (`Cannot read properties of null (reading 'useContext')`) and the page stays blank after handoff.
+
+```ts
+resolve: {
+  dedupe: ['react', 'react-dom', 'react-router-dom'],
+  alias: {
+    '@stl/shared-ui': path.resolve(appRoot, '../../packages/shared-ui/src'),
+  },
+},
+```
+
 ## Required buildCommand (product frontends using shared-ui)
 
 ```yaml
@@ -34,8 +47,11 @@ Applies to: `staffarr-frontend`, `trainarr-frontend`, `maintainarr-frontend`, `r
    npm ci --prefix ../../packages/shared-ui
    npm ci
    npm run build
+   npm run preview
    ```
-5. After changing `packages/shared-ui`, rebuild **every** product frontend that imports it.
+   Smoke: unauthenticated visit shows sign-in guidance; after suite handoff, topbar + sidebar shell render (not an empty `#root`).
+5. **`render.yaml`**: `staticPublishPath: dist`, SPA rewrite `/*` → `/index.html`, and `VITE_SUITE_URL` / product API `VITE_*` for build-time env.
+6. After changing `packages/shared-ui`, rebuild **every** product frontend that imports it.
 
 ## Common failure signatures
 
@@ -45,3 +61,4 @@ Applies to: `staffarr-frontend`, `trainarr-frontend`, `maintainarr-frontend`, `r
 | `react/jsx-runtime` missing in shared-ui | Same as above |
 | `npm ci` EUSAGE / lock out of sync | Missing or stale `package-lock.json` |
 | Unused import TS6133 in `*.test.tsx` | Strict `noUnusedLocals`; remove or use the import |
+| Blank page after launch; console `useContext` null | Missing `resolve.dedupe` for React when bundling aliased shared-ui |

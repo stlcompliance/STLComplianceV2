@@ -10,6 +10,7 @@ const supplyarrApiTarget = process.env.VITE_SUPPLYARR_PROXY_TARGET ?? 'http://lo
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
+    dedupe: ['react', 'react-dom', 'react-router-dom'],
     alias: {
       '@stl/shared-ui': path.resolve(appRoot, '../../packages/shared-ui/src'),
     },
