@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 153 | Companion Web Push subscription and delivery | Complete | `pending` |
+| 153 | Companion Web Push subscription and delivery | Complete | `b5bbd69` |
 
 ## Program summary
 

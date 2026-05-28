@@ -276,7 +276,7 @@
 
 | 152 | Companion offline sync hardening (per-item sync rejections, partial batch results, queue cap 50, retryable vs permanent client handling, tests, docs) | M11 (partial) | Complete | `e0b8bd2` |
 
-| 153 | Companion Web Push subscription and delivery (`nexarr_companion_push_subscriptions`, VAPID APIs, Web Push on notification dispatch, service worker + companion subscribe UI, render VAPID env, tests, docs) | M11 (partial) | Complete | `pending` |
+| 153 | Companion Web Push subscription and delivery (`nexarr_companion_push_subscriptions`, VAPID APIs, Web Push on notification dispatch, service worker + companion subscribe UI, render VAPID env, tests, docs) | M11 (partial) | Complete | `b5bbd69` |
 
 ## Next slice (Worker 154)
 
