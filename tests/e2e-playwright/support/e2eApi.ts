@@ -27,6 +27,14 @@ function supplyarrApiUrl(): string {
   return process.env.E2E_SUPPLYARR_API_URL ?? 'http://localhost:5106'
 }
 
+function staffarrApiUrl(): string {
+  return process.env.E2E_STAFFARR_API_URL ?? 'http://localhost:5102'
+}
+
+function compliancecoreApiUrl(): string {
+  return process.env.E2E_COMPLIANCECORE_API_URL ?? 'http://localhost:5107'
+}
+
 function productFrontendUrl(productKey: string): string {
   const frontend = handoffProductFrontends.find((p) => p.productKey === productKey)
   if (!frontend) {
@@ -94,20 +102,21 @@ export async function redeemTrainArrHandoff(handoffCode: string): Promise<string
   return redeemProductHandoff('trainarr', handoffCode)
 }
 
+const productApiUrls: Record<string, () => string> = {
+  staffarr: staffarrApiUrl,
+  trainarr: trainarrApiUrl,
+  maintainarr: maintainarrApiUrl,
+  routarr: routarrApiUrl,
+  supplyarr: supplyarrApiUrl,
+  compliancecore: compliancecoreApiUrl,
+}
+
 async function redeemProductHandoff(productKey: string, handoffCode: string): Promise<string> {
-  const apiUrl =
-    productKey === 'trainarr'
-      ? trainarrApiUrl()
-      : productKey === 'maintainarr'
-        ? maintainarrApiUrl()
-        : productKey === 'routarr'
-          ? routarrApiUrl()
-          : productKey === 'supplyarr'
-            ? supplyarrApiUrl()
-            : null
-  if (!apiUrl) {
+  const resolveApiUrl = productApiUrls[productKey]
+  if (!resolveApiUrl) {
     throw new Error(`No API URL configured for product ${productKey}`)
   }
+  const apiUrl = resolveApiUrl()
 
   const response = await fetch(`${apiUrl}/api/auth/handoff/redeem`, {
     method: 'POST',
@@ -225,6 +234,23 @@ export async function processPlatformAuditPackageGenerationBatch(
     },
   )
   await readJson(response)
+}
+
+export type ComplianceCoreJourneyFixture = {
+  rulePackId: string
+  rulePackKey: string
+}
+
+export async function seedComplianceCoreJourney(
+  compliancecoreAccessToken?: string,
+): Promise<ComplianceCoreJourneyFixture> {
+  const token = compliancecoreAccessToken ?? (await redeemHandoffForProduct('compliancecore'))
+  const response = await fetch(`${compliancecoreApiUrl()}/api/load-test-journey/seed`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const payload = await readJson<{ rulePackId: string; rulePackKey: string }>(response)
+  return { rulePackId: payload.rulePackId, rulePackKey: payload.rulePackKey }
 }
 
 export async function ensureTrainArrFieldInboxFixture(): Promise<TrainArrJourneyFixture> {

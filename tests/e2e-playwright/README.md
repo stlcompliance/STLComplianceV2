@@ -46,6 +46,8 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 | `product-trainarr-assignment-deep-link.spec.ts` | TrainArr `/assignments/{id}/evidence` route smoke |
 | `platform-admin-audit-export-smoke.spec.ts` | Suite platform-admin audit export manifest/timeline/sync ZIP + background job (W138) |
 | `companion-field-inbox-operations-deep-links.spec.ts` | Companion → MaintainArr / RoutArr / SupplyArr field inbox deep links (W140) |
+| `compliancecore-operator-rule-evaluate-smoke.spec.ts` | Compliance Core handoff → rule pack seed + evaluate (operator path) |
+| `suite-multi-product-handoff-journey.spec.ts` | Suite session chains StaffArr → TrainArr → Compliance Core handoffs |
 
 Catalog: `StlE2ePlaywrightSpecCatalog` + `StlE2eFrontendCatalog.CompanionFrontend` in shared .NET (`Category=E2e` tests).
 
@@ -71,5 +73,7 @@ Catalog: `StlE2ePlaywrightSpecCatalog` + `StlE2eFrontendCatalog.CompanionFronten
 | `E2E_ROUTARR_URL` | `http://localhost:5180` |
 | `E2E_COMPANION_URL` | `http://localhost:5181` |
 | `E2E_TRAINARR_API_URL` | `http://localhost:5103` |
+| `E2E_STAFFARR_API_URL` | `http://localhost:5102` |
+| `E2E_COMPLIANCECORE_API_URL` | `http://localhost:5107` |
 | `E2E_DEMO_EMAIL` | `admin@demo.stl` |
 | `E2E_DEMO_PASSWORD` | `ChangeMe!Demo2026` |

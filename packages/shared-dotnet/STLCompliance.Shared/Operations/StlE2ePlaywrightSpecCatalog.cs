@@ -16,6 +16,10 @@ public static class StlE2ePlaywrightSpecCatalog
         "companion-field-inbox-operations-deep-links.spec.ts";
     public const string PlatformAdminAuditExportSmokeSpec =
         "platform-admin-audit-export-smoke.spec.ts";
+    public const string ComplianceCoreOperatorRuleEvaluateSmokeSpec =
+        "compliancecore-operator-rule-evaluate-smoke.spec.ts";
+    public const string SuiteMultiProductHandoffJourneySpec =
+        "suite-multi-product-handoff-journey.spec.ts";
 
     public static readonly IReadOnlyList<string> DeepLinkSmokeSpecs =
     [
@@ -26,6 +30,12 @@ public static class StlE2ePlaywrightSpecCatalog
 
     public static readonly IReadOnlyList<string> PlatformAdminSmokeSpecs = [PlatformAdminAuditExportSmokeSpec];
 
+    public static readonly IReadOnlyList<string> OperatorJourneySmokeSpecs =
+    [
+        ComplianceCoreOperatorRuleEvaluateSmokeSpec,
+        SuiteMultiProductHandoffJourneySpec,
+    ];
+
     public static readonly IReadOnlyList<string> All =
     [
         SuiteLoginHandoffSmokeSpec,
@@ -33,5 +43,6 @@ public static class StlE2ePlaywrightSpecCatalog
         ProductHandoffTenantChromeSpec,
         ..DeepLinkSmokeSpecs,
         ..PlatformAdminSmokeSpecs,
+        ..OperatorJourneySmokeSpecs,
     ];
 }

@@ -81,7 +81,7 @@ export function RuleEvaluationPanel({
       : factKeysFromContent
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="rule-evaluation-panel">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-slate-400">
           Attach structured rule content to rule packs and run synchronous fact-based evaluations.
@@ -89,6 +89,7 @@ export function RuleEvaluationPanel({
         {canManage && (
           <button
             type="button"
+            data-testid="rule-evaluation-seed-content"
             onClick={onSeedContent}
             disabled={isSeedingContent || rulePacks.length === 0}
             className="rounded-md bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:opacity-50"
@@ -193,6 +194,7 @@ export function RuleEvaluationPanel({
             )}
             <button
               type="button"
+              data-testid="rule-evaluation-run"
               disabled={isEvaluating}
               onClick={() => onEvaluate(factInputs)}
               className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-600 disabled:opacity-50"
@@ -202,7 +204,11 @@ export function RuleEvaluationPanel({
           </div>
 
           {lastEvaluation && (
-            <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/60 p-3">
+            <div
+              className="mt-4 rounded-lg border border-slate-700 bg-slate-950/60 p-3"
+              data-testid="rule-evaluation-latest-result"
+              data-overall-result={lastEvaluation.overallResult}
+            >
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-medium text-slate-100">Latest result</p>
                 <span className={`rounded px-2 py-0.5 text-xs uppercase ${resultBadgeClass(lastEvaluation.overallResult)}`}>

@@ -258,6 +258,8 @@
 
 | 143 | M13 k6 journey extensions (StaffArr readiness, SupplyArr procurement PR, MaintainArr work order, Compliance Core evaluate, stl-journey/config, SLO/live/staging catalogs, ops scripts, Load.Tests, docs) | M13 (partial) | Complete | `d4217e4` |
 
-## Next slice (Worker 144)
+| 144 | M13 Playwright/E2E expansion (Compliance Core operator rule evaluate smoke, suite multi-product handoff journey, e2eApi/handoff helpers, catalog, compliancecore test ids, docs) | M13 (partial) | Complete | `pending` |
 
-Per milestone matrix: additional **M13 Playwright/E2E** coverage or next product backlog slice from milestone matrix.
+## Next slice (Worker 145)
+
+Per milestone matrix: next product backlog slice (M4–M12 feature row) or M13 ship-gate hardening (OpenAPI parity, isolation probes).

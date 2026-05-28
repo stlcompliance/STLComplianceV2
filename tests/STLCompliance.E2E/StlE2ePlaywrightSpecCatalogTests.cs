@@ -31,11 +31,25 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
     }
 
     [Fact]
+    public void Operator_journey_smoke_specs_include_compliance_core_and_multi_handoff()
+    {
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.ComplianceCoreOperatorRuleEvaluateSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.OperatorJourneySmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.SuiteMultiProductHandoffJourneySpec,
+            StlE2ePlaywrightSpecCatalog.OperatorJourneySmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.ComplianceCoreOperatorRuleEvaluateSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+    }
+
+    [Fact]
     public void All_specs_lists_handoff_and_deep_link_coverage()
     {
         Assert.Contains(StlE2ePlaywrightSpecCatalog.SuiteLoginHandoffSmokeSpec, StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(StlE2ePlaywrightSpecCatalog.ProductHandoffSmokeSpec, StlE2ePlaywrightSpecCatalog.All);
-        Assert.True(StlE2ePlaywrightSpecCatalog.All.Count >= 7);
+        Assert.True(StlE2ePlaywrightSpecCatalog.All.Count >= 9);
     }
 
     [Fact]
