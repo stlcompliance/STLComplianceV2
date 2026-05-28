@@ -20,6 +20,12 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
 
     public DbSet<RoutArrAuditEvent> AuditEvents => Set<RoutArrAuditEvent>();
 
+    public DbSet<TenantDispatchNotificationSettings> TenantDispatchNotificationSettings =>
+        Set<TenantDispatchNotificationSettings>();
+
+    public DbSet<DispatchNotificationDispatch> DispatchNotificationDispatches =>
+        Set<DispatchNotificationDispatch>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -133,6 +139,29 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.Property(x => x.ReasonCode).HasMaxLength(64);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.OccurredAt });
+        });
+
+        modelBuilder.Entity<TenantDispatchNotificationSettings>(entity =>
+        {
+            entity.ToTable("routarr_tenant_notification_settings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.NotificationWebhookUrl).HasMaxLength(2048);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<DispatchNotificationDispatch>(entity =>
+        {
+            entity.ToTable("routarr_notification_dispatches");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DriverPersonId).HasMaxLength(128);
+            entity.Property(x => x.RelatedEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DispatchStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.WebhookHost).HasMaxLength(256);
+            entity.Property(x => x.ErrorMessage).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.EventKind, x.RelatedEntityType, x.RelatedEntityId });
         });
     }
 }

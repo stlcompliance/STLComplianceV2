@@ -717,3 +717,43 @@ export interface CreateEquipmentAvailabilityRequest {
   reason?: string | null
   notes?: string | null
 }
+
+export interface DispatchNotificationSettingsResponse {
+  isEnabled: boolean
+  notificationWebhookUrl: string | null
+  notifyOnTripAssigned: boolean
+  notifyOnTripDispatched: boolean
+  notifyOnTripInProgress: boolean
+  notifyOnTripCompleted: boolean
+  notifyOnTripCancelled: boolean
+  updatedAt: string | null
+}
+
+export interface UpsertDispatchNotificationSettingsRequest {
+  isEnabled: boolean
+  notificationWebhookUrl: string | null
+  notifyOnTripAssigned: boolean
+  notifyOnTripDispatched: boolean
+  notifyOnTripInProgress: boolean
+  notifyOnTripCompleted: boolean
+  notifyOnTripCancelled: boolean
+}
+
+export interface DispatchNotificationDispatchItem {
+  notificationId: string
+  eventKind: string
+  dispatchStatus: string
+  tripId: string
+  driverPersonId: string | null
+  relatedEntityType: string
+  relatedEntityId: string
+  webhookHost: string | null
+  httpStatusCode: number | null
+  errorMessage: string | null
+  createdAt: string
+  dispatchedAt: string | null
+}
+
+export interface DispatchNotificationDispatchesResponse {
+  items: DispatchNotificationDispatchItem[]
+}

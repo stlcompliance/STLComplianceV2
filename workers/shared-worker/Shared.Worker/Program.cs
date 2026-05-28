@@ -119,6 +119,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<MaintainArrNotificationDispatchJob>();
 
+        builder.Services.Configure<RoutArrNotificationDispatchOptions>(
+            builder.Configuration.GetSection(RoutArrNotificationDispatchOptions.SectionName));
+
+        builder.Services.AddHttpClient<RoutArrNotificationDispatchClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<RoutArrNotificationDispatchOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.RoutArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<RoutArrNotificationDispatchJob>();
+
         builder.Services.Configure<SupplyArrReorderEvaluationOptions>(
             builder.Configuration.GetSection(SupplyArrReorderEvaluationOptions.SectionName));
 

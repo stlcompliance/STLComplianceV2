@@ -31,6 +31,9 @@ import type {
   DispatchWorkflowGateCheckResponse,
   EquipmentAvailabilityPanelResponse,
   CreateEquipmentAvailabilityRequest,
+  DispatchNotificationDispatchesResponse,
+  DispatchNotificationSettingsResponse,
+  UpsertDispatchNotificationSettingsRequest,
   TripDetailResponse,
   TripSummaryResponse,
   UpdateRouteStopStatusRequest,
@@ -418,5 +421,46 @@ export async function applyDispatchCloseout(
   return parseJsonResponse<DispatchCloseoutApplyResponse>(
     response,
     'Failed to apply dispatch closeout',
+  )
+}
+
+export async function getDispatchNotificationSettings(
+  accessToken: string,
+): Promise<DispatchNotificationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/notification-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DispatchNotificationSettingsResponse>(
+    response,
+    'Failed to load notification settings',
+  )
+}
+
+export async function upsertDispatchNotificationSettings(
+  accessToken: string,
+  payload: UpsertDispatchNotificationSettingsRequest,
+): Promise<DispatchNotificationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/notification-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<DispatchNotificationSettingsResponse>(
+    response,
+    'Failed to save notification settings',
+  )
+}
+
+export async function getDispatchNotificationDispatches(
+  accessToken: string,
+  limit = 20,
+): Promise<DispatchNotificationDispatchesResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/notification-settings/dispatches?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DispatchNotificationDispatchesResponse>(
+    response,
+    'Failed to load notification dispatches',
   )
 }

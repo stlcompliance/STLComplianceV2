@@ -21,5 +21,7 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
         app.MapRoutArrDispatchWorkflowGateEndpoints();
         app.MapRoutArrLoadTestJourneySeedEndpoints();
         app.MapRoutArrFieldInboxEndpoints();
+        app.MapRoutArrNotificationSettingsEndpoints();
+        app.MapRoutArrInternalDispatchNotificationEndpoints();
         await Task.CompletedTask;
     });

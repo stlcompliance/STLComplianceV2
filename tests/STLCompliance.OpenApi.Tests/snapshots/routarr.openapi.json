@@ -677,6 +677,72 @@
         }
       }
     },
+    "/api/internal/dispatch-notifications/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingDispatchNotifications",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/dispatch-notifications/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessDispatchNotifications",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessDispatchNotificationsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/load-test-journey/seed": {
       "post": {
         "tags": [
@@ -709,6 +775,67 @@
           "Me"
         ],
         "operationId": "RoutArrGetMe",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/notification-settings": {
+      "get": {
+        "tags": [
+          "NotificationSettings"
+        ],
+        "operationId": "GetRoutArrNotificationSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "NotificationSettings"
+        ],
+        "operationId": "UpsertRoutArrNotificationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDispatchNotificationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/notification-settings/dispatches": {
+      "get": {
+        "tags": [
+          "NotificationSettings"
+        ],
+        "operationId": "ListRoutArrNotificationDispatches",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1697,6 +1824,39 @@
           }
         }
       },
+      "ProcessDispatchNotificationsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "RedeemHandoffRequest": {
         "required": [
           "handoffCode"
@@ -1832,6 +1992,44 @@
             "type": "string"
           }
         }
+      },
+      "UpsertDispatchNotificationSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "notificationWebhookUrl",
+          "notifyOnTripAssigned",
+          "notifyOnTripDispatched",
+          "notifyOnTripInProgress",
+          "notifyOnTripCompleted",
+          "notifyOnTripCancelled"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "notificationWebhookUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notifyOnTripAssigned": {
+            "type": "boolean"
+          },
+          "notifyOnTripDispatched": {
+            "type": "boolean"
+          },
+          "notifyOnTripInProgress": {
+            "type": "boolean"
+          },
+          "notifyOnTripCompleted": {
+            "type": "boolean"
+          },
+          "notifyOnTripCancelled": {
+            "type": "boolean"
+          }
+        }
       }
     }
   },
@@ -1883,6 +2081,12 @@
     },
     {
       "name": "FieldInbox"
+    },
+    {
+      "name": "NotificationSettings"
+    },
+    {
+      "name": "Internal"
     }
   ]
 }

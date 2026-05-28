@@ -64,6 +64,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["maintainarr"],
             "maintainarr.notifications.dispatch"),
+        Profile(
+            "worker-routarr-notifications",
+            "shared-worker",
+            "RoutArrNotificationDispatch__ServiceToken",
+            "shared-worker",
+            ["routarr"],
+            "routarr.notifications.dispatch"),
         Profile("worker-supplyarr-reorder", "shared-worker", "SupplyArrReorderEvaluation__ServiceToken", "shared-worker", ["supplyarr"], "supplyarr.reorder.evaluate"),
         Profile(
             "worker-compliancecore-scheduled",

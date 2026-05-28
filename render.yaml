@@ -363,6 +363,8 @@ services:
         value: https://maintainarr-api-82rg.onrender.com
       - key: MaintainArrNotificationDispatch__MaintainArrBaseUrl
         value: https://maintainarr-api-82rg.onrender.com
+      - key: RoutArrNotificationDispatch__RoutArrBaseUrl
+        value: https://routarr-api-ut1u.onrender.com
       - key: SupplyArrReorderEvaluation__SupplyArrBaseUrl
         value: https://supplyarr-api-r963.onrender.com
       - key: ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl

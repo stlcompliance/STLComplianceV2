@@ -9,7 +9,8 @@ namespace RoutArr.Api.Services;
 public sealed class TripService(
     RoutArrDbContext db,
     IRoutArrAuditService audit,
-    DispatchAssignmentService dispatchAssignment)
+    DispatchAssignmentService dispatchAssignment,
+    DispatchNotificationEnqueueService notificationEnqueueService)
 {
     public async Task<IReadOnlyList<TripSummaryResponse>> ListAsync(
         Guid tenantId,
@@ -159,6 +160,14 @@ public sealed class TripService(
             driverPersonId,
             cancellationToken: cancellationToken);
 
+        if (string.Equals(trip.DispatchStatus, TripDispatchStatuses.Assigned, StringComparison.OrdinalIgnoreCase))
+        {
+            await notificationEnqueueService.TryEnqueueForTripStatusAsync(
+                trip,
+                trip.DispatchStatus,
+                cancellationToken);
+        }
+
         return MapDetail(trip);
     }
 
@@ -298,6 +307,7 @@ public sealed class TripService(
                 403);
         }
 
+        var previousStatus = trip.DispatchStatus;
         var now = DateTimeOffset.UtcNow;
         trip.DispatchStatus = normalized;
         trip.UpdatedAt = now;
@@ -338,6 +348,14 @@ public sealed class TripService(
             trip.Id.ToString(),
             normalized,
             cancellationToken: cancellationToken);
+
+        if (!string.Equals(previousStatus, normalized, StringComparison.OrdinalIgnoreCase))
+        {
+            await notificationEnqueueService.TryEnqueueForTripStatusAsync(
+                trip,
+                normalized,
+                cancellationToken);
+        }
 
         return MapDetail(trip);
     }

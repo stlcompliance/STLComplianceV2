@@ -49,6 +49,14 @@ export function clearSession(): void {
   sessionStorage.removeItem(STORAGE_KEY)
 }
 
+export function canManageNotificationSettings(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  if (isPlatformAdmin) return true
+  return ['tenant_admin', 'routarr_admin'].includes(tenantRoleKey.toLowerCase())
+}
+
 export function canCreateTrips(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true
   return ['tenant_admin', 'routarr_admin', 'routarr_manager', 'routarr_dispatcher'].includes(

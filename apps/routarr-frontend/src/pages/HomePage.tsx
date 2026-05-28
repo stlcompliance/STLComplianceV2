@@ -19,12 +19,14 @@ import {
   canAssignDrivers,
   canCreateTrips,
   canManageTrips,
+  canManageNotificationSettings,
   canPerformTrips,
   canViewAllTrips,
   canManageDriverAvailability,
   canManageEquipmentAvailability,
   loadSession,
 } from '../auth/sessionStorage'
+import { NotificationSettingsPanel } from '../components/NotificationSettingsPanel'
 import { TripsPanel } from '../components/TripsPanel'
 import { RoutesPanel } from '../components/RoutesPanel'
 import { DispatchBoardPanel } from '../components/DispatchBoardPanel'
@@ -218,6 +220,15 @@ export function HomePage() {
         scope={boardScope}
         onScopeChange={setBoardScope}
       />
+
+      {canManageNotificationSettings(roleKey, isPlatformAdmin) ? (
+        <div className="mt-8">
+          <NotificationSettingsPanel
+            accessToken={session.accessToken}
+            canManage={canManageNotificationSettings(roleKey, isPlatformAdmin)}
+          />
+        </div>
+      ) : null}
 
       {canAssignDrivers(roleKey, isPlatformAdmin) ? (
         <div className="mt-8">

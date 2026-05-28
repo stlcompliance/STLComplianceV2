@@ -287,6 +287,25 @@ public sealed class RoutArrAuthorizationService
             403);
     }
 
+    public void RequireNotificationSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireRoutArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "routarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Dispatch notification settings require routarr admin access.",
+            403);
+    }
+
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }

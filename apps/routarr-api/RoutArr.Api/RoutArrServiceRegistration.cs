@@ -64,6 +64,15 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<EquipmentAvailabilityService>();
         builder.Services.AddScoped<FieldInboxService>();
         builder.Services.AddScoped<IRoutArrAuditService, RoutArrAuditService>();
+        builder.Services.AddSingleton<StlServiceTokenValidator>();
+        builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
+        builder.Services.AddScoped<DispatchNotificationSettingsService>();
+        builder.Services.AddScoped<DispatchNotificationEnqueueService>();
+        builder.Services.AddScoped<DispatchNotificationDispatchService>();
+        builder.Services.AddHttpClient(DispatchNotificationDispatchService.WebhookHttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
 
         var frontendOrigin = builder.Configuration["Cors:RoutArrFrontendOrigin"] ?? "http://localhost:5180";
         builder.Services.AddCors(options =>
