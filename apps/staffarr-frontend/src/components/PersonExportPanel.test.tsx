@@ -63,6 +63,35 @@ describe('PersonExportPanel', () => {
     expect(screen.getByRole('button', { name: /Download CSV/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Download ZIP bundle/i })).toBeTruthy()
     expect(screen.getByLabelText(/Primary org unit filter/i)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Active workforce/i })).toBeTruthy()
+    expect((screen.getByRole('button', { name: /Active at org unit/i }) as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('applies active-at-org-unit preset and exports combined filters', async () => {
+    renderPanel(true)
+    await screen.findByRole('option', { name: /North Site/i })
+
+    const orgUnitSelect = screen.getAllByRole('combobox')[1]
+    fireEvent.change(orgUnitSelect, {
+      target: { value: '11111111-1111-1111-1111-111111111111' },
+    })
+    await waitFor(() => {
+      expect((orgUnitSelect as HTMLSelectElement).value).toBe('11111111-1111-1111-1111-111111111111')
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /Active at org unit/i }))
+    await waitFor(() => {
+      expect(screen.getByText(/Filtering by status active and org unit selected/i)).toBeTruthy()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /Preview JSON export/i }))
+
+    await waitFor(() => {
+      expect(exportPeopleJson).toHaveBeenCalledWith('token', {
+        employmentStatus: 'active',
+        orgUnitId: '11111111-1111-1111-1111-111111111111',
+      })
+    })
   })
 
   it('passes org unit filter to JSON export', async () => {

@@ -157,6 +157,47 @@ public class StaffArrPersonExportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task People_export_filters_by_employment_status_and_org_unit()
+    {
+        var northSiteId = Guid.NewGuid();
+        var southSiteId = Guid.NewGuid();
+        await SeedOrgUnitAsync(northSiteId, "site", "North Site");
+        await SeedOrgUnitAsync(southSiteId, "site", "South Site");
+        await SeedPersonAsync(
+            Guid.NewGuid(),
+            "North",
+            "Active",
+            "north.active@example.com",
+            primaryOrgUnitId: northSiteId,
+            employmentStatus: "active");
+        await SeedPersonAsync(
+            Guid.NewGuid(),
+            "North",
+            "Inactive",
+            "north.inactive@example.com",
+            primaryOrgUnitId: northSiteId,
+            employmentStatus: "inactive");
+        await SeedPersonAsync(
+            Guid.NewGuid(),
+            "South",
+            "Active",
+            "south.active@example.com",
+            primaryOrgUnitId: southSiteId,
+            employmentStatus: "active");
+
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var response = await _staffarrClient.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/people/export?format=json&employmentStatus=active&orgUnitId={northSiteId}",
+                token));
+        response.EnsureSuccessStatusCode();
+        var payload = (await response.Content.ReadFromJsonAsync<PersonExportResponse>())!;
+        Assert.Equal(1, payload.PersonCount);
+        Assert.Equal("north.active@example.com", payload.People[0].PrimaryEmail);
+    }
+
+    [Fact]
     public async Task People_export_denied_for_non_writer_role()
     {
         var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");

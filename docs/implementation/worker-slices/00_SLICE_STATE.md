@@ -201,7 +201,8 @@
 | 112 | M13 Render staging load soak (`StlRenderStagingLoadTestCatalog`, staging URL env conventions, `render-staging-load-soak` scripts, `RenderStagingLoadSoakLiveTests`, `load-staging-render.yml` workflow_dispatch, docs) | M13 (partial) | Complete | `2c5e359` |
 | 113 | StaffArr person export org-unit filter UI (`PersonExportPanel` org-unit dropdown, `orgUnitId` export filter wiring, integration + frontend tests, docs) | M4 (partial) | Complete | `fc6d732` |
 | 114 | M13 weekly Render staging load soak CI (`StlRenderStagingLoadSoakScheduleCatalog`, `load-staging-render.yml` schedule + secret gate, docs) | M13 (partial) | Complete | `7e7dd3b` |
+| 115 | StaffArr person export filter presets (`personExportFilterPresets`, `PersonExportPanel` quick presets, combined filter integration + frontend tests, docs) | M4 (partial) | Complete | `pending` |
 
-## Next slice (Worker 115)
+## Next slice (Worker 116)
 
-Recommended: **StaffArr export filter presets**, or **Compliance Core staging seeds for journey k6 scenarios**.
+Recommended: **Compliance Core staging seeds for journey k6 scenarios**, or **StaffArr export preset persistence per tenant**.

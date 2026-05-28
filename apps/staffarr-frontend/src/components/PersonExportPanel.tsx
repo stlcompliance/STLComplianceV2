@@ -9,6 +9,14 @@ import {
   getPeopleExportManifest,
 } from '../api/client'
 import type { PersonExportFilters, PersonExportResponse } from '../api/types'
+import {
+  PERSON_EXPORT_FILTER_PRESETS,
+  applyPersonExportFilterPreset,
+  describeActiveExportFilters,
+  isPersonExportFilterPresetEnabled,
+  resolvePersonExportFilters,
+  type PersonExportFilterPresetKey,
+} from '../lib/personExportFilterPresets'
 
 interface PersonExportPanelProps {
   accessToken: string
@@ -32,9 +40,12 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
     enabled: canExport,
   })
 
-  const filters = {
-    employmentStatus: employmentStatus || undefined,
-    orgUnitId: orgUnitId || undefined,
+  const filters = resolvePersonExportFilters({ employmentStatus, orgUnitId })
+
+  const applyPreset = (presetKey: PersonExportFilterPresetKey) => {
+    const next = applyPersonExportFilterPreset(presetKey, { employmentStatus, orgUnitId })
+    setEmploymentStatus(next.employmentStatus)
+    setOrgUnitId(next.orgUnitId)
   }
 
   const csvExportMutation = useMutation({
@@ -84,6 +95,28 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
             <p className="font-mono text-xs text-slate-400">
               {manifestQuery.data?.csvHeader ?? PeopleExportServiceFallbackHeader}
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-sm text-slate-300">Quick filter presets</p>
+            <div className="flex flex-wrap gap-2">
+              {PERSON_EXPORT_FILTER_PRESETS.map((preset) => {
+                const enabled = isPersonExportFilterPresetEnabled(preset, orgUnitId)
+                return (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    title={preset.description}
+                    disabled={!enabled}
+                    onClick={() => applyPreset(preset.key)}
+                    className="rounded-md border border-slate-600 px-3 py-1.5 text-xs text-slate-100 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {preset.label}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-xs text-slate-500">{describeActiveExportFilters({ employmentStatus, orgUnitId })}</p>
           </div>
 
           <label className="block text-sm text-slate-300">
