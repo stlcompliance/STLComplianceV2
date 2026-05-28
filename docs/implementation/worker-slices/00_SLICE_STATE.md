@@ -296,7 +296,7 @@
 
 | 162 | TrainArr rule-pack impact worker (`trainarr_tenant_rule_pack_impact_settings`, `trainarr_rule_pack_impact_states`, `trainarr_rule_pack_impact_runs`, internal pending/process-batch, `trainarr.rulepack_impact.scan`, `/api/rule-pack-impact-settings`, `TrainArrRulePackImpactJob`, `RulePackImpactSettingsPanel`, tests, docs; builds on W42) | M12 (partial) | Complete | `a3e992d` |
 
-| 163 | TrainArr evidence retention worker (`trainarr_tenant_evidence_retention_settings`, `trainarr_evidence_retention_runs`, internal pending/process-batch, `trainarr.evidence.retention.purge`, `/api/evidence-retention-settings`, `TrainArrEvidenceRetentionJob`, `EvidenceRetentionSettingsPanel`, storage purge, tests, docs) | M12 (partial) | Complete | `1dd493e` |
+| 163 | TrainArr evidence retention worker (`trainarr_tenant_evidence_retention_settings`, `trainarr_evidence_retention_runs`, internal pending/process-batch, `trainarr.evidence.retention.purge`, `/api/evidence-retention-settings`, `TrainArrEvidenceRetentionJob`, `EvidenceRetentionSettingsPanel`, storage purge, tests, docs) | M12 (partial) | Complete | `be584af` |
 
 ## Next slice (Worker 164)
 
