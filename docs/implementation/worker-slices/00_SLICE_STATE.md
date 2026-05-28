@@ -204,6 +204,8 @@
 | 115 | StaffArr person export filter presets (`personExportFilterPresets`, `PersonExportPanel` quick presets, combined filter integration + frontend tests, docs) | M4 (partial) | Complete | `475226f` |
 | 116 | Compliance Core journey k6 seeds (`LoadTestJourneySeedService`, `POST /api/load-test-journey/seed`, staging journey seed scripts, load-staging pre-step, tests, docs) | M5/M13 (partial) | Complete | `37e44f8` |
 
-## Next slice (Worker 117)
+| 117 | StaffArr tenant person export preset persistence (`TenantPersonExportPreset`, GET/PUT `/api/people/export/preset`, audit, `PersonExportPanel` tenant default UI, tests, docs) | M4 (partial) | Complete | `fcb5a84` |
 
-Recommended: **StaffArr export preset persistence per tenant**, or **TrainArr staging qualification mirror seed for k6 journeys**.
+## Next slice (Worker 118)
+
+Recommended: **TrainArr staging qualification mirror seed for k6 journeys**, or **StaffArr export scheduled delivery foundations**.
