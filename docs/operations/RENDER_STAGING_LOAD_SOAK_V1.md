@@ -51,18 +51,21 @@ export RENDER_STAGING_NEXARR_API_URL="https://nexarr-api-jdyi.onrender.com"
 ./scripts/ops/render-staging-load-soak.sh all
 ```
 
-GitHub: run workflow **Load Staging Render** manually, or rely on the **weekly schedule** (Sunday 07:00 UTC) after configuring repository secrets matching the environment variables above. Scheduled runs skip cleanly when staging API URL secrets are not configured and **seed Compliance Core + TrainArr journey fixtures** before the soak when NexArr and product API URLs are available.
+GitHub: run workflow **Load Staging Render** manually, or rely on the **weekly schedule** (Sunday 07:00 UTC) after configuring repository secrets matching the environment variables above. Scheduled runs skip cleanly when staging API URL secrets are not configured and **seed Compliance Core, TrainArr, and RoutArr journey fixtures** before the soak when NexArr and product API URLs are available.
 
 ### Journey seed (before staging soak)
 
 ```powershell
 ./scripts/ops/compliancecore-staging-journey-seed.ps1
 ./scripts/ops/trainarr-staging-journey-seed.ps1
+./scripts/ops/routarr-staging-journey-seed.ps1
 ```
 
 Compliance Core seeds `driver_qualification` rule pack content, `driver_license_valid` fact source, and dispatch workflow gates required by `trainarr-qualification-check` and `routarr-dispatch-workflow-gate` k6 scenarios. See `StlLoadTestJourneySeedCatalog`.
 
 TrainArr seeds an issued `hazmat_endorsement` qualification mirror for the demo subject person (`StlLoadTestJourneyDefaults.SubjectPersonId`) so the qualification-check journey returns a local **allow** outcome instead of warn. See `StlTrainArrLoadTestJourneySeedCatalog`.
+
+RoutArr seeds a planned dispatch trip mirror (`Load Test Journey Dispatch Trip`) for the same subject person so staging has a stable trip fixture before the `routarr-dispatch-workflow-gate` soak. See `StlRoutArrLoadTestJourneySeedCatalog`.
 
 ## CI schedule
 

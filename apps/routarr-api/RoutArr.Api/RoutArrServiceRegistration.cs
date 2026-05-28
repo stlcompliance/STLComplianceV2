@@ -56,6 +56,7 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<BulkDispatchService>();
         builder.Services.AddScoped<DispatchCloseoutService>();
         builder.Services.AddScoped<TripService>();
+        builder.Services.AddScoped<LoadTestJourneySeedService>();
         builder.Services.AddScoped<RouteService>();
         builder.Services.AddScoped<DispatchBoardService>();
         builder.Services.AddScoped<RouteCalendarService>();

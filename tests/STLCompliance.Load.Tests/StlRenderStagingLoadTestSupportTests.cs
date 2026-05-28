@@ -43,6 +43,14 @@ public sealed class StlRenderStagingLoadTestSupportTests
     }
 
     [Fact]
+    public void RoutArr_journey_seed_catalog_matches_load_test_defaults()
+    {
+        Assert.Equal(StlLoadTestJourneyDefaults.SubjectPersonId, StlRoutArrLoadTestJourneySeedCatalog.SubjectPersonId.ToString());
+        Assert.Equal("/api/load-test-journey/seed", StlRoutArrLoadTestJourneySeedCatalog.SeedEndpointPath);
+        Assert.Equal("Load Test Journey Dispatch Trip", StlRoutArrLoadTestJourneySeedCatalog.JourneyTripTitle);
+    }
+
+    [Fact]
     public void Schedule_catalog_lists_seven_required_staging_api_url_env_vars()
     {
         Assert.Equal(7, StlRenderStagingLoadSoakScheduleCatalog.RequiredStagingApiUrlEnvironmentVariables.Count);

@@ -19,6 +19,7 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
         app.MapRoutArrDriverEligibilityEndpoints();
         app.MapRoutArrAssetDispatchabilityEndpoints();
         app.MapRoutArrDispatchWorkflowGateEndpoints();
+        app.MapRoutArrLoadTestJourneySeedEndpoints();
         app.MapRoutArrFieldInboxEndpoints();
         await Task.CompletedTask;
     });

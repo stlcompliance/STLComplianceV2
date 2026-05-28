@@ -107,6 +107,17 @@ jobs:
           chmod +x scripts/ops/trainarr-staging-journey-seed.sh
           ./scripts/ops/trainarr-staging-journey-seed.sh
 
+      - name: Seed RoutArr load-test journey dispatch trip mirror
+        env:
+          RENDER_STAGING_NEXARR_API_URL: ${{ secrets.RENDER_STAGING_NEXARR_API_URL }}
+          RENDER_STAGING_ROUTARR_API_URL: ${{ secrets.RENDER_STAGING_ROUTARR_API_URL }}
+          STL_LOAD_DEMO_EMAIL: ${{ secrets.RENDER_STAGING_LOAD_DEMO_EMAIL }}
+          STL_LOAD_DEMO_PASSWORD: ${{ secrets.RENDER_STAGING_LOAD_DEMO_PASSWORD }}
+          STL_LOAD_DEMO_TENANT_ID: ${{ secrets.RENDER_STAGING_LOAD_DEMO_TENANT_ID }}
+        run: |
+          chmod +x scripts/ops/routarr-staging-journey-seed.sh
+          ./scripts/ops/routarr-staging-journey-seed.sh
+
       - name: Run Render staging load soak (product-owner SLOs)
         env:
           RENDER_STAGING_NEXARR_API_URL: ${{ secrets.RENDER_STAGING_NEXARR_API_URL }}

@@ -677,6 +677,19 @@
         }
       }
     },
+    "/api/load-test-journey/seed": {
+      "post": {
+        "tags": [
+          "LoadTestJourney"
+        ],
+        "operationId": "SeedRoutArrLoadTestJourney",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/me": {
       "get": {
         "tags": [
@@ -1815,6 +1828,9 @@
     },
     {
       "name": "RoutArr.Api"
+    },
+    {
+      "name": "LoadTestJourney"
     },
     {
       "name": "Auth"
