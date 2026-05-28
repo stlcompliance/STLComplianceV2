@@ -18,6 +18,7 @@ export type ProductAppShellProps = {
   userDisplayName?: string
   entitlements?: readonly string[]
   suiteHomeUrl?: string
+  productLaunchUrls?: Record<string, string>
   navItems?: ProductNavItem[]
   /** Compact layout hides sidebar navigation (field/mobile apps). */
   layoutVariant?: 'standard' | 'compact'
@@ -32,7 +33,7 @@ function WorkspaceTopBar({
   userDisplayName,
   entitlements,
   suiteHomeUrl,
-  showCompactSwitcher,
+  productLaunchUrls,
 }: {
   productName: string
   productKey: string
@@ -41,7 +42,7 @@ function WorkspaceTopBar({
   userDisplayName?: string
   entitlements: readonly string[]
   suiteHomeUrl: string
-  showCompactSwitcher: boolean
+  productLaunchUrls?: Record<string, string>
 }) {
   const ProductIcon = getSuiteProductIcon(productKey)
 
@@ -55,14 +56,12 @@ function WorkspaceTopBar({
         </div>
       </div>
       <div className="flex items-center gap-3">
-        {showCompactSwitcher ? (
-          <ProductSwitcher
-            currentProductKey={productKey}
-            entitlements={entitlements}
-            suiteHomeUrl={suiteHomeUrl}
-            layoutVariant="compact"
-          />
-        ) : null}
+        <ProductSwitcher
+          currentProductKey={productKey}
+          entitlements={entitlements}
+          suiteHomeUrl={suiteHomeUrl}
+          productLaunchUrls={productLaunchUrls}
+        />
         {(userDisplayName || tenantDisplayName) && (
           <div className="hidden text-right text-sm sm:block">
             {userDisplayName && <p className="font-medium text-slate-100">{userDisplayName}</p>}
@@ -82,6 +81,7 @@ export function ProductAppShell({
   userDisplayName,
   entitlements = [],
   suiteHomeUrl = 'http://localhost:5174/app',
+  productLaunchUrls,
   navItems = [{ label: 'Workspace', to: '/' }],
   layoutVariant = 'standard',
   children,
@@ -100,7 +100,7 @@ export function ProductAppShell({
           userDisplayName={userDisplayName}
           entitlements={entitlements}
           suiteHomeUrl={suiteHomeUrl}
-          showCompactSwitcher
+          productLaunchUrls={productLaunchUrls}
         />
         <main className="min-h-0 flex-1 overflow-auto px-4 pb-8 pt-4">{children}</main>
       </div>
@@ -110,7 +110,7 @@ export function ProductAppShell({
   return (
     <div className="flex min-h-screen bg-[#0f172a] text-slate-100">
       <aside className="flex w-64 shrink-0 flex-col min-h-0 overflow-y-auto border-r border-slate-700/70 bg-[#0a101c] p-4">
-        <div className="mb-4 shrink-0">
+        <div className="mb-6 shrink-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-teal-400">STL Compliance</p>
           <h1 className="text-lg font-semibold text-white">{productName}</h1>
           {(userDisplayName || tenantDisplayName) && (
@@ -120,16 +120,7 @@ export function ProductAppShell({
           )}
         </div>
 
-        <ProductSwitcher
-          currentProductKey={productKey}
-          entitlements={entitlements}
-          suiteHomeUrl={suiteHomeUrl}
-        />
-
-        <p className="mt-6 px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-          {productName}
-        </p>
-        <nav aria-label={`${productName} navigation`} className="mt-3 flex flex-col gap-1">
+        <nav aria-label={`${productName} navigation`} className="flex flex-col gap-1">
           {navItems.map((item) => {
             const Icon = item.icon ?? ProductIcon
             return (
@@ -163,7 +154,7 @@ export function ProductAppShell({
           userDisplayName={userDisplayName}
           entitlements={entitlements}
           suiteHomeUrl={suiteHomeUrl}
-          showCompactSwitcher={false}
+          productLaunchUrls={productLaunchUrls}
         />
         <main className="min-h-0 flex-1 overflow-auto p-6">{children}</main>
       </div>

@@ -10,8 +10,8 @@ All NexArr suite product UIs share one dark enterprise SaaS visual language. Pag
 
 ## Layout (three-zone shell)
 
-1. **Topbar** — dark navy/charcoal; sits in the **main column** (not over the sidebar)
-2. **Left sidebar** — full viewport height (`w-64`), product switcher + workflow nav; `overflow-y-auto` when tall
+1. **Topbar** — dark navy/charcoal; full width of the **main column** (not over the sidebar); includes branding, tenant/user context, and the **ProductSwitcher dropdown**
+2. **Left sidebar (AppNav)** — full viewport height (`w-64`); **product workflow routes only** (People, Org, Incidents for StaffArr; etc.); `overflow-y-auto` when tall
 3. **Main content** — dark slate workspace; `min-h-0 flex-1 overflow-auto` so content scrolls inside the shell
 
 **Structure (suite + product apps must match):**
@@ -19,29 +19,34 @@ All NexArr suite product UIs share one dark enterprise SaaS visual language. Pag
 ```tsx
 <div className="flex min-h-screen bg-[#0f172a]">
   <aside className="flex w-64 shrink-0 flex-col min-h-0 overflow-y-auto border-r ... bg-[#0a101c] p-4">
-    {/* brand, switcher, workflow nav */}
+    {/* brand + AppNav workflow links only — no product switcher */}
   </aside>
   <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-    <header className="shrink-0 border-b ... bg-[#0a101c] px-6 py-4">{/* topbar */}</header>
+    <header className="shrink-0 border-b ... bg-[#0a101c] px-6 py-4">
+      {/* topbar: product context + ProductSwitcher dropdown + user */}
+    </header>
     <main className="min-h-0 flex-1 overflow-auto p-6">{/* <Outlet /> */}</main>
   </div>
 </div>
 ```
 
-Definition of done: no double sidebars, no zero-height main, no full-width topbar sitting above a shortened sidebar column, content panels use dark theme (not white cards on `#0f172a`). Product app `index.css` must include `@source "../../../packages/shared-ui/src"` so Tailwind emits shell layout utilities.
+Definition of done: no double sidebars, no zero-height main, no full-width topbar sitting above a shortened sidebar column, no horizontal product strip in sidebar or main, content panels use dark theme (not white cards on `#0f172a`). Product app `index.css` must include `@source "../../../packages/shared-ui/src"` so Tailwind emits shell layout utilities.
 
 Must feel like one platform across NexArr, StaffArr, TrainArr, MaintainArr, RoutArr, SupplyArr, and Compliance Core.
 
 ## Topbar
 
-- Product name, tenant/workspace context, product switcher, user/profile controls, global actions
+- Product name, tenant/workspace context, **ProductSwitcher dropdown** (entitled products only), user/profile controls, global actions
+- ProductSwitcher is a compact dropdown — not a row of links or buttons, and **never** a vertical product list in the sidebar
+- Dropdown entries: product name + optional short description; selecting launches the product (suite route or direct frontend `/launch` URL via `VITE_*_FRONTEND_BASE` / `buildProductLaunchUrlMap`)
 - Calmer than content: no bright borders, loud gradients, or decorative clutter
 - Subtle bottom border only; height ~56–64px
 - Colors: near-black navy/charcoal bg; soft white/light gray text; muted slate secondary; subtle dark slate borders
 
-## Sidebar
+## Sidebar (AppNav)
 
-- Same dark family as topbar; primary navigation only
+- Same dark family as topbar; **app navigation only** — workflow routes for the current product
+- **No product switcher**, no horizontal product strip, no cross-product launch controls in the sidebar
 - Group links by **product workflow**, not database table names
 - Consistent lucide-react icons; clear active state (brighter bg, left accent bar or soft pill, stronger text, optional accent icon)
 - No massive menus, noisy nesting, or per-product styling drift
@@ -77,6 +82,7 @@ Same shell, sidebar/topbar behavior, spacing scale, cards, tables, badges, forms
 - Monolithic `App.tsx` UI blobs
 - Per-product theme systems or unrelated color palettes
 - Light-mode-only components or inconsistent shell layouts
+- **Horizontal or vertical product lists in the sidebar or main content** (product switching belongs in the topbar dropdown only)
 - Platform-admin controls in product UI without NexArr server validation
 - Frontend nav that implies permissions the backend does not enforce
 - Hidden frontend-only access paths
@@ -112,6 +118,18 @@ export function IncidentsPage() {
     </Card>
   );
 }
+```
+
+```tsx
+// ❌ BAD — product switcher in sidebar
+<aside>
+  <ProductSwitcher />
+  <AppNav items={staffNav} />
+</aside>
+
+// ✅ GOOD — AppNav in sidebar; ProductSwitcher dropdown in topbar
+<aside><AppNav items={staffNav} /></aside>
+<header><ProductSwitcher dropdown entitlements={entitlements} /></header>
 ```
 
 ```tsx

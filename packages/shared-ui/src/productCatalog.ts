@@ -13,24 +13,68 @@ import {
 export type SuiteProductCatalogEntry = {
   productKey: string
   displayName: string
+  description?: string
   icon: LucideIcon
   sortOrder: number
 }
 
 export const SUITE_PRODUCT_CATALOG: SuiteProductCatalogEntry[] = [
-  { productKey: 'nexarr', displayName: 'NexArr', icon: ShieldCheck, sortOrder: 0 },
-  { productKey: 'staffarr', displayName: 'StaffArr', icon: Users, sortOrder: 10 },
-  { productKey: 'trainarr', displayName: 'TrainArr', icon: GraduationCap, sortOrder: 20 },
-  { productKey: 'maintainarr', displayName: 'MaintainArr', icon: Wrench, sortOrder: 30 },
-  { productKey: 'routarr', displayName: 'RoutArr', icon: Route, sortOrder: 40 },
-  { productKey: 'supplyarr', displayName: 'SupplyArr', icon: PackageSearch, sortOrder: 50 },
+  {
+    productKey: 'nexarr',
+    displayName: 'NexArr',
+    description: 'Suite dashboard and control plane',
+    icon: ShieldCheck,
+    sortOrder: 0,
+  },
+  {
+    productKey: 'staffarr',
+    displayName: 'StaffArr',
+    description: 'People, org, and readiness',
+    icon: Users,
+    sortOrder: 10,
+  },
+  {
+    productKey: 'trainarr',
+    displayName: 'TrainArr',
+    description: 'Training and qualifications',
+    icon: GraduationCap,
+    sortOrder: 20,
+  },
+  {
+    productKey: 'maintainarr',
+    displayName: 'MaintainArr',
+    description: 'Assets and maintenance',
+    icon: Wrench,
+    sortOrder: 30,
+  },
+  {
+    productKey: 'routarr',
+    displayName: 'RoutArr',
+    description: 'Routes and dispatch',
+    icon: Route,
+    sortOrder: 40,
+  },
+  {
+    productKey: 'supplyarr',
+    displayName: 'SupplyArr',
+    description: 'Procurement and inventory',
+    icon: PackageSearch,
+    sortOrder: 50,
+  },
   {
     productKey: 'compliancecore',
     displayName: 'Compliance Core',
+    description: 'Rules, vocabulary, and references',
     icon: ClipboardCheck,
     sortOrder: 60,
   },
-  { productKey: 'companion', displayName: 'Companion', icon: Inbox, sortOrder: 70 },
+  {
+    productKey: 'companion',
+    displayName: 'Companion',
+    description: 'Field inbox and mobile tasks',
+    icon: Inbox,
+    sortOrder: 70,
+  },
 ]
 
 export function normalizeProductKey(productKey: string): string {

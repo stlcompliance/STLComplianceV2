@@ -16,6 +16,10 @@ export { ProductWorkspaceFrame } from './ProductWorkspaceFrame'
 export type { ProductWorkspaceFrameProps, ProductWorkspaceSession } from './ProductWorkspaceFrame'
 export { resolveSuiteHomeUrl } from './suiteWorkspaceEnv'
 export {
+  buildProductLaunchUrlMap,
+  resolveProductLaunchUrl,
+} from './productLaunchUrls'
+export {
   isProductWorkspaceAuthError,
   resolveProductWorkspaceBootstrapError,
 } from './productWorkspaceAuth'

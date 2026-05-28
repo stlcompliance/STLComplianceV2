@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import * as nexarr from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
 import { PermissionGate } from '../components/PermissionGate'
-import { useLaunchContextGate } from '../components/ProductSwitcher'
+import { useLaunchContextGate } from '../hooks/useLaunchContextGate'
 import { useProductLaunch } from '../hooks/useProductLaunch'
 import {
   canAccessProductRoute,

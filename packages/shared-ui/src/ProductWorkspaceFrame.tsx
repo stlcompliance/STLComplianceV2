@@ -14,6 +14,7 @@ export type ProductWorkspaceFrameProps = {
   layoutVariant?: ProductAppShellProps['layoutVariant']
   entitlements?: readonly string[]
   suiteHomeUrl?: string
+  productLaunchUrls?: Record<string, string>
   workspaceSession: ProductWorkspaceSession | null
   isBootstrapping?: boolean
   bootstrapError?: 'forbidden' | 'expired' | null
@@ -48,6 +49,7 @@ export function ProductWorkspaceFrame({
   layoutVariant,
   entitlements = [],
   suiteHomeUrl,
+  productLaunchUrls,
   workspaceSession,
   isBootstrapping = false,
   bootstrapError = null,
@@ -106,6 +108,7 @@ export function ProductWorkspaceFrame({
       userDisplayName={workspaceSession.userDisplayName}
       entitlements={entitlements}
       suiteHomeUrl={suiteHomeUrl}
+      productLaunchUrls={productLaunchUrls}
       navItems={navItems}
       layoutVariant={layoutVariant}
     >

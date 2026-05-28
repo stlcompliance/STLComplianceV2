@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Navigate, Outlet, useSearchParams } from 'react-router-dom'
 import {
   ProductWorkspaceFrame,
+  buildProductLaunchUrlMap,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
   type ProductNavItem,
@@ -11,6 +12,7 @@ import { getMe } from '../api/client'
 import { clearSession, loadSession } from '../auth/sessionStorage'
 
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
+const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
 
 const navItems: ProductNavItem[] = [{ label: 'Procurement', to: '/' }]
 
@@ -56,6 +58,7 @@ export function ProductWorkspaceLayout() {
       navItems={navItems}
       entitlements={meQuery.data?.entitlements ?? []}
       suiteHomeUrl={suiteHomeUrl}
+      productLaunchUrls={productLaunchUrls}
       workspaceSession={workspaceSession}
       isBootstrapping={Boolean(session?.accessToken) && meQuery.isLoading}
       bootstrapError={bootstrapError}
