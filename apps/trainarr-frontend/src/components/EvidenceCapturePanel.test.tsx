@@ -12,6 +12,7 @@ const assignment: TrainingAssignmentDetailResponse = {
   qualificationKey: 'annual_compliance',
   qualificationName: 'Annual Compliance',
   staffarrIncidentRemediationId: null,
+  sourceQualificationIssueId: null,
   assignmentReason: 'manual',
   status: 'in_progress',
   dueAt: null,

@@ -12,6 +12,7 @@ const assignment: TrainingAssignmentDetailResponse = {
   qualificationKey: 'forklift_ops',
   qualificationName: 'Forklift Operations',
   staffarrIncidentRemediationId: null,
+  sourceQualificationIssueId: null,
   assignmentReason: 'manual',
   status: 'in_progress',
   dueAt: null,

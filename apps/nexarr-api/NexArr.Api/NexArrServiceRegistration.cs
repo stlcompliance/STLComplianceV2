@@ -112,11 +112,30 @@ public static class NexArrServiceRegistration
             var launchOptions = scope.ServiceProvider.GetService<IOptions<StlLaunchOptions>>()?.Value;
             await PlatformSeeder.SeedAsync(db, passwordHasher, launchOptions);
 
-            var productionOrigins = new[]
+            var productionOrigins = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var origin in new[]
+                     {
+                         app.Configuration["Cors:SuiteFrontendOrigin"],
+                         app.Configuration["Cors:CompanionFrontendOrigin"],
+                     })
             {
-                app.Configuration["Cors:SuiteFrontendOrigin"],
-                app.Configuration["Cors:CompanionFrontendOrigin"],
-            }.Where(static origin => !string.IsNullOrWhiteSpace(origin)).Select(static origin => origin!);
+                if (!string.IsNullOrWhiteSpace(origin))
+                {
+                    productionOrigins.Add(origin.Trim().TrimEnd('/'));
+                }
+            }
+
+            if (launchOptions?.Products is not null)
+            {
+                foreach (var profile in launchOptions.Products.Values)
+                {
+                    if (!string.IsNullOrWhiteSpace(profile.BaseUrl))
+                    {
+                        productionOrigins.Add(profile.BaseUrl.Trim().TrimEnd('/'));
+                    }
+                }
+            }
+
             await PlatformSeeder.EnsureSuiteShellOriginsAsync(db, productionOrigins);
 
             var bootstrap = scope.ServiceProvider.GetRequiredService<IntegrationTokenBootstrapService>();
