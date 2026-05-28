@@ -4,6 +4,7 @@ export const WORKSPACE_SECTIONS = [
   'permissions',
   'readiness',
   'incidents',
+  'training-acknowledgements',
   'certifications',
   'admin',
 ] as const
@@ -43,6 +44,10 @@ export const workspaceSectionHeaders: Record<
   incidents: {
     title: 'Incidents',
     subtitle: 'Personnel incidents and TrainArr routing',
+  },
+  'training-acknowledgements': {
+    title: 'Training acknowledgements',
+    subtitle: 'Pending TrainArr assignment receipts for your person record',
   },
   certifications: {
     title: 'Certifications',

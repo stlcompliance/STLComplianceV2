@@ -83,6 +83,14 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
 
     public DbSet<MaintenanceHistoryRollupRun> MaintenanceHistoryRollupRuns => Set<MaintenanceHistoryRollupRun>();
 
+    public DbSet<TenantPmDueScanSettings> TenantPmDueScanSettings => Set<TenantPmDueScanSettings>();
+
+    public DbSet<PmDueScanRun> PmDueScanRuns => Set<PmDueScanRun>();
+
+    public DbSet<ComplianceRegulatoryKeyMirror> ComplianceRegulatoryKeyMirrors => Set<ComplianceRegulatoryKeyMirror>();
+
+    public DbSet<MaintainArrImportBatch> MaintainArrImportBatches => Set<MaintainArrImportBatch>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -536,6 +544,7 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Format).HasMaxLength(16).IsRequired();
             entity.Property(x => x.ErrorMessage).HasMaxLength(2000);
+            entity.Property(x => x.FilterJson).HasMaxLength(4096);
             entity.Property(x => x.ArtifactZip);
             entity.Property(x => x.ArtifactJson);
             entity.HasIndex(x => new { x.TenantId, x.Status, x.CreatedAt });
@@ -654,6 +663,46 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.ToTable("maintainarr_maintenance_history_rollup_runs");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<TenantPmDueScanSettings>(entity =>
+        {
+            entity.ToTable("maintainarr_tenant_pm_due_scan_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<PmDueScanRun>(entity =>
+        {
+            entity.ToTable("maintainarr_pm_due_scan_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<MaintainArrImportBatch>(entity =>
+        {
+            entity.ToTable("maintainarr_import_batches");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ImportType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Phase).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.ImportType, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<ComplianceRegulatoryKeyMirror>(entity =>
+        {
+            entity.ToTable("maintainarr_compliance_regulatory_key_mirrors");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SubjectType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ComplianceKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.MaterialKey).HasMaxLength(128);
+            entity.Property(x => x.RegulatoryCitationKey).HasMaxLength(128);
+            entity.Property(x => x.SourceProduct).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceRecordKey).HasMaxLength(256).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ComplianceKey });
+            entity.HasIndex(x => new { x.TenantId, x.SubjectType, x.SubjectId, x.ComplianceKey }).IsUnique();
         });
     }
 }

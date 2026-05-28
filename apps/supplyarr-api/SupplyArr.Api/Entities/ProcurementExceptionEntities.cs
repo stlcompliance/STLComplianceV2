@@ -36,6 +36,14 @@ public sealed class ProcurementException : IHasTenant
 
     public Guid? AssignedToUserId { get; set; }
 
+    public DateTimeOffset? SlaDueAt { get; set; }
+
+    public string ResolutionTemplateKey { get; set; } = string.Empty;
+
+    public Guid? LinkedPurchaseRequestId { get; set; }
+
+    public Guid? LinkedPurchaseOrderId { get; set; }
+
     public Guid? InvestigatedByUserId { get; set; }
 
     public DateTimeOffset? InvestigatedAt { get; set; }
@@ -139,3 +147,39 @@ public static class ProcurementExceptionStatuses
         Investigating,
     };
 }
+
+public static class ProcurementExceptionResolutionTemplates
+{
+    public const string VendorRequote = "vendor_requote";
+
+    public const string PrResubmit = "pr_resubmit";
+
+    public const string PoReissue = "po_reissue";
+
+    public const string PolicyWaiverDocumented = "policy_waiver_documented";
+
+    public const string EscalateToManager = "escalate_to_manager";
+
+    public static readonly IReadOnlyList<ProcurementExceptionResolutionTemplateDefinition> All =
+    [
+        new(VendorRequote, "Vendor re-quote", "Request an updated vendor quote and attach to the subject record."),
+        new(PrResubmit, "PR resubmit", "Correct the purchase request and resubmit through approval."),
+        new(PoReissue, "PO reissue", "Cancel or revise the purchase order and reissue with corrected terms."),
+        new(PolicyWaiverDocumented, "Policy waiver documented", "Document leadership approval for the policy exception."),
+        new(EscalateToManager, "Escalate to manager", "Escalate to procurement manager for decision within SLA."),
+    ];
+
+    public static readonly IReadOnlySet<string> Keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        VendorRequote,
+        PrResubmit,
+        PoReissue,
+        PolicyWaiverDocumented,
+        EscalateToManager,
+    };
+}
+
+public sealed record ProcurementExceptionResolutionTemplateDefinition(
+    string TemplateKey,
+    string Label,
+    string DefaultResolutionNotes);

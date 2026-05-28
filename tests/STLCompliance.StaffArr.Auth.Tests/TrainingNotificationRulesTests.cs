@@ -46,4 +46,31 @@ public sealed class TrainingNotificationRulesTests
         Assert.Equal(10, TrainingNotificationRules.NormalizeMaxAttempts(null));
         Assert.Equal(50, TrainingNotificationRules.NormalizeMaxAttempts(500));
     }
+
+    [Fact]
+    public void ShouldNotifyForEvent_includes_reminder_and_escalation_kinds()
+    {
+        var settings = new TenantTrainingNotificationSettingsSnapshot(
+            true,
+            "https://hooks.example.test",
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            30,
+            10,
+            5);
+
+        Assert.True(TrainingNotificationRules.ShouldNotifyForEvent(
+            settings,
+            TrainingNotificationEventKinds.AssignmentDueReminder));
+        Assert.True(TrainingNotificationRules.ShouldNotifyForEvent(
+            settings,
+            TrainingNotificationEventKinds.AssignmentOverdueEscalation));
+    }
 }

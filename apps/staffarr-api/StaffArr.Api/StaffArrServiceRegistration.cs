@@ -47,6 +47,8 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<PermissionProjectionService>();
         builder.Services.AddScoped<ProcurementApprovalAuthorityService>();
         builder.Services.AddScoped<TrainingBlockerIngestionService>();
+        builder.Services.AddScoped<TrainingAcknowledgementIngestionService>();
+        builder.Services.AddScoped<TrainingAcknowledgementService>();
         builder.Services.AddScoped<CertificationGrantIngestionService>();
         builder.Services.AddScoped<CertificationLifecycleIngestionService>();
         builder.Services.AddScoped<CertificationExpirationService>();
@@ -57,6 +59,12 @@ public static class StaffArrServiceRegistration
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<TrainArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
+        builder.Services.AddHttpClient<TrainArrPersonTrainingHistoryClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<TrainArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddScoped<TrainarrPersonTrainingHistoryService>();
         builder.Services.AddHttpClient<SupplyArrDemandClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<SupplyArrClientOptions>>().Value;

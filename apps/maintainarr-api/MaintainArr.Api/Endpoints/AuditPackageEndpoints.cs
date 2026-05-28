@@ -22,10 +22,73 @@ public static class AuditPackageEndpoints
         })
         .WithName("GetAuditPackageManifest");
 
+        packages.MapGet("/filter-options", async (
+            MaintainArrAuthorizationService authorization,
+            AuditPackageService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAuditPackageRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetFilterOptionsAsync(tenantId, cancellationToken));
+        })
+        .WithName("GetMaintainArrAuditPackageFilterOptions");
+
+        packages.MapGet("/summary", async (
+            DateTimeOffset? from,
+            DateTimeOffset? to,
+            string? action,
+            string? result,
+            string? targetType,
+            Guid? actorUserId,
+            MaintainArrAuthorizationService authorization,
+            AuditPackageService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAuditPackageRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetExportSummaryAsync(
+                tenantId,
+                BuildFilter(from, to, action, result, targetType, actorUserId),
+                cancellationToken));
+        })
+        .WithName("GetMaintainArrAuditPackageExportSummary");
+
+        packages.MapGet("/timeline", async (
+            DateTimeOffset? from,
+            DateTimeOffset? to,
+            string? action,
+            string? result,
+            string? targetType,
+            Guid? actorUserId,
+            int? page,
+            int? pageSize,
+            MaintainArrAuthorizationService authorization,
+            AuditPackageService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAuditPackageRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var resultPage = await service.ListAuditTimelineAsync(
+                tenantId,
+                BuildFilter(from, to, action, result, targetType, actorUserId),
+                page ?? 1,
+                pageSize ?? 25,
+                cancellationToken);
+            return Results.Ok(resultPage);
+        })
+        .WithName("GetMaintainArrAuditPackageTimeline");
+
         packages.MapGet("/export", async (
             string? format,
             DateTimeOffset? from,
             DateTimeOffset? to,
+            string? action,
+            string? result,
+            string? targetType,
+            Guid? actorUserId,
             MaintainArrAuthorizationService authorization,
             AuditPackageService service,
             HttpContext context,
@@ -33,24 +96,36 @@ public static class AuditPackageEndpoints
         {
             authorization.RequireAuditPackageExport(context.User);
             var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
+            var actor = context.User.GetUserId();
+            var filter = BuildFilter(from, to, action, result, targetType, actorUserId);
+
+            if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
+            {
+                var csvBytes = await service.ExportAuditEventsCsvAsync(
+                    tenantId,
+                    actor,
+                    filter,
+                    cancellationToken);
+                return Results.File(
+                    csvBytes,
+                    "text/csv",
+                    $"maintainarr-audit-events-{DateTime.UtcNow:yyyyMMddHHmmss}.csv");
+            }
 
             if (string.Equals(format, "json", StringComparison.OrdinalIgnoreCase))
             {
                 var package = await service.BuildExportAsync(
                     tenantId,
-                    actorUserId,
-                    from,
-                    to,
+                    actor,
+                    filter,
                     cancellationToken);
                 return Results.Ok(package);
             }
 
             var zipBytes = await service.ExportZipAsync(
                 tenantId,
-                actorUserId,
-                from,
-                to,
+                actor,
+                filter,
                 cancellationToken);
             return Results.File(
                 zipBytes,
@@ -117,4 +192,13 @@ public static class AuditPackageEndpoints
         })
         .WithName("DownloadMaintainArrAuditPackageGenerationJob");
     }
+
+    private static AuditPackageFilter BuildFilter(
+        DateTimeOffset? from,
+        DateTimeOffset? to,
+        string? action,
+        string? result,
+        string? targetType,
+        Guid? actorUserId) =>
+        new(from, to, action, result, targetType, actorUserId);
 }

@@ -39,7 +39,7 @@ public static class InternalPmDueScanEndpoints
             CancellationToken cancellationToken) =>
         {
             ValidateServiceToken(tokenValidator, context, request.TenantId);
-            var result = await service.ProcessBatchAsync(request, cancellationToken);
+            var result = await service.ProcessBatchAsync(request, recordRun: true, cancellationToken);
             return Results.Ok(result);
         })
         .WithName("InternalProcessPmDueScan");

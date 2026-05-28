@@ -30,6 +30,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrAssetReadinessEndpoints();
         app.MapMaintainArrFieldInboxEndpoints();
         app.MapMaintainArrInternalPmDueScanEndpoints();
+        app.MapMaintainArrPmDueScanSettingsEndpoints();
         app.MapMaintainArrNotificationSettingsEndpoints();
         app.MapMaintainArrInternalMaintenanceNotificationEndpoints();
         app.MapMaintainArrAuditPackageEndpoints();
@@ -41,5 +42,10 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrInternalAssetStatusRollupEndpoints();
         app.MapMaintainArrMaintenanceHistoryRollupSettingsEndpoints();
         app.MapMaintainArrInternalMaintenanceHistoryRollupEndpoints();
+        app.MapMaintainArrMaintenanceReportEndpoints();
+        app.MapMaintainArrExecutiveReportEndpoints();
+        app.MapMaintainArrComplianceReportEndpoints();
+        app.MapMaintainArrAssetImportEndpoints();
+        app.MapMaintainArrEntityExportEndpoints();
         await Task.CompletedTask;
     });

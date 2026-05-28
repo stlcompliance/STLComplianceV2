@@ -59,7 +59,7 @@ public class StaffArrTrainArrQualificationExpirationWorkerTests : IAsyncLifetime
             adminToken,
             "trainarr",
             ["staffarr"],
-            $"{StaffArrIntegration.TrainingBlockerIngestActionScope},{StaffArrIntegration.CertificationGrantIngestActionScope},{StaffArrIntegration.CertificationLifecycleIngestActionScope}");
+            $"{StaffArrIntegration.TrainingBlockerIngestActionScope},{StaffArrIntegration.TrainingAcknowledgementIngestActionScope},{StaffArrIntegration.TrainingAcknowledgementReadActionScope},{StaffArrIntegration.CertificationGrantIngestActionScope},{StaffArrIntegration.CertificationLifecycleIngestActionScope}");
 
         _sharedWorkerToTrainarrToken = await IssueServiceTokenAsync(
             adminToken,
@@ -102,6 +102,8 @@ public class StaffArrTrainArrQualificationExpirationWorkerTests : IAsyncLifetime
                 services.AddHttpClient<StaffArrCertificationGrantClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
                 services.AddHttpClient<StaffArrCertificationLifecycleClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
+                services.AddHttpClient<TrainArr.Api.Services.StaffArrTrainingAcknowledgementClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
             });
         });

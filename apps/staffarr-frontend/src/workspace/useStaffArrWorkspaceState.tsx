@@ -15,6 +15,7 @@ import {
   getPermissionHistoryTimeline,
   getPersonTimeline,
   getPersonHistorySummary,
+  getPersonTrainarrTrainingHistory,
   getPersonCertifications,
   clearPersonReadinessOverride,
   createPersonnelIncident,
@@ -161,6 +162,11 @@ export function useStaffArrWorkspaceState() {
   const personHistorySummaryQuery = useQuery({
     queryKey: ['staffarr-person-history-summary', session?.accessToken, effectivePersonId],
     queryFn: () => getPersonHistorySummary(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const trainarrTrainingHistoryQuery = useQuery({
+    queryKey: ['staffarr-trainarr-training-history', session?.accessToken, effectivePersonId],
+    queryFn: () => getPersonTrainarrTrainingHistory(session!.accessToken, effectivePersonId!),
     enabled: Boolean(session?.accessToken && effectivePersonId),
   })
   const certificationDefinitionsQuery = useQuery({
@@ -650,6 +656,7 @@ export function useStaffArrWorkspaceState() {
     permissionHistoryQuery,
     personTimelineQuery,
     personHistorySummaryQuery,
+    trainarrTrainingHistoryQuery,
     certificationDefinitionsQuery,
     personCertificationsQuery,
     personReadinessQuery,

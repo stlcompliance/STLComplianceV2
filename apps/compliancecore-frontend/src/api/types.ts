@@ -624,3 +624,414 @@ export interface OperatorDashboardResponse {
   recentEvaluations: OperatorDashboardRecentEvaluation[]
   generatedAt: string
 }
+
+export interface FactSourceIngestionRowRequest {
+  factDefinitionId: string
+  sourceKey: string
+  sourceType: string
+  label: string
+  description: string
+  productKey?: string | null
+  productReference?: string | null
+  configJson: string
+  priority: number
+}
+
+export interface FactSourceBulkIngestionRequest {
+  sources: FactSourceIngestionRowRequest[]
+}
+
+export interface SourceIngestionJobResult {
+  rowIndex: number
+  jobKey: string
+  status: string
+  entityType: string | null
+  entityId: string | null
+  errorCode: string | null
+  message: string | null
+}
+
+export interface SourceIngestionBatchResponse {
+  batchId: string
+  ingestionType: string
+  phase: string
+  dryRun: boolean
+  totalJobs: number
+  successCount: number
+  errorCount: number
+  skippedCount: number
+  status: string
+  jobs: SourceIngestionJobResult[]
+}
+
+export interface SourceIngestionBatchSummary {
+  batchId: string
+  ingestionType: string
+  phase: string
+  dryRun: boolean
+  status: string
+  totalJobs: number
+  successCount: number
+  errorCount: number
+  skippedCount: number
+  sourceProduct: string | null
+  publicationId: string | null
+  createdAt: string
+  completedAt: string | null
+}
+
+export interface SourceIngestionBatchDetailResponse extends SourceIngestionBatchSummary {
+  jobs: SourceIngestionJobResult[]
+}
+
+export interface RuleChangeEventResponse {
+  eventId: string
+  rulePackId: string
+  packKey: string
+  programKey: string
+  changeType: string
+  summary: string
+  fromStatus: string | null
+  toStatus: string | null
+  fromVersion: number | null
+  toVersion: number | null
+  previousContentHash: string | null
+  newContentHash: string | null
+  source: string
+  actorUserId: string | null
+  scanRunId: string | null
+  detectedAt: string
+}
+
+export interface EvaluateRiskScoresRequest {
+  scopeKey?: string | null
+  rulePackKey?: string | null
+  context?: Record<string, string> | null
+}
+
+export interface RiskScoreResponse {
+  riskScoreId: string
+  runId: string
+  scopeKey: string
+  rulePackId: string
+  packKey: string
+  riskScore: number
+  riskLevel: string
+  ruleOutcome: string
+  evaluationResult: string
+  unresolvedFactCount: number
+  failedRuleCount: number
+  resolvedFactCount: number
+  mirrorFactCount: number
+  summary: string
+  evaluatedAt: string
+}
+
+export interface EvaluateRiskScoresResponse {
+  runId: string
+  scopeKey: string
+  packsEvaluatedCount: number
+  highestRiskScore: number
+  highestRiskLevel: string
+  mirrorFactCount: number
+  evaluatedAt: string
+  scores: RiskScoreResponse[]
+}
+
+export interface RiskScoreSummaryResponse {
+  totalScores: number
+  scopesTracked: number
+  lowCount: number
+  mediumCount: number
+  highCount: number
+  criticalCount: number
+  highestRiskScore: number
+  highestRiskLevel: string
+  lastEvaluatedAt: string | null
+  generatedAt: string
+}
+
+export interface EvaluateMissingEvidenceWarningsRequest {
+  scopeKey?: string | null
+  rulePackKey?: string | null
+  context?: Record<string, string> | null
+}
+
+export interface MissingEvidenceWarningResponse {
+  warningId: string
+  runId: string
+  scopeKey: string
+  rulePackId: string
+  packKey: string
+  factKey: string
+  factDefinitionId: string | null
+  warningType: string
+  severity: string
+  reasonCode: string
+  hasMirrorAtScope: boolean
+  isRequiredInRule: boolean
+  isRequiredInCatalog: boolean
+  summary: string
+  evaluatedAt: string
+}
+
+export interface EvaluateMissingEvidenceWarningsResponse {
+  runId: string
+  scopeKey: string
+  packsAnalyzedCount: number
+  warningsEmittedCount: number
+  highestSeverity: string
+  mirrorFactCount: number
+  evaluatedAt: string
+  warnings: MissingEvidenceWarningResponse[]
+}
+
+export interface MissingEvidenceWarningSummaryResponse {
+  totalWarnings: number
+  scopesTracked: number
+  lowCount: number
+  mediumCount: number
+  highCount: number
+  criticalCount: number
+  highestSeverity: string
+  lastEvaluatedAt: string | null
+  generatedAt: string
+}
+
+export interface EvaluateControlEffectivenessRequest {
+  scopeKey?: string | null
+  rulePackKey?: string | null
+  context?: Record<string, string> | null
+}
+
+export interface ControlEffectivenessRecordResponse {
+  recordId: string
+  runId: string
+  scopeKey: string
+  rulePackId: string
+  packKey: string
+  effectivenessScore: number
+  effectivenessLevel: string
+  controlStatus: string
+  ruleOutcome: string
+  evaluationResult: string
+  totalRuleCount: number
+  passedRuleCount: number
+  failedRuleCount: number
+  unresolvedFactCount: number
+  resolvedFactCount: number
+  summary: string
+  evaluatedAt: string
+}
+
+export interface EvaluateControlEffectivenessResponse {
+  runId: string
+  scopeKey: string
+  packsEvaluatedCount: number
+  lowestEffectivenessScore: number
+  lowestEffectivenessLevel: string
+  averageEffectivenessScore: number
+  evaluatedAt: string
+  records: ControlEffectivenessRecordResponse[]
+}
+
+export interface ControlEffectivenessSummaryResponse {
+  totalControls: number
+  scopesTracked: number
+  effectiveCount: number
+  partiallyEffectiveCount: number
+  ineffectiveCount: number
+  unknownCount: number
+  lowestEffectivenessScore: number
+  lowestEffectivenessLevel: string
+  averageEffectivenessScore: number
+  lastEvaluatedAt: string | null
+  generatedAt: string
+}
+
+export interface EvaluateReadinessForecastRequest {
+  scopeKey?: string | null
+  rulePackKey?: string | null
+  context?: Record<string, string> | null
+}
+
+export interface ReadinessForecastResponse {
+  forecastId: string
+  runId: string
+  scopeKey: string
+  rulePackId: string
+  packKey: string
+  readinessScore: number
+  readinessLevel: string
+  riskScore: number
+  riskLevel: string
+  effectivenessScore: number
+  effectivenessLevel: string
+  missingEvidenceWarningCount: number
+  highestMissingEvidenceSeverity: string
+  summary: string
+  forecastedAt: string
+}
+
+export interface EvaluateReadinessForecastResponse {
+  runId: string
+  scopeKey: string
+  packsForecastCount: number
+  readinessScore: number
+  readinessLevel: string
+  lowestReadinessScore: number
+  averageReadinessScore: number
+  highestRiskScore: number
+  missingEvidenceWarningCount: number
+  averageEffectivenessScore: number
+  riskScoreRunId: string
+  missingEvidenceWarningRunId: string
+  controlEffectivenessRunId: string
+  forecastedAt: string
+  forecasts: ReadinessForecastResponse[]
+}
+
+export interface ReadinessForecastSummaryResponse {
+  totalForecasts: number
+  scopesTracked: number
+  readyCount: number
+  cautionCount: number
+  notReadyCount: number
+  unknownCount: number
+  readinessScore: number
+  readinessLevel: string
+  lowestReadinessScore: number
+  averageReadinessScore: number
+  lastForecastedAt: string | null
+  generatedAt: string
+}
+
+export interface RuleChangeMonitoringSummaryResponse {
+  totalEvents: number
+  eventsLast24Hours: number
+  eventsLast7Days: number
+  versionCreatedCount: number
+  statusChangedCount: number
+  contentUpdatedCount: number
+  scanDetectedCount: number
+  generatedAt: string
+}
+
+export interface M12AnalyticsWorkerSettingsResponse {
+  isEnabled: boolean
+  defaultScopeKey: string
+  intervalHours: number
+  riskScoringEnabled: boolean
+  missingEvidenceEnabled: boolean
+  controlEffectivenessEnabled: boolean
+  readinessForecastEnabled: boolean
+  auditDeliveryEnabled: boolean
+  lastBatchRunAt: string | null
+  lastRiskScoringRunAt: string | null
+  lastMissingEvidenceRunAt: string | null
+  lastControlEffectivenessRunAt: string | null
+  lastReadinessForecastRunAt: string | null
+  lastAuditDeliveryRunAt: string | null
+  updatedAt: string | null
+}
+
+export interface UpsertM12AnalyticsWorkerSettingsRequest {
+  isEnabled: boolean
+  defaultScopeKey?: string
+  intervalHours?: number
+  riskScoringEnabled?: boolean
+  missingEvidenceEnabled?: boolean
+  controlEffectivenessEnabled?: boolean
+  readinessForecastEnabled?: boolean
+  auditDeliveryEnabled?: boolean
+}
+
+export interface ScheduledRuleEvaluationRunSummary {
+  runId: string
+  startedAt: string
+  completedAt: string | null
+  status: string
+  packsDueCount: number
+  evaluatedCount: number
+  skippedCount: number
+  allowCount: number
+  warnCount: number
+  blockCount: number
+}
+
+export interface M12AnalyticsBatchRunSummary {
+  runId: string
+  startedAt: string
+  completedAt: string | null
+  status: string
+  scopeKey: string
+  riskScoringRan: boolean
+  missingEvidenceRan: boolean
+  controlEffectivenessRan: boolean
+  readinessForecastRan: boolean
+  auditDeliveryQueued: boolean
+  auditPackageJobId: string | null
+  errorMessage: string | null
+}
+
+export interface AuditPackageJobSummary {
+  jobId: string
+  status: string
+  format: string
+  createdAt: string
+  completedAt: string | null
+  packageId: string | null
+  errorMessage: string | null
+}
+
+export interface PendingM12AnalyticsBatchTenantItem {
+  tenantId: string
+  defaultScopeKey: string
+  intervalHours: number
+  riskScoringDue: boolean
+  missingEvidenceDue: boolean
+  controlEffectivenessDue: boolean
+  readinessForecastDue: boolean
+  auditDeliveryDue: boolean
+}
+
+export interface AuditDeliveryScheduledEvaluationStatus {
+  pendingPacksCount: number
+  lastRun: ScheduledRuleEvaluationRunSummary | null
+}
+
+export interface AuditDeliveryM12BatchStatus {
+  workerEnabled: boolean
+  batchDue: boolean
+  pendingSteps: PendingM12AnalyticsBatchTenantItem | null
+  lastRun: M12AnalyticsBatchRunSummary | null
+}
+
+export interface AuditDeliveryAuditPackageStatus {
+  pendingJobsCount: number
+  recentJobs: AuditPackageJobSummary[]
+}
+
+export interface AuditDeliveryOrchestrationStatusResponse {
+  workerSettings: M12AnalyticsWorkerSettingsResponse
+  scheduledEvaluation: AuditDeliveryScheduledEvaluationStatus
+  m12Batch: AuditDeliveryM12BatchStatus
+  auditPackages: AuditDeliveryAuditPackageStatus
+}
+
+export interface TriggerScheduledRuleEvaluationResponse {
+  scheduledRunId: string
+  evaluatedCount: number
+  skippedCount: number
+  allowCount: number
+  warnCount: number
+  blockCount: number
+}
+
+export interface TriggerM12AnalyticsBatchResponse {
+  batchRunId: string | null
+  status: string
+  auditDeliveryQueued: boolean
+  auditPackageJobId: string | null
+  errorMessage: string | null
+}

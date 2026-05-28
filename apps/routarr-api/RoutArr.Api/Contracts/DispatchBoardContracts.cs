@@ -49,6 +49,7 @@ public sealed record DispatchBoardTripRow(
     string Title,
     string DispatchStatus,
     string? AssignedDriverPersonId,
+    string? VehicleRefKey,
     DateTimeOffset? ScheduledStartAt,
     DateTimeOffset? ScheduledEndAt,
     bool IsLate,

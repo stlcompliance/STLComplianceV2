@@ -5,10 +5,19 @@ import { describe, expect, it, vi } from 'vitest'
 import { ProcurementExceptionsPanel } from './ProcurementExceptionsPanel'
 
 vi.mock('../api/client', () => ({
+  listProcurementExceptionResolutionTemplates: vi.fn().mockResolvedValue([
+    {
+      templateKey: 'pr_resubmit',
+      label: 'PR resubmit',
+      defaultResolutionNotes: 'Correct and resubmit.',
+    },
+  ]),
   listProcurementExceptions: vi.fn().mockResolvedValue([]),
   listSubjectProcurementExceptions: vi.fn().mockResolvedValue([]),
   getRfqs: vi.fn().mockResolvedValue([]),
   createSubjectProcurementException: vi.fn(),
+  assignProcurementException: vi.fn(),
+  linkProcurementExceptionActions: vi.fn(),
   startProcurementExceptionInvestigation: vi.fn(),
   resolveProcurementException: vi.fn(),
   requestProcurementExceptionWaive: vi.fn(),
@@ -25,6 +34,7 @@ describe('ProcurementExceptionsPanel', () => {
       <QueryClientProvider client={client}>
         <ProcurementExceptionsPanel
           accessToken="token"
+          currentUserId="user-1"
           canManage={true}
           canApprove={true}
           purchaseRequests={[

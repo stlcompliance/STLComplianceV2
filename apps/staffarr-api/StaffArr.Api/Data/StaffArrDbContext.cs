@@ -40,6 +40,8 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<PersonTrainingBlocker> PersonTrainingBlockers => Set<PersonTrainingBlocker>();
 
+    public DbSet<PersonTrainingAcknowledgement> PersonTrainingAcknowledgements => Set<PersonTrainingAcknowledgement>();
+
     public DbSet<IncidentTrainarrRouting> IncidentTrainarrRoutings => Set<IncidentTrainarrRouting>();
 
     public DbSet<ReadinessRollup> ReadinessRollups => Set<ReadinessRollup>();
@@ -266,6 +268,20 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
         });
 
+        modelBuilder.Entity<PersonTrainingAcknowledgement>(entity =>
+        {
+            entity.ToTable("staffarr_person_training_acknowledgements");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TrainingTitle).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.AssignmentReason).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Summary).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.TrainarrAcknowledgementRequestId }).IsUnique();
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+        });
+
         modelBuilder.Entity<PersonnelIncident>(entity =>
         {
             entity.ToTable("staffarr_personnel_incidents");
@@ -465,6 +481,7 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Format).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.FilterJson).HasMaxLength(4096);
             entity.Property(x => x.ErrorMessage).HasMaxLength(2000);
             entity.Property(x => x.ArtifactZip);
             entity.Property(x => x.ArtifactJson);

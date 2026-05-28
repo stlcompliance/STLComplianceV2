@@ -10,9 +10,16 @@ public sealed class DispatchAssignmentService(
     RoutArrDbContext db,
     DriverEligibilityService driverEligibility,
     AssetDispatchabilityService assetDispatchability,
-    DispatchWorkflowGateService dispatchWorkflowGates)
+    DispatchWorkflowGateService dispatchWorkflowGates,
+    IRoutArrAuditService audit)
 {
     public const string PreviewAction = "dispatch_assignment.preview";
+
+    public const string BulkPreviewAction = "dispatch_assignment.bulk_preview";
+
+    public const string AuditListAction = "dispatch_assignment.audit.list";
+
+    public const int MaxBulkPreviewItems = 50;
 
     public static class AssignmentKinds
     {
@@ -36,13 +43,108 @@ public sealed class DispatchAssignmentService(
 
         return kind switch
         {
-            AssignmentKinds.Driver => await PreviewDriverAsync(tenantId, trip, request.DriverPersonId, cancellationToken),
-            AssignmentKinds.Vehicle => await PreviewVehicleAsync(tenantId, trip, request.VehicleRefKey, cancellationToken),
+            AssignmentKinds.Driver => DispatchAssignmentValidationRules.ApplyValidation(
+                trip,
+                await PreviewDriverAsync(tenantId, trip, request.DriverPersonId, cancellationToken)),
+            AssignmentKinds.Vehicle => DispatchAssignmentValidationRules.ApplyValidation(
+                trip,
+                await PreviewVehicleAsync(tenantId, trip, request.VehicleRefKey, cancellationToken)),
             _ => throw new StlApiException(
                 "dispatch.assignment_invalid_kind",
                 "Assignment kind must be driver or vehicle.",
                 400),
         };
+    }
+
+    public async Task<DispatchBoardBulkAssignmentPreviewResponse> BulkPreviewAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        DispatchBoardBulkAssignmentPreviewRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var items = request.Items?.Where(x => x.TripId != Guid.Empty).ToList() ?? [];
+        if (items.Count == 0)
+        {
+            throw new StlApiException(
+                "dispatch.assignment_bulk_empty",
+                "At least one assignment item is required.",
+                400);
+        }
+
+        if (items.Count > MaxBulkPreviewItems)
+        {
+            throw new StlApiException(
+                "dispatch.assignment_bulk_too_many",
+                $"Bulk assignment preview supports at most {MaxBulkPreviewItems} items.",
+                400);
+        }
+
+        var previews = new List<DispatchBoardBulkAssignmentItemPreview>();
+        foreach (var item in items)
+        {
+            var preview = await PreviewAsync(
+                tenantId,
+                new DispatchAssignmentPreviewRequest(
+                    item.TripId,
+                    item.AssignmentKind,
+                    item.DriverPersonId,
+                    item.VehicleRefKey),
+                cancellationToken);
+            previews.Add(new DispatchBoardBulkAssignmentItemPreview(
+                item.TripId,
+                preview.AssignmentKind,
+                preview));
+        }
+
+        var response = new DispatchBoardBulkAssignmentPreviewResponse(
+            previews.Count,
+            previews.Count(x => x.Preview.CanAssign),
+            previews.Count(x => !x.Preview.CanAssign),
+            previews);
+
+        await audit.WriteAsync(
+            BulkPreviewAction,
+            tenantId,
+            actorUserId,
+            "dispatch_assignment",
+            "bulk",
+            $"{response.CanAssignCount}/{response.ItemCount} can assign",
+            cancellationToken: cancellationToken);
+
+        return response;
+    }
+
+    public async Task<DispatchAssignmentAuditListResponse> ListAuditAsync(
+        Guid tenantId,
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        limit = limit switch
+        {
+            < 1 => 25,
+            > 100 => 100,
+            _ => limit,
+        };
+
+        var entries = await db.AuditEvents
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && (x.Action.StartsWith("dispatch_assignment")
+                    || x.Action == "trip.assign_driver"
+                    || x.Action == "trip.assign_vehicle"))
+            .OrderByDescending(x => x.OccurredAt)
+            .Take(limit)
+            .Select(x => new DispatchAssignmentAuditEntry(
+                x.Id,
+                x.ActorUserId,
+                x.Action,
+                x.TargetType,
+                x.TargetId,
+                x.Result,
+                x.OccurredAt))
+            .ToListAsync(cancellationToken);
+
+        return new DispatchAssignmentAuditListResponse(entries);
     }
 
     public async Task EnsureDriverAssignmentAllowedAsync(

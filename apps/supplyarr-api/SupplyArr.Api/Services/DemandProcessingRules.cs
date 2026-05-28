@@ -1,9 +1,35 @@
+using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Entities;
+using STLCompliance.Shared.Contracts;
 
 namespace SupplyArr.Api.Services;
 
 public static class DemandProcessingRules
 {
+    public static void ValidateSettings(UpsertDemandProcessingSettingsRequest request)
+    {
+        var anySource = request.ProcessMaintainarrDemandRefs
+            || request.ProcessRoutarrDemandRefs
+            || request.ProcessTrainarrDemandRefs
+            || request.ProcessStaffarrDemandRefs;
+
+        if (request.IsEnabled && !anySource)
+        {
+            throw new StlApiException(
+                "demand_processing_settings.no_sources",
+                "Enable at least one demand source when the demand processing worker is on.",
+                400);
+        }
+
+        if (request.AutoCreatePrDraftWhenShort && !anySource)
+        {
+            throw new StlApiException(
+                "demand_processing_settings.auto_pr_requires_source",
+                "Auto PR draft requires at least one enabled demand source.",
+                400);
+        }
+    }
+
     public static int NormalizeBatchSize(int? batchSize) =>
         Math.Clamp(batchSize ?? 50, 1, 500);
 

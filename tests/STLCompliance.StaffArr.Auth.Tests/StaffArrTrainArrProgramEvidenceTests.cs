@@ -57,7 +57,7 @@ public class StaffArrTrainArrProgramEvidenceTests : IAsyncLifetime
             adminToken,
             "trainarr",
             ["staffarr"],
-            $"{StaffArrIntegration.TrainingBlockerIngestActionScope},{StaffArrIntegration.CertificationGrantIngestActionScope}");
+            $"{StaffArrIntegration.TrainingBlockerIngestActionScope},{StaffArrIntegration.TrainingAcknowledgementIngestActionScope},{StaffArrIntegration.TrainingAcknowledgementReadActionScope},{StaffArrIntegration.CertificationGrantIngestActionScope}");
 
         _staffarrFactory = new WebApplicationFactory<global::StaffArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -94,6 +94,8 @@ public class StaffArrTrainArrProgramEvidenceTests : IAsyncLifetime
                 services.AddHttpClient<TrainArr.Api.Services.StaffArrTrainingBlockerClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
                 services.AddHttpClient<TrainArr.Api.Services.StaffArrCertificationGrantClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
+                services.AddHttpClient<TrainArr.Api.Services.StaffArrTrainingAcknowledgementClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
             });
         });
@@ -182,6 +184,13 @@ public class StaffArrTrainArrProgramEvidenceTests : IAsyncLifetime
         Assert.Equal("assigned", assignment.Status);
         Assert.Equal(0, assignment.EvidenceCount);
 
+        var memberStaffarrToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_member", personId: personId);
+        await TrainArrAcknowledgementTestHelper.AcknowledgePendingForAssignmentAsync(
+            _staffarrClient,
+            personId,
+            assignment.AssignmentId,
+            memberStaffarrToken);
+
         var evidenceRequest = Authorized(
             HttpMethod.Post,
             $"/api/training-assignments/{assignment.AssignmentId}/evidence",
@@ -254,6 +263,13 @@ public class StaffArrTrainArrProgramEvidenceTests : IAsyncLifetime
         var assignment = (await createAssignmentResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
 
         var memberToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_member", personId: personId);
+        var memberStaffarrToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_member", personId: personId);
+        await TrainArrAcknowledgementTestHelper.AcknowledgePendingForAssignmentAsync(
+            _staffarrClient,
+            personId,
+            assignment.AssignmentId,
+            memberStaffarrToken);
+
         var evidenceRequest = Authorized(
             HttpMethod.Post,
             $"/api/training-assignments/{assignment.AssignmentId}/evidence",

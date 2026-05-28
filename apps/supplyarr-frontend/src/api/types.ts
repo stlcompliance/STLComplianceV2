@@ -1393,6 +1393,13 @@ export interface ProcurementExceptionResponse {
   waiveRejectionReason: string
   createdByUserId: string
   assignedToUserId: string | null
+  slaDueAt: string | null
+  isSlaBreached: boolean
+  resolutionTemplateKey: string
+  linkedPurchaseRequestId: string | null
+  linkedPurchaseRequestKey: string | null
+  linkedPurchaseOrderId: string | null
+  linkedPurchaseOrderKey: string | null
   waiveRequestedByUserId: string | null
   waiveRequestedAt: string | null
   waivedByUserId: string | null
@@ -1409,10 +1416,28 @@ export interface CreateProcurementExceptionRequest {
   title: string
   description: string
   assignedToUserId?: string | null
+  slaDueAt?: string | null
+}
+
+export interface ProcurementExceptionResolutionTemplateResponse {
+  templateKey: string
+  label: string
+  defaultResolutionNotes: string
+}
+
+export interface AssignProcurementExceptionRequest {
+  assignedToUserId: string
+  slaDueAt?: string | null
+}
+
+export interface LinkProcurementExceptionActionsRequest {
+  linkedPurchaseRequestId?: string | null
+  linkedPurchaseOrderId?: string | null
 }
 
 export interface ResolveProcurementExceptionRequest {
   resolutionNotes: string
+  resolutionTemplateKey?: string | null
 }
 
 export interface RequestProcurementExceptionWaiveRequest {
@@ -1543,22 +1568,59 @@ export interface DemandProcessingRunsResponse {
   items: DemandProcessingRunItem[]
 }
 
+export interface DemandProcessingSourceLinkResponse {
+  productKey: string
+  displayLabel: string
+  referenceKey: string
+}
+
 export interface DemandProcessingSummaryResponse {
-  processingStateId: string
+  processingStateId: string | null
   demandRefId: string
   demandRefSource: string
   sourceRefKey: string
   title: string
   demandRefStatus: string
-  processingOutcome: string
-  recommendedAction: string
-  linesTotalCount: number
-  linesCatalogCount: number
-  linesShortCount: number
+  processingOutcome: string | null
+  recommendedAction: string | null
+  linesTotalCount: number | null
+  linesCatalogCount: number | null
+  linesShortCount: number | null
   purchaseRequestId: string | null
   lastProcessingMessage: string | null
   demandReceivedAt: string
-  lastProcessedAt: string
+  lastProcessedAt: string | null
+  sourceLink: DemandProcessingSourceLinkResponse
+}
+
+export interface DemandProcessingLineSummary {
+  lineId: string
+  lineNumber: number
+  partId: string | null
+  partNumber: string
+  quantityRequested: number
+  quantityAvailable: number
+  isShort: boolean
+}
+
+export interface DemandProcessingDetailResponse {
+  summary: DemandProcessingSummaryResponse
+  lines: DemandProcessingLineSummary[]
+}
+
+export interface DemandProcessingOperatorActionResponse {
+  action: string
+  result: {
+    demandRefId: string
+    demandRefSource: string
+    sourceRefKey: string
+    processingOutcome: string
+    recommendedAction: string
+    linesShortCount: number
+    purchaseRequestId: string | null
+    notificationDispatchId: string | null
+  }
+  detail: DemandProcessingDetailResponse
 }
 
 export interface DemandProcessingDashboardResponse {
@@ -1566,7 +1628,8 @@ export interface DemandProcessingDashboardResponse {
   stockShortCount: number
   stockAvailableCount: number
   prDraftedCount: number
-  items: DemandProcessingSummaryResponse[]
+  processedItems: DemandProcessingSummaryResponse[]
+  pendingItems: DemandProcessingSummaryResponse[]
 }
 
 export interface SupplyReadinessTotalsResponse {

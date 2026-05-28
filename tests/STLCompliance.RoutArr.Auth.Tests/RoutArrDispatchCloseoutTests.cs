@@ -184,10 +184,95 @@ public sealed class RoutArrDispatchCloseoutTests : IAsyncLifetime
         Assert.Equal(TripDispatchStatuses.Completed, updatedTrip.DispatchStatus);
     }
 
+    [Fact]
+    public async Task Closeout_checklists_include_driver_and_stop_items()
+    {
+        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var now = DateTimeOffset.UtcNow;
+        var trip = await CreateTripAsync(dispatcherToken, now, now.AddHours(4));
+
+        var createRouteRequest = Authorized(HttpMethod.Post, "/api/routes", dispatcherToken);
+        createRouteRequest.Content = JsonContent.Create(new CreateRouteRequest(
+            "Checklist route",
+            "Checklist test",
+            trip.TripId,
+            [
+                new CreateRouteStopRequest("stop-b", "Stop B", "456 Oak", "pickup", 1, null),
+            ]));
+        (await _routarrClient.SendAsync(createRouteRequest)).EnsureSuccessStatusCode();
+
+        var checklistRequest = Authorized(
+            HttpMethod.Get,
+            "/api/dispatch/closeout/checklists?scope=daily&remainingTripDisposition=cancel",
+            dispatcherToken);
+        var checklistResponse = await _routarrClient.SendAsync(checklistRequest);
+        checklistResponse.EnsureSuccessStatusCode();
+        var checklists = (await checklistResponse.Content.ReadFromJsonAsync<DispatchCloseoutChecklistsResponse>())!;
+
+        var tripChecklist = Assert.Single(checklists.Trips, x => x.TripId == trip.TripId);
+        Assert.Contains(tripChecklist.Items, x => x.Key == DispatchCloseoutChecklistRules.StopsClosedKey && !x.Satisfied);
+        Assert.Contains(tripChecklist.Items, x => x.Key == DispatchCloseoutChecklistRules.TripDispositionReadyKey && x.Satisfied);
+    }
+
+    [Fact]
+    public async Task Closeout_bulk_apply_only_selected_trip()
+    {
+        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var now = DateTimeOffset.UtcNow;
+        var tripA = await CreateTripAsync(dispatcherToken, now, now.AddHours(4));
+        var tripB = await CreateTripAsync(dispatcherToken, now.AddHours(5), now.AddHours(8));
+
+        var applyRequest = Authorized(HttpMethod.Post, "/api/dispatch/closeout/apply", dispatcherToken);
+        applyRequest.Content = JsonContent.Create(new DispatchCloseoutRequest(
+            "daily",
+            DispatchCloseoutRules.TripDispositionCancel,
+            DispatchCloseoutRules.StopDispositionSkip,
+            [tripA.TripId]));
+        var applyResponse = await _routarrClient.SendAsync(applyRequest);
+        applyResponse.EnsureSuccessStatusCode();
+        var applied = (await applyResponse.Content.ReadFromJsonAsync<DispatchCloseoutApplyResponse>())!;
+
+        Assert.Contains(applied.TripResults, x => x.TripId == tripA.TripId && x.Applied);
+        Assert.DoesNotContain(applied.TripResults, x => x.TripId == tripB.TripId);
+
+        var tripBRequest = Authorized(HttpMethod.Get, $"/api/trips/{tripB.TripId}", dispatcherToken);
+        var tripBResponse = await _routarrClient.SendAsync(tripBRequest);
+        tripBResponse.EnsureSuccessStatusCode();
+        var stillOpen = (await tripBResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+        Assert.Equal(TripDispatchStatuses.Planned, stillOpen.DispatchStatus);
+    }
+
+    [Fact]
+    public async Task Closeout_audit_lists_apply_after_bulk()
+    {
+        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var now = DateTimeOffset.UtcNow;
+        var trip = await CreateTripAsync(dispatcherToken, now, now.AddHours(4));
+
+        var applyRequest = Authorized(HttpMethod.Post, "/api/dispatch/closeout/apply", dispatcherToken);
+        applyRequest.Content = JsonContent.Create(new DispatchCloseoutRequest(
+            "daily",
+            DispatchCloseoutRules.TripDispositionCancel,
+            DispatchCloseoutRules.StopDispositionSkip,
+            [trip.TripId]));
+        (await _routarrClient.SendAsync(applyRequest)).EnsureSuccessStatusCode();
+
+        var auditRequest = Authorized(HttpMethod.Get, "/api/dispatch/closeout/audit?limit=10", dispatcherToken);
+        var auditResponse = await _routarrClient.SendAsync(auditRequest);
+        auditResponse.EnsureSuccessStatusCode();
+        var audit = (await auditResponse.Content.ReadFromJsonAsync<DispatchCloseoutAuditListResponse>())!;
+
+        Assert.Contains(
+            audit.Entries,
+            x => x.Action == DispatchCloseoutService.BulkApplyAction);
+    }
+
     private async Task AssignDriverAsync(string token, Guid tripId, string driverPersonId)
     {
         var request = Authorized(HttpMethod.Patch, $"/api/trips/{tripId}/assign-driver", token);
-        request.Content = JsonContent.Create(new AssignTripDriverRequest(driverPersonId, false));
+        request.Content = JsonContent.Create(new AssignTripDriverRequest(
+            driverPersonId,
+            IgnoreAvailabilityConflicts: false));
         (await _routarrClient.SendAsync(request)).EnsureSuccessStatusCode();
     }
 

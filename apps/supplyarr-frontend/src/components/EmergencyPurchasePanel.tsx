@@ -48,10 +48,10 @@ export function EmergencyPurchasePanel({
   const [requestKey, setRequestKey] = useState('')
   const [title, setTitle] = useState('')
   const [emergencyReason, setEmergencyReason] = useState('')
-  const [notes, setNotes] = useState('')
+  const [notes] = useState('')
   const [vendorId, setVendorId] = useState('')
   const [partId, setPartId] = useState('')
-  const [lineQty, setLineQty] = useState('1')
+  const [lineQty] = useState('1')
   const [justification, setJustification] = useState('')
   const [orderKey, setOrderKey] = useState('')
 

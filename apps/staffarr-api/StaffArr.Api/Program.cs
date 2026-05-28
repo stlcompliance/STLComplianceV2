@@ -35,6 +35,7 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrInternalPermissionProjectionEndpoints();
         app.MapStaffArrInternalPersonExportDeliveryEndpoints();
         app.MapStaffArrInternalAuditPackageGenerationEndpoints();
+        app.MapStaffArrTrainingAcknowledgementEndpoints();
         app.MapStaffArrFieldInboxEndpoints();
         app.MapStaffArrAuditPackageEndpoints();
         await Task.CompletedTask;

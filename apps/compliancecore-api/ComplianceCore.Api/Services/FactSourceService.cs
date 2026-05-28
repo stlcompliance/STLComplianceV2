@@ -35,12 +35,30 @@ public sealed class FactSourceService(
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<(bool Ok, string? ErrorCode, string? Message)> TryValidateCreateAsync(
+        Guid tenantId,
+        CreateFactSourceRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await ValidateCreateAsync(tenantId, request, cancellationToken);
+            return (true, null, null);
+        }
+        catch (StlApiException ex)
+        {
+            return (false, ex.Code, ex.Message);
+        }
+    }
+
     public async Task<FactSourceResponse> CreateAsync(
         Guid tenantId,
         Guid? actorUserId,
         CreateFactSourceRequest request,
         CancellationToken cancellationToken = default)
     {
+        await ValidateCreateAsync(tenantId, request, cancellationToken);
+
         var sourceKey = GoverningBodyService.NormalizeKey(request.SourceKey, "fact_sources.validation", "Source key");
         var label = GoverningBodyService.NormalizeLabel(request.Label, "fact_sources.validation", "Label");
         var description = GoverningBodyService.NormalizeDescription(request.Description, "fact_sources.validation");
@@ -51,26 +69,8 @@ public sealed class FactSourceService(
 
         var definition = await db.FactDefinitions.FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.Id == request.FactDefinitionId && x.IsActive,
-            cancellationToken);
-
-        if (definition is null)
-        {
-            throw new StlApiException("fact_definitions.not_found", "Fact definition was not found.", 404);
-        }
-
-        ValidateConfigForSourceType(sourceType, definition.ValueType, configJson);
-
-        var duplicate = await db.FactSources.AnyAsync(
-            x => x.TenantId == tenantId && x.SourceKey == sourceKey,
-            cancellationToken);
-
-        if (duplicate)
-        {
-            throw new StlApiException(
-                "fact_sources.duplicate",
-                "A fact source with this key already exists.",
-                409);
-        }
+            cancellationToken)
+            ?? throw new StlApiException("fact_definitions.not_found", "Fact definition was not found.", 404);
 
         var now = DateTimeOffset.UtcNow;
         var entity = new FactSource
@@ -104,6 +104,39 @@ public sealed class FactSourceService(
             cancellationToken: cancellationToken);
 
         return MapResponse(entity, definition);
+    }
+
+    private async Task ValidateCreateAsync(
+        Guid tenantId,
+        CreateFactSourceRequest request,
+        CancellationToken cancellationToken)
+    {
+        var sourceKey = GoverningBodyService.NormalizeKey(request.SourceKey, "fact_sources.validation", "Source key");
+        var sourceType = NormalizeSourceType(request.SourceType);
+        var configJson = NormalizeConfigJson(request.ConfigJson);
+
+        var definition = await db.FactDefinitions.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == request.FactDefinitionId && x.IsActive,
+            cancellationToken);
+
+        if (definition is null)
+        {
+            throw new StlApiException("fact_definitions.not_found", "Fact definition was not found.", 404);
+        }
+
+        ValidateConfigForSourceType(sourceType, definition.ValueType, configJson);
+
+        var duplicate = await db.FactSources.AnyAsync(
+            x => x.TenantId == tenantId && x.SourceKey == sourceKey,
+            cancellationToken);
+
+        if (duplicate)
+        {
+            throw new StlApiException(
+                "fact_sources.duplicate",
+                "A fact source with this key already exists.",
+                409);
+        }
     }
 
     private static FactSourceResponse MapResponse(FactSource entity, FactDefinition definition) =>

@@ -48,7 +48,7 @@ export function SupplierIncidentsPanel({
   const [description, setDescription] = useState('')
   const [incidentType, setIncidentType] = useState<(typeof INCIDENT_TYPES)[number]>('quality')
   const [severity, setSeverity] = useState<(typeof SEVERITIES)[number]>('medium')
-  const [resolutionNotes, setResolutionNotes] = useState('')
+  const [resolutionNotes] = useState('')
 
   const openQuery = useQuery({
     queryKey: ['supplyarr-supplier-incidents-open', accessToken],

@@ -19,10 +19,11 @@ public sealed class PlatformAuditPackageService(
 
     public PlatformAuditPackageManifestResponse GetManifest() =>
         new(
-            PackageVersion: "1",
+            PackageVersion: "2",
             Sections:
             [
-                new("platform_audit_events", "platform_audit_events.json", "Platform audit events", "NexArr control-plane audit trail (optional tenant scope)."),
+                new("platform_audit_events", "platform_audit_events.json", "Platform audit events", "NexArr control-plane audit trail (JSON)."),
+                new("platform_audit_events_csv", "platform_audit_events.csv", "Platform audit events (CSV)", "Same audit events in CSV for spreadsheets."),
                 new("tenants", "tenants.json", "Tenants", "Tenant registry snapshot."),
                 new("tenant_entitlements", "tenant_entitlements.json", "Entitlements", "Tenant product entitlement records."),
                 new("product_catalog", "product_catalog.json", "Product catalog", "Suite product catalog entries."),
@@ -33,15 +34,76 @@ public sealed class PlatformAuditPackageService(
                 new("callback_allowlist", "callback_allowlist.json", "Callback allowlist", "Handoff callback allowlist entries."),
             ]);
 
+    public async Task<PlatformAuditPackageFilterOptionsResponse> GetFilterOptionsAsync(
+        PlatformAuditPackageFilter filter,
+        CancellationToken cancellationToken = default)
+    {
+        var query = db.AuditEvents.AsNoTracking();
+        query = ApplyTenantScope(query, filter.TenantId);
+
+        var actions = await query
+            .Select(x => x.Action)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToListAsync(cancellationToken);
+
+        var results = await query
+            .Select(x => x.Result)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToListAsync(cancellationToken);
+
+        var targetTypes = await query
+            .Select(x => x.TargetType)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToListAsync(cancellationToken);
+
+        var productKeys = await db.ProductCatalog
+            .AsNoTracking()
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.SortOrder)
+            .Select(x => x.ProductKey)
+            .ToListAsync(cancellationToken);
+
+        return new PlatformAuditPackageFilterOptionsResponse(actions, results, targetTypes, productKeys);
+    }
+
+    public async Task<PlatformAuditPackageExportSummaryResponse> GetExportSummaryAsync(
+        PlatformAuditPackageFilter filter,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateDateRange(filter.From, filter.To);
+        var package = await LoadPackageDataAsync(filter, cancellationToken);
+
+        var byResult = package.AuditEvents
+            .GroupBy(x => x.Result, StringComparer.OrdinalIgnoreCase)
+            .Select(group => new PlatformAuditPackageBreakdownItem(group.Key, group.Count()))
+            .OrderByDescending(x => x.Count)
+            .ToList();
+
+        var byAction = package.AuditEvents
+            .GroupBy(x => x.Action, StringComparer.OrdinalIgnoreCase)
+            .Select(group => new PlatformAuditPackageBreakdownItem(group.Key, group.Count()))
+            .OrderByDescending(x => x.Count)
+            .Take(15)
+            .ToList();
+
+        return new PlatformAuditPackageExportSummaryResponse(
+            MapAppliedFilters(filter),
+            package.Counts,
+            byResult,
+            byAction,
+            DateTimeOffset.UtcNow);
+    }
+
     public async Task<PagedResult<PlatformAuditEventExportItem>> ListAuditTimelineAsync(
-        Guid? scopeTenantId,
-        DateTimeOffset? from,
-        DateTimeOffset? to,
+        PlatformAuditPackageFilter filter,
         int page,
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        ValidateDateRange(from, to);
+        ValidateDateRange(filter.From, filter.To);
         page = page < 1 ? 1 : page;
         pageSize = pageSize switch
         {
@@ -51,8 +113,7 @@ public sealed class PlatformAuditPackageService(
         };
 
         var query = db.AuditEvents.AsNoTracking();
-        query = ApplyTenantScope(query, scopeTenantId);
-        query = ApplyOccurredAtFilter(query, from, to);
+        query = ApplyAuditEventFilters(query, filter);
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query
@@ -81,36 +142,32 @@ public sealed class PlatformAuditPackageService(
     }
 
     public async Task<PlatformAuditPackageExportResponse> BuildExportAsync(
-        Guid? scopeTenantId,
+        PlatformAuditPackageFilter filter,
         Guid? actorUserId,
-        DateTimeOffset? from,
-        DateTimeOffset? to,
         CancellationToken cancellationToken = default)
     {
-        var package = await MaterializeExportAsync(scopeTenantId, from, to, cancellationToken);
+        var package = await MaterializeExportAsync(filter, cancellationToken);
 
         await audit.WriteAsync(
             "platform_audit_package.export",
             "platform_audit_package",
             package.PackageId.ToString(),
             "success",
-            tenantId: scopeTenantId,
+            tenantId: filter.TenantId,
             actorUserId: actorUserId,
-            reasonCode: BuildDateRangeReasonCode(from, to),
+            reasonCode: BuildFilterReasonCode(filter),
             cancellationToken: cancellationToken);
 
         return package;
     }
 
     public async Task<byte[]> ExportZipAsync(
-        Guid? scopeTenantId,
+        PlatformAuditPackageFilter filter,
         Guid? actorUserId,
-        DateTimeOffset? from,
-        DateTimeOffset? to,
         CancellationToken cancellationToken = default)
     {
-        ValidateDateRange(from, to);
-        var package = await MaterializeExportAsync(scopeTenantId, from, to, cancellationToken);
+        ValidateDateRange(filter.From, filter.To);
+        var package = await MaterializeExportAsync(filter, cancellationToken);
         var zipBytes = await CreateZipBytesAsync(package, cancellationToken);
 
         await audit.WriteAsync(
@@ -118,24 +175,58 @@ public sealed class PlatformAuditPackageService(
             "platform_audit_package",
             package.PackageId.ToString(),
             "success",
-            tenantId: scopeTenantId,
+            tenantId: filter.TenantId,
             actorUserId: actorUserId,
-            reasonCode: BuildDateRangeReasonCode(from, to),
+            reasonCode: BuildFilterReasonCode(filter),
             cancellationToken: cancellationToken);
 
         return zipBytes;
     }
 
-    public async Task<PlatformAuditPackageExportResponse> MaterializeExportAsync(
-        Guid? scopeTenantId,
-        DateTimeOffset? from,
-        DateTimeOffset? to,
+    public async Task<byte[]> ExportAuditEventsCsvAsync(
+        PlatformAuditPackageFilter filter,
+        Guid? actorUserId,
         CancellationToken cancellationToken = default)
     {
-        ValidateDateRange(from, to);
-        var package = await LoadPackageDataAsync(scopeTenantId, from, to, cancellationToken);
+        ValidateDateRange(filter.From, filter.To);
+        var package = await LoadPackageDataAsync(filter, cancellationToken);
+        var csvBytes = PlatformAuditPackageCsvWriter.WriteAuditEvents(package.AuditEvents);
+
+        await audit.WriteAsync(
+            "platform_audit_package.export_csv",
+            "platform_audit_package",
+            Guid.NewGuid().ToString(),
+            "success",
+            tenantId: filter.TenantId,
+            actorUserId: actorUserId,
+            reasonCode: BuildFilterReasonCode(filter),
+            cancellationToken: cancellationToken);
+
+        return csvBytes;
+    }
+
+    public async Task<PlatformAuditPackageExportResponse> MaterializeExportAsync(
+        PlatformAuditPackageFilter filter,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateDateRange(filter.From, filter.To);
+        var package = await LoadPackageDataAsync(filter, cancellationToken);
         return package with { PackageId = Guid.NewGuid() };
     }
+
+    public static PlatformAuditPackageFilter FromJob(PlatformAuditPackageGenerationJob job)
+    {
+        if (string.IsNullOrWhiteSpace(job.FilterJson))
+        {
+            return new PlatformAuditPackageFilter(job.ScopeTenantId, job.FromUtc, job.ToUtc);
+        }
+
+        return JsonSerializer.Deserialize<PlatformAuditPackageFilter>(job.FilterJson, JsonOptions)
+            ?? new PlatformAuditPackageFilter(job.ScopeTenantId, job.FromUtc, job.ToUtc);
+    }
+
+    public static string SerializeFilter(PlatformAuditPackageFilter filter) =>
+        JsonSerializer.Serialize(filter, JsonOptions);
 
     public async Task<byte[]> CreateZipBytesAsync(
         PlatformAuditPackageExportResponse package,
@@ -150,11 +241,13 @@ public sealed class PlatformAuditPackageService(
                 package.ScopeTenantId,
                 package.GeneratedAt,
                 package.DateRange,
+                package.AppliedFilters,
                 package.Counts,
-                PackageVersion = "1",
+                PackageVersion = "2",
             }, cancellationToken);
 
             await WriteJsonEntryAsync(archive, "platform_audit_events.json", package.AuditEvents, cancellationToken);
+            await WriteCsvEntryAsync(archive, "platform_audit_events.csv", package.AuditEvents, cancellationToken);
             await WriteJsonEntryAsync(archive, "tenants.json", package.Tenants, cancellationToken);
             await WriteJsonEntryAsync(archive, "tenant_entitlements.json", package.TenantEntitlements, cancellationToken);
             await WriteJsonEntryAsync(archive, "product_catalog.json", package.ProductCatalog, cancellationToken);
@@ -169,25 +262,28 @@ public sealed class PlatformAuditPackageService(
     }
 
     private async Task<PlatformAuditPackageExportResponse> LoadPackageDataAsync(
-        Guid? scopeTenantId,
-        DateTimeOffset? from,
-        DateTimeOffset? to,
+        PlatformAuditPackageFilter filter,
         CancellationToken cancellationToken)
     {
         var auditEventsQuery = db.AuditEvents.AsNoTracking();
-        auditEventsQuery = ApplyTenantScope(auditEventsQuery, scopeTenantId);
-        auditEventsQuery = ApplyOccurredAtFilter(auditEventsQuery, from, to);
+        auditEventsQuery = ApplyAuditEventFilters(auditEventsQuery, filter);
 
         var tenantsQuery = db.Tenants.AsNoTracking();
-        if (scopeTenantId is Guid tenantId)
+        if (filter.TenantId is Guid tenantId)
         {
             tenantsQuery = tenantsQuery.Where(x => x.Id == tenantId);
         }
 
         var entitlementsQuery = db.Entitlements.AsNoTracking();
-        if (scopeTenantId is Guid scopedTenant)
+        if (filter.TenantId is Guid scopedTenant)
         {
             entitlementsQuery = entitlementsQuery.Where(x => x.TenantId == scopedTenant);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.ProductKey))
+        {
+            var productKey = filter.ProductKey.Trim().ToLowerInvariant();
+            entitlementsQuery = entitlementsQuery.Where(x => x.ProductKey == productKey);
         }
 
         var auditEvents = await auditEventsQuery
@@ -251,8 +347,16 @@ public sealed class PlatformAuditPackageService(
                 x.ModifiedAt))
             .ToListAsync(cancellationToken);
 
-        var serviceClients = await db.ServiceClients
-            .AsNoTracking()
+        var serviceClientsQuery = db.ServiceClients.AsNoTracking();
+        if (!string.IsNullOrWhiteSpace(filter.ProductKey))
+        {
+            var productKey = filter.ProductKey.Trim().ToLowerInvariant();
+            serviceClientsQuery = serviceClientsQuery.Where(x =>
+                x.SourceProductKey == productKey
+                || x.AllowedProductKeys.Contains(productKey));
+        }
+
+        var serviceClients = await serviceClientsQuery
             .OrderBy(x => x.ClientKey)
             .Select(x => new PlatformAuditPackageServiceClientItem(
                 x.Id,
@@ -266,7 +370,7 @@ public sealed class PlatformAuditPackageService(
             .ToListAsync(cancellationToken);
 
         var serviceTokensQuery = db.ServiceTokens.AsNoTracking();
-        if (scopeTenantId is Guid tokenTenantId)
+        if (filter.TenantId is Guid tokenTenantId)
         {
             serviceTokensQuery = serviceTokensQuery.Where(x => x.TenantId == tokenTenantId);
         }
@@ -295,9 +399,15 @@ public sealed class PlatformAuditPackageService(
             .ToListAsync(cancellationToken);
 
         var allowlistQuery = db.CallbackAllowlist.AsNoTracking();
-        if (scopeTenantId is Guid allowlistTenantId)
+        if (filter.TenantId is Guid allowlistTenantId)
         {
             allowlistQuery = allowlistQuery.Where(x => x.TenantId == allowlistTenantId || x.TenantId == null);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.ProductKey))
+        {
+            var productKey = filter.ProductKey.Trim().ToLowerInvariant();
+            allowlistQuery = allowlistQuery.Where(x => x.ProductKey == productKey);
         }
 
         var callbackAllowlist = await allowlistQuery
@@ -314,9 +424,10 @@ public sealed class PlatformAuditPackageService(
 
         return new PlatformAuditPackageExportResponse(
             Guid.Empty,
-            scopeTenantId,
+            filter.TenantId,
             DateTimeOffset.UtcNow,
-            new PlatformAuditPackageDateRangeResponse(from, to),
+            new PlatformAuditPackageDateRangeResponse(filter.From, filter.To),
+            MapAppliedFilters(filter),
             new PlatformAuditPackageCountsResponse(
                 auditEvents.Count,
                 tenants.Count,
@@ -336,6 +447,39 @@ public sealed class PlatformAuditPackageService(
             serviceTokens,
             launchProfiles,
             callbackAllowlist);
+    }
+
+    private static IQueryable<PlatformAuditEvent> ApplyAuditEventFilters(
+        IQueryable<PlatformAuditEvent> query,
+        PlatformAuditPackageFilter filter)
+    {
+        query = ApplyTenantScope(query, filter.TenantId);
+        query = ApplyOccurredAtFilter(query, filter.From, filter.To);
+
+        if (!string.IsNullOrWhiteSpace(filter.Action))
+        {
+            var action = filter.Action.Trim().ToLowerInvariant();
+            query = query.Where(x => x.Action.ToLower() == action);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Result))
+        {
+            var result = filter.Result.Trim().ToLowerInvariant();
+            query = query.Where(x => x.Result.ToLower() == result);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.TargetType))
+        {
+            var targetType = filter.TargetType.Trim().ToLowerInvariant();
+            query = query.Where(x => x.TargetType.ToLower() == targetType);
+        }
+
+        if (filter.ActorUserId is Guid actorUserId)
+        {
+            query = query.Where(x => x.ActorUserId == actorUserId);
+        }
+
+        return query;
     }
 
     private static IQueryable<PlatformAuditEvent> ApplyTenantScope(
@@ -379,6 +523,18 @@ public sealed class PlatformAuditPackageService(
         await JsonSerializer.SerializeAsync(entryStream, payload, JsonOptions, cancellationToken);
     }
 
+    private static async Task WriteCsvEntryAsync(
+        ZipArchive archive,
+        string entryName,
+        IReadOnlyList<PlatformAuditEventExportItem> events,
+        CancellationToken cancellationToken)
+    {
+        var entry = archive.CreateEntry(entryName, CompressionLevel.Optimal);
+        await using var entryStream = entry.Open();
+        var bytes = PlatformAuditPackageCsvWriter.WriteAuditEvents(events);
+        await entryStream.WriteAsync(bytes, cancellationToken);
+    }
+
     private static void ValidateDateRange(DateTimeOffset? from, DateTimeOffset? to)
     {
         if (from is not null && to is not null && from > to)
@@ -390,8 +546,17 @@ public sealed class PlatformAuditPackageService(
         }
     }
 
-    private static string BuildDateRangeReasonCode(DateTimeOffset? from, DateTimeOffset? to) =>
-        from is null && to is null
-            ? "all"
-            : $"{from:O}|{to:O}";
+    private static PlatformAuditPackageAppliedFiltersResponse MapAppliedFilters(PlatformAuditPackageFilter filter) =>
+        new(
+            filter.TenantId,
+            filter.From,
+            filter.To,
+            filter.Action,
+            filter.Result,
+            filter.TargetType,
+            filter.ActorUserId,
+            filter.ProductKey);
+
+    private static string BuildFilterReasonCode(PlatformAuditPackageFilter filter) =>
+        $"{filter.TenantId}:{filter.Action}:{filter.Result}:{filter.TargetType}:{filter.From:O}|{filter.To:O}";
 }

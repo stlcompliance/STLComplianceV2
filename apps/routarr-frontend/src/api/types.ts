@@ -101,6 +101,7 @@ export interface CreateTripRequest {
 
 export interface AssignTripDriverRequest {
   driverPersonId: string
+  driverDisplayName?: string | null
   ignoreAvailabilityConflicts?: boolean
   ignoreEligibilityBlocks?: boolean
   ignoreWorkflowGateBlocks?: boolean
@@ -187,6 +188,18 @@ export interface DispatchAssignmentWorkflowGateSummary {
   gates: DispatchWorkflowGateResultSummary[]
 }
 
+export interface DispatchAssignmentConflictSummary {
+  driverAvailabilityBlocks: number
+  equipmentAvailabilityBlocks: number
+  overlappingTrips: number
+  eligibilityBlocking: boolean
+  eligibilityWarning: boolean
+  dispatchabilityBlocking: boolean
+  dispatchabilityWarning: boolean
+  workflowGateBlocking: boolean
+  workflowGateWarning: boolean
+}
+
 export interface DispatchAssignmentPreviewResponse {
   tripId: string
   assignmentKind: string
@@ -198,6 +211,47 @@ export interface DispatchAssignmentPreviewResponse {
   driverEligibility?: DispatchAssignmentEligibilitySummary | null
   assetDispatchability?: DispatchAssignmentDispatchabilitySummary | null
   workflowGates?: DispatchAssignmentWorkflowGateSummary | null
+  conflictSummary?: DispatchAssignmentConflictSummary | null
+  validationMessages?: string[] | null
+  primaryBlockCode?: string | null
+}
+
+export interface DispatchBoardBulkAssignmentItem {
+  tripId: string
+  assignmentKind: 'driver' | 'vehicle'
+  driverPersonId?: string | null
+  vehicleRefKey?: string | null
+}
+
+export interface DispatchBoardBulkAssignmentPreviewRequest {
+  items: DispatchBoardBulkAssignmentItem[]
+}
+
+export interface DispatchBoardBulkAssignmentItemPreview {
+  tripId: string
+  assignmentKind: string
+  preview: DispatchAssignmentPreviewResponse
+}
+
+export interface DispatchBoardBulkAssignmentPreviewResponse {
+  itemCount: number
+  canAssignCount: number
+  blockedCount: number
+  items: DispatchBoardBulkAssignmentItemPreview[]
+}
+
+export interface DispatchAssignmentAuditEntry {
+  id: string
+  actorUserId: string | null
+  action: string
+  targetType: string
+  targetId: string | null
+  result: string
+  occurredAt: string
+}
+
+export interface DispatchAssignmentAuditListResponse {
+  entries: DispatchAssignmentAuditEntry[]
 }
 
 export interface DriverEligibilityCheckRequest {
@@ -319,6 +373,7 @@ export interface DispatchCloseoutRequest {
   scope?: string | null
   remainingTripDisposition: string
   openStopDisposition: string
+  tripIds?: string[] | null
 }
 
 export interface DispatchCloseoutCountsSummary {
@@ -450,6 +505,44 @@ export interface DispatchCloseoutApplyResponse {
   }>
 }
 
+export interface DispatchCloseoutChecklistItem {
+  key: string
+  label: string
+  satisfied: boolean
+  required: boolean
+  detail: string | null
+}
+
+export interface DispatchCloseoutTripChecklist {
+  tripId: string
+  tripNumber: string
+  dispatchStatus: string
+  readyForCloseout: boolean
+  items: DispatchCloseoutChecklistItem[]
+}
+
+export interface DispatchCloseoutChecklistsResponse {
+  scope: string
+  windowStart: string
+  windowEnd: string
+  remainingTripDisposition: string
+  trips: DispatchCloseoutTripChecklist[]
+}
+
+export interface DispatchCloseoutAuditEntry {
+  id: string
+  actorUserId: string | null
+  action: string
+  targetType: string
+  targetId: string | null
+  result: string
+  occurredAt: string
+}
+
+export interface DispatchCloseoutAuditListResponse {
+  entries: DispatchCloseoutAuditEntry[]
+}
+
 export interface UpdateTripDispatchStatusRequest {
   dispatchStatus: string
 }
@@ -565,6 +658,7 @@ export interface DispatchBoardTripRow {
   title: string
   dispatchStatus: string
   assignedDriverPersonId: string | null
+  vehicleRefKey: string | null
   scheduledStartAt: string | null
   scheduledEndAt: string | null
   isLate: boolean
@@ -584,6 +678,649 @@ export interface DispatchBoardResponse {
   assignedTrips: DispatchBoardTripRow[]
   activeTrips: DispatchBoardTripRow[]
   generatedAt: string
+}
+
+export interface DispatchBoardStateResponse {
+  defaultScope: string
+  updatedAt: string
+  updatedByUserId: string | null
+}
+
+export interface StaffarrPersonRefResponse {
+  personId: string
+  displayName: string
+  mirroredAt: string
+}
+
+export interface DispatchCommandCenterTripColumn {
+  dispatchStatus: string
+  label: string
+  count: number
+  trips: TripSummaryResponse[]
+}
+
+export interface DispatchCommandCenterActionDescriptor {
+  actionKey: string
+  label: string
+  route: string
+  httpMethod: string
+  description: string
+}
+
+export interface DispatchCommandCenterResponse {
+  generatedAt: string
+  scope: string
+  boardState: DispatchBoardStateResponse
+  board: DispatchBoardResponse
+  tripColumns: DispatchCommandCenterTripColumn[]
+  driverRefs: { items: StaffarrPersonRefResponse[] }
+  actions: DispatchCommandCenterActionDescriptor[]
+}
+
+export interface DispatchExceptionSummaryResponse {
+  exceptionId: string
+  exceptionKey: string
+  title: string
+  description: string
+  category: string
+  status: string
+  tripId: string | null
+  tripNumber: string | null
+  tripTitle: string | null
+  assignedToUserId: string | null
+  resolutionNotes: string
+  createdByUserId: string
+  createdAt: string
+  updatedAt: string
+  assignedAt: string | null
+  resolvedAt: string | null
+}
+
+export interface DispatchExceptionListResponse {
+  totalCount: number
+  openCount: number
+  items: DispatchExceptionSummaryResponse[]
+}
+
+export interface CreateDispatchExceptionRequest {
+  title: string
+  description: string
+  category?: string
+  tripId?: string
+}
+
+export interface AssignDispatchExceptionRequest {
+  assignedToUserId: string
+}
+
+export interface ResolveDispatchExceptionRequest {
+  resolutionNotes?: string
+}
+
+export interface LinkDispatchExceptionTripRequest {
+  tripId: string
+}
+
+export interface ActiveTripsSummary {
+  totalCount: number
+  lateCount: number
+  atRiskCount: number
+  dispatchedCount: number
+  inProgressCount: number
+}
+
+export interface ActiveTripRow {
+  tripId: string
+  tripNumber: string
+  title: string
+  dispatchStatus: string
+  assignedDriverPersonId: string | null
+  vehicleRefKey: string | null
+  scheduledStartAt: string | null
+  scheduledEndAt: string | null
+  dispatchedAt: string | null
+  startedAt: string | null
+  isLate: boolean
+  isAtRisk: boolean
+  routeCount: number
+  pendingStopCount: number
+  timelineOffsetPercent: number
+  timelineWidthPercent: number
+}
+
+export interface ActiveTripsResponse {
+  scope: string
+  windowStart: string
+  windowEnd: string
+  summary: ActiveTripsSummary
+  items: ActiveTripRow[]
+  generatedAt: string
+}
+
+export interface UnassignedWorkQueueTripRow {
+  tripId: string
+  tripNumber: string
+  title: string
+  dispatchStatus: string
+  scheduledStartAt: string | null
+  scheduledEndAt: string | null
+  isLate: boolean
+  isAtRisk: boolean
+  routeCount: number
+  pendingStopCount: number
+}
+
+export interface DriverPortalTripRow {
+  tripId: string
+  tripNumber: string
+  title: string
+  dispatchStatus: string
+  vehicleRefKey: string | null
+  scheduledStartAt: string | null
+  scheduledEndAt: string | null
+  dispatchedAt: string | null
+  startedAt: string | null
+  completedAt: string | null
+  canDispatch: boolean
+  canStart: boolean
+  canComplete: boolean
+  canClose: boolean
+  proofCount: number
+  hasPreTripDvir: boolean
+  hasPostTripDvir: boolean
+}
+
+export interface TripProofRecordResponse {
+  proofId: string
+  tripId: string
+  proofType: string
+  capturedByPersonId: string
+  vehicleRefKey: string | null
+  referenceKey: string
+  notes: string
+  capturedAt: string
+  createdAt: string
+}
+
+export interface CreateTripProofRequest {
+  proofType: string
+  vehicleRefKey?: string | null
+  referenceKey?: string | null
+  notes?: string | null
+  capturedAt?: string | null
+}
+
+export interface TripDvirInspectionResponse {
+  dvirId: string
+  tripId: string
+  phase: string
+  vehicleRefKey: string
+  result: string
+  odometerReading: number | null
+  defectNotes: string
+  submittedByPersonId: string
+  submittedAt: string
+}
+
+export interface SubmitTripDvirRequest {
+  phase: string
+  vehicleRefKey?: string | null
+  result: string
+  odometerReading?: number | null
+  defectNotes?: string | null
+}
+
+export interface TripExecutionSummaryResponse {
+  tripId: string
+  tripNumber: string
+  assignedDriverPersonId: string | null
+  proofs: TripProofRecordResponse[]
+  dvirInspections: TripDvirInspectionResponse[]
+  hasPreTripDvir: boolean
+  hasPostTripDvir: boolean
+}
+
+export interface DriverPortalScheduleResponse {
+  todayStart: string
+  todayEnd: string
+  upcomingEnd: string
+  todayTrips: DriverPortalTripRow[]
+  upcomingTrips: DriverPortalTripRow[]
+  generatedAt: string
+}
+
+export interface UnassignedWorkQueueResponse {
+  scope: string
+  windowStart: string
+  windowEnd: string
+  unassignedCount: number
+  items: UnassignedWorkQueueTripRow[]
+  driverRefs: { items: StaffarrPersonRefResponse[] }
+  generatedAt: string
+}
+
+export interface DispatchReportCountItem {
+  key: string
+  count: number
+}
+
+export interface DispatchReportTripSummaryItem {
+  tripId: string
+  tripNumber: string
+  title: string
+  dispatchStatus: string
+  assignedDriverPersonId: string | null
+  vehicleRefKey: string | null
+  scheduledStartAt: string | null
+  scheduledEndAt: string | null
+  isLate: boolean
+  isAtRisk: boolean
+  isUnassigned: boolean
+  routeCount: number
+  openExceptionCount: number
+}
+
+export interface DispatchReportExceptionRow {
+  exceptionId: string
+  exceptionKey: string
+  title: string
+  category: string
+  status: string
+  tripId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface DispatchReportSummaryResponse {
+  generatedAt: string
+  scope: string
+  windowStart: string
+  windowEnd: string
+  totalTripCount: number
+  lateTripCount: number
+  atRiskTripCount: number
+  unassignedTripCount: number
+  openExceptionCount: number
+  delayExceptionCount: number
+  tripStatusCounts: DispatchReportCountItem[]
+  exceptionStatusCounts: DispatchReportCountItem[]
+  exceptionCategoryCounts: DispatchReportCountItem[]
+  trips: DispatchReportTripSummaryItem[]
+  recentExceptions: DispatchReportExceptionRow[]
+}
+
+export interface DispatchReportTripDetailResponse {
+  tripId: string
+  tripNumber: string
+  title: string
+  description: string
+  dispatchStatus: string
+  assignedDriverPersonId: string | null
+  vehicleRefKey: string | null
+  scheduledStartAt: string | null
+  scheduledEndAt: string | null
+  dispatchedAt: string | null
+  startedAt: string | null
+  completedAt: string | null
+  cancelledAt: string | null
+  isLate: boolean
+  isAtRisk: boolean
+  routeCount: number
+  pendingStopCount: number
+  linkedExceptionCount: number
+  delayExceptionCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface DispatchReportExceptionDetailResponse {
+  exceptionId: string
+  exceptionKey: string
+  title: string
+  description: string
+  category: string
+  status: string
+  tripId: string | null
+  tripNumber: string | null
+  tripTitle: string | null
+  assignedToUserId: string | null
+  resolutionNotes: string
+  createdByUserId: string
+  createdAt: string
+  updatedAt: string
+  assignedAt: string | null
+  resolvedByUserId: string | null
+  resolvedAt: string | null
+}
+
+export interface RouteReportCountItem {
+  key: string
+  count: number
+}
+
+export interface RouteReportRouteSummaryItem {
+  routeId: string
+  routeNumber: string
+  title: string
+  routeStatus: string
+  tripId: string | null
+  tripNumber: string | null
+  totalStopCount: number
+  pendingStopCount: number
+  arrivedStopCount: number
+  completedStopCount: number
+  skippedStopCount: number
+  completionPercent: number
+}
+
+export interface RouteReportStopRow {
+  stopId: string
+  routeId: string
+  routeNumber: string
+  stopKey: string
+  label: string
+  stopType: string
+  stopStatus: string
+  sequenceNumber: number
+  scheduledArrivalAt: string | null
+  updatedAt: string
+}
+
+export interface RouteReportSummaryResponse {
+  generatedAt: string
+  scope: string
+  windowStart: string
+  windowEnd: string
+  totalRouteCount: number
+  totalStopCount: number
+  pendingStopCount: number
+  arrivedStopCount: number
+  completedStopCount: number
+  skippedStopCount: number
+  routeStatusCounts: RouteReportCountItem[]
+  stopStatusCounts: RouteReportCountItem[]
+  stopTypeCounts: RouteReportCountItem[]
+  routes: RouteReportRouteSummaryItem[]
+  recentStops: RouteReportStopRow[]
+}
+
+export interface RouteReportStopSummaryRow {
+  stopId: string
+  stopKey: string
+  label: string
+  addressLabel: string
+  stopType: string
+  stopStatus: string
+  sequenceNumber: number
+  scheduledArrivalAt: string | null
+  arrivedAt: string | null
+  completedAt: string | null
+  updatedAt: string
+}
+
+export interface RouteReportRouteDetailResponse {
+  routeId: string
+  routeNumber: string
+  title: string
+  description: string
+  routeStatus: string
+  tripId: string | null
+  tripNumber: string | null
+  tripTitle: string | null
+  totalStopCount: number
+  pendingStopCount: number
+  completedStopCount: number
+  skippedStopCount: number
+  completionPercent: number
+  createdAt: string
+  updatedAt: string
+  activatedAt: string | null
+  completedAt: string | null
+  stops: RouteReportStopSummaryRow[]
+}
+
+export interface RouteReportStopDetailResponse {
+  stopId: string
+  routeId: string
+  routeNumber: string
+  routeTitle: string
+  tripId: string | null
+  tripNumber: string | null
+  stopKey: string
+  label: string
+  addressLabel: string
+  stopType: string
+  stopStatus: string
+  sequenceNumber: number
+  scheduledArrivalAt: string | null
+  arrivedAt: string | null
+  completedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ProofDvirReportCountItem {
+  key: string
+  count: number
+}
+
+export interface ProofDvirReportTripSummaryItem {
+  tripId: string
+  tripNumber: string
+  title: string
+  dispatchStatus: string
+  assignedDriverPersonId: string | null
+  vehicleRefKey: string | null
+  proofCount: number
+  hasPreTripDvir: boolean
+  hasPostTripDvir: boolean
+  failOrConditionalDvirCount: number
+}
+
+export interface ProofDvirReportProofRow {
+  proofId: string
+  tripId: string
+  tripNumber: string
+  proofType: string
+  capturedByPersonId: string
+  vehicleRefKey: string | null
+  referenceKey: string
+  capturedAt: string
+}
+
+export interface ProofDvirReportDvirRow {
+  dvirId: string
+  tripId: string
+  tripNumber: string
+  phase: string
+  result: string
+  vehicleRefKey: string
+  submittedByPersonId: string
+  submittedAt: string
+}
+
+export interface ProofDvirReportSummaryResponse {
+  generatedAt: string
+  scope: string
+  windowStart: string
+  windowEnd: string
+  totalProofCount: number
+  totalDvirCount: number
+  tripWithProofOrDvirCount: number
+  preTripDvirCount: number
+  postTripDvirCount: number
+  failOrConditionalDvirCount: number
+  proofTypeCounts: ProofDvirReportCountItem[]
+  dvirPhaseCounts: ProofDvirReportCountItem[]
+  dvirResultCounts: ProofDvirReportCountItem[]
+  trips: ProofDvirReportTripSummaryItem[]
+  recentProofs: ProofDvirReportProofRow[]
+  recentDvirInspections: ProofDvirReportDvirRow[]
+}
+
+export interface ProofDvirReportTripDetailResponse {
+  tripId: string
+  tripNumber: string
+  title: string
+  dispatchStatus: string
+  assignedDriverPersonId: string | null
+  vehicleRefKey: string | null
+  scheduledStartAt: string | null
+  scheduledEndAt: string | null
+  proofCount: number
+  hasPreTripDvir: boolean
+  hasPostTripDvir: boolean
+  failOrConditionalDvirCount: number
+  proofs: ProofDvirReportProofRow[]
+  dvirInspections: ProofDvirReportDvirRow[]
+}
+
+export interface ProofDvirReportProofDetailResponse {
+  proofId: string
+  tripId: string
+  tripNumber: string
+  tripTitle: string
+  proofType: string
+  capturedByPersonId: string
+  vehicleRefKey: string | null
+  referenceKey: string
+  notes: string
+  capturedAt: string
+  createdAt: string
+}
+
+export interface ProofDvirReportDvirDetailResponse {
+  dvirId: string
+  tripId: string
+  tripNumber: string
+  tripTitle: string
+  phase: string
+  vehicleRefKey: string
+  result: string
+  odometerReading: number | null
+  defectNotes: string
+  submittedByPersonId: string
+  submittedAt: string
+  createdAt: string
+}
+
+export interface EntityExportFormatDescriptor {
+  formatKey: string
+  contentType: string
+  fileNamePattern: string
+  description: string
+}
+
+export interface EntityExportDescriptor {
+  entityKey: string
+  route: string
+  label: string
+  csvHeader: string
+  description: string
+  formats: EntityExportFormatDescriptor[]
+}
+
+export interface ReportExportDescriptor {
+  reportKey: string
+  route: string
+  label: string
+  description: string
+}
+
+export interface AuditPackageSectionDescriptor {
+  key: string
+  fileName: string
+  label: string
+  description: string
+}
+
+export interface AuditPackageManifestResponse {
+  packageVersion: string
+  sections: AuditPackageSectionDescriptor[]
+}
+
+export interface AuditPackageAppliedFilters {
+  from: string | null
+  to: string | null
+  action: string | null
+  result: string | null
+  targetType: string | null
+  actorUserId: string | null
+}
+
+export interface AuditPackageFilterOptions {
+  actions: string[]
+  results: string[]
+  targetTypes: string[]
+}
+
+export interface AuditPackageBreakdownItem {
+  key: string
+  count: number
+}
+
+export interface AuditPackageExportSummary {
+  filters: AuditPackageAppliedFilters
+  counts: { auditEvents: number }
+  byResult: AuditPackageBreakdownItem[]
+  byAction: AuditPackageBreakdownItem[]
+  generatedAt: string
+}
+
+export interface AuditPackageScope {
+  from?: string
+  to?: string
+  action?: string
+  result?: string
+  targetType?: string
+  actorUserId?: string
+}
+
+export interface AuditEventTimelineItem {
+  auditEventId: string
+  actorUserId: string | null
+  action: string
+  targetType: string
+  targetId: string | null
+  result: string
+  reasonCode: string | null
+  correlationId: string
+  occurredAt: string
+}
+
+export interface AuditPackageGenerationJobResponse {
+  jobId: string
+  status: string
+  format: string
+  packageId: string | null
+  errorMessage: string | null
+  createdAt: string
+  startedAt: string | null
+  completedAt: string | null
+  downloadReady: boolean
+}
+
+export interface AuditPackageExportResponse {
+  packageId: string
+  tenantId: string
+  generatedAt: string
+  appliedFilters?: AuditPackageAppliedFilters | null
+  counts: { auditEvents: number }
+}
+
+export interface PagedAuditTimeline {
+  items: AuditEventTimelineItem[]
+  page: number
+  pageSize: number
+  totalCount: number
+  hasNextPage: boolean
+}
+
+export interface EntityExportManifestResponse {
+  packageVersion: string
+  entities: EntityExportDescriptor[]
+  reportExports: ReportExportDescriptor[]
+  auditPackageFormats: EntityExportFormatDescriptor[]
 }
 
 export interface RouteCalendarEvent {

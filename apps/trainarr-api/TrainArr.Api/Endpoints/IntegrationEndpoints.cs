@@ -12,6 +12,8 @@ public static class IntegrationEndpoints
 
     public const string SupplyarrDemandStatusIngestActionScope = "trainarr.demand_status.write";
 
+    public const string PersonTrainingHistoryReadActionScope = PersonTrainingHistoryService.IntegrationReadActionScope;
+
     public static void MapTrainArrIntegrationEndpoints(this WebApplication app)
     {
         var integrations = app.MapGroup("/api/integrations").WithTags("Integrations");
@@ -94,5 +96,32 @@ public static class IntegrationEndpoints
             return Results.Ok(result);
         })
         .WithName("IngestSupplyarrDemandStatus");
+
+        integrations.MapGet("/person-training-history", async (
+            Guid tenantId,
+            Guid staffarrPersonId,
+            int? limit,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            PersonTrainingHistoryService historyService,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "staffarr",
+                    RequiredTargetProduct = "trainarr",
+                    TenantId = tenantId,
+                    RequiredActionScope = PersonTrainingHistoryReadActionScope
+                });
+
+            return Results.Ok(await historyService.GetForPersonAsync(
+                tenantId,
+                staffarrPersonId,
+                limit,
+                cancellationToken));
+        })
+        .WithName("GetTrainArrPersonTrainingHistoryIntegration");
     }
 }

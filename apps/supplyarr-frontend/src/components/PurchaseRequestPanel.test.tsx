@@ -22,6 +22,12 @@ const baseProps = {
       rejectedAt: null,
       rejectedByUserId: null,
       rejectionReason: '',
+      isEmergency: false,
+      emergencyReason: '',
+      emergencyExpeditedAt: null,
+      managerOverrideApproved: false,
+      managerOverrideJustification: '',
+      managerOverrideApprovedAt: null,
       lines: [
         {
           lineId: 'line-1',

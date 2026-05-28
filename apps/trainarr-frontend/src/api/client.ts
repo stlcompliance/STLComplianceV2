@@ -9,6 +9,11 @@ import type {
   TrainArrMeResponse,
   TrainingAssignmentDetailResponse,
   TrainingAssignmentSummaryResponse,
+  TrainingAssignmentMaterialDemandLineResponse,
+  CreateTrainingAssignmentMaterialDemandLineRequest,
+  PublishTrainingAssignmentMaterialDemandRequest,
+  PublishTrainingAssignmentMaterialDemandResponse,
+  TrainingAssignmentMaterialDemandStatusEventResponse,
   TrainingDefinitionResponse,
   TrainingEvidenceResponse,
   TrainingProgramDetailResponse,
@@ -33,6 +38,15 @@ import type {
   TrainingNotificationDispatchesResponse,
   TrainingNotificationSettingsResponse,
   UpsertTrainingNotificationSettingsRequest,
+  AssignmentDueReminderSettingsResponse,
+  UpsertAssignmentDueReminderSettingsRequest,
+  PendingAssignmentDueRemindersResponse,
+  AssignmentDueReminderRunsResponse,
+  AssignmentEscalationSettingsResponse,
+  UpsertAssignmentEscalationSettingsRequest,
+  PendingAssignmentEscalationsResponse,
+  AssignmentEscalationRunsResponse,
+  AssignmentEscalationEventsResponse,
   RecertificationSettingsResponse,
   UpsertRecertificationSettingsRequest,
   RecertificationAssignmentRunsResponse,
@@ -257,6 +271,72 @@ export async function submitTrainingSignoff(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<TrainingSignoffResponse>(response, 'Failed to submit training signoff')
+}
+
+export async function getTrainingAssignmentMaterialDemand(
+  accessToken: string,
+  assignmentId: string,
+): Promise<TrainingAssignmentMaterialDemandLineResponse[]> {
+  const response = await fetch(
+    `${apiBase}/api/training-assignments/${assignmentId}/material-demand`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<TrainingAssignmentMaterialDemandLineResponse[]>(
+    response,
+    'Failed to load assignment material demand',
+  )
+}
+
+export async function createTrainingAssignmentMaterialDemandLine(
+  accessToken: string,
+  assignmentId: string,
+  payload: CreateTrainingAssignmentMaterialDemandLineRequest,
+): Promise<TrainingAssignmentMaterialDemandLineResponse> {
+  const response = await fetch(
+    `${apiBase}/api/training-assignments/${assignmentId}/material-demand`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(payload),
+    },
+  )
+  return parseJsonResponse<TrainingAssignmentMaterialDemandLineResponse>(
+    response,
+    'Failed to create assignment material demand line',
+  )
+}
+
+export async function publishTrainingAssignmentMaterialDemand(
+  accessToken: string,
+  assignmentId: string,
+  payload: PublishTrainingAssignmentMaterialDemandRequest = {},
+): Promise<PublishTrainingAssignmentMaterialDemandResponse> {
+  const response = await fetch(
+    `${apiBase}/api/training-assignments/${assignmentId}/material-demand/publish`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(payload),
+    },
+  )
+  return parseJsonResponse<PublishTrainingAssignmentMaterialDemandResponse>(
+    response,
+    'Failed to publish assignment material demand',
+  )
+}
+
+export async function getTrainingAssignmentMaterialDemandStatusEvents(
+  accessToken: string,
+  assignmentId: string,
+): Promise<TrainingAssignmentMaterialDemandStatusEventResponse[]> {
+  const response = await fetch(
+    `${apiBase}/api/training-assignments/${assignmentId}/material-demand/status-events`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<TrainingAssignmentMaterialDemandStatusEventResponse[]>(
+    response,
+    'Failed to load assignment material demand status events',
+  )
 }
 
 export async function getIncidentRemediations(
@@ -630,6 +710,123 @@ export async function getTrainingNotificationDispatches(
   return parseJsonResponse<TrainingNotificationDispatchesResponse>(
     response,
     'Failed to load notification dispatches',
+  )
+}
+
+export async function getAssignmentDueReminderSettings(
+  accessToken: string,
+): Promise<AssignmentDueReminderSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/assignment-due-reminder-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssignmentDueReminderSettingsResponse>(
+    response,
+    'Failed to load assignment due reminder settings',
+  )
+}
+
+export async function upsertAssignmentDueReminderSettings(
+  accessToken: string,
+  payload: UpsertAssignmentDueReminderSettingsRequest,
+): Promise<AssignmentDueReminderSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/assignment-due-reminder-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<AssignmentDueReminderSettingsResponse>(
+    response,
+    'Failed to save assignment due reminder settings',
+  )
+}
+
+export async function getPendingAssignmentDueReminders(
+  accessToken: string,
+): Promise<PendingAssignmentDueRemindersResponse> {
+  const response = await fetch(`${apiBase}/api/assignment-due-reminder-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingAssignmentDueRemindersResponse>(
+    response,
+    'Failed to load pending assignment due reminders',
+  )
+}
+
+export async function getAssignmentDueReminderRuns(
+  accessToken: string,
+  limit = 8,
+): Promise<AssignmentDueReminderRunsResponse> {
+  const response = await fetch(`${apiBase}/api/assignment-due-reminder-settings/runs?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssignmentDueReminderRunsResponse>(
+    response,
+    'Failed to load assignment due reminder runs',
+  )
+}
+
+export async function getAssignmentEscalationSettings(
+  accessToken: string,
+): Promise<AssignmentEscalationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/assignment-escalation-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssignmentEscalationSettingsResponse>(
+    response,
+    'Failed to load assignment escalation settings',
+  )
+}
+
+export async function upsertAssignmentEscalationSettings(
+  accessToken: string,
+  payload: UpsertAssignmentEscalationSettingsRequest,
+): Promise<AssignmentEscalationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/assignment-escalation-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<AssignmentEscalationSettingsResponse>(
+    response,
+    'Failed to save assignment escalation settings',
+  )
+}
+
+export async function getPendingAssignmentEscalations(
+  accessToken: string,
+): Promise<PendingAssignmentEscalationsResponse> {
+  const response = await fetch(`${apiBase}/api/assignment-escalation-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingAssignmentEscalationsResponse>(
+    response,
+    'Failed to load pending assignment escalations',
+  )
+}
+
+export async function getAssignmentEscalationRuns(
+  accessToken: string,
+  limit = 8,
+): Promise<AssignmentEscalationRunsResponse> {
+  const response = await fetch(`${apiBase}/api/assignment-escalation-settings/runs?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssignmentEscalationRunsResponse>(
+    response,
+    'Failed to load assignment escalation runs',
+  )
+}
+
+export async function getAssignmentEscalationEvents(
+  accessToken: string,
+  limit = 8,
+): Promise<AssignmentEscalationEventsResponse> {
+  const response = await fetch(`${apiBase}/api/assignment-escalation-settings/events?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssignmentEscalationEventsResponse>(
+    response,
+    'Failed to load assignment escalation events',
   )
 }
 

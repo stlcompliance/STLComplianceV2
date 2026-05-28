@@ -31,6 +31,101 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
     }
 
     [Fact]
+    public void Product_admin_smoke_specs_include_maintainarr_through_compliancecore_w230_w248()
+    {
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.MaintainArrSettingsAuditExportSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.ComplianceCoreM12WorkerSettingsSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.ComplianceCoreAuditDeliveryOrchestrationSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.TrainArrAssignmentMaterialDemandSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.RoutArrDispatchCommandCenterSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.RoutArrDispatchExceptionQueueSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.RoutArrDispatchActiveTripsSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.RoutArrDispatchUnassignedWorkQueueSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.RoutArrDriverPortalSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.RoutArrDispatchProofDvirReadSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.SupplyArrSettingsIntegrationEventsSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.SupplyArrReportsWorkspaceSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.StaffArrAdminAuditExportSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.TrainArrSettingsAuditExportSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.RoutArrReportsAuditExportSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.MaintainArrSettingsAuditExportSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.ComplianceCoreM12WorkerSettingsSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.ComplianceCoreAuditDeliveryOrchestrationSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.TrainArrAssignmentMaterialDemandSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.RoutArrDispatchCommandCenterSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.RoutArrDispatchExceptionQueueSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.RoutArrDispatchActiveTripsSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.RoutArrDispatchUnassignedWorkQueueSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.RoutArrDriverPortalSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.RoutArrDispatchProofDvirReadSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.SupplyArrSettingsIntegrationEventsSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.SupplyArrReportsWorkspaceSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.StaffArrAdminAuditExportSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.TrainArrSettingsAuditExportSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.RoutArrReportsAuditExportSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+    }
+
+    [Fact]
     public void Operator_journey_smoke_specs_include_compliance_core_and_multi_handoff()
     {
         Assert.Contains(
@@ -66,7 +161,7 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
     {
         Assert.Contains(StlE2ePlaywrightSpecCatalog.SuiteLoginHandoffSmokeSpec, StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(StlE2ePlaywrightSpecCatalog.ProductHandoffSmokeSpec, StlE2ePlaywrightSpecCatalog.All);
-        Assert.True(StlE2ePlaywrightSpecCatalog.All.Count >= 11);
+        Assert.True(StlE2ePlaywrightSpecCatalog.All.Count >= 26);
     }
 
     [Fact]

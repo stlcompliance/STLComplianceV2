@@ -11,6 +11,7 @@ using NexArr.Api.Contracts;
 using NexArr.Api.Data;
 using NexArr.Api.Entities;
 using NexArr.Api.Services;
+using STLCompliance.Shared.Contracts;
 
 namespace STLCompliance.NexArr.Auth.Tests;
 
@@ -83,7 +84,69 @@ public class NexArrPlatformAuditPackageTests : IClassFixture<WebApplicationFacto
         await using var zipStream = await exportResponse.Content.ReadAsStreamAsync();
         using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
         Assert.NotNull(archive.GetEntry("platform_audit_events.json"));
+        Assert.NotNull(archive.GetEntry("platform_audit_events.csv"));
         Assert.NotNull(archive.GetEntry("tenants.json"));
+
+        var manifestV2 = manifest.PackageVersion;
+        Assert.Equal("2", manifestV2);
+    }
+
+    [Fact]
+    public async Task Platform_admin_can_get_filter_options_summary_and_csv()
+    {
+        await SeedDatabaseAsync();
+        await SeedScopedAuditEventsAsync();
+        var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var filterOptionsResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/platform-admin/audit-packages/filter-options", adminToken));
+        filterOptionsResponse.EnsureSuccessStatusCode();
+        var filterOptions =
+            (await filterOptionsResponse.Content.ReadFromJsonAsync<PlatformAuditPackageFilterOptionsResponse>())!;
+        Assert.Contains("w226.test.success", filterOptions.Actions);
+        Assert.Contains("success", filterOptions.Results);
+
+        var summaryResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/platform-admin/audit-packages/summary?action=w226.test.success&result=success",
+                adminToken));
+        summaryResponse.EnsureSuccessStatusCode();
+        var summary =
+            (await summaryResponse.Content.ReadFromJsonAsync<PlatformAuditPackageExportSummaryResponse>())!;
+        Assert.Equal("w226.test.success", summary.Filters.Action);
+        Assert.True(summary.Counts.AuditEvents >= 1);
+        Assert.Contains(summary.ByResult, x => x.Key == "success" && x.Count >= 1);
+
+        var csvResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/platform-admin/audit-packages/export?format=csv&action=w226.test.success",
+                adminToken));
+        csvResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", csvResponse.Content.Headers.ContentType?.MediaType);
+        var csvText = await csvResponse.Content.ReadAsStringAsync();
+        Assert.Contains("audit_event_id", csvText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("w226.test.success", csvText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Timeline_respects_action_filter()
+    {
+        await SeedDatabaseAsync();
+        await SeedScopedAuditEventsAsync();
+        var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var filteredResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/platform-admin/audit-packages/timeline?action=w226.test.failure&pageSize=50",
+                adminToken));
+        filteredResponse.EnsureSuccessStatusCode();
+        var filtered =
+            (await filteredResponse.Content.ReadFromJsonAsync<PagedResult<PlatformAuditEventExportItem>>())!;
+        Assert.All(filtered.Items, item => Assert.Equal("w226.test.failure", item.Action));
+        Assert.True(filtered.Items.Count >= 1);
     }
 
     [Fact]
@@ -188,5 +251,32 @@ public class NexArrPlatformAuditPackageTests : IClassFixture<WebApplicationFacto
         await db.Database.EnsureCreatedAsync();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         await PlatformSeeder.SeedAsync(db, hasher);
+    }
+
+    private async Task SeedScopedAuditEventsAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        db.AuditEvents.AddRange(
+            new PlatformAuditEvent
+            {
+                Id = Guid.NewGuid(),
+                Action = "w226.test.success",
+                TargetType = "w226_target",
+                Result = "success",
+                CorrelationId = Guid.NewGuid(),
+                OccurredAt = now,
+            },
+            new PlatformAuditEvent
+            {
+                Id = Guid.NewGuid(),
+                Action = "w226.test.failure",
+                TargetType = "w226_target",
+                Result = "failure",
+                CorrelationId = Guid.NewGuid(),
+                OccurredAt = now,
+            });
+        await db.SaveChangesAsync();
     }
 }

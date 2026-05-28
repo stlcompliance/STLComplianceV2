@@ -8,7 +8,8 @@ namespace ComplianceCore.Api.Services;
 
 public sealed class RuleContentService(
     ComplianceCoreDbContext db,
-    IComplianceCoreAuditService auditService)
+    IComplianceCoreAuditService auditService,
+    RuleChangeMonitoringService ruleChangeMonitoring)
 {
     public async Task<RulePackContentResponse> GetContentAsync(
         Guid tenantId,
@@ -29,6 +30,7 @@ public sealed class RuleContentService(
         var entity = await LoadEditableRulePackAsync(tenantId, rulePackId, cancellationToken);
         EnsureContentEditable(entity.Status);
 
+        var previousHash = RuleChangeHash.Compute(entity.RuleContentJson);
         var serialized = RuleEvaluator.SerializeContent(request.Content);
         entity.RuleContentJson = serialized;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
@@ -43,6 +45,21 @@ public sealed class RuleContentService(
             entity.Id.ToString(),
             "success",
             cancellationToken: cancellationToken);
+
+        var program = await db.RegulatoryPrograms.AsNoTracking()
+            .FirstAsync(x => x.Id == entity.RegulatoryProgramId, cancellationToken);
+        var newHash = RuleChangeHash.Compute(entity.RuleContentJson);
+        if (!string.Equals(previousHash, newHash, StringComparison.Ordinal))
+        {
+            await ruleChangeMonitoring.RecordContentUpdatedAsync(
+                tenantId,
+                actorUserId,
+                entity,
+                program.ProgramKey,
+                previousHash,
+                newHash,
+                cancellationToken);
+        }
 
         return MapContentResponse(entity);
     }

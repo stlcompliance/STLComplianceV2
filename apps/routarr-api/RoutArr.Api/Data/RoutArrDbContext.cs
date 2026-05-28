@@ -39,6 +39,18 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
 
     public DbSet<TripCompletionRollupRun> TripCompletionRollupRuns => Set<TripCompletionRollupRun>();
 
+    public DbSet<TenantDispatchBoardState> TenantDispatchBoardStates => Set<TenantDispatchBoardState>();
+
+    public DbSet<StaffarrPersonRef> StaffarrPersonRefs => Set<StaffarrPersonRef>();
+
+    public DbSet<DispatchException> DispatchExceptions => Set<DispatchException>();
+
+    public DbSet<TripProofRecord> TripProofRecords => Set<TripProofRecord>();
+
+    public DbSet<TripDvirInspection> TripDvirInspections => Set<TripDvirInspection>();
+
+    public DbSet<AuditPackageGenerationJob> AuditPackageGenerationJobs => Set<AuditPackageGenerationJob>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -257,6 +269,92 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<TenantDispatchBoardState>(entity =>
+        {
+            entity.ToTable("routarr_tenant_dispatch_board_state");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DefaultScope).HasMaxLength(16).IsRequired();
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<StaffarrPersonRef>(entity =>
+        {
+            entity.ToTable("routarr_staffarr_person_refs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PersonId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.DisplayName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId }).IsUnique();
+        });
+
+        modelBuilder.Entity<TripProofRecord>(entity =>
+        {
+            entity.ToTable("routarr_trip_proof_records");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProofType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CapturedByPersonId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.VehicleRefKey).HasMaxLength(128);
+            entity.Property(x => x.ReferenceKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TripId });
+            entity.HasIndex(x => new { x.TenantId, x.TripId, x.CapturedAt });
+            entity.HasOne(x => x.Trip)
+                .WithMany()
+                .HasForeignKey(x => x.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TripDvirInspection>(entity =>
+        {
+            entity.ToTable("routarr_trip_dvir_inspections");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Phase).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.VehicleRefKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Result).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.DefectNotes).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.SubmittedByPersonId).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TripId });
+            entity.HasIndex(x => new { x.TenantId, x.TripId, x.Phase }).IsUnique();
+            entity.HasOne(x => x.Trip)
+                .WithMany()
+                .HasForeignKey(x => x.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<DispatchException>(entity =>
+        {
+            entity.ToTable("routarr_dispatch_exceptions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ExceptionKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Category).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ResolutionNotes).HasMaxLength(1024).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ExceptionKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.UpdatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.TripId });
+            entity.HasIndex(x => new { x.TenantId, x.AssignedToUserId });
+        });
+
+        modelBuilder.Entity<AuditPackageGenerationJob>(entity =>
+        {
+            entity.ToTable("routarr_audit_package_generation_jobs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Format).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.FilterJson).HasMaxLength(4096);
+            entity.Property(x => x.ErrorMessage).HasMaxLength(2000);
+            entity.Property(x => x.ArtifactZip);
+            entity.Property(x => x.ArtifactJson);
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.CreatedAt });
+            entity.HasIndex(x => x.CreatedAt);
         });
     }
 }

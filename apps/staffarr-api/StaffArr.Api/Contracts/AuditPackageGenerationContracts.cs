@@ -3,7 +3,11 @@ namespace StaffArr.Api.Contracts;
 public sealed record CreateAuditPackageGenerationJobRequest(
     string Format,
     DateTimeOffset? From,
-    DateTimeOffset? To);
+    DateTimeOffset? To,
+    string? Action = null,
+    string? Result = null,
+    string? TargetType = null,
+    Guid? ActorUserId = null);
 
 public sealed record AuditPackageGenerationJobResponse(
     Guid JobId,

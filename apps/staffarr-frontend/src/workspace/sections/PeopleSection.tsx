@@ -2,6 +2,7 @@ import { StaffArrApiError } from '../../api/client'
 import { PersonProfileEditorPanel } from '../../components/PersonProfileEditorPanel'
 import { PersonLookupPanel } from '../../components/PersonLookupPanel'
 import { PersonTimelinePanel } from '../../components/PersonTimelinePanel'
+import { PersonTrainarrTrainingHistoryPanel } from '../../components/PersonTrainarrTrainingHistoryPanel'
 import { PersonHistorySummaryPanel } from '../../components/PersonHistorySummaryPanel'
 import { PersonnelNotesPanel } from '../../components/PersonnelNotesPanel'
 import { PersonnelDocumentsPanel } from '../../components/PersonnelDocumentsPanel'
@@ -201,6 +202,15 @@ export function PeopleSection({ state }: Props) {
           entries={s.personTimelineEntries}
           totalCount={s.personTimelineTotalCount}
           isLoading={s.personTimelineQuery.isLoading}
+        />
+      ) : null}
+
+      {s.selectedPerson ? (
+        <PersonTrainarrTrainingHistoryPanel
+          personDisplayName={s.selectedPerson.displayName}
+          history={s.trainarrTrainingHistoryQuery.data ?? null}
+          isLoading={s.trainarrTrainingHistoryQuery.isLoading}
+          isError={s.trainarrTrainingHistoryQuery.isError}
         />
       ) : null}
     </>

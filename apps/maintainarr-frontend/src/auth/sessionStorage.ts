@@ -57,6 +57,49 @@ export function canManageNotificationSettings(
   return ['tenant_admin', 'maintainarr_admin'].includes(tenantRoleKey.toLowerCase())
 }
 
+export function canReadMaintenanceReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return [
+    'tenant_admin',
+    'maintainarr_admin',
+    'maintainarr_manager',
+    'maintainarr_technician',
+    'tenant_member',
+  ].includes(tenantRoleKey.toLowerCase())
+}
+
+export function canExportMaintenanceReports(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canExportAuditPackage(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canReadExecutiveReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return ['tenant_admin', 'maintainarr_admin', 'maintainarr_manager'].includes(
+    tenantRoleKey.toLowerCase(),
+  )
+}
+
+export function canExportExecutiveReports(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canExportAuditPackage(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canReadComplianceReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canReadExecutiveReports(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canExportComplianceReports(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canExportAuditPackage(tenantRoleKey, isPlatformAdmin)
+}
+
 export function canExportAuditPackage(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true
   return ['tenant_admin', 'maintainarr_admin', 'maintainarr_manager'].includes(

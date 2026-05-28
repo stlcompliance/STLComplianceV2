@@ -56,7 +56,7 @@ public class StaffArrTrainArrSignoffsEvaluationsTests : IAsyncLifetime
             adminToken,
             "trainarr",
             ["staffarr"],
-            $"{StaffArrIntegration.TrainingBlockerIngestActionScope},{StaffArrIntegration.CertificationGrantIngestActionScope}");
+            $"{StaffArrIntegration.TrainingBlockerIngestActionScope},{StaffArrIntegration.TrainingAcknowledgementIngestActionScope},{StaffArrIntegration.TrainingAcknowledgementReadActionScope},{StaffArrIntegration.CertificationGrantIngestActionScope}");
 
         _staffarrFactory = new WebApplicationFactory<global::StaffArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -92,6 +92,8 @@ public class StaffArrTrainArrSignoffsEvaluationsTests : IAsyncLifetime
                 services.AddHttpClient<TrainArr.Api.Services.StaffArrTrainingBlockerClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
                 services.AddHttpClient<TrainArr.Api.Services.StaffArrCertificationGrantClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
+                services.AddHttpClient<TrainArr.Api.Services.StaffArrTrainingAcknowledgementClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
             });
         });

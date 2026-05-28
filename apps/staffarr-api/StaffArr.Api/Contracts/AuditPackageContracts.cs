@@ -15,6 +15,7 @@ public sealed record AuditPackageExportResponse(
     Guid TenantId,
     DateTimeOffset GeneratedAt,
     AuditPackageDateRangeResponse? DateRange,
+    AuditPackageAppliedFiltersResponse? AppliedFilters,
     AuditPackageCountsResponse Counts,
     IReadOnlyList<StaffArrAuditEventExportItem> AuditEvents,
     IReadOnlyList<AuditPackagePersonItem> People,

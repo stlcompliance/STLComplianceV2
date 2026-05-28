@@ -235,6 +235,78 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Procurement_exception_resolution_depth_assign_sla_template_and_links()
+    {
+        var vendor = await CreateVendorAsync();
+        var part = await CreatePartAsync();
+
+        var createPrRequest = Authorized(HttpMethod.Post, "/api/purchase-requests", _userToken);
+        createPrRequest.Content = JsonContent.Create(new CreatePurchaseRequestRequest(
+            $"pex-depth-{Guid.NewGuid():N}"[..20],
+            "Depth PR",
+            string.Empty,
+            vendor.PartyId,
+            [new CreatePurchaseRequestLineRequest(part.PartId, 1m, string.Empty)]));
+        var pr = (await (await _supplyarrClient.SendAsync(createPrRequest)).Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+
+        var createExceptionRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/purchase-requests/{pr.PurchaseRequestId}/procurement-exceptions",
+            _userToken);
+        createExceptionRequest.Content = JsonContent.Create(new CreateProcurementExceptionRequest(
+            "PEX-DEPTH-001",
+            ProcurementExceptionCategories.ApprovalDelay,
+            "Approval queue stuck",
+            "PR blocked in approval longer than SLA.",
+            PlatformSeeder.DemoAdminUserId,
+            null));
+        var created = (await (await _supplyarrClient.SendAsync(createExceptionRequest))
+            .Content.ReadFromJsonAsync<ProcurementExceptionResponse>())!;
+        Assert.NotNull(created.SlaDueAt);
+        Assert.Equal(PlatformSeeder.DemoAdminUserId, created.AssignedToUserId);
+
+        var templatesResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/procurement-exceptions/resolution-templates", _userToken));
+        templatesResponse.EnsureSuccessStatusCode();
+        var templates = (await templatesResponse.Content.ReadFromJsonAsync<List<ProcurementExceptionResolutionTemplateResponse>>())!;
+        Assert.Contains(templates, x => x.TemplateKey == ProcurementExceptionResolutionTemplates.PrResubmit);
+
+        var linkRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/procurement-exceptions/{created.ExceptionId}/link-actions",
+            _userToken);
+        linkRequest.Content = JsonContent.Create(new LinkProcurementExceptionActionsRequest(
+            pr.PurchaseRequestId,
+            null));
+        var linked = (await (await _supplyarrClient.SendAsync(linkRequest)).Content.ReadFromJsonAsync<ProcurementExceptionResponse>())!;
+        Assert.Equal(pr.RequestKey, linked.LinkedPurchaseRequestKey);
+
+        (await _supplyarrClient.SendAsync(
+            Authorized(
+                HttpMethod.Post,
+                $"/api/procurement-exceptions/{created.ExceptionId}/start-investigation",
+                _userToken))).EnsureSuccessStatusCode();
+
+        var resolveRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/procurement-exceptions/{created.ExceptionId}/resolve",
+            _userToken);
+        resolveRequest.Content = JsonContent.Create(new ResolveProcurementExceptionRequest(
+            "Resubmitted with corrected budget code.",
+            ProcurementExceptionResolutionTemplates.PrResubmit));
+        var resolved = (await (await _supplyarrClient.SendAsync(resolveRequest)).Content.ReadFromJsonAsync<ProcurementExceptionResponse>())!;
+        Assert.Equal(ProcurementExceptionStatuses.Resolved, resolved.Status);
+        Assert.Equal(ProcurementExceptionResolutionTemplates.PrResubmit, resolved.ResolutionTemplateKey);
+        Assert.Contains("PR resubmit", resolved.ResolutionNotes, StringComparison.OrdinalIgnoreCase);
+
+        var overdueResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/procurement-exceptions?overdueOnly=true", _userToken));
+        overdueResponse.EnsureSuccessStatusCode();
+        var overdue = (await overdueResponse.Content.ReadFromJsonAsync<List<ProcurementExceptionResponse>>())!;
+        Assert.DoesNotContain(overdue, x => x.ExceptionId == created.ExceptionId);
+    }
+
+    [Fact]
     public async Task Create_procurement_exception_enqueues_outbox_event()
     {
         var vendor = await CreateVendorAsync();

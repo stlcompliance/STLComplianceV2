@@ -102,6 +102,10 @@ export interface TrainingAssignmentDetailResponse extends TrainingAssignmentSumm
   qualificationName: string
   assignedByUserId: string | null
   blockerPublicationId: string | null
+  staffarrAcknowledgementRequestId: string | null
+  staffarrAcknowledgementStatus: string | null
+  staffarrAcknowledgementAt: string | null
+  staffarrAcknowledgementRequired: boolean
   completedAt: string | null
   completedByUserId: string | null
   updatedAt: string
@@ -123,6 +127,64 @@ export interface SubmitTrainingSignoffRequest {
   trainingAssignmentId: string
   signoffRole: 'trainee' | 'trainer'
   notes?: string | null
+}
+
+export interface TrainingAssignmentMaterialDemandLineResponse {
+  demandLineId: string
+  lineNumber: number
+  supplyarrPartId: string | null
+  partNumber: string
+  description: string
+  quantityRequested: number
+  unitOfMeasure: string
+  notes: string
+  status: string
+  trainarrPublicationId: string | null
+  supplyarrDemandRefId: string | null
+  publishedAt: string | null
+  procurementStatus: string
+  supplyarrPurchaseRequestId: string | null
+  supplyarrPurchaseOrderId: string | null
+  quantityReceived: number
+  procurementStatusMessage: string
+  lastProcurementStatusAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateTrainingAssignmentMaterialDemandLineRequest {
+  supplyarrPartId?: string | null
+  partNumber?: string | null
+  description?: string | null
+  quantityRequested: number
+  unitOfMeasure?: string | null
+  notes?: string | null
+}
+
+export interface PublishTrainingAssignmentMaterialDemandRequest {
+  createPurchaseRequestDraft?: boolean
+}
+
+export interface PublishTrainingAssignmentMaterialDemandResponse {
+  publicationId: string
+  demandRefId: string
+  purchaseRequestId: string | null
+  createdPurchaseRequestDraft: boolean
+  lines: TrainingAssignmentMaterialDemandLineResponse[]
+}
+
+export interface TrainingAssignmentMaterialDemandStatusEventResponse {
+  statusEventId: string
+  trainarrPublicationId: string
+  supplyarrDemandRefId: string
+  eventType: string
+  procurementStatus: string
+  supplyarrPurchaseRequestId: string | null
+  supplyarrPurchaseOrderId: string | null
+  supplyarrReceivingReceiptId: string | null
+  message: string
+  occurredAt: string
+  createdAt: string
 }
 
 export interface TrainingProgramSummaryResponse {
@@ -442,6 +504,8 @@ export interface TrainingNotificationSettingsResponse {
   notifyOnQualificationSuspended: boolean
   notifyOnQualificationRevoked: boolean
   notifyOnQualificationExpired: boolean
+  notifyOnAssignmentDueReminder: boolean
+  notifyOnAssignmentOverdueEscalation: boolean
   expiringLeadDays: number
   maxAttempts: number
   retryIntervalMinutes: number
@@ -458,6 +522,8 @@ export interface UpsertTrainingNotificationSettingsRequest {
   notifyOnQualificationSuspended: boolean
   notifyOnQualificationRevoked: boolean
   notifyOnQualificationExpired: boolean
+  notifyOnAssignmentDueReminder: boolean
+  notifyOnAssignmentOverdueEscalation: boolean
   expiringLeadDays: number
   maxAttempts: number
   retryIntervalMinutes: number
@@ -481,6 +547,107 @@ export interface TrainingNotificationDispatchItem {
 
 export interface TrainingNotificationDispatchesResponse {
   items: TrainingNotificationDispatchItem[]
+}
+
+export interface AssignmentDueReminderSettingsResponse {
+  isEnabled: boolean
+  dueSoonLeadDays: number
+  reminderCooldownHours: number
+  maxRemindersPerAssignment: number
+  updatedAt: string | null
+}
+
+export interface UpsertAssignmentDueReminderSettingsRequest {
+  isEnabled: boolean
+  dueSoonLeadDays: number
+  reminderCooldownHours: number
+  maxRemindersPerAssignment: number
+}
+
+export interface PendingAssignmentDueReminderItem {
+  trainingAssignmentId: string
+  staffarrPersonId: string
+  dueAt: string
+  dueReminderCount: number
+  lastDueReminderSentAt: string | null
+  hoursUntilDue: number
+  hoursUntilNextReminder: number | null
+}
+
+export interface PendingAssignmentDueRemindersResponse {
+  asOfUtc: string
+  batchSize: number
+  items: PendingAssignmentDueReminderItem[]
+}
+
+export interface AssignmentDueReminderRunItem {
+  runId: string
+  asOfUtc: string
+  candidatesFound: number
+  remindersSentCount: number
+  skippedCount: number
+  createdAt: string
+}
+
+export interface AssignmentDueReminderRunsResponse {
+  items: AssignmentDueReminderRunItem[]
+}
+
+export interface AssignmentEscalationSettingsResponse {
+  isEnabled: boolean
+  overdueEscalationAfterHours: number
+  escalationCooldownHours: number
+  maxEscalationsPerAssignment: number
+  updatedAt: string | null
+}
+
+export interface UpsertAssignmentEscalationSettingsRequest {
+  isEnabled: boolean
+  overdueEscalationAfterHours: number
+  escalationCooldownHours: number
+  maxEscalationsPerAssignment: number
+}
+
+export interface PendingAssignmentEscalationItem {
+  trainingAssignmentId: string
+  staffarrPersonId: string
+  dueAt: string
+  escalationCount: number
+  lastEscalatedAt: string | null
+  hoursOverdue: number
+  hoursUntilNextEscalation: number | null
+}
+
+export interface PendingAssignmentEscalationsResponse {
+  asOfUtc: string
+  batchSize: number
+  items: PendingAssignmentEscalationItem[]
+}
+
+export interface AssignmentEscalationRunItem {
+  runId: string
+  asOfUtc: string
+  candidatesFound: number
+  escalatedCount: number
+  skippedCount: number
+  createdAt: string
+}
+
+export interface AssignmentEscalationRunsResponse {
+  items: AssignmentEscalationRunItem[]
+}
+
+export interface AssignmentEscalationEventItem {
+  eventId: string
+  trainingAssignmentId: string
+  staffarrPersonId: string
+  dueAt: string | null
+  escalationCount: number
+  createdAt: string
+}
+
+export interface AssignmentEscalationEventsResponse {
+  items: AssignmentEscalationEventItem[]
 }
 
 export interface RecertificationSettingsResponse {

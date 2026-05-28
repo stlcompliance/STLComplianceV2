@@ -4,7 +4,12 @@ public sealed record CreatePlatformAuditPackageGenerationJobRequest(
     string Format,
     DateTimeOffset? From,
     DateTimeOffset? To,
-    Guid? TenantId);
+    Guid? TenantId,
+    string? Action = null,
+    string? Result = null,
+    string? TargetType = null,
+    Guid? ActorUserId = null,
+    string? ProductKey = null);
 
 public sealed record PlatformAuditPackageGenerationJobResponse(
     Guid JobId,

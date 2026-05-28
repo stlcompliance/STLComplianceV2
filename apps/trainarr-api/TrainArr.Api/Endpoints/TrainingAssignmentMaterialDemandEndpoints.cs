@@ -27,6 +27,24 @@ public static class TrainingAssignmentMaterialDemandEndpoints
         })
         .WithName("ListTrainingAssignmentMaterialDemand");
 
+        group.MapGet("/status-events", async (
+            Guid assignmentId,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingAssignmentService assignmentService,
+            TrainingAssignmentMaterialDemandService materialDemandService,
+            CancellationToken cancellationToken) =>
+        {
+            var tenantId = context.User.GetTenantId();
+            var assignment = await assignmentService.GetAsync(tenantId, assignmentId, cancellationToken);
+            authorization.RequireAssignmentsRead(context.User, assignment.StaffarrPersonId);
+            return Results.Ok(await materialDemandService.ListStatusEventsAsync(
+                tenantId,
+                assignmentId,
+                cancellationToken));
+        })
+        .WithName("ListTrainingAssignmentMaterialDemandStatusEvents");
+
         group.MapPost("/", async (
             Guid assignmentId,
             CreateTrainingAssignmentMaterialDemandLineRequest request,

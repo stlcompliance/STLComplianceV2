@@ -69,6 +69,7 @@ public sealed record CreateTripRequest(
 
 public sealed record AssignTripDriverRequest(
     string DriverPersonId,
+    string? DriverDisplayName = null,
     bool IgnoreAvailabilityConflicts = false,
     bool IgnoreEligibilityBlocks = false,
     bool IgnoreWorkflowGateBlocks = false);

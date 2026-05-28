@@ -65,6 +65,18 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
     public DbSet<TenantTrainingNotificationSettings> TenantTrainingNotificationSettings =>
         Set<TenantTrainingNotificationSettings>();
 
+    public DbSet<TenantAssignmentDueReminderSettings> TenantAssignmentDueReminderSettings =>
+        Set<TenantAssignmentDueReminderSettings>();
+
+    public DbSet<AssignmentDueReminderRun> AssignmentDueReminderRuns => Set<AssignmentDueReminderRun>();
+
+    public DbSet<TenantAssignmentEscalationSettings> TenantAssignmentEscalationSettings =>
+        Set<TenantAssignmentEscalationSettings>();
+
+    public DbSet<AssignmentEscalationEvent> AssignmentEscalationEvents => Set<AssignmentEscalationEvent>();
+
+    public DbSet<AssignmentEscalationRun> AssignmentEscalationRuns => Set<AssignmentEscalationRun>();
+
     public DbSet<TenantRecertificationSettings> TenantRecertificationSettings =>
         Set<TenantRecertificationSettings>();
 
@@ -232,6 +244,8 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
             entity.Property(x => x.AssignmentReason).HasMaxLength(64).IsRequired();
 
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+
+            entity.Property(x => x.StaffarrAcknowledgementStatus).HasMaxLength(32);
 
             entity.HasIndex(x => x.TenantId);
 
@@ -516,6 +530,44 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
                 x.RelatedEntityType,
                 x.RelatedEntityId,
             });
+        });
+
+        modelBuilder.Entity<TenantAssignmentDueReminderSettings>(entity =>
+        {
+            entity.ToTable("trainarr_tenant_assignment_due_reminder_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<AssignmentDueReminderRun>(entity =>
+        {
+            entity.ToTable("trainarr_assignment_due_reminder_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<TenantAssignmentEscalationSettings>(entity =>
+        {
+            entity.ToTable("trainarr_tenant_assignment_escalation_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<AssignmentEscalationEvent>(entity =>
+        {
+            entity.ToTable("trainarr_assignment_escalation_events");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TrainingAssignmentId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<AssignmentEscalationRun>(entity =>
+        {
+            entity.ToTable("trainarr_assignment_escalation_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
         });
 
         modelBuilder.Entity<TenantRecertificationSettings>(entity =>

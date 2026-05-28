@@ -84,7 +84,15 @@ import type {
   WorkflowGateCheckResponse,
 } from '../api/types'
 
-import { canExportAuditPackage, canManageVocabulary, loadSession } from '../auth/sessionStorage'
+import {
+  canEvaluateReadinessForecast,
+  canEvaluateControlEffectiveness,
+  canEvaluateMissingEvidenceWarnings,
+  canEvaluateRiskScores,
+  canExportAuditPackage,
+  canManageVocabulary,
+  loadSession,
+} from '../auth/sessionStorage'
 
 export function useComplianceCoreWorkspaceState() {
 
@@ -1114,6 +1122,19 @@ export function useComplianceCoreWorkspaceState() {
   const canExportAudit = meQuery.data
     ? canExportAuditPackage(me.tenantRoleKey, me.isPlatformAdmin)
     : false
+  const canReadOrchestration = canExportAudit
+  const canEvaluateRisk = meQuery.data
+    ? canEvaluateRiskScores(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+  const canEvaluateMissingEvidence = meQuery.data
+    ? canEvaluateMissingEvidenceWarnings(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+  const canEvaluateControlEffectivenessFlag = meQuery.data
+    ? canEvaluateControlEffectiveness(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+  const canEvaluateReadinessForecastFlag = meQuery.data
+    ? canEvaluateReadinessForecast(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
   const loadingMessage = 'Loading compliance registry…'
 
   return {
@@ -1166,6 +1187,11 @@ export function useComplianceCoreWorkspaceState() {
     checkWorkflowGateBatchMutation,
     canManage,
     canExportAudit,
+    canReadOrchestration,
+    canEvaluateRisk,
+    canEvaluateMissingEvidence,
+    canEvaluateControlEffectiveness: canEvaluateControlEffectivenessFlag,
+    canEvaluateReadinessForecast: canEvaluateReadinessForecastFlag,
   }
 }
 

@@ -347,6 +347,9 @@ public sealed class SupplyArrAuthorizationService
     public void RequireDemandProcessingRead(ClaimsPrincipal principal) =>
         RequireDemandRefRead(principal);
 
+    public void RequireDemandProcessingOperate(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestCreate(principal);
+
     public void RequireIntegrationEventSettingsManage(ClaimsPrincipal principal) =>
         RequireNotificationSettingsManage(principal);
 

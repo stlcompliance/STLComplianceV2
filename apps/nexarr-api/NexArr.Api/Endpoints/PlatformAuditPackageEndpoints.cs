@@ -23,10 +23,50 @@ public static class PlatformAuditPackageEndpoints
         })
         .WithName("GetPlatformAuditPackageManifest");
 
+        packages.MapGet("/filter-options", async (
+            Guid? tenantId,
+            HttpContext context,
+            PlatformAuthorizationService authorization,
+            PlatformAuditPackageService service,
+            CancellationToken cancellationToken) =>
+        {
+            await authorization.RequirePlatformAdminAsync(context.User, cancellationToken);
+            return Results.Ok(await service.GetFilterOptionsAsync(
+                new PlatformAuditPackageFilter(TenantId: tenantId),
+                cancellationToken));
+        })
+        .WithName("GetPlatformAuditPackageFilterOptions");
+
+        packages.MapGet("/summary", async (
+            Guid? tenantId,
+            DateTimeOffset? from,
+            DateTimeOffset? to,
+            string? action,
+            string? result,
+            string? targetType,
+            Guid? actorUserId,
+            string? productKey,
+            HttpContext context,
+            PlatformAuthorizationService authorization,
+            PlatformAuditPackageService service,
+            CancellationToken cancellationToken) =>
+        {
+            await authorization.RequirePlatformAdminAsync(context.User, cancellationToken);
+            return Results.Ok(await service.GetExportSummaryAsync(
+                BuildFilter(tenantId, from, to, action, result, targetType, actorUserId, productKey),
+                cancellationToken));
+        })
+        .WithName("GetPlatformAuditPackageExportSummary");
+
         packages.MapGet("/timeline", async (
             Guid? tenantId,
             DateTimeOffset? from,
             DateTimeOffset? to,
+            string? action,
+            string? result,
+            string? targetType,
+            Guid? actorUserId,
+            string? productKey,
             int? page,
             int? pageSize,
             HttpContext context,
@@ -35,14 +75,12 @@ public static class PlatformAuditPackageEndpoints
             CancellationToken cancellationToken) =>
         {
             await authorization.RequirePlatformAdminAsync(context.User, cancellationToken);
-            var result = await service.ListAuditTimelineAsync(
-                tenantId,
-                from,
-                to,
+            var resultPage = await service.ListAuditTimelineAsync(
+                BuildFilter(tenantId, from, to, action, result, targetType, actorUserId, productKey),
                 page ?? 1,
                 pageSize ?? 25,
                 cancellationToken);
-            return Results.Ok(result);
+            return Results.Ok(resultPage);
         })
         .WithName("GetPlatformAuditPackageTimeline");
 
@@ -51,31 +89,36 @@ public static class PlatformAuditPackageEndpoints
             Guid? tenantId,
             DateTimeOffset? from,
             DateTimeOffset? to,
+            string? action,
+            string? result,
+            string? targetType,
+            Guid? actorUserId,
+            string? productKey,
             HttpContext context,
             PlatformAuthorizationService authorization,
             PlatformAuditPackageService service,
             CancellationToken cancellationToken) =>
         {
             await authorization.RequirePlatformAdminAsync(context.User, cancellationToken);
-            var actorUserId = context.User.GetUserId();
+            var actorUserIdClaim = context.User.GetUserId();
+            var filter = BuildFilter(tenantId, from, to, action, result, targetType, actorUserId, productKey);
 
             if (string.Equals(format, "json", StringComparison.OrdinalIgnoreCase))
             {
-                var package = await service.BuildExportAsync(
-                    tenantId,
-                    actorUserId,
-                    from,
-                    to,
-                    cancellationToken);
+                var package = await service.BuildExportAsync(filter, actorUserIdClaim, cancellationToken);
                 return Results.Ok(package);
             }
 
-            var zipBytes = await service.ExportZipAsync(
-                tenantId,
-                actorUserId,
-                from,
-                to,
-                cancellationToken);
+            if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
+            {
+                var csvBytes = await service.ExportAuditEventsCsvAsync(filter, actorUserIdClaim, cancellationToken);
+                return Results.File(
+                    csvBytes,
+                    "text/csv",
+                    $"nexarr-platform-audit-events-{DateTime.UtcNow:yyyyMMddHHmmss}.csv");
+            }
+
+            var zipBytes = await service.ExportZipAsync(filter, actorUserIdClaim, cancellationToken);
             return Results.File(
                 zipBytes,
                 "application/zip",
@@ -131,4 +174,23 @@ public static class PlatformAuditPackageEndpoints
         })
         .WithName("DownloadPlatformAuditPackageGenerationJob");
     }
+
+    private static PlatformAuditPackageFilter BuildFilter(
+        Guid? tenantId,
+        DateTimeOffset? from,
+        DateTimeOffset? to,
+        string? action,
+        string? result,
+        string? targetType,
+        Guid? actorUserId,
+        string? productKey) =>
+        new(
+            TenantId: tenantId,
+            From: from,
+            To: to,
+            Action: action,
+            Result: result,
+            TargetType: targetType,
+            ActorUserId: actorUserId,
+            ProductKey: productKey);
 }

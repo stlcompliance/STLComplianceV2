@@ -26,6 +26,10 @@ public sealed class TenantTrainingNotificationSettings : IHasTenant
 
     public bool NotifyOnQualificationRevoked { get; set; } = true;
 
+    public bool NotifyOnAssignmentDueReminder { get; set; } = true;
+
+    public bool NotifyOnAssignmentOverdueEscalation { get; set; } = true;
+
     public int ExpiringLeadDays { get; set; } = 30;
 
     public int MaxAttempts { get; set; } = 10;

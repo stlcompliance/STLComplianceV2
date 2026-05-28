@@ -322,6 +322,7 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Format).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.FilterJson).HasMaxLength(4096);
             entity.Property(x => x.ErrorMessage).HasMaxLength(2000);
             entity.HasIndex(x => x.CreatedAt);
             entity.HasIndex(x => new { x.ScopeTenantId, x.Status, x.CreatedAt });

@@ -102,9 +102,11 @@ export function PurchasingSection({ state: s }: Props) {
       <DemandProcessingPanel
         accessToken={s.accessToken}
         canRead={s.canCreatePr || s.canApprovePr}
+        canOperate={s.canCreatePr}
       />
       <ProcurementExceptionsPanel
         accessToken={s.accessToken}
+        currentUserId={s.session?.userId ?? ''}
         canManage={s.canCreatePr}
         canApprove={s.canApprovePr}
         purchaseRequests={s.purchaseRequestsQuery.data ?? []}

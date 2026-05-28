@@ -60,7 +60,7 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
             adminToken,
             "trainarr",
             ["staffarr"],
-            StaffArrIntegration.TrainingBlockerIngestActionScope);
+            $"{StaffArrIntegration.TrainingBlockerIngestActionScope},{StaffArrIntegration.TrainingAcknowledgementIngestActionScope},{StaffArrIntegration.TrainingAcknowledgementReadActionScope}");
         _sharedWorkerToTrainarrToken = await IssueServiceTokenAsync(
             adminToken,
             "shared-worker",
@@ -104,6 +104,8 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
                 services.AddDbContext<TrainArrDbContext>(options => options.UseInMemoryDatabase(trainArrDbName));
 
                 services.AddHttpClient<StaffArrTrainingBlockerClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
+                services.AddHttpClient<TrainArr.Api.Services.StaffArrTrainingAcknowledgementClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
                 services.AddHttpClient(TrainingNotificationDispatchService.WebhookHttpClientName)
                     .ConfigurePrimaryHttpMessageHandler(() => new WebhookCaptureHandler(_webhookRequests));
@@ -197,6 +199,8 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
             true,
             true,
             true,
+            true,
+            true,
             30,
             10,
             5));
@@ -224,6 +228,8 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
         request.Content = JsonContent.Create(new UpsertTrainingNotificationSettingsRequest(
             true,
             webhookUrl,
+            true,
+            true,
             true,
             true,
             true,
@@ -260,6 +266,8 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
                 services.AddDbContext<TrainArrDbContext>(options => options.UseInMemoryDatabase(trainArrDbName));
                 services.AddHttpClient<StaffArrTrainingBlockerClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
+                services.AddHttpClient<TrainArr.Api.Services.StaffArrTrainingAcknowledgementClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
                 services.AddHttpClient(TrainingNotificationDispatchService.WebhookHttpClientName)
                     .ConfigurePrimaryHttpMessageHandler(() => new FlakyWebhookCaptureHandler(retryWebhookRequests));
             });
@@ -278,6 +286,8 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
         settingsRequest.Content = JsonContent.Create(new UpsertTrainingNotificationSettingsRequest(
             true,
             webhookUrl,
+            true,
+            true,
             true,
             true,
             true,

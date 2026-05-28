@@ -440,6 +440,10 @@ namespace MaintainArr.Api.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<string>("FilterJson")
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
                     b.Property<string>("Format")
                         .IsRequired()
                         .HasMaxLength(16)
@@ -475,6 +479,67 @@ namespace MaintainArr.Api.Migrations
                     b.HasIndex("TenantId", "Status", "CreatedAt");
 
                     b.ToTable("maintainarr_audit_package_generation_jobs", (string)null);
+                });
+
+            modelBuilder.Entity("MaintainArr.Api.Entities.ComplianceRegulatoryKeyMirror", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ComplianceKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MaterialKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RegulatoryCitationKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SourceProduct")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SourceRecordKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("SourceUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SubjectType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "ComplianceKey");
+
+                    b.HasIndex("TenantId", "SubjectType", "SubjectId", "ComplianceKey")
+                        .IsUnique();
+
+                    b.ToTable("maintainarr_compliance_regulatory_key_mirrors", (string)null);
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.Defect", b =>
@@ -979,6 +1044,60 @@ namespace MaintainArr.Api.Migrations
                     b.ToTable("maintainarr_audit_events", (string)null);
                 });
 
+            modelBuilder.Entity("MaintainArr.Api.Entities.MaintainArrImportBatch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("DryRun")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ErrorCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ImportType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Phase")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int>("SuccessCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TotalRows")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "ImportType", "CreatedAt");
+
+                    b.ToTable("maintainarr_import_batches", (string)null);
+                });
+
             modelBuilder.Entity("MaintainArr.Api.Entities.MaintenanceHistoryEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1252,6 +1371,46 @@ namespace MaintainArr.Api.Migrations
                     b.HasIndex("TenantId", "AssetMeterId", "ReadAt");
 
                     b.ToTable("maintainarr_meter_readings", (string)null);
+                });
+
+            modelBuilder.Entity("MaintainArr.Api.Entities.PmDueScanRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("AsOfUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CandidatesFound")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MarkedDueCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MarkedOverdueCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SkippedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("WorkOrdersCreatedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("WorkOrdersLinkedCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CreatedAt");
+
+                    b.ToTable("maintainarr_pm_due_scan_runs", (string)null);
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.PmProgram", b =>
@@ -1594,6 +1753,47 @@ namespace MaintainArr.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("maintainarr_tenant_notification_settings", (string)null);
+                });
+
+            modelBuilder.Entity("MaintainArr.Api.Entities.TenantPmDueScanSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("BatchSize")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastRunAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("OverdueGraceDays")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ScanIntervalMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("maintainarr_tenant_pm_due_scan_settings", (string)null);
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.WorkOrder", b =>

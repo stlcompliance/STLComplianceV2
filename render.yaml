@@ -382,6 +382,10 @@ services:
         value: https://trainarr-api-ae2t.onrender.com
       - key: TrainArrNotificationDispatch__TrainArrBaseUrl
         value: https://trainarr-api-ae2t.onrender.com
+      - key: TrainArrAssignmentDueReminders__TrainArrBaseUrl
+        value: https://trainarr-api-ae2t.onrender.com
+      - key: TrainArrAssignmentEscalation__TrainArrBaseUrl
+        value: https://trainarr-api-ae2t.onrender.com
       - key: StaffArrCertificationExpiration__StaffArrBaseUrl
         value: https://staffarr-api-srdo.onrender.com
       - key: StaffArrReadinessRollup__StaffArrBaseUrl
@@ -426,12 +430,16 @@ services:
         value: https://compliancecore-api-qfu7.onrender.com
       - key: ComplianceCoreAuditPackageGeneration__ComplianceCoreBaseUrl
         value: https://compliancecore-api-qfu7.onrender.com
+      - key: ComplianceCoreM12AnalyticsBatch__ComplianceCoreBaseUrl
+        value: https://compliancecore-api-qfu7.onrender.com
       - key: NexArrCompanionNotificationDispatch__NexArrBaseUrl
         value: https://nexarr-api-jdyi.onrender.com
       - key: NexArrPlatformAuditPackageGeneration__NexArrBaseUrl
         value: https://nexarr-api-jdyi.onrender.com
       - key: MaintainArrAuditPackageGeneration__MaintainArrBaseUrl
         value: https://maintainarr-api-82rg.onrender.com
+      - key: RoutArrAuditPackageGeneration__RoutArrBaseUrl
+        value: https://routarr-api-ut1u.onrender.com
       - key: TrainArrAuditPackageGeneration__TrainArrBaseUrl
         value: https://trainarr-api-ae2t.onrender.com
       - key: NexArrServiceTokenCleanup__NexArrBaseUrl

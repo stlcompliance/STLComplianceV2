@@ -60,3 +60,28 @@ export function canExportAuditPackage(tenantRoleKey: string, isPlatformAdmin: bo
     tenantRoleKey.toLowerCase(),
   )
 }
+
+export function canEvaluateRiskScores(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canExportAuditPackage(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canEvaluateMissingEvidenceWarnings(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canEvaluateRiskScores(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canEvaluateControlEffectiveness(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canEvaluateRiskScores(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canEvaluateReadinessForecast(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canEvaluateRiskScores(tenantRoleKey, isPlatformAdmin)
+}

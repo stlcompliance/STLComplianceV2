@@ -26,6 +26,8 @@ public sealed class DemandProcessingSettingsService(
         UpsertDemandProcessingSettingsRequest request,
         CancellationToken cancellationToken = default)
     {
+        DemandProcessingRules.ValidateSettings(request);
+
         var entity = await db.TenantDemandProcessingSettings
             .FirstOrDefaultAsync(x => x.TenantId == tenantId, cancellationToken);
 

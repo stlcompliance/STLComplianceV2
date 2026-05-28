@@ -50,6 +50,10 @@ public static class TrainingNotificationEventKinds
     public const string QualificationSuspended = "qualification_suspended";
 
     public const string QualificationRevoked = "qualification_revoked";
+
+    public const string AssignmentDueReminder = "assignment_due_reminder";
+
+    public const string AssignmentOverdueEscalation = "assignment_overdue_escalation";
 }
 
 public static class TrainingNotificationDispatchStatuses

@@ -56,6 +56,53 @@ public sealed class TrainingNotificationEnqueueService(
         return dispatch.Id;
     }
 
+    public async Task<Guid?> TryEnqueueRepeatableAsync(
+        Guid tenantId,
+        string eventKind,
+        Guid staffarrPersonId,
+        string relatedEntityType,
+        Guid relatedEntityId,
+        CancellationToken cancellationToken = default)
+    {
+        var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (settings is null || !TrainingNotificationRules.ShouldNotifyForEvent(settings, eventKind))
+        {
+            return null;
+        }
+
+        var pendingDuplicate = await db.TrainingNotificationDispatches.AnyAsync(
+            x => x.TenantId == tenantId
+                && x.EventKind == eventKind
+                && x.RelatedEntityType == relatedEntityType
+                && x.RelatedEntityId == relatedEntityId
+                && x.DispatchStatus == TrainingNotificationDispatchStatuses.Pending,
+            cancellationToken);
+
+        if (pendingDuplicate)
+        {
+            return null;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var dispatch = new TrainingNotificationDispatch
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            EventKind = eventKind,
+            StaffarrPersonId = staffarrPersonId,
+            RelatedEntityType = relatedEntityType,
+            RelatedEntityId = relatedEntityId,
+            DispatchStatus = TrainingNotificationDispatchStatuses.Pending,
+            AttemptCount = 0,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.TrainingNotificationDispatches.Add(dispatch);
+        await db.SaveChangesAsync(cancellationToken);
+        return dispatch.Id;
+    }
+
     public async Task TryEnqueueFromDomainEventAsync(
         TrainingDomainEvent domainEvent,
         CancellationToken cancellationToken = default)

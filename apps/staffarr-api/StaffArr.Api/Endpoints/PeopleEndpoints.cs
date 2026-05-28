@@ -66,6 +66,26 @@ public static class PeopleEndpoints
         })
         .WithName("GetPersonTimeline");
 
+        people.MapGet("/{personId:guid}/trainarr-training-history", async (
+            Guid personId,
+            int? limit,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            TrainarrPersonTrainingHistoryService trainarrHistoryService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePersonHistoryRead(context.User, personId);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await trainarrHistoryService.GetForPersonAsync(
+                tenantId,
+                actorUserId,
+                personId,
+                limit,
+                cancellationToken));
+        })
+        .WithName("GetStaffPersonTrainarrTrainingHistory");
+
         people.MapPost("/", async (
             CreateStaffPersonRequest request,
             HttpContext context,

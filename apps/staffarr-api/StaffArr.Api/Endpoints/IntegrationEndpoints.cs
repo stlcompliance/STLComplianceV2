@@ -23,6 +23,10 @@ public static class IntegrationEndpoints
     public const string SupplyarrProcurementApprovalAuthorityReadActionScope =
         ProcurementApprovalAuthorityService.ReadAuthorityActionScope;
 
+    public const string TrainingAcknowledgementIngestActionScope = "staffarr.training_acknowledgements.write";
+
+    public const string TrainingAcknowledgementReadActionScope = "staffarr.training_acknowledgements.read";
+
     public static void MapStaffArrIntegrationEndpoints(this WebApplication app)
     {
         var integrations = app.MapGroup("/api/integrations").WithTags("Integrations");
@@ -274,6 +278,71 @@ public static class IntegrationEndpoints
             return Results.Ok(result);
         })
         .WithName("IngestSupplyarrDemandStatus");
+
+        integrations.MapPost("/training-acknowledgements", async (
+            IngestTrainingAcknowledgementRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            TrainingAcknowledgementIngestionService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "trainarr",
+                    RequiredTargetProduct = "staffarr",
+                    TenantId = request.TenantId,
+                    RequiredActionScope = TrainingAcknowledgementIngestActionScope
+                });
+
+            return Results.Ok(await service.IngestAsync(request, cancellationToken));
+        })
+        .WithName("IngestTrainingAcknowledgement");
+
+        integrations.MapPost("/training-acknowledgements/supersede", async (
+            SupersedeTrainingAcknowledgementRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            TrainingAcknowledgementIngestionService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "trainarr",
+                    RequiredTargetProduct = "staffarr",
+                    TenantId = request.TenantId,
+                    RequiredActionScope = TrainingAcknowledgementIngestActionScope
+                });
+
+            return Results.Ok(await service.SupersedeAsync(request, cancellationToken));
+        })
+        .WithName("SupersedeTrainingAcknowledgement");
+
+        integrations.MapGet("/training-acknowledgements/status", async (
+            Guid tenantId,
+            Guid trainarrAcknowledgementRequestId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            TrainingAcknowledgementIngestionService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "trainarr",
+                    RequiredTargetProduct = "staffarr",
+                    TenantId = tenantId,
+                    RequiredActionScope = TrainingAcknowledgementReadActionScope
+                });
+
+            var status = await service.GetStatusAsync(tenantId, trainarrAcknowledgementRequestId, cancellationToken);
+            return status is null ? Results.NotFound() : Results.Ok(status);
+        })
+        .WithName("GetTrainingAcknowledgementStatus");
 
         integrations.MapGet("/procurement-approval-authority", async (
             Guid tenantId,

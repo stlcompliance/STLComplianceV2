@@ -20,6 +20,8 @@ public sealed class TrainingEvidenceService(
 
     TrainArrEvidenceStorageService storage,
 
+    TrainingAcknowledgementPublicationService acknowledgementPublicationService,
+
     ITrainArrAuditService audit)
 
 {
@@ -98,6 +100,15 @@ public sealed class TrainingEvidenceService(
 
                 409);
 
+        }
+
+        await acknowledgementPublicationService.SyncMirrorFromStaffArrAsync(assignment, cancellationToken);
+        if (TrainingAcknowledgementPublicationService.RequiresAcknowledgement(assignment))
+        {
+            throw new StlApiException(
+                "evidence.acknowledgement_required",
+                "Acknowledge this training assignment in StaffArr before uploading evidence.",
+                409);
         }
 
 

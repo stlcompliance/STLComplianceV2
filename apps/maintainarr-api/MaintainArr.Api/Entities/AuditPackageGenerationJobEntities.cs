@@ -18,6 +18,8 @@ public sealed class AuditPackageGenerationJob : IHasTenant
 
     public DateTimeOffset? ToUtc { get; set; }
 
+    public string? FilterJson { get; set; }
+
     public Guid? PackageId { get; set; }
 
     public byte[]? ArtifactZip { get; set; }

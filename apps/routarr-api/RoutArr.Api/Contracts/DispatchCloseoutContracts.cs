@@ -3,7 +3,8 @@ namespace RoutArr.Api.Contracts;
 public sealed record DispatchCloseoutRequest(
     string? Scope,
     string RemainingTripDisposition,
-    string OpenStopDisposition);
+    string OpenStopDisposition,
+    IReadOnlyList<Guid>? TripIds = null);
 
 public sealed record DispatchCloseoutSummaryResponse(
     string Scope,
@@ -139,3 +140,36 @@ public sealed record DispatchCloseoutRouteApplyResult(
     string? FinalRouteStatus,
     string? ErrorCode,
     string? ErrorMessage);
+
+public sealed record DispatchCloseoutChecklistItem(
+    string Key,
+    string Label,
+    bool Satisfied,
+    bool Required,
+    string? Detail);
+
+public sealed record DispatchCloseoutTripChecklistResponse(
+    Guid TripId,
+    string TripNumber,
+    string DispatchStatus,
+    bool ReadyForCloseout,
+    IReadOnlyList<DispatchCloseoutChecklistItem> Items);
+
+public sealed record DispatchCloseoutChecklistsResponse(
+    string Scope,
+    DateTimeOffset WindowStart,
+    DateTimeOffset WindowEnd,
+    string RemainingTripDisposition,
+    IReadOnlyList<DispatchCloseoutTripChecklistResponse> Trips);
+
+public sealed record DispatchCloseoutAuditEntry(
+    Guid Id,
+    Guid? ActorUserId,
+    string Action,
+    string TargetType,
+    string? TargetId,
+    string Result,
+    DateTimeOffset OccurredAt);
+
+public sealed record DispatchCloseoutAuditListResponse(
+    IReadOnlyList<DispatchCloseoutAuditEntry> Entries);

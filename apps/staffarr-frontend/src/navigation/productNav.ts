@@ -1,4 +1,4 @@
-import { Users, Network, Shield, Activity, AlertCircle, Award, Settings } from 'lucide-react'
+import { Users, Network, Shield, Activity, AlertCircle, ClipboardCheck, Award, Settings } from 'lucide-react'
 import type { ProductNavItem } from '@stl/shared-ui'
 
 export const staffarrNavItems: ProductNavItem[] = [
@@ -7,6 +7,7 @@ export const staffarrNavItems: ProductNavItem[] = [
   { label: 'Permissions', to: '/permissions' , icon: Shield },
   { label: 'Readiness', to: '/readiness' , icon: Activity },
   { label: 'Incidents', to: '/incidents' , icon: AlertCircle },
+  { label: 'Training acks', to: '/training-acknowledgements', icon: ClipboardCheck },
   { label: 'Certifications', to: '/certifications' , icon: Award },
   { label: 'Admin', to: '/admin' , icon: Settings },
 ]

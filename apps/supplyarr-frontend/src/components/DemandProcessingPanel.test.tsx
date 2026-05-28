@@ -1,57 +1,70 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
-
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DemandProcessingPanel } from './DemandProcessingPanel'
 
 vi.mock('../api/client', () => ({
   getDemandProcessingDashboard: vi.fn().mockResolvedValue({
     pendingCount: 1,
-    stockShortCount: 1,
+    stockShortCount: 0,
     stockAvailableCount: 0,
     prDraftedCount: 0,
-    items: [
+    processedItems: [],
+    pendingItems: [
       {
-        processingStateId: 'state-1',
+        processingStateId: null,
         demandRefId: 'ref-1',
-        demandRefSource: 'maintainarr',
-        sourceRefKey: 'WO-DP-100',
-        title: 'Brake pads',
+        demandRefSource: 'routarr',
+        sourceRefKey: 'TRIP-1',
+        title: 'Trip parts',
         demandRefStatus: 'received',
-        processingOutcome: 'stock_short',
-        recommendedAction: 'create_purchase_request',
-        linesTotalCount: 1,
-        linesCatalogCount: 1,
-        linesShortCount: 1,
+        processingOutcome: null,
+        recommendedAction: null,
+        linesTotalCount: null,
+        linesCatalogCount: null,
+        linesShortCount: null,
         purchaseRequestId: null,
-        lastProcessingMessage: '1 of 1 catalog-linked lines are short on stock.',
-        demandReceivedAt: '2026-05-28T00:00:00Z',
-        lastProcessedAt: '2026-05-28T01:00:00Z',
+        lastProcessingMessage: null,
+        demandReceivedAt: new Date().toISOString(),
+        lastProcessedAt: null,
+        sourceLink: {
+          productKey: 'routarr',
+          displayLabel: 'RoutArr trip TRIP-1',
+          referenceKey: 'TRIP-1',
+        },
       },
     ],
   }),
+  getDemandProcessingDetail: vi.fn(),
+  retryDemandProcessing: vi.fn(),
+  createDemandProcessingPrDraft: vi.fn(),
 }))
 
 describe('DemandProcessingPanel', () => {
-  it('renders dashboard when user can read', async () => {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  afterEach(() => cleanup())
+
+  it('renders pending queue with operator controls when canOperate', async () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
-      <QueryClientProvider client={client}>
-        <DemandProcessingPanel accessToken="token" canRead={true} />
+      <QueryClientProvider client={qc}>
+        <DemandProcessingPanel accessToken="token" canRead={true} canOperate={true} />
       </QueryClientProvider>,
     )
-    expect(await screen.findByTestId('demand-processing-panel')).toBeInTheDocument()
-    expect(screen.getByText('Demand processing')).toBeInTheDocument()
-    expect(await screen.findByText(/maintainarr · WO-DP-100/)).toBeInTheDocument()
+
+    expect(await screen.findByTestId('demand-processing-panel')).toBeTruthy()
+    expect(await screen.findByText('Pending queue')).toBeTruthy()
+    expect(await screen.findByTestId('demand-processing-row-ref-1')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Retry processing' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Create PR draft' })).toBeTruthy()
   })
 
-  it('returns null when user cannot read', () => {
-    const client = new QueryClient()
+  it('returns null when canRead is false', () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     const { container } = render(
-      <QueryClientProvider client={client}>
+      <QueryClientProvider client={qc}>
         <DemandProcessingPanel accessToken="token" canRead={false} />
       </QueryClientProvider>,
     )
-    expect(container).toBeEmptyDOMElement()
+    expect(container.firstChild).toBeNull()
   })
 })

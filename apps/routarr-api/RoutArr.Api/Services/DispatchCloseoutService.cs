@@ -17,6 +17,12 @@ public sealed class DispatchCloseoutService(
 
     public const string ApplyAction = "dispatch_closeout.apply";
 
+    public const string BulkApplyAction = "dispatch_closeout.bulk_apply";
+
+    public const string ChecklistsAction = "dispatch_closeout.checklists";
+
+    public const string AuditListAction = "dispatch_closeout.audit.list";
+
     public async Task<DispatchCloseoutSummaryResponse> GetSummaryAsync(
         Guid tenantId,
         bool viewAll,
@@ -98,7 +104,8 @@ public sealed class DispatchCloseoutService(
             request.Scope,
             cancellationToken);
 
-        var plans = BuildPlans(context, tripDisposition, stopDisposition);
+        var tripIds = NormalizeTripIds(request.TripIds);
+        var plans = BuildPlans(context, tripDisposition, stopDisposition, tripIds);
         return ToPreviewResponse(context, tripDisposition, stopDisposition, plans);
     }
 
@@ -120,7 +127,8 @@ public sealed class DispatchCloseoutService(
             request.Scope,
             cancellationToken);
 
-        var plans = BuildPlans(context, tripDisposition, stopDisposition);
+        var tripIds = NormalizeTripIds(request.TripIds);
+        var plans = BuildPlans(context, tripDisposition, stopDisposition, tripIds);
         var preview = ToPreviewResponse(context, tripDisposition, stopDisposition, plans);
 
         if (string.Equals(tripDisposition, DispatchCloseoutRules.TripDispositionCancel, StringComparison.OrdinalIgnoreCase)
@@ -290,13 +298,18 @@ public sealed class DispatchCloseoutService(
             routeResults.Count(x => x.Applied),
             routeResults.Count(x => !x.Applied));
 
+        var applyAction = tripIds.Count > 0 ? BulkApplyAction : ApplyAction;
+        var applyDetail = tripIds.Count > 0
+            ? $"bulk {tripIds.Count} trips: {summary.TripsCanApply}/{summary.TripCount} trips, {summary.StopsCanApply}/{summary.StopCount} stops"
+            : $"{summary.TripsCanApply}/{summary.TripCount} trips, {summary.StopsCanApply}/{summary.StopCount} stops";
+
         await audit.WriteAsync(
-            ApplyAction,
+            applyAction,
             tenantId,
             actorUserId,
             "dispatch_closeout",
             context.Scope,
-            $"{summary.TripsCanApply}/{summary.TripCount} trips, {summary.StopsCanApply}/{summary.StopCount} stops",
+            applyDetail,
             cancellationToken: cancellationToken);
 
         return new DispatchCloseoutApplyResponse(
@@ -309,17 +322,114 @@ public sealed class DispatchCloseoutService(
             routeResults);
     }
 
-    private static CloseoutPlans BuildPlans(
-        CloseoutScopeContext context,
-        string tripDisposition,
-        string stopDisposition)
+    public async Task<DispatchCloseoutChecklistsResponse> GetChecklistsAsync(
+        Guid tenantId,
+        bool viewAll,
+        Guid? actorUserId,
+        string? actorPersonId,
+        string? scope,
+        string? remainingTripDisposition,
+        CancellationToken cancellationToken = default)
     {
+        var tripDisposition = DispatchCloseoutRules.NormalizeTripDisposition(
+            remainingTripDisposition ?? DispatchCloseoutRules.TripDispositionCancel);
+        var context = await LoadScopeContextAsync(
+            tenantId,
+            viewAll,
+            actorUserId,
+            actorPersonId,
+            scope,
+            cancellationToken);
+
         var openTrips = context.ScopedTrips
             .Where(x => TripDispatchStatuses.Active.Contains(x.DispatchStatus))
             .ToList();
 
+        var checklistContext = await LoadTripChecklistContextAsync(tenantId, openTrips, context, cancellationToken);
+        var checklists = openTrips
+            .Select(trip =>
+            {
+                var tripPlan = DispatchCloseoutRules.PlanTrip(trip, tripDisposition);
+                var openStopCount = checklistContext.OpenStopCountByTrip.GetValueOrDefault(trip.Id);
+                var openRouteCount = checklistContext.OpenRouteCountByTrip.GetValueOrDefault(trip.Id);
+                var openExceptionCount = checklistContext.OpenExceptionCountByTrip.GetValueOrDefault(trip.Id);
+                return DispatchCloseoutChecklistRules.BuildTripChecklist(
+                    trip,
+                    tripDisposition,
+                    openStopCount,
+                    openRouteCount,
+                    openExceptionCount,
+                    checklistContext.HasProofByTrip.GetValueOrDefault(trip.Id),
+                    checklistContext.HasPreTripDvirByTrip.GetValueOrDefault(trip.Id),
+                    checklistContext.HasPostTripDvirByTrip.GetValueOrDefault(trip.Id),
+                    tripPlan);
+            })
+            .ToList();
+
+        return new DispatchCloseoutChecklistsResponse(
+            context.Scope,
+            context.WindowStart,
+            context.WindowEnd,
+            tripDisposition,
+            checklists);
+    }
+
+    public async Task<DispatchCloseoutAuditListResponse> ListAuditAsync(
+        Guid tenantId,
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        limit = limit switch
+        {
+            < 1 => 25,
+            > 100 => 100,
+            _ => limit,
+        };
+
+        var entries = await db.AuditEvents
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && (x.Action.StartsWith("dispatch_closeout")
+                    || x.Action == "route_stop.closeout"
+                    || x.Action == "route.closeout"))
+            .OrderByDescending(x => x.OccurredAt)
+            .Take(limit)
+            .Select(x => new DispatchCloseoutAuditEntry(
+                x.Id,
+                x.ActorUserId,
+                x.Action,
+                x.TargetType,
+                x.TargetId,
+                x.Result,
+                x.OccurredAt))
+            .ToListAsync(cancellationToken);
+
+        return new DispatchCloseoutAuditListResponse(entries);
+    }
+
+    private static CloseoutPlans BuildPlans(
+        CloseoutScopeContext context,
+        string tripDisposition,
+        string stopDisposition,
+        IReadOnlyList<Guid> tripIds)
+    {
+        var tripIdFilter = tripIds.Count > 0 ? tripIds.ToHashSet() : null;
+
+        var openTrips = context.ScopedTrips
+            .Where(x => TripDispatchStatuses.Active.Contains(x.DispatchStatus))
+            .Where(x => tripIdFilter == null || tripIdFilter.Contains(x.Id))
+            .ToList();
+
+        var allowedRouteIds = tripIdFilter == null
+            ? null
+            : context.ScopedRoutes
+                .Where(x => x.TripId.HasValue && tripIdFilter.Contains(x.TripId.Value))
+                .Select(x => x.Id)
+                .ToHashSet();
+
         var openStops = context.ScopedStops
             .Where(x => !RouteStopStatuses.Terminal.Contains(x.StopStatus))
+            .Where(x => allowedRouteIds == null || allowedRouteIds.Contains(x.RouteId))
             .OrderBy(x => x.RouteId)
             .ThenBy(x => x.SequenceNumber)
             .ToList();
@@ -343,6 +453,7 @@ public sealed class DispatchCloseoutService(
 
         var openRoutes = context.ScopedRoutes
             .Where(x => DispatchCloseoutRules.OpenRouteStatuses.Contains(x.RouteStatus))
+            .Where(x => tripIdFilter == null || (x.TripId.HasValue && tripIdFilter.Contains(x.TripId.Value)))
             .ToList();
 
         var routeActions = openRoutes
@@ -625,6 +736,89 @@ public sealed class DispatchCloseoutService(
     private static bool StatusEquals(string actual, string expected) =>
         string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
 
+    private static IReadOnlyList<Guid> NormalizeTripIds(IReadOnlyList<Guid>? tripIds) =>
+        tripIds?.Where(x => x != Guid.Empty).Distinct().ToList() ?? [];
+
+    private async Task<TripChecklistContext> LoadTripChecklistContextAsync(
+        Guid tenantId,
+        IReadOnlyList<Trip> openTrips,
+        CloseoutScopeContext context,
+        CancellationToken cancellationToken)
+    {
+        if (openTrips.Count == 0)
+        {
+            return new TripChecklistContext(
+                new Dictionary<Guid, int>(),
+                new Dictionary<Guid, int>(),
+                new Dictionary<Guid, int>(),
+                new Dictionary<Guid, bool>(),
+                new Dictionary<Guid, bool>(),
+                new Dictionary<Guid, bool>());
+        }
+
+        var tripIds = openTrips.Select(x => x.Id).ToList();
+        var routeIdsByTrip = context.ScopedRoutes
+            .Where(x => x.TripId.HasValue && tripIds.Contains(x.TripId.Value))
+            .GroupBy(x => x.TripId!.Value)
+            .ToDictionary(x => x.Key, x => x.Select(r => r.Id).ToHashSet());
+
+        var openStopCountByTrip = new Dictionary<Guid, int>();
+        var openRouteCountByTrip = new Dictionary<Guid, int>();
+        foreach (var trip in openTrips)
+        {
+            var routeIds = routeIdsByTrip.GetValueOrDefault(trip.Id) ?? [];
+            openRouteCountByTrip[trip.Id] = context.ScopedRoutes.Count(route =>
+                routeIds.Contains(route.Id)
+                && DispatchCloseoutRules.OpenRouteStatuses.Contains(route.RouteStatus));
+            openStopCountByTrip[trip.Id] = context.ScopedStops.Count(stop =>
+                routeIds.Contains(stop.RouteId)
+                && !RouteStopStatuses.Terminal.Contains(stop.StopStatus));
+        }
+
+        var openExceptionCountByTrip = await db.DispatchExceptions
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.TripId.HasValue
+                && tripIds.Contains(x.TripId.Value)
+                && x.Status == DispatchExceptionStatuses.Open)
+            .GroupBy(x => x.TripId!.Value)
+            .Select(x => new { TripId = x.Key, Count = x.Count() })
+            .ToDictionaryAsync(x => x.TripId, x => x.Count, cancellationToken);
+
+        var proofTripIds = await db.TripProofRecords
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && tripIds.Contains(x.TripId))
+            .Select(x => x.TripId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var dvirRows = await db.TripDvirInspections
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && tripIds.Contains(x.TripId))
+            .Select(x => new { x.TripId, x.Phase })
+            .ToListAsync(cancellationToken);
+
+        var hasProofByTrip = tripIds.ToDictionary(
+            id => id,
+            id => proofTripIds.Contains(id));
+        var hasPreTripDvirByTrip = tripIds.ToDictionary(
+            id => id,
+            id => dvirRows.Any(x => x.TripId == id
+                && string.Equals(x.Phase, DvirInspectionPhases.PreTrip, StringComparison.OrdinalIgnoreCase)));
+        var hasPostTripDvirByTrip = tripIds.ToDictionary(
+            id => id,
+            id => dvirRows.Any(x => x.TripId == id
+                && string.Equals(x.Phase, DvirInspectionPhases.PostTrip, StringComparison.OrdinalIgnoreCase)));
+
+        return new TripChecklistContext(
+            openStopCountByTrip,
+            openRouteCountByTrip,
+            openExceptionCountByTrip,
+            hasProofByTrip,
+            hasPreTripDvirByTrip,
+            hasPostTripDvirByTrip);
+    }
+
     private sealed record CloseoutScopeContext(
         string Scope,
         DateTimeOffset WindowStart,
@@ -654,4 +848,12 @@ public sealed class DispatchCloseoutService(
     {
         public string TargetRouteStatus => Plan.TargetRouteStatus;
     }
+
+    private sealed record TripChecklistContext(
+        IReadOnlyDictionary<Guid, int> OpenStopCountByTrip,
+        IReadOnlyDictionary<Guid, int> OpenRouteCountByTrip,
+        IReadOnlyDictionary<Guid, int> OpenExceptionCountByTrip,
+        IReadOnlyDictionary<Guid, bool> HasProofByTrip,
+        IReadOnlyDictionary<Guid, bool> HasPreTripDvirByTrip,
+        IReadOnlyDictionary<Guid, bool> HasPostTripDvirByTrip);
 }

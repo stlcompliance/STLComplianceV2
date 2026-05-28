@@ -4,21 +4,27 @@ import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@stl/shared-ui'
 import {
   completeTrainingAssignment,
+  createTrainingAssignmentMaterialDemandLine,
   createTrainingEvidence,
   getMe,
   getTrainingAssignment,
+  getTrainingAssignmentMaterialDemand,
+  getTrainingAssignmentMaterialDemandStatusEvents,
   getTrainingEvidence,
+  publishTrainingAssignmentMaterialDemand,
   submitTrainingEvaluation,
   submitTrainingSignoff,
 } from '../api/client'
 import {
   canCompleteAssignment,
+  canManageAssignments,
   canSubmitEvaluation,
   canSubmitTraineeSignoff,
   canSubmitTrainerSignoff,
   canUploadEvidence,
   loadSession,
 } from '../auth/sessionStorage'
+import { AssignmentMaterialDemandPanel } from '../components/AssignmentMaterialDemandPanel'
 import { EvidenceCapturePanel } from '../components/EvidenceCapturePanel'
 import { SignoffEvaluationPanel } from '../components/SignoffEvaluationPanel'
 
@@ -55,6 +61,12 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
   const [evaluationScore, setEvaluationScore] = useState('')
   const [evaluationNotes, setEvaluationNotes] = useState('')
   const [signoffNotes, setSignoffNotes] = useState('')
+  const [demandPartNumber, setDemandPartNumber] = useState('')
+  const [demandSupplyarrPartId, setDemandSupplyarrPartId] = useState('')
+  const [demandQuantity, setDemandQuantity] = useState('1')
+  const [demandUnitOfMeasure, setDemandUnitOfMeasure] = useState('each')
+  const [demandNotes, setDemandNotes] = useState('')
+  const [createPurchaseRequestDraft, setCreatePurchaseRequestDraft] = useState(false)
 
   const meQuery = useQuery({
     queryKey: ['trainarr-me', session?.accessToken],
@@ -72,6 +84,19 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
   const evidenceQuery = useQuery({
     queryKey: ['trainarr-evidence', session?.accessToken, assignmentId],
     queryFn: () => getTrainingEvidence(session!.accessToken, assignmentId!),
+    enabled: Boolean(session?.accessToken && assignmentId),
+  })
+
+  const materialDemandQuery = useQuery({
+    queryKey: ['trainarr-material-demand', session?.accessToken, assignmentId],
+    queryFn: () => getTrainingAssignmentMaterialDemand(session!.accessToken, assignmentId!),
+    enabled: Boolean(session?.accessToken && assignmentId),
+  })
+
+  const materialDemandStatusEventsQuery = useQuery({
+    queryKey: ['trainarr-material-demand-status-events', session?.accessToken, assignmentId],
+    queryFn: () =>
+      getTrainingAssignmentMaterialDemandStatusEvents(session!.accessToken, assignmentId!),
     enabled: Boolean(session?.accessToken && assignmentId),
   })
 
@@ -159,6 +184,47 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
     },
   })
 
+  const invalidateMaterialDemand = () => {
+    void queryClient.invalidateQueries({
+      queryKey: ['trainarr-material-demand', session?.accessToken, assignmentId],
+    })
+    void queryClient.invalidateQueries({
+      queryKey: ['trainarr-material-demand-status-events', session?.accessToken, assignmentId],
+    })
+  }
+
+  const addMaterialDemandLineMutation = useMutation({
+    mutationFn: async () => {
+      const quantity = Number(demandQuantity)
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        throw new Error('Quantity must be greater than zero.')
+      }
+      const supplyarrPartId = demandSupplyarrPartId.trim()
+      return createTrainingAssignmentMaterialDemandLine(session!.accessToken, assignmentId!, {
+        supplyarrPartId: supplyarrPartId ? supplyarrPartId : null,
+        partNumber: demandPartNumber.trim() || null,
+        quantityRequested: quantity,
+        unitOfMeasure: demandUnitOfMeasure.trim() || 'each',
+        notes: demandNotes.trim() || null,
+      })
+    },
+    onSuccess: () => {
+      setDemandPartNumber('')
+      setDemandSupplyarrPartId('')
+      setDemandQuantity('1')
+      setDemandNotes('')
+      invalidateMaterialDemand()
+    },
+  })
+
+  const publishMaterialDemandMutation = useMutation({
+    mutationFn: () =>
+      publishTrainingAssignmentMaterialDemand(session!.accessToken, assignmentId!, {
+        createPurchaseRequestDraft,
+      }),
+    onSuccess: () => invalidateMaterialDemand(),
+  })
+
   const assignment = assignmentDetailQuery.data
 
   useEffect(() => {
@@ -182,6 +248,7 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
   const me = meQuery.data
   const canUploadForAssignment =
     assignment &&
+    !assignment.staffarrAcknowledgementRequired &&
     canUploadEvidence(me.tenantRoleKey, me.isPlatformAdmin, assignment.staffarrPersonId, me.personId)
   const canComplete =
     assignment &&
@@ -192,6 +259,7 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
     canSubmitTraineeSignoff(me.tenantRoleKey, me.isPlatformAdmin, assignment.staffarrPersonId, me.personId)
   const canEvaluate = canSubmitEvaluation(me.tenantRoleKey, me.isPlatformAdmin)
   const canTrainerSign = canSubmitTrainerSignoff(me.tenantRoleKey, me.isPlatformAdmin)
+  const canManageDemand = canManageAssignments(me.tenantRoleKey, me.isPlatformAdmin)
 
   return (
     <div className="mx-auto max-w-3xl space-y-6" data-testid="assignment-workspace">
@@ -209,6 +277,26 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
       {assignmentDetailQuery.isError ? (
         <p className="rounded-lg border border-rose-800/60 bg-rose-950/40 px-4 py-3 text-sm text-rose-200">
           Unable to load this assignment. It may have been completed or you may not have access.
+        </p>
+      ) : null}
+
+      {assignment?.staffarrAcknowledgementRequired ? (
+        <p
+          className="rounded-lg border border-amber-800/60 bg-amber-950/40 px-4 py-3 text-sm text-amber-100"
+          data-testid="staffarr-acknowledgement-required"
+        >
+          Acknowledge this training assignment in StaffArr before uploading evidence. Current StaffArr status:{' '}
+          <span className="font-medium">{assignment.staffarrAcknowledgementStatus ?? 'pending'}</span>.
+        </p>
+      ) : null}
+
+      {assignment && assignment.staffarrAcknowledgementStatus === 'acknowledged' ? (
+        <p className="rounded-lg border border-emerald-800/50 bg-emerald-950/30 px-4 py-2 text-sm text-emerald-200">
+          StaffArr acknowledgement recorded
+          {assignment.staffarrAcknowledgementAt
+            ? ` at ${new Date(assignment.staffarrAcknowledgementAt).toLocaleString()}`
+            : ''}
+          .
         </p>
       ) : null}
 
@@ -285,6 +373,29 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
             canSubmitEvaluation={canEvaluate}
             canSubmitTraineeSignoff={Boolean(canTraineeSign)}
             canSubmitTrainerSignoff={canTrainerSign}
+          />
+
+          <AssignmentMaterialDemandPanel
+            assignment={assignment}
+            demandLines={materialDemandQuery.data ?? []}
+            statusEvents={materialDemandStatusEventsQuery.data ?? []}
+            canManage={canManageDemand}
+            partNumber={demandPartNumber}
+            supplyarrPartId={demandSupplyarrPartId}
+            quantityRequested={demandQuantity}
+            unitOfMeasure={demandUnitOfMeasure}
+            notes={demandNotes}
+            createPurchaseRequestDraft={createPurchaseRequestDraft}
+            onPartNumberChange={setDemandPartNumber}
+            onSupplyarrPartIdChange={setDemandSupplyarrPartId}
+            onQuantityRequestedChange={setDemandQuantity}
+            onUnitOfMeasureChange={setDemandUnitOfMeasure}
+            onNotesChange={setDemandNotes}
+            onCreatePurchaseRequestDraftChange={setCreatePurchaseRequestDraft}
+            onAddDemandLine={() => addMaterialDemandLineMutation.mutate()}
+            onPublishDemand={() => publishMaterialDemandMutation.mutate()}
+            isAdding={addMaterialDemandLineMutation.isPending}
+            isPublishing={publishMaterialDemandMutation.isPending}
           />
         </>
       ) : null}

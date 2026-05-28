@@ -250,6 +250,131 @@ namespace ComplianceCore.Api.Migrations
                     b.ToTable("compliancecore_compliance_keys", (string)null);
                 });
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ControlEffectivenessRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ControlStatus")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("EffectivenessLevel")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int>("EffectivenessScore")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("EvaluatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EvaluationResult")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("FailedRuleCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PackKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("PassedRuleCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ResolvedFactCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RuleOutcome")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid>("RulePackId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ScopeKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TotalRuleCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UnresolvedFactCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RunId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "ScopeKey", "PackKey", "EvaluatedAt");
+
+                    b.ToTable("compliancecore_control_effectiveness_records", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ControlEffectivenessRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AverageEffectivenessScore")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("EvaluatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LowestEffectivenessLevel")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int>("LowestEffectivenessScore")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PacksEvaluatedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ScopeKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "EvaluatedAt");
+
+                    b.ToTable("compliancecore_control_effectiveness_runs", (string)null);
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.FactDefinition", b =>
                 {
                     b.Property<Guid>("Id")
@@ -518,6 +643,75 @@ namespace ComplianceCore.Api.Migrations
                     b.ToTable("compliancecore_jurisdictions", (string)null);
                 });
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.M12AnalyticsBatchRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AuditDeliveryQueued")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("AuditPackageJobId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("ControlEffectivenessRan")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("ControlEffectivenessRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("IntervalHours")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("MissingEvidenceRan")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("MissingEvidenceWarningRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("ReadinessForecastRan")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("ReadinessForecastRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("RiskScoreRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("RiskScoringRan")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ScopeKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "StartedAt");
+
+                    b.ToTable("compliancecore_m12_analytics_batch_runs", (string)null);
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.MaterialKey", b =>
                 {
                     b.Property<Guid>("Id")
@@ -564,6 +758,122 @@ namespace ComplianceCore.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("compliancecore_material_keys", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.MissingEvidenceWarning", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("EvaluatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("FactDefinitionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FactKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<bool>("HasMirrorAtScope")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsRequiredInCatalog")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsRequiredInRule")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PackKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ReasonCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("RulePackId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ScopeKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("WarningType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RunId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "ScopeKey", "PackKey", "Severity", "EvaluatedAt");
+
+                    b.ToTable("compliancecore_missing_evidence_warnings", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.MissingEvidenceWarningRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("EvaluatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("HighestSeverity")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("PacksAnalyzedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ScopeKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("WarningsEmittedCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "EvaluatedAt");
+
+                    b.ToTable("compliancecore_missing_evidence_warning_runs", (string)null);
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.ProductFactMirror", b =>
@@ -648,6 +958,146 @@ namespace ComplianceCore.Api.Migrations
                     b.HasIndex("TenantId", "SourceProduct", "FactKey", "ScopeKey");
 
                     b.ToTable("compliancecore_product_fact_mirrors", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ReadinessForecast", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EffectivenessLevel")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int>("EffectivenessScore")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("ForecastedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("HighestMissingEvidenceSeverity")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("MissingEvidenceWarningCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PackKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ReadinessLevel")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("ReadinessScore")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RiskLevel")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("RiskScore")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("RulePackId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ScopeKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RunId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "ScopeKey", "PackKey", "ForecastedAt");
+
+                    b.ToTable("compliancecore_readiness_forecasts", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ReadinessForecastRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AverageEffectivenessScore")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AverageReadinessScore")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ControlEffectivenessRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ForecastedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("HighestRiskScore")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LowestReadinessScore")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MissingEvidenceWarningCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("MissingEvidenceWarningRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("PacksForecastCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ReadinessLevel")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("ReadinessScore")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("RiskScoreRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ScopeKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "ForecastedAt");
+
+                    b.ToTable("compliancecore_readiness_forecast_runs", (string)null);
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.RegulatoryCitation", b =>
@@ -842,6 +1292,240 @@ namespace ComplianceCore.Api.Migrations
                     b.ToTable("compliancecore_regulatory_programs", (string)null);
                 });
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.RiskScore", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("EvaluatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EvaluationResult")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("FailedRuleCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MirrorFactCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PackKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("ResolvedFactCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RiskLevel")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("RiskScoreValue")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RuleOutcome")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid>("RulePackId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ScopeKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("UnresolvedFactCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RunId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "ScopeKey", "PackKey", "EvaluatedAt");
+
+                    b.ToTable("compliancecore_risk_scores", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.RiskScoreRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("EvaluatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("HighestRiskLevel")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("HighestRiskScore")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PacksEvaluatedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ScopeKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "EvaluatedAt");
+
+                    b.ToTable("compliancecore_risk_score_runs", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.RuleChangeEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ChangeType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("DetectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FromStatus")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int?>("FromVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("NewContentHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PackKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PreviousContentHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ProgramKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("RulePackId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ScanRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ToStatus")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int?>("ToVersion")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RulePackId");
+
+                    b.HasIndex("ScanRunId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "PackKey", "DetectedAt");
+
+                    b.ToTable("compliancecore_rule_change_events", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.RuleChangeScanRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ChangesDetectedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<int>("PacksScannedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartedAt");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("compliancecore_rule_change_scan_runs", (string)null);
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.RuleEvaluationRun", b =>
                 {
                     b.Property<Guid>("Id")
@@ -951,6 +1635,48 @@ namespace ComplianceCore.Api.Migrations
                     b.HasIndex("TenantId", "Status", "LastScheduledEvaluationAt");
 
                     b.ToTable("compliancecore_rule_packs", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.RulePackMonitorSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CapturedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ContentHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("PackKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("RulePackId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RulePackId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("compliancecore_rule_pack_monitor_snapshots", (string)null);
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.ScheduledRuleEvaluationRun", b =>
@@ -1064,6 +1790,184 @@ namespace ComplianceCore.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("compliancecore_sds_references", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.SourceIngestionBatch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("DryRun")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ErrorCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IngestionType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Phase")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid?>("PublicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SkippedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceProduct")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("SuccessCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TotalJobs")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "IngestionType", "CreatedAt");
+
+                    b.ToTable("compliancecore_source_ingestion_batches", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.SourceIngestionJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ErrorCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("JobKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<int>("RowIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchId");
+
+                    b.ToTable("compliancecore_source_ingestion_jobs", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TenantM12AnalyticsWorkerSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AuditDeliveryEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ControlEffectivenessEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DefaultScopeKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<int>("IntervalHours")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastAuditDeliveryRunAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("LastBatchRunAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("LastControlEffectivenessRunAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("LastMissingEvidenceRunAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("LastReadinessForecastRunAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("LastRiskScoringRunAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("MissingEvidenceEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ReadinessForecastEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RiskScoringEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("compliancecore_tenant_m12_analytics_worker_settings", (string)null);
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.VocabularyAlias", b =>
@@ -1359,6 +2263,17 @@ namespace ComplianceCore.Api.Migrations
                     b.Navigation("RulePack");
                 });
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ControlEffectivenessRecord", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ControlEffectivenessRun", "Run")
+                        .WithMany()
+                        .HasForeignKey("RunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Run");
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.FactRequirement", b =>
                 {
                     b.HasOne("ComplianceCore.Api.Entities.RegulatoryCitation", "Citation")
@@ -1404,6 +2319,28 @@ namespace ComplianceCore.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("GoverningBody");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.MissingEvidenceWarning", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.MissingEvidenceWarningRun", "Run")
+                        .WithMany()
+                        .HasForeignKey("RunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Run");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ReadinessForecast", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ReadinessForecastRun", "Run")
+                        .WithMany()
+                        .HasForeignKey("RunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Run");
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.RegulatoryCitation", b =>
@@ -1497,6 +2434,27 @@ namespace ComplianceCore.Api.Migrations
                     b.Navigation("Jurisdiction");
                 });
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.RiskScore", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.RiskScoreRun", "Run")
+                        .WithMany()
+                        .HasForeignKey("RunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Run");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.RuleChangeEvent", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.RuleChangeScanRun", "ScanRun")
+                        .WithMany()
+                        .HasForeignKey("ScanRunId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ScanRun");
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.RuleEvaluationRun", b =>
                 {
                     b.HasOne("ComplianceCore.Api.Entities.RulePack", "RulePack")
@@ -1527,6 +2485,17 @@ namespace ComplianceCore.Api.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("MaterialKey");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.SourceIngestionJob", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.SourceIngestionBatch", "Batch")
+                        .WithMany("Jobs")
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Batch");
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.VocabularyAlias", b =>
@@ -1567,6 +2536,11 @@ namespace ComplianceCore.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("RulePack");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.SourceIngestionBatch", b =>
+                {
+                    b.Navigation("Jobs");
                 });
 #pragma warning restore 612, 618
         }

@@ -87,6 +87,10 @@ namespace StaffArr.Api.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<string>("FilterJson")
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
                     b.Property<string>("Format")
                         .IsRequired()
                         .HasMaxLength(16)
@@ -997,6 +1001,76 @@ namespace StaffArr.Api.Migrations
                     b.ToTable("staffarr_person_role_assignments", (string)null);
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonTrainingAcknowledgement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("AcknowledgedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("AcknowledgedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AssignmentReason")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainarrAcknowledgementRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainarrAssignmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TrainingTitle")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "TrainarrAcknowledgementRequestId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.ToTable("staffarr_person_training_acknowledgements", (string)null);
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.PersonTrainingBlocker", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1905,6 +1979,15 @@ namespace StaffArr.Api.Migrations
                     b.HasOne("StaffArr.Api.Entities.RoleTemplate", null)
                         .WithMany()
                         .HasForeignKey("RoleTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonTrainingAcknowledgement", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
+                        .WithMany()
+                        .HasForeignKey("PersonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

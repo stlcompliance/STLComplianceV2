@@ -119,6 +119,30 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<TrainArrNotificationDispatchJob>();
 
+        builder.Services.Configure<TrainArrAssignmentDueRemindersOptions>(
+            builder.Configuration.GetSection(TrainArrAssignmentDueRemindersOptions.SectionName));
+
+        builder.Services.AddHttpClient<TrainArrAssignmentDueRemindersClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<TrainArrAssignmentDueRemindersOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.TrainArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<TrainArrAssignmentDueRemindersJob>();
+
+        builder.Services.Configure<TrainArrAssignmentEscalationOptions>(
+            builder.Configuration.GetSection(TrainArrAssignmentEscalationOptions.SectionName));
+
+        builder.Services.AddHttpClient<TrainArrAssignmentEscalationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<TrainArrAssignmentEscalationOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.TrainArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<TrainArrAssignmentEscalationJob>();
+
         builder.Services.Configure<StaffArrCertificationExpirationOptions>(
             builder.Configuration.GetSection(StaffArrCertificationExpirationOptions.SectionName));
 
@@ -142,6 +166,30 @@ await StlWorkerHost.RunAsync(
         });
 
         builder.Services.AddHostedService<ComplianceCoreScheduledEvaluationJob>();
+
+        builder.Services.Configure<ComplianceCoreRuleChangeMonitorOptions>(
+            builder.Configuration.GetSection(ComplianceCoreRuleChangeMonitorOptions.SectionName));
+
+        builder.Services.AddHttpClient<ComplianceCoreRuleChangeMonitorClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<ComplianceCoreRuleChangeMonitorOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.ComplianceCoreBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(5);
+        });
+
+        builder.Services.AddHostedService<ComplianceCoreRuleChangeMonitorJob>();
+
+        builder.Services.Configure<ComplianceCoreM12AnalyticsBatchOptions>(
+            builder.Configuration.GetSection(ComplianceCoreM12AnalyticsBatchOptions.SectionName));
+
+        builder.Services.AddHttpClient<ComplianceCoreM12AnalyticsBatchClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<ComplianceCoreM12AnalyticsBatchOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.ComplianceCoreBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(10);
+        });
+
+        builder.Services.AddHostedService<ComplianceCoreM12AnalyticsBatchJob>();
 
         builder.Services.Configure<ComplianceCoreAuditPackageGenerationOptions>(
             builder.Configuration.GetSection(ComplianceCoreAuditPackageGenerationOptions.SectionName));
@@ -406,6 +454,18 @@ await StlWorkerHost.RunAsync(
         });
 
         builder.Services.AddHostedService<MaintainArrAuditPackageGenerationJob>();
+
+        builder.Services.Configure<RoutArrAuditPackageGenerationOptions>(
+            builder.Configuration.GetSection(RoutArrAuditPackageGenerationOptions.SectionName));
+
+        builder.Services.AddHttpClient<RoutArrAuditPackageGenerationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<RoutArrAuditPackageGenerationOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.RoutArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(10);
+        });
+
+        builder.Services.AddHostedService<RoutArrAuditPackageGenerationJob>();
 
         builder.Services.Configure<TrainArrAuditPackageGenerationOptions>(
             builder.Configuration.GetSection(TrainArrAuditPackageGenerationOptions.SectionName));

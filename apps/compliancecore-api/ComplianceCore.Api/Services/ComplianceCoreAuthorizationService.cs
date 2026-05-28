@@ -248,6 +248,180 @@ public sealed class ComplianceCoreAuthorizationService
             403);
     }
 
+    public void RequireSourceIngestionRead(ClaimsPrincipal principal)
+    {
+        RequireRegulatoryRead(principal);
+    }
+
+    public void RequireSourceIngestionManage(ClaimsPrincipal principal)
+    {
+        RequireRegulatoryManage(principal);
+    }
+
+    public void RequireRuleChangeMonitoringRead(ClaimsPrincipal principal)
+    {
+        RequireRegulatoryRead(principal);
+    }
+
+    public void RequireRiskScoringRead(ClaimsPrincipal principal)
+    {
+        RequireRuleEvaluation(principal);
+    }
+
+    public void RequireRiskScoringEvaluate(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "compliance_admin",
+                "compliance_reviewer"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Risk scoring evaluation requires compliancecore.risk_scores.evaluate scope.",
+            403);
+    }
+
+    public void RequireMissingEvidenceWarningRead(ClaimsPrincipal principal)
+    {
+        RequireRuleEvaluation(principal);
+    }
+
+    public void RequireMissingEvidenceWarningEvaluate(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "compliance_admin",
+                "compliance_reviewer"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Missing evidence warning evaluation requires compliance admin or reviewer role.",
+            403);
+    }
+
+    public void RequireControlEffectivenessRead(ClaimsPrincipal principal)
+    {
+        RequireRuleEvaluation(principal);
+    }
+
+    public void RequireControlEffectivenessEvaluate(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "compliance_admin",
+                "compliance_reviewer"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Control effectiveness evaluation requires compliance admin or reviewer role.",
+            403);
+    }
+
+    public void RequireReadinessForecastRead(ClaimsPrincipal principal)
+    {
+        RequireRuleEvaluation(principal);
+    }
+
+    public void RequireReadinessForecastEvaluate(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "compliance_admin",
+                "compliance_reviewer"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Readiness forecast evaluation requires compliance admin or reviewer role.",
+            403);
+    }
+
+    public void RequireM12AnalyticsWorkerSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireAuditDeliveryOrchestrationManage(principal);
+    }
+
+    public void RequireAuditDeliveryOrchestrationRead(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "compliance_admin",
+                "compliance_reviewer"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Audit delivery orchestration requires compliance admin or reviewer role.",
+            403);
+    }
+
+    public void RequireAuditDeliveryOrchestrationManage(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Audit delivery orchestration triggers require tenant admin or compliance admin role.",
+            403);
+    }
+
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }

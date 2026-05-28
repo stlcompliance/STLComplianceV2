@@ -87,6 +87,8 @@ public static class TrainingNotificationRules
             TrainingNotificationEventKinds.QualificationSuspended => settings.NotifyOnQualificationSuspended,
             TrainingNotificationEventKinds.QualificationRevoked => settings.NotifyOnQualificationRevoked,
             TrainingNotificationEventKinds.QualificationExpired => settings.NotifyOnQualificationExpired,
+            TrainingNotificationEventKinds.AssignmentDueReminder => settings.NotifyOnAssignmentDueReminder,
+            TrainingNotificationEventKinds.AssignmentOverdueEscalation => settings.NotifyOnAssignmentOverdueEscalation,
             _ => false,
         };
 
@@ -113,6 +115,8 @@ public sealed record TenantTrainingNotificationSettingsSnapshot(
     bool NotifyOnQualificationSuspended,
     bool NotifyOnQualificationRevoked,
     bool NotifyOnQualificationExpired,
+    bool NotifyOnAssignmentDueReminder,
+    bool NotifyOnAssignmentOverdueEscalation,
     int ExpiringLeadDays,
     int MaxAttempts,
     int RetryIntervalMinutes);

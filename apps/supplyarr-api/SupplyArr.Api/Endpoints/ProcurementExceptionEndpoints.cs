@@ -13,10 +13,21 @@ public static class ProcurementExceptionEndpoints
             .WithTags("ProcurementExceptions")
             .RequireAuthorization();
 
+        group.MapGet("/resolution-templates", (
+            SupplyArrAuthorizationService authorization,
+            ProcurementExceptionService service,
+            HttpContext context) =>
+        {
+            authorization.RequirePurchaseRequestRead(context.User);
+            return Results.Ok(service.ListResolutionTemplates());
+        })
+        .WithName("ListProcurementExceptionResolutionTemplates");
+
         group.MapGet("/", async (
             string? status,
             string? subjectType,
             Guid? subjectId,
+            bool overdueOnly,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             ProcurementExceptionService service,
@@ -24,7 +35,13 @@ public static class ProcurementExceptionEndpoints
         {
             authorization.RequirePurchaseRequestRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListAsync(tenantId, status, subjectType, subjectId, cancellationToken));
+            return Results.Ok(await service.ListAsync(
+                tenantId,
+                status,
+                subjectType,
+                subjectId,
+                overdueOnly,
+                cancellationToken));
         })
         .WithName("ListProcurementExceptions");
 
@@ -55,6 +72,36 @@ public static class ProcurementExceptionEndpoints
             return Results.Ok(await service.UpdateAsync(tenantId, actorUserId, exceptionId, request, cancellationToken));
         })
         .WithName("UpdateProcurementException");
+
+        group.MapPost("/{exceptionId:guid}/assign", async (
+            Guid exceptionId,
+            AssignProcurementExceptionRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ProcurementExceptionService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePurchaseRequestCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.AssignAsync(tenantId, actorUserId, exceptionId, request, cancellationToken));
+        })
+        .WithName("AssignProcurementException");
+
+        group.MapPut("/{exceptionId:guid}/link-actions", async (
+            Guid exceptionId,
+            LinkProcurementExceptionActionsRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ProcurementExceptionService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePurchaseRequestCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.LinkActionsAsync(tenantId, actorUserId, exceptionId, request, cancellationToken));
+        })
+        .WithName("LinkProcurementExceptionActions");
 
         group.MapPost("/{exceptionId:guid}/start-investigation", async (
             Guid exceptionId,

@@ -10,7 +10,8 @@ public sealed class TripService(
     RoutArrDbContext db,
     IRoutArrAuditService audit,
     DispatchAssignmentService dispatchAssignment,
-    DispatchNotificationEnqueueService notificationEnqueueService)
+    DispatchNotificationEnqueueService notificationEnqueueService,
+    StaffarrPersonRefService staffarrPersonRefService)
 {
     public async Task<IReadOnlyList<TripSummaryResponse>> ListAsync(
         Guid tenantId,
@@ -151,13 +152,20 @@ public sealed class TripService(
 
         await db.SaveChangesAsync(cancellationToken);
 
+        await staffarrPersonRefService.UpsertFromAssignmentAsync(
+            tenantId,
+            actorUserId,
+            driverPersonId,
+            request.DriverDisplayName,
+            cancellationToken);
+
         await audit.WriteAsync(
             "trip.assign_driver",
             tenantId,
             actorUserId,
             "trip",
             trip.Id.ToString(),
-            driverPersonId,
+            BuildAssignDriverAuditResult(driverPersonId, request),
             cancellationToken: cancellationToken);
 
         if (string.Equals(trip.DispatchStatus, TripDispatchStatuses.Assigned, StringComparison.OrdinalIgnoreCase))
@@ -224,7 +232,7 @@ public sealed class TripService(
             actorUserId,
             "trip",
             trip.Id.ToString(),
-            vehicleRefKey ?? string.Empty,
+            BuildAssignVehicleAuditResult(vehicleRefKey, request),
             cancellationToken: cancellationToken);
 
         return MapDetail(trip);
@@ -564,4 +572,51 @@ public sealed class TripService(
             trip.StartedAt,
             trip.CompletedAt,
             trip.CancelledAt);
+
+    private static string BuildAssignDriverAuditResult(string driverPersonId, AssignTripDriverRequest request)
+    {
+        var overrides = new List<string>();
+        if (request.IgnoreAvailabilityConflicts)
+        {
+            overrides.Add("availability");
+        }
+
+        if (request.IgnoreEligibilityBlocks)
+        {
+            overrides.Add("eligibility");
+        }
+
+        if (request.IgnoreWorkflowGateBlocks)
+        {
+            overrides.Add("workflow");
+        }
+
+        return overrides.Count == 0
+            ? driverPersonId
+            : $"{driverPersonId} (override:{string.Join(',', overrides)})";
+    }
+
+    private static string BuildAssignVehicleAuditResult(string? vehicleRefKey, AssignTripVehicleRequest request)
+    {
+        var key = vehicleRefKey ?? string.Empty;
+        var overrides = new List<string>();
+        if (request.IgnoreAvailabilityConflicts)
+        {
+            overrides.Add("availability");
+        }
+
+        if (request.IgnoreDispatchabilityBlocks)
+        {
+            overrides.Add("dispatchability");
+        }
+
+        if (request.IgnoreWorkflowGateBlocks)
+        {
+            overrides.Add("workflow");
+        }
+
+        return overrides.Count == 0
+            ? key
+            : $"{key} (override:{string.Join(',', overrides)})";
+    }
 }

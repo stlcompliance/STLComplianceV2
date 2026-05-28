@@ -341,7 +341,49 @@ public sealed class MaintainArrAuthorizationService
         RequireNotificationSettingsManage(principal);
     }
 
+    public void RequirePmDueScanSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireNotificationSettingsManage(principal);
+    }
+
     public void RequireAssetStatusRollupRead(ClaimsPrincipal principal) => RequireAssetsRead(principal);
+
+    public void RequireMaintenanceReportRead(ClaimsPrincipal principal) => RequireAssetsRead(principal);
+
+    public void RequireMaintenanceReportExport(ClaimsPrincipal principal) => RequireAuditPackageExport(principal);
+
+    public void RequireExecutiveReportRead(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "maintainarr_admin",
+                "maintainarr_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Executive report access requires MaintainArr manager or administrator role.",
+            403);
+    }
+
+    public void RequireExecutiveReportExport(ClaimsPrincipal principal) => RequireAuditPackageExport(principal);
+
+    public void RequireComplianceReportRead(ClaimsPrincipal principal) => RequireExecutiveReportRead(principal);
+
+    public void RequireComplianceReportExport(ClaimsPrincipal principal) => RequireAuditPackageExport(principal);
+
+    public void RequireAssetImportManage(ClaimsPrincipal principal) => RequireAssetsManage(principal);
+
+    public void RequireEntityExport(ClaimsPrincipal principal) => RequireAuditPackageExport(principal);
 
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));

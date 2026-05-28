@@ -3,10 +3,13 @@ import { useMemo, useState } from 'react'
 
 import {
   approveProcurementExceptionWaive,
+  assignProcurementException,
   cancelProcurementException,
   closeProcurementException,
   createSubjectProcurementException,
   getRfqs,
+  linkProcurementExceptionActions,
+  listProcurementExceptionResolutionTemplates,
   listProcurementExceptions,
   listSubjectProcurementExceptions,
   rejectProcurementExceptionWaive,
@@ -52,8 +55,16 @@ function statusClass(status: string): string {
   }
 }
 
+function formatSlaDue(slaDueAt: string | null): string {
+  if (!slaDueAt) {
+    return 'No SLA'
+  }
+  return new Date(slaDueAt).toLocaleString()
+}
+
 interface ProcurementExceptionsPanelProps {
   accessToken: string
+  currentUserId: string
   canManage: boolean
   canApprove: boolean
   purchaseRequests: PurchaseRequestResponse[]
@@ -62,6 +73,7 @@ interface ProcurementExceptionsPanelProps {
 
 export function ProcurementExceptionsPanel({
   accessToken,
+  currentUserId,
   canManage,
   canApprove,
   purchaseRequests,
@@ -74,8 +86,19 @@ export function ProcurementExceptionsPanel({
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('policy_violation')
+  const [assignOnCreate, setAssignOnCreate] = useState(true)
   const [waiveJustification, setWaiveJustification] = useState('')
   const [resolutionNotes, setResolutionNotes] = useState('')
+  const [resolutionTemplateKey, setResolutionTemplateKey] = useState('')
+  const [selectedExceptionId, setSelectedExceptionId] = useState('')
+  const [linkedPrId, setLinkedPrId] = useState('')
+  const [linkedPoId, setLinkedPoId] = useState('')
+
+  const templatesQuery = useQuery({
+    queryKey: ['supplyarr-procurement-exception-templates', accessToken],
+    queryFn: () => listProcurementExceptionResolutionTemplates(accessToken),
+    enabled: canManage,
+  })
 
   const activeQuery = useQuery({
     queryKey: ['supplyarr-procurement-exceptions-active', accessToken],
@@ -89,6 +112,12 @@ export function ProcurementExceptionsPanel({
         })
         return [...open, ...investigating, ...waivePending]
       }),
+    enabled: canManage,
+  })
+
+  const overdueQuery = useQuery({
+    queryKey: ['supplyarr-procurement-exceptions-overdue', accessToken],
+    queryFn: () => listProcurementExceptions(accessToken, { overdueOnly: true }),
     enabled: canManage,
   })
 
@@ -123,9 +152,20 @@ export function ProcurementExceptionsPanel({
     enabled: Boolean(subjectId),
   })
 
+  const selectedException = useMemo(() => {
+    const pool = [
+      ...(subjectExceptionsQuery.data ?? []),
+      ...(activeQuery.data ?? []),
+    ]
+    return pool.find((x) => x.exceptionId === selectedExceptionId) ?? null
+  }, [selectedExceptionId, subjectExceptionsQuery.data, activeQuery.data])
+
   const invalidate = () => {
     void queryClient.invalidateQueries({
       queryKey: ['supplyarr-procurement-exceptions-active', accessToken],
+    })
+    void queryClient.invalidateQueries({
+      queryKey: ['supplyarr-procurement-exceptions-overdue', accessToken],
     })
     void queryClient.invalidateQueries({
       queryKey: ['supplyarr-subject-procurement-exceptions', accessToken, subjectType, subjectId],
@@ -139,13 +179,32 @@ export function ProcurementExceptionsPanel({
         exceptionCategory: category,
         title,
         description,
+        assignedToUserId: assignOnCreate ? currentUserId : null,
       }),
-    onSuccess: () => {
+    onSuccess: (created) => {
       setExceptionKey('')
       setTitle('')
       setDescription('')
+      setSelectedExceptionId(created.exceptionId)
       invalidate()
     },
+  })
+
+  const assignMutation = useMutation({
+    mutationFn: (exceptionId: string) =>
+      assignProcurementException(accessToken, exceptionId, {
+        assignedToUserId: currentUserId,
+      }),
+    onSuccess: invalidate,
+  })
+
+  const linkMutation = useMutation({
+    mutationFn: (exceptionId: string) =>
+      linkProcurementExceptionActions(accessToken, exceptionId, {
+        linkedPurchaseRequestId: linkedPrId || null,
+        linkedPurchaseOrderId: linkedPoId || null,
+      }),
+    onSuccess: invalidate,
   })
 
   const workflowMutation = useMutation({
@@ -167,6 +226,7 @@ export function ProcurementExceptionsPanel({
       if (type === 'resolve') {
         return resolveProcurementException(accessToken, exceptionId, {
           resolutionNotes: resolutionNotes || 'Resolved from purchasing workspace',
+          resolutionTemplateKey: resolutionTemplateKey || null,
         })
       }
       if (type === 'request_waive') {
@@ -204,14 +264,19 @@ export function ProcurementExceptionsPanel({
     >
       <h2 className="text-lg font-semibold text-slate-50">Procurement exceptions</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Structured exceptions on purchase requests, orders, and RFQs — distinct from receiving
-        exceptions and supplier incidents. Waive requires approver sign-off.
+        Resolver assignment, SLA due dates, resolution templates, and linked PR/PO follow-up
+        actions for purchase requests, orders, and RFQs.
       </p>
 
       {activeQuery.data && (
-        <p className="mt-3 text-sm text-slate-500">
+        <p className="mt-3 text-sm text-slate-500" data-testid="procurement-exceptions-active-count">
           {activeQuery.data.length} active exception{activeQuery.data.length === 1 ? '' : 's'}{' '}
           tenant-wide
+          {(overdueQuery.data?.length ?? 0) > 0 ? (
+            <span className="ml-2 text-rose-300">
+              · {overdueQuery.data!.length} past SLA
+            </span>
+          ) : null}
         </p>
       )}
 
@@ -275,6 +340,15 @@ export function ProcurementExceptionsPanel({
           </select>
         </label>
 
+        <label className="flex items-center gap-2 text-sm text-slate-400 md:col-span-2">
+          <input
+            type="checkbox"
+            checked={assignOnCreate}
+            onChange={(event) => setAssignOnCreate(event.target.checked)}
+          />
+          Assign to me on create (category-based SLA applied automatically)
+        </label>
+
         <label className="block text-sm text-slate-400 md:col-span-2">
           Title
           <input
@@ -294,6 +368,31 @@ export function ProcurementExceptionsPanel({
           />
         </label>
 
+        <label className="block text-sm text-slate-400">
+          Resolution template
+          <select
+            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+            value={resolutionTemplateKey}
+            onChange={(event) => setResolutionTemplateKey(event.target.value)}
+          >
+            <option value="">Custom resolution notes</option>
+            {(templatesQuery.data ?? []).map((template) => (
+              <option key={template.templateKey} value={template.templateKey}>
+                {template.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block text-sm text-slate-400">
+          Resolution notes
+          <input
+            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+            value={resolutionNotes}
+            onChange={(event) => setResolutionNotes(event.target.value)}
+          />
+        </label>
+
         <label className="block text-sm text-slate-400 md:col-span-2">
           Waive justification (for waive request)
           <textarea
@@ -303,30 +402,107 @@ export function ProcurementExceptionsPanel({
             onChange={(event) => setWaiveJustification(event.target.value)}
           />
         </label>
-
-        <label className="block text-sm text-slate-400 md:col-span-2">
-          Resolution notes
-          <input
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
-            value={resolutionNotes}
-            onChange={(event) => setResolutionNotes(event.target.value)}
-          />
-        </label>
       </div>
 
       <button
         type="button"
         className="mt-4 rounded bg-sky-600 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
-        disabled={
-          !subjectId ||
-          !exceptionKey ||
-          title.length < 3 ||
-          createMutation.isPending
-        }
+        disabled={!subjectId || !exceptionKey || title.length < 3 || createMutation.isPending}
         onClick={() => createMutation.mutate()}
       >
         Open exception
       </button>
+
+      {selectedException && (
+        <div
+          className="mt-6 rounded-lg border border-slate-600 bg-slate-950/80 p-4"
+          data-testid="procurement-exception-detail"
+        >
+          <h3 className="text-sm font-medium text-slate-200">
+            Selected: {selectedException.exceptionKey}
+          </h3>
+          <p className="mt-1 text-xs text-slate-500">
+            SLA due {formatSlaDue(selectedException.slaDueAt)}
+            {selectedException.isSlaBreached ? (
+              <span className="ml-2 text-rose-300">· past due</span>
+            ) : null}
+            {selectedException.assignedToUserId ? (
+              <span className="ml-2">· resolver {selectedException.assignedToUserId}</span>
+            ) : (
+              <span className="ml-2">· unassigned</span>
+            )}
+          </p>
+
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <label className="block text-xs text-slate-400">
+              Link follow-up PR
+              <select
+                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+                value={linkedPrId}
+                onChange={(event) => setLinkedPrId(event.target.value)}
+              >
+                <option value="">None</option>
+                {purchaseRequests.map((pr) => (
+                  <option key={pr.purchaseRequestId} value={pr.purchaseRequestId}>
+                    {pr.requestKey}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs text-slate-400">
+              Link follow-up PO
+              <select
+                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+                value={linkedPoId}
+                onChange={(event) => setLinkedPoId(event.target.value)}
+              >
+                <option value="">None</option>
+                {purchaseOrders.map((po) => (
+                  <option key={po.purchaseOrderId} value={po.purchaseOrderId}>
+                    {po.orderKey}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-200"
+              disabled={assignMutation.isPending}
+              onClick={() => assignMutation.mutate(selectedException.exceptionId)}
+            >
+              Assign to me
+            </button>
+            <button
+              type="button"
+              className="rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-200"
+              disabled={linkMutation.isPending}
+              onClick={() => linkMutation.mutate(selectedException.exceptionId)}
+            >
+              Save PR/PO links
+            </button>
+          </div>
+
+          {(selectedException.linkedPurchaseRequestKey ||
+            selectedException.linkedPurchaseOrderKey) && (
+            <p className="mt-2 text-xs text-emerald-300">
+              Linked actions:{' '}
+              {selectedException.linkedPurchaseRequestKey
+                ? `PR ${selectedException.linkedPurchaseRequestKey}`
+                : ''}
+              {selectedException.linkedPurchaseRequestKey &&
+              selectedException.linkedPurchaseOrderKey
+                ? ' · '
+                : ''}
+              {selectedException.linkedPurchaseOrderKey
+                ? `PO ${selectedException.linkedPurchaseOrderKey}`
+                : ''}
+            </p>
+          )}
+        </div>
+      )}
 
       <div className="mt-6 space-y-3">
         <h3 className="text-sm font-medium text-slate-300">Exceptions on selected subject</h3>
@@ -336,16 +512,39 @@ export function ProcurementExceptionsPanel({
         {(subjectExceptionsQuery.data ?? []).map((exception) => (
           <div
             key={exception.exceptionId}
-            className="rounded-lg border border-slate-800 bg-slate-950/60 p-3"
+            className={`rounded-lg border p-3 ${
+              selectedExceptionId === exception.exceptionId
+                ? 'border-sky-600 bg-slate-950'
+                : 'border-slate-800 bg-slate-950/60'
+            }`}
           >
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-sm text-slate-200">{exception.exceptionKey}</span>
+              <button
+                type="button"
+                className="font-mono text-sm text-slate-200 underline-offset-2 hover:underline"
+                onClick={() => {
+                  setSelectedExceptionId(exception.exceptionId)
+                  setLinkedPrId(exception.linkedPurchaseRequestId ?? '')
+                  setLinkedPoId(exception.linkedPurchaseOrderId ?? '')
+                }}
+              >
+                {exception.exceptionKey}
+              </button>
               <span className={`rounded px-2 py-0.5 text-xs ${statusClass(exception.status)}`}>
                 {exception.status}
               </span>
               <span className="text-xs text-slate-500">{exception.exceptionCategory}</span>
+              {exception.isSlaBreached ? (
+                <span className="rounded bg-rose-500/20 px-2 py-0.5 text-xs text-rose-200">
+                  SLA breached
+                </span>
+              ) : null}
             </div>
             <p className="mt-1 text-sm text-slate-300">{exception.title}</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Due {formatSlaDue(exception.slaDueAt)}
+              {exception.assignedToUserId ? ` · assigned` : ' · unassigned'}
+            </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {exception.status === 'open' && (
                 <button

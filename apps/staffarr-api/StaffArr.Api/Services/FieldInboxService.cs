@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using StaffArr.Api.Data;
+using StaffArr.Api.Entities;
 using STLCompliance.Shared.Contracts;
 
 namespace StaffArr.Api.Services;
@@ -36,6 +37,30 @@ public sealed class FieldInboxService(StaffArrDbContext db)
             incident.OccurredAt,
             incident.ReportedAt,
             $"/incidents/{incident.Id:D}")).ToList();
+
+        if (personId is Guid inboxPersonId)
+        {
+            var acknowledgements = await db.PersonTrainingAcknowledgements
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId
+                    && x.PersonId == inboxPersonId
+                    && TrainingAcknowledgementStatuses.Open.Contains(x.Status))
+                .OrderByDescending(x => x.RequestedAt)
+                .Take(50)
+                .ToListAsync(cancellationToken);
+
+            items.AddRange(acknowledgements.Select(ack => new FieldInboxTaskItem(
+                $"staffarr:training_acknowledgement:{ack.Id:D}",
+                "staffarr",
+                "training_acknowledgement",
+                ack.TrainingTitle,
+                ack.AssignmentReason,
+                ack.Status,
+                ack.DueAt.HasValue ? "due" : "normal",
+                ack.DueAt,
+                ack.RequestedAt,
+                $"/training-acknowledgements?acknowledgementId={ack.Id:D}")));
+        }
 
         return FieldInboxRules.BuildProductResponse(items);
     }

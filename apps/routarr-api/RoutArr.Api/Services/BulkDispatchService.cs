@@ -825,14 +825,11 @@ public sealed class BulkDispatchService(
                 item.TripId,
 
                 new AssignTripDriverRequest(
-
                     item.DriverPersonId,
-
-                    ignoreAvailabilityConflicts,
-
-                    ignoreEligibilityBlocks,
-
-                    ignoreWorkflowGateBlocks),
+                    DriverDisplayName: null,
+                    IgnoreAvailabilityConflicts: ignoreAvailabilityConflicts,
+                    IgnoreEligibilityBlocks: ignoreEligibilityBlocks,
+                    IgnoreWorkflowGateBlocks: ignoreWorkflowGateBlocks),
 
                 cancellationToken);
 

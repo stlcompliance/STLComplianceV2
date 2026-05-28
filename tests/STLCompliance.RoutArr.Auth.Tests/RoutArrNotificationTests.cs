@@ -107,7 +107,11 @@ public sealed class RoutArrNotificationTests : IAsyncLifetime
         var created = (await createResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
 
         var assignRequest = Authorized(HttpMethod.Patch, $"/api/trips/{created.TripId}/assign-driver", adminToken);
-        assignRequest.Content = JsonContent.Create(new AssignTripDriverRequest(driverPersonId, false, false, false));
+        assignRequest.Content = JsonContent.Create(new AssignTripDriverRequest(
+            driverPersonId,
+            IgnoreAvailabilityConflicts: false,
+            IgnoreEligibilityBlocks: false,
+            IgnoreWorkflowGateBlocks: false));
         var assignResponse = await _routarrClient.SendAsync(assignRequest);
         assignResponse.EnsureSuccessStatusCode();
 

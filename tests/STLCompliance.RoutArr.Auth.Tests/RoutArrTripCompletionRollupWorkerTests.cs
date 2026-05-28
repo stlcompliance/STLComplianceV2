@@ -183,7 +183,11 @@ public sealed class RoutArrTripCompletionRollupWorkerTests : IAsyncLifetime
         var created = (await createResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
 
         var assignRequest = Authorized(HttpMethod.Patch, $"/api/trips/{created.TripId}/assign-driver", adminToken);
-        assignRequest.Content = JsonContent.Create(new AssignTripDriverRequest(driverPersonId, false, false, false));
+        assignRequest.Content = JsonContent.Create(new AssignTripDriverRequest(
+            driverPersonId,
+            IgnoreAvailabilityConflicts: false,
+            IgnoreEligibilityBlocks: false,
+            IgnoreWorkflowGateBlocks: false));
         await _routarrClient.SendAsync(assignRequest);
 
         foreach (var status in new[] { "dispatched", "in_progress", "completed" })

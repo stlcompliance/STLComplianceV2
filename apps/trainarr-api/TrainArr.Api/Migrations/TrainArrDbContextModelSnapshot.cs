@@ -65,6 +65,105 @@ namespace TrainArr.Api.Migrations
                     b.ToTable("platform_metadata", (string)null);
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.AssignmentDueReminderRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("AsOfUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CandidatesFound")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RemindersSentCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SkippedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "CreatedAt");
+
+                    b.ToTable("trainarr_assignment_due_reminder_runs", (string)null);
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.AssignmentEscalationEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DueAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EscalationCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("StaffarrPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainingAssignmentId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "TrainingAssignmentId", "CreatedAt");
+
+                    b.ToTable("trainarr_assignment_escalation_events", (string)null);
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.AssignmentEscalationRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("AsOfUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CandidatesFound")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EscalatedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SkippedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "CreatedAt");
+
+                    b.ToTable("trainarr_assignment_escalation_runs", (string)null);
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.AuditPackageGenerationJob", b =>
                 {
                     b.Property<Guid>("Id")
@@ -857,6 +956,82 @@ namespace TrainArr.Api.Migrations
                     b.ToTable("trainarr_staffarr_publication_deliveries", (string)null);
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TenantAssignmentDueReminderSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DueSoonLeadDays")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MaxRemindersPerAssignment")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReminderCooldownHours")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("trainarr_tenant_assignment_due_reminder_settings", (string)null);
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.TenantAssignmentEscalationSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EscalationCooldownHours")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MaxEscalationsPerAssignment")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("OverdueEscalationAfterHours")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("trainarr_tenant_assignment_escalation_settings", (string)null);
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TenantEventProcessingSettings", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1168,6 +1343,12 @@ namespace TrainArr.Api.Migrations
                     b.Property<bool>("NotifyOnAssignmentCreated")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("NotifyOnAssignmentDueReminder")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyOnAssignmentOverdueEscalation")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("NotifyOnQualificationExpired")
                         .HasColumnType("boolean");
 
@@ -1282,8 +1463,30 @@ namespace TrainArr.Api.Migrations
                     b.Property<DateTimeOffset?>("DueAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("DueReminderCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EscalationCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("LastDueReminderSentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("LastEscalatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid?>("SourceQualificationIssueId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("StaffarrAcknowledgementAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("StaffarrAcknowledgementRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("StaffarrAcknowledgementStatus")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<Guid?>("StaffarrIncidentRemediationId")
                         .HasColumnType("uuid");

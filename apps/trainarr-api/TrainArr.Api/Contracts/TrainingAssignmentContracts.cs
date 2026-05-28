@@ -72,6 +72,14 @@ public sealed record TrainingAssignmentDetailResponse(
 
     Guid? BlockerPublicationId,
 
+    Guid? StaffarrAcknowledgementRequestId,
+
+    string? StaffarrAcknowledgementStatus,
+
+    DateTimeOffset? StaffarrAcknowledgementAt,
+
+    bool StaffarrAcknowledgementRequired,
+
     DateTimeOffset? CompletedAt,
 
     Guid? CompletedByUserId,

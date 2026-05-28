@@ -1,0 +1,134 @@
+using RoutArr.Api.Services;
+using STLCompliance.Shared.Auth;
+
+namespace RoutArr.Api.Endpoints;
+
+public static class ProofDvirReportEndpoints
+{
+    public static void MapRoutArrProofDvirReportEndpoints(this WebApplication app)
+    {
+        var group = app.MapGroup("/api/reports/proof-dvir")
+            .WithTags("ProofDvirReports")
+            .RequireAuthorization();
+
+        group.MapGet("/summary", async (
+            string? scope,
+            RoutArrAuthorizationService authorization,
+            ProofDvirReportService reportService,
+            IRoutArrAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireDispatchReportRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var summary = await reportService.GetSummaryAsync(tenantId, scope, cancellationToken);
+            await audit.WriteAsync(
+                "routarr.reports.proof_dvir.summary",
+                tenantId,
+                actorUserId,
+                "proof_dvir_report",
+                summary.Scope,
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.Ok(summary);
+        })
+        .WithName("GetRoutArrProofDvirReportSummary");
+
+        group.MapGet("/summary/export", async (
+            string? scope,
+            RoutArrAuthorizationService authorization,
+            ProofDvirReportService reportService,
+            IRoutArrAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireDispatchReportExport(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var export = await reportService.ExportSummaryCsvAsync(tenantId, scope, cancellationToken);
+            await audit.WriteAsync(
+                "routarr.reports.proof_dvir.export",
+                tenantId,
+                actorUserId,
+                "proof_dvir_report",
+                "summary",
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.File(export.Content, export.ContentType, export.FileName);
+        })
+        .WithName("ExportRoutArrProofDvirReportSummary");
+
+        group.MapGet("/trips/{tripId:guid}", async (
+            Guid tripId,
+            RoutArrAuthorizationService authorization,
+            ProofDvirReportService reportService,
+            IRoutArrAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireDispatchReportRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var detail = await reportService.GetTripDetailAsync(tenantId, tripId, cancellationToken);
+            await audit.WriteAsync(
+                "routarr.reports.proof_dvir.trip.detail",
+                tenantId,
+                actorUserId,
+                "proof_dvir_report",
+                tripId.ToString(),
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.Ok(detail);
+        })
+        .WithName("GetRoutArrProofDvirReportTripDetail");
+
+        group.MapGet("/proofs/{proofId:guid}", async (
+            Guid proofId,
+            RoutArrAuthorizationService authorization,
+            ProofDvirReportService reportService,
+            IRoutArrAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireDispatchReportRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var detail = await reportService.GetProofDetailAsync(tenantId, proofId, cancellationToken);
+            await audit.WriteAsync(
+                "routarr.reports.proof_dvir.proof.detail",
+                tenantId,
+                actorUserId,
+                "proof_dvir_report",
+                proofId.ToString(),
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.Ok(detail);
+        })
+        .WithName("GetRoutArrProofDvirReportProofDetail");
+
+        group.MapGet("/dvir/{dvirId:guid}", async (
+            Guid dvirId,
+            RoutArrAuthorizationService authorization,
+            ProofDvirReportService reportService,
+            IRoutArrAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireDispatchReportRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var detail = await reportService.GetDvirDetailAsync(tenantId, dvirId, cancellationToken);
+            await audit.WriteAsync(
+                "routarr.reports.proof_dvir.dvir.detail",
+                tenantId,
+                actorUserId,
+                "proof_dvir_report",
+                dvirId.ToString(),
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.Ok(detail);
+        })
+        .WithName("GetRoutArrProofDvirReportDvirDetail");
+    }
+}

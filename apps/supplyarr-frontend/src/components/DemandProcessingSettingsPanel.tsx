@@ -13,11 +13,31 @@ interface DemandProcessingSettingsPanelProps {
   canManage: boolean
 }
 
-const SOURCE_LABELS: { key: keyof SourceFlags; label: string }[] = [
-  { key: 'processMaintainarrDemandRefs', label: 'MaintainArr work-order demand' },
-  { key: 'processRoutarrDemandRefs', label: 'RoutArr trip parts demand' },
-  { key: 'processTrainarrDemandRefs', label: 'TrainArr assignment materials demand' },
-  { key: 'processStaffarrDemandRefs', label: 'StaffArr incident supply demand' },
+const SOURCE_LABELS: {
+  key: keyof SourceFlags
+  label: string
+  help: string
+}[] = [
+  {
+    key: 'processMaintainarrDemandRefs',
+    label: 'MaintainArr work-order demand',
+    help: 'Parts demand published from MaintainArr work orders (enabled by default).',
+  },
+  {
+    key: 'processRoutarrDemandRefs',
+    label: 'RoutArr trip parts demand',
+    help: 'Trip material demand from RoutArr; requires RoutArr to publish demand refs to SupplyArr.',
+  },
+  {
+    key: 'processTrainarrDemandRefs',
+    label: 'TrainArr assignment materials demand',
+    help: 'Assignment material lines from TrainArr; status callbacks update procurement badges.',
+  },
+  {
+    key: 'processStaffarrDemandRefs',
+    label: 'StaffArr incident supply demand',
+    help: 'Incident-driven supply demand from StaffArr personnel workflows.',
+  },
 ]
 
 type SourceFlags = {
@@ -82,6 +102,14 @@ export function DemandProcessingSettingsPanel({
     setInitialized(true)
   }, [initialized, settingsQuery.data, settingsQuery.isLoading])
 
+  const anySourceEnabled = Object.values(sourceFlags).some(Boolean)
+  const settingsValidationError =
+    isEnabled && !anySourceEnabled
+      ? 'Enable at least one demand source when the worker is on.'
+      : autoCreatePrDraftWhenShort && !anySourceEnabled
+        ? 'Auto PR draft requires at least one enabled demand source.'
+        : null
+
   const saveMutation = useMutation({
     mutationFn: () =>
       upsertDemandProcessingSettings(accessToken, {
@@ -129,21 +157,35 @@ export function DemandProcessingSettingsPanel({
           </label>
           <fieldset className="md:col-span-2">
             <legend className="text-sm font-medium text-slate-300">Demand sources</legend>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2">
-              {SOURCE_LABELS.map(({ key, label }) => (
-                <label key={key} className="flex items-center gap-2 text-sm text-slate-400">
+            <p className="mt-1 text-xs text-slate-500">
+              Select which cross-product demand publications the worker may evaluate. At least one
+              source is required when the worker or auto PR draft is enabled.
+            </p>
+            <div className="mt-2 grid gap-3 sm:grid-cols-2">
+              {SOURCE_LABELS.map(({ key, label, help }) => (
+                <label
+                  key={key}
+                  className="flex gap-2 rounded-md border border-slate-800 p-2 text-sm text-slate-400"
+                >
                   <input
                     type="checkbox"
+                    className="mt-1"
                     checked={sourceFlags[key]}
                     onChange={(event) =>
                       setSourceFlags((prev) => ({ ...prev, [key]: event.target.checked }))
                     }
                   />
-                  {label}
+                  <span>
+                    <span className="text-slate-300">{label}</span>
+                    <span className="mt-1 block text-xs text-slate-500">{help}</span>
+                  </span>
                 </label>
               ))}
             </div>
           </fieldset>
+          {settingsValidationError ? (
+            <p className="text-sm text-amber-300 md:col-span-2">{settingsValidationError}</p>
+          ) : null}
           <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
             <input
               type="checkbox"
@@ -185,7 +227,7 @@ export function DemandProcessingSettingsPanel({
           <button
             type="button"
             className="rounded bg-emerald-600 px-3 py-1.5 text-sm text-white disabled:opacity-50 md:col-span-2 md:w-fit"
-            disabled={saveMutation.isPending}
+            disabled={saveMutation.isPending || Boolean(settingsValidationError)}
             onClick={() => saveMutation.mutate()}
           >
             Save settings

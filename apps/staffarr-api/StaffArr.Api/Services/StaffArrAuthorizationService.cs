@@ -292,6 +292,60 @@ public sealed class StaffArrAuthorizationService
             403);
     }
 
+    public void RequireTrainingAcknowledgementRead(ClaimsPrincipal principal, Guid? personId)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        var roleKey = principal.GetTenantRoleKey();
+        if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin", "supervisor"))
+        {
+            return;
+        }
+
+        if (personId is Guid requestedPersonId
+            && MatchesRole(roleKey, "tenant_member")
+            && principal.GetPersonId() == requestedPersonId)
+        {
+            return;
+        }
+
+        if (personId is null
+            && MatchesRole(roleKey, "tenant_member")
+            && principal.GetPersonId() is Guid selfPersonId)
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Training acknowledgement read requires supervisor access or your own person record.",
+            403);
+    }
+
+    public void RequireTrainingAcknowledgementAcknowledge(ClaimsPrincipal principal, Guid personId)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_member")
+            && principal.GetPersonId() == personId)
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "You may only acknowledge training assignments assigned to your own person record.",
+            403);
+    }
+
     public void RequireAuditPackageRead(ClaimsPrincipal principal)
     {
         RequirePeopleRead(principal);

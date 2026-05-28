@@ -82,6 +82,8 @@ import type {
   PendingDemandProcessingResponse,
   DemandProcessingRunsResponse,
   DemandProcessingDashboardResponse,
+  DemandProcessingDetailResponse,
+  DemandProcessingOperatorActionResponse,
   SupplyReadinessDashboardResponse,
   IntegrationEventSettingsResponse,
   UpsertIntegrationEventSettingsRequest,
@@ -99,10 +101,12 @@ import type {
   SupplierIncidentResponse,
   CreateSupplierIncidentRequest,
   ResolveSupplierIncidentRequest,
-  CancelSupplierIncidentRequest,
   ApplySupplierIncidentProcurementRestrictionRequest,
   ProcurementExceptionResponse,
+  ProcurementExceptionResolutionTemplateResponse,
   CreateProcurementExceptionRequest,
+  AssignProcurementExceptionRequest,
+  LinkProcurementExceptionActionsRequest,
   ResolveProcurementExceptionRequest,
   RequestProcurementExceptionWaiveRequest,
   RejectProcurementExceptionWaiveRequest,
@@ -1492,6 +1496,47 @@ export async function getDemandProcessingDashboard(
   )
 }
 
+export async function getDemandProcessingDetail(
+  accessToken: string,
+  demandRefId: string,
+): Promise<DemandProcessingDetailResponse> {
+  const response = await fetch(`${apiBase}/api/demand-processing/${demandRefId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DemandProcessingDetailResponse>(
+    response,
+    'Failed to load demand processing detail',
+  )
+}
+
+export async function retryDemandProcessing(
+  accessToken: string,
+  demandRefId: string,
+): Promise<DemandProcessingOperatorActionResponse> {
+  const response = await fetch(`${apiBase}/api/demand-processing/${demandRefId}/retry-processing`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DemandProcessingOperatorActionResponse>(
+    response,
+    'Failed to retry demand processing',
+  )
+}
+
+export async function createDemandProcessingPrDraft(
+  accessToken: string,
+  demandRefId: string,
+): Promise<DemandProcessingOperatorActionResponse> {
+  const response = await fetch(`${apiBase}/api/demand-processing/${demandRefId}/create-pr-draft`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DemandProcessingOperatorActionResponse>(
+    response,
+    'Failed to create purchase request draft',
+  )
+}
+
 export async function getSupplyReadinessDashboard(
   accessToken: string,
 ): Promise<SupplyReadinessDashboardResponse> {
@@ -2349,14 +2394,32 @@ export async function applySupplierIncidentProcurementRestriction(
   )
 }
 
+export async function listProcurementExceptionResolutionTemplates(
+  accessToken: string,
+): Promise<ProcurementExceptionResolutionTemplateResponse[]> {
+  const response = await fetch(`${apiBase}/api/procurement-exceptions/resolution-templates`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProcurementExceptionResolutionTemplateResponse[]>(
+    response,
+    'Failed to load procurement exception resolution templates',
+  )
+}
+
 export async function listProcurementExceptions(
   accessToken: string,
-  options?: { status?: string; subjectType?: string; subjectId?: string },
+  options?: {
+    status?: string
+    subjectType?: string
+    subjectId?: string
+    overdueOnly?: boolean
+  },
 ): Promise<ProcurementExceptionResponse[]> {
   const search = new URLSearchParams()
   if (options?.status) search.set('status', options.status)
   if (options?.subjectType) search.set('subjectType', options.subjectType)
   if (options?.subjectId) search.set('subjectId', options.subjectId)
+  if (options?.overdueOnly) search.set('overdueOnly', 'true')
   const query = search.toString()
   const response = await fetch(`${apiBase}/api/procurement-exceptions${query ? `?${query}` : ''}`, {
     headers: authHeaders(accessToken),
@@ -2405,6 +2468,38 @@ export async function createSubjectProcurementException(
   return parseJsonResponse<ProcurementExceptionResponse>(
     response,
     'Failed to create procurement exception',
+  )
+}
+
+export async function assignProcurementException(
+  accessToken: string,
+  exceptionId: string,
+  payload: AssignProcurementExceptionRequest,
+): Promise<ProcurementExceptionResponse> {
+  const response = await fetch(`${apiBase}/api/procurement-exceptions/${exceptionId}/assign`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<ProcurementExceptionResponse>(
+    response,
+    'Failed to assign procurement exception',
+  )
+}
+
+export async function linkProcurementExceptionActions(
+  accessToken: string,
+  exceptionId: string,
+  payload: LinkProcurementExceptionActionsRequest,
+): Promise<ProcurementExceptionResponse> {
+  const response = await fetch(`${apiBase}/api/procurement-exceptions/${exceptionId}/link-actions`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<ProcurementExceptionResponse>(
+    response,
+    'Failed to link procurement exception actions',
   )
 }
 

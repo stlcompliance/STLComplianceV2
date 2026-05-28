@@ -170,6 +170,199 @@ public sealed class DemandProcessingWorkerService(
         return new DemandProcessingRunsResponse(runs);
     }
 
+    public async Task<DemandProcessingResult> ProcessDemandRefNowAsync(
+        Guid tenantId,
+        Guid demandRefId,
+        CancellationToken cancellationToken = default)
+    {
+        var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken)
+            ?? throw new STLCompliance.Shared.Contracts.StlApiException(
+                "demand_processing.settings_missing",
+                "Demand processing settings are not configured for this tenant.",
+                400);
+
+        if (!settings.IsEnabled)
+        {
+            throw new STLCompliance.Shared.Contracts.StlApiException(
+                "demand_processing.disabled",
+                "Demand processing worker is disabled for this tenant.",
+                400);
+        }
+
+        var candidate = await ResolveOperatorCandidateAsync(tenantId, demandRefId, settings, cancellationToken)
+            ?? throw new STLCompliance.Shared.Contracts.StlApiException(
+                "demand_processing.demand_ref_not_found",
+                "Demand reference was not found or is not eligible for processing.",
+                404);
+
+        return await ProcessDemandRefAsync(candidate, DateTimeOffset.UtcNow, cancellationToken);
+    }
+
+    public async Task<PurchaseRequestResponse> CreatePurchaseRequestDraftForOperatorAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid demandRefId,
+        CancellationToken cancellationToken = default)
+    {
+        var candidate = await ResolveOperatorCandidateAsync(
+                tenantId,
+                demandRefId,
+                await settingsService.LoadSnapshotAsync(tenantId, cancellationToken),
+                cancellationToken,
+                requireEnabledSource: false)
+            ?? throw new STLCompliance.Shared.Contracts.StlApiException(
+                "demand_processing.demand_ref_not_found",
+                "Demand reference was not found.",
+                404);
+
+        var snapshot = await LoadDemandRefSnapshotAsync(candidate, cancellationToken)
+            ?? throw new STLCompliance.Shared.Contracts.StlApiException(
+                "demand_processing.demand_ref_not_found",
+                "Demand reference was not found.",
+                404);
+
+        if (snapshot.PurchaseRequestId.HasValue)
+        {
+            throw new STLCompliance.Shared.Contracts.StlApiException(
+                "demand_processing.pr_exists",
+                "Demand reference already has a linked purchase request.",
+                409);
+        }
+
+        if (!string.Equals(snapshot.Status, snapshot.ReceivedStatus, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new STLCompliance.Shared.Contracts.StlApiException(
+                "demand_processing.invalid_status",
+                "Demand reference must be in received status to create a purchase request.",
+                400);
+        }
+
+        return await CreateAutoPurchaseRequestDraftAsync(snapshot, actorUserId, cancellationToken);
+    }
+
+    private async Task<PendingDemandProcessingCandidate?> ResolveOperatorCandidateAsync(
+        Guid tenantId,
+        Guid demandRefId,
+        TenantDemandProcessingSettingsSnapshot? settings,
+        CancellationToken cancellationToken,
+        bool requireEnabledSource = true)
+    {
+        var maintainarr = await db.MaintainArrDemandRefs
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Id == demandRefId)
+            .Select(x => new { x.Title, x.MaintainarrWorkOrderNumber, x.ReceivedAt, x.Status })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (maintainarr is not null)
+        {
+            if (requireEnabledSource && (settings is null || !settings.IsSourceEnabled(DemandRefSources.MaintainArr)))
+            {
+                throw new STLCompliance.Shared.Contracts.StlApiException(
+                    "demand_processing.source_disabled",
+                    "MaintainArr demand processing is disabled for this tenant.",
+                    400);
+            }
+
+            return BuildOperatorCandidate(
+                tenantId,
+                demandRefId,
+                DemandRefSources.MaintainArr,
+                maintainarr.MaintainarrWorkOrderNumber,
+                maintainarr.Title,
+                maintainarr.ReceivedAt);
+        }
+
+        var routarr = await db.RoutArrDemandRefs
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Id == demandRefId)
+            .Select(x => new { x.Title, x.RoutarrTripNumber, x.ReceivedAt, x.Status })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (routarr is not null)
+        {
+            if (requireEnabledSource && (settings is null || !settings.IsSourceEnabled(DemandRefSources.RoutArr)))
+            {
+                throw new STLCompliance.Shared.Contracts.StlApiException(
+                    "demand_processing.source_disabled",
+                    "RoutArr demand processing is disabled for this tenant.",
+                    400);
+            }
+
+            return BuildOperatorCandidate(
+                tenantId,
+                demandRefId,
+                DemandRefSources.RoutArr,
+                routarr.RoutarrTripNumber,
+                routarr.Title,
+                routarr.ReceivedAt);
+        }
+
+        var trainarr = await db.TrainArrDemandRefs
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Id == demandRefId)
+            .Select(x => new { x.Title, x.TrainarrAssignmentRefKey, x.ReceivedAt, x.Status })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (trainarr is not null)
+        {
+            if (requireEnabledSource && (settings is null || !settings.IsSourceEnabled(DemandRefSources.TrainArr)))
+            {
+                throw new STLCompliance.Shared.Contracts.StlApiException(
+                    "demand_processing.source_disabled",
+                    "TrainArr demand processing is disabled for this tenant.",
+                    400);
+            }
+
+            return BuildOperatorCandidate(
+                tenantId,
+                demandRefId,
+                DemandRefSources.TrainArr,
+                trainarr.TrainarrAssignmentRefKey,
+                trainarr.Title,
+                trainarr.ReceivedAt);
+        }
+
+        var staffarr = await db.StaffArrDemandRefs
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Id == demandRefId)
+            .Select(x => new { x.Title, x.StaffarrIncidentTitle, x.ReceivedAt, x.Status })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (staffarr is not null)
+        {
+            if (requireEnabledSource && (settings is null || !settings.IsSourceEnabled(DemandRefSources.StaffArr)))
+            {
+                throw new STLCompliance.Shared.Contracts.StlApiException(
+                    "demand_processing.source_disabled",
+                    "StaffArr demand processing is disabled for this tenant.",
+                    400);
+            }
+
+            return BuildOperatorCandidate(
+                tenantId,
+                demandRefId,
+                DemandRefSources.StaffArr,
+                staffarr.StaffarrIncidentTitle,
+                staffarr.Title,
+                staffarr.ReceivedAt);
+        }
+
+        return null;
+    }
+
+    private static PendingDemandProcessingCandidate BuildOperatorCandidate(
+        Guid tenantId,
+        Guid demandRefId,
+        string source,
+        string sourceRefKey,
+        string title,
+        DateTimeOffset receivedAt) =>
+        new(
+            tenantId,
+            demandRefId,
+            source,
+            sourceRefKey,
+            title,
+            receivedAt,
+            null,
+            null);
+
     private async Task<DemandProcessingResult> ProcessDemandRefAsync(
         PendingDemandProcessingCandidate candidate,
         DateTimeOffset asOfUtc,
@@ -288,14 +481,20 @@ public sealed class DemandProcessingWorkerService(
             notificationDispatchId);
     }
 
+    private Task<PurchaseRequestResponse> CreateAutoPurchaseRequestDraftAsync(
+        DemandRefProcessingSnapshot snapshot,
+        CancellationToken cancellationToken) =>
+        CreateAutoPurchaseRequestDraftAsync(snapshot, WorkerActorUserId, cancellationToken);
+
     private async Task<PurchaseRequestResponse> CreateAutoPurchaseRequestDraftAsync(
         DemandRefProcessingSnapshot snapshot,
+        Guid actorUserId,
         CancellationToken cancellationToken) =>
         snapshot.Source switch
         {
             DemandRefSources.MaintainArr => await maintainArrDemandIntake.CreatePurchaseRequestFromDemandRefAsync(
                 snapshot.TenantId,
-                WorkerActorUserId,
+                actorUserId,
                 snapshot.DemandRefId,
                 new CreatePurchaseRequestFromDemandRefRequest(
                     snapshot.AutoRequestKey,
@@ -304,7 +503,7 @@ public sealed class DemandProcessingWorkerService(
                 cancellationToken),
             DemandRefSources.RoutArr => await routArrDemandIntake.CreatePurchaseRequestFromDemandRefAsync(
                 snapshot.TenantId,
-                WorkerActorUserId,
+                actorUserId,
                 snapshot.DemandRefId,
                 new CreatePurchaseRequestFromRoutarrDemandRefRequest(
                     snapshot.AutoRequestKey,
@@ -313,7 +512,7 @@ public sealed class DemandProcessingWorkerService(
                 cancellationToken),
             DemandRefSources.TrainArr => await trainArrDemandIntake.CreatePurchaseRequestFromDemandRefAsync(
                 snapshot.TenantId,
-                WorkerActorUserId,
+                actorUserId,
                 snapshot.DemandRefId,
                 new CreatePurchaseRequestFromTrainarrDemandRefRequest(
                     snapshot.AutoRequestKey,
@@ -322,7 +521,7 @@ public sealed class DemandProcessingWorkerService(
                 cancellationToken),
             DemandRefSources.StaffArr => await staffArrDemandIntake.CreatePurchaseRequestFromDemandRefAsync(
                 snapshot.TenantId,
-                WorkerActorUserId,
+                actorUserId,
                 snapshot.DemandRefId,
                 new CreatePurchaseRequestFromStaffarrDemandRefRequest(
                     snapshot.AutoRequestKey,

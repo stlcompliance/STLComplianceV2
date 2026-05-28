@@ -31,6 +31,7 @@ public class StaffArrAuditPackageTests : IAsyncLifetime
             builder.UseSetting("ConnectionStrings:Database", string.Empty);
             builder.UseSetting("DATABASE_URL", string.Empty);
             builder.UseSetting("Auth:SigningKey", signingKey);
+            builder.UseSetting("ServiceToken:SigningKey", signingKey);
             builder.ConfigureServices(services =>
             {
                 RemoveDbContext<StaffArrDbContext>(services);
@@ -59,8 +60,9 @@ public class StaffArrAuditPackageTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/audit-packages/manifest", supervisorToken));
         response.EnsureSuccessStatusCode();
         var manifest = (await response.Content.ReadFromJsonAsync<AuditPackageManifestResponse>())!;
-        Assert.Equal("1", manifest.PackageVersion);
-        Assert.Equal(7, manifest.Sections.Count);
+        Assert.Equal("2", manifest.PackageVersion);
+        Assert.Equal(8, manifest.Sections.Count);
+        Assert.Contains(manifest.Sections, section => section.FileName == "audit_events.csv");
         Assert.Contains(manifest.Sections, section => section.Key == "audit_events");
         Assert.Contains(manifest.Sections, section => section.FileName == "training_blockers.json");
     }
@@ -78,8 +80,9 @@ public class StaffArrAuditPackageTests : IAsyncLifetime
 
         var zipBytes = await response.Content.ReadAsByteArrayAsync();
         using var archive = new ZipArchive(new MemoryStream(zipBytes), ZipArchiveMode.Read);
-        Assert.Equal(8, archive.Entries.Count);
+        Assert.Equal(9, archive.Entries.Count);
         Assert.Contains(archive.Entries, entry => entry.Name == "manifest.json");
+        Assert.Contains(archive.Entries, entry => entry.Name == "audit_events.csv");
         Assert.Contains(archive.Entries, entry => entry.Name == "people.json");
         Assert.Contains(archive.Entries, entry => entry.Name == "permission_history.json");
         Assert.Contains(archive.Entries, entry => entry.Name == "training_blockers.json");
@@ -174,6 +177,57 @@ public class StaffArrAuditPackageTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Audit_package_filter_options_summary_and_csv()
+    {
+        var adminToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        await SeedW228AuditEventsAsync();
+
+        var filterResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/audit-packages/filter-options", adminToken));
+        filterResponse.EnsureSuccessStatusCode();
+        var filterOptions =
+            (await filterResponse.Content.ReadFromJsonAsync<AuditPackageFilterOptionsResponse>())!;
+        Assert.Contains("w228.test.success", filterOptions.Actions);
+
+        var summaryResponse = await _staffarrClient.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/audit-packages/summary?action=w228.test.success&result=success",
+                adminToken));
+        summaryResponse.EnsureSuccessStatusCode();
+        var summary =
+            (await summaryResponse.Content.ReadFromJsonAsync<AuditPackageExportSummaryResponse>())!;
+        Assert.True(summary.Counts.AuditEvents >= 1);
+
+        var csvResponse = await _staffarrClient.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/audit-packages/export?format=csv&action=w228.test.success",
+                adminToken));
+        csvResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", csvResponse.Content.Headers.ContentType?.MediaType);
+        var csv = await csvResponse.Content.ReadAsStringAsync();
+        Assert.Contains("w228.test.success", csv, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Audit_package_timeline_respects_action_filter()
+    {
+        var supervisorToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "hr_admin");
+        await SeedW228AuditEventsAsync();
+
+        var response = await _staffarrClient.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/audit-packages/timeline?action=w228.test.failure&pageSize=20",
+                supervisorToken));
+        response.EnsureSuccessStatusCode();
+        var timeline =
+            (await response.Content.ReadFromJsonAsync<PagedResult<StaffArrAuditEventExportItem>>())!;
+        Assert.All(timeline.Items, item => Assert.Equal("w228.test.failure", item.Action));
+    }
+
+    [Fact]
     public async Task Audit_package_export_date_filter_limits_audit_events()
     {
         var adminToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
@@ -229,6 +283,35 @@ public class StaffArrAuditPackageTests : IAsyncLifetime
             UpdatedAt = now,
         });
 
+        await db.SaveChangesAsync();
+    }
+
+    private async Task SeedW228AuditEventsAsync()
+    {
+        using var scope = _staffarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        db.AuditEvents.AddRange(
+            new StaffArrAuditEvent
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                Action = "w228.test.success",
+                TargetType = "person",
+                Result = "success",
+                CorrelationId = Guid.NewGuid(),
+                OccurredAt = now,
+            },
+            new StaffArrAuditEvent
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                Action = "w228.test.failure",
+                TargetType = "person",
+                Result = "failure",
+                CorrelationId = Guid.NewGuid(),
+                OccurredAt = now,
+            });
         await db.SaveChangesAsync();
     }
 

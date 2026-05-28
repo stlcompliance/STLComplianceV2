@@ -80,6 +80,66 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Settings_get_returns_defaults_and_pending_count()
+    {
+        await SeedPastDuePmScheduleAsync(daysPastDue: 0);
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+        var request = Authorized(HttpMethod.Get, "/api/pm-due-scan-settings", token);
+        var response = await _maintainarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var body = (await response.Content.ReadFromJsonAsync<PmDueScanSettingsResponse>())!;
+        Assert.False(body.IsEnabled);
+        Assert.Equal(15, body.ScanIntervalMinutes);
+        Assert.True(body.PendingPmCount >= 1);
+        Assert.Null(body.LastRunAt);
+    }
+
+    [Fact]
+    public async Task Settings_put_trigger_records_run_and_updates_last_run()
+    {
+        var schedule = await SeedPastDuePmScheduleAsync(daysPastDue: 0);
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+
+        var putRequest = Authorized(HttpMethod.Put, "/api/pm-due-scan-settings", token);
+        putRequest.Content = JsonContent.Create(
+            new UpsertPmDueScanSettingsRequest(true, 15, 50, 1));
+        (await _maintainarrClient.SendAsync(putRequest)).EnsureSuccessStatusCode();
+
+        var triggerRequest = Authorized(HttpMethod.Post, "/api/pm-due-scan-settings/trigger", token);
+        var triggerResponse = await _maintainarrClient.SendAsync(triggerRequest);
+        triggerResponse.EnsureSuccessStatusCode();
+        var triggerBody = (await triggerResponse.Content.ReadFromJsonAsync<TriggerPmDueScanResponse>())!;
+        Assert.True(triggerBody.Result.CandidatesFound >= 1);
+
+        var getRequest = Authorized(HttpMethod.Get, "/api/pm-due-scan-settings", token);
+        var getResponse = await _maintainarrClient.SendAsync(getRequest);
+        getResponse.EnsureSuccessStatusCode();
+        var settings = (await getResponse.Content.ReadFromJsonAsync<PmDueScanSettingsResponse>())!;
+        Assert.NotNull(settings.LastRunAt);
+
+        var runsRequest = Authorized(HttpMethod.Get, "/api/pm-due-scan-settings/runs?limit=5", token);
+        var runsResponse = await _maintainarrClient.SendAsync(runsRequest);
+        runsResponse.EnsureSuccessStatusCode();
+        var runs = (await runsResponse.Content.ReadFromJsonAsync<PmDueScanRunsResponse>())!;
+        Assert.NotEmpty(runs.Items);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var updated = await db.PmSchedules.AsNoTracking().FirstAsync(x => x.Id == schedule.Id);
+        Assert.Equal(PmDueStatuses.Due, updated.DueStatus);
+    }
+
+    [Fact]
+    public async Task Settings_put_requires_admin()
+    {
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
+        var request = Authorized(HttpMethod.Put, "/api/pm-due-scan-settings", token);
+        request.Content = JsonContent.Create(new UpsertPmDueScanSettingsRequest(true, 15, 100, 1));
+        var response = await _maintainarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Process_due_scan_rejects_missing_service_token()
     {
         var response = await _maintainarrClient.PostAsJsonAsync(

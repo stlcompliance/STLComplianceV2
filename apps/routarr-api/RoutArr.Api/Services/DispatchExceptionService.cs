@@ -1,0 +1,417 @@
+using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using RoutArr.Api.Contracts;
+using RoutArr.Api.Data;
+using RoutArr.Api.Entities;
+using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Contracts;
+
+namespace RoutArr.Api.Services;
+
+public sealed class DispatchExceptionService(
+    RoutArrDbContext db,
+    RoutArrAuthorizationService authorization,
+    IRoutArrAuditService audit)
+{
+    public const string ListAction = "dispatch_exception.list";
+    public const string CreateAction = "dispatch_exception.create";
+    public const string AssignAction = "dispatch_exception.assign";
+    public const string ResolveAction = "dispatch_exception.resolve";
+    public const string LinkTripAction = "dispatch_exception.link_trip";
+
+    public async Task<DispatchExceptionListResponse> ListOpenAsync(
+        ClaimsPrincipal principal,
+        string? statusFilter,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireDispatchExceptionRead(principal);
+        var tenantId = principal.GetTenantId();
+        var actorUserId = principal.GetUserId();
+        var viewAll = authorization.CanViewAllTrips(principal);
+
+        var statuses = ResolveStatusFilter(statusFilter);
+        var query = db.DispatchExceptions
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && statuses.Contains(x.Status));
+
+        if (!viewAll)
+        {
+            query = query.Where(x =>
+                x.CreatedByUserId == actorUserId
+                || x.AssignedToUserId == actorUserId);
+        }
+
+        var entities = await query
+            .OrderByDescending(x => x.UpdatedAt)
+            .Take(200)
+            .ToListAsync(cancellationToken);
+
+        var tripIds = entities
+            .Where(x => x.TripId.HasValue)
+            .Select(x => x.TripId!.Value)
+            .Distinct()
+            .ToList();
+
+        var trips = tripIds.Count == 0
+            ? new Dictionary<Guid, Trip>()
+            : await db.Trips
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && tripIds.Contains(x.Id))
+                .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        var openCount = await db.DispatchExceptions
+            .AsNoTracking()
+            .CountAsync(
+                x => x.TenantId == tenantId && DispatchExceptionStatuses.OpenQueue.Contains(x.Status),
+                cancellationToken);
+
+        await audit.WriteAsync(
+            ListAction,
+            tenantId,
+            actorUserId,
+            "dispatch_exception_queue",
+            statusFilter ?? "open",
+            entities.Count.ToString(),
+            cancellationToken: cancellationToken);
+
+        return new DispatchExceptionListResponse(
+            entities.Count,
+            openCount,
+            entities.Select(x =>
+            {
+                Trip? trip = null;
+                if (x.TripId.HasValue)
+                {
+                    trips.TryGetValue(x.TripId.Value, out trip);
+                }
+
+                return MapSummary(x, trip);
+            }).ToList());
+    }
+
+    public async Task<DispatchExceptionSummaryResponse> CreateAsync(
+        ClaimsPrincipal principal,
+        CreateDispatchExceptionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireDispatchExceptionTriage(principal);
+        var tenantId = principal.GetTenantId();
+        var actorUserId = principal.GetUserId();
+
+        ValidateTitle(request.Title);
+        var category = NormalizeCategory(request.Category);
+        Trip? trip = null;
+        if (request.TripId.HasValue)
+        {
+            trip = await RequireTripAsync(tenantId, request.TripId.Value, cancellationToken);
+            authorization.RequireTripAccess(
+                principal,
+                trip.CreatedByUserId,
+                trip.AssignedDriverPersonId);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new DispatchException
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            ExceptionKey = await GenerateExceptionKeyAsync(tenantId, cancellationToken),
+            Title = request.Title.Trim(),
+            Description = request.Description?.Trim() ?? string.Empty,
+            Category = category,
+            Status = DispatchExceptionStatuses.Open,
+            TripId = trip?.Id,
+            CreatedByUserId = actorUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.DispatchExceptions.Add(entity);
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            CreateAction,
+            tenantId,
+            actorUserId,
+            "dispatch_exception",
+            entity.Id.ToString(),
+            entity.ExceptionKey,
+            cancellationToken: cancellationToken);
+
+        return MapSummary(entity, trip);
+    }
+
+    public async Task<DispatchExceptionSummaryResponse> AssignAsync(
+        ClaimsPrincipal principal,
+        Guid exceptionId,
+        AssignDispatchExceptionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireDispatchExceptionTriage(principal);
+        var tenantId = principal.GetTenantId();
+        var actorUserId = principal.GetUserId();
+
+        if (request.AssignedToUserId == Guid.Empty)
+        {
+            throw new StlApiException(
+                "dispatch_exception.assignee_required",
+                "Assignee user id is required.",
+                400);
+        }
+
+        var entity = await RequireExceptionAsync(tenantId, exceptionId, cancellationToken);
+        EnsureNotTerminal(entity);
+
+        entity.Status = DispatchExceptionStatuses.Assigned;
+        entity.AssignedToUserId = request.AssignedToUserId;
+        entity.AssignedAt = DateTimeOffset.UtcNow;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            AssignAction,
+            tenantId,
+            actorUserId,
+            "dispatch_exception",
+            entity.Id.ToString(),
+            request.AssignedToUserId.ToString(),
+            cancellationToken: cancellationToken);
+
+        return await MapWithTripAsync(tenantId, entity, cancellationToken);
+    }
+
+    public async Task<DispatchExceptionSummaryResponse> ResolveAsync(
+        ClaimsPrincipal principal,
+        Guid exceptionId,
+        ResolveDispatchExceptionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireDispatchExceptionTriage(principal);
+        var tenantId = principal.GetTenantId();
+        var actorUserId = principal.GetUserId();
+
+        var entity = await RequireExceptionAsync(tenantId, exceptionId, cancellationToken);
+        EnsureNotTerminal(entity);
+
+        entity.Status = DispatchExceptionStatuses.Resolved;
+        entity.ResolutionNotes = request.ResolutionNotes?.Trim() ?? string.Empty;
+        entity.ResolvedByUserId = actorUserId;
+        entity.ResolvedAt = DateTimeOffset.UtcNow;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            ResolveAction,
+            tenantId,
+            actorUserId,
+            "dispatch_exception",
+            entity.Id.ToString(),
+            "resolved",
+            cancellationToken: cancellationToken);
+
+        return await MapWithTripAsync(tenantId, entity, cancellationToken);
+    }
+
+    public async Task<DispatchExceptionSummaryResponse> LinkTripAsync(
+        ClaimsPrincipal principal,
+        Guid exceptionId,
+        LinkDispatchExceptionTripRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireDispatchExceptionTriage(principal);
+        var tenantId = principal.GetTenantId();
+        var actorUserId = principal.GetUserId();
+
+        if (request.TripId == Guid.Empty)
+        {
+            throw new StlApiException(
+                "dispatch_exception.trip_required",
+                "Trip id is required.",
+                400);
+        }
+
+        var entity = await RequireExceptionAsync(tenantId, exceptionId, cancellationToken);
+        EnsureNotTerminal(entity);
+
+        var trip = await RequireTripAsync(tenantId, request.TripId, cancellationToken);
+        authorization.RequireTripAccess(
+            principal,
+            trip.CreatedByUserId,
+            trip.AssignedDriverPersonId);
+
+        entity.TripId = trip.Id;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            LinkTripAction,
+            tenantId,
+            actorUserId,
+            "dispatch_exception",
+            entity.Id.ToString(),
+            trip.TripNumber,
+            cancellationToken: cancellationToken);
+
+        return MapSummary(entity, trip);
+    }
+
+    private static IReadOnlySet<string> ResolveStatusFilter(string? statusFilter)
+    {
+        if (string.IsNullOrWhiteSpace(statusFilter)
+            || string.Equals(statusFilter, "open", StringComparison.OrdinalIgnoreCase))
+        {
+            return DispatchExceptionStatuses.OpenQueue;
+        }
+
+        var normalized = statusFilter.Trim().ToLowerInvariant();
+        if (!DispatchExceptionStatuses.All.Contains(normalized))
+        {
+            throw new StlApiException(
+                "dispatch_exception.invalid_status",
+                "Status filter must be open, assigned, resolved, or cancelled.",
+                400);
+        }
+
+        return new HashSet<string>([normalized], StringComparer.OrdinalIgnoreCase);
+    }
+
+    private async Task<DispatchException> RequireExceptionAsync(
+        Guid tenantId,
+        Guid exceptionId,
+        CancellationToken cancellationToken)
+    {
+        var entity = await db.DispatchExceptions
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == exceptionId, cancellationToken);
+
+        if (entity is null)
+        {
+            throw new StlApiException(
+                "dispatch_exception.not_found",
+                "Dispatch exception was not found.",
+                404);
+        }
+
+        return entity;
+    }
+
+    private async Task<Trip> RequireTripAsync(
+        Guid tenantId,
+        Guid tripId,
+        CancellationToken cancellationToken)
+    {
+        var trip = await db.Trips
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
+
+        if (trip is null)
+        {
+            throw new StlApiException("trip.not_found", "Trip was not found.", 404);
+        }
+
+        return trip;
+    }
+
+    private static void EnsureNotTerminal(DispatchException entity)
+    {
+        if (DispatchExceptionStatuses.IsTerminal(entity.Status))
+        {
+            throw new StlApiException(
+                "dispatch_exception.terminal",
+                "Dispatch exception is already closed.",
+                409);
+        }
+    }
+
+    private static void ValidateTitle(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new StlApiException(
+                "dispatch_exception.title_required",
+                "Exception title is required.",
+                400);
+        }
+
+        if (title.Trim().Length > 256)
+        {
+            throw new StlApiException(
+                "dispatch_exception.title_too_long",
+                "Exception title must be 256 characters or fewer.",
+                400);
+        }
+    }
+
+    private static string NormalizeCategory(string? category)
+    {
+        var normalized = string.IsNullOrWhiteSpace(category)
+            ? DispatchExceptionCategories.Other
+            : category.Trim().ToLowerInvariant();
+
+        if (!DispatchExceptionCategories.All.Contains(normalized))
+        {
+            throw new StlApiException(
+                "dispatch_exception.invalid_category",
+                "Exception category is not valid.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private async Task<string> GenerateExceptionKeyAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var datePart = DateTimeOffset.UtcNow.ToString("yyyyMMdd");
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            var suffix = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+            var candidate = $"DEX-{datePart}-{suffix}";
+            var exists = await db.DispatchExceptions.AnyAsync(
+                x => x.TenantId == tenantId && x.ExceptionKey == candidate,
+                cancellationToken);
+            if (!exists)
+            {
+                return candidate;
+            }
+        }
+
+        return $"DEX-{datePart}-{Guid.NewGuid():N}".ToUpperInvariant();
+    }
+
+    private async Task<DispatchExceptionSummaryResponse> MapWithTripAsync(
+        Guid tenantId,
+        DispatchException entity,
+        CancellationToken cancellationToken)
+    {
+        Trip? trip = null;
+        if (entity.TripId.HasValue)
+        {
+            trip = await db.Trips
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == entity.TripId, cancellationToken);
+        }
+
+        return MapSummary(entity, trip);
+    }
+
+    private static DispatchExceptionSummaryResponse MapSummary(DispatchException entity, Trip? trip) =>
+        new(
+            entity.Id,
+            entity.ExceptionKey,
+            entity.Title,
+            entity.Description,
+            entity.Category,
+            entity.Status,
+            entity.TripId,
+            trip?.TripNumber,
+            trip?.Title,
+            entity.AssignedToUserId,
+            entity.ResolutionNotes,
+            entity.CreatedByUserId,
+            entity.CreatedAt,
+            entity.UpdatedAt,
+            entity.AssignedAt,
+            entity.ResolvedAt);
+}

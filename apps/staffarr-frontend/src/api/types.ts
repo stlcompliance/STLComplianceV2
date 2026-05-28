@@ -565,6 +565,23 @@ export interface IncidentTrainarrRoutingResponse {
   routedByUserId: string
 }
 
+export interface TrainingAcknowledgementResponse {
+  acknowledgementId: string
+  personId: string
+  trainarrAcknowledgementRequestId: string
+  trainarrAssignmentId: string
+  trainingTitle: string
+  assignmentReason: string
+  summary: string
+  status: string
+  dueAt: string | null
+  requestedAt: string
+  acknowledgedAt: string | null
+  acknowledgedByUserId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export interface PersonnelIncidentSummaryResponse {
   incidentId: string
   personId: string
@@ -692,6 +709,23 @@ export interface PersonTimelineEntryResponse {
   externalReferenceId: string | null
 }
 
+export interface TrainarrPersonTrainingHistoryEntryItem {
+  entryId: string
+  eventKind: string
+  summary: string
+  relatedEntityType: string | null
+  relatedEntityId: string | null
+  occurredAt: string
+}
+
+export interface TrainarrPersonTrainingHistoryResponse {
+  personId: string
+  sourceProduct: string
+  sourceNote: string
+  totalCount: number
+  items: TrainarrPersonTrainingHistoryEntryItem[]
+}
+
 export interface PersonnelHistorySummaryResponse {
   personId: string
   eventCount: number
@@ -717,6 +751,43 @@ export interface AuditPackageSectionDescriptor {
 export interface AuditPackageManifestResponse {
   packageVersion: string
   sections: AuditPackageSectionDescriptor[]
+}
+
+export interface AuditPackageAppliedFilters {
+  from: string | null
+  to: string | null
+  action: string | null
+  result: string | null
+  targetType: string | null
+  actorUserId: string | null
+}
+
+export interface AuditPackageFilterOptions {
+  actions: string[]
+  results: string[]
+  targetTypes: string[]
+}
+
+export interface AuditPackageBreakdownItem {
+  key: string
+  count: number
+}
+
+export interface AuditPackageExportSummary {
+  filters: AuditPackageAppliedFilters
+  counts: AuditPackageCountsResponse
+  byResult: AuditPackageBreakdownItem[]
+  byAction: AuditPackageBreakdownItem[]
+  generatedAt: string
+}
+
+export interface AuditPackageScope {
+  from?: string
+  to?: string
+  action?: string
+  result?: string
+  targetType?: string
+  actorUserId?: string
 }
 
 export interface AuditPackageCountsResponse {
@@ -746,6 +817,7 @@ export interface AuditPackageExportResponse {
   tenantId: string
   generatedAt: string
   dateRange: { from: string | null; to: string | null } | null
+  appliedFilters?: AuditPackageAppliedFilters | null
   counts: AuditPackageCountsResponse
   auditEvents: unknown[]
   people: unknown[]

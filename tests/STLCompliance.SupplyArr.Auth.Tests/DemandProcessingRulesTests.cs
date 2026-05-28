@@ -1,5 +1,7 @@
+using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Entities;
 using SupplyArr.Api.Services;
+using STLCompliance.Shared.Contracts;
 
 namespace STLCompliance.SupplyArr.Auth.Tests;
 
@@ -90,5 +92,23 @@ public sealed class DemandProcessingRulesTests
         var (outcome, action) = DemandProcessingRules.ResolveOutcome(2, 0, 0);
         Assert.Equal(DemandProcessingOutcomes.NoCatalogParts, outcome);
         Assert.Equal(DemandProcessingRecommendedActions.ReviewManually, action);
+    }
+
+    [Fact]
+    public void ValidateSettings_rejects_enabled_worker_without_sources()
+    {
+        var ex = Assert.Throws<StlApiException>(() =>
+            DemandProcessingRules.ValidateSettings(new UpsertDemandProcessingSettingsRequest(
+                true,
+                false,
+                0,
+                4,
+                true,
+                false,
+                false,
+                false,
+                false)));
+
+        Assert.Equal("demand_processing_settings.no_sources", ex.Code);
     }
 }

@@ -8,6 +8,7 @@ export const WORKSPACE_SECTIONS = [
   'inspections',
   'inspection-templates',
   'history',
+  'reports',
   'settings',
 ] as const
 
@@ -63,8 +64,12 @@ export const workspaceSectionHeaders: Record<
     title: 'Maintenance history',
     subtitle: 'Asset maintenance timeline',
   },
+  reports: {
+    title: 'Maintenance reports',
+    subtitle: 'Fleet rollups, report CSV, and entity exports',
+  },
   settings: {
     title: 'Workspace settings',
-    subtitle: 'Notifications and audit exports',
+    subtitle: 'Bulk import, notifications, and audit exports',
   },
 }

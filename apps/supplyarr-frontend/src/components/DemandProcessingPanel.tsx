@@ -1,17 +1,26 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
-import { getDemandProcessingDashboard } from '../api/client'
+import {
+  createDemandProcessingPrDraft,
+  getDemandProcessingDashboard,
+  getDemandProcessingDetail,
+  retryDemandProcessing,
+} from '../api/client'
+import type { DemandProcessingSummaryResponse } from '../api/types'
 
 interface DemandProcessingPanelProps {
   accessToken: string
   canRead: boolean
+  canOperate?: boolean
 }
 
-function formatOutcome(outcome: string): string {
+function formatOutcome(outcome: string | null): string {
+  if (!outcome) return 'pending'
   return outcome.replaceAll('_', ' ')
 }
 
-function outcomeBadgeClass(outcome: string): string {
+function outcomeBadgeClass(outcome: string | null): string {
   switch (outcome) {
     case 'stock_available':
       return 'bg-emerald-500/20 text-emerald-300 ring-emerald-500/40'
@@ -26,12 +35,153 @@ function outcomeBadgeClass(outcome: string): string {
   }
 }
 
-export function DemandProcessingPanel({ accessToken, canRead }: DemandProcessingPanelProps) {
+function DemandRefRow({
+  item,
+  accessToken,
+  canOperate,
+  isSelected,
+  onSelect,
+  onActionComplete,
+}: {
+  item: DemandProcessingSummaryResponse
+  accessToken: string
+  canOperate: boolean
+  isSelected: boolean
+  onSelect: () => void
+  onActionComplete: () => void
+}) {
+  const detailQuery = useQuery({
+    queryKey: ['supplyarr-demand-processing-detail', accessToken, item.demandRefId],
+    queryFn: () => getDemandProcessingDetail(accessToken, item.demandRefId),
+    enabled: isSelected,
+  })
+
+  const retryMutation = useMutation({
+    mutationFn: () => retryDemandProcessing(accessToken, item.demandRefId),
+    onSuccess: onActionComplete,
+  })
+
+  const createPrMutation = useMutation({
+    mutationFn: () => createDemandProcessingPrDraft(accessToken, item.demandRefId),
+    onSuccess: onActionComplete,
+  })
+
+  const canCreatePr =
+    canOperate
+    && !item.purchaseRequestId
+    && item.demandRefStatus === 'received'
+
+  return (
+    <li
+      className="px-3 py-3"
+      data-testid={`demand-processing-row-${item.demandRefId}`}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <button
+          type="button"
+          className="min-w-0 flex-1 text-left"
+          onClick={onSelect}
+        >
+          <div className="font-medium text-slate-100">
+            {item.demandRefSource} · {item.sourceRefKey} · {item.title}
+          </div>
+          <div className="text-xs text-slate-500">
+            {item.sourceLink.displayLabel} · status {item.demandRefStatus}
+            {item.linesShortCount != null
+              ? ` · ${item.linesShortCount} short of ${item.linesCatalogCount ?? 0} catalog lines`
+              : ''}
+          </div>
+        </button>
+        <span
+          className={`rounded px-2 py-0.5 text-xs ring-1 ${outcomeBadgeClass(item.processingOutcome)}`}
+        >
+          {formatOutcome(item.processingOutcome)}
+        </span>
+      </div>
+
+      {item.lastProcessingMessage ? (
+        <p className="mt-2 text-slate-300">{item.lastProcessingMessage}</p>
+      ) : null}
+
+      {item.purchaseRequestId ? (
+        <p className="mt-2 text-xs text-violet-300">
+          Linked PR {item.purchaseRequestId.slice(0, 8)}…
+        </p>
+      ) : null}
+
+      {canOperate ? (
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 disabled:opacity-50"
+            disabled={retryMutation.isPending}
+            onClick={() => retryMutation.mutate()}
+          >
+            Retry processing
+          </button>
+          {canCreatePr ? (
+            <button
+              type="button"
+              className="rounded bg-violet-700 px-2 py-1 text-xs text-white disabled:opacity-50"
+              disabled={createPrMutation.isPending}
+              onClick={() => createPrMutation.mutate()}
+            >
+              Create PR draft
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-400"
+            onClick={onSelect}
+          >
+            {isSelected ? 'Hide status' : 'View status'}
+          </button>
+        </div>
+      ) : null}
+
+      {isSelected && detailQuery.data ? (
+        <div
+          className="mt-3 rounded-md border border-slate-800 bg-slate-950/60 p-3 text-xs text-slate-400"
+          data-testid="demand-processing-detail"
+        >
+          <p className="font-medium text-slate-300">Source link</p>
+          <p className="mt-1">{detailQuery.data.summary.sourceLink.displayLabel}</p>
+          <p className="mt-2 font-medium text-slate-300">Line availability</p>
+          <ul className="mt-1 space-y-1">
+            {detailQuery.data.lines.map((line) => (
+              <li key={line.lineId}>
+                {line.partNumber}: requested {line.quantityRequested}, available{' '}
+                {line.quantityAvailable}
+                {line.isShort ? ' (short)' : ''}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </li>
+  )
+}
+
+export function DemandProcessingPanel({
+  accessToken,
+  canRead,
+  canOperate = false,
+}: DemandProcessingPanelProps) {
+  const queryClient = useQueryClient()
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+
   const dashboardQuery = useQuery({
     queryKey: ['supplyarr-demand-processing', accessToken],
     queryFn: () => getDemandProcessingDashboard(accessToken),
     enabled: canRead,
   })
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ['supplyarr-demand-processing', accessToken] })
+    void queryClient.invalidateQueries({
+      queryKey: ['supplyarr-demand-processing-detail', accessToken],
+    })
+  }
 
   if (!canRead) {
     return null
@@ -44,8 +194,8 @@ export function DemandProcessingPanel({ accessToken, canRead }: DemandProcessing
     >
       <h2 className="text-lg font-semibold text-slate-50">Demand processing</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Stock availability evaluation and procurement recommendations for demand references from enabled
-        sources (MaintainArr, RoutArr, TrainArr, StaffArr).
+        Stock evaluation and procurement actions for demand references from enabled sources.
+        Use Retry processing to refresh outcomes; Create PR draft when stock is short.
       </p>
 
       {dashboardQuery.isLoading && (
@@ -73,34 +223,56 @@ export function DemandProcessingPanel({ accessToken, canRead }: DemandProcessing
             </span>
           </div>
 
-          {dashboardQuery.data.items.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">No processed demand references yet.</p>
-          ) : (
-            <ul className="mt-4 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
-              {dashboardQuery.data.items.map((item) => (
-                <li key={item.processingStateId} className="px-3 py-3">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <div className="font-medium text-slate-100">
-                        {item.demandRefSource} · {item.sourceRefKey} · {item.title}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        {item.linesShortCount} short of {item.linesCatalogCount} catalog lines
-                      </div>
-                    </div>
-                    <span
-                      className={`rounded px-2 py-0.5 text-xs ring-1 ${outcomeBadgeClass(item.processingOutcome)}`}
-                    >
-                      {formatOutcome(item.processingOutcome)}
-                    </span>
-                  </div>
-                  {item.lastProcessingMessage && (
-                    <p className="mt-2 text-slate-300">{item.lastProcessingMessage}</p>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+          {dashboardQuery.data.pendingItems.length > 0 ? (
+            <div className="mt-4">
+              <h3 className="text-sm font-medium text-slate-200">Pending queue</h3>
+              <ul className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
+                {dashboardQuery.data.pendingItems.map((item) => (
+                  <DemandRefRow
+                    key={`pending-${item.demandRefId}`}
+                    item={item}
+                    accessToken={accessToken}
+                    canOperate={canOperate}
+                    isSelected={selectedId === item.demandRefId}
+                    onSelect={() =>
+                      setSelectedId((current) =>
+                        current === item.demandRefId ? null : item.demandRefId,
+                      )
+                    }
+                    onActionComplete={invalidate}
+                  />
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {dashboardQuery.data.processedItems.length > 0 ? (
+            <div className="mt-4">
+              <h3 className="text-sm font-medium text-slate-200">Recently processed</h3>
+              <ul className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
+                {dashboardQuery.data.processedItems.map((item) => (
+                  <DemandRefRow
+                    key={`processed-${item.processingStateId ?? item.demandRefId}`}
+                    item={item}
+                    accessToken={accessToken}
+                    canOperate={canOperate}
+                    isSelected={selectedId === item.demandRefId}
+                    onSelect={() =>
+                      setSelectedId((current) =>
+                        current === item.demandRefId ? null : item.demandRefId,
+                      )
+                    }
+                    onActionComplete={invalidate}
+                  />
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {dashboardQuery.data.pendingItems.length === 0
+            && dashboardQuery.data.processedItems.length === 0 ? (
+            <p className="mt-4 text-sm text-slate-500">No demand references in the processing queues.</p>
+          ) : null}
         </>
       )}
     </section>

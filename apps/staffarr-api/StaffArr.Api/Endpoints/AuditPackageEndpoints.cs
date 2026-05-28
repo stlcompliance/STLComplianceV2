@@ -22,9 +22,46 @@ public static class AuditPackageEndpoints
         })
         .WithName("GetStaffArrAuditPackageManifest");
 
+        packages.MapGet("/filter-options", async (
+            StaffArrAuthorizationService authorization,
+            AuditPackageService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAuditPackageRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetFilterOptionsAsync(tenantId, cancellationToken));
+        })
+        .WithName("GetStaffArrAuditPackageFilterOptions");
+
+        packages.MapGet("/summary", async (
+            DateTimeOffset? from,
+            DateTimeOffset? to,
+            string? action,
+            string? result,
+            string? targetType,
+            Guid? actorUserId,
+            StaffArrAuthorizationService authorization,
+            AuditPackageService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAuditPackageRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetExportSummaryAsync(
+                tenantId,
+                BuildFilter(from, to, action, result, targetType, actorUserId),
+                cancellationToken));
+        })
+        .WithName("GetStaffArrAuditPackageExportSummary");
+
         packages.MapGet("/timeline", async (
             DateTimeOffset? from,
             DateTimeOffset? to,
+            string? action,
+            string? result,
+            string? targetType,
+            Guid? actorUserId,
             int? page,
             int? pageSize,
             StaffArrAuthorizationService authorization,
@@ -34,14 +71,13 @@ public static class AuditPackageEndpoints
         {
             authorization.RequireAuditPackageRead(context.User);
             var tenantId = context.User.GetTenantId();
-            var result = await service.ListAuditTimelineAsync(
+            var resultPage = await service.ListAuditTimelineAsync(
                 tenantId,
-                from,
-                to,
+                BuildFilter(from, to, action, result, targetType, actorUserId),
                 page ?? 1,
                 pageSize ?? 25,
                 cancellationToken);
-            return Results.Ok(result);
+            return Results.Ok(resultPage);
         })
         .WithName("GetStaffArrAuditPackageTimeline");
 
@@ -49,6 +85,10 @@ public static class AuditPackageEndpoints
             string? format,
             DateTimeOffset? from,
             DateTimeOffset? to,
+            string? action,
+            string? result,
+            string? targetType,
+            Guid? actorUserId,
             StaffArrAuthorizationService authorization,
             AuditPackageService service,
             HttpContext context,
@@ -56,25 +96,25 @@ public static class AuditPackageEndpoints
         {
             authorization.RequireAuditPackageExport(context.User);
             var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
+            var actor = context.User.GetUserId();
+            var filter = BuildFilter(from, to, action, result, targetType, actorUserId);
 
             if (string.Equals(format, "json", StringComparison.OrdinalIgnoreCase))
             {
-                var package = await service.BuildExportAsync(
-                    tenantId,
-                    actorUserId,
-                    from,
-                    to,
-                    cancellationToken);
+                var package = await service.BuildExportAsync(tenantId, actor, filter, cancellationToken);
                 return Results.Ok(package);
             }
 
-            var zipBytes = await service.ExportZipAsync(
-                tenantId,
-                actorUserId,
-                from,
-                to,
-                cancellationToken);
+            if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
+            {
+                var csvBytes = await service.ExportAuditEventsCsvAsync(tenantId, actor, filter, cancellationToken);
+                return Results.File(
+                    csvBytes,
+                    "text/csv",
+                    $"staffarr-audit-events-{DateTime.UtcNow:yyyyMMddHHmmss}.csv");
+            }
+
+            var zipBytes = await service.ExportZipAsync(tenantId, actor, filter, cancellationToken);
             return Results.File(
                 zipBytes,
                 "application/zip",
@@ -140,4 +180,13 @@ public static class AuditPackageEndpoints
         })
         .WithName("DownloadStaffArrAuditPackageGenerationJob");
     }
+
+    private static AuditPackageFilter BuildFilter(
+        DateTimeOffset? from,
+        DateTimeOffset? to,
+        string? action,
+        string? result,
+        string? targetType,
+        Guid? actorUserId) =>
+        new(from, to, action, result, targetType, actorUserId);
 }

@@ -75,26 +75,37 @@ public sealed class RoutArrAuthorizationService
 
     public void RequireTripsAssign(ClaimsPrincipal principal)
     {
-        RequireRoutArrEntitlement(principal);
+        if (!CanAssignTrips(principal))
+        {
+            throw new StlApiException(
+                "auth.forbidden",
+                "Driver assignment requires routarr.dispatch.assign scope.",
+                403);
+        }
+    }
+
+    public bool CanAssignTrips(ClaimsPrincipal principal)
+    {
+        try
+        {
+            RequireRoutArrEntitlement(principal);
+        }
+        catch (StlApiException)
+        {
+            return false;
+        }
+
         if (principal.IsPlatformAdmin())
         {
-            return;
+            return true;
         }
 
-        if (MatchesRole(
-                principal.GetTenantRoleKey(),
-                "tenant_admin",
-                "routarr_admin",
-                "routarr_manager",
-                "routarr_dispatcher"))
-        {
-            return;
-        }
-
-        throw new StlApiException(
-            "auth.forbidden",
-            "Driver assignment requires routarr.dispatch.assign scope.",
-            403);
+        return MatchesRole(
+            principal.GetTenantRoleKey(),
+            "tenant_admin",
+            "routarr_admin",
+            "routarr_manager",
+            "routarr_dispatcher");
     }
 
     public void RequireTripsPerform(ClaimsPrincipal principal)
@@ -192,6 +203,62 @@ public sealed class RoutArrAuthorizationService
     }
 
     public void RequireDispatchBoardRead(ClaimsPrincipal principal) => RequireTripsRead(principal);
+
+    public void RequireDispatchExceptionRead(ClaimsPrincipal principal) => RequireDispatchBoardRead(principal);
+
+    public void RequireDispatchExceptionTriage(ClaimsPrincipal principal) => RequireTripsAssign(principal);
+
+    public void RequireDispatchReportRead(ClaimsPrincipal principal) => RequireTripsAssign(principal);
+
+    public void RequireDispatchReportExport(ClaimsPrincipal principal) => RequireTripsManage(principal);
+
+    public void RequireEntityExport(ClaimsPrincipal principal) => RequireDispatchReportExport(principal);
+
+    public void RequireAuditPackageRead(ClaimsPrincipal principal) => RequireDispatchReportRead(principal);
+
+    public void RequireAuditPackageExport(ClaimsPrincipal principal) => RequireDispatchReportExport(principal);
+
+    public void RequireTripProofRead(ClaimsPrincipal principal)
+    {
+        RequireRoutArrEntitlement(principal);
+        if (principal.IsPlatformAdmin() || CanViewAllTrips(principal))
+        {
+            return;
+        }
+
+        RequireTripsPerform(principal);
+    }
+
+    public void RequireTripProofWrite(ClaimsPrincipal principal) => RequireDriverPortalExecute(principal);
+
+    public void RequireDvirPerform(ClaimsPrincipal principal) => RequireTripProofWrite(principal);
+
+    public void RequireDriverPortalRead(ClaimsPrincipal principal) => RequireTripsPerform(principal);
+
+    public void RequireDriverPortalExecute(ClaimsPrincipal principal)
+    {
+        RequireTripsPerform(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "routarr_admin",
+                "routarr_manager",
+                "routarr_dispatcher",
+                "routarr_driver"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Driver portal execution requires routarr.trips.perform scope.",
+            403);
+    }
 
     public void RequireRouteCalendarRead(ClaimsPrincipal principal) => RequireTripsRead(principal);
 

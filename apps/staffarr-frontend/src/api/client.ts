@@ -61,6 +61,8 @@ import type {
   UpsertPersonExportScheduleRequest,
   PersonLookupResponse,
   PersonnelHistorySummaryResponse,
+  TrainarrPersonTrainingHistoryResponse,
+  TrainingAcknowledgementResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -567,6 +569,21 @@ export async function getPersonHistorySummary(
   return parseJsonResponse<PersonnelHistorySummaryResponse>(response, 'Failed to load person history summary')
 }
 
+export async function getPersonTrainarrTrainingHistory(
+  accessToken: string,
+  personId: string,
+  limit = 25,
+): Promise<TrainarrPersonTrainingHistoryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/people/${personId}/trainarr-training-history?limit=${limit}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<TrainarrPersonTrainingHistoryResponse>(
+    response,
+    'Failed to load TrainArr training history',
+  )
+}
+
 export async function getCertificationDefinitions(
   accessToken: string,
 ): Promise<CertificationDefinitionResponse[]> {
@@ -675,6 +692,42 @@ export async function clearPersonReadinessOverride(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PersonReadinessResponse>(response, 'Failed to clear readiness override')
+}
+
+export async function listTrainingAcknowledgements(
+  accessToken: string,
+  personId?: string,
+  status?: string,
+): Promise<TrainingAcknowledgementResponse[]> {
+  const params = new URLSearchParams()
+  if (personId) {
+    params.set('personId', personId)
+  }
+  if (status) {
+    params.set('status', status)
+  }
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/training-acknowledgements${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TrainingAcknowledgementResponse[]>(
+    response,
+    'Failed to load training acknowledgements',
+  )
+}
+
+export async function acknowledgeTrainingAssignment(
+  accessToken: string,
+  acknowledgementId: string,
+): Promise<TrainingAcknowledgementResponse> {
+  const response = await fetch(`${apiBase}/api/training-acknowledgements/${acknowledgementId}/acknowledge`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TrainingAcknowledgementResponse>(
+    response,
+    'Failed to acknowledge training assignment',
+  )
 }
 
 export async function listPersonnelIncidents(
@@ -796,22 +849,34 @@ export function personnelDocumentContentUrl(personId: string, documentId: string
   return `${apiBase}/api/people/${personId}/documents/${documentId}/content`
 }
 
-function buildAuditPackageQuery(options?: {
-  from?: string
-  to?: string
-  format?: string
-  page?: number
-  pageSize?: number
-}): string {
+function buildAuditPackageQuery(
+  options?: import('./types').AuditPackageScope & {
+    format?: string
+    page?: number
+    pageSize?: number
+  },
+): string {
   const params = new URLSearchParams()
   if (options?.from) {
-    params.set('from', options.from)
+    params.set('from', `${options.from}T00:00:00.000Z`)
   }
   if (options?.to) {
-    params.set('to', options.to)
+    params.set('to', `${options.to}T23:59:59.999Z`)
   }
   if (options?.format) {
     params.set('format', options.format)
+  }
+  if (options?.action) {
+    params.set('action', options.action)
+  }
+  if (options?.result) {
+    params.set('result', options.result)
+  }
+  if (options?.targetType) {
+    params.set('targetType', options.targetType)
+  }
+  if (options?.actorUserId) {
+    params.set('actorUserId', options.actorUserId)
   }
   if (options?.page != null) {
     params.set('page', String(options.page))
@@ -823,9 +888,41 @@ function buildAuditPackageQuery(options?: {
   return query ? `?${query}` : ''
 }
 
+function auditPackageJobBody(scope: import('./types').AuditPackageScope & { format: string }) {
+  return {
+    format: scope.format,
+    from: scope.from ? `${scope.from}T00:00:00.000Z` : undefined,
+    to: scope.to ? `${scope.to}T23:59:59.999Z` : undefined,
+    action: scope.action,
+    result: scope.result,
+    targetType: scope.targetType,
+    actorUserId: scope.actorUserId,
+  }
+}
+
+export async function getAuditPackageFilterOptions(
+  accessToken: string,
+): Promise<import('./types').AuditPackageFilterOptions> {
+  const response = await fetch(`${apiBase}/api/audit-packages/filter-options`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse(response, 'Failed to load audit filter options')
+}
+
+export async function getAuditPackageExportSummary(
+  accessToken: string,
+  scope?: import('./types').AuditPackageScope,
+): Promise<import('./types').AuditPackageExportSummary> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/summary${buildAuditPackageQuery(scope)}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse(response, 'Failed to load audit export summary')
+}
+
 export async function getAuditPackageTimeline(
   accessToken: string,
-  options?: { from?: string; to?: string; page?: number; pageSize?: number },
+  options?: import('./types').AuditPackageScope & { page?: number; pageSize?: number },
 ): Promise<PagedResult<StaffArrAuditEventExportItem>> {
   const response = await fetch(
     `${apiBase}/api/audit-packages/timeline${buildAuditPackageQuery(options)}`,
@@ -848,9 +945,28 @@ export async function getAuditPackageManifest(
   return parseJsonResponse<AuditPackageManifestResponse>(response, 'Failed to load audit package manifest')
 }
 
+export async function exportAuditPackageCsv(
+  accessToken: string,
+  scope?: import('./types').AuditPackageScope,
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/export${buildAuditPackageQuery({ ...scope, format: 'csv' })}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new StaffArrApiError(
+      body || `Audit events CSV export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
 export async function exportAuditPackageZip(
   accessToken: string,
-  options?: { from?: string; to?: string },
+  options?: import('./types').AuditPackageScope,
 ): Promise<Blob> {
   const response = await fetch(
     `${apiBase}/api/audit-packages/export${buildAuditPackageQuery(options)}`,
@@ -871,7 +987,7 @@ export async function exportAuditPackageZip(
 
 export async function exportAuditPackageJson(
   accessToken: string,
-  options?: { from?: string; to?: string },
+  options?: import('./types').AuditPackageScope,
 ): Promise<AuditPackageExportResponse> {
   const response = await fetch(
     `${apiBase}/api/audit-packages/export${buildAuditPackageQuery({ ...options, format: 'json' })}`,
@@ -882,20 +998,9 @@ export async function exportAuditPackageJson(
   return parseJsonResponse<AuditPackageExportResponse>(response, 'Failed to export audit package JSON')
 }
 
-function auditPackageDateBody(from?: string, to?: string): { from?: string; to?: string } {
-  const body: { from?: string; to?: string } = {}
-  if (from) {
-    body.from = `${from}T00:00:00.000Z`
-  }
-  if (to) {
-    body.to = `${to}T23:59:59.999Z`
-  }
-  return body
-}
-
 export async function createAuditPackageGenerationJob(
   accessToken: string,
-  options: { format: 'zip' | 'json'; from?: string; to?: string },
+  options: import('./types').AuditPackageScope & { format: 'zip' | 'json' },
 ): Promise<AuditPackageGenerationJobResponse> {
   const response = await fetch(`${apiBase}/api/audit-packages/jobs`, {
     method: 'POST',
@@ -903,10 +1008,7 @@ export async function createAuditPackageGenerationJob(
       ...authHeaders(accessToken),
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      format: options.format,
-      ...auditPackageDateBody(options.from, options.to),
-    }),
+    body: JSON.stringify(auditPackageJobBody(options)),
   })
   return parseJsonResponse<AuditPackageGenerationJobResponse>(
     response,

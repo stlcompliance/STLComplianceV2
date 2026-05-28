@@ -282,6 +282,80 @@ public sealed class SupplyArrDemandProcessingWorkerTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Settings_upsert_rejects_enabled_worker_without_any_source()
+    {
+        var adminToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_admin");
+        var request = Authorized(HttpMethod.Put, "/api/demand-processing-settings", adminToken);
+        request.Content = JsonContent.Create(new UpsertDemandProcessingSettingsRequest(
+            true,
+            false,
+            0,
+            4,
+            true,
+            false,
+            false,
+            false,
+            false));
+        var response = await _supplyarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Operator_retry_processing_updates_materialized_state()
+    {
+        var demandRefId = await SeedDemandRefWithShortStockAsync();
+        await UpsertSettingsAsync(autoCreatePrDraftWhenShort: false);
+        var managerToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_manager");
+
+        var retryResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/demand-processing/{demandRefId}/retry-processing", managerToken));
+        retryResponse.EnsureSuccessStatusCode();
+        var action = (await retryResponse.Content.ReadFromJsonAsync<DemandProcessingOperatorActionResponse>())!;
+        Assert.Equal("retry_processing", action.Action);
+        Assert.Equal(DemandProcessingOutcomes.StockShort, action.Result.ProcessingOutcome);
+
+        var dashboardResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/demand-processing", managerToken));
+        dashboardResponse.EnsureSuccessStatusCode();
+        var dashboard = (await dashboardResponse.Content.ReadFromJsonAsync<DemandProcessingDashboardResponse>())!;
+        Assert.Contains(dashboard.ProcessedItems, x => x.DemandRefId == demandRefId);
+    }
+
+    [Fact]
+    public async Task Operator_create_pr_draft_links_purchase_request()
+    {
+        var demandRefId = await SeedDemandRefWithShortStockAsync();
+        await UpsertSettingsAsync(autoCreatePrDraftWhenShort: false);
+        var managerToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_manager");
+
+        var createResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/demand-processing/{demandRefId}/create-pr-draft", managerToken));
+        createResponse.EnsureSuccessStatusCode();
+        var action = (await createResponse.Content.ReadFromJsonAsync<DemandProcessingOperatorActionResponse>())!;
+        Assert.Equal("create_pr_draft", action.Action);
+        Assert.NotNull(action.Detail.Summary.PurchaseRequestId);
+
+        using var scope = _supplyarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
+        var demandRef = await db.MaintainArrDemandRefs.SingleAsync(x => x.Id == demandRefId);
+        Assert.NotNull(demandRef.PurchaseRequestId);
+    }
+
+    [Fact]
+    public async Task Dashboard_returns_pending_and_processed_queues()
+    {
+        var demandRefId = await SeedDemandRefWithShortStockAsync();
+        await UpsertSettingsAsync(autoCreatePrDraftWhenShort: false);
+        var managerToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_manager");
+
+        var dashboardResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/demand-processing", managerToken));
+        dashboardResponse.EnsureSuccessStatusCode();
+        var dashboard = (await dashboardResponse.Content.ReadFromJsonAsync<DemandProcessingDashboardResponse>())!;
+        Assert.Contains(dashboard.PendingItems, x => x.DemandRefId == demandRefId);
+    }
+
     private async Task<Guid> SeedDemandRefWithShortStockAsync()
     {
         using var scope = _supplyarrFactory.Services.CreateScope();

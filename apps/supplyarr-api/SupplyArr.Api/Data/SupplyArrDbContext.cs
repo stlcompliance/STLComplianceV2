@@ -288,10 +288,12 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.Property(x => x.WaiveJustification).HasMaxLength(2048).IsRequired();
             entity.Property(x => x.WaiveRejectionReason).HasMaxLength(512).IsRequired();
             entity.Property(x => x.CancellationReason).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.ResolutionTemplateKey).HasMaxLength(64).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.ExceptionKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.SubjectType, x.SubjectId });
             entity.HasIndex(x => new { x.TenantId, x.Status, x.UpdatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.SlaDueAt });
         });
 
         modelBuilder.Entity<SupplierIncident>(entity =>

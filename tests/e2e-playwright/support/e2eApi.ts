@@ -198,9 +198,10 @@ export async function listCompanionOfflineActions(
 
 const platformAuditGenerateScope = 'nexarr.platform_audit_packages.generate'
 
-export async function issueSharedWorkerNexArrServiceToken(
+export async function issueSharedWorkerServiceToken(
   adminAccessToken: string,
-  actionScope: string = platformAuditGenerateScope,
+  allowedProductKeys: string[],
+  actionScope: string,
 ): Promise<string> {
   const clientKey = `shared-worker-e2e-${Date.now()}`
   const registerResponse = await fetch(`${nexarrApiUrl()}/api/service-tokens/clients`, {
@@ -213,7 +214,7 @@ export async function issueSharedWorkerNexArrServiceToken(
       clientKey,
       displayName: 'E2E shared worker',
       sourceProductKey: 'shared-worker',
-      allowedProductKeys: ['nexarr'],
+      allowedProductKeys,
     }),
   })
   const client = await readJson<{ serviceClientId: string }>(registerResponse)
@@ -227,13 +228,20 @@ export async function issueSharedWorkerNexArrServiceToken(
     body: JSON.stringify({
       serviceClientId: client.serviceClientId,
       tenantId: demoCredentials.tenantId,
-      allowedProductKeys: ['nexarr'],
+      allowedProductKeys,
       actionScope,
       lifetimeMinutes: 30,
     }),
   })
   const issued = await readJson<{ accessToken: string }>(issueResponse)
   return issued.accessToken
+}
+
+export async function issueSharedWorkerNexArrServiceToken(
+  adminAccessToken: string,
+  actionScope: string = platformAuditGenerateScope,
+): Promise<string> {
+  return issueSharedWorkerServiceToken(adminAccessToken, ['nexarr'], actionScope)
 }
 
 export async function processPlatformAuditPackageGenerationBatch(
@@ -251,6 +259,117 @@ export async function processPlatformAuditPackageGenerationBatch(
       body: JSON.stringify({
         tenantId: demoCredentials.tenantId,
         asOfUtc: null,
+        batchSize,
+      }),
+    },
+  )
+  await readJson(response)
+}
+
+export async function processMaintainArrAuditPackageGenerationBatch(
+  serviceToken: string,
+  batchSize = 5,
+): Promise<void> {
+  const response = await fetch(
+    `${maintainarrApiUrl()}/api/internal/audit-package-jobs/process-batch`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${serviceToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tenantId: demoCredentials.tenantId,
+        asOfUtc: null,
+        batchSize,
+      }),
+    },
+  )
+  await readJson(response)
+}
+
+export async function processStaffArrAuditPackageGenerationBatch(
+  serviceToken: string,
+  batchSize = 5,
+): Promise<void> {
+  const response = await fetch(
+    `${staffarrApiUrl()}/api/internal/audit-package-jobs/process-batch`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${serviceToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tenantId: demoCredentials.tenantId,
+        asOfUtc: null,
+        batchSize,
+      }),
+    },
+  )
+  await readJson(response)
+}
+
+export async function processTrainArrAuditPackageGenerationBatch(
+  serviceToken: string,
+  batchSize = 5,
+): Promise<void> {
+  const response = await fetch(
+    `${trainarrApiUrl()}/api/internal/audit-package-jobs/process-batch`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${serviceToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tenantId: demoCredentials.tenantId,
+        asOfUtc: null,
+        batchSize,
+      }),
+    },
+  )
+  await readJson(response)
+}
+
+export async function processRoutArrAuditPackageGenerationBatch(
+  serviceToken: string,
+  batchSize = 5,
+): Promise<void> {
+  const response = await fetch(
+    `${routarrApiUrl()}/api/internal/audit-package-jobs/process-batch`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${serviceToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tenantId: demoCredentials.tenantId,
+        asOfUtc: null,
+        batchSize,
+      }),
+    },
+  )
+  await readJson(response)
+}
+
+export async function processComplianceCoreM12AnalyticsBatch(
+  serviceToken: string,
+  batchSize = 5,
+): Promise<void> {
+  const response = await fetch(
+    `${compliancecoreApiUrl()}/api/internal/m12-analytics-batches/process-batch`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${serviceToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tenantId: demoCredentials.tenantId,
+        asOfUtc: null,
+        intervalHours: 24,
         batchSize,
       }),
     },
@@ -503,4 +622,180 @@ export async function ensureSupplyArrFieldInboxFixture(): Promise<SupplyArrField
   )
 
   return { receivingReceiptId: receipt.receivingReceiptId }
+}
+
+const trainarrDemandStatusIngestScope = 'trainarr.demand_status.write'
+
+export type TrainArrMaterialDemandFixture = TrainArrJourneyFixture & {
+  procurementStatusSeeded: boolean
+}
+
+type TrainArrMaterialDemandLineResponse = {
+  demandLineId: string
+  status: string
+  procurementStatus: string
+}
+
+type PublishTrainArrMaterialDemandResponse = {
+  publicationId: string
+  demandRefId: string
+  purchaseRequestId: string | null
+}
+
+export async function issueSupplyarrToTrainarrDemandStatusToken(
+  adminAccessToken: string,
+): Promise<string> {
+  const clientKey = `supplyarr-trainarr-e2e-${Date.now()}`
+  const registerResponse = await fetch(`${nexarrApiUrl()}/api/service-tokens/clients`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${adminAccessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      clientKey,
+      displayName: 'E2E SupplyArr TrainArr demand status',
+      sourceProductKey: 'supplyarr',
+      allowedProductKeys: ['trainarr'],
+    }),
+  })
+  const client = await readJson<{ serviceClientId: string }>(registerResponse)
+
+  const issueResponse = await fetch(`${nexarrApiUrl()}/api/service-tokens`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${adminAccessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      serviceClientId: client.serviceClientId,
+      tenantId: demoCredentials.tenantId,
+      allowedProductKeys: ['trainarr'],
+      actionScope: trainarrDemandStatusIngestScope,
+      lifetimeMinutes: 30,
+    }),
+  })
+  const issued = await readJson<{ accessToken: string }>(issueResponse)
+  return issued.accessToken
+}
+
+export async function createTrainArrMaterialDemandLine(
+  trainarrAccessToken: string,
+  assignmentId: string,
+  payload: {
+    partNumber: string
+    quantityRequested?: number
+    supplyarrPartId?: string | null
+  },
+): Promise<TrainArrMaterialDemandLineResponse> {
+  const response = await fetch(
+    `${trainarrApiUrl()}/api/training-assignments/${assignmentId}/material-demand`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${trainarrAccessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        supplyarrPartId: payload.supplyarrPartId ?? null,
+        partNumber: payload.partNumber,
+        description: 'E2E material demand',
+        quantityRequested: payload.quantityRequested ?? 1,
+        unitOfMeasure: 'each',
+        notes: null,
+      }),
+    },
+  )
+  return readJson<TrainArrMaterialDemandLineResponse>(response)
+}
+
+export async function publishTrainArrMaterialDemand(
+  trainarrAccessToken: string,
+  assignmentId: string,
+  createPurchaseRequestDraft = false,
+): Promise<PublishTrainArrMaterialDemandResponse> {
+  const response = await fetch(
+    `${trainarrApiUrl()}/api/training-assignments/${assignmentId}/material-demand/publish`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${trainarrAccessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ createPurchaseRequestDraft }),
+    },
+  )
+  return readJson<PublishTrainArrMaterialDemandResponse>(response)
+}
+
+export async function ingestTrainarrSupplyarrDemandStatus(
+  serviceToken: string,
+  payload: {
+    trainarrPublicationId: string
+    supplyarrDemandRefId: string
+    supplyarrCallbackPublicationId: string
+    eventType?: string
+    procurementStatus?: string
+    message?: string
+  },
+): Promise<void> {
+  const response = await fetch(`${trainarrApiUrl()}/api/integrations/supplyarr-demand-status`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${serviceToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      tenantId: demoCredentials.tenantId,
+      trainarrPublicationId: payload.trainarrPublicationId,
+      supplyarrDemandRefId: payload.supplyarrDemandRefId,
+      supplyarrCallbackPublicationId: payload.supplyarrCallbackPublicationId,
+      eventType: payload.eventType ?? 'pr_submitted',
+      procurementStatus: payload.procurementStatus ?? 'pr_submitted',
+      supplyarrPurchaseRequestId: null,
+      supplyarrPurchaseOrderId: null,
+      supplyarrReceivingReceiptId: null,
+      quantityReceivedDelta: null,
+      message: payload.message ?? 'E2E procurement status callback',
+      occurredAt: new Date().toISOString(),
+    }),
+  })
+  await readJson(response)
+}
+
+/**
+ * Active assignment plus optional published demand line and procurement status (W233 / W234).
+ * Publish + callback require TrainArr and SupplyArr APIs; failures leave procurementStatusSeeded false.
+ */
+export async function ensureTrainArrMaterialDemandFixture(): Promise<TrainArrMaterialDemandFixture> {
+  const trainarrToken = await redeemHandoffForProduct('trainarr')
+  const journey = await seedTrainArrJourney(trainarrToken)
+  const trainingAssignmentId = await createActiveTrainingAssignment(
+    trainarrToken,
+    journey.trainingDefinitionId,
+  )
+
+  let procurementStatusSeeded = false
+
+  try {
+    await createTrainArrMaterialDemandLine(trainarrToken, trainingAssignmentId, {
+      partNumber: `E2E-MD-${Date.now()}`,
+    })
+    const published = await publishTrainArrMaterialDemand(trainarrToken, trainingAssignmentId, false)
+    const adminToken = await loginNexArr()
+    const statusToken = await issueSupplyarrToTrainarrDemandStatusToken(adminToken)
+    await ingestTrainarrSupplyarrDemandStatus(statusToken, {
+      trainarrPublicationId: published.publicationId,
+      supplyarrDemandRefId: published.demandRefId,
+      supplyarrCallbackPublicationId: crypto.randomUUID(),
+      procurementStatus: 'pr_submitted',
+      eventType: 'pr_submitted',
+      message: 'E2E Playwright procurement status',
+    })
+    procurementStatusSeeded = true
+  } catch {
+    procurementStatusSeeded = false
+  }
+
+  return { trainingAssignmentId, procurementStatusSeeded }
 }

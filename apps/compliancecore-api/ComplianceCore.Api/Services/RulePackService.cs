@@ -18,7 +18,9 @@ public sealed class RulePackService(
 
     ComplianceCoreDbContext db,
 
-    IComplianceCoreAuditService auditService)
+    IComplianceCoreAuditService auditService,
+
+    RuleChangeMonitoringService ruleChangeMonitoring)
 
 {
 
@@ -200,7 +202,12 @@ public sealed class RulePackService(
 
             cancellationToken: cancellationToken);
 
-
+        await ruleChangeMonitoring.RecordVersionCreatedAsync(
+            tenantId,
+            actorUserId,
+            entity,
+            program.ProgramKey,
+            cancellationToken);
 
         return MapResponse(entity, program);
 
@@ -258,7 +265,7 @@ public sealed class RulePackService(
 
         ValidateStatusTransition(entity.Status, status);
 
-
+        var previousStatus = entity.Status;
 
         entity.Status = status;
 
@@ -286,11 +293,18 @@ public sealed class RulePackService(
 
             cancellationToken: cancellationToken);
 
-
-
         var program = await db.RegulatoryPrograms.AsNoTracking()
 
             .FirstAsync(x => x.Id == entity.RegulatoryProgramId, cancellationToken);
+
+        await ruleChangeMonitoring.RecordStatusChangedAsync(
+            tenantId,
+            actorUserId,
+            entity,
+            program.ProgramKey,
+            previousStatus,
+            status,
+            cancellationToken);
 
         return MapResponse(entity, program);
 

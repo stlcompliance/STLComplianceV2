@@ -35,9 +35,17 @@ test.describe('Suite platform-admin audit export @requires-live', () => {
     const manifest = page.getByTestId('platform-audit-manifest-section')
     await expect(manifest.getByRole('listitem').first()).toBeVisible({ timeout: 15_000 })
 
+    const summary = page.getByTestId('platform-audit-summary-section')
+    await expect(summary).toBeVisible()
+    await expect(summary.getByTestId('platform-audit-summary-counts')).toBeVisible({
+      timeout: 15_000,
+    })
+
     const timeline = page.getByTestId('platform-audit-timeline-section')
     await expect(timeline).toBeVisible()
     await expect(timeline).not.toContainText('Loading audit timeline', { timeout: 15_000 })
+
+    await expect(page.getByTestId('platform-audit-filter-action')).toBeVisible()
 
     await page.getByRole('button', { name: 'Preview JSON export' }).click()
     const jsonPreview = page.getByTestId('platform-audit-json-preview')

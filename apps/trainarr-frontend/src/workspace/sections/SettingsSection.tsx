@@ -1,4 +1,5 @@
 import { NotificationSettingsPanel } from '../../components/NotificationSettingsPanel'
+import { AssignmentReminderEscalationSettingsPanel } from '../../components/AssignmentReminderEscalationSettingsPanel'
 import { QualificationRecalculationSettingsPanel } from '../../components/QualificationRecalculationSettingsPanel'
 import { RulePackImpactSettingsPanel } from '../../components/RulePackImpactSettingsPanel'
 import { EvidenceRetentionSettingsPanel } from '../../components/EvidenceRetentionSettingsPanel'
@@ -24,6 +25,7 @@ export function SettingsSection({ state }: Props) {
         <>
           <IntegrationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
           <NotificationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
+          <AssignmentReminderEscalationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
           <RecertificationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
           <QualificationRecalculationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
           <RulePackImpactSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />

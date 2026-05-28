@@ -24,6 +24,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<PmScheduleService>();
         builder.Services.AddScoped<PmProgramService>();
         builder.Services.AddScoped<PmDueScanService>();
+        builder.Services.AddScoped<PmDueScanSettingsService>();
         builder.Services.AddScoped<InspectionTemplateService>();
         builder.Services.AddScoped<InspectionRunService>();
         builder.Services.AddScoped<DefectService>();
@@ -58,6 +59,11 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<AssetStatusRollupSettingsService>();
         builder.Services.AddScoped<AssetStatusRollupWorkerService>();
         builder.Services.AddScoped<AssetStatusRollupService>();
+        builder.Services.AddScoped<MaintenanceReportService>();
+        builder.Services.AddScoped<ExecutiveReportService>();
+        builder.Services.AddScoped<ComplianceReportService>();
+        builder.Services.AddScoped<AssetBulkImportService>();
+        builder.Services.AddScoped<EntityBulkExportService>();
         builder.Services.AddScoped<AuditPackageService>();
         builder.Services.AddScoped<AuditPackageGenerationService>();
         builder.Services.AddHttpClient(MaintenanceNotificationDispatchService.WebhookHttpClientName, client =>

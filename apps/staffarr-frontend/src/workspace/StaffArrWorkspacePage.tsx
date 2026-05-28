@@ -6,6 +6,7 @@ import { OrgSection } from './sections/OrgSection'
 import { PermissionsSection } from './sections/PermissionsSection'
 import { ReadinessSection } from './sections/ReadinessSection'
 import { IncidentsSection } from './sections/IncidentsSection'
+import { TrainingAcknowledgementsSection } from './sections/TrainingAcknowledgementsSection'
 import { CertificationsSection } from './sections/CertificationsSection'
 import { AdminSection } from './sections/AdminSection'
 
@@ -21,6 +22,7 @@ export function StaffArrWorkspacePage({ section }: { section: WorkspaceSection }
       {section === 'permissions' ? <PermissionsSection state={state} /> : null}
       {section === 'readiness' ? <ReadinessSection state={state} /> : null}
       {section === 'incidents' ? <IncidentsSection state={state} /> : null}
+      {section === 'training-acknowledgements' ? <TrainingAcknowledgementsSection state={state} /> : null}
       {section === 'certifications' ? <CertificationsSection state={state} /> : null}
       {section === 'admin' ? <AdminSection state={state} /> : null}
     </WorkspaceShell>

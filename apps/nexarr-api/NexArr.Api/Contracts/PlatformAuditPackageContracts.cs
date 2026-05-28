@@ -15,6 +15,7 @@ public sealed record PlatformAuditPackageExportResponse(
     Guid? ScopeTenantId,
     DateTimeOffset GeneratedAt,
     PlatformAuditPackageDateRangeResponse? DateRange,
+    PlatformAuditPackageAppliedFiltersResponse? AppliedFilters,
     PlatformAuditPackageCountsResponse Counts,
     IReadOnlyList<PlatformAuditEventExportItem> AuditEvents,
     IReadOnlyList<PlatformAuditPackageTenantItem> Tenants,

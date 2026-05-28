@@ -4,8 +4,10 @@ import { ProductWorkspaceLayout } from './layouts/ProductWorkspaceLayout'
 import { AvailabilityPage } from './pages/availability/AvailabilityPage'
 import { CalendarPage } from './pages/calendar/CalendarPage'
 import { DispatchPage } from './pages/dispatch/DispatchPage'
+import { DriverPortalPage } from './pages/driver-portal/DriverPortalPage'
 import { RoutesPage } from './pages/routes/RoutesPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
+import { ReportsPage } from './pages/reports/ReportsPage'
 import { TripsPage } from './pages/trips/TripsPage'
 import { LaunchPage } from './pages/LaunchPage'
 import { TripWorkspacePage } from './pages/TripWorkspacePage'
@@ -28,11 +30,13 @@ export default function App() {
           <Route element={<ProductWorkspaceLayout />}>
             <Route index element={<Navigate to="/dispatch" replace />} />
             <Route path="/dispatch" element={<DispatchPage />} />
+            <Route path="/driver-portal" element={<DriverPortalPage />} />
             <Route path="/trips" element={<TripsPage />} />
             <Route path="/trips/:tripId" element={<TripWorkspacePage />} />
             <Route path="/routes" element={<RoutesPage />} />
             <Route path="/availability" element={<AvailabilityPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

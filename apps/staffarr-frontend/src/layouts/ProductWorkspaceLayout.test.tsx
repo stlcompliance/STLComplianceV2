@@ -45,6 +45,13 @@ vi.mock('@stl/shared-ui', () => ({
   },
   resolveSuiteHomeUrl: (url?: string) => url ?? 'http://localhost:5174/app',
   buildProductLaunchUrlMap: () => ({}),
+  useProductWorkspaceLaunch: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+    isError: false,
+    error: null,
+  }),
+  formatProductLaunchError: (error: unknown) => String(error),
 }))
 
 vi.mock('../api/client', () => ({

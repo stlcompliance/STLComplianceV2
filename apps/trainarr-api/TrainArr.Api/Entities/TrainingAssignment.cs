@@ -58,11 +58,23 @@ public sealed class TrainingAssignment : IHasTenant
 
     public Guid? BlockerPublicationId { get; set; }
 
+    public Guid? StaffarrAcknowledgementRequestId { get; set; }
+
+    public string? StaffarrAcknowledgementStatus { get; set; }
+
+    public DateTimeOffset? StaffarrAcknowledgementAt { get; set; }
+
 
 
     public DateTimeOffset? CompletedAt { get; set; }
 
+    public DateTimeOffset? LastDueReminderSentAt { get; set; }
 
+    public int DueReminderCount { get; set; }
+
+    public DateTimeOffset? LastEscalatedAt { get; set; }
+
+    public int EscalationCount { get; set; }
 
     public Guid? CompletedByUserId { get; set; }
 

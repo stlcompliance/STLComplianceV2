@@ -10,6 +10,7 @@ import { DefectsSection } from './sections/DefectsSection'
 import { InspectionsSection } from './sections/InspectionsSection'
 import { InspectionTemplatesSection } from './sections/InspectionTemplatesSection'
 import { HistorySection } from './sections/HistorySection'
+import { ReportsSection } from './sections/ReportsSection'
 import { SettingsSection } from './sections/SettingsSection'
 
 export function MaintainArrWorkspacePage({ section }: { section: WorkspaceSection }) {
@@ -28,6 +29,7 @@ export function MaintainArrWorkspacePage({ section }: { section: WorkspaceSectio
       {section === 'inspections' ? <InspectionsSection state={state} /> : null}
       {section === 'inspection-templates' ? <InspectionTemplatesSection state={state} /> : null}
       {section === 'history' ? <HistorySection state={state} /> : null}
+      {section === 'reports' ? <ReportsSection state={state} /> : null}
       {section === 'settings' ? <SettingsSection state={state} /> : null}
     </WorkspaceShell>
   )

@@ -38,3 +38,16 @@ public sealed record PublishTrainingAssignmentMaterialDemandResponse(
     Guid? PurchaseRequestId,
     bool CreatedPurchaseRequestDraft,
     IReadOnlyList<TrainingAssignmentMaterialDemandLineResponse> Lines);
+
+public sealed record TrainingAssignmentMaterialDemandStatusEventResponse(
+    Guid StatusEventId,
+    Guid TrainarrPublicationId,
+    Guid SupplyarrDemandRefId,
+    string EventType,
+    string ProcurementStatus,
+    Guid? SupplyarrPurchaseRequestId,
+    Guid? SupplyarrPurchaseOrderId,
+    Guid? SupplyarrReceivingReceiptId,
+    string Message,
+    DateTimeOffset OccurredAt,
+    DateTimeOffset CreatedAt);

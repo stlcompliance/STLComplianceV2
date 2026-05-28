@@ -30,12 +30,85 @@ public sealed class PmDueScanService(
 
     public async Task<ProcessPmDueScanResponse> ProcessBatchAsync(
         ProcessPmDueScanRequest request,
+        bool recordRun = false,
         CancellationToken cancellationToken = default)
+    {
+        if (request.TenantId is null)
+        {
+            return await ProcessEnabledTenantsAsync(request, recordRun, cancellationToken);
+        }
+
+        return await ProcessTenantBatchAsync(request, request.TenantId.Value, recordRun, cancellationToken);
+    }
+
+    public async Task<PmDueScanRunsResponse> ListRecentRunsAsync(
+        Guid tenantId,
+        int? limit,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedLimit = PmDueScanSettingsRules.NormalizeRunListLimit(limit);
+        var runs = await db.PmDueScanRuns
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .OrderByDescending(x => x.CreatedAt)
+            .Take(normalizedLimit)
+            .Select(x => new PmDueScanRunItem(
+                x.Id,
+                x.AsOfUtc,
+                x.CandidatesFound,
+                x.MarkedDueCount,
+                x.MarkedOverdueCount,
+                x.SkippedCount,
+                x.WorkOrdersCreatedCount,
+                x.WorkOrdersLinkedCount,
+                x.CreatedAt))
+            .ToListAsync(cancellationToken);
+
+        return new PmDueScanRunsResponse(runs);
+    }
+
+    private async Task<ProcessPmDueScanResponse> ProcessEnabledTenantsAsync(
+        ProcessPmDueScanRequest request,
+        bool recordRun,
+        CancellationToken cancellationToken)
+    {
+        var asOf = request.AsOfUtc ?? DateTimeOffset.UtcNow;
+        var enabledTenants = await db.TenantPmDueScanSettings
+            .AsNoTracking()
+            .Where(x => x.IsEnabled)
+            .ToListAsync(cancellationToken);
+
+        ProcessPmDueScanResponse? aggregate = null;
+        foreach (var settings in enabledTenants)
+        {
+            if (!PmDueScanSettingsRules.IsScheduledRunDue(settings.LastRunAt, settings.ScanIntervalMinutes, asOf))
+            {
+                continue;
+            }
+
+            var tenantRequest = new ProcessPmDueScanRequest(
+                settings.TenantId,
+                asOf,
+                request.BatchSize ?? settings.BatchSize,
+                request.OverdueGraceDays ?? settings.OverdueGraceDays);
+
+            var result = await ProcessTenantBatchAsync(tenantRequest, settings.TenantId, recordRun, cancellationToken);
+            aggregate = aggregate is null ? result : MergeProcessResponses(aggregate, result);
+        }
+
+        return aggregate ?? EmptyProcessResponse(asOf, NormalizeBatchSize(request.BatchSize ?? 100));
+    }
+
+    private async Task<ProcessPmDueScanResponse> ProcessTenantBatchAsync(
+        ProcessPmDueScanRequest request,
+        Guid tenantId,
+        bool recordRun,
+        CancellationToken cancellationToken)
     {
         var asOf = request.AsOfUtc ?? DateTimeOffset.UtcNow;
         var batchSize = NormalizeBatchSize(request.BatchSize ?? 100);
         var overdueGraceDays = NormalizeOverdueGraceDays(request.OverdueGraceDays);
-        var candidates = await LoadPendingCandidatesAsync(request.TenantId, asOf, batchSize, cancellationToken);
+        var candidates = await LoadPendingCandidatesAsync(tenantId, asOf, batchSize, cancellationToken);
 
         var updatedIds = new List<Guid>();
         var markedDue = 0;
@@ -110,7 +183,7 @@ public sealed class PmDueScanService(
             }
         }
 
-        return new ProcessPmDueScanResponse(
+        var response = new ProcessPmDueScanResponse(
             asOf,
             batchSize,
             candidates.Count,
@@ -124,7 +197,86 @@ public sealed class PmDueScanService(
             createdWorkOrderIds,
             skipped,
             workOrderGenerationSkipped);
+
+        if (recordRun)
+        {
+            await RecordRunAsync(
+                tenantId,
+                asOf,
+                response,
+                cancellationToken);
+        }
+
+        return response;
     }
+
+    private async Task RecordRunAsync(
+        Guid tenantId,
+        DateTimeOffset asOfUtc,
+        ProcessPmDueScanResponse response,
+        CancellationToken cancellationToken)
+    {
+        db.PmDueScanRuns.Add(new PmDueScanRun
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            AsOfUtc = asOfUtc,
+            CandidatesFound = response.CandidatesFound,
+            MarkedDueCount = response.MarkedDueCount,
+            MarkedOverdueCount = response.MarkedOverdueCount,
+            SkippedCount = response.SkippedCount,
+            WorkOrdersCreatedCount = response.WorkOrdersCreatedCount,
+            WorkOrdersLinkedCount = response.WorkOrdersLinkedCount,
+            CreatedAt = asOfUtc,
+        });
+
+        var settings = await db.TenantPmDueScanSettings
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId, cancellationToken);
+        if (settings is not null)
+        {
+            settings.LastRunAt = asOfUtc;
+            settings.UpdatedAt = asOfUtc;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static ProcessPmDueScanResponse EmptyProcessResponse(DateTimeOffset asOfUtc, int batchSize) =>
+        new(
+            asOfUtc,
+            NormalizeBatchSize(batchSize),
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            [],
+            [],
+            [],
+            []);
+
+    private static ProcessPmDueScanResponse MergeProcessResponses(
+        ProcessPmDueScanResponse left,
+        ProcessPmDueScanResponse right) =>
+        new(
+            right.AsOfUtc,
+            right.BatchSize,
+            left.CandidatesFound + right.CandidatesFound,
+            left.MarkedDueCount + right.MarkedDueCount,
+            left.MarkedOverdueCount + right.MarkedOverdueCount,
+            left.SkippedCount + right.SkippedCount,
+            left.WorkOrdersCreatedCount + right.WorkOrdersCreatedCount,
+            left.WorkOrdersLinkedCount + right.WorkOrdersLinkedCount,
+            left.WorkOrderGenerationSkippedCount + right.WorkOrderGenerationSkippedCount,
+            left.UpdatedPmScheduleIds.Concat(right.UpdatedPmScheduleIds).ToList(),
+            left.CreatedWorkOrderIds.Concat(right.CreatedWorkOrderIds).ToList(),
+            left.Skipped.Concat(right.Skipped).ToList(),
+            left.WorkOrderGenerationSkipped.Concat(right.WorkOrderGenerationSkipped).ToList());
+
+    private static int NormalizeBatchSize(int batchSize) =>
+        batchSize is < 1 or > 500 ? 100 : batchSize;
 
     public async Task<string?> ApplyDueScanAsync(
         Guid pmScheduleId,
@@ -226,9 +378,6 @@ public sealed class PmDueScanService(
                 x.schedule.NextDueAt))
             .ToListAsync(cancellationToken);
     }
-
-    private static int NormalizeBatchSize(int batchSize) =>
-        batchSize is < 1 or > 500 ? 100 : batchSize;
 
     private static int NormalizeOverdueGraceDays(int? overdueGraceDays) =>
         overdueGraceDays is null or < 0 or > 30

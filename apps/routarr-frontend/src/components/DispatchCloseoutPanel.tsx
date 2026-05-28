@@ -1,12 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Check, X } from 'lucide-react'
 
 import {
   applyDispatchCloseout,
+  getDispatchCloseoutAudit,
+  getDispatchCloseoutChecklists,
   getDispatchCloseoutSummary,
   previewDispatchCloseout,
 } from '../api/client'
-import type { DispatchCloseoutPreviewResponse } from '../api/types'
+import type {
+  DispatchCloseoutPreviewResponse,
+  DispatchCloseoutRequest,
+  DispatchCloseoutTripChecklist,
+} from '../api/types'
 
 type DispatchCloseoutPanelProps = {
   accessToken: string
@@ -14,10 +21,26 @@ type DispatchCloseoutPanelProps = {
   canAssign: boolean
 }
 
+function buildCloseoutPayload(
+  scope: 'daily' | 'weekly',
+  tripDisposition: 'complete' | 'cancel',
+  stopDisposition: 'skip' | 'complete',
+  selectedTripIds: string[],
+): DispatchCloseoutRequest {
+  return {
+    scope,
+    remainingTripDisposition: tripDisposition,
+    openStopDisposition: stopDisposition,
+    tripIds: selectedTripIds.length > 0 ? selectedTripIds : null,
+  }
+}
+
 export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: DispatchCloseoutPanelProps) {
   const queryClient = useQueryClient()
   const [tripDisposition, setTripDisposition] = useState<'complete' | 'cancel'>('cancel')
   const [stopDisposition, setStopDisposition] = useState<'skip' | 'complete'>('skip')
+  const [selectedTripIds, setSelectedTripIds] = useState<string[]>([])
+  const [expandedTripId, setExpandedTripId] = useState<string | null>(null)
   const [preview, setPreview] = useState<DispatchCloseoutPreviewResponse | null>(null)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
@@ -27,17 +50,47 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
     enabled: canAssign,
   })
 
+  const checklistsQuery = useQuery({
+    queryKey: ['routarr-closeout-checklists', accessToken, scope, tripDisposition],
+    queryFn: () => getDispatchCloseoutChecklists(accessToken, scope, tripDisposition),
+    enabled: canAssign,
+  })
+
+  const auditQuery = useQuery({
+    queryKey: ['routarr-closeout-audit', accessToken],
+    queryFn: () => getDispatchCloseoutAudit(accessToken, 12),
+    enabled: canAssign,
+  })
+
+  const openTrips = summaryQuery.data?.openTrips ?? []
+
+  useEffect(() => {
+    setSelectedTripIds((current) =>
+      current.filter((id) => openTrips.some((trip) => trip.tripId === id)),
+    )
+  }, [openTrips])
+
+  const checklistByTripId = useMemo(() => {
+    const map = new Map<string, DispatchCloseoutTripChecklist>()
+    for (const checklist of checklistsQuery.data?.trips ?? []) {
+      map.set(checklist.tripId, checklist)
+    }
+    return map
+  }, [checklistsQuery.data])
+
+  const bulkMode = selectedTripIds.length > 0
+
   const previewMutation = useMutation({
     mutationFn: () =>
-      previewDispatchCloseout(accessToken, {
-        scope,
-        remainingTripDisposition: tripDisposition,
-        openStopDisposition: stopDisposition,
-      }),
+      previewDispatchCloseout(
+        accessToken,
+        buildCloseoutPayload(scope, tripDisposition, stopDisposition, selectedTripIds),
+      ),
     onSuccess: (response) => {
       setPreview(response)
+      const scopeLabel = bulkMode ? `${selectedTripIds.length} selected` : 'all open'
       setStatusMessage(
-        `Preview: ${response.summary.tripsCanApply}/${response.summary.tripCount} trips, ` +
+        `Preview (${scopeLabel}): ${response.summary.tripsCanApply}/${response.summary.tripCount} trips, ` +
           `${response.summary.stopsCanApply}/${response.summary.stopCount} stops, ` +
           `${response.summary.routesCanApply}/${response.summary.routeCount} routes ready.`,
       )
@@ -50,18 +103,21 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
 
   const applyMutation = useMutation({
     mutationFn: () =>
-      applyDispatchCloseout(accessToken, {
-        scope,
-        remainingTripDisposition: tripDisposition,
-        openStopDisposition: stopDisposition,
-      }),
+      applyDispatchCloseout(
+        accessToken,
+        buildCloseoutPayload(scope, tripDisposition, stopDisposition, selectedTripIds),
+      ),
     onSuccess: async (response) => {
       setPreview(null)
+      setSelectedTripIds([])
       setStatusMessage(
         `Closeout applied: ${response.summary.tripsCanApply} trips, ` +
-          `${response.summary.stopsCanApply} stops, ${response.summary.routesCanApply} routes updated.`,
+          `${response.summary.stopsCanApply} stops, ` +
+          `${response.summary.routesCanApply} routes updated.`,
       )
       await queryClient.invalidateQueries({ queryKey: ['routarr-closeout-summary'] })
+      await queryClient.invalidateQueries({ queryKey: ['routarr-closeout-checklists'] })
+      await queryClient.invalidateQueries({ queryKey: ['routarr-closeout-audit'] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-trips'] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-routes'] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-dispatch-board'] })
@@ -76,14 +132,35 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
   }
 
   const summary = summaryQuery.data
+  const notReadyCount = (checklistsQuery.data?.trips ?? []).filter((x) => !x.readyForCloseout).length
+
+  const toggleTrip = (tripId: string) => {
+    setSelectedTripIds((current) =>
+      current.includes(tripId) ? current.filter((id) => id !== tripId) : [...current, tripId],
+    )
+    setPreview(null)
+  }
+
+  const selectAllOpen = () => {
+    setSelectedTripIds(openTrips.map((trip) => trip.tripId))
+    setPreview(null)
+  }
+
+  const clearSelection = () => {
+    setSelectedTripIds([])
+    setPreview(null)
+  }
 
   return (
-    <section className="rounded-xl border border-amber-700/60 bg-amber-950/20 p-4">
+    <section
+      className="rounded-xl border border-amber-700/60 bg-amber-950/20 p-4"
+      data-testid="dispatch-closeout-panel"
+    >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">End-of-day closeout</h2>
           <p className="text-sm text-slate-400">
-            Close remaining trips, routes, and stops for the {scope} dispatch window.
+            Review per-trip checklists, close selected trips or all open work in the {scope} window.
           </p>
         </div>
         {summary ? (
@@ -92,6 +169,9 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
               Open: {summary.counts.openTrips} trips · {summary.counts.openRoutes} routes ·{' '}
               {summary.counts.openStops} stops
             </div>
+            {notReadyCount > 0 ? (
+              <div className="text-amber-300">{notReadyCount} trip(s) not checklist-ready</div>
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -102,7 +182,10 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
           <select
             className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-2 py-1.5 text-white"
             value={tripDisposition}
-            onChange={(event) => setTripDisposition(event.target.value as 'complete' | 'cancel')}
+            onChange={(event) => {
+              setTripDisposition(event.target.value as 'complete' | 'cancel')
+              setPreview(null)
+            }}
           >
             <option value="cancel">Cancel all open trips</option>
             <option value="complete">Complete in-flight trips (cancel planned)</option>
@@ -113,13 +196,108 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
           <select
             className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-2 py-1.5 text-white"
             value={stopDisposition}
-            onChange={(event) => setStopDisposition(event.target.value as 'skip' | 'complete')}
+            onChange={(event) => {
+              setStopDisposition(event.target.value as 'skip' | 'complete')
+              setPreview(null)
+            }}
           >
             <option value="skip">Skip pending / arrived stops</option>
             <option value="complete">Complete arrived stops (skip pending)</option>
           </select>
         </label>
       </div>
+
+      {openTrips.length > 0 ? (
+        <div className="mb-4 rounded border border-slate-700">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 bg-slate-900/60 px-3 py-2">
+            <span className="text-sm font-medium text-slate-200">Trip closeout checklist</span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600"
+                onClick={selectAllOpen}
+              >
+                Select all open
+              </button>
+              <button
+                type="button"
+                className="rounded bg-slate-700 px-2 py-1 text-xs text-white hover:bg-slate-600 disabled:opacity-50"
+                disabled={selectedTripIds.length === 0}
+                onClick={clearSelection}
+              >
+                Clear selection
+              </button>
+            </div>
+          </div>
+          <ul className="max-h-64 divide-y divide-slate-800 overflow-y-auto">
+            {openTrips.map((trip) => {
+              const checklist = checklistByTripId.get(trip.tripId)
+              const isSelected = selectedTripIds.includes(trip.tripId)
+              const isExpanded = expandedTripId === trip.tripId
+              return (
+                <li key={trip.tripId} className="px-3 py-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleTrip(trip.tripId)}
+                      aria-label={`Select ${trip.tripNumber}`}
+                    />
+                    <button
+                      type="button"
+                      className="text-left text-sm text-slate-200 hover:text-white"
+                      onClick={() =>
+                        setExpandedTripId(isExpanded ? null : trip.tripId)
+                      }
+                    >
+                      <span className="font-medium">{trip.tripNumber}</span>
+                      <span className="ml-2 text-slate-400">{trip.dispatchStatus}</span>
+                      {checklist ? (
+                        <span
+                          className={
+                            checklist.readyForCloseout
+                              ? 'ml-2 text-emerald-400'
+                              : 'ml-2 text-amber-400'
+                          }
+                        >
+                          {checklist.readyForCloseout ? 'ready' : 'blocked'}
+                        </span>
+                      ) : null}
+                    </button>
+                  </div>
+                  {isExpanded && checklist ? (
+                    <ul className="mt-2 space-y-1 pl-6 text-xs text-slate-300">
+                      {checklist.items.map((item) => (
+                        <li key={item.key} className="flex items-start gap-2">
+                          {item.satisfied ? (
+                            <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                          ) : (
+                            <X
+                              className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${
+                                item.required ? 'text-amber-400' : 'text-slate-500'
+                              }`}
+                            />
+                          )}
+                          <span>
+                            {item.label}
+                            {item.required ? '' : ' (recommended)'}
+                            {item.detail ? ` — ${item.detail}` : ''}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </li>
+              )
+            })}
+          </ul>
+          <p className="border-t border-slate-700 px-3 py-2 text-xs text-slate-400">
+            {bulkMode
+              ? `Bulk closeout: ${selectedTripIds.length} trip(s) selected. Stops/routes on those trips only.`
+              : 'No trips selected — preview/apply closes all open work in this window.'}
+          </p>
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         <button
@@ -140,16 +318,19 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
             preview.summary.tripsCanApply + preview.summary.stopsCanApply === 0
           }
           onClick={() => {
+            const target = bulkMode
+              ? `${selectedTripIds.length} selected trip(s)`
+              : 'all open work in this window'
             if (
               window.confirm(
-                'Apply end-of-day closeout for all open work in this window? This cannot be undone.',
+                `Apply end-of-day closeout for ${target}? This cannot be undone.`,
               )
             ) {
               applyMutation.mutate()
             }
           }}
         >
-          Apply closeout
+          {bulkMode ? 'Apply bulk closeout' : 'Apply closeout'}
         </button>
       </div>
 
@@ -188,6 +369,25 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
               ))}
             </tbody>
           </table>
+        </div>
+      ) : null}
+
+      {auditQuery.data && auditQuery.data.entries.length > 0 ? (
+        <div className="mt-4 rounded border border-slate-700">
+          <h3 className="border-b border-slate-700 bg-slate-900/60 px-3 py-2 text-sm font-medium text-slate-200">
+            Recent closeout audit
+          </h3>
+          <ul className="max-h-40 divide-y divide-slate-800 overflow-y-auto text-xs text-slate-300">
+            {auditQuery.data.entries.map((entry) => (
+              <li key={entry.id} className="px-3 py-2">
+                <span className="text-slate-400">
+                  {new Date(entry.occurredAt).toLocaleString()}
+                </span>
+                <span className="ml-2 text-slate-200">{entry.action}</span>
+                <span className="ml-2">{entry.result}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       ) : null}
     </section>

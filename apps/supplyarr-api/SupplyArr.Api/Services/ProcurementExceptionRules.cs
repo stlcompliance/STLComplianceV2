@@ -91,6 +91,73 @@ public static class ProcurementExceptionRules
         return normalized;
     }
 
+    public static DateTimeOffset ComputeDefaultSlaDueAt(string category, DateTimeOffset createdAt)
+    {
+        var hours = category switch
+        {
+            ProcurementExceptionCategories.ApprovalDelay => 48,
+            ProcurementExceptionCategories.VendorIssue => 72,
+            ProcurementExceptionCategories.BudgetOverride => 24,
+            ProcurementExceptionCategories.PolicyViolation => 24,
+            ProcurementExceptionCategories.PricingVariance => 48,
+            _ => 72,
+        };
+
+        return createdAt.AddHours(hours);
+    }
+
+    public static DateTimeOffset? NormalizeSlaDueAt(DateTimeOffset? slaDueAt, string category, DateTimeOffset createdAt) =>
+        slaDueAt ?? ComputeDefaultSlaDueAt(category, createdAt);
+
+    public static string NormalizeResolutionTemplateKey(string? templateKey)
+    {
+        if (string.IsNullOrWhiteSpace(templateKey))
+        {
+            return string.Empty;
+        }
+
+        var normalized = templateKey.Trim().ToLowerInvariant();
+        if (!ProcurementExceptionResolutionTemplates.Keys.Contains(normalized))
+        {
+            throw new STLCompliance.Shared.Contracts.StlApiException(
+                "procurement_exceptions.invalid_resolution_template",
+                "Resolution template key is not supported.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    public static string BuildResolutionNotes(string? templateKey, string resolutionNotes)
+    {
+        var normalizedNotes = NormalizeResolutionNotes(resolutionNotes);
+        if (string.IsNullOrWhiteSpace(templateKey))
+        {
+            return normalizedNotes;
+        }
+
+        var template = ProcurementExceptionResolutionTemplates.All
+            .First(x => string.Equals(x.TemplateKey, templateKey, StringComparison.OrdinalIgnoreCase));
+
+        return $"{template.Label}: {template.DefaultResolutionNotes} — {normalizedNotes}";
+    }
+
+    public static bool IsSlaBreached(ProcurementException entity, DateTimeOffset asOfUtc) =>
+        entity.SlaDueAt is not null
+        && ProcurementExceptionStatuses.Active.Contains(entity.Status)
+        && asOfUtc > entity.SlaDueAt.Value;
+
+    public static void EnsureAssignee(Guid assignedToUserId)
+    {
+        if (assignedToUserId == Guid.Empty)
+        {
+            throw new STLCompliance.Shared.Contracts.StlApiException(
+                "procurement_exceptions.invalid_assignee",
+                "Assigned resolver user id is required.",
+                400);
+        }
+    }
+
     public static bool CanTransition(string currentStatus, string targetStatus) =>
         (currentStatus, targetStatus) switch
         {

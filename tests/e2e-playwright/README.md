@@ -45,6 +45,21 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 | `companion-field-inbox-trainarr-deep-link.spec.ts` | Companion field inbox → TrainArr assignment deep link (W133) |
 | `product-trainarr-assignment-deep-link.spec.ts` | TrainArr `/assignments/{id}/evidence` route smoke |
 | `platform-admin-audit-export-smoke.spec.ts` | Suite platform-admin audit export manifest/timeline/sync ZIP + background job (W138) |
+| `maintainarr-settings-audit-export-smoke.spec.ts` | MaintainArr Settings audit export panel (W230): manifest, filters, ZIP/JSON, background job (W232) |
+| `compliancecore-m12-worker-settings-smoke.spec.ts` | Compliance Core Admin M12 analytics worker settings save (W231/W232) |
+| `compliancecore-audit-delivery-orchestration-smoke.spec.ts` | Compliance Core Admin audit delivery orchestration panel: status sections + trigger controls visible (W240/W242; no live triggers) |
+| `trainarr-assignment-material-demand-smoke.spec.ts` | TrainArr handoff → assignment workspace material demand panel: lines, optional publish, procurement badge/timeline (W233/W234) |
+| `routarr-dispatch-command-center-smoke.spec.ts` | RoutArr handoff → `/dispatch` command center panel: daily/weekly scope toggle, status columns or empty state (W209/W235) |
+| `routarr-dispatch-exception-queue-smoke.spec.ts` | RoutArr handoff → `/dispatch` exception queue panel: heading, create form when triage allowed, open rows or empty state (W210/W243) |
+| `routarr-dispatch-active-trips-smoke.spec.ts` | RoutArr handoff → `/dispatch` active trips panel: list/map toggle, summary tiles, trip rows or empty state (W211/W244) |
+| `routarr-dispatch-unassigned-work-queue-smoke.spec.ts` | RoutArr handoff → `/dispatch` unassigned work queue: heading, per-trip assign controls, bulk assign when rows present, or empty state (W212/W245) |
+| `routarr-driver-portal-smoke.spec.ts` | RoutArr handoff → `/driver-portal` schedule panel: Today/Upcoming sections, trip cards or empty state (W213/W247; no dispatch/start clicks) |
+| `routarr-dispatch-proof-dvir-read-smoke.spec.ts` | RoutArr handoff → `/dispatch` `trip-proof-dvir-read-panel`: trip ID lookup, load execution summary, proof/DVIR rows or empty lists (W217/W248; read-only, no proof/DVIR capture) |
+| `supplyarr-settings-integration-events-smoke.spec.ts` | SupplyArr handoff → Settings integration event outbox/inbox save + Readiness dashboard metrics (W236) |
+| `supplyarr-reports-workspace-smoke.spec.ts` | SupplyArr handoff → Reports vendor + purchasing panels: filters, summary/empty state, Export CSV present (W237) |
+| `staffarr-admin-audit-export-smoke.spec.ts` | StaffArr handoff → Admin audit package panel: manifest, summary, filters, sync ZIP/JSON/CSV, background job (W228/W238) |
+| `trainarr-settings-audit-export-smoke.spec.ts` | TrainArr handoff → Settings training audit package panel: manifest, date filters, JSON summary counts, sync + background ZIP (W165/W167/W239) |
+| `routarr-reports-audit-export-smoke.spec.ts` | RoutArr handoff → Reports audit package panel: manifest, summary, filters, sync ZIP/JSON/CSV, background job (W227/W241) |
 | `companion-field-inbox-operations-deep-links.spec.ts` | Companion → MaintainArr / RoutArr / SupplyArr field inbox deep links (W140) |
 | `companion-offline-queue-notification.spec.ts` | Offline acknowledge queue sync + notification/push readiness surfaces (W146) |
 | `companion-field-task-evidence.spec.ts` | TrainArr field-inbox photo evidence upload via companion API (W147) |

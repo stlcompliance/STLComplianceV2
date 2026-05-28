@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ComplianceCore.Api.Entities;
+using ComplianceCore.Api.Services;
 using STLCompliance.Shared.Data;
 
 namespace ComplianceCore.Api.Data;
@@ -52,6 +53,37 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
     public DbSet<SdsReference> SdsReferences => Set<SdsReference>();
 
     public DbSet<AuditPackageGenerationJob> AuditPackageGenerationJobs => Set<AuditPackageGenerationJob>();
+
+    public DbSet<SourceIngestionBatch> SourceIngestionBatches => Set<SourceIngestionBatch>();
+
+    public DbSet<SourceIngestionJob> SourceIngestionJobs => Set<SourceIngestionJob>();
+
+    public DbSet<RuleChangeEvent> RuleChangeEvents => Set<RuleChangeEvent>();
+
+    public DbSet<RulePackMonitorSnapshot> RulePackMonitorSnapshots => Set<RulePackMonitorSnapshot>();
+
+    public DbSet<RuleChangeScanRun> RuleChangeScanRuns => Set<RuleChangeScanRun>();
+
+    public DbSet<RiskScoreRun> RiskScoreRuns => Set<RiskScoreRun>();
+
+    public DbSet<RiskScore> RiskScores => Set<RiskScore>();
+
+    public DbSet<MissingEvidenceWarningRun> MissingEvidenceWarningRuns => Set<MissingEvidenceWarningRun>();
+
+    public DbSet<MissingEvidenceWarning> MissingEvidenceWarnings => Set<MissingEvidenceWarning>();
+
+    public DbSet<ControlEffectivenessRun> ControlEffectivenessRuns => Set<ControlEffectivenessRun>();
+
+    public DbSet<ControlEffectivenessRecord> ControlEffectivenessRecords => Set<ControlEffectivenessRecord>();
+
+    public DbSet<ReadinessForecastRun> ReadinessForecastRuns => Set<ReadinessForecastRun>();
+
+    public DbSet<ReadinessForecast> ReadinessForecasts => Set<ReadinessForecast>();
+
+    public DbSet<TenantM12AnalyticsWorkerSettings> TenantM12AnalyticsWorkerSettings =>
+        Set<TenantM12AnalyticsWorkerSettings>();
+
+    public DbSet<M12AnalyticsBatchRun> M12AnalyticsBatchRuns => Set<M12AnalyticsBatchRun>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -338,6 +370,196 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        modelBuilder.Entity<RiskScoreRun>(entity =>
+        {
+            entity.ToTable("compliancecore_risk_score_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScopeKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.HighestRiskLevel).HasMaxLength(16).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.EvaluatedAt });
+        });
+
+        modelBuilder.Entity<RiskScore>(entity =>
+        {
+            entity.ToTable("compliancecore_risk_scores");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScopeKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.PackKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.RiskLevel).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.RuleOutcome).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.EvaluationResult).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.Summary).HasMaxLength(512).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.RunId);
+            entity.HasIndex(x => new { x.TenantId, x.ScopeKey, x.PackKey, x.EvaluatedAt });
+            entity.HasOne(x => x.Run)
+                .WithMany()
+                .HasForeignKey(x => x.RunId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MissingEvidenceWarningRun>(entity =>
+        {
+            entity.ToTable("compliancecore_missing_evidence_warning_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScopeKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.HighestSeverity).HasMaxLength(16).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.EvaluatedAt });
+        });
+
+        modelBuilder.Entity<MissingEvidenceWarning>(entity =>
+        {
+            entity.ToTable("compliancecore_missing_evidence_warnings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScopeKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.PackKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.FactKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.WarningType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Severity).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.ReasonCode).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Summary).HasMaxLength(512).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.RunId);
+            entity.HasIndex(x => new { x.TenantId, x.ScopeKey, x.PackKey, x.Severity, x.EvaluatedAt });
+            entity.HasOne(x => x.Run)
+                .WithMany()
+                .HasForeignKey(x => x.RunId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ControlEffectivenessRun>(entity =>
+        {
+            entity.ToTable("compliancecore_control_effectiveness_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScopeKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.LowestEffectivenessLevel).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.EvaluatedAt });
+        });
+
+        modelBuilder.Entity<ControlEffectivenessRecord>(entity =>
+        {
+            entity.ToTable("compliancecore_control_effectiveness_records");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScopeKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.PackKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EffectivenessLevel).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ControlStatus).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.RuleOutcome).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.EvaluationResult).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.Summary).HasMaxLength(512).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.RunId);
+            entity.HasIndex(x => new { x.TenantId, x.ScopeKey, x.PackKey, x.EvaluatedAt });
+            entity.HasOne(x => x.Run)
+                .WithMany()
+                .HasForeignKey(x => x.RunId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ReadinessForecastRun>(entity =>
+        {
+            entity.ToTable("compliancecore_readiness_forecast_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScopeKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ReadinessLevel).HasMaxLength(16).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ForecastedAt });
+        });
+
+        modelBuilder.Entity<ReadinessForecast>(entity =>
+        {
+            entity.ToTable("compliancecore_readiness_forecasts");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScopeKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.PackKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ReadinessLevel).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.RiskLevel).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.EffectivenessLevel).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.HighestMissingEvidenceSeverity).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.Summary).HasMaxLength(512).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.RunId);
+            entity.HasIndex(x => new { x.TenantId, x.ScopeKey, x.PackKey, x.ForecastedAt });
+            entity.HasOne(x => x.Run)
+                .WithMany()
+                .HasForeignKey(x => x.RunId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RuleChangeEvent>(entity =>
+        {
+            entity.ToTable("compliancecore_rule_change_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PackKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ProgramKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ChangeType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Summary).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.FromStatus).HasMaxLength(32);
+            entity.Property(x => x.ToStatus).HasMaxLength(32);
+            entity.Property(x => x.PreviousContentHash).HasMaxLength(64);
+            entity.Property(x => x.NewContentHash).HasMaxLength(64);
+            entity.Property(x => x.Source).HasMaxLength(16).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PackKey, x.DetectedAt });
+            entity.HasIndex(x => x.RulePackId);
+            entity.HasOne(x => x.ScanRun)
+                .WithMany()
+                .HasForeignKey(x => x.ScanRunId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<RulePackMonitorSnapshot>(entity =>
+        {
+            entity.ToTable("compliancecore_rule_pack_monitor_snapshots");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.PackKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ContentHash).HasMaxLength(64);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.RulePackId).IsUnique();
+        });
+
+        modelBuilder.Entity<RuleChangeScanRun>(entity =>
+        {
+            entity.ToTable("compliancecore_rule_change_scan_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.ErrorMessage).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.StartedAt);
+        });
+
+        modelBuilder.Entity<SourceIngestionBatch>(entity =>
+        {
+            entity.ToTable("compliancecore_source_ingestion_batches");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.IngestionType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Phase).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(32);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.IngestionType, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<SourceIngestionJob>(entity =>
+        {
+            entity.ToTable("compliancecore_source_ingestion_jobs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.JobKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.EntityType).HasMaxLength(64);
+            entity.Property(x => x.ErrorCode).HasMaxLength(64);
+            entity.Property(x => x.Message).HasMaxLength(512);
+            entity.HasIndex(x => x.BatchId);
+            entity.HasOne(x => x.Batch)
+                .WithMany(x => x.Jobs)
+                .HasForeignKey(x => x.BatchId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<ProductFactMirror>(entity =>
         {
             entity.ToTable("compliancecore_product_fact_mirrors");
@@ -453,6 +675,24 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
                 .WithMany()
                 .HasForeignKey(x => x.MaterialKeyId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<TenantM12AnalyticsWorkerSettings>(entity =>
+        {
+            entity.ToTable("compliancecore_tenant_m12_analytics_worker_settings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DefaultScopeKey).HasMaxLength(M12AnalyticsBatchRules.MaxScopeKeyLength).IsRequired();
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<M12AnalyticsBatchRun>(entity =>
+        {
+            entity.ToTable("compliancecore_m12_analytics_batch_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ScopeKey).HasMaxLength(M12AnalyticsBatchRules.MaxScopeKeyLength).IsRequired();
+            entity.Property(x => x.ErrorMessage).HasMaxLength(2000);
+            entity.HasIndex(x => new { x.TenantId, x.StartedAt });
         });
 
         modelBuilder.Entity<AuditPackageGenerationJob>(entity =>

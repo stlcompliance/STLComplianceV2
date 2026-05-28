@@ -22,8 +22,11 @@ import type {
   PlatformAdminDashboardResponse,
   ProductOverviewRow,
   PlatformAuditPackageExportPreview,
+  PlatformAuditPackageExportSummary,
+  PlatformAuditPackageFilterOptions,
   PlatformAuditPackageGenerationJob,
   PlatformAuditPackageManifest,
+  PlatformAuditPackageScope,
   PlatformAuditEventTimelineItem,
   ServiceTokenCleanupRunsResponse,
   ServiceTokenCleanupSettings,
@@ -33,6 +36,7 @@ import type {
   TenantLifecycleSettings,
   TenantLifecycleRunsResponse,
   PendingTenantLifecycleResponse,
+  PlatformLifecycleOverviewResponse,
   TenantOverviewRow,
 } from './types'
 import { NexarrApiError } from './types'
@@ -237,6 +241,15 @@ export async function getPlatformAdminDashboard(): Promise<PlatformAdminDashboar
   return (await response.json()) as PlatformAdminDashboardResponse
 }
 
+export async function getPlatformLifecycleOverview(): Promise<PlatformLifecycleOverviewResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/platform-lifecycle/overview')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformLifecycleOverviewResponse
+}
+
 export async function getPlatformAdminLaunchDiagnostics(
   params: { tenantId?: string; productKey?: string; page?: number; pageSize?: number } = {},
 ): Promise<LaunchDiagnosticsResponse> {
@@ -287,14 +300,13 @@ export async function getPlatformAdminProductOverview(): Promise<ProductOverview
   return (await response.json()) as ProductOverviewRow[]
 }
 
-function buildPlatformAuditPackageQuery(options?: {
-  format?: string
-  from?: string
-  to?: string
-  tenantId?: string
-  page?: number
-  pageSize?: number
-}): string {
+function buildPlatformAuditPackageQuery(
+  options?: PlatformAuditPackageScope & {
+    format?: string
+    page?: number
+    pageSize?: number
+  },
+): string {
   const search = new URLSearchParams()
   if (options?.format) {
     search.set('format', options.format)
@@ -307,6 +319,21 @@ function buildPlatformAuditPackageQuery(options?: {
   }
   if (options?.tenantId) {
     search.set('tenantId', options.tenantId)
+  }
+  if (options?.action) {
+    search.set('action', options.action)
+  }
+  if (options?.result) {
+    search.set('result', options.result)
+  }
+  if (options?.targetType) {
+    search.set('targetType', options.targetType)
+  }
+  if (options?.actorUserId) {
+    search.set('actorUserId', options.actorUserId)
+  }
+  if (options?.productKey) {
+    search.set('productKey', options.productKey)
   }
   if (options?.page) {
     search.set('page', String(options.page))
@@ -327,8 +354,34 @@ export async function getPlatformAuditPackageManifest(): Promise<PlatformAuditPa
   return (await response.json()) as PlatformAuditPackageManifest
 }
 
+export async function getPlatformAuditPackageFilterOptions(
+  options?: Pick<PlatformAuditPackageScope, 'tenantId'>,
+): Promise<PlatformAuditPackageFilterOptions> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/audit-packages/filter-options${buildPlatformAuditPackageQuery(options)}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformAuditPackageFilterOptions
+}
+
+export async function getPlatformAuditPackageExportSummary(
+  options?: PlatformAuditPackageScope,
+): Promise<PlatformAuditPackageExportSummary> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/audit-packages/summary${buildPlatformAuditPackageQuery(options)}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformAuditPackageExportSummary
+}
+
 export async function getPlatformAuditPackageTimeline(
-  options?: { from?: string; to?: string; tenantId?: string; page?: number; pageSize?: number },
+  options?: PlatformAuditPackageScope & { page?: number; pageSize?: number },
 ): Promise<PagedResult<PlatformAuditEventTimelineItem>> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth(
@@ -340,11 +393,9 @@ export async function getPlatformAuditPackageTimeline(
   return (await response.json()) as PagedResult<PlatformAuditEventTimelineItem>
 }
 
-export async function exportPlatformAuditPackageZip(options?: {
-  from?: string
-  to?: string
-  tenantId?: string
-}): Promise<Blob> {
+export async function exportPlatformAuditPackageZip(
+  options?: PlatformAuditPackageScope,
+): Promise<Blob> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth(
     `/api/platform-admin/audit-packages/export${buildPlatformAuditPackageQuery(options)}`,
@@ -355,11 +406,22 @@ export async function exportPlatformAuditPackageZip(options?: {
   return response.blob()
 }
 
-export async function exportPlatformAuditPackageJson(options?: {
-  from?: string
-  to?: string
-  tenantId?: string
-}): Promise<PlatformAuditPackageExportPreview> {
+export async function exportPlatformAuditPackageCsv(
+  options?: PlatformAuditPackageScope,
+): Promise<Blob> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/audit-packages/export${buildPlatformAuditPackageQuery({ ...options, format: 'csv' })}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return response.blob()
+}
+
+export async function exportPlatformAuditPackageJson(
+  options?: PlatformAuditPackageScope,
+): Promise<PlatformAuditPackageExportPreview> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth(
     `/api/platform-admin/audit-packages/export${buildPlatformAuditPackageQuery({ ...options, format: 'json' })}`,
@@ -370,12 +432,9 @@ export async function exportPlatformAuditPackageJson(options?: {
   return (await response.json()) as PlatformAuditPackageExportPreview
 }
 
-export async function createPlatformAuditPackageGenerationJob(body: {
-  format: string
-  from?: string
-  to?: string
-  tenantId?: string
-}): Promise<PlatformAuditPackageGenerationJob> {
+export async function createPlatformAuditPackageGenerationJob(
+  body: PlatformAuditPackageScope & { format: string },
+): Promise<PlatformAuditPackageGenerationJob> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth('/api/platform-admin/audit-packages/jobs', {
     method: 'POST',
@@ -384,6 +443,11 @@ export async function createPlatformAuditPackageGenerationJob(body: {
       from: body.from,
       to: body.to,
       tenantId: body.tenantId,
+      action: body.action,
+      result: body.result,
+      targetType: body.targetType,
+      actorUserId: body.actorUserId,
+      productKey: body.productKey,
     }),
   })
   if (!response.ok) {

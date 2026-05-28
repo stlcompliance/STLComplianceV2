@@ -10,6 +10,7 @@ public sealed class TrainingAssignmentService(
     TrainArrDbContext db,
     TrainingDefinitionService definitionService,
     CertificationPublicationService publicationService,
+    TrainingAcknowledgementPublicationService acknowledgementPublicationService,
     QualificationIssueService qualificationIssueService,
     TrainingNotificationEnqueueService notificationEnqueueService,
     TrainingEventEnqueueService trainingEventEnqueueService,
@@ -68,6 +69,8 @@ public sealed class TrainingAssignmentService(
         CancellationToken cancellationToken = default)
     {
         var assignment = await LoadAssignmentAsync(tenantId, assignmentId, cancellationToken);
+        await acknowledgementPublicationService.SyncMirrorFromStaffArrAsync(assignment, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
         return MapDetail(assignment);
     }
 
@@ -161,6 +164,11 @@ public sealed class TrainingAssignmentService(
 
         assignment.BlockerPublicationId = publication.PublicationId;
 
+        await acknowledgementPublicationService.PublishForAssignmentAsync(
+            assignment,
+            definition.Name,
+            cancellationToken);
+
         if (remediation is not null)
         {
             remediation.Status = "assignment_created";
@@ -242,6 +250,11 @@ public sealed class TrainingAssignmentService(
 
         assignment.BlockerPublicationId = publication.PublicationId;
 
+        await acknowledgementPublicationService.PublishForAssignmentAsync(
+            assignment,
+            definition.Name,
+            cancellationToken);
+
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
             "training_assignment.create.recertification",
@@ -308,6 +321,8 @@ public sealed class TrainingAssignmentService(
                 publicationId,
                 cancellationToken);
         }
+
+        await acknowledgementPublicationService.SupersedeIfOpenAsync(assignment, cancellationToken);
 
         var qualificationIssue = await qualificationIssueService.IssueOnAssignmentCompletionAsync(
             assignment,
@@ -401,6 +416,10 @@ public sealed class TrainingAssignmentService(
             entity.DueAt,
             entity.AssignedByUserId,
             entity.BlockerPublicationId,
+            entity.StaffarrAcknowledgementRequestId,
+            entity.StaffarrAcknowledgementStatus,
+            entity.StaffarrAcknowledgementAt,
+            TrainingAcknowledgementPublicationService.RequiresAcknowledgement(entity),
             entity.CompletedAt,
             entity.CompletedByUserId,
             entity.CreatedAt,

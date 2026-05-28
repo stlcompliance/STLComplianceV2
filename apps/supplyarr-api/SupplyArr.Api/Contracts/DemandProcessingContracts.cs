@@ -90,29 +90,41 @@ public sealed record ProcessDemandProcessingResponse(
     IReadOnlyList<DemandProcessingResult> Processed,
     IReadOnlyList<DemandProcessingSkip> Skipped);
 
+public sealed record DemandProcessingSourceLinkResponse(
+    string ProductKey,
+    string DisplayLabel,
+    string ReferenceKey);
+
 public sealed record DemandProcessingSummaryResponse(
-    Guid ProcessingStateId,
+    Guid? ProcessingStateId,
     Guid DemandRefId,
     string DemandRefSource,
     string SourceRefKey,
     string Title,
     string DemandRefStatus,
-    string ProcessingOutcome,
-    string RecommendedAction,
-    int LinesTotalCount,
-    int LinesCatalogCount,
-    int LinesShortCount,
+    string? ProcessingOutcome,
+    string? RecommendedAction,
+    int? LinesTotalCount,
+    int? LinesCatalogCount,
+    int? LinesShortCount,
     Guid? PurchaseRequestId,
     string? LastProcessingMessage,
     DateTimeOffset DemandReceivedAt,
-    DateTimeOffset LastProcessedAt);
+    DateTimeOffset? LastProcessedAt,
+    DemandProcessingSourceLinkResponse SourceLink);
+
+public sealed record DemandProcessingOperatorActionResponse(
+    string Action,
+    DemandProcessingResult Result,
+    DemandProcessingDetailResponse Detail);
 
 public sealed record DemandProcessingDashboardResponse(
     int PendingCount,
     int StockShortCount,
     int StockAvailableCount,
     int PrDraftedCount,
-    IReadOnlyList<DemandProcessingSummaryResponse> Items);
+    IReadOnlyList<DemandProcessingSummaryResponse> ProcessedItems,
+    IReadOnlyList<DemandProcessingSummaryResponse> PendingItems);
 
 public sealed record DemandProcessingDetailResponse(
     DemandProcessingSummaryResponse Summary,

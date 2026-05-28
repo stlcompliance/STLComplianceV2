@@ -13,7 +13,13 @@ public static class StlIntegrationTokenCatalog
     public static IReadOnlyList<StlIntegrationTokenProfile> All { get; } =
     [
         Profile("handoff-staffarr", "staffarr-api", "Handoff__ServiceToken", "staffarr", ["staffarr"], "launch.redeem"),
-        Profile("staffarr-trainarr", "staffarr-api", "TrainArr__ServiceToken", "staffarr", ["trainarr"], "trainarr.incident_remediations.write"),
+        Profile(
+            "staffarr-trainarr",
+            "staffarr-api",
+            "TrainArr__ServiceToken",
+            "staffarr",
+            ["trainarr"],
+            "trainarr.incident_remediations.write,trainarr.person_training_history.read"),
 
         Profile("handoff-trainarr", "trainarr-api", "Handoff__ServiceToken", "trainarr", ["trainarr"], "launch.redeem"),
         Profile(
@@ -22,7 +28,7 @@ public static class StlIntegrationTokenCatalog
             "StaffArr__ServiceToken",
             "trainarr",
             ["staffarr"],
-            "staffarr.training_blockers.write,staffarr.certification_grants.write,staffarr.certification_lifecycle.write,staffarr.person.lookup"),
+            "staffarr.training_blockers.write,staffarr.training_acknowledgements.write,staffarr.training_acknowledgements.read,staffarr.certification_grants.write,staffarr.certification_lifecycle.write,staffarr.person.lookup"),
         Profile(
             "trainarr-compliancecore",
             "trainarr-api",
@@ -51,7 +57,7 @@ public static class StlIntegrationTokenCatalog
             "ComplianceCore__ServiceToken",
             "supplyarr",
             ["compliancecore"],
-            "compliancecore.facts.ingest"),
+            "compliancecore.facts.ingest,compliancecore.sources.ingest"),
 
         Profile("handoff-routarr", "routarr-api", "Handoff__ServiceToken", "routarr", ["routarr"], "launch.redeem"),
         Profile("routarr-trainarr", "routarr-api", "TrainArr__ServiceToken", "routarr", ["trainarr"], "trainarr.qualification_checks.dispatch"),
@@ -123,6 +129,20 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["trainarr"],
             "trainarr.notifications.dispatch"),
+        Profile(
+            "worker-trainarr-due-reminders",
+            "shared-worker",
+            "TrainArrAssignmentDueReminders__ServiceToken",
+            "shared-worker",
+            ["trainarr"],
+            "trainarr.assignments.due_reminders.dispatch"),
+        Profile(
+            "worker-trainarr-assignment-escalation",
+            "shared-worker",
+            "TrainArrAssignmentEscalation__ServiceToken",
+            "shared-worker",
+            ["trainarr"],
+            "trainarr.assignments.escalate"),
         Profile("worker-staffarr-cert-expire", "shared-worker", "StaffArrCertificationExpiration__ServiceToken", "shared-worker", ["staffarr"], "staffarr.certifications.expire"),
         Profile("worker-staffarr-readiness", "shared-worker", "StaffArrReadinessRollup__ServiceToken", "shared-worker", ["staffarr"], "staffarr.readiness.rollup"),
         Profile("worker-staffarr-permissions", "shared-worker", "StaffArrPermissionProjection__ServiceToken", "shared-worker", ["staffarr"], "staffarr.permissions.project"),
@@ -171,6 +191,20 @@ public static class StlIntegrationTokenCatalog
             ["compliancecore"],
             "compliancecore.rules.evaluate.scheduled"),
         Profile(
+            "worker-compliancecore-rule-changes",
+            "shared-worker",
+            "ComplianceCoreRuleChangeMonitor__ServiceToken",
+            "shared-worker",
+            ["compliancecore"],
+            "compliancecore.rule_changes.monitor"),
+        Profile(
+            "worker-compliancecore-m12-analytics",
+            "shared-worker",
+            "ComplianceCoreM12AnalyticsBatch__ServiceToken",
+            "shared-worker",
+            ["compliancecore"],
+            "compliancecore.m12_analytics.process_batch"),
+        Profile(
             "worker-compliancecore-audit-packages",
             "shared-worker",
             "ComplianceCoreAuditPackageGeneration__ServiceToken",
@@ -198,6 +232,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["maintainarr"],
             "maintainarr.audit_packages.generate"),
+        Profile(
+            "worker-routarr-audit-packages",
+            "shared-worker",
+            "RoutArrAuditPackageGeneration__ServiceToken",
+            "shared-worker",
+            ["routarr"],
+            "routarr.audit_packages.generate"),
         Profile(
             "worker-trainarr-audit-packages",
             "shared-worker",

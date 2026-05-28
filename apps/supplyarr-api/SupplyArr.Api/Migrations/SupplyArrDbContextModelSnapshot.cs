@@ -2054,16 +2054,30 @@ namespace SupplyArr.Api.Migrations
                     b.Property<Guid?>("InvestigatedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("LinkedPurchaseOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("LinkedPurchaseRequestId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ResolutionNotes")
                         .IsRequired()
                         .HasMaxLength(2048)
                         .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("ResolutionTemplateKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<DateTimeOffset?>("ResolvedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("ResolvedByUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("SlaDueAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -2125,6 +2139,8 @@ namespace SupplyArr.Api.Migrations
 
                     b.HasIndex("TenantId", "ExceptionKey")
                         .IsUnique();
+
+                    b.HasIndex("TenantId", "SlaDueAt");
 
                     b.HasIndex("TenantId", "Status", "UpdatedAt");
 

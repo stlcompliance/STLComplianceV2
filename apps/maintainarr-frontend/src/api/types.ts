@@ -881,6 +881,72 @@ export interface MaintenanceHistoryRollupRunItem {
   createdAt: string
 }
 
+export interface PmDueScanSettingsResponse {
+  isEnabled: boolean
+  scanIntervalMinutes: number
+  batchSize: number
+  overdueGraceDays: number
+  lastRunAt: string | null
+  pendingPmCount: number
+  updatedAt: string | null
+}
+
+export interface UpsertPmDueScanSettingsRequest {
+  isEnabled: boolean
+  scanIntervalMinutes: number
+  batchSize: number
+  overdueGraceDays: number
+}
+
+export interface PendingPmDueItem {
+  pmScheduleId: string
+  tenantId: string
+  assetId: string
+  assetTag: string
+  assetName: string
+  scheduleKey: string
+  dueStatus: string
+  nextDueAt: string
+}
+
+export interface PendingPmDueResponse {
+  asOfUtc: string
+  batchSize: number
+  items: PendingPmDueItem[]
+}
+
+export interface PmDueScanRunItem {
+  runId: string
+  asOfUtc: string
+  candidatesFound: number
+  markedDueCount: number
+  markedOverdueCount: number
+  skippedCount: number
+  workOrdersCreatedCount: number
+  workOrdersLinkedCount: number
+  createdAt: string
+}
+
+export interface PmDueScanRunsResponse {
+  items: PmDueScanRunItem[]
+}
+
+export interface ProcessPmDueScanResponse {
+  asOfUtc: string
+  batchSize: number
+  candidatesFound: number
+  markedDueCount: number
+  markedOverdueCount: number
+  skippedCount: number
+  workOrdersCreatedCount: number
+  workOrdersLinkedCount: number
+  workOrderGenerationSkippedCount: number
+}
+
+export interface TriggerPmDueScanResponse {
+  result: ProcessPmDueScanResponse
+}
+
 export interface MaintenanceHistoryRollupRunsResponse {
   items: MaintenanceHistoryRollupRunItem[]
 }
@@ -909,6 +975,63 @@ export interface AuditPackageManifestResponse {
   sections: AuditPackageSectionDescriptor[]
 }
 
+export interface AuditPackageFilterOptions {
+  actions: string[]
+  results: string[]
+  targetTypes: string[]
+}
+
+export interface AuditPackageAppliedFilters {
+  from: string | null
+  to: string | null
+  action: string | null
+  result: string | null
+  targetType: string | null
+  actorUserId: string | null
+}
+
+export interface AuditPackageBreakdownItem {
+  key: string
+  count: number
+}
+
+export interface AuditPackageExportSummary {
+  filters: AuditPackageAppliedFilters
+  counts: AuditPackageCountsResponse
+  byResult: AuditPackageBreakdownItem[]
+  byAction: AuditPackageBreakdownItem[]
+  generatedAt: string
+}
+
+export interface AuditPackageScope {
+  from?: string
+  to?: string
+  action?: string
+  result?: string
+  targetType?: string
+  actorUserId?: string
+}
+
+export interface AuditEventTimelineItem {
+  auditEventId: string
+  actorUserId: string | null
+  action: string
+  targetType: string
+  targetId: string | null
+  result: string
+  reasonCode: string | null
+  correlationId: string
+  occurredAt: string
+}
+
+export interface PagedAuditTimeline {
+  items: AuditEventTimelineItem[]
+  page: number
+  pageSize: number
+  totalCount: number
+  hasNextPage: boolean
+}
+
 export interface AuditPackageCountsResponse {
   auditEvents: number
   assets: number
@@ -935,4 +1058,295 @@ export interface AuditPackageExportResponse {
   tenantId: string
   generatedAt: string
   counts: AuditPackageCountsResponse
+}
+
+export interface MaintenanceReportCountItem {
+  key: string
+  count: number
+}
+
+export interface MaintenanceReportAssetSummaryItem {
+  assetId: string
+  assetTag: string
+  assetName: string
+  lifecycleStatus: string
+  siteRef: string | null
+  readinessStatus: string | null
+  openWorkOrderCount: number
+  openDefectCount: number
+  overduePmScheduleCount: number
+  duePmScheduleCount: number
+  lastInspectionCompletedAt: string | null
+  lastWorkOrderCompletedAt: string | null
+}
+
+export interface MaintenanceReportSummaryResponse {
+  generatedAt: string
+  totalAssetCount: number
+  activeAssetCount: number
+  workOrderStatusCounts: MaintenanceReportCountItem[]
+  defectStatusCounts: MaintenanceReportCountItem[]
+  defectSeverityCounts: MaintenanceReportCountItem[]
+  inspectionRunStatusCounts: MaintenanceReportCountItem[]
+  pmDueStatusCounts: MaintenanceReportCountItem[]
+  readinessStatusCounts: MaintenanceReportCountItem[]
+  assets: MaintenanceReportAssetSummaryItem[]
+}
+
+export interface MaintenanceReportWorkOrderRow {
+  workOrderId: string
+  workOrderNumber: string
+  title: string
+  status: string
+  priority: string
+  updatedAt: string
+}
+
+export interface MaintenanceReportDefectRow {
+  defectId: string
+  title: string
+  severity: string
+  status: string
+  createdAt: string
+}
+
+export interface MaintenanceReportInspectionRunRow {
+  inspectionRunId: string
+  templateName: string
+  status: string
+  result: string | null
+  startedAt: string
+  completedAt: string | null
+}
+
+export interface MaintenanceReportPmScheduleRow {
+  pmScheduleId: string
+  scheduleKey: string
+  name: string
+  dueStatus: string
+  nextDueAt: string
+  lastCompletedAt: string | null
+}
+
+export interface MaintenanceReportAssetDetailResponse {
+  summary: MaintenanceReportAssetSummaryItem
+  recentWorkOrders: MaintenanceReportWorkOrderRow[]
+  openDefects: MaintenanceReportDefectRow[]
+  recentInspectionRuns: MaintenanceReportInspectionRunRow[]
+  pmSchedules: MaintenanceReportPmScheduleRow[]
+}
+
+export interface MaintenanceReportWorkOrderDetailResponse {
+  workOrderId: string
+  workOrderNumber: string
+  title: string
+  description: string
+  status: string
+  priority: string
+  source: string
+  assetId: string
+  assetTag: string
+  assetName: string
+  defectId: string | null
+  pmScheduleId: string | null
+  assignedTechnicianPersonId: string | null
+  taskLineCount: number
+  evidenceCount: number
+  totalLaborHours: number
+  createdAt: string
+  updatedAt: string
+  startedAt: string | null
+  completedAt: string | null
+}
+
+export interface ExecutiveReportCountItem {
+  key: string
+  count: number
+}
+
+export interface ExecutiveReportFleetReadiness {
+  totalAssets: number
+  readyCount: number
+  notReadyCount: number
+  readyPercent: number
+  computedAt: string | null
+  fromScopeRollup: boolean
+}
+
+export interface ExecutiveReportScopeReadinessItem {
+  scopeType: string
+  scopeEntityId: string
+  scopeLabel: string
+  totalAssets: number
+  readyCount: number
+  notReadyCount: number
+  readyPercent: number
+  computedAt: string
+}
+
+export interface ExecutiveReportSupplyDemandSummary {
+  sourceProduct: string
+  totalDemandLines: number
+  publishedDemandLines: number
+  openProcurementLines: number
+  fulfilledLines: number
+  procurementStatusCounts: ExecutiveReportCountItem[]
+}
+
+export interface ExecutiveReportOperationalTotals {
+  totalAssetCount: number
+  activeAssetCount: number
+  openWorkOrderCount: number
+  openCriticalDefectCount: number
+  openHighDefectCount: number
+  overduePmScheduleCount: number
+  failedInspectionCount: number
+  laborHoursLast30Days: number
+  workOrdersCompletedLast30Days: number
+  activeTechnicianAssignments: number
+}
+
+export interface ExecutiveReportSummaryResponse {
+  generatedAt: string
+  fleetReadiness: ExecutiveReportFleetReadiness
+  operationalTotals: ExecutiveReportOperationalTotals
+  supplyDemand: ExecutiveReportSupplyDemandSummary
+  scopeReadiness: ExecutiveReportScopeReadinessItem[]
+  workOrderStatusCounts: ExecutiveReportCountItem[]
+  defectSeverityCounts: ExecutiveReportCountItem[]
+}
+
+export interface ComplianceReportCountItem {
+  key: string
+  count: number
+}
+
+export interface ComplianceReportInspectionTotals {
+  totalRuns: number
+  completedRuns: number
+  passedRuns: number
+  failedRuns: number
+  inProgressRuns: number
+  failedChecklistAnswers: number
+  passRatePercent: number
+}
+
+export interface ComplianceReportDefectTotals {
+  openDefectCount: number
+  openCriticalCount: number
+  openHighCount: number
+  inspectionSourcedOpenCount: number
+  manualSourcedOpenCount: number
+}
+
+export interface ComplianceReportPmAdherenceTotals {
+  activeScheduleCount: number
+  overdueCount: number
+  dueCount: number
+  scheduledCount: number
+  adherencePercent: number
+}
+
+export interface ComplianceReportRegulatoryKeyGroup {
+  complianceKey: string
+  materialKey: string | null
+  linkedSubjectCount: number
+  inspectionTemplateCount: number
+  openComplianceIssueCount: number
+}
+
+export interface ComplianceReportTemplateSummaryItem {
+  inspectionTemplateId: string
+  templateKey: string
+  templateName: string
+  regulatoryKeyCount: number
+  completedRunCount: number
+  failedRunCount: number
+  lastFailedAt: string | null
+  requiresAttention: boolean
+}
+
+export interface ComplianceReportAttentionItem {
+  assetId: string
+  assetTag: string
+  assetName: string
+  siteRef: string | null
+  issueType: string
+  message: string
+}
+
+export interface ComplianceReportSummaryResponse {
+  generatedAt: string
+  inspectionTotals: ComplianceReportInspectionTotals
+  defectTotals: ComplianceReportDefectTotals
+  pmAdherenceTotals: ComplianceReportPmAdherenceTotals
+  regulatoryKeyMirrorCount: number
+  regulatoryKeyGroups: ComplianceReportRegulatoryKeyGroup[]
+  templateSummaries: ComplianceReportTemplateSummaryItem[]
+  attentionItems: ComplianceReportAttentionItem[]
+  defectSeverityCounts: ComplianceReportCountItem[]
+}
+
+export interface AssetImportRowRequest {
+  assetClassKey: string
+  assetTypeKey: string
+  assetTag: string
+  name: string
+  description?: string
+  siteRef?: string | null
+  lifecycleStatus?: string
+}
+
+export interface AssetBulkImportRequest {
+  assets: AssetImportRowRequest[]
+}
+
+export interface AssetImportRowResult {
+  rowIndex: number
+  assetTag: string
+  status: string
+  assetId: string | null
+  errorCode: string | null
+  message: string | null
+}
+
+export interface AssetBulkImportResponse {
+  importBatchId: string
+  importType: string
+  phase: string
+  dryRun: boolean
+  totalRows: number
+  successCount: number
+  errorCount: number
+  results: AssetImportRowResult[]
+}
+
+export interface EntityExportFormatDescriptor {
+  formatKey: string
+  contentType: string
+  fileNamePattern: string
+  description: string
+}
+
+export interface EntityExportDescriptor {
+  entityKey: string
+  route: string
+  label: string
+  csvHeader: string
+  description: string
+  formats: EntityExportFormatDescriptor[]
+}
+
+export interface ReportExportDescriptor {
+  reportKey: string
+  route: string
+  label: string
+  description: string
+}
+
+export interface EntityExportManifestResponse {
+  packageVersion: string
+  entities: EntityExportDescriptor[]
+  reportExports: ReportExportDescriptor[]
+  auditPackageFormats: EntityExportFormatDescriptor[]
 }

@@ -154,12 +154,65 @@ public sealed class MaintainArrAuditPackageGenerationTests : IAsyncLifetime
 
         var zipBytes = await downloadResponse.Content.ReadAsByteArrayAsync();
         using var archive = new ZipArchive(new MemoryStream(zipBytes), ZipArchiveMode.Read);
+        Assert.Equal(8, archive.Entries.Count);
         Assert.Contains(archive.Entries, entry => entry.Name == "audit_events.json");
+        Assert.Contains(archive.Entries, entry => entry.Name == "audit_events.csv");
+        Assert.Contains(archive.Entries, entry => entry.Name == "manifest.json");
 
         using var scope = _maintainarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
         Assert.True(await db.AuditEvents.AnyAsync(x =>
             x.TenantId == PlatformSeeder.DemoTenantId && x.Action == "audit_package.generation.completed"));
+    }
+
+    [Fact]
+    public async Task Process_batch_persists_filter_json_and_applies_action_filter()
+    {
+        await SeedAuditEventAsync("work_order.create", "success");
+        await SeedAuditEventAsync("defect.create", "success");
+        var adminToken = CreateMaintainArrAccessToken(["maintainarr"], tenantRoleKey: "maintainarr_admin");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/audit-packages/jobs", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateAuditPackageGenerationJobRequest(
+            "zip",
+            null,
+            null,
+            Action: "work_order.create"));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<AuditPackageGenerationJobResponse>())!;
+
+        using (var scope = _maintainarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+            var entity = await db.AuditPackageGenerationJobs.SingleAsync(x => x.Id == created.JobId);
+            Assert.Contains("work_order.create", entity.FilterJson, StringComparison.Ordinal);
+        }
+
+        var processRequest = Authorized(
+            HttpMethod.Post,
+            "/api/internal/audit-package-jobs/process-batch",
+            _sharedWorkerToMaintainArrToken);
+        processRequest.Content = JsonContent.Create(new ProcessAuditPackageGenerationJobsRequest(
+            PlatformSeeder.DemoTenantId,
+            null,
+            5));
+        var processResponse = await _maintainarrClient.SendAsync(processRequest);
+        processResponse.EnsureSuccessStatusCode();
+
+        var downloadResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/audit-packages/jobs/{created.JobId}/download", adminToken));
+        downloadResponse.EnsureSuccessStatusCode();
+
+        var zipBytes = await downloadResponse.Content.ReadAsByteArrayAsync();
+        using var archive = new ZipArchive(new MemoryStream(zipBytes), ZipArchiveMode.Read);
+        var auditJsonEntry = archive.GetEntry("audit_events.json");
+        Assert.NotNull(auditJsonEntry);
+        await using var stream = auditJsonEntry.Open();
+        using var reader = new StreamReader(stream);
+        var json = await reader.ReadToEndAsync();
+        Assert.Contains("work_order.create", json, StringComparison.Ordinal);
+        Assert.DoesNotContain("defect.create", json, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -171,7 +224,7 @@ public sealed class MaintainArrAuditPackageGenerationTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    private async Task SeedAuditEventAsync()
+    private async Task SeedAuditEventAsync(string action = "asset.create", string result = "success")
     {
         using var scope = _maintainarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
@@ -180,10 +233,10 @@ public sealed class MaintainArrAuditPackageGenerationTests : IAsyncLifetime
             Id = Guid.NewGuid(),
             TenantId = PlatformSeeder.DemoTenantId,
             ActorUserId = PlatformSeeder.DemoAdminUserId,
-            Action = "asset.create",
+            Action = action,
             TargetType = "asset",
             TargetId = Guid.NewGuid().ToString(),
-            Result = "success",
+            Result = result,
             CorrelationId = Guid.NewGuid(),
             OccurredAt = DateTimeOffset.UtcNow,
         });

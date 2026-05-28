@@ -26,6 +26,48 @@ public sealed class TrainingAssignmentMaterialDemandService(
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<TrainingAssignmentMaterialDemandStatusEventResponse>> ListStatusEventsAsync(
+        Guid tenantId,
+        Guid assignmentId,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureAssignmentExistsAsync(tenantId, assignmentId, cancellationToken);
+
+        var publicationIds = await db.TrainingAssignmentMaterialDemandLines
+            .AsNoTracking()
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.TrainingAssignmentId == assignmentId
+                && x.TrainarrPublicationId != null)
+            .Select(x => x.TrainarrPublicationId!.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        if (publicationIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await db.TrainingAssignmentMaterialDemandStatusEvents
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && publicationIds.Contains(x.TrainarrPublicationId))
+            .OrderByDescending(x => x.OccurredAt)
+            .ThenByDescending(x => x.CreatedAt)
+            .Select(x => new TrainingAssignmentMaterialDemandStatusEventResponse(
+                x.Id,
+                x.TrainarrPublicationId,
+                x.SupplyarrDemandRefId,
+                x.EventType,
+                x.ProcurementStatus,
+                x.SupplyarrPurchaseRequestId,
+                x.SupplyarrPurchaseOrderId,
+                x.SupplyarrReceivingReceiptId,
+                x.Message,
+                x.OccurredAt,
+                x.CreatedAt))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<TrainingAssignmentMaterialDemandLineResponse> CreateAsync(
         Guid tenantId,
         Guid actorUserId,

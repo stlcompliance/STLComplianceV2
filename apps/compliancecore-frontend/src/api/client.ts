@@ -42,6 +42,33 @@ import type {
   WorkflowGateCheckResponse,
   WorkflowGateDefinitionResponse,
   OperatorDashboardResponse,
+  FactSourceBulkIngestionRequest,
+  SourceIngestionBatchDetailResponse,
+  SourceIngestionBatchResponse,
+  SourceIngestionBatchSummary,
+  RuleChangeEventResponse,
+  RuleChangeMonitoringSummaryResponse,
+  M12AnalyticsWorkerSettingsResponse,
+  UpsertM12AnalyticsWorkerSettingsRequest,
+  AuditDeliveryOrchestrationStatusResponse,
+  TriggerM12AnalyticsBatchResponse,
+  TriggerScheduledRuleEvaluationResponse,
+  EvaluateRiskScoresRequest,
+  EvaluateRiskScoresResponse,
+  EvaluateReadinessForecastRequest,
+  EvaluateReadinessForecastResponse,
+  ReadinessForecastResponse,
+  ReadinessForecastSummaryResponse,
+  EvaluateControlEffectivenessRequest,
+  EvaluateControlEffectivenessResponse,
+  ControlEffectivenessRecordResponse,
+  ControlEffectivenessSummaryResponse,
+  EvaluateMissingEvidenceWarningsRequest,
+  EvaluateMissingEvidenceWarningsResponse,
+  MissingEvidenceWarningResponse,
+  MissingEvidenceWarningSummaryResponse,
+  RiskScoreResponse,
+  RiskScoreSummaryResponse,
   UpdateRulePackContentRequest,
   UpdateRulePackStatusRequest,
   VocabularyTermResponse,
@@ -687,4 +714,408 @@ export async function getOperatorDashboard(accessToken: string): Promise<Operato
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<OperatorDashboardResponse>(response, 'Failed to load operator dashboard')
+}
+
+export async function listSourceIngestionBatches(
+  accessToken: string,
+  ingestionType?: string,
+): Promise<SourceIngestionBatchSummary[]> {
+  const params = new URLSearchParams()
+  if (ingestionType) {
+    params.set('ingestionType', ingestionType)
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/source-ingestion/batches${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<SourceIngestionBatchSummary[]>(response, 'Failed to list source ingestion batches')
+}
+
+export async function getSourceIngestionBatch(
+  accessToken: string,
+  batchId: string,
+): Promise<SourceIngestionBatchDetailResponse> {
+  const response = await fetch(`${apiBase}/api/source-ingestion/batches/${batchId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<SourceIngestionBatchDetailResponse>(
+    response,
+    'Failed to load source ingestion batch',
+  )
+}
+
+export async function validateFactSourceIngestion(
+  accessToken: string,
+  payload: FactSourceBulkIngestionRequest,
+): Promise<SourceIngestionBatchResponse> {
+  const response = await fetch(`${apiBase}/api/source-ingestion/fact-sources/validate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<SourceIngestionBatchResponse>(
+    response,
+    'Failed to validate fact source ingestion',
+  )
+}
+
+export async function getRiskScoreSummary(
+  accessToken: string,
+): Promise<RiskScoreSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/risk-scores/summary`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RiskScoreSummaryResponse>(response, 'Failed to load risk score summary')
+}
+
+export async function listRiskScores(
+  accessToken: string,
+  options?: { scopeKey?: string; rulePackKey?: string; runId?: string; limit?: number },
+): Promise<RiskScoreResponse[]> {
+  const params = new URLSearchParams()
+  if (options?.scopeKey) {
+    params.set('scopeKey', options.scopeKey)
+  }
+  if (options?.rulePackKey) {
+    params.set('rulePackKey', options.rulePackKey)
+  }
+  if (options?.runId) {
+    params.set('runId', options.runId)
+  }
+  if (options?.limit) {
+    params.set('limit', String(options.limit))
+  }
+  const query = params.toString()
+  const response = await fetch(`${apiBase}/api/risk-scores${query ? `?${query}` : ''}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RiskScoreResponse[]>(response, 'Failed to list risk scores')
+}
+
+export async function evaluateRiskScores(
+  accessToken: string,
+  payload: EvaluateRiskScoresRequest,
+): Promise<EvaluateRiskScoresResponse> {
+  const response = await fetch(`${apiBase}/api/risk-scores/evaluate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<EvaluateRiskScoresResponse>(response, 'Failed to evaluate risk scores')
+}
+
+export async function getReadinessForecastSummary(
+  accessToken: string,
+): Promise<ReadinessForecastSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/readiness-forecasts/summary`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ReadinessForecastSummaryResponse>(
+    response,
+    'Failed to load readiness forecast summary',
+  )
+}
+
+export async function listReadinessForecasts(
+  accessToken: string,
+  options?: {
+    scopeKey?: string
+    rulePackKey?: string
+    readinessLevel?: string
+    runId?: string
+    limit?: number
+  },
+): Promise<ReadinessForecastResponse[]> {
+  const params = new URLSearchParams()
+  if (options?.scopeKey) {
+    params.set('scopeKey', options.scopeKey)
+  }
+  if (options?.rulePackKey) {
+    params.set('rulePackKey', options.rulePackKey)
+  }
+  if (options?.readinessLevel) {
+    params.set('readinessLevel', options.readinessLevel)
+  }
+  if (options?.runId) {
+    params.set('runId', options.runId)
+  }
+  if (options?.limit) {
+    params.set('limit', String(options.limit))
+  }
+  const query = params.toString()
+  const response = await fetch(`${apiBase}/api/readiness-forecasts${query ? `?${query}` : ''}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ReadinessForecastResponse[]>(
+    response,
+    'Failed to list readiness forecasts',
+  )
+}
+
+export async function evaluateReadinessForecast(
+  accessToken: string,
+  payload: EvaluateReadinessForecastRequest,
+): Promise<EvaluateReadinessForecastResponse> {
+  const response = await fetch(`${apiBase}/api/readiness-forecasts/evaluate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<EvaluateReadinessForecastResponse>(
+    response,
+    'Failed to evaluate readiness forecast',
+  )
+}
+
+export async function getControlEffectivenessSummary(
+  accessToken: string,
+): Promise<ControlEffectivenessSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/control-effectiveness/summary`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ControlEffectivenessSummaryResponse>(
+    response,
+    'Failed to load control effectiveness summary',
+  )
+}
+
+export async function listControlEffectivenessRecords(
+  accessToken: string,
+  options?: {
+    scopeKey?: string
+    rulePackKey?: string
+    effectivenessLevel?: string
+    runId?: string
+    limit?: number
+  },
+): Promise<ControlEffectivenessRecordResponse[]> {
+  const params = new URLSearchParams()
+  if (options?.scopeKey) {
+    params.set('scopeKey', options.scopeKey)
+  }
+  if (options?.rulePackKey) {
+    params.set('rulePackKey', options.rulePackKey)
+  }
+  if (options?.effectivenessLevel) {
+    params.set('effectivenessLevel', options.effectivenessLevel)
+  }
+  if (options?.runId) {
+    params.set('runId', options.runId)
+  }
+  if (options?.limit) {
+    params.set('limit', String(options.limit))
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/control-effectiveness${query ? `?${query}` : ''}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<ControlEffectivenessRecordResponse[]>(
+    response,
+    'Failed to list control effectiveness records',
+  )
+}
+
+export async function evaluateControlEffectiveness(
+  accessToken: string,
+  payload: EvaluateControlEffectivenessRequest,
+): Promise<EvaluateControlEffectivenessResponse> {
+  const response = await fetch(`${apiBase}/api/control-effectiveness/evaluate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<EvaluateControlEffectivenessResponse>(
+    response,
+    'Failed to evaluate control effectiveness',
+  )
+}
+
+export async function getMissingEvidenceWarningSummary(
+  accessToken: string,
+): Promise<MissingEvidenceWarningSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/missing-evidence-warnings/summary`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MissingEvidenceWarningSummaryResponse>(
+    response,
+    'Failed to load missing evidence warning summary',
+  )
+}
+
+export async function listMissingEvidenceWarnings(
+  accessToken: string,
+  options?: {
+    scopeKey?: string
+    rulePackKey?: string
+    severity?: string
+    runId?: string
+    limit?: number
+  },
+): Promise<MissingEvidenceWarningResponse[]> {
+  const params = new URLSearchParams()
+  if (options?.scopeKey) {
+    params.set('scopeKey', options.scopeKey)
+  }
+  if (options?.rulePackKey) {
+    params.set('rulePackKey', options.rulePackKey)
+  }
+  if (options?.severity) {
+    params.set('severity', options.severity)
+  }
+  if (options?.runId) {
+    params.set('runId', options.runId)
+  }
+  if (options?.limit) {
+    params.set('limit', String(options.limit))
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/missing-evidence-warnings${query ? `?${query}` : ''}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<MissingEvidenceWarningResponse[]>(
+    response,
+    'Failed to list missing evidence warnings',
+  )
+}
+
+export async function evaluateMissingEvidenceWarnings(
+  accessToken: string,
+  payload: EvaluateMissingEvidenceWarningsRequest,
+): Promise<EvaluateMissingEvidenceWarningsResponse> {
+  const response = await fetch(`${apiBase}/api/missing-evidence-warnings/evaluate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<EvaluateMissingEvidenceWarningsResponse>(
+    response,
+    'Failed to evaluate missing evidence warnings',
+  )
+}
+
+export async function getRuleChangeSummary(
+  accessToken: string,
+): Promise<RuleChangeMonitoringSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/rule-changes/summary`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RuleChangeMonitoringSummaryResponse>(
+    response,
+    'Failed to load rule change summary',
+  )
+}
+
+export async function listRuleChangeEvents(
+  accessToken: string,
+  options?: { packKey?: string; changeType?: string; since?: string; limit?: number },
+): Promise<RuleChangeEventResponse[]> {
+  const params = new URLSearchParams()
+  if (options?.packKey) {
+    params.set('packKey', options.packKey)
+  }
+  if (options?.changeType) {
+    params.set('changeType', options.changeType)
+  }
+  if (options?.since) {
+    params.set('since', options.since)
+  }
+  if (options?.limit) {
+    params.set('limit', String(options.limit))
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/rule-changes/events${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<RuleChangeEventResponse[]>(response, 'Failed to list rule change events')
+}
+
+export async function commitFactSourceIngestion(
+  accessToken: string,
+  payload: FactSourceBulkIngestionRequest,
+): Promise<SourceIngestionBatchResponse> {
+  const response = await fetch(`${apiBase}/api/source-ingestion/fact-sources/commit`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<SourceIngestionBatchResponse>(
+    response,
+    'Failed to commit fact source ingestion',
+  )
+}
+
+export async function getM12AnalyticsWorkerSettings(
+  accessToken: string,
+): Promise<M12AnalyticsWorkerSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/m12-analytics-worker-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<M12AnalyticsWorkerSettingsResponse>(
+    response,
+    'Failed to load M12 analytics worker settings',
+  )
+}
+
+export async function upsertM12AnalyticsWorkerSettings(
+  accessToken: string,
+  payload: UpsertM12AnalyticsWorkerSettingsRequest,
+): Promise<M12AnalyticsWorkerSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/m12-analytics-worker-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<M12AnalyticsWorkerSettingsResponse>(
+    response,
+    'Failed to save M12 analytics worker settings',
+  )
+}
+
+export async function getAuditDeliveryOrchestrationStatus(
+  accessToken: string,
+): Promise<AuditDeliveryOrchestrationStatusResponse> {
+  const response = await fetch(`${apiBase}/api/audit-delivery-orchestration`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AuditDeliveryOrchestrationStatusResponse>(
+    response,
+    'Failed to load audit delivery orchestration status',
+  )
+}
+
+export async function triggerScheduledRuleEvaluation(
+  accessToken: string,
+): Promise<TriggerScheduledRuleEvaluationResponse> {
+  const response = await fetch(
+    `${apiBase}/api/audit-delivery-orchestration/trigger-scheduled-evaluation`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<TriggerScheduledRuleEvaluationResponse>(
+    response,
+    'Failed to trigger scheduled rule evaluation',
+  )
+}
+
+export async function triggerM12AnalyticsBatch(
+  accessToken: string,
+): Promise<TriggerM12AnalyticsBatchResponse> {
+  const response = await fetch(`${apiBase}/api/audit-delivery-orchestration/trigger-m12-batch`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TriggerM12AnalyticsBatchResponse>(
+    response,
+    'Failed to trigger M12 analytics batch',
+  )
 }

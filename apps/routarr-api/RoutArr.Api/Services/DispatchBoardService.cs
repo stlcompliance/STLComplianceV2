@@ -229,6 +229,7 @@ public sealed class DispatchBoardService(
             trip.Title,
             trip.DispatchStatus,
             trip.AssignedDriverPersonId,
+            trip.VehicleRefKey,
             trip.ScheduledStartAt,
             trip.ScheduledEndAt,
             isLate,

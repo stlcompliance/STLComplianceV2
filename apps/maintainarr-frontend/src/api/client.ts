@@ -44,6 +44,11 @@ import type {
   MaintenanceHistorySummaryResponse,
   MaintenanceHistoryRollupSettingsResponse,
   UpsertMaintenanceHistoryRollupSettingsRequest,
+  PmDueScanSettingsResponse,
+  UpsertPmDueScanSettingsRequest,
+  PendingPmDueResponse,
+  PmDueScanRunsResponse,
+  TriggerPmDueScanResponse,
   PendingMaintenanceHistoryRollupsResponse,
   MaintenanceHistoryRollupRunsResponse,
   MaintenanceHistoryEntryResponse,
@@ -72,6 +77,14 @@ import type {
   CreateWorkOrderPartsDemandLineRequest,
   PublishWorkOrderPartsDemandRequest,
   PublishWorkOrderPartsDemandResponse,
+  MaintenanceReportSummaryResponse,
+  MaintenanceReportAssetDetailResponse,
+  MaintenanceReportWorkOrderDetailResponse,
+  ExecutiveReportSummaryResponse,
+  ComplianceReportSummaryResponse,
+  AssetBulkImportRequest,
+  AssetBulkImportResponse,
+  EntityExportManifestResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_MAINTAINARR_API_BASE ?? ''
@@ -952,30 +965,99 @@ export async function getMaintenanceHistoryRollupRuns(
   )
 }
 
-function buildAuditPackageQuery(options?: { from?: string; to?: string; format?: string }): string {
+export async function getPmDueScanSettings(
+  accessToken: string,
+): Promise<PmDueScanSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/pm-due-scan-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PmDueScanSettingsResponse>(response, 'Failed to load PM due scan settings')
+}
+
+export async function upsertPmDueScanSettings(
+  accessToken: string,
+  payload: UpsertPmDueScanSettingsRequest,
+): Promise<PmDueScanSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/pm-due-scan-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<PmDueScanSettingsResponse>(response, 'Failed to save PM due scan settings')
+}
+
+export async function getPendingPmDueScan(
+  accessToken: string,
+): Promise<PendingPmDueResponse> {
+  const response = await fetch(`${apiBase}/api/pm-due-scan-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingPmDueResponse>(response, 'Failed to load pending PM due scan items')
+}
+
+export async function getPmDueScanRuns(
+  accessToken: string,
+  limit = 5,
+): Promise<PmDueScanRunsResponse> {
+  const response = await fetch(`${apiBase}/api/pm-due-scan-settings/runs?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PmDueScanRunsResponse>(response, 'Failed to load PM due scan runs')
+}
+
+export async function triggerPmDueScan(accessToken: string): Promise<TriggerPmDueScanResponse> {
+  const response = await fetch(`${apiBase}/api/pm-due-scan-settings/trigger`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TriggerPmDueScanResponse>(response, 'Failed to trigger PM due scan')
+}
+
+function buildAuditPackageQuery(
+  options?: import('./types').AuditPackageScope & { format?: string; page?: number; pageSize?: number },
+): string {
   const params = new URLSearchParams()
-  if (options?.from) {
-    params.set('from', options.from)
-  }
-  if (options?.to) {
-    params.set('to', options.to)
-  }
   if (options?.format) {
     params.set('format', options.format)
+  }
+  if (options?.from) {
+    params.set('from', `${options.from}T00:00:00.000Z`)
+  }
+  if (options?.to) {
+    params.set('to', `${options.to}T23:59:59.999Z`)
+  }
+  if (options?.action) {
+    params.set('action', options.action)
+  }
+  if (options?.result) {
+    params.set('result', options.result)
+  }
+  if (options?.targetType) {
+    params.set('targetType', options.targetType)
+  }
+  if (options?.actorUserId) {
+    params.set('actorUserId', options.actorUserId)
+  }
+  if (options?.page) {
+    params.set('page', String(options.page))
+  }
+  if (options?.pageSize) {
+    params.set('pageSize', String(options.pageSize))
   }
   const query = params.toString()
   return query ? `?${query}` : ''
 }
 
-function auditPackageDateBody(from?: string, to?: string): { from?: string; to?: string } {
-  const body: { from?: string; to?: string } = {}
-  if (from) {
-    body.from = `${from}T00:00:00.000Z`
+function auditPackageJobBody(scope: import('./types').AuditPackageScope & { format: string }) {
+  return {
+    format: scope.format,
+    from: scope.from ? `${scope.from}T00:00:00.000Z` : undefined,
+    to: scope.to ? `${scope.to}T23:59:59.999Z` : undefined,
+    action: scope.action,
+    result: scope.result,
+    targetType: scope.targetType,
+    actorUserId: scope.actorUserId,
   }
-  if (to) {
-    body.to = `${to}T23:59:59.999Z`
-  }
-  return body
 }
 
 export async function getAuditPackageManifest(
@@ -987,9 +1069,49 @@ export async function getAuditPackageManifest(
   return parseJsonResponse<AuditPackageManifestResponse>(response, 'Failed to load audit package manifest')
 }
 
+export async function getAuditPackageFilterOptions(
+  accessToken: string,
+): Promise<import('./types').AuditPackageFilterOptions> {
+  const response = await fetch(`${apiBase}/api/audit-packages/filter-options`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<import('./types').AuditPackageFilterOptions>(
+    response,
+    'Failed to load audit filter options',
+  )
+}
+
+export async function getAuditPackageExportSummary(
+  accessToken: string,
+  scope?: import('./types').AuditPackageScope,
+): Promise<import('./types').AuditPackageExportSummary> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/summary${buildAuditPackageQuery(scope)}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<import('./types').AuditPackageExportSummary>(
+    response,
+    'Failed to load audit export summary',
+  )
+}
+
+export async function getAuditPackageTimeline(
+  accessToken: string,
+  scope?: import('./types').AuditPackageScope & { page?: number; pageSize?: number },
+): Promise<import('./types').PagedAuditTimeline> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/timeline${buildAuditPackageQuery({ ...scope, page: scope?.page ?? 1, pageSize: scope?.pageSize ?? 15 })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<import('./types').PagedAuditTimeline>(
+    response,
+    'Failed to load audit timeline',
+  )
+}
+
 export async function exportAuditPackageZip(
   accessToken: string,
-  options?: { from?: string; to?: string },
+  options?: import('./types').AuditPackageScope,
 ): Promise<Blob> {
   const response = await fetch(
     `${apiBase}/api/audit-packages/export${buildAuditPackageQuery(options)}`,
@@ -1008,9 +1130,28 @@ export async function exportAuditPackageZip(
   return response.blob()
 }
 
+export async function exportAuditPackageCsv(
+  accessToken: string,
+  options?: import('./types').AuditPackageScope,
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/export${buildAuditPackageQuery({ ...options, format: 'csv' })}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new MaintainArrApiError(
+      body || `Audit CSV export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
 export async function exportAuditPackageJson(
   accessToken: string,
-  options?: { from?: string; to?: string },
+  options?: import('./types').AuditPackageScope,
 ): Promise<AuditPackageExportResponse> {
   const response = await fetch(
     `${apiBase}/api/audit-packages/export${buildAuditPackageQuery({ ...options, format: 'json' })}`,
@@ -1023,7 +1164,7 @@ export async function exportAuditPackageJson(
 
 export async function createAuditPackageGenerationJob(
   accessToken: string,
-  options: { format: 'zip' | 'json'; from?: string; to?: string },
+  options: import('./types').AuditPackageScope & { format: 'zip' | 'json' },
 ): Promise<AuditPackageGenerationJobResponse> {
   const response = await fetch(`${apiBase}/api/audit-packages/jobs`, {
     method: 'POST',
@@ -1031,10 +1172,7 @@ export async function createAuditPackageGenerationJob(
       ...authHeaders(accessToken),
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      format: options.format,
-      ...auditPackageDateBody(options.from, options.to),
-    }),
+    body: JSON.stringify(auditPackageJobBody(options)),
   })
   return parseJsonResponse<AuditPackageGenerationJobResponse>(
     response,
@@ -1071,6 +1209,244 @@ export async function downloadAuditPackageGenerationJob(
     )
   }
   return response.blob()
+}
+
+export async function getMaintenanceReportSummary(
+  accessToken: string,
+  options?: { lifecycleStatus?: string },
+): Promise<MaintenanceReportSummaryResponse> {
+  const params = new URLSearchParams()
+  if (options?.lifecycleStatus) {
+    params.set('lifecycleStatus', options.lifecycleStatus)
+  }
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/reports/maintenance/summary${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenanceReportSummaryResponse>(
+    response,
+    'Failed to load maintenance report summary',
+  )
+}
+
+export async function getMaintenanceReportAssetDetail(
+  accessToken: string,
+  assetId: string,
+): Promise<MaintenanceReportAssetDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/maintenance/assets/${assetId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenanceReportAssetDetailResponse>(
+    response,
+    'Failed to load maintenance report asset detail',
+  )
+}
+
+export async function getMaintenanceReportWorkOrderDetail(
+  accessToken: string,
+  workOrderId: string,
+): Promise<MaintenanceReportWorkOrderDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/maintenance/work-orders/${workOrderId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenanceReportWorkOrderDetailResponse>(
+    response,
+    'Failed to load maintenance report work order detail',
+  )
+}
+
+export async function exportMaintenanceReportSummaryCsv(
+  accessToken: string,
+  options?: { lifecycleStatus?: string },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.lifecycleStatus) {
+    params.set('lifecycleStatus', options.lifecycleStatus)
+  }
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/reports/maintenance/summary/export${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new MaintainArrApiError(
+      body || `Maintenance report export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function getExecutiveReportSummary(
+  accessToken: string,
+): Promise<ExecutiveReportSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/reports/executive/summary`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ExecutiveReportSummaryResponse>(
+    response,
+    'Failed to load executive report summary',
+  )
+}
+
+export async function exportExecutiveReportSummaryCsv(accessToken: string): Promise<Blob> {
+  const response = await fetch(`${apiBase}/api/reports/executive/summary/export`, {
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new MaintainArrApiError(
+      body || `Executive report export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function getComplianceReportSummary(
+  accessToken: string,
+  options?: { attentionOnly?: boolean; siteRef?: string },
+): Promise<ComplianceReportSummaryResponse> {
+  const params = new URLSearchParams()
+  if (options?.attentionOnly) {
+    params.set('attentionOnly', 'true')
+  }
+  if (options?.siteRef) {
+    params.set('siteRef', options.siteRef)
+  }
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/reports/compliance/summary${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ComplianceReportSummaryResponse>(
+    response,
+    'Failed to load compliance report summary',
+  )
+}
+
+export async function exportComplianceReportSummaryCsv(
+  accessToken: string,
+  options?: { attentionOnly?: boolean; siteRef?: string },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.attentionOnly) {
+    params.set('attentionOnly', 'true')
+  }
+  if (options?.siteRef) {
+    params.set('siteRef', options.siteRef)
+  }
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/reports/compliance/summary/export${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new MaintainArrApiError(
+      body || `Compliance report export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function validateAssetImport(
+  accessToken: string,
+  request: AssetBulkImportRequest,
+): Promise<AssetBulkImportResponse> {
+  const response = await fetch(`${apiBase}/api/imports/assets/validate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<AssetBulkImportResponse>(response, 'Failed to validate asset import')
+}
+
+export async function commitAssetImport(
+  accessToken: string,
+  request: AssetBulkImportRequest,
+): Promise<AssetBulkImportResponse> {
+  const response = await fetch(`${apiBase}/api/imports/assets/commit`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<AssetBulkImportResponse>(response, 'Failed to commit asset import')
+}
+
+export async function getEntityExportManifest(
+  accessToken: string,
+): Promise<EntityExportManifestResponse> {
+  const response = await fetch(`${apiBase}/api/exports/manifest`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<EntityExportManifestResponse>(
+    response,
+    'Failed to load export manifest',
+  )
+}
+
+async function downloadExportBlob(
+  accessToken: string,
+  path: string,
+  errorLabel: string,
+): Promise<Blob> {
+  const response = await fetch(`${apiBase}${path}`, {
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new MaintainArrApiError(body || `${errorLabel} (${response.status})`, response.status, body)
+  }
+  return response.blob()
+}
+
+export async function exportAssetsCsv(
+  accessToken: string,
+  options?: { lifecycleStatus?: string },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.lifecycleStatus) {
+    params.set('lifecycleStatus', options.lifecycleStatus)
+  }
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  return downloadExportBlob(accessToken, `/api/exports/assets${query}`, 'Asset export failed')
+}
+
+export async function exportWorkOrdersCsv(
+  accessToken: string,
+  options?: { status?: string; assetId?: string },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.status) {
+    params.set('status', options.status)
+  }
+  if (options?.assetId) {
+    params.set('assetId', options.assetId)
+  }
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  return downloadExportBlob(accessToken, `/api/exports/work-orders${query}`, 'Work order export failed')
+}
+
+export async function exportInspectionRunsCsv(
+  accessToken: string,
+  options?: { status?: string; assetId?: string },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.status) {
+    params.set('status', options.status)
+  }
+  if (options?.assetId) {
+    params.set('assetId', options.assetId)
+  }
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  return downloadExportBlob(
+    accessToken,
+    `/api/exports/inspection-runs${query}`,
+    'Inspection run export failed',
+  )
 }
 
 export async function getMaintenanceNotificationDispatches(

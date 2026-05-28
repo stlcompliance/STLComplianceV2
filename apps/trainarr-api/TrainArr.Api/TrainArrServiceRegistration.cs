@@ -45,6 +45,16 @@ public static class TrainArrServiceRegistration
 
         });
 
+        builder.Services.AddHttpClient<StaffArrTrainingAcknowledgementClient>((sp, client) =>
+
+        {
+
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
+
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+
+        });
+
         builder.Services.AddHttpClient<StaffArrCertificationGrantClient>((sp, client) =>
 
         {
@@ -161,6 +171,11 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<TrainingNotificationEnqueueService>();
         builder.Services.AddScoped<TrainingNotificationDispatchService>();
 
+        builder.Services.AddScoped<AssignmentDueReminderSettingsService>();
+        builder.Services.AddScoped<AssignmentDueReminderWorkerService>();
+        builder.Services.AddScoped<AssignmentEscalationSettingsService>();
+        builder.Services.AddScoped<AssignmentEscalationWorkerService>();
+
         builder.Services.AddHttpClient(TrainingNotificationDispatchService.WebhookHttpClientName, client =>
         {
             client.Timeout = TimeSpan.FromSeconds(15);
@@ -173,6 +188,8 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<TrainingDefinitionService>();
 
         builder.Services.AddScoped<TrainingProgramService>();
+
+        builder.Services.AddScoped<TrainingAcknowledgementPublicationService>();
 
         builder.Services.AddScoped<TrainingAssignmentService>();
         builder.Services.AddScoped<TrainingAssignmentMaterialDemandService>();

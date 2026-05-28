@@ -393,6 +393,10 @@ namespace NexArr.Api.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<string>("FilterJson")
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
                     b.Property<string>("Format")
                         .IsRequired()
                         .HasMaxLength(16)

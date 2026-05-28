@@ -30,6 +30,16 @@ public sealed class PlatformAuditPackageGenerationService(
         ValidateDateRange(request.From, request.To);
 
         var now = DateTimeOffset.UtcNow;
+        var filter = new PlatformAuditPackageFilter(
+            request.TenantId,
+            request.From,
+            request.To,
+            request.Action,
+            request.Result,
+            request.TargetType,
+            request.ActorUserId,
+            request.ProductKey);
+
         var job = new PlatformAuditPackageGenerationJob
         {
             Id = Guid.NewGuid(),
@@ -39,6 +49,7 @@ public sealed class PlatformAuditPackageGenerationService(
             Format = format,
             FromUtc = request.From,
             ToUtc = request.To,
+            FilterJson = PlatformAuditPackageService.SerializeFilter(filter),
             CreatedAt = now,
         };
 
@@ -183,9 +194,7 @@ public sealed class PlatformAuditPackageGenerationService(
         try
         {
             var package = await auditPackageService.MaterializeExportAsync(
-                job.ScopeTenantId,
-                job.FromUtc,
-                job.ToUtc,
+                PlatformAuditPackageService.FromJob(job),
                 cancellationToken);
 
             if (job.Format == PlatformAuditPackageGenerationFormats.Zip)

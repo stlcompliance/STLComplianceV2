@@ -30,6 +30,14 @@ public sealed class AuditPackageGenerationService(
         var format = AuditPackageGenerationRules.NormalizeFormat(request.Format);
         ValidateDateRange(request.From, request.To);
 
+        var filter = new AuditPackageFilter(
+            request.From,
+            request.To,
+            request.Action,
+            request.Result,
+            request.TargetType,
+            request.ActorUserId);
+
         var now = DateTimeOffset.UtcNow;
         var job = new AuditPackageGenerationJob
         {
@@ -40,6 +48,7 @@ public sealed class AuditPackageGenerationService(
             Format = format,
             FromUtc = request.From,
             ToUtc = request.To,
+            FilterJson = AuditPackageService.SerializeFilter(filter),
             CreatedAt = now,
         };
 
@@ -188,8 +197,7 @@ public sealed class AuditPackageGenerationService(
         {
             var package = await auditPackageService.MaterializeExportAsync(
                 job.TenantId,
-                job.FromUtc,
-                job.ToUtc,
+                AuditPackageService.FromJob(job),
                 cancellationToken);
 
             if (job.Format == AuditPackageGenerationFormats.Zip)

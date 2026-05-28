@@ -18,6 +18,13 @@ public sealed record ProcurementExceptionResponse(
     string WaiveRejectionReason,
     Guid CreatedByUserId,
     Guid? AssignedToUserId,
+    DateTimeOffset? SlaDueAt,
+    bool IsSlaBreached,
+    string ResolutionTemplateKey,
+    Guid? LinkedPurchaseRequestId,
+    string? LinkedPurchaseRequestKey,
+    Guid? LinkedPurchaseOrderId,
+    string? LinkedPurchaseOrderKey,
     Guid? WaiveRequestedByUserId,
     DateTimeOffset? WaiveRequestedAt,
     Guid? WaivedByUserId,
@@ -32,15 +39,19 @@ public sealed record CreateProcurementExceptionRequest(
     string ExceptionCategory,
     string Title,
     string Description,
-    Guid? AssignedToUserId);
+    Guid? AssignedToUserId,
+    DateTimeOffset? SlaDueAt = null);
 
 public sealed record UpdateProcurementExceptionRequest(
     string Title,
     string Description,
     string ExceptionCategory,
-    Guid? AssignedToUserId);
+    Guid? AssignedToUserId,
+    DateTimeOffset? SlaDueAt = null);
 
-public sealed record ResolveProcurementExceptionRequest(string ResolutionNotes);
+public sealed record ResolveProcurementExceptionRequest(
+    string ResolutionNotes,
+    string? ResolutionTemplateKey = null);
 
 public sealed record RequestProcurementExceptionWaiveRequest(string WaiveJustification);
 

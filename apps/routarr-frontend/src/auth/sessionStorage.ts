@@ -98,3 +98,11 @@ export function canManageDriverAvailability(tenantRoleKey: string, isPlatformAdm
 export function canManageEquipmentAvailability(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   return canAssignDrivers(tenantRoleKey, isPlatformAdmin)
 }
+
+export function canReadDispatchReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canAssignDrivers(tenantRoleKey, isPlatformAdmin)
+}
+
+export function canExportDispatchReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canManageTrips(tenantRoleKey, isPlatformAdmin)
+}

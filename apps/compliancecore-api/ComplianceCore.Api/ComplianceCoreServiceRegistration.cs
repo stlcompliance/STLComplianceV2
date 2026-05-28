@@ -38,6 +38,15 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<FactSourceService>();
         builder.Services.AddScoped<ProductFactMirrorService>();
         builder.Services.AddScoped<ProductFactIngestionService>();
+        builder.Services.AddScoped<SourceIngestionService>();
+        builder.Services.AddScoped<RuleChangeMonitoringService>();
+        builder.Services.AddScoped<RiskScoringService>();
+        builder.Services.AddScoped<MissingEvidenceWarningService>();
+        builder.Services.AddScoped<ControlEffectivenessService>();
+        builder.Services.AddScoped<ReadinessForecastService>();
+        builder.Services.AddScoped<M12AnalyticsWorkerSettingsService>();
+        builder.Services.AddScoped<M12AnalyticsBatchWorkerService>();
+        builder.Services.AddScoped<AuditDeliveryOrchestrationService>();
         builder.Services.AddScoped<FactResolveService>();
         builder.Services.AddScoped<InternalRuleEvaluationService>();
         builder.Services.AddScoped<ScheduledRuleEvaluationService>();

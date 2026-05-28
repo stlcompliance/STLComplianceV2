@@ -6,6 +6,8 @@ namespace TrainArr.Api.Services;
 
 public sealed class PersonTrainingHistoryService(TrainArrDbContext db)
 {
+    public const string IntegrationReadActionScope = "trainarr.person_training_history.read";
+
     public async Task<PersonTrainingHistoryResponse> GetForPersonAsync(
         Guid tenantId,
         Guid staffarrPersonId,

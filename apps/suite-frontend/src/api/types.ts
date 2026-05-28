@@ -200,21 +200,66 @@ export interface PlatformAuditPackageGenerationJob {
   downloadReady: boolean
 }
 
+export interface PlatformAuditPackageCounts {
+  auditEvents: number
+  tenants: number
+  tenantEntitlements: number
+  productCatalog: number
+  platformUsers: number
+  serviceClients: number
+  serviceTokens: number
+  launchProfiles: number
+  callbackAllowlist: number
+}
+
+export interface PlatformAuditPackageAppliedFilters {
+  tenantId: string | null
+  from: string | null
+  to: string | null
+  action: string | null
+  result: string | null
+  targetType: string | null
+  actorUserId: string | null
+  productKey: string | null
+}
+
+export interface PlatformAuditPackageFilterOptions {
+  actions: string[]
+  results: string[]
+  targetTypes: string[]
+  productKeys: string[]
+}
+
+export interface PlatformAuditPackageBreakdownItem {
+  key: string
+  count: number
+}
+
+export interface PlatformAuditPackageExportSummary {
+  filters: PlatformAuditPackageAppliedFilters
+  counts: PlatformAuditPackageCounts
+  byResult: PlatformAuditPackageBreakdownItem[]
+  byAction: PlatformAuditPackageBreakdownItem[]
+  generatedAt: string
+}
+
+export interface PlatformAuditPackageScope {
+  from?: string
+  to?: string
+  tenantId?: string
+  action?: string
+  result?: string
+  targetType?: string
+  actorUserId?: string
+  productKey?: string
+}
+
 export interface PlatformAuditPackageExportPreview {
   packageId: string
   scopeTenantId: string | null
   generatedAt: string
-  counts: {
-    auditEvents: number
-    tenants: number
-    tenantEntitlements: number
-    productCatalog: number
-    platformUsers: number
-    serviceClients: number
-    serviceTokens: number
-    launchProfiles: number
-    callbackAllowlist: number
-  }
+  appliedFilters?: PlatformAuditPackageAppliedFilters | null
+  counts: PlatformAuditPackageCounts
 }
 
 export interface ServiceTokenCleanupSettings {
@@ -317,6 +362,31 @@ export interface PendingTenantLifecycleResponse {
   asOfUtc: string
   batchSize: number
   items: PendingTenantLifecycleItem[]
+}
+
+export interface PlatformLifecycleLatestRunSummary {
+  runId: string
+  outcome: string
+  processedAt: string
+  primaryCount: number
+  primaryCountLabel: string
+}
+
+export interface PlatformLifecycleWorkerStatus {
+  workerKey: string
+  label: string
+  description: string
+  isEnabled: boolean
+  pendingCount: number
+  latestRun: PlatformLifecycleLatestRunSummary | null
+  serviceTokenScope: string
+  platformSettingsPath: string
+  suiteAdminPath: string
+}
+
+export interface PlatformLifecycleOverviewResponse {
+  generatedAt: string
+  workers: PlatformLifecycleWorkerStatus[]
 }
 
 export class NexarrApiError extends Error {

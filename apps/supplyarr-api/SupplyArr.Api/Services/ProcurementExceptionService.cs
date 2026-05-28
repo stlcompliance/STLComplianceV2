@@ -11,14 +11,24 @@ public sealed class ProcurementExceptionService(
     IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
+    public IReadOnlyList<ProcurementExceptionResolutionTemplateResponse> ListResolutionTemplates() =>
+        ProcurementExceptionResolutionTemplates.All
+            .Select(x => new ProcurementExceptionResolutionTemplateResponse(
+                x.TemplateKey,
+                x.Label,
+                x.DefaultResolutionNotes))
+            .ToList();
+
     public async Task<IReadOnlyList<ProcurementExceptionResponse>> ListAsync(
         Guid tenantId,
         string? status = null,
         string? subjectType = null,
         Guid? subjectId = null,
+        bool overdueOnly = false,
         CancellationToken cancellationToken = default)
     {
         var query = db.ProcurementExceptions.AsNoTracking().Where(x => x.TenantId == tenantId);
+        var asOf = DateTimeOffset.UtcNow;
 
         if (!string.IsNullOrWhiteSpace(status))
         {
@@ -36,10 +46,26 @@ public sealed class ProcurementExceptionService(
             query = query.Where(x => x.SubjectId == subjectId);
         }
 
-        var rows = await query
-            .OrderByDescending(x => x.UpdatedAt)
-            .Take(200)
-            .ToListAsync(cancellationToken);
+        if (overdueOnly)
+        {
+            query = query.Where(x =>
+                x.SlaDueAt != null
+                && x.SlaDueAt < asOf
+                && (x.Status == ProcurementExceptionStatuses.Open
+                    || x.Status == ProcurementExceptionStatuses.Investigating
+                    || x.Status == ProcurementExceptionStatuses.WaivePending));
+        }
+
+        var rows = overdueOnly
+            ? await query
+                .OrderBy(x => x.SlaDueAt)
+                .ThenByDescending(x => x.UpdatedAt)
+                .Take(200)
+                .ToListAsync(cancellationToken)
+            : await query
+                .OrderByDescending(x => x.UpdatedAt)
+                .Take(200)
+                .ToListAsync(cancellationToken);
 
         return await MapListAsync(tenantId, rows, cancellationToken);
     }
@@ -92,6 +118,10 @@ public sealed class ProcurementExceptionService(
             Status = ProcurementExceptionStatuses.Open,
             CreatedByUserId = actorUserId,
             AssignedToUserId = request.AssignedToUserId,
+            SlaDueAt = ProcurementExceptionRules.NormalizeSlaDueAt(
+                request.SlaDueAt,
+                ProcurementExceptionRules.NormalizeCategory(request.ExceptionCategory),
+                now),
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -125,6 +155,10 @@ public sealed class ProcurementExceptionService(
         entity.Description = ProcurementExceptionRules.NormalizeDescription(request.Description);
         entity.ExceptionCategory = ProcurementExceptionRules.NormalizeCategory(request.ExceptionCategory);
         entity.AssignedToUserId = request.AssignedToUserId;
+        entity.SlaDueAt = ProcurementExceptionRules.NormalizeSlaDueAt(
+            request.SlaDueAt,
+            entity.ExceptionCategory,
+            entity.CreatedAt);
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -136,6 +170,86 @@ public sealed class ProcurementExceptionService(
             actorUserId,
             entity,
             $"Procurement exception updated: {entity.ExceptionKey}",
+            cancellationToken);
+
+        return await MapAsync(tenantId, entity, cancellationToken);
+    }
+
+    public async Task<ProcurementExceptionResponse> AssignAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid exceptionId,
+        AssignProcurementExceptionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ProcurementExceptionRules.EnsureAssignee(request.AssignedToUserId);
+
+        var entity = await LoadTrackedAsync(tenantId, exceptionId, cancellationToken);
+        EnsureEditable(entity);
+
+        entity.AssignedToUserId = request.AssignedToUserId;
+        if (request.SlaDueAt is not null)
+        {
+            entity.SlaDueAt = request.SlaDueAt;
+        }
+
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await WriteAuditAndOutboxAsync(
+            "procurement_exception.assign",
+            IntegrationOutboxEventKinds.ProcurementExceptionUpdated,
+            tenantId,
+            actorUserId,
+            entity,
+            $"Procurement exception assigned: {entity.ExceptionKey}",
+            cancellationToken);
+
+        return await MapAsync(tenantId, entity, cancellationToken);
+    }
+
+    public async Task<ProcurementExceptionResponse> LinkActionsAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid exceptionId,
+        LinkProcurementExceptionActionsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadTrackedAsync(tenantId, exceptionId, cancellationToken);
+        EnsureEditable(entity);
+
+        if (request.LinkedPurchaseRequestId is Guid linkedPrId)
+        {
+            await EnsurePurchaseRequestExistsAsync(tenantId, linkedPrId, cancellationToken);
+            entity.LinkedPurchaseRequestId = linkedPrId;
+        }
+        else
+        {
+            entity.LinkedPurchaseRequestId = null;
+        }
+
+        if (request.LinkedPurchaseOrderId is Guid linkedPoId)
+        {
+            await EnsurePurchaseOrderExistsAsync(tenantId, linkedPoId, cancellationToken);
+            entity.LinkedPurchaseOrderId = linkedPoId;
+        }
+        else
+        {
+            entity.LinkedPurchaseOrderId = null;
+        }
+
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await WriteAuditAndOutboxAsync(
+            "procurement_exception.link_actions",
+            IntegrationOutboxEventKinds.ProcurementExceptionUpdated,
+            tenantId,
+            actorUserId,
+            entity,
+            $"Procurement exception linked to PR/PO actions: {entity.ExceptionKey}",
             cancellationToken);
 
         return await MapAsync(tenantId, entity, cancellationToken);
@@ -181,7 +295,13 @@ public sealed class ProcurementExceptionService(
         Transition(entity, ProcurementExceptionStatuses.Resolved);
 
         var now = DateTimeOffset.UtcNow;
-        entity.ResolutionNotes = ProcurementExceptionRules.NormalizeResolutionNotes(request.ResolutionNotes);
+        var templateKey = string.IsNullOrWhiteSpace(request.ResolutionTemplateKey)
+            ? string.Empty
+            : ProcurementExceptionRules.NormalizeResolutionTemplateKey(request.ResolutionTemplateKey);
+        entity.ResolutionTemplateKey = templateKey;
+        entity.ResolutionNotes = ProcurementExceptionRules.BuildResolutionNotes(
+            templateKey,
+            request.ResolutionNotes);
         entity.ResolvedByUserId = actorUserId;
         entity.ResolvedAt = now;
         entity.UpdatedAt = now;
@@ -365,7 +485,41 @@ public sealed class ProcurementExceptionService(
         return await MapAsync(tenantId, entity, cancellationToken);
     }
 
+    private async Task EnsurePurchaseRequestExistsAsync(
+        Guid tenantId,
+        Guid purchaseRequestId,
+        CancellationToken cancellationToken)
+    {
+        var exists = await db.PurchaseRequests.AsNoTracking()
+            .AnyAsync(x => x.TenantId == tenantId && x.Id == purchaseRequestId, cancellationToken);
+        if (!exists)
+        {
+            throw new StlApiException(
+                "procurement_exceptions.linked_pr_not_found",
+                "Linked purchase request was not found.",
+                404);
+        }
+    }
+
+    private async Task EnsurePurchaseOrderExistsAsync(
+        Guid tenantId,
+        Guid purchaseOrderId,
+        CancellationToken cancellationToken)
+    {
+        var exists = await db.PurchaseOrders.AsNoTracking()
+            .AnyAsync(x => x.TenantId == tenantId && x.Id == purchaseOrderId, cancellationToken);
+        if (!exists)
+        {
+            throw new StlApiException(
+                "procurement_exceptions.linked_po_not_found",
+                "Linked purchase order was not found.",
+                404);
+        }
+    }
+
     private sealed record SubjectSnapshot(string SubjectKey, Guid? VendorPartyId);
+
+    private sealed record LinkedActionKeys(string? PurchaseRequestKey, string? PurchaseOrderKey);
 
     private async Task<SubjectSnapshot> ResolveSubjectAsync(
         Guid tenantId,
@@ -467,21 +621,41 @@ public sealed class ProcurementExceptionService(
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == exceptionId, cancellationToken)
             ?? throw new StlApiException("procurement_exceptions.not_found", "Procurement exception was not found.", 404);
 
-    private async Task<ProcurementExceptionResponse> MapAsync(
+    private async Task<LinkedActionKeys> LoadLinkedActionKeysAsync(
         Guid tenantId,
         ProcurementException entity,
         CancellationToken cancellationToken)
     {
-        string? vendorKey = null;
-        string? vendorName = null;
-        if (entity.VendorPartyId is Guid vendorId)
+        string? prKey = null;
+        string? poKey = null;
+
+        if (entity.LinkedPurchaseRequestId is Guid prId)
         {
-            var vendor = await db.ExternalParties.AsNoTracking()
-                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == vendorId, cancellationToken);
-            vendorKey = vendor?.PartyKey;
-            vendorName = vendor?.DisplayName;
+            prKey = await db.PurchaseRequests.AsNoTracking()
+                .Where(x => x.TenantId == tenantId && x.Id == prId)
+                .Select(x => x.RequestKey)
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
+        if (entity.LinkedPurchaseOrderId is Guid poId)
+        {
+            poKey = await db.PurchaseOrders.AsNoTracking()
+                .Where(x => x.TenantId == tenantId && x.Id == poId)
+                .Select(x => x.OrderKey)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        return new LinkedActionKeys(prKey, poKey);
+    }
+
+    private static ProcurementExceptionResponse MapEntity(
+        ProcurementException entity,
+        string? vendorKey,
+        string? vendorName,
+        string? linkedPurchaseRequestKey,
+        string? linkedPurchaseOrderKey)
+    {
+        var asOf = DateTimeOffset.UtcNow;
         return new ProcurementExceptionResponse(
             entity.Id,
             entity.ExceptionKey,
@@ -500,6 +674,13 @@ public sealed class ProcurementExceptionService(
             entity.WaiveRejectionReason,
             entity.CreatedByUserId,
             entity.AssignedToUserId,
+            entity.SlaDueAt,
+            ProcurementExceptionRules.IsSlaBreached(entity, asOf),
+            entity.ResolutionTemplateKey,
+            entity.LinkedPurchaseRequestId,
+            linkedPurchaseRequestKey,
+            entity.LinkedPurchaseOrderId,
+            linkedPurchaseOrderKey,
             entity.WaiveRequestedByUserId,
             entity.WaiveRequestedAt,
             entity.WaivedByUserId,
@@ -508,6 +689,25 @@ public sealed class ProcurementExceptionService(
             entity.ClosedAt,
             entity.CreatedAt,
             entity.UpdatedAt);
+    }
+
+    private async Task<ProcurementExceptionResponse> MapAsync(
+        Guid tenantId,
+        ProcurementException entity,
+        CancellationToken cancellationToken)
+    {
+        string? vendorKey = null;
+        string? vendorName = null;
+        if (entity.VendorPartyId is Guid vendorId)
+        {
+            var vendor = await db.ExternalParties.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == vendorId, cancellationToken);
+            vendorKey = vendor?.PartyKey;
+            vendorName = vendor?.DisplayName;
+        }
+
+        var linked = await LoadLinkedActionKeysAsync(tenantId, entity, cancellationToken);
+        return MapEntity(entity, vendorKey, vendorName, linked.PurchaseRequestKey, linked.PurchaseOrderKey);
     }
 
     private async Task<IReadOnlyList<ProcurementExceptionResponse>> MapListAsync(
@@ -522,35 +722,37 @@ public sealed class ProcurementExceptionService(
                 .Where(x => x.TenantId == tenantId && vendorIds.Contains(x.Id))
                 .ToDictionaryAsync(x => x.Id, cancellationToken);
 
+        var linkedPrIds = entities.Where(x => x.LinkedPurchaseRequestId.HasValue)
+            .Select(x => x.LinkedPurchaseRequestId!.Value)
+            .Distinct()
+            .ToList();
+        var linkedPrs = linkedPrIds.Count == 0
+            ? []
+            : await db.PurchaseRequests.AsNoTracking()
+                .Where(x => x.TenantId == tenantId && linkedPrIds.Contains(x.Id))
+                .ToDictionaryAsync(x => x.Id, x => x.RequestKey, cancellationToken);
+
+        var linkedPoIds = entities.Where(x => x.LinkedPurchaseOrderId.HasValue)
+            .Select(x => x.LinkedPurchaseOrderId!.Value)
+            .Distinct()
+            .ToList();
+        var linkedPos = linkedPoIds.Count == 0
+            ? []
+            : await db.PurchaseOrders.AsNoTracking()
+                .Where(x => x.TenantId == tenantId && linkedPoIds.Contains(x.Id))
+                .ToDictionaryAsync(x => x.Id, x => x.OrderKey, cancellationToken);
+
         return entities.Select(entity =>
         {
             vendors.TryGetValue(entity.VendorPartyId ?? Guid.Empty, out var vendor);
-            return new ProcurementExceptionResponse(
-                entity.Id,
-                entity.ExceptionKey,
-                entity.SubjectType,
-                entity.SubjectId,
-                entity.SubjectKey,
-                entity.VendorPartyId,
+            linkedPrs.TryGetValue(entity.LinkedPurchaseRequestId ?? Guid.Empty, out var prKey);
+            linkedPos.TryGetValue(entity.LinkedPurchaseOrderId ?? Guid.Empty, out var poKey);
+            return MapEntity(
+                entity,
                 vendor?.PartyKey,
                 vendor?.DisplayName,
-                entity.ExceptionCategory,
-                entity.Title,
-                entity.Description,
-                entity.Status,
-                entity.ResolutionNotes,
-                entity.WaiveJustification,
-                entity.WaiveRejectionReason,
-                entity.CreatedByUserId,
-                entity.AssignedToUserId,
-                entity.WaiveRequestedByUserId,
-                entity.WaiveRequestedAt,
-                entity.WaivedByUserId,
-                entity.WaivedAt,
-                entity.ResolvedAt,
-                entity.ClosedAt,
-                entity.CreatedAt,
-                entity.UpdatedAt);
+                prKey,
+                poKey);
         }).ToList();
     }
 }

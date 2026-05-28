@@ -56,7 +56,7 @@ export function WarrantyClaimsPanel({
   const [purchaseOrderLineId, setPurchaseOrderLineId] = useState('')
   const [quantityClaimed, setQuantityClaimed] = useState('1')
   const [problemDescription, setProblemDescription] = useState('')
-  const [vendorRmaNumber, setVendorRmaNumber] = useState('')
+  const [vendorRmaNumber] = useState('')
   const [selectedClaimId, setSelectedClaimId] = useState('')
   const [vendorDisposition, setVendorDisposition] =
     useState<(typeof DISPOSITIONS)[number]>('approved')
