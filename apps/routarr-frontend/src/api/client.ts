@@ -51,7 +51,6 @@ import type {
   AuditPackageGenerationJobResponse,
   AuditPackageManifestResponse,
   AuditPackageScope,
-  AuditEventTimelineItem,
   EntityExportManifestResponse,
   PagedAuditTimeline,
   TripDetailResponse,

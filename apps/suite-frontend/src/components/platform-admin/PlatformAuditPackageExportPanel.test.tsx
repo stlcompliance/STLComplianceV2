@@ -93,7 +93,7 @@ describe('PlatformAuditPackageExportPanel', () => {
       page: 1,
       pageSize: 15,
       totalCount: 1,
-      totalPages: 1,
+      hasNextPage: false,
     })
 
     renderPanel()

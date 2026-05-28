@@ -121,7 +121,7 @@ export function DispatchCommandCenterPanel({
         })
       }
       if (action === 'dispatch') {
-        await updateTripStatus(accessToken, tripId, 'dispatched')
+        await updateTripStatus(accessToken, tripId, { dispatchStatus: 'dispatched' })
       }
     },
     onSuccess: () => {
