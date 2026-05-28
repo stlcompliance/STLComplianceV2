@@ -169,6 +169,26 @@ export interface HandoffCreatedResponse {
   launchUrl: string
 }
 
+export interface CompanionScanResolveRequest {
+  scannedValue: string
+  symbology?: string | null
+}
+
+export interface CompanionScanResolveResponse {
+  outcome: 'resolved' | 'denied'
+  reasonCode: string | null
+  reasonMessage: string | null
+  taskKey: string | null
+  productKey: string | null
+  taskType: string | null
+  title: string | null
+  subtitle: string | null
+  status: string | null
+  deepLinkPath: string | null
+  deepLinkUrl: string | null
+  blockedReason: string | null
+}
+
 export interface CompanionMeResponse {
   userId: string
   personId: string

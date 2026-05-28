@@ -12,6 +12,8 @@ import type {
   SyncCompanionOfflineActionsRequest,
   SyncCompanionOfflineActionsResponse,
   SubmitCompanionFieldEvidenceRequest,
+  CompanionScanResolveRequest,
+  CompanionScanResolveResponse,
   UpsertCompanionNotificationSettingsRequest,
 } from './types'
 
@@ -181,6 +183,18 @@ export async function getFieldTaskSubmissionStatus(
     response,
     'Failed to load field task submission status',
   )
+}
+
+export async function resolveCompanionScan(
+  accessToken: string,
+  body: CompanionScanResolveRequest,
+): Promise<CompanionScanResolveResponse> {
+  const response = await fetch(`${apiBase}/api/companion/scan/resolve`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<CompanionScanResolveResponse>(response, 'Failed to resolve scan')
 }
 
 export async function submitCompanionFieldEvidence(

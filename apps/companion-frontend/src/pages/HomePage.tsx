@@ -5,6 +5,8 @@ import { PageHeader } from '@stl/shared-ui'
 import { getFieldInbox, getMe } from '../api/client'
 import { loadSession } from '../auth/sessionStorage'
 import { FieldInboxPanel } from '../components/FieldInboxPanel'
+import { FieldScanPanel } from '../components/FieldScanPanel'
+import type { CompanionScanResolveResponse } from '../api/types'
 import { NotificationSettingsPanel } from '../components/NotificationSettingsPanel'
 import { OfflineQueuePanel } from '../components/OfflineQueuePanel'
 import { SubmissionActivityBanner } from '../components/SubmissionActivityBanner'
@@ -22,6 +24,7 @@ export function HomePage() {
   const session = loadSession()
   const [productFilter, setProductFilter] = useState('')
   const [acknowledgedTaskKeys, setAcknowledgedTaskKeys] = useState<Set<string>>(() => new Set())
+  const [highlightedTaskKey, setHighlightedTaskKey] = useState<string | null>(null)
 
   const meQuery = useQuery({
     queryKey: ['companion-me', session?.accessToken],
@@ -85,6 +88,26 @@ export function HomePage() {
         </p>
       )}
 
+      <FieldScanPanel
+        accessToken={session.accessToken}
+        onResolved={(result: CompanionScanResolveResponse) => {
+          if (result.outcome !== 'resolved' || !result.taskKey) {
+            return
+          }
+
+          if (result.productKey) {
+            setProductFilter(result.productKey)
+          }
+
+          setHighlightedTaskKey(result.taskKey)
+          requestAnimationFrame(() => {
+            document
+              .querySelector(`[data-task-key="${result.taskKey}"]`)
+              ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          })
+        }}
+      />
+
       <OfflineQueuePanel
         isOnline={offlineQueue.isOnline}
         pendingCount={offlineQueue.pendingCount}
@@ -114,6 +137,7 @@ export function HomePage() {
             setAcknowledgedTaskKeys((previous) => new Set(previous).add(task.taskKey))
           }}
           onEvidenceUploadComplete={submissionState.refreshServerStatus}
+          highlightedTaskKey={highlightedTaskKey}
         />
       )}
 

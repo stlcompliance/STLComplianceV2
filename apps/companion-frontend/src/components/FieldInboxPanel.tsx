@@ -15,6 +15,7 @@ interface FieldInboxPanelProps {
   acknowledgedTaskKeys?: ReadonlySet<string>
   onAcknowledgeTask?: (task: FieldInboxTaskItem) => void
   onEvidenceUploadComplete?: () => void
+  highlightedTaskKey?: string | null
 }
 
 export function FieldInboxPanel({
@@ -26,6 +27,7 @@ export function FieldInboxPanel({
   acknowledgedTaskKeys,
   onAcknowledgeTask,
   onEvidenceUploadComplete,
+  highlightedTaskKey,
 }: FieldInboxPanelProps) {
   const filteredItems = productFilter
     ? inbox.items.filter((item) => item.productKey === productFilter)
@@ -80,6 +82,7 @@ export function FieldInboxPanel({
               acknowledged={acknowledgedTaskKeys?.has(task.taskKey) ?? false}
               onAcknowledge={onAcknowledgeTask}
               onEvidenceUploadComplete={onEvidenceUploadComplete}
+              highlighted={highlightedTaskKey === task.taskKey}
             />
           ))}
         </ul>
@@ -143,6 +146,7 @@ function TaskCard({
   acknowledged,
   onAcknowledge,
   onEvidenceUploadComplete,
+  highlighted,
 }: {
   task: FieldInboxTaskItem
   accessToken: string
@@ -150,13 +154,17 @@ function TaskCard({
   acknowledged: boolean
   onAcknowledge?: (task: FieldInboxTaskItem) => void
   onEvidenceUploadComplete?: () => void
+  highlighted?: boolean
 }) {
   const launchUrl = task.deepLinkUrl ?? productLaunchUrl(task.productKey, task.deepLinkPath)
 
   return (
     <li
-      className="rounded-xl border border-slate-700 bg-slate-900/80 p-4 shadow-sm"
+      className={`rounded-xl border bg-slate-900/80 p-4 shadow-sm ${
+        highlighted ? 'border-teal-400 ring-2 ring-teal-500/40' : 'border-slate-700'
+      }`}
       data-testid="companion-field-inbox-task"
+      data-task-key={task.taskKey}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
