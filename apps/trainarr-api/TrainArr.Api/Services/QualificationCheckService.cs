@@ -22,6 +22,8 @@ public sealed class QualificationCheckService(
 
     TrainingRulePackRequirementService rulePackRequirementService,
 
+    IntegrationSettingsService integrationSettingsService,
+
     ITrainArrAuditService auditService)
 
 {
@@ -451,6 +453,14 @@ public sealed class QualificationCheckService(
             return null;
 
         }
+
+
+
+        await integrationSettingsService.EnsureComplianceCoreQualificationChecksEnabledAsync(
+
+            tenantId,
+
+            cancellationToken);
 
 
 

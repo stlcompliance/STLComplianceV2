@@ -10,6 +10,7 @@ namespace TrainArr.Api.Services;
 public sealed class StaffarrPublicationRetryService(
     TrainArrDbContext db,
     StaffarrPublicationSettingsService settingsService,
+    IntegrationSettingsService integrationSettingsService,
     StaffArrTrainingBlockerClient staffArrBlockerClient,
     StaffArrCertificationGrantClient staffArrGrantClient,
     StaffArrCertificationLifecycleClient staffArrLifecycleClient,
@@ -29,6 +30,12 @@ public sealed class StaffarrPublicationRetryService(
         string payloadJson,
         CancellationToken cancellationToken = default)
     {
+        var integrationSnapshot = await integrationSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!IntegrationSettingsRules.ResolveStaffArrPublicationDeliveryEnabled(integrationSnapshot))
+        {
+            return;
+        }
+
         var duplicate = await db.StaffarrPublicationDeliveries.AnyAsync(
             x => x.TenantId == tenantId
                 && x.CertificationPublicationId == certificationPublicationId

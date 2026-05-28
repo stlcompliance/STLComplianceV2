@@ -134,6 +134,14 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<OrphanReferenceSettingsService>();
         builder.Services.AddScoped<OrphanReferenceWorkerService>();
 
+        builder.Services.AddScoped<IntegrationSettingsService>();
+        builder.Services.AddScoped<IntegrationProbeService>();
+
+        builder.Services.AddHttpClient(IntegrationProbeService.HttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
+
         builder.Services.AddScoped<StaffarrPublicationSettingsService>();
         builder.Services.AddScoped<StaffarrPublicationRetryService>();
 

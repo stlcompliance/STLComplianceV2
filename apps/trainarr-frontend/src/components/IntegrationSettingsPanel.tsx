@@ -1,0 +1,201 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+
+import {
+  getIntegrationProbes,
+  getIntegrationSettings,
+  upsertIntegrationSettings,
+} from '../api/client'
+
+interface IntegrationSettingsPanelProps {
+  accessToken: string
+  canManage: boolean
+}
+
+export function IntegrationSettingsPanel({ accessToken, canManage }: IntegrationSettingsPanelProps) {
+  const queryClient = useQueryClient()
+  const [initialized, setInitialized] = useState(false)
+  const [staffArrIntegrationEnabled, setStaffArrIntegrationEnabled] = useState(true)
+  const [staffArrIncidentIntakeEnabled, setStaffArrIncidentIntakeEnabled] = useState(true)
+  const [staffArrPublicationDeliveryEnabled, setStaffArrPublicationDeliveryEnabled] = useState(true)
+  const [complianceCoreIntegrationEnabled, setComplianceCoreIntegrationEnabled] = useState(true)
+  const [complianceCoreQualificationChecksEnabled, setComplianceCoreQualificationChecksEnabled] = useState(true)
+  const [routarrIntegrationEnabled, setRoutarrIntegrationEnabled] = useState(true)
+  const [routarrQualificationDispatchEnabled, setRoutarrQualificationDispatchEnabled] = useState(true)
+
+  const settingsQuery = useQuery({
+    queryKey: ['trainarr-integration-settings', accessToken],
+    queryFn: () => getIntegrationSettings(accessToken),
+    enabled: canManage,
+  })
+
+  const probesQuery = useQuery({
+    queryKey: ['trainarr-integration-probes', accessToken],
+    queryFn: () => getIntegrationProbes(accessToken),
+    enabled: canManage,
+  })
+
+  useEffect(() => {
+    if (initialized || settingsQuery.isLoading || !settingsQuery.data) {
+      return
+    }
+    const data = settingsQuery.data
+    setStaffArrIntegrationEnabled(data.staffArrIntegrationEnabled)
+    setStaffArrIncidentIntakeEnabled(data.staffArrIncidentIntakeEnabled)
+    setStaffArrPublicationDeliveryEnabled(data.staffArrPublicationDeliveryEnabled)
+    setComplianceCoreIntegrationEnabled(data.complianceCoreIntegrationEnabled)
+    setComplianceCoreQualificationChecksEnabled(data.complianceCoreQualificationChecksEnabled)
+    setRoutarrIntegrationEnabled(data.routarrIntegrationEnabled)
+    setRoutarrQualificationDispatchEnabled(data.routarrQualificationDispatchEnabled)
+    setInitialized(true)
+  }, [initialized, settingsQuery.data, settingsQuery.isLoading])
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      upsertIntegrationSettings(accessToken, {
+        staffArrIntegrationEnabled,
+        staffArrIncidentIntakeEnabled,
+        staffArrPublicationDeliveryEnabled,
+        complianceCoreIntegrationEnabled,
+        complianceCoreQualificationChecksEnabled,
+        routarrIntegrationEnabled,
+        routarrQualificationDispatchEnabled,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-integration-settings', accessToken] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-integration-probes', accessToken] })
+    },
+  })
+
+  if (!canManage) {
+    return null
+  }
+
+  return (
+    <section className="rounded-lg border border-border bg-card p-4 shadow-sm" data-testid="integration-settings-panel">
+      <h2 className="text-lg font-semibold text-foreground">Cross-product integrations</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Control which TrainArr cross-product integrations are active for this tenant. Disabled integrations reject
+        inbound service-token calls and skip outbound delivery attempts.
+      </p>
+
+      {settingsQuery.isError && (
+        <p className="mt-3 text-sm text-destructive">Failed to load integration settings.</p>
+      )}
+
+      <div className="mt-4 space-y-4">
+        <fieldset className="space-y-2 rounded border border-border p-3">
+          <legend className="px-1 text-sm font-semibold">StaffArr</legend>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={staffArrIntegrationEnabled}
+              onChange={(event) => setStaffArrIntegrationEnabled(event.target.checked)}
+              data-testid="integration-staffarr-enabled"
+            />
+            Enable StaffArr integration
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={staffArrIncidentIntakeEnabled}
+              disabled={!staffArrIntegrationEnabled}
+              onChange={(event) => setStaffArrIncidentIntakeEnabled(event.target.checked)}
+              data-testid="integration-staffarr-incident-intake"
+            />
+            Accept incident remediation intake from StaffArr
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={staffArrPublicationDeliveryEnabled}
+              disabled={!staffArrIntegrationEnabled}
+              onChange={(event) => setStaffArrPublicationDeliveryEnabled(event.target.checked)}
+              data-testid="integration-staffarr-publication-delivery"
+            />
+            Deliver certification publications to StaffArr
+          </label>
+        </fieldset>
+
+        <fieldset className="space-y-2 rounded border border-border p-3">
+          <legend className="px-1 text-sm font-semibold">Compliance Core</legend>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={complianceCoreIntegrationEnabled}
+              onChange={(event) => setComplianceCoreIntegrationEnabled(event.target.checked)}
+              data-testid="integration-compliancecore-enabled"
+            />
+            Enable Compliance Core integration
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={complianceCoreQualificationChecksEnabled}
+              disabled={!complianceCoreIntegrationEnabled}
+              onChange={(event) => setComplianceCoreQualificationChecksEnabled(event.target.checked)}
+              data-testid="integration-compliancecore-qualification-checks"
+            />
+            Run Compliance Core rule evaluation during qualification checks
+          </label>
+        </fieldset>
+
+        <fieldset className="space-y-2 rounded border border-border p-3">
+          <legend className="px-1 text-sm font-semibold">RoutArr</legend>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={routarrIntegrationEnabled}
+              onChange={(event) => setRoutarrIntegrationEnabled(event.target.checked)}
+              data-testid="integration-routarr-enabled"
+            />
+            Enable RoutArr integration
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={routarrQualificationDispatchEnabled}
+              disabled={!routarrIntegrationEnabled}
+              onChange={(event) => setRoutarrQualificationDispatchEnabled(event.target.checked)}
+              data-testid="integration-routarr-qualification-dispatch"
+            />
+            Accept qualification check dispatch from RoutArr
+          </label>
+        </fieldset>
+
+        <button
+          type="button"
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          disabled={saveMutation.isPending}
+          onClick={() => saveMutation.mutate()}
+          data-testid="integration-settings-save"
+        >
+          {saveMutation.isPending ? 'Saving…' : 'Save integration settings'}
+        </button>
+      </div>
+
+      <div className="mt-6">
+        <h3 className="text-sm font-semibold text-foreground">Connectivity probes</h3>
+        {probesQuery.isLoading && <p className="mt-2 text-sm text-muted-foreground">Probing integrations…</p>}
+        {probesQuery.isError && (
+          <p className="mt-2 text-sm text-destructive">Failed to load integration connectivity probes.</p>
+        )}
+        {probesQuery.data && (
+          <ul className="mt-2 space-y-2 text-sm" data-testid="integration-probes-list">
+            {probesQuery.data.items.map((item) => (
+              <li key={item.integrationKey} className="rounded border border-border px-3 py-2">
+                <div className="font-medium">
+                  {item.displayName} · {item.status}
+                </div>
+                {item.httpStatusCode != null && (
+                  <div className="text-muted-foreground">HTTP {item.httpStatusCode}</div>
+                )}
+                {item.message && <div className="text-muted-foreground">{item.message}</div>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
+  )
+}

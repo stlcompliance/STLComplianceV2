@@ -101,6 +101,9 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
     public DbSet<TrainingNotificationDispatch> TrainingNotificationDispatches =>
         Set<TrainingNotificationDispatch>();
 
+    public DbSet<TenantIntegrationSettings> TenantIntegrationSettings =>
+        Set<TenantIntegrationSettings>();
+
     public DbSet<TenantStaffarrPublicationSettings> TenantStaffarrPublicationSettings =>
         Set<TenantStaffarrPublicationSettings>();
 
@@ -599,6 +602,13 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
             entity.Property(x => x.SkipReason).HasMaxLength(512);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.ProcessedAt });
+        });
+
+        modelBuilder.Entity<TenantIntegrationSettings>(entity =>
+        {
+            entity.ToTable("trainarr_tenant_integration_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
         });
 
         modelBuilder.Entity<TenantStaffarrPublicationSettings>(entity =>

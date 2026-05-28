@@ -787,3 +787,38 @@ export interface AuditPackageExportResponse {
   certificationPublications: unknown[]
   personTrainingHistory: unknown[]
 }
+
+export interface IntegrationSettingsResponse {
+  staffArrIntegrationEnabled: boolean
+  staffArrIncidentIntakeEnabled: boolean
+  staffArrPublicationDeliveryEnabled: boolean
+  complianceCoreIntegrationEnabled: boolean
+  complianceCoreQualificationChecksEnabled: boolean
+  routarrIntegrationEnabled: boolean
+  routarrQualificationDispatchEnabled: boolean
+  updatedAt: string | null
+}
+
+export interface UpsertIntegrationSettingsRequest {
+  staffArrIntegrationEnabled: boolean
+  staffArrIncidentIntakeEnabled: boolean
+  staffArrPublicationDeliveryEnabled: boolean
+  complianceCoreIntegrationEnabled: boolean
+  complianceCoreQualificationChecksEnabled: boolean
+  routarrIntegrationEnabled: boolean
+  routarrQualificationDispatchEnabled: boolean
+}
+
+export interface IntegrationProbeItem {
+  integrationKey: string
+  displayName: string
+  status: string
+  httpStatusCode: number | null
+  message: string | null
+  probedAt: string
+}
+
+export interface IntegrationProbesResponse {
+  probedAt: string
+  items: IntegrationProbeItem[]
+}

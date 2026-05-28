@@ -7,6 +7,7 @@ import { AuditPackageExportPanel } from '../../components/AuditPackageExportPane
 import { RecertificationSettingsPanel } from '../../components/RecertificationSettingsPanel'
 import { EventProcessingSettingsPanel } from '../../components/EventProcessingSettingsPanel'
 import { StaffarrPublicationSettingsPanel } from '../../components/StaffarrPublicationSettingsPanel'
+import { IntegrationSettingsPanel } from '../../components/IntegrationSettingsPanel'
 import type { TrainArrWorkspaceState } from '../useTrainArrWorkspaceState'
 
 type Props = { state: TrainArrWorkspaceState }
@@ -21,6 +22,7 @@ export function SettingsSection({ state }: Props) {
     <div className="space-y-6">
       {s.canNotifications ? (
         <>
+          <IntegrationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
           <NotificationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
           <RecertificationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
           <QualificationRecalculationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />

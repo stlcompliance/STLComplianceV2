@@ -8,6 +8,7 @@ namespace TrainArr.Api.Services;
 
 public sealed class StaffarrIncidentRemediationService(
     TrainArrDbContext db,
+    IntegrationSettingsService integrationSettingsService,
     ITrainArrAuditService audit)
 {
     private static readonly HashSet<string> AllowedReasonCategories = new(StringComparer.OrdinalIgnoreCase)
@@ -27,6 +28,10 @@ public sealed class StaffarrIncidentRemediationService(
         IngestStaffarrIncidentRemediationRequest request,
         CancellationToken cancellationToken = default)
     {
+        await integrationSettingsService.EnsureStaffArrIncidentIntakeEnabledAsync(
+            request.TenantId,
+            cancellationToken);
+
         var reasonCategoryKey = NormalizeReasonCategoryKey(request.ReasonCategoryKey);
         var severity = NormalizeSeverity(request.Severity);
         var title = NormalizeTitle(request.Title);

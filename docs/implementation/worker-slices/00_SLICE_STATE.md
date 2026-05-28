@@ -302,6 +302,8 @@
 
 | 165 | TrainArr training audit package (`AuditPackageService`, `/api/audit-packages` manifest + ZIP/JSON export, `trainarr.audit.export` auth, trainarr-frontend `AuditPackageExportPanel`, integration + frontend tests, docs) | M12 (partial) | Complete | `55bc9e1` |
 
-## Next slice (Worker 166)
+| 166 | TrainArr integration settings (`trainarr_tenant_integration_settings`, GET/PUT `/api/integration-settings` + probes, enforcement on StaffArr/Compliance Core/RoutArr paths, `IntegrationSettingsPanel`, integration + frontend tests, docs) | M6 (partial) | Complete | `a963b30` |
 
-Per milestone matrix: next open **M12** TrainArr backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (integration settings or other M12 items).
+## Next slice (Worker 167)
+
+Per milestone matrix: next open backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (other product M12 items or remaining M6 gaps).

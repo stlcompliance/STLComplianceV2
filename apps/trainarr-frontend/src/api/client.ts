@@ -60,6 +60,9 @@ import type {
   PersonTrainingHistoryResponse,
   AuditPackageExportResponse,
   AuditPackageManifestResponse,
+  IntegrationSettingsResponse,
+  UpsertIntegrationSettingsRequest,
+  IntegrationProbesResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_TRAINARR_API_BASE ?? ''
@@ -961,6 +964,32 @@ export async function getPersonTrainingHistory(
     response,
     'Failed to load person training history',
   )
+}
+
+export async function getIntegrationSettings(accessToken: string): Promise<IntegrationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/integration-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<IntegrationSettingsResponse>(response, 'Failed to load integration settings')
+}
+
+export async function upsertIntegrationSettings(
+  accessToken: string,
+  body: UpsertIntegrationSettingsRequest,
+): Promise<IntegrationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/integration-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<IntegrationSettingsResponse>(response, 'Failed to save integration settings')
+}
+
+export async function getIntegrationProbes(accessToken: string): Promise<IntegrationProbesResponse> {
+  const response = await fetch(`${apiBase}/api/integration-settings/probes`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<IntegrationProbesResponse>(response, 'Failed to load integration probes')
 }
 
 function buildAuditPackageQuery(options?: { from?: string; to?: string; format?: string }): string {

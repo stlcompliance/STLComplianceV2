@@ -534,6 +534,25 @@ public sealed class TrainArrAuthorizationService
             403);
     }
 
+    public void RequireIntegrationSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireTrainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "TrainArr integration settings require trainarr admin access.",
+            403);
+    }
+
     public void RequireEventProcessingSettingsManage(ClaimsPrincipal principal)
     {
         RequireTrainArrEntitlement(principal);

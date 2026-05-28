@@ -40,6 +40,7 @@ public static class IntegrationEndpoints
             RoutarrQualificationCheckRequest request,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
+            IntegrationSettingsService integrationSettingsService,
             QualificationCheckService service,
             CancellationToken cancellationToken) =>
         {
@@ -52,6 +53,10 @@ public static class IntegrationEndpoints
                     TenantId = request.TenantId,
                     RequiredActionScope = RoutarrQualificationCheckActionScope
                 });
+
+            await integrationSettingsService.EnsureRoutarrQualificationDispatchEnabledAsync(
+                request.TenantId,
+                cancellationToken);
 
             var result = await service.CheckAsync(
                 request.TenantId,
