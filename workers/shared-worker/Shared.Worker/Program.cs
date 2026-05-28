@@ -59,6 +59,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<ComplianceCoreScheduledEvaluationJob>();
 
+        builder.Services.Configure<ComplianceCoreAuditPackageGenerationOptions>(
+            builder.Configuration.GetSection(ComplianceCoreAuditPackageGenerationOptions.SectionName));
+
+        builder.Services.AddHttpClient<ComplianceCoreAuditPackageGenerationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<ComplianceCoreAuditPackageGenerationOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.ComplianceCoreBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(10);
+        });
+
+        builder.Services.AddHostedService<ComplianceCoreAuditPackageGenerationJob>();
+
         builder.Services.Configure<StaffArrReadinessRollupOptions>(
             builder.Configuration.GetSection(StaffArrReadinessRollupOptions.SectionName));
 

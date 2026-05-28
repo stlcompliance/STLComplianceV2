@@ -373,6 +373,8 @@ services:
         value: https://supplyarr-api-r963.onrender.com
       - key: ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl
         value: https://compliancecore-api-qfu7.onrender.com
+      - key: ComplianceCoreAuditPackageGeneration__ComplianceCoreBaseUrl
+        value: https://compliancecore-api-qfu7.onrender.com
 
   # --- Product heartbeat workers (reserved for product-local jobs) ---
   - type: worker

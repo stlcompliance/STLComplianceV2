@@ -499,6 +499,20 @@ export interface AuditPackageCountsResponse {
   rulePacks: number
 }
 
+export interface AuditPackageGenerationJobResponse {
+  jobId: string
+  status: string
+  format: string
+  from: string | null
+  to: string | null
+  packageId: string | null
+  errorMessage: string | null
+  createdAt: string
+  startedAt: string | null
+  completedAt: string | null
+  downloadReady: boolean
+}
+
 export interface AuditPackageExportResponse {
   packageId: string
   tenantId: string

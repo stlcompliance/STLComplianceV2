@@ -93,6 +93,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["compliancecore"],
             "compliancecore.rules.evaluate.scheduled"),
+        Profile(
+            "worker-compliancecore-audit-packages",
+            "shared-worker",
+            "ComplianceCoreAuditPackageGeneration__ServiceToken",
+            "shared-worker",
+            ["compliancecore"],
+            "compliancecore.audit_packages.generate"),
     ];
 
     public static IReadOnlyList<StlIntegrationTokenProfile> ForConsumer(string consumerService) =>

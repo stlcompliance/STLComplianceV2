@@ -33,22 +33,19 @@ public sealed class AuditPackageService(
         DateTimeOffset? to,
         CancellationToken cancellationToken = default)
     {
-        ValidateDateRange(from, to);
-
-        var package = await LoadPackageDataAsync(tenantId, from, to, cancellationToken);
-        var packageId = Guid.NewGuid();
+        var package = await MaterializeExportAsync(tenantId, from, to, cancellationToken);
 
         await auditService.WriteAsync(
             "audit_package.export",
             tenantId,
             actorUserId,
             "audit_package",
-            packageId.ToString(),
+            package.PackageId.ToString(),
             "success",
             reasonCode: BuildDateRangeReasonCode(from, to),
             cancellationToken: cancellationToken);
 
-        return package with { PackageId = packageId };
+        return package;
     }
 
     public async Task<byte[]> ExportZipAsync(
@@ -58,8 +55,38 @@ public sealed class AuditPackageService(
         DateTimeOffset? to,
         CancellationToken cancellationToken = default)
     {
-        var package = await BuildExportAsync(tenantId, actorUserId, from, to, cancellationToken);
+        ValidateDateRange(from, to);
+        var package = await MaterializeExportAsync(tenantId, from, to, cancellationToken);
+        var zipBytes = await CreateZipBytesAsync(package, cancellationToken);
 
+        await auditService.WriteAsync(
+            "audit_package.export",
+            tenantId,
+            actorUserId,
+            "audit_package",
+            package.PackageId.ToString(),
+            "success",
+            reasonCode: BuildDateRangeReasonCode(from, to),
+            cancellationToken: cancellationToken);
+
+        return zipBytes;
+    }
+
+    public async Task<AuditPackageExportResponse> MaterializeExportAsync(
+        Guid tenantId,
+        DateTimeOffset? from,
+        DateTimeOffset? to,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateDateRange(from, to);
+        var package = await LoadPackageDataAsync(tenantId, from, to, cancellationToken);
+        return package with { PackageId = Guid.NewGuid() };
+    }
+
+    public async Task<byte[]> CreateZipBytesAsync(
+        AuditPackageExportResponse package,
+        CancellationToken cancellationToken = default)
+    {
         await using var memory = new MemoryStream();
         using (var archive = new ZipArchive(memory, ZipArchiveMode.Create, leaveOpen: true))
         {

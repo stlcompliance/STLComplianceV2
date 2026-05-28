@@ -44,6 +44,7 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<LoadTestJourneySeedService>();
         builder.Services.AddScoped<CsvImportExportService>();
         builder.Services.AddScoped<AuditPackageService>();
+        builder.Services.AddScoped<AuditPackageGenerationService>();
         builder.Services.AddScoped<OperatorDashboardService>();
         builder.Services.AddScoped<IComplianceCoreAuditService, ComplianceCoreAuditService>();
 
