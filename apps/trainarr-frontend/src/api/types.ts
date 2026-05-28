@@ -735,3 +735,55 @@ export interface PersonTrainingHistoryResponse {
   totalCount: number
   items: PersonTrainingHistoryEntryItem[]
 }
+
+export interface AuditPackageSectionDescriptor {
+  key: string
+  fileName: string
+  label: string
+  description: string
+}
+
+export interface AuditPackageManifestResponse {
+  packageVersion: string
+  sections: AuditPackageSectionDescriptor[]
+}
+
+export interface AuditPackageDateRangeResponse {
+  from: string | null
+  to: string | null
+}
+
+export interface AuditPackageCountsResponse {
+  auditEvents: number
+  trainingDefinitions: number
+  trainingPrograms: number
+  trainingProgramDefinitions: number
+  trainingRulePackRequirements: number
+  trainingAssignments: number
+  trainingEvidence: number
+  trainingEvaluations: number
+  trainingSignoffs: number
+  qualificationIssues: number
+  certificationPublications: number
+  personTrainingHistory: number
+}
+
+export interface AuditPackageExportResponse {
+  packageId: string
+  tenantId: string
+  generatedAt: string
+  dateRange: AuditPackageDateRangeResponse | null
+  counts: AuditPackageCountsResponse
+  auditEvents: unknown[]
+  trainingDefinitions: unknown[]
+  trainingPrograms: unknown[]
+  trainingProgramDefinitions: unknown[]
+  trainingRulePackRequirements: unknown[]
+  trainingAssignments: unknown[]
+  trainingEvidence: unknown[]
+  trainingEvaluations: unknown[]
+  trainingSignoffs: unknown[]
+  qualificationIssues: unknown[]
+  certificationPublications: unknown[]
+  personTrainingHistory: unknown[]
+}

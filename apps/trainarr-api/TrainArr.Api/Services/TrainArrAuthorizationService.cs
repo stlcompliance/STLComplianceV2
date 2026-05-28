@@ -578,6 +578,48 @@ public sealed class TrainArrAuthorizationService
             403);
     }
 
+    public void RequireAuditPackageRead(ClaimsPrincipal principal)
+    {
+        RequireTrainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "trainarr_admin",
+                "trainarr_trainer"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Training audit package read requires TrainArr administrator or trainer access.",
+            403);
+    }
+
+    public void RequireAuditPackageExport(ClaimsPrincipal principal)
+    {
+        RequireTrainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Training audit package export requires trainarr.audit.export scope.",
+            403);
+    }
+
     public void RequireSignoffSubmit(ClaimsPrincipal principal, Guid staffarrPersonId, string signoffRole)
     {
         RequireTrainArrEntitlement(principal);

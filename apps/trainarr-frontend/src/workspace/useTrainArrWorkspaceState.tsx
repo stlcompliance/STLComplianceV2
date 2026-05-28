@@ -35,6 +35,8 @@ import {
   canManagePrograms,
   canAssessRulePackImpact,
   canManageNotificationSettings,
+  canExportAuditPackage,
+  canReadAuditPackage,
   canManageQualifications,
   canRunBatchQualificationChecks,
   canSubmitEvaluation,
@@ -484,6 +486,8 @@ const me = meQuery.data
   const canPrograms = me ? canManagePrograms(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canImpact = me ? canAssessRulePackImpact(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canNotifications = me ? canManageNotificationSettings(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canExportAudit = me ? canExportAuditPackage(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canReadAudit = me ? canReadAuditPackage(me.tenantRoleKey, me.isPlatformAdmin) : false
   const assignments = assignmentsQuery.data ?? []
   const selectedAssignment = assignmentDetailQuery.data
   const canUploadForAssignment =
@@ -589,6 +593,8 @@ const me = meQuery.data
     canPrograms,
     canImpact,
     canNotifications,
+    canExportAudit,
+    canReadAudit,
     assignments,
     selectedAssignment,
     canUploadForAssignment,

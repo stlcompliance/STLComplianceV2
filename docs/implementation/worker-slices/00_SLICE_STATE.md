@@ -300,6 +300,8 @@
 
 | 164 | TrainArr orphan reference detection worker (`trainarr_tenant_orphan_reference_settings`, `trainarr_orphan_reference_findings`, `trainarr_orphan_reference_runs`, internal pending/process-batch, `trainarr.orphan_references.scan`, `/api/orphan-reference-settings`, `TrainArrOrphanReferenceJob`, `OrphanReferenceSettingsPanel`, StaffArr/Compliance Core validation, tests, docs) | M12 (partial) | Complete | `51db338` |
 
-## Next slice (Worker 165)
+| 165 | TrainArr training audit package (`AuditPackageService`, `/api/audit-packages` manifest + ZIP/JSON export, `trainarr.audit.export` auth, trainarr-frontend `AuditPackageExportPanel`, integration + frontend tests, docs) | M12 (partial) | Complete | `pending` |
 
-Per milestone matrix: next open **M12** TrainArr backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (training audit package).
+## Next slice (Worker 166)
+
+Per milestone matrix: next open **M12** TrainArr backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (integration settings or other M12 items).
