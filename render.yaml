@@ -67,6 +67,8 @@ envVarGroups:
         value: https://compliancecore-frontend.onrender.com
       - key: COMPANION_FRONTEND_URL
         value: https://companion-frontend-b2nm.onrender.com
+      - key: STLCOMPLIANCESITE_URL
+        value: https://stlcompliancesite.onrender.com
 
   # Vite build-time product frontend bases for topbar ProductSwitcher launch URLs.
   - name: stl-vite-product-frontend-urls
@@ -475,6 +477,22 @@ services:
           property: connectionString
 
   # --- Static frontends (Vite / React) ---
+  - type: web
+    name: stlcompliancesite
+    runtime: static
+    rootDir: apps/stlcompliancesite
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_SUITE_LOGIN_URL
+        value: https://suite-frontend.onrender.com/login
+      - key: VITE_CONTACT_EMAIL
+        value: hello@stlcompliance.com
+
   - type: web
     name: suite-frontend
     runtime: static

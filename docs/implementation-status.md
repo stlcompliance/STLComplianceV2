@@ -16,8 +16,8 @@
 - Playwright: suite login + **six product handoff** smokes with per-frontend skip semantics
 - DR: nightly live restore drill validates **all seven** product PostgreSQL databases
 
-## Next recommended slice (Worker 135)
+## Next recommended slice (Worker 136)
 
-Per milestone matrix: **STLComplianceSite marketing** (M3/M12) or **NexArr audit export** (M12). Worker 134 (Playwright deep-link E2E) is complete on `main`.
+Per milestone matrix: **NexArr platform audit export** (M12) or **STLComplianceSite SEO / products hub hardening** (M12). Worker 135 (STLComplianceSite marketing spine) is complete on `main`.
 
 See `FINAL_IMPLEMENTATION_REPORT.md` for ship-gate checklist.
