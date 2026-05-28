@@ -1,13 +1,15 @@
 import { Building2, PackageSearch, Warehouse, ShoppingCart, Truck, Tags, LineChart, Settings } from 'lucide-react'
 import type { ProductNavItem } from '@stl/shared-ui'
 
+type NavIcon = NonNullable<ProductNavItem['icon']>
+
 export const supplyarrNavItems: ProductNavItem[] = [
-  { label: 'Parties', to: '/parties' , icon: Building2 },
-  { label: 'Catalog', to: '/catalog' , icon: PackageSearch },
-  { label: 'Inventory', to: '/inventory' , icon: Warehouse },
-  { label: 'Purchasing', to: '/purchasing' , icon: ShoppingCart },
-  { label: 'Receiving', to: '/receiving' , icon: Truck },
-  { label: 'Pricing', to: '/pricing' , icon: Tags },
-  { label: 'Planning', to: '/planning' , icon: LineChart },
-  { label: 'Settings', to: '/settings' , icon: Settings },
+  { label: 'Parties', to: '/parties', icon: Building2 as NavIcon },
+  { label: 'Catalog', to: '/catalog', icon: PackageSearch as NavIcon },
+  { label: 'Inventory', to: '/inventory', icon: Warehouse as NavIcon },
+  { label: 'Purchasing', to: '/purchasing', icon: ShoppingCart as NavIcon },
+  { label: 'Receiving', to: '/receiving', icon: Truck as NavIcon },
+  { label: 'Pricing', to: '/pricing', icon: Tags as NavIcon },
+  { label: 'Planning', to: '/planning', icon: LineChart as NavIcon },
+  { label: 'Settings', to: '/settings', icon: Settings as NavIcon },
 ]

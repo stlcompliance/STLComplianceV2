@@ -108,6 +108,8 @@ export function useSupplyArrWorkspaceState() {
     : null
 
   const session = loadSession()
+  const accessToken = session?.accessToken ?? ''
+  const [apiError] = useState<string | null>(null)
 
   const queryClient = useQueryClient()
 
@@ -1460,7 +1462,7 @@ export function useSupplyArrWorkspaceState() {
 
   })
 
-const me = meQuery.data
+  const me = meQuery.data
 
   const canManage = me ? canManageParties(me.tenantRoleKey, me.isPlatformAdmin) : false
 
@@ -1569,10 +1571,6 @@ const me = meQuery.data
   const vendors = vendorsQuery.data ?? []
 
   const locations = locationsQuery.data ?? []
-
-  const ready = Boolean(session && meQuery.data)
-  const me = meQuery.data
-  const loadingMessage = 'Loading supply workspace…'
 
   return {
     handoffRedirect,
@@ -1743,6 +1741,100 @@ const me = meQuery.data
     selectedReceivingLine,
     vendors,
     locations,
+    setVendorKey,
+    setVendorName,
+    setVendorLegalName,
+    setVendorTaxId,
+    setVendorNotes,
+    setCatalogKey,
+    setCatalogName,
+    setCatalogDescription,
+    setPartKey,
+    setPartName,
+    setPartCategory,
+    setPartUom,
+    setPartManufacturer,
+    setPartMfgNumber,
+    setSelectedCatalogId,
+    setSelectedPartId,
+    setSelectedVendorId,
+    setVendorPartNumber,
+    setInvLocationKey,
+    setInvLocationName,
+    setInvLocationType,
+    setInvAddressLine,
+    setInvBinKey,
+    setInvBinName,
+    setSelectedInvLocationId,
+    setSelectedStockPartId,
+    setSelectedStockBinId,
+    setStockQuantity,
+    setPrRequestKey,
+    setPrTitle,
+    setPrNotes,
+    setPrVendorId,
+    setPrPartId,
+    setPrLineQty,
+    setPrLineNotes,
+    setPrRejectionReason,
+    setSelectedPurchaseRequestId,
+    setPoOrderKey,
+    setPoSourcePurchaseRequestId,
+    setSelectedPurchaseOrderId,
+    setReceiptKey,
+    setReceiveSourcePurchaseOrderId,
+    setSelectedReceivingReceiptId,
+    setReceiveBinId,
+    setSelectedReceiveLineId,
+    setLineQuantityReceived,
+    setExceptionType,
+    setExceptionQuantity,
+    setExceptionNotes,
+    setBackorderKey,
+    setSelectedBackorderId,
+    setSelectedBackorderPoLineId,
+    setBackorderQuantity,
+    setBackorderNotes,
+    setBackorderCancelReason,
+    setBackorderStatusFilter,
+    setReturnKey,
+    setSelectedReturnId,
+    setSelectedReturnVendorId,
+    setSelectedReturnBinId,
+    setSelectedReturnPoLineId,
+    setSelectedReturnPartId,
+    setReturnQuantity,
+    setRmaNumber,
+    setReturnNotes,
+    setReturnCancelReason,
+    setReturnStatusFilter,
+    setReturnSource,
+    setPricingSnapshotKey,
+    setLeadTimeSnapshotKey,
+    setSelectedSnapshotVendorLinkId,
+    setSnapshotUnitPrice,
+    setSnapshotCurrencyCode,
+    setSnapshotMinimumOrderQty,
+    setSnapshotLeadTimeDays,
+    setSnapshotNotes,
+    setSnapshotCurrentOnly,
+    setAvailabilitySnapshotKey,
+    setSelectedAvailabilityVendorLinkId,
+    setAvailabilityQuantity,
+    setAvailabilityStatus,
+    setAvailabilityNotes,
+    setAvailabilityCurrentOnly,
+    setReorderPolicyPartId,
+    setReorderPoint,
+    setReorderQuantity,
+    setSelectedReorderPartIds,
+    setReorderPrRequestKey,
+    setReorderPrTitle,
+    setReorderPrNotes,
+    setSelectedDemandRefId,
+    setDemandPrRequestKey,
+    setDemandPrTitle,
+    setDemandPrNotes,
   }
 }
 
