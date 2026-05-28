@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 137 | STLComplianceSite SEO / products hub hardening | Complete | `pending` |
+| 137 | STLComplianceSite SEO / products hub hardening | Complete | `9e40d40` |
 
 ## Program summary
 
