@@ -44,6 +44,7 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 | `product-handoff-smoke.spec.ts` | Handoff redirect for all six product frontends |
 | `companion-field-inbox-trainarr-deep-link.spec.ts` | Companion field inbox → TrainArr assignment deep link (W133) |
 | `product-trainarr-assignment-deep-link.spec.ts` | TrainArr `/assignments/{id}/evidence` route smoke |
+| `platform-admin-audit-export-smoke.spec.ts` | Suite platform-admin audit export manifest/timeline/sync ZIP + background job (W138) |
 
 Catalog: `StlE2ePlaywrightSpecCatalog` + `StlE2eFrontendCatalog.CompanionFrontend` in shared .NET (`Category=E2e` tests).
 

@@ -95,7 +95,10 @@ export function PlatformAuditPackageExportPanel() {
     Boolean(activeJobId) && jobStatus && (jobStatus.status === 'pending' || jobStatus.status === 'processing')
 
   return (
-    <section className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5">
+    <section
+      data-testid="platform-audit-export-panel"
+      className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+    >
       <header>
         <h2 className="text-lg font-semibold text-slate-50">Platform audit package export</h2>
         <p className="mt-1 text-sm text-slate-400">
@@ -104,7 +107,10 @@ export function PlatformAuditPackageExportPanel() {
         </p>
       </header>
 
-      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+      <div
+        data-testid="platform-audit-manifest-section"
+        className="rounded-lg border border-slate-800 bg-slate-950/50 p-4"
+      >
         <h3 className="text-sm font-medium text-slate-200">Package sections</h3>
         <ul className="mt-2 list-inside list-disc text-sm text-slate-400">
           {(manifestQuery.data?.sections ?? []).map((section) => (
@@ -116,7 +122,10 @@ export function PlatformAuditPackageExportPanel() {
         </ul>
       </div>
 
-      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+      <div
+        data-testid="platform-audit-timeline-section"
+        className="rounded-lg border border-slate-800 bg-slate-950/50 p-4"
+      >
         <h3 className="text-sm font-medium text-slate-200">Audit timeline preview</h3>
         {timelineQuery.isLoading ? (
           <p className="mt-3 text-sm text-slate-500">Loading audit timeline…</p>
@@ -204,7 +213,11 @@ export function PlatformAuditPackageExportPanel() {
       </div>
 
       {jobStatus ? (
-        <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4 text-sm text-slate-300">
+        <div
+          data-testid="platform-audit-job-status"
+          data-job-status={jobStatus.status}
+          className="rounded-lg border border-slate-800 bg-slate-950/50 p-4 text-sm text-slate-300"
+        >
           <p>
             Background job <span className="font-mono text-teal-300">{jobStatus.jobId}</span>:{' '}
             <span className="font-medium text-slate-100">{jobStatus.status}</span>
@@ -216,7 +229,10 @@ export function PlatformAuditPackageExportPanel() {
       ) : null}
 
       {lastJsonExport ? (
-        <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4 text-sm text-slate-300">
+        <div
+          data-testid="platform-audit-json-preview"
+          className="rounded-lg border border-slate-800 bg-slate-950/50 p-4 text-sm text-slate-300"
+        >
           <p>
             Package <span className="font-mono text-teal-300">{lastJsonExport.packageId}</span>{' '}
             generated at {new Date(lastJsonExport.generatedAt).toLocaleString()}.

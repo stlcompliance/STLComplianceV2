@@ -106,6 +106,68 @@ async function createActiveTrainingAssignment(
 }
 
 /** Ensures an active TrainArr assignment exists for companion field-inbox deep-link smokes. */
+const platformAuditGenerateScope = 'nexarr.platform_audit_packages.generate'
+
+export async function issueSharedWorkerNexArrServiceToken(
+  adminAccessToken: string,
+  actionScope: string = platformAuditGenerateScope,
+): Promise<string> {
+  const clientKey = `shared-worker-e2e-${Date.now()}`
+  const registerResponse = await fetch(`${nexarrApiUrl()}/api/service-tokens/clients`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${adminAccessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      clientKey,
+      displayName: 'E2E shared worker',
+      sourceProductKey: 'shared-worker',
+      allowedProductKeys: ['nexarr'],
+    }),
+  })
+  const client = await readJson<{ serviceClientId: string }>(registerResponse)
+
+  const issueResponse = await fetch(`${nexarrApiUrl()}/api/service-tokens`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${adminAccessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      serviceClientId: client.serviceClientId,
+      tenantId: demoCredentials.tenantId,
+      allowedProductKeys: ['nexarr'],
+      actionScope,
+      lifetimeMinutes: 30,
+    }),
+  })
+  const issued = await readJson<{ accessToken: string }>(issueResponse)
+  return issued.accessToken
+}
+
+export async function processPlatformAuditPackageGenerationBatch(
+  serviceToken: string,
+  batchSize = 5,
+): Promise<void> {
+  const response = await fetch(
+    `${nexarrApiUrl()}/api/internal/platform-audit-package-jobs/process-batch`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${serviceToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        tenantId: demoCredentials.tenantId,
+        asOfUtc: null,
+        batchSize,
+      }),
+    },
+  )
+  await readJson(response)
+}
+
 export async function ensureTrainArrFieldInboxFixture(): Promise<TrainArrJourneyFixture> {
   const nexarrToken = await loginNexArr()
   const handoffCode = await createHandoff(

@@ -17,11 +17,22 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
     }
 
     [Fact]
+    public void Platform_admin_smoke_specs_include_audit_export()
+    {
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.PlatformAdminAuditExportSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.PlatformAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.PlatformAdminAuditExportSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+    }
+
+    [Fact]
     public void All_specs_lists_handoff_and_deep_link_coverage()
     {
         Assert.Contains(StlE2ePlaywrightSpecCatalog.SuiteLoginHandoffSmokeSpec, StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(StlE2ePlaywrightSpecCatalog.ProductHandoffSmokeSpec, StlE2ePlaywrightSpecCatalog.All);
-        Assert.True(StlE2ePlaywrightSpecCatalog.All.Count >= 5);
+        Assert.True(StlE2ePlaywrightSpecCatalog.All.Count >= 6);
     }
 
     [Fact]

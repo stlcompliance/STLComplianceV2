@@ -246,6 +246,8 @@
 
 | 137 | STLComplianceSite SEO / products hub hardening (resources section, richer products hub + maturity table, OG/Twitter/canonical SEO, build-time sitemap/robots, vitest, Render headers + `VITE_SITE_BASE_URL`, docs) | M12 (partial) | Complete | `9e40d40` |
 
-## Next slice (Worker 138)
+| 138 | M13 Playwright platform-admin audit export smoke (`platform-admin-audit-export-smoke.spec.ts`, suite `/app/platform-admin/audit-export`, manifest/timeline/sync ZIP+JSON+background job via internal process-batch helper, `StlE2ePlaywrightSpecCatalog`, panel test ids, docs) | M13 (partial) | Complete | `pending` |
 
-Per milestone matrix: **M13 E2E** platform-admin audit export smoke, or next M12/M13 backlog from feature matrix.
+## Next slice (Worker 139)
+
+Per milestone matrix: next M12/M13 backlog (e.g. additional product deep-link E2E, load harness journeys, or marketing/pricing narrative).
