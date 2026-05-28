@@ -322,7 +322,7 @@
 
 | 175 | SupplyArr lead-time snapshot worker (`supplyarr_tenant_lead_time_snapshot_settings`, `supplyarr_part_vendor_lead_time_capture_states`, `supplyarr_lead_time_snapshot_runs`, vendor link catalog lead time field, internal pending/process-batch, `supplyarr.leadtime.snapshots.capture`, `SupplyArrLeadTimeSnapshotJob`, `/api/lead-time-snapshot-settings`, `LeadTimeSnapshotSettingsPanel`, tests, docs) | M12 (partial) | Complete | `118137c` |
 
-| 176 | RoutArr trip completion rollup worker (`routarr_tenant_trip_completion_rollup_settings`, `routarr_trip_completion_rollups`, `routarr_trip_completion_events`, `routarr_trip_completion_rollup_runs`, internal pending/process-batch, `routarr.trips.completion.rollup`, `/api/trip-completions` + `/api/route-completions`, `RoutArrTripCompletionRollupJob`, `TripCompletionRollupSettingsPanel`, tests, docs) | M12 (partial) | Complete | `pending` |
+| 176 | RoutArr trip completion rollup worker (`routarr_tenant_trip_completion_rollup_settings`, `routarr_trip_completion_rollups`, `routarr_trip_completion_events`, `routarr_trip_completion_rollup_runs`, internal pending/process-batch, `routarr.trips.completion.rollup`, `/api/trip-completions` + `/api/route-completions`, `RoutArrTripCompletionRollupJob`, `TripCompletionRollupSettingsPanel`, tests, docs) | M12 (partial) | Complete | `b786225` |
 
 ## Next slice (Worker 177)
 
