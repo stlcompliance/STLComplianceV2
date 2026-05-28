@@ -6,15 +6,13 @@ import {
   buildProductLaunchUrlMap,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
-  type ProductNavItem,
 } from '@stl/shared-ui'
 import { getMe } from '../api/client'
 import { clearSession, loadSession } from '../auth/sessionStorage'
+import { routarrNavItems } from '../navigation/productNav'
 
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
-
-const navItems: ProductNavItem[] = [{ label: 'Dispatch board', to: '/' }]
 
 export function ProductWorkspaceLayout() {
   const [searchParams] = useSearchParams()
@@ -56,7 +54,7 @@ export function ProductWorkspaceLayout() {
       productName="RoutArr"
       productKey="routarr"
       workspaceSubtitle="Routes, trips, and dispatch"
-      navItems={navItems}
+      navItems={routarrNavItems}
       entitlements={meQuery.data?.entitlements ?? []}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}

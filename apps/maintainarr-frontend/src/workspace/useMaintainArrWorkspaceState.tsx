@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
-import { PageHeader } from '@stl/shared-ui'
 import {
   activateInspectionTemplate,
   completeInspectionRun,
@@ -65,18 +64,6 @@ import {
   canViewAllInspectionRuns,
   loadSession,
 } from '../auth/sessionStorage'
-import { AuditPackageExportPanel } from '../components/AuditPackageExportPanel'
-import { NotificationSettingsPanel } from '../components/NotificationSettingsPanel'
-import { AssetRegistryPanel } from '../components/AssetRegistryPanel'
-import { DefectsPanel } from '../components/DefectsPanel'
-import { WorkOrdersPanel } from '../components/WorkOrdersPanel'
-import { InspectionRunnerPanel } from '../components/InspectionRunnerPanel'
-import { InspectionTemplateBuilderPanel } from '../components/InspectionTemplateBuilderPanel'
-import { MaintenanceHistoryPanel } from '../components/MaintenanceHistoryPanel'
-import { MeterReadingsPanel } from '../components/MeterReadingsPanel'
-import { PmDuePanel } from '../components/PmDuePanel'
-import { PmProgramBuilderPanel } from '../components/PmProgramBuilderPanel'
-
 async function fileToBase64(file: File): Promise<string> {
   const buffer = await file.arrayBuffer()
   const bytes = new Uint8Array(buffer)
@@ -87,12 +74,13 @@ async function fileToBase64(file: File): Promise<string> {
   return btoa(binary)
 }
 
-export function HomePage() {
+export function useMaintainArrWorkspaceState() {
+
   const [searchParams] = useSearchParams()
   const handoff = searchParams.get('handoff')
-  if (handoff) {
-    return <Navigate to={`/launch?handoff=${encodeURIComponent(handoff)}`} replace />
-  }
+  const handoffRedirect = handoff
+    ? <Navigate to={`/launch?handoff=${encodeURIComponent(handoff)}`} replace />
+    : null
 
   const session = loadSession()
   const accessToken = session?.accessToken ?? ''
@@ -896,344 +884,229 @@ export function HomePage() {
     onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to activate PM program'),
   })
 
-  if (!session || !meQuery.data) {
-    return <p className="text-sm text-slate-400">Loading asset workspace…</p>
+  return {
+    handoffRedirect,
+    ready: Boolean(session && meQuery.data),
+    loadingMessage: 'Loading asset workspace…',
+    me: meQuery.data!,
+    session: session!,
+    accessToken,
+    apiError,
+    searchParams,
+    classKey,
+    className,
+    classDescription,
+    selectedClassId,
+    typeKey,
+    typeName,
+    typeDescription,
+    selectedTypeId,
+    assetTag,
+    assetName,
+    assetDescription,
+    siteRef,
+    templateKey,
+    templateName,
+    templateDescription,
+    selectedTemplateId,
+    categoryKey,
+    categoryName,
+    itemKey,
+    itemPrompt,
+    itemType,
+    selectedCategoryId,
+    selectedAssetTypeIds,
+    runAssetId,
+    runTemplateId,
+    selectedRunId,
+    answerDrafts,
+    defectAssetId,
+    defectTitle,
+    defectDescription,
+    defectSeverity,
+    defectStatusFilter,
+    workOrderAssetId,
+    workOrderTitle,
+    workOrderDescription,
+    workOrderPriority,
+    assignedPersonId,
+    workOrderStatusFilter,
+    selectedWorkOrderId,
+    creatingWorkOrderDefectId,
+    woTaskTitle,
+    woLaborHours,
+    woLaborTypeKey,
+    woLaborPersonId,
+    woSelectedTaskLineId,
+    woEvidenceTypeKey,
+    woEvidenceNotes,
+    woEvidenceFile,
+    demandPartNumber,
+    demandSupplyarrPartId,
+    demandQuantity,
+    demandUnitOfMeasure,
+    demandNotes,
+    createPurchaseRequestDraft,
+    meterAssetId,
+    selectedMeterId,
+    meterKey,
+    meterName,
+    meterUnit,
+    baselineReading,
+    readingValue,
+    readingNotes,
+    programKey,
+    programName,
+    programDescription,
+    programScopeType,
+    programAssetTypeId,
+    programAssetId,
+    selectedProgramId,
+    selectedProgramScheduleIds,
+    historyAssetId,
+    setClassKey,
+    setClassName,
+    setClassDescription,
+    setSelectedClassId,
+    setTypeKey,
+    setTypeName,
+    setTypeDescription,
+    setSelectedTypeId,
+    setAssetTag,
+    setAssetName,
+    setAssetDescription,
+    setSiteRef,
+    setTemplateKey,
+    setTemplateName,
+    setTemplateDescription,
+    setSelectedTemplateId,
+    setCategoryKey,
+    setCategoryName,
+    setItemKey,
+    setItemPrompt,
+    setItemType,
+    setSelectedCategoryId,
+    setSelectedAssetTypeIds,
+    setRunAssetId,
+    setRunTemplateId,
+    setSelectedRunId,
+    setAnswerDrafts,
+    setDefectAssetId,
+    setDefectTitle,
+    setDefectDescription,
+    setDefectSeverity,
+    setDefectStatusFilter,
+    setWorkOrderAssetId,
+    setWorkOrderTitle,
+    setWorkOrderDescription,
+    setWorkOrderPriority,
+    setAssignedPersonId,
+    setWorkOrderStatusFilter,
+    setSelectedWorkOrderId,
+    setCreatingWorkOrderDefectId,
+    setWoTaskTitle,
+    setWoLaborHours,
+    setWoLaborTypeKey,
+    setWoLaborPersonId,
+    setWoSelectedTaskLineId,
+    setWoEvidenceTypeKey,
+    setWoEvidenceNotes,
+    setWoEvidenceFile,
+    setDemandPartNumber,
+    setDemandSupplyarrPartId,
+    setDemandQuantity,
+    setDemandUnitOfMeasure,
+    setDemandNotes,
+    setCreatePurchaseRequestDraft,
+    setMeterAssetId,
+    setSelectedMeterId,
+    setMeterKey,
+    setMeterName,
+    setMeterUnit,
+    setBaselineReading,
+    setReadingValue,
+    setReadingNotes,
+    setProgramKey,
+    setProgramName,
+    setProgramDescription,
+    setProgramScopeType,
+    setProgramAssetTypeId,
+    setProgramAssetId,
+    setSelectedProgramId,
+    setSelectedProgramScheduleIds,
+    setHistoryAssetId,
+    setApiError,
+    meQuery,
+    classesQuery,
+    typesQuery,
+    assetsQuery,
+    assetReadinessFleetQuery,
+    duePmQuery,
+    pmProgramsQuery,
+    pmProgramDetailQuery,
+    pmSchedulesQuery,
+    templatesQuery,
+    templateDetailQuery,
+    inspectionRunsQuery,
+    inspectionRunQuery,
+    defectsQuery,
+    workOrdersQuery,
+    maintenanceHistoryQuery,
+    workOrderDetailQuery,
+    workOrderTasksQuery,
+    workOrderLaborQuery,
+    workOrderEvidenceQuery,
+    workOrderPartsDemandQuery,
+    assetMetersQuery,
+    meterReadingsQuery,
+    meterForecastQuery,
+    activeTemplates,
+    canManage,
+    canManageNotifications,
+    canExportAudit,
+    viewAllRuns,
+    viewAllDefects,
+    canManageDefects,
+    canCreateWorkOrder,
+    canCloseWorkOrder,
+    viewAllWorkOrders,
+    canExecuteInspections,
+    scopedPmSchedules,
+    invalidateRegistry,
+    invalidateTemplates,
+    invalidateInspectionRuns,
+    invalidateDefects,
+    invalidateWorkOrders,
+    invalidateMeters,
+    invalidatePmPrograms,
+    createClassMutation,
+    createTypeMutation,
+    createTemplateMutation,
+    createCategoryMutation,
+    createItemMutation,
+    saveAssetTypesMutation,
+    activateTemplateMutation,
+    startRunMutation,
+    submitAnswersMutation,
+    completeRunMutation,
+    createDefectsFromRunMutation,
+    createMeterMutation,
+    recordMeterReadingMutation,
+    createDefectMutation,
+    updateDefectStatusMutation,
+    createWorkOrderMutation,
+    createWorkOrderFromDefectMutation,
+    updateWorkOrderStatusMutation,
+    addWorkOrderTaskMutation,
+    logWorkOrderLaborMutation,
+    uploadWorkOrderEvidenceMutation,
+    addWorkOrderPartsDemandMutation,
+    publishWorkOrderPartsDemandMutation,
+    createAssetMutation,
+    createPmProgramMutation,
+    savePmProgramSchedulesMutation,
+    activatePmProgramMutation,
   }
-
-  return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <PageHeader
-        title="Asset and maintenance workspace"
-        subtitle={`Signed in as ${meQuery.data.displayName} (${meQuery.data.tenantRoleKey})`}
-      />
-
-      {apiError ? <p className="mb-4 rounded-lg border border-red-800 bg-red-950/40 p-3 text-sm text-red-200">{apiError}</p> : null}
-
-      <div className="mb-8">
-        <PmDuePanel
-          dueSchedules={duePmQuery.data ?? []}
-          isLoading={duePmQuery.isLoading}
-        />
-      </div>
-
-      <div className="mb-8">
-        <PmProgramBuilderPanel
-          canManage={canManage}
-          programs={pmProgramsQuery.data ?? []}
-          selectedProgram={pmProgramDetailQuery.data ?? null}
-          assetTypes={typesQuery.data ?? []}
-          assets={assetsQuery.data ?? []}
-          availableSchedules={scopedPmSchedules}
-          isLoading={pmProgramsQuery.isLoading}
-          isDetailLoading={pmProgramDetailQuery.isLoading}
-          isSchedulesLoading={pmSchedulesQuery.isLoading}
-          programKey={programKey}
-          programName={programName}
-          programDescription={programDescription}
-          scopeType={programScopeType}
-          selectedAssetTypeId={programAssetTypeId}
-          selectedAssetId={programAssetId}
-          selectedProgramId={selectedProgramId}
-          selectedScheduleIds={selectedProgramScheduleIds}
-          onProgramKeyChange={setProgramKey}
-          onProgramNameChange={setProgramName}
-          onProgramDescriptionChange={setProgramDescription}
-          onScopeTypeChange={setProgramScopeType}
-          onSelectedAssetTypeIdChange={setProgramAssetTypeId}
-          onSelectedAssetIdChange={setProgramAssetId}
-          onSelectedProgramIdChange={setSelectedProgramId}
-          onSelectedScheduleIdsChange={setSelectedProgramScheduleIds}
-          onCreateProgram={() => createPmProgramMutation.mutate()}
-          onSaveSchedules={() => savePmProgramSchedulesMutation.mutate()}
-          onActivateProgram={() => activatePmProgramMutation.mutate()}
-          isCreatingProgram={createPmProgramMutation.isPending}
-          isSavingSchedules={
-            savePmProgramSchedulesMutation.isPending || activatePmProgramMutation.isPending
-          }
-        />
-      </div>
-
-      <div className="mb-8">
-        <MeterReadingsPanel
-          canManageMeters={canManage}
-          canRecordReadings={canExecuteInspections}
-          assets={assetsQuery.data ?? []}
-          meters={assetMetersQuery.data ?? []}
-          readings={meterReadingsQuery.data ?? []}
-          forecast={meterForecastQuery.data ?? null}
-          selectedAssetId={meterAssetId}
-          selectedMeterId={selectedMeterId}
-          meterKey={meterKey}
-          meterName={meterName}
-          meterUnit={meterUnit}
-          baselineReading={baselineReading}
-          readingValue={readingValue}
-          readingNotes={readingNotes}
-          isLoading={assetMetersQuery.isLoading || meterReadingsQuery.isLoading}
-          isCreatingMeter={createMeterMutation.isPending}
-          isRecording={recordMeterReadingMutation.isPending}
-          onSelectedAssetIdChange={(assetId) => {
-            setMeterAssetId(assetId)
-            setSelectedMeterId('')
-          }}
-          onSelectedMeterIdChange={setSelectedMeterId}
-          onMeterKeyChange={setMeterKey}
-          onMeterNameChange={setMeterName}
-          onMeterUnitChange={setMeterUnit}
-          onBaselineReadingChange={setBaselineReading}
-          onReadingValueChange={setReadingValue}
-          onReadingNotesChange={setReadingNotes}
-          onCreateMeter={() => createMeterMutation.mutate()}
-          onRecordReading={() => recordMeterReadingMutation.mutate()}
-        />
-      </div>
-
-      <div className="mb-8">
-        <WorkOrdersPanel
-          canCreate={canCreateWorkOrder}
-          canPerform={canExecuteInspections}
-          canClose={canCloseWorkOrder}
-          viewAllWorkOrders={viewAllWorkOrders}
-          sessionPersonId={session.personId}
-          assets={assetsQuery.data ?? []}
-          workOrders={workOrdersQuery.data ?? []}
-          selectedWorkOrder={workOrderDetailQuery.data ?? null}
-          selectedWorkOrderId={selectedWorkOrderId}
-          selectedAssetId={workOrderAssetId}
-          workOrderTitle={workOrderTitle}
-          workOrderDescription={workOrderDescription}
-          workOrderPriority={workOrderPriority}
-          assignedPersonId={assignedPersonId}
-          statusFilter={workOrderStatusFilter}
-          isLoading={workOrdersQuery.isLoading}
-          isDetailLoading={workOrderDetailQuery.isLoading}
-          isCreating={createWorkOrderMutation.isPending}
-          isUpdatingStatus={updateWorkOrderStatusMutation.isPending}
-          onSelectedWorkOrderIdChange={setSelectedWorkOrderId}
-          onSelectedAssetIdChange={setWorkOrderAssetId}
-          onWorkOrderTitleChange={setWorkOrderTitle}
-          onWorkOrderDescriptionChange={setWorkOrderDescription}
-          onWorkOrderPriorityChange={setWorkOrderPriority}
-          onAssignedPersonIdChange={setAssignedPersonId}
-          onStatusFilterChange={setWorkOrderStatusFilter}
-          onCreateWorkOrder={() => createWorkOrderMutation.mutate()}
-          onUpdateStatus={(workOrderId, status) =>
-            updateWorkOrderStatusMutation.mutate({ workOrderId, status })
-          }
-          tasks={workOrderTasksQuery.data ?? []}
-          labor={workOrderLaborQuery.data ?? []}
-          evidence={workOrderEvidenceQuery.data ?? []}
-          taskTitle={woTaskTitle}
-          laborHours={woLaborHours}
-          laborTypeKey={woLaborTypeKey}
-          laborPersonId={woLaborPersonId}
-          selectedTaskLineId={woSelectedTaskLineId}
-          evidenceTypeKey={woEvidenceTypeKey}
-          evidenceNotes={woEvidenceNotes}
-          selectedEvidenceFileName={woEvidenceFile?.name ?? null}
-          onTaskTitleChange={setWoTaskTitle}
-          onLaborHoursChange={setWoLaborHours}
-          onLaborTypeKeyChange={setWoLaborTypeKey}
-          onLaborPersonIdChange={setWoLaborPersonId}
-          onSelectedTaskLineIdChange={setWoSelectedTaskLineId}
-          onEvidenceTypeKeyChange={setWoEvidenceTypeKey}
-          onEvidenceNotesChange={setWoEvidenceNotes}
-          onSelectEvidenceFile={setWoEvidenceFile}
-          onAddTask={() => addWorkOrderTaskMutation.mutate()}
-          onLogLabor={() => logWorkOrderLaborMutation.mutate()}
-          onUploadEvidence={() => uploadWorkOrderEvidenceMutation.mutate()}
-          isAddingTask={addWorkOrderTaskMutation.isPending}
-          isLoggingLabor={logWorkOrderLaborMutation.isPending}
-          isUploadingEvidence={uploadWorkOrderEvidenceMutation.isPending}
-          partsDemand={workOrderPartsDemandQuery.data ?? []}
-          demandPartNumber={demandPartNumber}
-          demandSupplyarrPartId={demandSupplyarrPartId}
-          demandQuantity={demandQuantity}
-          demandUnitOfMeasure={demandUnitOfMeasure}
-          demandNotes={demandNotes}
-          createPurchaseRequestDraft={createPurchaseRequestDraft}
-          onDemandPartNumberChange={setDemandPartNumber}
-          onDemandSupplyarrPartIdChange={setDemandSupplyarrPartId}
-          onDemandQuantityChange={setDemandQuantity}
-          onDemandUnitOfMeasureChange={setDemandUnitOfMeasure}
-          onDemandNotesChange={setDemandNotes}
-          onCreatePurchaseRequestDraftChange={setCreatePurchaseRequestDraft}
-          onAddPartsDemandLine={() => addWorkOrderPartsDemandMutation.mutate()}
-          onPublishPartsDemand={() => publishWorkOrderPartsDemandMutation.mutate()}
-          isAddingPartsDemand={addWorkOrderPartsDemandMutation.isPending}
-          isPublishingPartsDemand={publishWorkOrderPartsDemandMutation.isPending}
-        />
-      </div>
-
-      <div className="mb-8">
-        <DefectsPanel
-          canCreate={canExecuteInspections}
-          canCreateWorkOrder={canCreateWorkOrder}
-          canManageStatus={canManageDefects}
-          viewAllDefects={viewAllDefects}
-          assets={assetsQuery.data ?? []}
-          defects={defectsQuery.data ?? []}
-          selectedAssetId={defectAssetId}
-          defectTitle={defectTitle}
-          defectDescription={defectDescription}
-          defectSeverity={defectSeverity}
-          statusFilter={defectStatusFilter}
-          isLoading={defectsQuery.isLoading}
-          isCreating={createDefectMutation.isPending}
-          isUpdatingStatus={updateDefectStatusMutation.isPending}
-          onSelectedAssetIdChange={setDefectAssetId}
-          onDefectTitleChange={setDefectTitle}
-          onDefectDescriptionChange={setDefectDescription}
-          onDefectSeverityChange={setDefectSeverity}
-          onStatusFilterChange={setDefectStatusFilter}
-          onCreateDefect={() => createDefectMutation.mutate()}
-          onCreateWorkOrderFromDefect={(defectId) => createWorkOrderFromDefectMutation.mutate(defectId)}
-          creatingWorkOrderDefectId={creatingWorkOrderDefectId}
-          onUpdateStatus={(defectId, status) => updateDefectStatusMutation.mutate({ defectId, status })}
-        />
-      </div>
-
-      <div className="mb-8">
-        <InspectionRunnerPanel
-          canExecute={canExecuteInspections}
-          viewAllRuns={viewAllRuns}
-          assets={assetsQuery.data ?? []}
-          activeTemplates={activeTemplates}
-          runs={inspectionRunsQuery.data ?? []}
-          activeRun={inspectionRunQuery.data ?? null}
-          selectedAssetId={runAssetId}
-          selectedTemplateId={runTemplateId}
-          selectedRunId={selectedRunId}
-          answerDrafts={answerDrafts}
-          isLoading={assetsQuery.isLoading || templatesQuery.isLoading || inspectionRunsQuery.isLoading}
-          isRunLoading={inspectionRunQuery.isLoading}
-          isStarting={startRunMutation.isPending}
-          isSubmitting={submitAnswersMutation.isPending}
-          isCompleting={completeRunMutation.isPending}
-          isCreatingDefects={createDefectsFromRunMutation.isPending}
-          onSelectedAssetIdChange={setRunAssetId}
-          onSelectedTemplateIdChange={setRunTemplateId}
-          onSelectedRunIdChange={setSelectedRunId}
-          onAnswerDraftChange={(checklistItemId, field, value) =>
-            setAnswerDrafts((current) => ({
-              ...current,
-              [checklistItemId]: { ...current[checklistItemId], [field]: value },
-            }))
-          }
-          onStartRun={() => startRunMutation.mutate()}
-          onSubmitAnswers={() => submitAnswersMutation.mutate()}
-          onCompleteRun={() => completeRunMutation.mutate()}
-          onCreateDefectsFromRun={() => createDefectsFromRunMutation.mutate()}
-        />
-      </div>
-
-      <div className="mb-8">
-        <InspectionTemplateBuilderPanel
-          canManage={canManage}
-          templates={templatesQuery.data ?? []}
-          selectedTemplate={templateDetailQuery.data ?? null}
-          assetTypes={typesQuery.data ?? []}
-          isLoading={templatesQuery.isLoading}
-          isDetailLoading={templateDetailQuery.isLoading}
-          templateKey={templateKey}
-          templateName={templateName}
-          templateDescription={templateDescription}
-          categoryKey={categoryKey}
-          categoryName={categoryName}
-          itemKey={itemKey}
-          itemPrompt={itemPrompt}
-          itemType={itemType}
-          selectedCategoryId={selectedCategoryId}
-          selectedAssetTypeIds={selectedAssetTypeIds}
-          selectedTemplateId={selectedTemplateId}
-          onTemplateKeyChange={setTemplateKey}
-          onTemplateNameChange={setTemplateName}
-          onTemplateDescriptionChange={setTemplateDescription}
-          onCategoryKeyChange={setCategoryKey}
-          onCategoryNameChange={setCategoryName}
-          onItemKeyChange={setItemKey}
-          onItemPromptChange={setItemPrompt}
-          onItemTypeChange={setItemType}
-          onSelectedCategoryIdChange={setSelectedCategoryId}
-          onSelectedAssetTypeIdsChange={setSelectedAssetTypeIds}
-          onSelectedTemplateIdChange={setSelectedTemplateId}
-          onCreateTemplate={() => createTemplateMutation.mutate()}
-          onCreateCategory={() => createCategoryMutation.mutate()}
-          onCreateItem={() => createItemMutation.mutate()}
-          onSaveAssetTypes={() => saveAssetTypesMutation.mutate()}
-          onActivateTemplate={() => activateTemplateMutation.mutate()}
-          isCreatingTemplate={createTemplateMutation.isPending}
-          isSavingBuilder={
-            createCategoryMutation.isPending ||
-            createItemMutation.isPending ||
-            saveAssetTypesMutation.isPending ||
-            activateTemplateMutation.isPending
-          }
-        />
-      </div>
-
-      <AssetRegistryPanel
-        canManage={canManage}
-        classes={classesQuery.data ?? []}
-        types={typesQuery.data ?? []}
-        assets={assetsQuery.data ?? []}
-        readinessByAssetId={Object.fromEntries(
-          (assetReadinessFleetQuery.data ?? []).map((item) => [item.assetId, item]),
-        )}
-        isLoading={classesQuery.isLoading || typesQuery.isLoading || assetsQuery.isLoading}
-        isReadinessLoading={assetReadinessFleetQuery.isLoading}
-        classKey={classKey}
-        className={className}
-        classDescription={classDescription}
-        selectedClassId={selectedClassId}
-        typeKey={typeKey}
-        typeName={typeName}
-        typeDescription={typeDescription}
-        selectedTypeId={selectedTypeId}
-        assetTag={assetTag}
-        assetName={assetName}
-        assetDescription={assetDescription}
-        siteRef={siteRef}
-        onClassKeyChange={setClassKey}
-        onClassNameChange={setClassName}
-        onClassDescriptionChange={setClassDescription}
-        onSelectedClassIdChange={setSelectedClassId}
-        onTypeKeyChange={setTypeKey}
-        onTypeNameChange={setTypeName}
-        onTypeDescriptionChange={setTypeDescription}
-        onSelectedTypeIdChange={setSelectedTypeId}
-        onAssetTagChange={setAssetTag}
-        onAssetNameChange={setAssetName}
-        onAssetDescriptionChange={setAssetDescription}
-        onSiteRefChange={setSiteRef}
-        onCreateClass={() => createClassMutation.mutate()}
-        onCreateType={() => createTypeMutation.mutate()}
-        onCreateAsset={() => createAssetMutation.mutate()}
-        isCreatingClass={createClassMutation.isPending}
-        isCreatingType={createTypeMutation.isPending}
-        isCreatingAsset={createAssetMutation.isPending}
-      />
-
-      {canManageNotifications && (
-        <div className="mt-8">
-          <NotificationSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
-        </div>
-      )}
-
-      <div className="mt-8">
-        <AuditPackageExportPanel accessToken={accessToken} canExport={canExportAudit} />
-      </div>
-
-      <div className="mt-8">
-        <MaintenanceHistoryPanel
-          assets={assetsQuery.data ?? []}
-          entries={maintenanceHistoryQuery.data?.items ?? []}
-          totalCount={maintenanceHistoryQuery.data?.totalCount ?? 0}
-          selectedAssetId={historyAssetId}
-          isLoading={maintenanceHistoryQuery.isLoading}
-          onSelectedAssetIdChange={setHistoryAssetId}
-        />
-      </div>
-    </div>
-  )
 }
+
+export type MaintainArrWorkspaceState = ReturnType<typeof useMaintainArrWorkspaceState>

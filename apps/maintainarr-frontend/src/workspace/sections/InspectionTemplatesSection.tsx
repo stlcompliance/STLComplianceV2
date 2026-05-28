@@ -1,0 +1,54 @@
+import { InspectionTemplateBuilderPanel } from '../../components/InspectionTemplateBuilderPanel'
+import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
+
+type Props = { state: MaintainArrWorkspaceState }
+
+export function InspectionTemplatesSection({ state }: Props) {
+  const s = state
+  return (
+    <div className="mb-8">
+      <InspectionTemplateBuilderPanel
+        canManage={s.canManage}
+        templates={s.templatesQuery.data ?? []}
+        selectedTemplate={s.templateDetailQuery.data ?? null}
+        assetTypes={s.typesQuery.data ?? []}
+        isLoading={s.templatesQuery.isLoading}
+        isDetailLoading={s.templateDetailQuery.isLoading}
+        templateKey={s.templateKey}
+        templateName={s.templateName}
+        templateDescription={s.templateDescription}
+        categoryKey={s.categoryKey}
+        categoryName={s.categoryName}
+        itemKey={s.itemKey}
+        itemPrompt={s.itemPrompt}
+        itemType={s.itemType}
+        selectedCategoryId={s.selectedCategoryId}
+        selectedAssetTypeIds={s.selectedAssetTypeIds}
+        selectedTemplateId={s.selectedTemplateId}
+        onTemplateKeyChange={s.setTemplateKey}
+        onTemplateNameChange={s.setTemplateName}
+        onTemplateDescriptionChange={s.setTemplateDescription}
+        onCategoryKeyChange={s.setCategoryKey}
+        onCategoryNameChange={s.setCategoryName}
+        onItemKeyChange={s.setItemKey}
+        onItemPromptChange={s.setItemPrompt}
+        onItemTypeChange={s.setItemType}
+        onSelectedCategoryIdChange={s.setSelectedCategoryId}
+        onSelectedAssetTypeIdsChange={s.setSelectedAssetTypeIds}
+        onSelectedTemplateIdChange={s.setSelectedTemplateId}
+        onCreateTemplate={() => s.createTemplateMutation.mutate()}
+        onCreateCategory={() => s.createCategoryMutation.mutate()}
+        onCreateItem={() => s.createItemMutation.mutate()}
+        onSaveAssetTypes={() => s.saveAssetTypesMutation.mutate()}
+        onActivateTemplate={() => s.activateTemplateMutation.mutate()}
+        isCreatingTemplate={s.createTemplateMutation.isPending}
+        isSavingBuilder={
+          s.createCategoryMutation.isPending ||
+          s.createItemMutation.isPending ||
+          s.saveAssetTypesMutation.isPending ||
+          s.activateTemplateMutation.isPending
+        }
+      />
+    </div>
+  )
+}

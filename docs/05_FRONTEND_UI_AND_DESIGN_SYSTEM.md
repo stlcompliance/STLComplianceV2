@@ -4,6 +4,7 @@
 
 - stlcompliancesite: public static marketing site.
 - suite-frontend: authenticated suite shell with product surfaces for all entitled products.
+- Each product frontend (`apps/*-frontend`): authenticated workspace with **sidebar workflow routes** — not a single scrollable page of every panel.
 
 ## Layout
 
@@ -11,15 +12,16 @@ Topbar:
 
 - Brand/product context left
 - Tenant/user context visible
+- **ProductSwitcher dropdown** (entitled products only) on the right — never a product list in the sidebar
 - Global actions right
 - Subtle bottom border
 
-Sidebar:
+Sidebar (AppNav):
 
-- Product switcher at top
-- Product navigation grouped by domain
-- Admin/settings separate from daily work
-- Lucide icons from central registry
+- **Current product workflow routes only** (People, Work orders, Dispatch, and so on)
+- Group links by operational workflow, not database table names
+- Admin/settings as their own route when needed
+- Lucide icons from central registry (product apps: co-locate in `src/navigation/productNav.ts`)
 
 Content:
 

@@ -1,7 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProductWorkspaceLayout } from './layouts/ProductWorkspaceLayout'
-import { HomePage } from './pages/HomePage'
+import { AdminPage } from './pages/admin/AdminPage'
+import { CertificationsPage } from './pages/certifications/CertificationsPage'
+import { IncidentsPage } from './pages/incidents/IncidentsPage'
+import { OrgPage } from './pages/org/OrgPage'
+import { PeoplePage } from './pages/people/PeoplePage'
+import { PermissionsPage } from './pages/permissions/PermissionsPage'
+import { ReadinessPage } from './pages/readiness/ReadinessPage'
 import { LaunchPage } from './pages/LaunchPage'
 
 const queryClient = new QueryClient({
@@ -20,7 +26,14 @@ export default function App() {
         <Routes>
           <Route path="/launch" element={<LaunchPage />} />
           <Route element={<ProductWorkspaceLayout />}>
-            <Route path="/" element={<HomePage />} />
+            <Route index element={<Navigate to="/people" replace />} />
+            <Route path="/people" element={<PeoplePage />} />
+            <Route path="/org" element={<OrgPage />} />
+            <Route path="/permissions" element={<PermissionsPage />} />
+            <Route path="/readiness" element={<ReadinessPage />} />
+            <Route path="/incidents" element={<IncidentsPage />} />
+            <Route path="/certifications" element={<CertificationsPage />} />
+            <Route path="/admin" element={<AdminPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -28,3 +41,4 @@ export default function App() {
     </QueryClientProvider>
   )
 }
+

@@ -1,7 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProductWorkspaceLayout } from './layouts/ProductWorkspaceLayout'
-import { HomePage } from './pages/HomePage'
+import { CatalogPage } from './pages/catalog/CatalogPage'
+import { InventoryPage } from './pages/inventory/InventoryPage'
+import { PartiesPage } from './pages/parties/PartiesPage'
+import { PlanningPage } from './pages/planning/PlanningPage'
+import { PricingPage } from './pages/pricing/PricingPage'
+import { PurchasingPage } from './pages/purchasing/PurchasingPage'
+import { ReceivingPage } from './pages/receiving/ReceivingPage'
+import { SettingsPage } from './pages/settings/SettingsPage'
 import { LaunchPage } from './pages/LaunchPage'
 import { ReceivingWorkspacePage } from './pages/ReceivingWorkspacePage'
 
@@ -21,8 +28,16 @@ export default function App() {
         <Routes>
           <Route path="/launch" element={<LaunchPage />} />
           <Route element={<ProductWorkspaceLayout />}>
-            <Route path="/" element={<HomePage />} />
+            <Route index element={<Navigate to="/parties" replace />} />
+            <Route path="/parties" element={<PartiesPage />} />
+            <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/inventory" element={<InventoryPage />} />
+            <Route path="/purchasing" element={<PurchasingPage />} />
+            <Route path="/receiving" element={<ReceivingPage />} />
             <Route path="/receiving/:receivingReceiptId" element={<ReceivingWorkspacePage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/planning" element={<PlanningPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -30,3 +45,4 @@ export default function App() {
     </QueryClientProvider>
   )
 }
+

@@ -6,15 +6,13 @@ import {
   buildProductLaunchUrlMap,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
-  type ProductNavItem,
 } from '@stl/shared-ui'
 import { getMe } from '../api/client'
 import { clearSession, loadSession } from '../auth/sessionStorage'
+import { trainarrNavItems } from '../navigation/productNav'
 
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
-
-const navItems: ProductNavItem[] = [{ label: 'Training workspace', to: '/' }]
 
 export function ProductWorkspaceLayout() {
   const [searchParams] = useSearchParams()
@@ -56,7 +54,7 @@ export function ProductWorkspaceLayout() {
       productName="TrainArr"
       productKey="trainarr"
       workspaceSubtitle="Training and qualifications"
-      navItems={navItems}
+      navItems={trainarrNavItems}
       entitlements={meQuery.data?.entitlements ?? []}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}

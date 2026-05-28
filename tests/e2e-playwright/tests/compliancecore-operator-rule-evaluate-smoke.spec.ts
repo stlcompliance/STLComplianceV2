@@ -31,10 +31,13 @@ test.describe('Compliance Core operator rule evaluation @requires-live', () => {
     await launchProductHandoffFromSuite(page, 'compliancecore')
 
     await expect(
-      page.getByRole('heading', { name: 'Compliance authority registry' }),
+      page.getByRole('heading', { name: 'Compliance registry' }),
     ).toBeVisible({ timeout: 15_000 })
 
-    await page.getByTestId('compliancecore-tab-evaluation').click()
+    await page.goto(new URL('/evaluation', page.url()).toString())
+    await expect(page.getByRole('heading', { name: 'Rule evaluation' })).toBeVisible({
+      timeout: 15_000,
+    })
     const panel = page.getByTestId('rule-evaluation-panel')
     await expect(panel).toBeVisible({ timeout: 15_000 })
 

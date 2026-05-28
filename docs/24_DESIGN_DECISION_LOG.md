@@ -61,3 +61,9 @@ Reason: TrainArr owns proof of training, while StaffArr owns person readiness an
 ## Compliance Core Does Not Replace Product Workflows
 
 Reason: Compliance Core provides rule context and results; products own operational decisions.
+
+## Product UIs Use Sidebar Workflow Navigation
+
+Reason: each product workspace must expose **one workflow area per route** in the left AppNav (assets, people, dispatch, purchasing, and so on). Users navigate via the sidebar; the main column renders only the active surface.
+
+Do not ship monolithic home pages that stack every panel vertically behind a single nav item. `App.tsx` stays thin (routing + providers); workflow UI lives in `pages/` and `components/` grouped by domain. Prefer separate route files per workflow as features grow; interim route-gated rendering in a shared page is acceptable only while splitting.

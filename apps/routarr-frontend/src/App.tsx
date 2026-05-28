@@ -1,7 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProductWorkspaceLayout } from './layouts/ProductWorkspaceLayout'
-import { HomePage } from './pages/HomePage'
+import { AvailabilityPage } from './pages/availability/AvailabilityPage'
+import { CalendarPage } from './pages/calendar/CalendarPage'
+import { DispatchPage } from './pages/dispatch/DispatchPage'
+import { RoutesPage } from './pages/routes/RoutesPage'
+import { SettingsPage } from './pages/settings/SettingsPage'
+import { TripsPage } from './pages/trips/TripsPage'
 import { LaunchPage } from './pages/LaunchPage'
 import { TripWorkspacePage } from './pages/TripWorkspacePage'
 
@@ -21,8 +26,14 @@ export default function App() {
         <Routes>
           <Route path="/launch" element={<LaunchPage />} />
           <Route element={<ProductWorkspaceLayout />}>
-            <Route path="/" element={<HomePage />} />
+            <Route index element={<Navigate to="/dispatch" replace />} />
+            <Route path="/dispatch" element={<DispatchPage />} />
+            <Route path="/trips" element={<TripsPage />} />
             <Route path="/trips/:tripId" element={<TripWorkspacePage />} />
+            <Route path="/routes" element={<RoutesPage />} />
+            <Route path="/availability" element={<AvailabilityPage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -30,3 +41,4 @@ export default function App() {
     </QueryClientProvider>
   )
 }
+

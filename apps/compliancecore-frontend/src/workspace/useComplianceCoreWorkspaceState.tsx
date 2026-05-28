@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 
 import { Navigate, useSearchParams } from 'react-router-dom'
-import { PageHeader } from '@stl/shared-ui'
 
 import {
 
@@ -103,43 +102,22 @@ import { RuleEvaluationPanel } from '../components/RuleEvaluationPanel'
 
 import { VocabularyPanel } from '../components/VocabularyPanel'
 
+export function useComplianceCoreWorkspaceState() {
 
-
-type AdminTab =
-  | 'dashboard'
-  | 'vocabulary'
-  | 'regulatory'
-  | 'citations'
-  | 'sources'
-  | 'mappings'
-  | 'evaluation'
-  | 'findings'
-  | 'csv'
-  | 'audit'
-
-
-
-export function HomePage() {
 
   const [searchParams] = useSearchParams()
 
   const handoff = searchParams.get('handoff')
-
-  if (handoff) {
-
-    return <Navigate to={`/launch?handoff=${encodeURIComponent(handoff)}`} replace />
-
-  }
-
-
+  const handoffRedirect = handoff
+    ? <Navigate to={`/launch?handoff=${encodeURIComponent(handoff)}`} replace />
+    : null
 
   const session = loadSession()
+  const accessToken = session?.accessToken ?? ''
 
   const queryClient = useQueryClient()
 
   const [selectedTypeKey, setSelectedTypeKey] = useState('material_hazard')
-
-  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard')
 
   const [selectedRulePackId, setSelectedRulePackId] = useState('')
 
@@ -1143,458 +1121,65 @@ export function HomePage() {
 
   }, [rulePacksQuery.data, selectedRulePackId])
 
+  const ready = Boolean(session && meQuery.data)
+  const me = meQuery.data!
+  const canManage = meQuery.data
+    ? canManageVocabulary(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+  const canExportAudit = meQuery.data
+    ? canExportAuditPackage(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+  const loadingMessage = 'Loading compliance registry…'
 
-
-  if (!session || !meQuery.data) {
-
-    return <p className="text-sm text-slate-400">Loading compliance registry…</p>
-
+  return {
+    handoffRedirect,
+    ready,
+    loadingMessage,
+    me,
+    session: session!,
+    accessToken,
+    apiError,
+    searchParams,
+    selectedTypeKey,
+    selectedRulePackId,
+    lastEvaluation,
+    lastBatchEvaluation,
+    lastGateCheck,
+    lastGateBatch,
+    meQuery,
+    typesQuery,
+    termsQuery,
+    complianceKeysQuery,
+    materialKeysQuery,
+    governingBodiesQuery,
+    jurisdictionsQuery,
+    programsQuery,
+    rulePacksQuery,
+    citationsQuery,
+    factDefinitionsQuery,
+    factRequirementsQuery,
+    factSourcesQuery,
+    regulatoryMappingsQuery,
+    rulePackContentQuery,
+    ruleEvaluationsQuery,
+    findingsQuery,
+    workflowGatesQuery,
+    seedMutation,
+    seedRegistryMutation,
+    advanceRulePackMutation,
+    seedCatalogMutation,
+    seedSourcesMutation,
+    seedMappingsMutation,
+    saveRuleContentMutation,
+    seedRuleContentMutation,
+    evaluateRulePackMutation,
+    evaluateRulePackBatchMutation,
+    seedWorkflowGateMutation,
+    checkWorkflowGateMutation,
+    checkWorkflowGateBatchMutation,
+    canManage,
+    canExportAudit,
   }
-
-
-
-  const me = meQuery.data
-
-  const canManage = canManageVocabulary(me.tenantRoleKey, me.isPlatformAdmin)
-  const canExportAudit = canExportAuditPackage(me.tenantRoleKey, me.isPlatformAdmin)
-
-
-
-  return (
-
-    <div className="mx-auto max-w-5xl space-y-6">
-
-      <PageHeader
-        title="Compliance authority registry"
-        subtitle={`${me.displayName} · ${me.tenantRoleKey.replace('_', ' ')} · ${typesQuery.data?.length ?? 0} vocabulary types · ${rulePacksQuery.data?.length ?? 0} rule packs · ${citationsQuery.data?.length ?? 0} citations · ${regulatoryMappingsQuery.data?.length ?? 0} mappings · ${factSourcesQuery.data?.length ?? 0} fact sources · ${ruleEvaluationsQuery.data?.length ?? 0} evaluations · ${findingsQuery.data?.length ?? 0} findings · ${workflowGatesQuery.data?.length ?? 0} gates`}
-      />
-
-      <nav className="flex flex-wrap gap-2 border-b border-slate-700 pb-4">
-
-          <button
-
-            type="button"
-
-            onClick={() => setActiveTab('dashboard')}
-
-            className={`rounded-md px-3 py-1.5 text-sm ${
-
-              activeTab === 'dashboard'
-
-                ? 'bg-violet-600 text-white'
-
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-
-            }`}
-
-          >
-
-            Dashboard
-
-          </button>
-
-          <button
-
-            type="button"
-
-            onClick={() => setActiveTab('vocabulary')}
-
-            className={`rounded-md px-3 py-1.5 text-sm ${
-
-              activeTab === 'vocabulary'
-
-                ? 'bg-violet-600 text-white'
-
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-
-            }`}
-
-          >
-
-            Vocabulary & keys
-
-          </button>
-
-          <button
-
-            type="button"
-
-            onClick={() => setActiveTab('regulatory')}
-
-            className={`rounded-md px-3 py-1.5 text-sm ${
-
-              activeTab === 'regulatory'
-
-                ? 'bg-violet-600 text-white'
-
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-
-            }`}
-
-          >
-
-            Regulatory & rule packs
-
-          </button>
-
-          <button
-
-            type="button"
-
-            onClick={() => setActiveTab('citations')}
-
-            className={`rounded-md px-3 py-1.5 text-sm ${
-
-              activeTab === 'citations'
-
-                ? 'bg-violet-600 text-white'
-
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-
-            }`}
-
-          >
-
-            Citations & facts
-
-          </button>
-
-          <button
-
-            type="button"
-
-            onClick={() => setActiveTab('sources')}
-
-            className={`rounded-md px-3 py-1.5 text-sm ${
-
-              activeTab === 'sources'
-
-                ? 'bg-violet-600 text-white'
-
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-
-            }`}
-
-          >
-
-            Fact sources
-
-          </button>
-
-          <button
-
-            type="button"
-
-            onClick={() => setActiveTab('mappings')}
-
-            className={`rounded-md px-3 py-1.5 text-sm ${
-
-              activeTab === 'mappings'
-
-                ? 'bg-violet-600 text-white'
-
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-
-            }`}
-
-          >
-
-            Regulatory mappings
-
-          </button>
-
-          <button
-
-            type="button"
-
-            data-testid="compliancecore-tab-evaluation"
-
-            onClick={() => setActiveTab('evaluation')}
-
-            className={`rounded-md px-3 py-1.5 text-sm ${
-
-              activeTab === 'evaluation'
-
-                ? 'bg-violet-600 text-white'
-
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-
-            }`}
-
-          >
-
-            Rule evaluation
-
-          </button>
-
-          <button
-
-            type="button"
-
-            onClick={() => setActiveTab('findings')}
-
-            className={`rounded-md px-3 py-1.5 text-sm ${
-
-              activeTab === 'findings'
-
-                ? 'bg-violet-600 text-white'
-
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-
-            }`}
-
-          >
-
-            Findings & gates
-
-          </button>
-
-          <button
-
-            type="button"
-
-            onClick={() => setActiveTab('csv')}
-
-            className={`rounded-md px-3 py-1.5 text-sm ${
-
-              activeTab === 'csv'
-
-                ? 'bg-violet-600 text-white'
-
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-
-            }`}
-
-          >
-
-            CSV bundle
-
-          </button>
-
-          <button
-
-            type="button"
-
-            onClick={() => setActiveTab('audit')}
-
-            className={`rounded-md px-3 py-1.5 text-sm ${
-
-              activeTab === 'audit'
-
-                ? 'bg-violet-600 text-white'
-
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-
-            }`}
-
-          >
-
-            Audit package
-
-          </button>
-
-      </nav>
-
-
-
-      {activeTab === 'dashboard' ? (
-
-        <OperatorDashboardPanel accessToken={session!.accessToken} />
-
-      ) : activeTab === 'audit' ? (
-
-        <AuditPackageExportPanel accessToken={session!.accessToken} canExport={canExportAudit} />
-
-      ) : activeTab === 'csv' ? (
-
-        <CsvImportExportPanel accessToken={session!.accessToken} canManage={canManage} />
-
-      ) : activeTab === 'findings' ? (
-
-        <FindingsWorkflowGatesPanel
-
-          rulePacks={rulePacksQuery.data ?? []}
-
-          factDefinitions={factDefinitionsQuery.data ?? []}
-
-          rulePackContent={rulePackContentQuery.data?.content ?? null}
-
-          findings={findingsQuery.data ?? []}
-
-          workflowGates={workflowGatesQuery.data ?? []}
-
-          canManage={canManage}
-
-          onSeedGate={() => seedWorkflowGateMutation.mutate()}
-
-          isSeedingGate={seedWorkflowGateMutation.isPending}
-
-          onCheckGate={(gateKey, facts, emitFindings) =>
-
-            checkWorkflowGateMutation.mutate({ gateKey, facts, emitFindings })
-
-          }
-
-          isCheckingGate={checkWorkflowGateMutation.isPending}
-
-          lastGateCheck={lastGateCheck}
-
-          onCheckGateBatch={(gateKeys, facts, emitFindings) =>
-            checkWorkflowGateBatchMutation.mutate({ gateKeys, facts, emitFindings })
-          }
-
-          isCheckingGateBatch={checkWorkflowGateBatchMutation.isPending}
-
-          lastGateBatch={lastGateBatch}
-
-        />
-
-      ) : activeTab === 'evaluation' ? (
-
-        <RuleEvaluationPanel
-
-          rulePacks={rulePacksQuery.data ?? []}
-
-          factDefinitions={factDefinitionsQuery.data ?? []}
-
-          selectedRulePackId={selectedRulePackId}
-
-          onSelectRulePack={setSelectedRulePackId}
-
-          content={rulePackContentQuery.data?.content ?? null}
-
-          hasContent={rulePackContentQuery.data?.hasContent ?? false}
-
-          evaluationRuns={ruleEvaluationsQuery.data ?? []}
-
-          canManage={canManage}
-
-          onSaveContent={(content) => saveRuleContentMutation.mutate(content)}
-
-          isSavingContent={saveRuleContentMutation.isPending}
-
-          onSeedContent={() => seedRuleContentMutation.mutate()}
-
-          isSeedingContent={seedRuleContentMutation.isPending}
-
-          onEvaluate={(facts) => evaluateRulePackMutation.mutate(facts)}
-
-          isEvaluating={evaluateRulePackMutation.isPending}
-
-          lastEvaluation={lastEvaluation}
-
-          onEvaluateBatch={(rulePackKeys, facts, emitFindings) =>
-            evaluateRulePackBatchMutation.mutate({ rulePackKeys, facts, emitFindings })
-          }
-
-          isEvaluatingBatch={evaluateRulePackBatchMutation.isPending}
-
-          lastBatchEvaluation={lastBatchEvaluation}
-
-        />
-
-      ) : activeTab === 'sources' ? (
-
-        <FactSourcesPanel
-
-          factDefinitions={factDefinitionsQuery.data ?? []}
-
-          factSources={factSourcesQuery.data ?? []}
-
-          canManage={canManage}
-
-          onSeedSources={() => seedSourcesMutation.mutate()}
-
-          isSeeding={seedSourcesMutation.isPending}
-
-        />
-
-      ) : activeTab === 'mappings' ? (
-
-        <RegulatoryMappingsPanel
-
-          mappings={regulatoryMappingsQuery.data ?? []}
-
-          canManage={canManage}
-
-          onSeedMappings={() => seedMappingsMutation.mutate()}
-
-          isSeeding={seedMappingsMutation.isPending}
-
-        />
-
-      ) : activeTab === 'citations' ? (
-
-        <CitationFactCatalogPanel
-
-          citations={citationsQuery.data ?? []}
-
-          factDefinitions={factDefinitionsQuery.data ?? []}
-
-          factRequirements={factRequirementsQuery.data ?? []}
-
-          canManage={canManage}
-
-          onSeedCatalog={() => seedCatalogMutation.mutate()}
-
-          isSeeding={seedCatalogMutation.isPending}
-
-        />
-
-      ) : activeTab === 'vocabulary' ? (
-
-        <VocabularyPanel
-
-          types={typesQuery.data ?? []}
-
-          terms={termsQuery.data ?? []}
-
-          complianceKeys={complianceKeysQuery.data ?? []}
-
-          materialKeys={materialKeysQuery.data ?? []}
-
-          selectedTypeKey={selectedTypeKey}
-
-          onSelectType={setSelectedTypeKey}
-
-          canManage={canManage}
-
-          onCreateTerm={() => seedMutation.mutate()}
-
-          isCreatingTerm={seedMutation.isPending}
-
-        />
-
-      ) : (
-
-        <RegulatoryRegistryPanel
-
-          governingBodies={governingBodiesQuery.data ?? []}
-
-          jurisdictions={jurisdictionsQuery.data ?? []}
-
-          programs={programsQuery.data ?? []}
-
-          rulePacks={rulePacksQuery.data ?? []}
-
-          canManage={canManage}
-
-          onSeedRegistry={() => seedRegistryMutation.mutate()}
-
-          isSeeding={seedRegistryMutation.isPending}
-
-          onAdvanceRulePack={(rulePackId, status) => advanceRulePackMutation.mutate({ rulePackId, status })}
-
-          isAdvancingRulePack={advanceRulePackMutation.isPending}
-
-        />
-
-      )}
-
-    </div>
-
-  )
-
 }
 
-
+export type ComplianceCoreWorkspaceState = ReturnType<typeof useComplianceCoreWorkspaceState>
