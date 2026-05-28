@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using RoutArr.Api.Contracts;
 using RoutArr.Api.Data;
 using RoutArr.Api.Entities;
+using STLCompliance.Shared.Contracts;
 using STLCompliance.Shared.Operations.LoadTesting;
 
 namespace RoutArr.Api.Services;
@@ -72,5 +73,32 @@ public sealed class LoadTestJourneySeedService(
             TripCreated: true,
             created.ScheduledStartAt,
             created.ScheduledEndAt);
+    }
+
+    public async Task<LoadTestJourneyTripResponse> GetMirrorTripAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var title = StlRoutArrLoadTestJourneySeedCatalog.JourneyTripTitle;
+        var trip = await db.Trips
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Title == title,
+                cancellationToken);
+
+        if (trip is null)
+        {
+            throw new StlApiException(
+                "load_test_journey.trip_not_found",
+                "Load-test journey dispatch trip mirror has not been seeded for this tenant.",
+                404);
+        }
+
+        return new LoadTestJourneyTripResponse(
+            StlRoutArrLoadTestJourneySeedCatalog.SubjectPersonId,
+            trip.Id,
+            trip.Title,
+            trip.ScheduledStartAt,
+            trip.ScheduledEndAt);
     }
 }

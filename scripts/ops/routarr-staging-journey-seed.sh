@@ -51,6 +51,12 @@ routarr_token="$(printf '%s' "$redeem_response" | python -c "import json,sys; pr
 
 echo "Seeding RoutArr load-test journey dispatch trip mirror"
 seed_response="$(json_post "$ROUTARR_BASE_URL/api/load-test-journey/seed" "{}" "$routarr_token")"
+trip_id="$(printf '%s' "$seed_response" | python -c "import json,sys; print(json.load(sys.stdin)['tripId'])")"
+export STL_LOAD_JOURNEY_TRIP_ID="$trip_id"
+if [ -n "${GITHUB_ENV:-}" ]; then
+  echo "STL_LOAD_JOURNEY_TRIP_ID=$trip_id" >> "$GITHUB_ENV"
+fi
 printf '%s\n' "$seed_response"
 
 echo "RoutArr load-test journey dispatch trip mirror seed completed."
+echo "STL_LOAD_JOURNEY_TRIP_ID=$trip_id"

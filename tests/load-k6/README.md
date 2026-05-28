@@ -14,6 +14,8 @@ Product-owner SLO targets (V1) are the active baseline. See `docs/operations/PRO
 | `trainarr-qualification-check` | `scenarios/trainarr-qualification-check.js` | 10000ms / 4% / 10 |
 | `routarr-dispatch-workflow-gate` | `scenarios/routarr-dispatch-workflow-gate.js` | 12000ms / 4% / 8 |
 
+Set `STL_LOAD_JOURNEY_TRIP_ID` (from `routarr-staging-journey-seed`) to reuse the seeded dispatch trip mirror and skip per-iteration `POST /api/trips`.
+
 ## Prerequisites
 
 - [k6](https://k6.io/docs/get-started/installation/) on PATH

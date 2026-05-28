@@ -65,7 +65,7 @@ Compliance Core seeds `driver_qualification` rule pack content, `driver_license_
 
 TrainArr seeds an issued `hazmat_endorsement` qualification mirror for the demo subject person (`StlLoadTestJourneyDefaults.SubjectPersonId`) so the qualification-check journey returns a local **allow** outcome instead of warn. See `StlTrainArrLoadTestJourneySeedCatalog`.
 
-RoutArr seeds a planned dispatch trip mirror (`Load Test Journey Dispatch Trip`) for the same subject person so staging has a stable trip fixture before the `routarr-dispatch-workflow-gate` soak. See `StlRoutArrLoadTestJourneySeedCatalog`.
+RoutArr seeds a planned dispatch trip mirror (`Load Test Journey Dispatch Trip`) for the same subject person so staging has a stable trip fixture before the `routarr-dispatch-workflow-gate` soak. The seed script sets `STL_LOAD_JOURNEY_TRIP_ID` (and `GITHUB_ENV` in CI) so k6 reuses that trip instead of creating one per iteration. See `StlRoutArrLoadTestJourneySeedCatalog`.
 
 ## CI schedule
 

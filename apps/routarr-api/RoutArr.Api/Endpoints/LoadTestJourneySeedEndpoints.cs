@@ -25,5 +25,20 @@ public static class LoadTestJourneySeedEndpoints
         .WithTags("LoadTestJourney")
         .RequireAuthorization()
         .WithName("SeedRoutArrLoadTestJourney");
+
+        app.MapGet("/api/load-test-journey/trip", async (
+            RoutArrAuthorizationService authorization,
+            LoadTestJourneySeedService seedService,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTripsRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var result = await seedService.GetMirrorTripAsync(tenantId, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithTags("LoadTestJourney")
+        .RequireAuthorization()
+        .WithName("GetRoutArrLoadTestJourneyTrip");
     }
 }

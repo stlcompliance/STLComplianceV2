@@ -84,6 +84,7 @@ public sealed class StlLoadTestJourneyDefaultsTests
         Assert.Equal("22222222-2222-2222-2222-222222222201", StlLoadTestJourneyDefaults.SubjectPersonId);
         Assert.Equal("hazmat_endorsement", StlLoadTestJourneyDefaults.QualificationKey);
         Assert.Equal("driver_qualification", StlLoadTestJourneyDefaults.RulePackKey);
+        Assert.Equal("STL_LOAD_JOURNEY_TRIP_ID", StlLoadTestJourneyDefaults.JourneyTripIdEnvVar);
     }
 }
 

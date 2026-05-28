@@ -12,4 +12,6 @@ public static class StlRoutArrLoadTestJourneySeedCatalog
         "Idempotent load-test journey trip mirror for k6 dispatch workflow gate checks.";
 
     public static Guid SubjectPersonId => Guid.Parse(StlLoadTestJourneyDefaults.SubjectPersonId);
+
+    public static string JourneyTripIdEnvVar => StlLoadTestJourneyDefaults.JourneyTripIdEnvVar;
 }

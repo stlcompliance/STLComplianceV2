@@ -690,6 +690,19 @@
         }
       }
     },
+    "/api/load-test-journey/trip": {
+      "get": {
+        "tags": [
+          "LoadTestJourney"
+        ],
+        "operationId": "GetRoutArrLoadTestJourneyTrip",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/me": {
       "get": {
         "tags": [

@@ -36,6 +36,19 @@ export function runQualificationCheck(trainarrBaseUrl, accessToken, journeyDefau
   return response;
 }
 
+export function resolveJourneyTripId(
+  routarrBaseUrl,
+  accessToken,
+  journeyDefaults,
+  titleSuffix = '',
+) {
+  if (journeyDefaults?.journeyTripId) {
+    return journeyDefaults.journeyTripId;
+  }
+
+  return createTrip(routarrBaseUrl, accessToken, titleSuffix);
+}
+
 export function createTrip(routarrBaseUrl, accessToken, titleSuffix = '') {
   const now = Date.now();
   const scheduledStartAt = new Date(now + 2 * 60 * 60 * 1000).toISOString();

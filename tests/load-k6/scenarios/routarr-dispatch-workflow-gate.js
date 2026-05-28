@@ -10,7 +10,7 @@ import {
   loadScenarioOptions,
 } from '../lib/stl-config.js';
 import { bootstrapProductSession } from '../lib/stl-auth.js';
-import { createTrip, runDispatchWorkflowGateCheck } from '../lib/stl-journey.js';
+import { resolveJourneyTripId, runDispatchWorkflowGateCheck } from '../lib/stl-journey.js';
 
 const nexarrBaseUrl = apiEndpoints.find((endpoint) => endpoint.key === 'nexarr').url;
 const routarrBaseUrl = apiEndpoints.find((endpoint) => endpoint.key === 'routarr').url;
@@ -40,7 +40,12 @@ export default function () {
     return;
   }
 
-  const tripId = createTrip(routarrBaseUrl, routarrToken, `${__VU}-${__ITER}`);
+  const tripId = resolveJourneyTripId(
+    routarrBaseUrl,
+    routarrToken,
+    journeyDefaults,
+    `${__VU}-${__ITER}`,
+  );
   if (tripId) {
     runDispatchWorkflowGateCheck(
       routarrBaseUrl,

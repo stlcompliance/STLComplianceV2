@@ -214,6 +214,8 @@
 
 | 121 | StaffArr export delivery notification hooks (`PersonExportDeliveryNotificationService`, webhook URL on schedule, success/failure HTTPS hooks, notification audit + list API, `PersonExportPanel` UI, tests, docs) | M4/M12 (partial) | Complete | `193620a` |
 
-## Next slice (Worker 122)
+| 122 | k6 optional `STL_LOAD_JOURNEY_TRIP_ID` from RoutArr seed (`resolveJourneyTripId`, `GET /api/load-test-journey/trip`, seed scripts export env, staging soak catalog, tests, docs) | M13 (partial) | Complete | `pending` |
 
-Recommended: **k6 optional `STL_LOAD_JOURNEY_TRIP_ID` from RoutArr seed**, or **TrainArr notification settings foundations**.
+## Next slice (Worker 123)
+
+Recommended: **TrainArr notification settings foundations**, or **Playwright shell tenant chrome after handoff**.

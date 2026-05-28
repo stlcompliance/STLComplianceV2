@@ -65,5 +65,11 @@ $seedResponse = Invoke-RestMethod -Method Post -Uri "$RoutArrBaseUrl/api/load-te
     -Headers @{ Authorization = "Bearer $($redeemResponse.accessToken)" } `
     -Body "{}"
 
+$env:STL_LOAD_JOURNEY_TRIP_ID = $seedResponse.tripId
+if ($env:GITHUB_ENV) {
+    Add-Content -Path $env:GITHUB_ENV -Value "STL_LOAD_JOURNEY_TRIP_ID=$($seedResponse.tripId)"
+}
+
 $seedResponse | ConvertTo-Json -Depth 5
 Write-Host "RoutArr load-test journey dispatch trip mirror seed completed."
+Write-Host "STL_LOAD_JOURNEY_TRIP_ID=$($seedResponse.tripId)"

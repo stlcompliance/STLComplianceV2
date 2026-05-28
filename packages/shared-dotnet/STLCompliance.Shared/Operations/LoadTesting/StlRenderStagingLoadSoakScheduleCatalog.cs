@@ -24,6 +24,7 @@ public static class StlRenderStagingLoadSoakScheduleCatalog
         StlLoadTestJourneyDefaults.SubjectPersonIdEnvVar,
         StlLoadTestJourneyDefaults.QualificationKeyEnvVar,
         StlLoadTestJourneyDefaults.RulePackKeyEnvVar,
+        StlLoadTestJourneyDefaults.JourneyTripIdEnvVar,
     ];
 
     public static IReadOnlyList<string> GetMissingStagingApiUrlEnvironmentVariables()

@@ -26,11 +26,13 @@ export function loadDemoCredentials() {
 }
 
 export function loadJourneyDefaults() {
+  const journeyTripId = (__ENV.STL_LOAD_JOURNEY_TRIP_ID || '').trim();
   return {
     subjectPersonId:
       __ENV.STL_LOAD_SUBJECT_PERSON_ID || '22222222-2222-2222-2222-222222222201',
     qualificationKey: __ENV.STL_LOAD_QUALIFICATION_KEY || 'hazmat_endorsement',
     rulePackKey: __ENV.STL_LOAD_RULE_PACK_KEY || 'driver_qualification',
+    journeyTripId: journeyTripId.length > 0 ? journeyTripId : null,
   };
 }
 

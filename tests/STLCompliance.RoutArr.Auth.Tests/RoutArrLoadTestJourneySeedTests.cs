@@ -92,6 +92,32 @@ public sealed class RoutArrLoadTestJourneySeedTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Load_test_journey_trip_get_returns_seeded_mirror_trip_id()
+    {
+        var adminToken = CreateRoutArrAccessToken(["routarr"], tenantRoleKey: "routarr_admin");
+        var seedResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Post, StlRoutArrLoadTestJourneySeedCatalog.SeedEndpointPath, adminToken));
+        seedResponse.EnsureSuccessStatusCode();
+        var seeded = (await seedResponse.Content.ReadFromJsonAsync<LoadTestJourneySeedResponse>())!;
+
+        var getResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/load-test-journey/trip", adminToken));
+        getResponse.EnsureSuccessStatusCode();
+        var mirror = (await getResponse.Content.ReadFromJsonAsync<LoadTestJourneyTripResponse>())!;
+        Assert.Equal(seeded.TripId, mirror.TripId);
+        Assert.Equal(StlRoutArrLoadTestJourneySeedCatalog.JourneyTripTitle, mirror.TripTitle);
+    }
+
+    [Fact]
+    public async Task Load_test_journey_trip_get_returns_not_found_before_seed()
+    {
+        var adminToken = CreateRoutArrAccessToken(["routarr"], tenantRoleKey: "routarr_admin");
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/load-test-journey/trip", adminToken));
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
     private string CreateRoutArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_admin",

@@ -48,6 +48,15 @@ public sealed class StlRenderStagingLoadTestSupportTests
         Assert.Equal(StlLoadTestJourneyDefaults.SubjectPersonId, StlRoutArrLoadTestJourneySeedCatalog.SubjectPersonId.ToString());
         Assert.Equal("/api/load-test-journey/seed", StlRoutArrLoadTestJourneySeedCatalog.SeedEndpointPath);
         Assert.Equal("Load Test Journey Dispatch Trip", StlRoutArrLoadTestJourneySeedCatalog.JourneyTripTitle);
+        Assert.Equal(StlLoadTestJourneyDefaults.JourneyTripIdEnvVar, StlRoutArrLoadTestJourneySeedCatalog.JourneyTripIdEnvVar);
+    }
+
+    [Fact]
+    public void Schedule_catalog_lists_optional_journey_trip_id_env_var()
+    {
+        Assert.Contains(
+            StlLoadTestJourneyDefaults.JourneyTripIdEnvVar,
+            StlRenderStagingLoadSoakScheduleCatalog.OptionalCredentialEnvironmentVariables);
     }
 
     [Fact]

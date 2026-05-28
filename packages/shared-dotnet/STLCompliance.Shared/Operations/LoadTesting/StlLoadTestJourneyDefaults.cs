@@ -12,4 +12,5 @@ public static class StlLoadTestJourneyDefaults
     public const string SubjectPersonIdEnvVar = "STL_LOAD_SUBJECT_PERSON_ID";
     public const string QualificationKeyEnvVar = "STL_LOAD_QUALIFICATION_KEY";
     public const string RulePackKeyEnvVar = "STL_LOAD_RULE_PACK_KEY";
+    public const string JourneyTripIdEnvVar = "STL_LOAD_JOURNEY_TRIP_ID";
 }
