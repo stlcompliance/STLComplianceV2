@@ -212,7 +212,7 @@
 
 | 120 | RoutArr staging trip mirror seed for dispatch gate k6 journeys (`LoadTestJourneySeedService`, `POST /api/load-test-journey/seed`, planned trip mirror for demo subject, operator scripts, load-staging pre-step, tests, docs) | M9/M13 (partial) | Complete | `6a2cd3f` |
 
-| 121 | StaffArr export delivery notification hooks (`PersonExportDeliveryNotificationService`, webhook URL on schedule, success/failure HTTPS hooks, notification audit + list API, `PersonExportPanel` UI, tests, docs) | M4/M12 (partial) | Complete | `pending` |
+| 121 | StaffArr export delivery notification hooks (`PersonExportDeliveryNotificationService`, webhook URL on schedule, success/failure HTTPS hooks, notification audit + list API, `PersonExportPanel` UI, tests, docs) | M4/M12 (partial) | Complete | `193620a` |
 
 ## Next slice (Worker 122)
 

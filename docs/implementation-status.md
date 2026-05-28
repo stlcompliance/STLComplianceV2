@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 121 | StaffArr export delivery notification hooks | Complete | `pending` |
+| 121 | StaffArr export delivery notification hooks | Complete | `193620a` |
 
 ## Program summary
 
