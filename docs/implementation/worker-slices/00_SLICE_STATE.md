@@ -302,7 +302,7 @@
 
 | 165 | TrainArr training audit package (`AuditPackageService`, `/api/audit-packages` manifest + ZIP/JSON export, `trainarr.audit.export` auth, trainarr-frontend `AuditPackageExportPanel`, integration + frontend tests, docs) | M12 (partial) | Complete | `55bc9e1` |
 
-| 166 | TrainArr integration settings (`trainarr_tenant_integration_settings`, GET/PUT `/api/integration-settings` + probes, enforcement on StaffArr/Compliance Core/RoutArr paths, `IntegrationSettingsPanel`, integration + frontend tests, docs) | M6 (partial) | Complete | `a963b30` |
+| 166 | TrainArr integration settings (`trainarr_tenant_integration_settings`, GET/PUT `/api/integration-settings` + probes, enforcement on StaffArr/Compliance Core/RoutArr paths, `IntegrationSettingsPanel`, integration + frontend tests, docs) | M6 (partial) | Complete | `ea3e198` |
 
 ## Next slice (Worker 167)
 
