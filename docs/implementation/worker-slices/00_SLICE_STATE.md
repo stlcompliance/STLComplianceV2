@@ -238,7 +238,7 @@
 
 | 133 | TrainArr field-inbox deep links (`deepLinkPath` + `deepLinkUrl` on field inbox items, `/assignments/{id}` + `/evidence` TrainArr routes, companion inbox prefers API URL, tests, docs) | M6/M13 (partial) | Complete | `68984fa` |
 
-| 134 | M13 Playwright deep-link E2E (`companion-field-inbox-trainarr-deep-link`, `product-trainarr-assignment-deep-link`, `StlE2ePlaywrightSpecCatalog`, companion preview 5181, `e2eApi` journey seed, `Category=E2e` catalog tests, docs) | M13 (partial) | Complete | `pending` |
+| 134 | M13 Playwright deep-link E2E (`companion-field-inbox-trainarr-deep-link`, `product-trainarr-assignment-deep-link`, `StlE2ePlaywrightSpecCatalog`, companion preview 5181, `e2eApi` journey seed, `Category=E2e` catalog tests, docs) | M13 (partial) | Complete | `4783cb9` |
 
 ## Next slice (Worker 135)
 
