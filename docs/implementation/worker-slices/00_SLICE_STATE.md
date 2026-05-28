@@ -316,6 +316,6 @@
 
 | 172 | MaintainArr asset status rollup worker (`maintainarr_tenant_asset_status_rollup_settings`, `maintainarr_asset_status_rollups`, `maintainarr_asset_status_scope_rollups`, `maintainarr_asset_status_rollup_runs`, internal pending/process-batch, `maintainarr.asset_status.rollup`, `MaintainArrAssetStatusRollupJob`, materialized-first asset readiness reads, `AssetStatusRollupSettingsPanel`, tests, docs) | M12 (partial) | Complete | `7d60d7b` |
 
-| 173 | MaintainArr maintenance history rollup worker (`maintainarr_tenant_maintenance_history_rollup_settings`, `maintainarr_maintenance_history_rollups`, `maintainarr_maintenance_history_events`, `maintainarr_maintenance_history_rollup_runs`, internal pending/process-batch, `maintainarr.maintenance_history.rollup`, `MaintainArrMaintenanceHistoryRollupJob`, materialized-first maintenance history reads + summary API, `MaintenanceHistoryRollupSettingsPanel`, tests, docs) | M12 (partial) | Complete | `64d53fd` |
+| 173 | MaintainArr maintenance history rollup worker (`maintainarr_tenant_maintenance_history_rollup_settings`, `maintainarr_maintenance_history_rollups`, `maintainarr_maintenance_history_events`, `maintainarr_maintenance_history_rollup_runs`, internal pending/process-batch, `maintainarr.maintenance_history.rollup`, `MaintainArrMaintenanceHistoryRollupJob`, materialized-first maintenance history reads + summary API, `MaintenanceHistoryRollupSettingsPanel`, tests, docs) | M12 (partial) | Complete | `d7d9328` |
 
 ## Next slice (Worker 174)
