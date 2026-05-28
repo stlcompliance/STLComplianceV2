@@ -10,7 +10,7 @@ const maintainarrApiTarget = process.env.VITE_MAINTAINARR_PROXY_TARGET ?? 'http:
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
-    dedupe: ['react', 'react-dom', 'react-router-dom'],
+    dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
     alias: {
       '@stl/shared-ui': path.resolve(appRoot, '../../packages/shared-ui/src'),
     },

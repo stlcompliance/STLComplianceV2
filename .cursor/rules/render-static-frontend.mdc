@@ -28,11 +28,11 @@ After changing shared-ui shell classes, rebuild every product frontend and confi
 
 ## Vite: single React instance (product frontends)
 
-When aliasing `@stl/shared-ui` to source, add `resolve.dedupe` so shared-ui and the app share one `react` / `react-dom` / `react-router-dom`. Without it, authenticated shells crash at runtime (`Cannot read properties of null (reading 'useContext')`) and the page stays blank after handoff.
+When aliasing `@stl/shared-ui` to source, add `resolve.dedupe` so shared-ui and the app share one `react` / `react-dom` / `react-router-dom` / `@tanstack/react-query`. Without it, authenticated shells crash at runtime (`Cannot read properties of null (reading 'useContext')` or `No QueryClient set`) and the page stays blank after handoff.
 
 ```ts
 resolve: {
-  dedupe: ['react', 'react-dom', 'react-router-dom'],
+  dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
   alias: {
     '@stl/shared-ui': path.resolve(appRoot, '../../packages/shared-ui/src'),
   },
@@ -74,4 +74,5 @@ Applies to: `staffarr-frontend`, `trainarr-frontend`, `maintainarr-frontend`, `r
 | `npm ci` EUSAGE / lock out of sync | Missing or stale `package-lock.json` |
 | Unused import TS6133 in `*.test.tsx` | Strict `noUnusedLocals`; remove or use the import |
 | Blank page after launch; console `useContext` null | Missing `resolve.dedupe` for React when bundling aliased shared-ui |
+| Blank page; console `No QueryClient set` | Missing `resolve.dedupe` for `@tanstack/react-query` (shared-ui `useProductWorkspaceLaunch`) |
 | Horizontal product row, empty center, narrow main | Missing `@source` for `packages/shared-ui/src` in product `index.css` |
