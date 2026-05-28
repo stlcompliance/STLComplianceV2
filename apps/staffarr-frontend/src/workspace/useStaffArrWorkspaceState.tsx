@@ -61,6 +61,8 @@ export function useStaffArrWorkspaceState() {
     : null
 
   const session = loadSession()
+  const accessToken = session?.accessToken ?? ''
+  const [apiError] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
   const meQuery = useQuery({
@@ -491,48 +493,6 @@ export function useStaffArrWorkspaceState() {
     },
   })
 
-if (
-    peopleQuery.isError ||
-    orgUnitsQuery.isError ||
-    assignmentQuery.isError ||
-    managerChainQuery.isError ||
-    subordinatesQuery.isError ||
-    subordinateDetailQuery.isError
-    || permissionTemplatesQuery.isError
-    || roleTemplatesQuery.isError
-    || roleAssignmentsQuery.isError
-    || effectivePermissionsQuery.isError
-    || permissionHistoryQuery.isError
-    || certificationDefinitionsQuery.isError
-    || personCertificationsQuery.isError
-    || personReadinessQuery.isError
-  ) {
-    const directoryError =
-      peopleQuery.error ??
-      orgUnitsQuery.error ??
-      assignmentQuery.error ??
-      managerChainQuery.error ??
-      subordinatesQuery.error ??
-      subordinateDetailQuery.error ??
-      permissionTemplatesQuery.error ??
-      roleTemplatesQuery.error ??
-      roleAssignmentsQuery.error ??
-      effectivePermissionsQuery.error ??
-      permissionHistoryQuery.error ??
-      certificationDefinitionsQuery.error ??
-      personCertificationsQuery.error ??
-      personReadinessQuery.error
-    if (directoryError instanceof StaffArrApiError && (directoryError.status === 401 || directoryError.status === 403)) {
-      clearSession()
-    }
-
-    return (
-      <div className="rounded-xl border border-red-800/60 bg-red-950/30 p-6 text-center">
-        <p className="text-sm text-red-200">Could not load people directory data.</p>
-      </div>
-    )
-  }
-
   const me = meQuery.data
   const people = peopleQuery.data ?? []
   const orgUnits = orgUnitsQuery.data ?? []
@@ -551,12 +511,12 @@ if (
   const personTimelineTotalCount = personTimelineQuery.data?.totalCount ?? 0
   const certificationDefinitions = certificationDefinitionsQuery.data ?? []
   const personCertifications = personCertificationsQuery.data ?? []
-  const canManageOrgUnits = canManageOrgHierarchy(me.tenantRoleKey, me.isPlatformAdmin)
+  const canManageOrgUnits = me ? canManageOrgHierarchy(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canManageHierarchy = canManageOrgUnits
-  const canOverridePersonReadiness = canOverrideReadiness(me.tenantRoleKey, me.isPlatformAdmin)
-  const canManagePersonIncidents = canManageIncidents(me.tenantRoleKey, me.isPlatformAdmin)
-  const canManagePeopleProfiles = canManagePeople(me.tenantRoleKey, me.isPlatformAdmin)
-  const canExportAudit = canExportAuditPackage(me.tenantRoleKey, me.isPlatformAdmin)
+  const canOverridePersonReadiness = me ? canOverrideReadiness(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canManagePersonIncidents = me ? canManageIncidents(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canManagePeopleProfiles = me ? canManagePeople(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canExportAudit = me ? canExportAuditPackage(me.tenantRoleKey, me.isPlatformAdmin) : false
   const personIncidents = personIncidentsQuery.data ?? []
   const orgMutationError =
     createOrgUnitMutation.error ?? updateOrgUnitMutation.error ?? updateOrgUnitStatusMutation.error ?? null
@@ -578,10 +538,6 @@ if (
     createIncidentMutation.error ?? routeIncidentToTrainarrMutation.error ?? null
   const personProfileMutationError =
     updatePersonMutation.error ?? updateEmploymentStatusMutation.error ?? null
-
-  const ready = Boolean(session && meQuery.data)
-  const me = meQuery.data
-  const loadingMessage = 'Loading workforce workspace…'
 
   return {
     handoffRedirect,

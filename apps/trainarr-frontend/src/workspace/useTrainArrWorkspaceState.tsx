@@ -24,18 +24,13 @@ import {
   getTrainingProgramCitations,
   attachTrainingDefinitionCitation,
   attachTrainingProgramCitation,
-  removeTrainingDefinitionCitation,
-  removeTrainingProgramCitation,
   getTrainingDefinitionRulePackRequirements,
   getTrainingProgramRulePackRequirements,
   upsertTrainingDefinitionRulePackRequirement,
   upsertTrainingProgramRulePackRequirement,
-  removeTrainingDefinitionRulePackRequirement,
-  removeTrainingProgramRulePackRequirement,
   assessRulePackImpact,
 } from '../api/client'
 import {
-  canCompleteAssignment,
   canManageAssignments,
   canManagePrograms,
   canAssessRulePackImpact,
@@ -48,16 +43,6 @@ import {
   canUploadEvidence,
   loadSession,
 } from '../auth/sessionStorage'
-import { AssignmentsPanel } from '../components/AssignmentsPanel'
-import { EvidenceCapturePanel } from '../components/EvidenceCapturePanel'
-import { ProgramBuilderPanel } from '../components/ProgramBuilderPanel'
-import { SignoffEvaluationPanel } from '../components/SignoffEvaluationPanel'
-import { RemediationAssignmentPanel } from '../components/RemediationAssignmentPanel'
-import { BatchQualificationCheckPanel } from '../components/BatchQualificationCheckPanel'
-import { CitationAttachmentPanel } from '../components/CitationAttachmentPanel'
-import { RulePackRequirementPanel } from '../components/RulePackRequirementPanel'
-import { RulePackImpactPanel } from '../components/RulePackImpactPanel'
-import { NotificationSettingsPanel } from '../components/NotificationSettingsPanel'
 
 const personIdPattern =
   /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi
@@ -86,6 +71,8 @@ export function useTrainArrWorkspaceState() {
     : null
 
   const session = loadSession()
+  const accessToken = session?.accessToken ?? ''
+  const [apiError] = useState<string | null>(null)
   const queryClient = useQueryClient()
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null)
   const [selectedRemediationId, setSelectedRemediationId] = useState<string | null>(null)
@@ -491,15 +478,16 @@ export function useTrainArrWorkspaceState() {
   })
 
 const me = meQuery.data
-  const canManage = canManageAssignments(me.tenantRoleKey, me.isPlatformAdmin)
-  const canBatchQualification = canRunBatchQualificationChecks(me.tenantRoleKey, me.isPlatformAdmin)
-  const canQualifications = canManageQualifications(me.tenantRoleKey, me.isPlatformAdmin)
-  const canPrograms = canManagePrograms(me.tenantRoleKey, me.isPlatformAdmin)
-  const canImpact = canAssessRulePackImpact(me.tenantRoleKey, me.isPlatformAdmin)
-  const canNotifications = canManageNotificationSettings(me.tenantRoleKey, me.isPlatformAdmin)
+  const canManage = me ? canManageAssignments(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canBatchQualification = me ? canRunBatchQualificationChecks(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canQualifications = me ? canManageQualifications(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canPrograms = me ? canManagePrograms(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canImpact = me ? canAssessRulePackImpact(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canNotifications = me ? canManageNotificationSettings(me.tenantRoleKey, me.isPlatformAdmin) : false
   const assignments = assignmentsQuery.data ?? []
   const selectedAssignment = assignmentDetailQuery.data
   const canUploadForAssignment =
+    me &&
     selectedAssignment &&
     canUploadEvidence(
       me.tenantRoleKey,
@@ -508,8 +496,9 @@ const me = meQuery.data
       me.personId,
     )
 
-  const canEvaluate = canSubmitEvaluation(me.tenantRoleKey, me.isPlatformAdmin)
+  const canEvaluate = me ? canSubmitEvaluation(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canTraineeSign =
+    me &&
     selectedAssignment &&
     canSubmitTraineeSignoff(
       me.tenantRoleKey,
@@ -517,17 +506,13 @@ const me = meQuery.data
       selectedAssignment.staffarrPersonId,
       me.personId,
     )
-  const canTrainerSign = canSubmitTrainerSignoff(me.tenantRoleKey, me.isPlatformAdmin)
+  const canTrainerSign = me ? canSubmitTrainerSignoff(me.tenantRoleKey, me.isPlatformAdmin) : false
 
   const toggleProgramDefinition = (definitionId: string) => {
     setSelectedProgramDefinitionIds((current) =>
       current.includes(definitionId) ? current.filter((id) => id !== definitionId) : [...current, definitionId],
     )
   }
-
-  const ready = Boolean(session && meQuery.data)
-  const me = meQuery.data
-  const loadingMessage = 'Loading training workspace…'
 
   return {
     handoffRedirect,

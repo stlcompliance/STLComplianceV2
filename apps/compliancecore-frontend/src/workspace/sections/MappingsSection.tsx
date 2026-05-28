@@ -1,57 +1,27 @@
+import { CitationFactCatalogPanel } from '../../components/CitationFactCatalogPanel'
+import { RegulatoryMappingsPanel } from '../../components/RegulatoryMappingsPanel'
 import type { ComplianceCoreWorkspaceState } from '../useComplianceCoreWorkspaceState'
 
 type Props = { state: ComplianceCoreWorkspaceState }
 
 export function MappingsSection({ state }: Props) {
-  const {
-    citations,
-    citationsQuery,
-    data,
-    factDefinitions,
-    factDefinitionsQuery,
-    factRequirements,
-    factRequirementsQuery,
-    isPending,
-    isSeeding,
-    mappings,
-    mutate,
-    onSeedCatalog,
-    onSeedMappings,
-    regulatoryMappingsQuery,
-    seedCatalogMutation,
-    seedMappingsMutation,
-  } = state
+  const s = state
   return (
     <>
-      <>
-              <RegulatoryMappingsPanel
-      
-                mappings={regulatoryMappingsQuery.data ?? []}
-      
-                canManage={canManage}
-      
-                onSeedMappings={() => seedMappingsMutation.mutate()}
-      
-                isSeeding={seedMappingsMutation.isPending}
-      
-              />
-      
-              <CitationFactCatalogPanel
-      
-                citations={citationsQuery.data ?? []}
-      
-                factDefinitions={factDefinitionsQuery.data ?? []}
-      
-                factRequirements={factRequirementsQuery.data ?? []}
-      
-                canManage={canManage}
-      
-                onSeedCatalog={() => seedCatalogMutation.mutate()}
-      
-                isSeeding={seedCatalogMutation.isPending}
-      
-              />
-              </>
+      <RegulatoryMappingsPanel
+        mappings={s.regulatoryMappingsQuery.data ?? []}
+        canManage={s.canManage}
+        onSeedMappings={() => s.seedMappingsMutation.mutate()}
+        isSeeding={s.seedMappingsMutation.isPending}
+      />
+      <CitationFactCatalogPanel
+        citations={s.citationsQuery.data ?? []}
+        factDefinitions={s.factDefinitionsQuery.data ?? []}
+        factRequirements={s.factRequirementsQuery.data ?? []}
+        canManage={s.canManage}
+        onSeedCatalog={() => s.seedCatalogMutation.mutate()}
+        isSeeding={s.seedCatalogMutation.isPending}
+      />
     </>
   )
 }

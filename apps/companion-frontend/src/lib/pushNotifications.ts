@@ -86,7 +86,7 @@ export async function syncCompanionPushSubscription(accessToken: string): Promis
       existing ??
       (await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey,
+        applicationServerKey: applicationServerKey as BufferSource,
       }))
 
     const json = subscription.toJSON()

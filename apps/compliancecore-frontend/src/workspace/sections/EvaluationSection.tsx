@@ -1,85 +1,32 @@
+import { RuleEvaluationPanel } from '../../components/RuleEvaluationPanel'
 import type { ComplianceCoreWorkspaceState } from '../useComplianceCoreWorkspaceState'
 
 type Props = { state: ComplianceCoreWorkspaceState }
 
 export function EvaluationSection({ state }: Props) {
-  const {
-    content,
-    data,
-    emitFindings,
-    evaluateRulePackBatchMutation,
-    evaluateRulePackMutation,
-    evaluationRuns,
-    factDefinitions,
-    factDefinitionsQuery,
-    facts,
-    hasContent,
-    isEvaluating,
-    isEvaluatingBatch,
-    isPending,
-    isSavingContent,
-    isSeedingContent,
-    lastBatchEvaluation,
-    lastEvaluation,
-    mutate,
-    onEvaluate,
-    onEvaluateBatch,
-    onSaveContent,
-    onSeedContent,
-    onSelectRulePack,
-    ruleEvaluationsQuery,
-    rulePackContentQuery,
-    rulePackKeys,
-    rulePacks,
-    rulePacksQuery,
-    saveRuleContentMutation,
-    seedRuleContentMutation,
-    selectedRulePackId,
-    setSelectedRulePackId,
-  } = state
+  const s = state
   return (
-    <>
-      <RuleEvaluationPanel
-      
-                rulePacks={rulePacksQuery.data ?? []}
-      
-                factDefinitions={factDefinitionsQuery.data ?? []}
-      
-                selectedRulePackId={selectedRulePackId}
-      
-                onSelectRulePack={setSelectedRulePackId}
-      
-                content={rulePackContentQuery.data?.content ?? null}
-      
-                hasContent={rulePackContentQuery.data?.hasContent ?? false}
-      
-                evaluationRuns={ruleEvaluationsQuery.data ?? []}
-      
-                canManage={canManage}
-      
-                onSaveContent={(content) => saveRuleContentMutation.mutate(content)}
-      
-                isSavingContent={saveRuleContentMutation.isPending}
-      
-                onSeedContent={() => seedRuleContentMutation.mutate()}
-      
-                isSeedingContent={seedRuleContentMutation.isPending}
-      
-                onEvaluate={(facts) => evaluateRulePackMutation.mutate(facts)}
-      
-                isEvaluating={evaluateRulePackMutation.isPending}
-      
-                lastEvaluation={lastEvaluation}
-      
-                onEvaluateBatch={(rulePackKeys, facts, emitFindings) =>
-                  evaluateRulePackBatchMutation.mutate({ rulePackKeys, facts, emitFindings })
-                }
-      
-                isEvaluatingBatch={evaluateRulePackBatchMutation.isPending}
-      
-                lastBatchEvaluation={lastBatchEvaluation}
-      
-              />
-    </>
+    <RuleEvaluationPanel
+      rulePacks={s.rulePacksQuery.data ?? []}
+      factDefinitions={s.factDefinitionsQuery.data ?? []}
+      selectedRulePackId={s.selectedRulePackId}
+      onSelectRulePack={s.setSelectedRulePackId}
+      content={s.rulePackContentQuery.data?.content ?? null}
+      hasContent={s.rulePackContentQuery.data?.hasContent ?? false}
+      evaluationRuns={s.ruleEvaluationsQuery.data ?? []}
+      canManage={s.canManage}
+      onSaveContent={(content) => s.saveRuleContentMutation.mutate(content)}
+      isSavingContent={s.saveRuleContentMutation.isPending}
+      onSeedContent={() => s.seedRuleContentMutation.mutate()}
+      isSeedingContent={s.seedRuleContentMutation.isPending}
+      onEvaluate={(facts) => s.evaluateRulePackMutation.mutate(facts)}
+      isEvaluating={s.evaluateRulePackMutation.isPending}
+      lastEvaluation={s.lastEvaluation}
+      onEvaluateBatch={(rulePackKeys, facts, emitFindings) =>
+        s.evaluateRulePackBatchMutation.mutate({ rulePackKeys, facts, emitFindings })
+      }
+      isEvaluatingBatch={s.evaluateRulePackBatchMutation.isPending}
+      lastBatchEvaluation={s.lastBatchEvaluation}
+    />
   )
 }

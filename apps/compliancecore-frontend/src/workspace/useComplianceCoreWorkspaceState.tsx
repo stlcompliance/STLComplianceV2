@@ -86,22 +86,6 @@ import type {
 
 import { canExportAuditPackage, canManageVocabulary, loadSession } from '../auth/sessionStorage'
 
-import { CitationFactCatalogPanel } from '../components/CitationFactCatalogPanel'
-
-import { FactSourcesPanel } from '../components/FactSourcesPanel'
-
-import { RegulatoryMappingsPanel } from '../components/RegulatoryMappingsPanel'
-
-import { RegulatoryRegistryPanel } from '../components/RegulatoryRegistryPanel'
-
-import { AuditPackageExportPanel } from '../components/AuditPackageExportPanel'
-import { CsvImportExportPanel } from '../components/CsvImportExportPanel'
-import { FindingsWorkflowGatesPanel } from '../components/FindingsWorkflowGatesPanel'
-import { OperatorDashboardPanel } from '../components/OperatorDashboardPanel'
-import { RuleEvaluationPanel } from '../components/RuleEvaluationPanel'
-
-import { VocabularyPanel } from '../components/VocabularyPanel'
-
 export function useComplianceCoreWorkspaceState() {
 
 
@@ -114,6 +98,7 @@ export function useComplianceCoreWorkspaceState() {
 
   const session = loadSession()
   const accessToken = session?.accessToken ?? ''
+  const [apiError] = useState<string | null>(null)
 
   const queryClient = useQueryClient()
 
@@ -1141,7 +1126,9 @@ export function useComplianceCoreWorkspaceState() {
     apiError,
     searchParams,
     selectedTypeKey,
+    setSelectedTypeKey,
     selectedRulePackId,
+    setSelectedRulePackId,
     lastEvaluation,
     lastBatchEvaluation,
     lastGateCheck,

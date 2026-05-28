@@ -2,11 +2,11 @@ import { PageHeader } from '@stl/shared-ui'
 import type { ReactNode } from 'react'
 import { workspaceSectionHeaders } from '../lib/workspaceSection'
 import type { WorkspaceSection } from '../lib/workspaceSection'
-import type { MeResponse } from '../api/types'
+import type { StaffArrMeResponse } from '../api/types'
 
 type Props = {
   section: WorkspaceSection
-  me: MeResponse
+  me: StaffArrMeResponse
   apiError: string | null
   children: ReactNode
 }

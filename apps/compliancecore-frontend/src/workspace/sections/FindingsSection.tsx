@@ -1,78 +1,30 @@
+import { FindingsWorkflowGatesPanel } from '../../components/FindingsWorkflowGatesPanel'
 import type { ComplianceCoreWorkspaceState } from '../useComplianceCoreWorkspaceState'
 
 type Props = { state: ComplianceCoreWorkspaceState }
 
 export function FindingsSection({ state }: Props) {
-  const {
-    checkWorkflowGateBatchMutation,
-    checkWorkflowGateMutation,
-    content,
-    data,
-    emitFindings,
-    factDefinitions,
-    factDefinitionsQuery,
-    facts,
-    findings,
-    findingsQuery,
-    gateKey,
-    gateKeys,
-    isCheckingGate,
-    isCheckingGateBatch,
-    isPending,
-    isSeedingGate,
-    lastGateBatch,
-    lastGateCheck,
-    mutate,
-    onCheckGate,
-    onCheckGateBatch,
-    onSeedGate,
-    rulePackContent,
-    rulePackContentQuery,
-    rulePacks,
-    rulePacksQuery,
-    seedWorkflowGateMutation,
-    workflowGates,
-    workflowGatesQuery,
-  } = state
+  const s = state
   return (
-    <>
-      <FindingsWorkflowGatesPanel
-      
-                rulePacks={rulePacksQuery.data ?? []}
-      
-                factDefinitions={factDefinitionsQuery.data ?? []}
-      
-                rulePackContent={rulePackContentQuery.data?.content ?? null}
-      
-                findings={findingsQuery.data ?? []}
-      
-                workflowGates={workflowGatesQuery.data ?? []}
-      
-                canManage={canManage}
-      
-                onSeedGate={() => seedWorkflowGateMutation.mutate()}
-      
-                isSeedingGate={seedWorkflowGateMutation.isPending}
-      
-                onCheckGate={(gateKey, facts, emitFindings) =>
-      
-                  checkWorkflowGateMutation.mutate({ gateKey, facts, emitFindings })
-      
-                }
-      
-                isCheckingGate={checkWorkflowGateMutation.isPending}
-      
-                lastGateCheck={lastGateCheck}
-      
-                onCheckGateBatch={(gateKeys, facts, emitFindings) =>
-                  checkWorkflowGateBatchMutation.mutate({ gateKeys, facts, emitFindings })
-                }
-      
-                isCheckingGateBatch={checkWorkflowGateBatchMutation.isPending}
-      
-                lastGateBatch={lastGateBatch}
-      
-              />
-    </>
+    <FindingsWorkflowGatesPanel
+      rulePacks={s.rulePacksQuery.data ?? []}
+      factDefinitions={s.factDefinitionsQuery.data ?? []}
+      rulePackContent={s.rulePackContentQuery.data?.content ?? null}
+      findings={s.findingsQuery.data ?? []}
+      workflowGates={s.workflowGatesQuery.data ?? []}
+      canManage={s.canManage}
+      onSeedGate={() => s.seedWorkflowGateMutation.mutate()}
+      isSeedingGate={s.seedWorkflowGateMutation.isPending}
+      onCheckGate={(gateKey, facts, emitFindings) =>
+        s.checkWorkflowGateMutation.mutate({ gateKey, facts, emitFindings })
+      }
+      isCheckingGate={s.checkWorkflowGateMutation.isPending}
+      lastGateCheck={s.lastGateCheck}
+      onCheckGateBatch={(gateKeys, facts, emitFindings) =>
+        s.checkWorkflowGateBatchMutation.mutate({ gateKeys, facts, emitFindings })
+      }
+      isCheckingGateBatch={s.checkWorkflowGateBatchMutation.isPending}
+      lastGateBatch={s.lastGateBatch}
+    />
   )
 }
