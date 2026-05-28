@@ -266,6 +266,8 @@ services:
           property: connectionString
       - key: Cors__MaintainArrFrontendOrigin
         value: https://maintainarr-frontend.onrender.com
+      - key: MaintainArr__FrontendBaseUrl
+        value: https://maintainarr-frontend.onrender.com
       - key: EvidenceStorage__RootPath
         value: /var/data/maintainarr-evidence
 
@@ -290,6 +292,8 @@ services:
           property: connectionString
       - key: Cors__RoutArrFrontendOrigin
         value: https://routarr-frontend.onrender.com
+      - key: RoutArr__FrontendBaseUrl
+        value: https://routarr-frontend.onrender.com
 
   - type: web
     name: supplyarr-api
@@ -311,6 +315,8 @@ services:
           name: supplyarr-db
           property: connectionString
       - key: Cors__SupplyArrFrontendOrigin
+        value: https://supplyarr-frontend.onrender.com
+      - key: SupplyArr__FrontendBaseUrl
         value: https://supplyarr-frontend.onrender.com
 
   - type: web

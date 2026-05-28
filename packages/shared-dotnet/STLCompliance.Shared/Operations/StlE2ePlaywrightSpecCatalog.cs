@@ -12,6 +12,8 @@ public static class StlE2ePlaywrightSpecCatalog
         "companion-field-inbox-trainarr-deep-link.spec.ts";
     public const string ProductTrainarrAssignmentDeepLinkSpec =
         "product-trainarr-assignment-deep-link.spec.ts";
+    public const string CompanionFieldInboxMaintainarrDeepLinkSpec =
+        "companion-field-inbox-operations-deep-links.spec.ts";
     public const string PlatformAdminAuditExportSmokeSpec =
         "platform-admin-audit-export-smoke.spec.ts";
 
@@ -19,6 +21,7 @@ public static class StlE2ePlaywrightSpecCatalog
     [
         CompanionFieldInboxTrainarrDeepLinkSpec,
         ProductTrainarrAssignmentDeepLinkSpec,
+        CompanionFieldInboxMaintainarrDeepLinkSpec,
     ];
 
     public static readonly IReadOnlyList<string> PlatformAdminSmokeSpecs = [PlatformAdminAuditExportSmokeSpec];

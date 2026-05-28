@@ -1,12 +1,12 @@
 # Implementation status (Arr ecosystem)
 
-**Last updated:** Worker 139 (2026-05-28)
+**Last updated:** Worker 140 (2026-05-28)
 
 ## Latest slice
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 139 | STLComplianceSite pricing narrative | Complete | `eafc0f6` |
+| 140 | M13 operations product deep-link E2E | Complete | `pending` |
 
 ## Program summary
 
@@ -16,8 +16,8 @@
 - Playwright: suite login + **six product handoff** smokes with per-frontend skip semantics
 - DR: nightly live restore drill validates **all seven** product PostgreSQL databases
 
-## Next recommended slice (Worker 140)
+## Next recommended slice (Worker 141)
 
-Per milestone matrix: **M13 product deep-link E2E** (MaintainArr/RoutArr/SupplyArr), **STLComplianceSite comparison content**, or **implementation maturity status** page. Worker 139 (pricing narrative) is complete on `main`.
+Per milestone matrix: **STLComplianceSite comparison content** or **implementation maturity status** page, or **k6 journey** extensions. Worker 140 (operations deep-link E2E) is complete on `main`.
 
 See `FINAL_IMPLEMENTATION_REPORT.md` for ship-gate checklist.

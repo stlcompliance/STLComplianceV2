@@ -5,8 +5,10 @@ using STLCompliance.Shared.Contracts;
 
 namespace SupplyArr.Api.Services;
 
-public sealed class FieldInboxService(SupplyArrDbContext db)
+public sealed class FieldInboxService(SupplyArrDbContext db, IConfiguration configuration)
 {
+    private readonly string? _frontendBaseUrl = configuration["SupplyArr:FrontendBaseUrl"]
+        ?? configuration["Cors:SupplyArrFrontendOrigin"];
     public async Task<FieldInboxResponse> GetAsync(
         Guid tenantId,
         Guid actorUserId,
@@ -28,17 +30,22 @@ public sealed class FieldInboxService(SupplyArrDbContext db)
             .Take(50)
             .ToListAsync(cancellationToken);
 
-        var items = receipts.Select(receipt => new FieldInboxTaskItem(
-            $"supplyarr:receiving:{receipt.Id:D}",
-            "supplyarr",
-            "receiving",
-            receipt.ReceiptKey,
-            receipt.PurchaseOrder?.OrderKey,
-            receipt.Status,
-            null,
-            null,
-            receipt.UpdatedAt,
-            $"/receiving/{receipt.Id:D}")).ToList();
+        var items = receipts.Select(receipt =>
+        {
+            var deepLinkPath = $"/receiving/{receipt.Id:D}";
+            return new FieldInboxTaskItem(
+                $"supplyarr:receiving:{receipt.Id:D}",
+                "supplyarr",
+                "receiving",
+                receipt.ReceiptKey,
+                receipt.PurchaseOrder?.OrderKey,
+                receipt.Status,
+                null,
+                null,
+                receipt.UpdatedAt,
+                deepLinkPath,
+                DeepLinkUrl: FieldInboxDeepLinkBuilder.BuildProductDeepLinkUrl(_frontendBaseUrl, deepLinkPath));
+        }).ToList();
 
         return FieldInboxRules.BuildProductResponse(items);
     }

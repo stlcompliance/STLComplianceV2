@@ -12,12 +12,43 @@ function trainarrApiUrl(): string {
 }
 
 function trainarrFrontendUrl(): string {
-  const trainarr = handoffProductFrontends.find((p) => p.productKey === 'trainarr')
-  return trainarr?.baseUrl ?? 'http://localhost:5176'
+  return productFrontendUrl('trainarr')
+}
+
+function maintainarrApiUrl(): string {
+  return process.env.E2E_MAINTAINARR_API_URL ?? 'http://localhost:5104'
+}
+
+function routarrApiUrl(): string {
+  return process.env.E2E_ROUTARR_API_URL ?? 'http://localhost:5105'
+}
+
+function supplyarrApiUrl(): string {
+  return process.env.E2E_SUPPLYARR_API_URL ?? 'http://localhost:5106'
+}
+
+function productFrontendUrl(productKey: string): string {
+  const frontend = handoffProductFrontends.find((p) => p.productKey === productKey)
+  if (!frontend) {
+    throw new Error(`Unknown product frontend key: ${productKey}`)
+  }
+  return frontend.baseUrl
 }
 
 export type TrainArrJourneyFixture = {
   trainingAssignmentId: string
+}
+
+export type MaintainArrFieldInboxFixture = {
+  workOrderId: string
+}
+
+export type RoutArrFieldInboxFixture = {
+  tripId: string
+}
+
+export type SupplyArrFieldInboxFixture = {
+  receivingReceiptId: string
 }
 
 async function readJson<T>(response: Response): Promise<T> {
@@ -60,13 +91,41 @@ export async function createHandoff(
 }
 
 export async function redeemTrainArrHandoff(handoffCode: string): Promise<string> {
-  const response = await fetch(`${trainarrApiUrl()}/api/auth/handoff/redeem`, {
+  return redeemProductHandoff('trainarr', handoffCode)
+}
+
+async function redeemProductHandoff(productKey: string, handoffCode: string): Promise<string> {
+  const apiUrl =
+    productKey === 'trainarr'
+      ? trainarrApiUrl()
+      : productKey === 'maintainarr'
+        ? maintainarrApiUrl()
+        : productKey === 'routarr'
+          ? routarrApiUrl()
+          : productKey === 'supplyarr'
+            ? supplyarrApiUrl()
+            : null
+  if (!apiUrl) {
+    throw new Error(`No API URL configured for product ${productKey}`)
+  }
+
+  const response = await fetch(`${apiUrl}/api/auth/handoff/redeem`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ handoffCode }),
   })
   const payload = await readJson<{ accessToken: string }>(response)
   return payload.accessToken
+}
+
+async function redeemHandoffForProduct(productKey: string): Promise<string> {
+  const nexarrToken = await loginNexArr()
+  const handoffCode = await createHandoff(
+    nexarrToken,
+    productKey,
+    `${productFrontendUrl(productKey)}/launch`,
+  )
+  return redeemProductHandoff(productKey, handoffCode)
 }
 
 type TrainArrJourneySeedResponse = {
@@ -169,17 +228,231 @@ export async function processPlatformAuditPackageGenerationBatch(
 }
 
 export async function ensureTrainArrFieldInboxFixture(): Promise<TrainArrJourneyFixture> {
-  const nexarrToken = await loginNexArr()
-  const handoffCode = await createHandoff(
-    nexarrToken,
-    'trainarr',
-    `${trainarrFrontendUrl()}/launch`,
-  )
-  const trainarrToken = await redeemTrainArrHandoff(handoffCode)
+  const trainarrToken = await redeemHandoffForProduct('trainarr')
   const journey = await seedTrainArrJourney(trainarrToken)
   const trainingAssignmentId = await createActiveTrainingAssignment(
     trainarrToken,
     journey.trainingDefinitionId,
   )
   return { trainingAssignmentId }
+}
+
+export async function ensureMaintainArrFieldInboxFixture(): Promise<MaintainArrFieldInboxFixture> {
+  const token = await redeemHandoffForProduct('maintainarr')
+  const suffix = Date.now()
+
+  const assetClass = await readJson<{ assetClassId: string }>(
+    await fetch(`${maintainarrApiUrl()}/api/asset-classes`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        classKey: `e2e-class-${suffix}`,
+        name: 'E2E production',
+        description: 'E2E asset class',
+      }),
+    }),
+  )
+
+  const assetType = await readJson<{ assetTypeId: string }>(
+    await fetch(`${maintainarrApiUrl()}/api/asset-types`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        assetClassId: assetClass.assetClassId,
+        typeKey: `e2e-type-${suffix}`,
+        name: 'E2E conveyor',
+        description: 'E2E',
+      }),
+    }),
+  )
+
+  const asset = await readJson<{ assetId: string }>(
+    await fetch(`${maintainarrApiUrl()}/api/assets`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        assetTypeId: assetType.assetTypeId,
+        assetTag: `E2E-${suffix}`,
+        name: 'E2E conveyor',
+        locationLabel: 'Line 1',
+        notes: null,
+      }),
+    }),
+  )
+
+  const workOrder = await readJson<{ workOrderId: string }>(
+    await fetch(`${maintainarrApiUrl()}/api/work-orders`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        assetId: asset.assetId,
+        title: `E2E work order ${suffix}`,
+        description: 'Companion deep-link smoke',
+        priority: 'high',
+        assignedTechnicianPersonId: journeySubjectPersonId,
+        pmScheduleId: null,
+      }),
+    }),
+  )
+
+  return { workOrderId: workOrder.workOrderId }
+}
+
+export async function ensureRoutArrFieldInboxFixture(): Promise<RoutArrFieldInboxFixture> {
+  const token = await redeemHandoffForProduct('routarr')
+
+  const seed = await readJson<{ tripId: string }>(
+    await fetch(`${routarrApiUrl()}/api/load-test-journey/seed`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+  )
+
+  await readJson(
+    await fetch(`${routarrApiUrl()}/api/trips/${seed.tripId}/assign-driver`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        driverPersonId: journeySubjectPersonId,
+        ignoreAvailabilityConflicts: true,
+        ignoreEligibilityBlocks: true,
+        ignoreWorkflowGateBlocks: true,
+      }),
+    }),
+  )
+
+  await readJson(
+    await fetch(`${routarrApiUrl()}/api/trips/${seed.tripId}/status`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dispatchStatus: 'assigned' }),
+    }),
+  )
+
+  return { tripId: seed.tripId }
+}
+
+export async function ensureSupplyArrFieldInboxFixture(): Promise<SupplyArrFieldInboxFixture> {
+  const token = await redeemHandoffForProduct('supplyarr')
+  const suffix = Date.now()
+
+  const vendor = await readJson<{ partyId: string }>(
+    await fetch(`${supplyarrApiUrl()}/api/vendors`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        partyKey: `e2e-vendor-${suffix}`,
+        displayName: 'E2E Vendor',
+        legalName: 'E2E Vendor LLC',
+        contactEmail: null,
+        notes: '',
+      }),
+    }),
+  )
+
+  const part = await readJson<{ partId: string }>(
+    await fetch(`${supplyarrApiUrl()}/api/parts`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        partKey: `e2e-part-${suffix}`,
+        catalogId: null,
+        displayName: 'E2E Part',
+        description: '',
+        categoryKey: 'general',
+        unitOfMeasure: 'each',
+        manufacturerName: '',
+        manufacturerPartNumber: '',
+      }),
+    }),
+  )
+
+  const location = await readJson<{ locationId: string }>(
+    await fetch(`${supplyarrApiUrl()}/api/inventory/locations`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        locationKey: `e2e-loc-${suffix}`,
+        name: 'E2E Warehouse',
+        locationType: 'warehouse',
+        addressLine: 'Dock',
+      }),
+    }),
+  )
+
+  const bin = await readJson<{ binId: string }>(
+    await fetch(`${supplyarrApiUrl()}/api/inventory/locations/${location.locationId}/bins`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ binKey: `e2e-bin-${suffix}`, name: 'E2E Bin' }),
+    }),
+  )
+
+  const purchaseRequest = await readJson<{ purchaseRequestId: string }>(
+    await fetch(`${supplyarrApiUrl()}/api/purchase-requests`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requestKey: `e2e-pr-${suffix}`,
+        title: 'E2E receiving PR',
+        notes: '',
+        vendorPartyId: vendor.partyId,
+        lines: [{ partId: part.partId, quantity: 3, notes: '' }],
+      }),
+    }),
+  )
+
+  await readJson(
+    await fetch(
+      `${supplyarrApiUrl()}/api/purchase-requests/${purchaseRequest.purchaseRequestId}/submit`,
+      { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
+    ),
+  )
+  await readJson(
+    await fetch(
+      `${supplyarrApiUrl()}/api/purchase-requests/${purchaseRequest.purchaseRequestId}/approve`,
+      { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
+    ),
+  )
+
+  const purchaseOrder = await readJson<{ purchaseOrderId: string }>(
+    await fetch(
+      `${supplyarrApiUrl()}/api/purchase-orders/from-purchase-request/${purchaseRequest.purchaseRequestId}`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderKey: `e2e-po-${suffix}`, notes: null, requestedDeliveryAt: null }),
+      },
+    ),
+  )
+
+  await readJson(
+    await fetch(`${supplyarrApiUrl()}/api/purchase-orders/${purchaseOrder.purchaseOrderId}/approve`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+  )
+  await readJson(
+    await fetch(`${supplyarrApiUrl()}/api/purchase-orders/${purchaseOrder.purchaseOrderId}/issue`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+  )
+
+  const receipt = await readJson<{ receivingReceiptId: string }>(
+    await fetch(
+      `${supplyarrApiUrl()}/api/receiving/from-purchase-order/${purchaseOrder.purchaseOrderId}`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiptKey: `e2e-rcpt-${suffix}`,
+          inventoryBinId: bin.binId,
+          notes: 'E2E deep link',
+        }),
+      },
+    ),
+  )
+
+  return { receivingReceiptId: receipt.receivingReceiptId }
 }

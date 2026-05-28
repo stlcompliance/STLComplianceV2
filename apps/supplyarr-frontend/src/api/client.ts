@@ -363,6 +363,16 @@ export async function issuePurchaseOrder(
   return parseJsonResponse<PurchaseOrderResponse>(response, 'Failed to issue purchase order')
 }
 
+export async function getReceivingReceipt(
+  accessToken: string,
+  receivingReceiptId: string,
+): Promise<ReceivingReceiptResponse> {
+  const response = await fetch(`${apiBase}/api/receiving/${receivingReceiptId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ReceivingReceiptResponse>(response, 'Failed to load receiving receipt')
+}
+
 export async function getReceivingReceipts(
   accessToken: string,
   options?: { status?: string; purchaseOrderId?: string },

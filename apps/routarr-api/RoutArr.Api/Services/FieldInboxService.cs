@@ -5,8 +5,10 @@ using STLCompliance.Shared.Contracts;
 
 namespace RoutArr.Api.Services;
 
-public sealed class FieldInboxService(RoutArrDbContext db)
+public sealed class FieldInboxService(RoutArrDbContext db, IConfiguration configuration)
 {
+    private readonly string? _frontendBaseUrl = configuration["RoutArr:FrontendBaseUrl"]
+        ?? configuration["Cors:RoutArrFrontendOrigin"];
     private static readonly HashSet<string> ActiveTripStatuses = new(StringComparer.OrdinalIgnoreCase)
     {
         TripDispatchStatuses.Assigned,
@@ -41,17 +43,22 @@ public sealed class FieldInboxService(RoutArrDbContext db)
             .Take(50)
             .ToListAsync(cancellationToken);
 
-        var items = trips.Select(trip => new FieldInboxTaskItem(
-            $"routarr:trip:{trip.Id:D}",
-            "routarr",
-            "trip",
-            trip.Title,
-            trip.TripNumber,
-            trip.DispatchStatus,
-            null,
-            trip.ScheduledStartAt,
-            trip.ScheduledStartAt ?? trip.UpdatedAt,
-            $"/trips/{trip.Id:D}")).ToList();
+        var items = trips.Select(trip =>
+        {
+            var deepLinkPath = $"/trips/{trip.Id:D}";
+            return new FieldInboxTaskItem(
+                $"routarr:trip:{trip.Id:D}",
+                "routarr",
+                "trip",
+                trip.Title,
+                trip.TripNumber,
+                trip.DispatchStatus,
+                null,
+                trip.ScheduledStartAt,
+                trip.ScheduledStartAt ?? trip.UpdatedAt,
+                deepLinkPath,
+                DeepLinkUrl: FieldInboxDeepLinkBuilder.BuildProductDeepLinkUrl(_frontendBaseUrl, deepLinkPath));
+        }).ToList();
 
         return FieldInboxRules.BuildProductResponse(items);
     }

@@ -81,6 +81,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       DATABASE_URL: Host=postgres;Port=5432;Database=maintainarr;Username=stl;Password=stl_dev_password
+      MaintainArr__FrontendBaseUrl: http://127.0.0.1:5178
     depends_on:
       postgres:
         condition: service_healthy
@@ -97,6 +98,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       DATABASE_URL: Host=postgres;Port=5432;Database=routarr;Username=stl;Password=stl_dev_password
+      RoutArr__FrontendBaseUrl: http://127.0.0.1:5180
     depends_on:
       postgres:
         condition: service_healthy
@@ -113,6 +115,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       DATABASE_URL: Host=postgres;Port=5432;Database=supplyarr;Username=stl;Password=stl_dev_password
+      SupplyArr__FrontendBaseUrl: http://127.0.0.1:5179
     depends_on:
       postgres:
         condition: service_healthy

@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProductWorkspaceLayout } from './layouts/ProductWorkspaceLayout'
 import { HomePage } from './pages/HomePage'
 import { LaunchPage } from './pages/LaunchPage'
+import { TripWorkspacePage } from './pages/TripWorkspacePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/launch" element={<LaunchPage />} />
           <Route element={<ProductWorkspaceLayout />}>
             <Route path="/" element={<HomePage />} />
+            <Route path="/trips/:tripId" element={<TripWorkspacePage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

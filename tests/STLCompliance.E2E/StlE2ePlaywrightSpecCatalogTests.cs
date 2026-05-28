@@ -14,6 +14,9 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
         Assert.Contains(
             StlE2ePlaywrightSpecCatalog.ProductTrainarrAssignmentDeepLinkSpec,
             StlE2ePlaywrightSpecCatalog.DeepLinkSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.CompanionFieldInboxMaintainarrDeepLinkSpec,
+            StlE2ePlaywrightSpecCatalog.DeepLinkSmokeSpecs);
     }
 
     [Fact]
@@ -32,7 +35,7 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
     {
         Assert.Contains(StlE2ePlaywrightSpecCatalog.SuiteLoginHandoffSmokeSpec, StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(StlE2ePlaywrightSpecCatalog.ProductHandoffSmokeSpec, StlE2ePlaywrightSpecCatalog.All);
-        Assert.True(StlE2ePlaywrightSpecCatalog.All.Count >= 6);
+        Assert.True(StlE2ePlaywrightSpecCatalog.All.Count >= 7);
     }
 
     [Fact]

@@ -6,8 +6,10 @@ using STLCompliance.Shared.Contracts;
 
 namespace MaintainArr.Api.Services;
 
-public sealed class FieldInboxService(MaintainArrDbContext db)
+public sealed class FieldInboxService(MaintainArrDbContext db, IConfiguration configuration)
 {
+    private readonly string? _frontendBaseUrl = configuration["MaintainArr:FrontendBaseUrl"]
+        ?? configuration["Cors:MaintainArrFrontendOrigin"];
     public async Task<FieldInboxResponse> GetAsync(
         Guid tenantId,
         bool viewAll,
@@ -76,6 +78,7 @@ public sealed class FieldInboxService(MaintainArrDbContext db)
         {
             assets.TryGetValue(wo.AssetId, out var asset);
             var subtitle = asset is null ? null : $"{asset.AssetTag} · {asset.Name}";
+            var deepLinkPath = $"/work-orders/{wo.Id:D}";
             return new FieldInboxTaskItem(
                 $"maintainarr:work-order:{wo.Id:D}",
                 "maintainarr",
@@ -86,7 +89,8 @@ public sealed class FieldInboxService(MaintainArrDbContext db)
                 wo.Priority,
                 wo.StartedAt ?? wo.CreatedAt,
                 wo.UpdatedAt,
-                $"/work-orders/{wo.Id:D}");
+                deepLinkPath,
+                DeepLinkUrl: FieldInboxDeepLinkBuilder.BuildProductDeepLinkUrl(_frontendBaseUrl, deepLinkPath));
         }).ToList();
     }
 
@@ -118,6 +122,7 @@ public sealed class FieldInboxService(MaintainArrDbContext db)
             var assetLabel = run.Asset is null
                 ? null
                 : $"{run.Asset.AssetTag} · {run.Asset.Name}";
+            var deepLinkPath = $"/inspections/{run.Id:D}";
             return new FieldInboxTaskItem(
                 $"maintainarr:inspection:{run.Id:D}",
                 "maintainarr",
@@ -128,7 +133,8 @@ public sealed class FieldInboxService(MaintainArrDbContext db)
                 null,
                 null,
                 run.StartedAt,
-                $"/inspections/{run.Id:D}");
+                deepLinkPath,
+                DeepLinkUrl: FieldInboxDeepLinkBuilder.BuildProductDeepLinkUrl(_frontendBaseUrl, deepLinkPath));
         }).ToList();
     }
 }
