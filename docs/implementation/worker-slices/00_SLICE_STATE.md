@@ -280,7 +280,7 @@
 
 | 154 | StaffArr personnel notes + documents foundations (`staffarr_personnel_notes`, `staffarr_personnel_documents`, note/document APIs with visibility + file storage, person timeline integration, People workspace UI, tests, docs) | M4 (partial) | Complete | `0a0e25f` |
 
-| 155 | StaffArr product-facing person lookup API (`PersonLookupService`, `/api/person-lookup` + nested lookup routes, TrainArr `/api/integrations/person-lookup`, `staffarr.person.lookup`, `PersonLookupPanel`, tests, docs) | M4 (partial) | Complete | `pending` |
+| 155 | StaffArr product-facing person lookup API (`PersonLookupService`, `/api/person-lookup` + nested lookup routes, TrainArr `/api/integrations/person-lookup`, `staffarr.person.lookup`, `PersonLookupPanel`, tests, docs) | M4 (partial) | Complete | `99c8d67` |
 
 ## Next slice (Worker 156)
 
