@@ -25,6 +25,8 @@ public static class StlRenderStagingLoadSoakScheduleCatalog
         StlLoadTestJourneyDefaults.QualificationKeyEnvVar,
         StlLoadTestJourneyDefaults.RulePackKeyEnvVar,
         StlLoadTestJourneyDefaults.JourneyTripIdEnvVar,
+        StlLoadTestJourneyDefaults.JourneyRulePackIdEnvVar,
+        StlLoadTestJourneyDefaults.DriverLicenseFactKeyEnvVar,
     ];
 
     public static IReadOnlyList<string> GetMissingStagingApiUrlEnvironmentVariables()

@@ -21,6 +21,10 @@ public static class StlLoadTestLiveScenarioCatalog
         new(StlLoadTestSloCatalog.ProductAuthHandoffMeKey, 2, "15s", 6),
         new(StlLoadTestSloCatalog.TrainArrQualificationCheckKey, 2, "15s", 5),
         new(StlLoadTestSloCatalog.RoutArrDispatchWorkflowGateKey, 2, "15s", 4),
+        new(StlLoadTestSloCatalog.StaffArrPersonReadinessKey, 2, "15s", 4),
+        new(StlLoadTestSloCatalog.SupplyArrProcurementPrKey, 2, "20s", 3),
+        new(StlLoadTestSloCatalog.MaintainArrWorkOrderKey, 2, "20s", 3),
+        new(StlLoadTestSloCatalog.ComplianceCoreRuleEvaluateKey, 2, "15s", 4),
     ];
 
     public static StlLoadTestLiveScenarioDefinition GetByScenarioKey(string scenarioKey) =>

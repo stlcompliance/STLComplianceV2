@@ -18,6 +18,10 @@ ALL_SCENARIOS=(
   product-auth-handoff-me
   trainarr-qualification-check
   routarr-dispatch-workflow-gate
+  staffarr-person-readiness
+  supplyarr-procurement-pr
+  maintainarr-work-order
+  compliancecore-rule-evaluate
 )
 
 if ! command -v k6 >/dev/null 2>&1; then

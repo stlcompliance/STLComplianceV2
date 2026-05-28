@@ -13,4 +13,8 @@ public static class StlLoadTestJourneyDefaults
     public const string QualificationKeyEnvVar = "STL_LOAD_QUALIFICATION_KEY";
     public const string RulePackKeyEnvVar = "STL_LOAD_RULE_PACK_KEY";
     public const string JourneyTripIdEnvVar = "STL_LOAD_JOURNEY_TRIP_ID";
+    public const string JourneyRulePackIdEnvVar = "STL_LOAD_JOURNEY_RULE_PACK_ID";
+    public const string DriverLicenseFactKeyEnvVar = "STL_LOAD_DRIVER_LICENSE_FACT_KEY";
+
+    public static string DriverLicenseFactKey => StlLoadTestJourneySeedCatalog.DriverLicenseValidFactKey;
 }

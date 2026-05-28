@@ -27,12 +27,15 @@ export function loadDemoCredentials() {
 
 export function loadJourneyDefaults() {
   const journeyTripId = (__ENV.STL_LOAD_JOURNEY_TRIP_ID || '').trim();
+  const journeyRulePackId = (__ENV.STL_LOAD_JOURNEY_RULE_PACK_ID || '').trim();
   return {
     subjectPersonId:
       __ENV.STL_LOAD_SUBJECT_PERSON_ID || '22222222-2222-2222-2222-222222222201',
     qualificationKey: __ENV.STL_LOAD_QUALIFICATION_KEY || 'hazmat_endorsement',
     rulePackKey: __ENV.STL_LOAD_RULE_PACK_KEY || 'driver_qualification',
+    driverLicenseFactKey: __ENV.STL_LOAD_DRIVER_LICENSE_FACT_KEY || 'driver_license_valid',
     journeyTripId: journeyTripId.length > 0 ? journeyTripId : null,
+    journeyRulePackId: journeyRulePackId.length > 0 ? journeyRulePackId : null,
   };
 }
 

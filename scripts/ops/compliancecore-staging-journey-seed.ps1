@@ -66,4 +66,12 @@ $seedResponse = Invoke-RestMethod -Method Post -Uri "$ComplianceCoreBaseUrl/api/
     -Body "{}"
 
 $seedResponse | ConvertTo-Json -Depth 5
+if ($seedResponse.rulePackId) {
+    $rulePackId = $seedResponse.rulePackId.ToString()
+    $env:STL_LOAD_JOURNEY_RULE_PACK_ID = $rulePackId
+    if ($env:GITHUB_ENV) {
+        Add-Content -Path $env:GITHUB_ENV -Value "STL_LOAD_JOURNEY_RULE_PACK_ID=$rulePackId"
+    }
+    Write-Host "Set STL_LOAD_JOURNEY_RULE_PACK_ID=$rulePackId"
+}
 Write-Host "Compliance Core load-test journey seed completed."

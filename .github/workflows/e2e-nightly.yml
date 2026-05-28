@@ -88,7 +88,7 @@ jobs:
           done
           exit 1
 
-      - name: Live k6 load tests (all seven PO scenarios)
+      - name: Live k6 load tests (all eleven PO scenarios)
         env:
           LOAD_LIVE: "1"
           STL_LOAD_SLO_PROFILE: product-owner

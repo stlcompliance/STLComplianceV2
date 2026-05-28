@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       scenario:
-        description: "k6 scenario key (empty = all seven PO scenarios)"
+        description: "k6 scenario key (empty = all eleven PO scenarios)"
         required: false
         default: ""
       vus:

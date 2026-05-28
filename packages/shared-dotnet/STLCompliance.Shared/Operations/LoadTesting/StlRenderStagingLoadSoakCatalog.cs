@@ -17,6 +17,10 @@ public static class StlRenderStagingLoadSoakCatalog
         StlLoadTestSloCatalog.ProductAuthHandoffMeKey,
         StlLoadTestSloCatalog.TrainArrQualificationCheckKey,
         StlLoadTestSloCatalog.RoutArrDispatchWorkflowGateKey,
+        StlLoadTestSloCatalog.StaffArrPersonReadinessKey,
+        StlLoadTestSloCatalog.SupplyArrProcurementPrKey,
+        StlLoadTestSloCatalog.MaintainArrWorkOrderKey,
+        StlLoadTestSloCatalog.ComplianceCoreRuleEvaluateKey,
     ];
 
     public static StlLoadTestSloTarget ResolveSoakSloTarget(string scenarioKey) =>

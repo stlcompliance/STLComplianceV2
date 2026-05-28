@@ -29,6 +29,10 @@ Runs use `./scripts/ops/load-test-run.ps1` (or `.sh`) with default 5 VUs / 30s u
 | `product-auth-handoff-me` | Login → handoff → redeem → `/api/me` (6 products) | 6000 ms | 3% | 12 |
 | `trainarr-qualification-check` | Handoff TrainArr → `POST /api/qualification-checks` (TrainArr + Compliance Core) | 10000 ms | 4% | 10 |
 | `routarr-dispatch-workflow-gate` | Handoff RoutArr → create trip → `POST /api/dispatch-workflow-gates/check` (RoutArr + Compliance Core) | 12000 ms | 4% | 8 |
+| `staffarr-person-readiness` | Handoff StaffArr → `GET /api/people/{personId}/readiness` | 8000 ms | 4% | 10 |
+| `supplyarr-procurement-pr` | Handoff SupplyArr → vendor/part → PR submit/approve | 15000 ms | 5% | 6 |
+| `maintainarr-work-order` | Handoff MaintainArr → asset chain → work order create/read | 18000 ms | 5% | 6 |
+| `compliancecore-rule-evaluate` | Handoff Compliance Core → journey seed → rule pack evaluate | 12000 ms | 4% | 8 |
 
 ## Ownership
 
@@ -39,6 +43,10 @@ Runs use `./scripts/ops/load-test-run.ps1` (or `.sh`) with default 5 VUs / 30s u
 | API availability | Platform ops | Health scenarios |
 | Training authorization | TrainArr | Qualification check journey |
 | Dispatch compliance gates | RoutArr | Workflow gate journey |
+| Workforce readiness | StaffArr | Person readiness journey |
+| Procurement | SupplyArr | Purchase request approval journey |
+| Maintenance execution | MaintainArr | Work order journey |
+| Rule evaluation | Compliance Core | Operator rule pack evaluate journey |
 
 ## Engineering fallback
 

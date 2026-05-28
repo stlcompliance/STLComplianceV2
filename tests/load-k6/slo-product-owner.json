@@ -46,6 +46,30 @@
       "p95LatencyMsMax": 12000,
       "errorRateMax": 0.04,
       "minRequestCount": 8
+    },
+    {
+      "scenarioKey": "staffarr-person-readiness",
+      "p95LatencyMsMax": 8000,
+      "errorRateMax": 0.04,
+      "minRequestCount": 10
+    },
+    {
+      "scenarioKey": "supplyarr-procurement-pr",
+      "p95LatencyMsMax": 15000,
+      "errorRateMax": 0.05,
+      "minRequestCount": 6
+    },
+    {
+      "scenarioKey": "maintainarr-work-order",
+      "p95LatencyMsMax": 18000,
+      "errorRateMax": 0.05,
+      "minRequestCount": 6
+    },
+    {
+      "scenarioKey": "compliancecore-rule-evaluate",
+      "p95LatencyMsMax": 12000,
+      "errorRateMax": 0.04,
+      "minRequestCount": 8
     }
   ]
 }

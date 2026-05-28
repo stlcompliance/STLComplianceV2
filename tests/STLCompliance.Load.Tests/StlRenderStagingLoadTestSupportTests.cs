@@ -20,7 +20,7 @@ public sealed class StlRenderStagingLoadTestSupportTests
     [Fact]
     public void Soak_catalog_covers_all_product_owner_scenarios()
     {
-        Assert.Equal(7, StlRenderStagingLoadSoakCatalog.DefaultScenarioKeys.Count);
+        Assert.Equal(11, StlRenderStagingLoadSoakCatalog.DefaultScenarioKeys.Count);
         Assert.Equal(
             StlLoadTestSloCatalog.ProductOwnerTargets.Count,
             StlRenderStagingLoadSoakCatalog.DefaultScenarioKeys.Count);
@@ -52,10 +52,13 @@ public sealed class StlRenderStagingLoadTestSupportTests
     }
 
     [Fact]
-    public void Schedule_catalog_lists_optional_journey_trip_id_env_var()
+    public void Schedule_catalog_lists_optional_journey_env_vars()
     {
         Assert.Contains(
             StlLoadTestJourneyDefaults.JourneyTripIdEnvVar,
+            StlRenderStagingLoadSoakScheduleCatalog.OptionalCredentialEnvironmentVariables);
+        Assert.Contains(
+            StlLoadTestJourneyDefaults.JourneyRulePackIdEnvVar,
             StlRenderStagingLoadSoakScheduleCatalog.OptionalCredentialEnvironmentVariables);
     }
 

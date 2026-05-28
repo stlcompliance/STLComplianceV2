@@ -56,4 +56,11 @@ echo "Seeding load-test journey fixtures"
 seed_response="$(json_post "$COMPLIANCECORE_BASE_URL/api/load-test-journey/seed" "{}" "$compliance_token")"
 printf '%s\n' "$seed_response"
 
+rule_pack_id="$(printf '%s' "$seed_response" | python -c "import json,sys; print(json.load(sys.stdin)['rulePackId'])")"
+export STL_LOAD_JOURNEY_RULE_PACK_ID="$rule_pack_id"
+if [[ -n "${GITHUB_ENV:-}" ]]; then
+  echo "STL_LOAD_JOURNEY_RULE_PACK_ID=$rule_pack_id" >> "$GITHUB_ENV"
+fi
+echo "Set STL_LOAD_JOURNEY_RULE_PACK_ID=$rule_pack_id"
+
 echo "Compliance Core load-test journey seed completed."

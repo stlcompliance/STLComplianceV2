@@ -6,24 +6,30 @@ namespace STLCompliance.Load.Tests;
 public sealed class StlLoadTestSloCatalogTests
 {
     [Fact]
-    public void EngineeringDefaults_includes_seven_scenarios()
+    public void EngineeringDefaults_includes_eleven_scenarios()
     {
-        Assert.Equal(7, StlLoadTestSloCatalog.EngineeringDefaults.Count);
+        Assert.Equal(11, StlLoadTestSloCatalog.EngineeringDefaults.Count);
         Assert.Contains(
             StlLoadTestSloCatalog.EngineeringDefaults,
             s => s.ScenarioKey == StlLoadTestSloCatalog.ApiHealthLivenessKey);
     }
 
     [Fact]
-    public void ProductOwnerTargets_includes_seven_scenarios()
+    public void ProductOwnerTargets_includes_eleven_scenarios()
     {
-        Assert.Equal(7, StlLoadTestSloCatalog.ProductOwnerTargets.Count);
+        Assert.Equal(11, StlLoadTestSloCatalog.ProductOwnerTargets.Count);
         Assert.Contains(
             StlLoadTestSloCatalog.ProductOwnerTargets,
             s => s.ScenarioKey == StlLoadTestSloCatalog.TrainArrQualificationCheckKey);
         Assert.Contains(
             StlLoadTestSloCatalog.ProductOwnerTargets,
             s => s.ScenarioKey == StlLoadTestSloCatalog.RoutArrDispatchWorkflowGateKey);
+        Assert.Contains(
+            StlLoadTestSloCatalog.ProductOwnerTargets,
+            s => s.ScenarioKey == StlLoadTestSloCatalog.StaffArrPersonReadinessKey);
+        Assert.Contains(
+            StlLoadTestSloCatalog.ProductOwnerTargets,
+            s => s.ScenarioKey == StlLoadTestSloCatalog.ComplianceCoreRuleEvaluateKey);
     }
 
     [Fact]
@@ -85,6 +91,8 @@ public sealed class StlLoadTestJourneyDefaultsTests
         Assert.Equal("hazmat_endorsement", StlLoadTestJourneyDefaults.QualificationKey);
         Assert.Equal("driver_qualification", StlLoadTestJourneyDefaults.RulePackKey);
         Assert.Equal("STL_LOAD_JOURNEY_TRIP_ID", StlLoadTestJourneyDefaults.JourneyTripIdEnvVar);
+        Assert.Equal("STL_LOAD_JOURNEY_RULE_PACK_ID", StlLoadTestJourneyDefaults.JourneyRulePackIdEnvVar);
+        Assert.Equal("driver_license_valid", StlLoadTestJourneyDefaults.DriverLicenseFactKey);
     }
 }
 
@@ -208,7 +216,7 @@ public sealed class StlLoadTestLiveScenarioCatalogTests
     [Fact]
     public void Live_catalog_covers_all_product_owner_scenarios()
     {
-        Assert.Equal(7, StlLoadTestLiveScenarioCatalog.All.Count);
+        Assert.Equal(11, StlLoadTestLiveScenarioCatalog.All.Count);
 
         foreach (var target in StlLoadTestSloCatalog.ProductOwnerTargets)
         {

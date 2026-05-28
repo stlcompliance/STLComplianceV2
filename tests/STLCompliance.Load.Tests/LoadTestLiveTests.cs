@@ -136,6 +136,8 @@ internal static class LoadLiveProbe
         startInfo.Environment[StlLoadTestJourneyDefaults.SubjectPersonIdEnvVar] = StlLoadTestJourneyDefaults.SubjectPersonId;
         startInfo.Environment[StlLoadTestJourneyDefaults.QualificationKeyEnvVar] = StlLoadTestJourneyDefaults.QualificationKey;
         startInfo.Environment[StlLoadTestJourneyDefaults.RulePackKeyEnvVar] = StlLoadTestJourneyDefaults.RulePackKey;
+        startInfo.Environment[StlLoadTestJourneyDefaults.DriverLicenseFactKeyEnvVar] =
+            StlLoadTestJourneyDefaults.DriverLicenseFactKey;
         startInfo.Environment[StlLoadTestSloCatalog.ActiveProfileEnvVar] = StlLoadTestSloCatalog.ProductOwnerProfile;
 
         using var process = Process.Start(startInfo)

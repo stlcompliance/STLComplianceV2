@@ -7,6 +7,10 @@ param(
         "product-auth-handoff-me",
         "trainarr-qualification-check",
         "routarr-dispatch-workflow-gate",
+        "staffarr-person-readiness",
+        "supplyarr-procurement-pr",
+        "maintainarr-work-order",
+        "compliancecore-rule-evaluate",
         "all")]
     [string]$Scenario = "all",
     [int]$Vus = 5,
@@ -91,7 +95,11 @@ switch ($Scenario) {
             "nexarr-auth-me",
             "product-auth-handoff-me",
             "trainarr-qualification-check",
-            "routarr-dispatch-workflow-gate"
+            "routarr-dispatch-workflow-gate",
+            "staffarr-person-readiness",
+            "supplyarr-procurement-pr",
+            "maintainarr-work-order",
+            "compliancecore-rule-evaluate"
         )
     }
     default {

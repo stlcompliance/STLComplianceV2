@@ -13,8 +13,14 @@ Product-owner SLO targets (V1) are the active baseline. See `docs/operations/PRO
 | `product-auth-handoff-me` | `scenarios/product-auth-handoff-me.js` | 6000ms / 3% / 12 |
 | `trainarr-qualification-check` | `scenarios/trainarr-qualification-check.js` | 10000ms / 4% / 10 |
 | `routarr-dispatch-workflow-gate` | `scenarios/routarr-dispatch-workflow-gate.js` | 12000ms / 4% / 8 |
+| `staffarr-person-readiness` | `scenarios/staffarr-person-readiness.js` | 8000ms / 4% / 10 |
+| `supplyarr-procurement-pr` | `scenarios/supplyarr-procurement-pr.js` | 15000ms / 5% / 6 |
+| `maintainarr-work-order` | `scenarios/maintainarr-work-order.js` | 18000ms / 5% / 6 |
+| `compliancecore-rule-evaluate` | `scenarios/compliancecore-rule-evaluate.js` | 12000ms / 4% / 8 |
 
 Set `STL_LOAD_JOURNEY_TRIP_ID` (from `routarr-staging-journey-seed`) to reuse the seeded dispatch trip mirror and skip per-iteration `POST /api/trips`.
+
+Set `STL_LOAD_JOURNEY_RULE_PACK_ID` (from `compliancecore-staging-journey-seed`) to reuse a seeded rule pack and skip per-iteration journey seed in `compliancecore-rule-evaluate`.
 
 ## Prerequisites
 
@@ -28,7 +34,7 @@ docker compose up -d postgres nexarr-api staffarr-api trainarr-api maintainarr-a
 ## Run locally
 
 ```powershell
-# From repo root — runs all seven scenarios and validates summaries with Shared evaluator
+# From repo root — runs all eleven PO scenarios and validates summaries with Shared evaluator
 ./scripts/ops/load-test-run.ps1
 
 # Single scenario
@@ -64,6 +70,8 @@ chmod +x scripts/ops/load-test-run.sh
 | `STL_LOAD_SUBJECT_PERSON_ID` | demo admin user GUID | Qualification/gate journey subject |
 | `STL_LOAD_QUALIFICATION_KEY` | `hazmat_endorsement` | TrainArr qualification check key |
 | `STL_LOAD_RULE_PACK_KEY` | `driver_qualification` | Compliance Core rule pack key |
+| `STL_LOAD_JOURNEY_RULE_PACK_ID` | unset | Reuse seeded rule pack GUID (skip per-iter seed) |
+| `STL_LOAD_DRIVER_LICENSE_FACT_KEY` | `driver_license_valid` | Fact key for Compliance Core evaluate |
 | `STL_LOAD_VUS` | `5` (3 for platform health) | Virtual users |
 | `STL_LOAD_DURATION` | `30s` | Scenario duration |
 | `LOAD_LIVE` | unset | Set to `1` for optional live k6 tests in `STLCompliance.Load.Tests` |
@@ -71,7 +79,7 @@ chmod +x scripts/ops/load-test-run.sh
 ## CI
 
 - **Default CI** (`Category=Load`, not Live): unit tests for SLO catalog, k6 summary parsing, and evaluator logic.
-- **Nightly** (`e2e-nightly.yml`): live k6 run for all seven product-owner scenarios when `LOAD_LIVE=1` (health, auth, handoff, TrainArr qualification, RoutArr dispatch gate).
+- **Nightly** (`e2e-nightly.yml`): live k6 run for all eleven product-owner scenarios when `LOAD_LIVE=1`.
 - **Render staging** (`load-staging-render.yml`): manual workflow_dispatch and **weekly schedule** (Sunday 07:00 UTC) against `RENDER_STAGING_*_API_URL` secrets — see `docs/operations/RENDER_STAGING_LOAD_SOAK_V1.md`.
 
 ## Render staging soak

@@ -256,6 +256,8 @@
 
 | 142 | STLComplianceSite implementation maturity status (`/maturity` product + milestone snapshot, nav/footer/resources, SEO + sitemap, vitest, docs) | M3/M12 (partial) | Complete | `be0e623` |
 
-## Next slice (Worker 143)
+| 143 | M13 k6 journey extensions (StaffArr readiness, SupplyArr procurement PR, MaintainArr work order, Compliance Core evaluate, stl-journey/config, SLO/live/staging catalogs, ops scripts, Load.Tests, docs) | M13 (partial) | Complete | `pending` |
 
-Per milestone matrix: **k6/load harness** journey extensions or additional M13 Playwright/E2E coverage.
+## Next slice (Worker 144)
+
+Per milestone matrix: additional **M13 Playwright/E2E** coverage or next product backlog slice from milestone matrix.

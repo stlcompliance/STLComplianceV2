@@ -6,7 +6,7 @@
 
 ## Purpose
 
-Operators and CI can run the same seven product-owner k6 scenarios used locally against Render staging API URLs, with pre-run health gates and SLO validation.
+Operators and CI can run the same eleven product-owner k6 scenarios used locally against Render staging API URLs, with pre-run health gates and SLO validation.
 
 ## Environment variables
 
@@ -37,7 +37,7 @@ $env:RENDER_STAGING_NEXARR_API_URL = "https://nexarr-api-jdyi.onrender.com"
 $env:STL_LOAD_DEMO_EMAIL = "admin@demo.stl"
 $env:STL_LOAD_DEMO_PASSWORD = "ChangeMe!Demo2026"
 
-# 3. Full soak (5 VUs / 30s, all seven scenarios, product-owner SLOs)
+# 3. Full soak (5 VUs / 30s, all eleven scenarios, product-owner SLOs)
 ./scripts/ops/render-staging-load-soak.ps1
 
 # Single scenario smoke
@@ -84,7 +84,7 @@ Canonical C# definitions: `StlRenderStagingLoadSoakScheduleCatalog`.
 |---------|-------|
 | Virtual users | 5 |
 | Duration | 30s |
-| Scenarios | All seven PO keys |
+| Scenarios | All eleven PO keys |
 | SLO profile | `product-owner` (full min-request counts) |
 
 Canonical C# definitions: `StlRenderStagingLoadSoakCatalog`, `StlRenderStagingLoadTestCatalog`.
