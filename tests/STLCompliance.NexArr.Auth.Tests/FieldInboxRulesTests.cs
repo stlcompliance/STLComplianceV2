@@ -49,4 +49,22 @@ public sealed class FieldInboxRulesTests
         Assert.Equal("Ready WO", response.Items[0].Title);
         Assert.Equal("Blocked WO", response.Items[1].Title);
     }
+
+    [Fact]
+    public void BuildProductDeepLinkUrl_combines_frontend_base_and_path()
+    {
+        var url = FieldInboxDeepLinkBuilder.BuildProductDeepLinkUrl(
+            "https://trainarr-frontend.onrender.com/",
+            "/assignments/00000000-0000-0000-0000-000000000099/evidence");
+
+        Assert.Equal(
+            "https://trainarr-frontend.onrender.com/assignments/00000000-0000-0000-0000-000000000099/evidence",
+            url);
+    }
+
+    [Fact]
+    public void BuildProductDeepLinkUrl_returns_null_when_base_missing()
+    {
+        Assert.Null(FieldInboxDeepLinkBuilder.BuildProductDeepLinkUrl(null, "/assignments/1"));
+    }
 }

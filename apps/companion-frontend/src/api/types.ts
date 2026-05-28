@@ -10,6 +10,7 @@ export interface FieldInboxTaskItem {
   sortAt: string | null
   deepLinkPath: string
   blockedReason?: string | null
+  deepLinkUrl?: string | null
 }
 
 export interface FieldInboxSummary {

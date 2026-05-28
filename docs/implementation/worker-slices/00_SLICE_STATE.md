@@ -236,6 +236,8 @@
 
 | 132 | MaintainArr async audit package generation (`maintainarr_audit_package_generation_jobs`, sync manifest/export + POST/GET job APIs + download, internal process-batch, shared-worker job, `AuditPackageExportPanel` background ZIP + status, tests, docs) | M6/M12 (partial) | Complete | `968b63c` |
 
-## Next slice (Worker 133)
+| 133 | TrainArr field-inbox deep links (`deepLinkPath` + `deepLinkUrl` on field inbox items, `/assignments/{id}` + `/evidence` TrainArr routes, companion inbox prefers API URL, tests, docs) | M6/M13 (partial) | Complete | `pending` |
 
-Recommended: **TrainArr field-inbox deep links** (M6/M13) per backlog.
+## Next slice (Worker 134)
+
+Recommended: **M13 Playwright E2E harness** (companion + product deep-link smoke) per backlog after field inbox links.

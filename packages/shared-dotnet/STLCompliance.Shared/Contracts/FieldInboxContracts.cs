@@ -11,7 +11,23 @@ public sealed record FieldInboxTaskItem(
     DateTimeOffset? DueAt,
     DateTimeOffset? SortAt,
     string DeepLinkPath,
-    string? BlockedReason = null);
+    string? BlockedReason = null,
+    string? DeepLinkUrl = null);
+
+public static class FieldInboxDeepLinkBuilder
+{
+    public static string? BuildProductDeepLinkUrl(string? frontendBaseUrl, string deepLinkPath)
+    {
+        if (string.IsNullOrWhiteSpace(frontendBaseUrl) || string.IsNullOrWhiteSpace(deepLinkPath))
+        {
+            return null;
+        }
+
+        var normalizedBase = frontendBaseUrl.TrimEnd('/');
+        var normalizedPath = deepLinkPath.StartsWith('/') ? deepLinkPath : $"/{deepLinkPath}";
+        return $"{normalizedBase}{normalizedPath}";
+    }
+}
 
 public sealed record FieldInboxSummary(
     int TotalCount,

@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProductWorkspaceLayout } from './layouts/ProductWorkspaceLayout'
+import { AssignmentWorkspacePage } from './pages/AssignmentWorkspacePage'
 import { HomePage } from './pages/HomePage'
 import { LaunchPage } from './pages/LaunchPage'
 
@@ -21,6 +22,11 @@ export default function App() {
           <Route path="/launch" element={<LaunchPage />} />
           <Route element={<ProductWorkspaceLayout />}>
             <Route path="/" element={<HomePage />} />
+            <Route
+              path="/assignments/:assignmentId/evidence"
+              element={<AssignmentWorkspacePage focus="evidence" />}
+            />
+            <Route path="/assignments/:assignmentId" element={<AssignmentWorkspacePage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

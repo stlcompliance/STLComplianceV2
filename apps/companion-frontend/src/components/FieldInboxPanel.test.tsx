@@ -70,4 +70,48 @@ describe('FieldInboxPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /MaintainArr \(1\)/ }))
     expect(onFilter).toHaveBeenCalledWith('maintainarr')
   })
+
+  it('prefers API deepLinkUrl when provided', () => {
+    const trainarrTask: FieldInboxTaskItem = {
+      taskKey: 'trainarr:assignment:2',
+      productKey: 'trainarr',
+      taskType: 'training_assignment',
+      title: 'Hazmat annual',
+      subtitle: 'manual',
+      status: 'in_progress',
+      priority: null,
+      dueAt: null,
+      sortAt: '2026-05-27T10:00:00.000Z',
+      deepLinkPath: '/assignments/00000000-0000-0000-0000-000000000002/evidence',
+      deepLinkUrl:
+        'https://trainarr.example/assignments/00000000-0000-0000-0000-000000000002/evidence',
+    }
+
+    render(
+      <FieldInboxPanel
+        inbox={{
+          summary: { totalCount: 1, blockedCount: 0, countByProduct: { trainarr: 1 } },
+          items: [trainarrTask],
+          sources: [
+            {
+              productKey: 'trainarr',
+              entitled: true,
+              fetched: true,
+              errorCode: null,
+              errorMessage: null,
+              items: [trainarrTask],
+            },
+          ],
+        }}
+        productFilter=""
+        onProductFilterChange={() => undefined}
+      />,
+    )
+
+    const link = screen.getByRole('link', { name: /Open in TrainArr/i })
+    expect(link).toHaveAttribute(
+      'href',
+      'https://trainarr.example/assignments/00000000-0000-0000-0000-000000000002/evidence',
+    )
+  })
 })

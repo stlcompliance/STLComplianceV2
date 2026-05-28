@@ -115,7 +115,7 @@ function FilterChip({
 }
 
 function TaskCard({ task }: { task: FieldInboxTaskItem }) {
-  const launchUrl = productLaunchUrl(task.productKey, task.deepLinkPath)
+  const launchUrl = task.deepLinkUrl ?? productLaunchUrl(task.productKey, task.deepLinkPath)
 
   return (
     <li className="rounded-xl border border-slate-700 bg-slate-900/80 p-4 shadow-sm">

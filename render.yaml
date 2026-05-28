@@ -238,6 +238,8 @@ services:
           property: connectionString
       - key: Cors__TrainArrFrontendOrigin
         value: https://trainarr-frontend.onrender.com
+      - key: TrainArr__FrontendBaseUrl
+        value: https://trainarr-frontend.onrender.com
       - key: EvidenceStorage__RootPath
         value: /var/data/trainarr-evidence
 
