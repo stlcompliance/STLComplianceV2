@@ -70,6 +70,15 @@ chmod +x scripts/ops/load-test-run.sh
 
 - **Default CI** (`Category=Load`, not Live): unit tests for SLO catalog, k6 summary parsing, and evaluator logic.
 - **Nightly** (`e2e-nightly.yml`): live k6 run for all seven product-owner scenarios when `LOAD_LIVE=1` (health, auth, handoff, TrainArr qualification, RoutArr dispatch gate).
+- **Render staging** (`load-staging-render.yml`): manual workflow_dispatch soak against `RENDER_STAGING_*_API_URL` secrets — see `docs/operations/RENDER_STAGING_LOAD_SOAK_V1.md`.
+
+## Render staging soak
+
+```powershell
+$env:RENDER_STAGING_NEXARR_API_URL = "https://nexarr-api-jdyi.onrender.com"
+# ... all seven RENDER_STAGING_*_API_URL values ...
+./scripts/ops/render-staging-load-soak.ps1
+```
 
 ## .NET validation
 

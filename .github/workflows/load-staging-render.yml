@@ -1,0 +1,77 @@
+name: Load Staging Render
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: "k6 scenario key (empty = all seven PO scenarios)"
+        required: false
+        default: ""
+      vus:
+        description: "Virtual users"
+        required: false
+        default: "5"
+      duration:
+        description: "Scenario duration (k6 format, e.g. 30s)"
+        required: false
+        default: "30s"
+      skip_health_gate:
+        description: "Skip pre-run /health gate"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  staging-render-load-soak:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: Build
+        run: dotnet build STLCompliance.slnx -c Release
+
+      - name: Run Render staging load soak (product-owner SLOs)
+        env:
+          RENDER_STAGING_NEXARR_API_URL: ${{ secrets.RENDER_STAGING_NEXARR_API_URL }}
+          RENDER_STAGING_STAFFARR_API_URL: ${{ secrets.RENDER_STAGING_STAFFARR_API_URL }}
+          RENDER_STAGING_TRAINARR_API_URL: ${{ secrets.RENDER_STAGING_TRAINARR_API_URL }}
+          RENDER_STAGING_MAINTAINARR_API_URL: ${{ secrets.RENDER_STAGING_MAINTAINARR_API_URL }}
+          RENDER_STAGING_ROUTARR_API_URL: ${{ secrets.RENDER_STAGING_ROUTARR_API_URL }}
+          RENDER_STAGING_SUPPLYARR_API_URL: ${{ secrets.RENDER_STAGING_SUPPLYARR_API_URL }}
+          RENDER_STAGING_COMPLIANCECORE_API_URL: ${{ secrets.RENDER_STAGING_COMPLIANCECORE_API_URL }}
+          STL_LOAD_DEMO_EMAIL: ${{ secrets.RENDER_STAGING_LOAD_DEMO_EMAIL }}
+          STL_LOAD_DEMO_PASSWORD: ${{ secrets.RENDER_STAGING_LOAD_DEMO_PASSWORD }}
+          STL_LOAD_DEMO_TENANT_ID: ${{ secrets.RENDER_STAGING_LOAD_DEMO_TENANT_ID }}
+          STL_LOAD_SUBJECT_PERSON_ID: ${{ secrets.RENDER_STAGING_LOAD_SUBJECT_PERSON_ID }}
+          STL_LOAD_QUALIFICATION_KEY: ${{ secrets.RENDER_STAGING_LOAD_QUALIFICATION_KEY }}
+          STL_LOAD_RULE_PACK_KEY: ${{ secrets.RENDER_STAGING_LOAD_RULE_PACK_KEY }}
+          RENDER_STAGING_LOAD_OUTPUT_DIRECTORY: ${{ runner.temp }}/render-staging-load
+          RENDER_STAGING_SKIP_HEALTH_GATE: ${{ inputs.skip_health_gate }}
+        run: |
+          chmod +x scripts/ops/render-staging-load-soak.sh scripts/ops/load-test-run.sh
+          scenario="${{ inputs.scenario }}"
+          if [[ -z "$scenario" ]]; then
+            scenario="all"
+          fi
+          STL_LOAD_VUS="${{ inputs.vus }}" STL_LOAD_DURATION="${{ inputs.duration }}" \
+            ./scripts/ops/render-staging-load-soak.sh "$scenario"
+
+      - name: Upload k6 summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: render-staging-load-summaries
+          path: ${{ runner.temp }}/render-staging-load
+          if-no-files-found: ignore

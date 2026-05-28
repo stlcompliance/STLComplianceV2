@@ -198,7 +198,8 @@
 | 110 | M13 nightly live k6 all PO scenarios (`StlLoadTestLiveScenarioCatalog`, theory-based Load live tests ×7, seven-API health gate, e2e-nightly workflow, docs) | M13 (partial) | Complete | `8ef05f6` |
 
 | 111 | StaffArr person export bundle (`GET /api/people/export` CSV/JSON/ZIP, import-compatible CSV, managerEmail resolution, `PersonExportPanel`, integration + frontend tests, docs) | M4 (partial) | Complete | `9abb7d9` |
+| 112 | M13 Render staging load soak (`StlRenderStagingLoadTestCatalog`, staging URL env conventions, `render-staging-load-soak` scripts, `RenderStagingLoadSoakLiveTests`, `load-staging-render.yml` workflow_dispatch, docs) | M13 (partial) | Complete | `pending` |
 
-## Next slice (Worker 112)
+## Next slice (Worker 113)
 
-Recommended: **Render staging load soak against PO SLOs**, or **StaffArr org-unit filter on person export UI**.
+Recommended: **StaffArr org-unit filter on person export UI**, or **scheduled weekly staging load soak in CI**.
