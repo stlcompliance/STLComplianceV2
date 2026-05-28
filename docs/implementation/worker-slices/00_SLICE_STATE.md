@@ -272,7 +272,7 @@
 
 | 150 | Companion QR/barcode scan (`POST /api/companion/scan/resolve`, payload parser, `FieldScanPanel` + `@zxing/browser`, inbox highlight, tests, docs) | M11 (partial) | Complete | `5841339` |
 
-| 151 | Companion server-side field task validation (`POST /api/companion/field-tasks/validate`, `CompanionFieldTaskValidationService`, plain denied catalog, offline sync + evidence enforcement, companion preflight + plain error UI, tests, docs) | M11 (partial) | Complete | `pending` |
+| 151 | Companion server-side field task validation (`POST /api/companion/field-tasks/validate`, `CompanionFieldTaskValidationService`, plain denied catalog, offline sync + evidence enforcement, companion preflight + plain error UI, tests, docs) | M11 (partial) | Complete | `38b45c4` |
 
 ## Next slice (Worker 152)
 

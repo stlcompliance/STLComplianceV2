@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 151 | Companion server-side field task validation | Complete | `pending` |
+| 151 | Companion server-side field task validation | Complete | `38b45c4` |
 
 ## Program summary
 
