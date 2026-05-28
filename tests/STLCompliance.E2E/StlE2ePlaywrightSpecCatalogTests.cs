@@ -51,7 +51,13 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
             StlE2ePlaywrightSpecCatalog.CompanionOfflineQueueNotificationSpec,
             StlE2ePlaywrightSpecCatalog.CompanionOperationalSpecs);
         Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.CompanionFieldTaskEvidenceSpec,
+            StlE2ePlaywrightSpecCatalog.CompanionOperationalSpecs);
+        Assert.Contains(
             StlE2ePlaywrightSpecCatalog.CompanionOfflineQueueNotificationSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.CompanionFieldTaskEvidenceSpec,
             StlE2ePlaywrightSpecCatalog.All);
     }
 
@@ -60,7 +66,7 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
     {
         Assert.Contains(StlE2ePlaywrightSpecCatalog.SuiteLoginHandoffSmokeSpec, StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(StlE2ePlaywrightSpecCatalog.ProductHandoffSmokeSpec, StlE2ePlaywrightSpecCatalog.All);
-        Assert.True(StlE2ePlaywrightSpecCatalog.All.Count >= 10);
+        Assert.True(StlE2ePlaywrightSpecCatalog.All.Count >= 11);
     }
 
     [Fact]

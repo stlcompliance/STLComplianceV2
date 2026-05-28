@@ -25,6 +25,7 @@ await StlApiHost.RunAsync<NexArrDbContext>(
         app.MapCompanionEndpoints();
         app.MapCompanionNotificationEndpoints();
         app.MapCompanionOfflineEndpoints();
+        app.MapCompanionFieldEvidenceEndpoints();
         app.MapInternalCompanionNotificationEndpoints();
         await NexArrServiceRegistration.InitializeAsync(app);
     });

@@ -264,6 +264,8 @@
 
 | 146 | Companion offline queue + notification Playwright E2E (`nexarr_companion_offline_actions`, companion offline sync UI, push readiness, Playwright spec, e2eApi, catalog, tests, docs) | M11/M13 (partial) | Complete | `0e434f9` |
 
-## Next slice (Worker 147)
+| 147 | Companion field evidence capture (`POST /api/companion/field-tasks/evidence`, TrainArr proxy, photo/document/signature UI, Playwright spec, tests, docs) | M11 (partial) | Complete | `pending` |
 
-Per milestone matrix: **M11 clear submission state** / evidence capture, or next **product backlog** row (M4–M12).
+## Next slice (Worker 148)
+
+Per milestone matrix: **M11 clear submission state** or **product switcher** / QR scan support; or next **product backlog** row (M4–M12).

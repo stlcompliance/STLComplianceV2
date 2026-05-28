@@ -1,11 +1,14 @@
 import type { AggregatedFieldInboxResponse, FieldInboxTaskItem } from '../api/types'
 import { formatWhen, productLabel, taskTypeLabel } from '../lib/fieldInbox'
+import { isTrainarrFieldTask } from '../lib/evidenceCapture'
 import { productLaunchUrl } from '../api/client'
+import { FieldTaskEvidencePanel } from './FieldTaskEvidencePanel'
 
 interface FieldInboxPanelProps {
   inbox: AggregatedFieldInboxResponse
   productFilter: string
   onProductFilterChange: (productKey: string) => void
+  accessToken: string
   acknowledgedTaskKeys?: ReadonlySet<string>
   onAcknowledgeTask?: (task: FieldInboxTaskItem) => void
 }
@@ -14,6 +17,7 @@ export function FieldInboxPanel({
   inbox,
   productFilter,
   onProductFilterChange,
+  accessToken,
   acknowledgedTaskKeys,
   onAcknowledgeTask,
 }: FieldInboxPanelProps) {
@@ -65,6 +69,7 @@ export function FieldInboxPanel({
             <TaskCard
               key={task.taskKey}
               task={task}
+              accessToken={accessToken}
               acknowledged={acknowledgedTaskKeys?.has(task.taskKey) ?? false}
               onAcknowledge={onAcknowledgeTask}
             />
@@ -125,10 +130,12 @@ function FilterChip({
 
 function TaskCard({
   task,
+  accessToken,
   acknowledged,
   onAcknowledge,
 }: {
   task: FieldInboxTaskItem
+  accessToken: string
   acknowledged: boolean
   onAcknowledge?: (task: FieldInboxTaskItem) => void
 }) {
@@ -187,6 +194,10 @@ function TaskCard({
           </p>
         )}
       </div>
+
+      {isTrainarrFieldTask(task.taskKey) && (
+        <FieldTaskEvidencePanel accessToken={accessToken} task={task} />
+      )}
     </li>
   )
 }

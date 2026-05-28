@@ -86,6 +86,7 @@ export function HomePage() {
           inbox={inboxQuery.data}
           productFilter={productFilter}
           onProductFilterChange={setProductFilter}
+          accessToken={session.accessToken}
           acknowledgedTaskKeys={acknowledgedTaskKeys}
           onAcknowledgeTask={(task) => {
             offlineQueue.queueAcknowledge({

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { FieldInboxPanel } from './FieldInboxPanel'
@@ -61,7 +62,12 @@ describe('FieldInboxPanel', () => {
     const onFilter = vi.fn()
 
     render(
-      <FieldInboxPanel inbox={inbox} productFilter="" onProductFilterChange={onFilter} />,
+      <FieldInboxPanel
+        inbox={inbox}
+        productFilter=""
+        onProductFilterChange={onFilter}
+        accessToken="test-token"
+      />,
     )
 
     expect(screen.getByText('Replace belt')).toBeInTheDocument()
@@ -87,25 +93,29 @@ describe('FieldInboxPanel', () => {
         'https://trainarr.example/assignments/00000000-0000-0000-0000-000000000002/evidence',
     }
 
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
-      <FieldInboxPanel
-        inbox={{
-          summary: { totalCount: 1, blockedCount: 0, countByProduct: { trainarr: 1 } },
-          items: [trainarrTask],
-          sources: [
-            {
-              productKey: 'trainarr',
-              entitled: true,
-              fetched: true,
-              errorCode: null,
-              errorMessage: null,
-              items: [trainarrTask],
-            },
-          ],
-        }}
-        productFilter=""
-        onProductFilterChange={() => undefined}
-      />,
+      <QueryClientProvider client={client}>
+        <FieldInboxPanel
+          inbox={{
+            summary: { totalCount: 1, blockedCount: 0, countByProduct: { trainarr: 1 } },
+            items: [trainarrTask],
+            sources: [
+              {
+                productKey: 'trainarr',
+                entitled: true,
+                fetched: true,
+                errorCode: null,
+                errorMessage: null,
+                items: [trainarrTask],
+              },
+            ],
+          }}
+          productFilter=""
+          onProductFilterChange={() => undefined}
+          accessToken="test-token"
+        />
+      </QueryClientProvider>,
     )
 
     const link = screen.getByRole('link', { name: /Open in TrainArr/i })

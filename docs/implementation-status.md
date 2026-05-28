@@ -1,12 +1,12 @@
 # Implementation status (Arr ecosystem)
 
-**Last updated:** Worker 146 (2026-05-27)
+**Last updated:** Worker 147 (2026-05-27)
 
 ## Latest slice
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 146 | Companion offline queue + notification Playwright E2E | Complete | `0e434f9` |
+| 147 | Companion field evidence capture | Complete | `pending` |
 
 ## Program summary
 
@@ -16,8 +16,8 @@
 - Playwright: suite login, handoff smokes, deep links, platform-admin audit export, **Compliance Core operator evaluate**, and **multi-product handoff journey** (E2E_LIVE skip)
 - DR: nightly live restore drill validates **all seven** product PostgreSQL databases
 
-## Next recommended slice (Worker 147)
+## Next recommended slice (Worker 148)
 
-Per milestone matrix (**Companion / M11**): **clear submission state** or **evidence capture** (photo/document/signature), or the next open **product backlog** row (M4–M12).
+Per milestone matrix (**Companion / M11**): **clear submission state** or **product switcher** / scan support; or the next open **product backlog** row (M4–M12).
 
 See `FINAL_IMPLEMENTATION_REPORT.md` for ship-gate checklist.

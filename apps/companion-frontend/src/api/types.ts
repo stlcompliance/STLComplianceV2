@@ -115,6 +115,27 @@ export interface CompanionOfflineActionsListResponse {
   items: CompanionOfflineActionSyncedItem[]
 }
 
+export interface SubmitCompanionFieldEvidenceRequest {
+  taskKey: string
+  captureKind: string
+  fileName: string
+  contentType: string
+  contentBase64: string
+  notes: string | null
+}
+
+export interface CompanionFieldEvidenceResponse {
+  taskKey: string
+  productKey: string
+  evidenceId: string
+  evidenceTypeKey: string
+  fileName: string
+  contentType: string
+  sizeBytes: number
+  notes: string | null
+  createdAt: string
+}
+
 export interface CompanionMeResponse {
   userId: string
   personId: string

@@ -5,8 +5,10 @@ import type {
   CompanionNotificationSettingsResponse,
   CompanionOfflineActionsListResponse,
   CompanionSessionResponse,
+  CompanionFieldEvidenceResponse,
   SyncCompanionOfflineActionsRequest,
   SyncCompanionOfflineActionsResponse,
+  SubmitCompanionFieldEvidenceRequest,
   UpsertCompanionNotificationSettingsRequest,
 } from './types'
 
@@ -132,6 +134,21 @@ export async function listCompanionOfflineActions(
   return parseJsonResponse<CompanionOfflineActionsListResponse>(
     response,
     'Failed to load offline action history',
+  )
+}
+
+export async function submitCompanionFieldEvidence(
+  accessToken: string,
+  body: SubmitCompanionFieldEvidenceRequest,
+): Promise<CompanionFieldEvidenceResponse> {
+  const response = await fetch(`${apiBase}/api/companion/field-tasks/evidence`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<CompanionFieldEvidenceResponse>(
+    response,
+    'Failed to upload field task evidence',
   )
 }
 
