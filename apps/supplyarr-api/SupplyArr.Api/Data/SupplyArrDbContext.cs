@@ -74,6 +74,17 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
 
     public DbSet<LeadTimeSnapshotRun> LeadTimeSnapshotRuns => Set<LeadTimeSnapshotRun>();
 
+    public DbSet<TenantProcurementCoordinationSettings> TenantProcurementCoordinationSettings =>
+        Set<TenantProcurementCoordinationSettings>();
+
+    public DbSet<ProcurementCoordinationRecord> ProcurementCoordinationRecords =>
+        Set<ProcurementCoordinationRecord>();
+
+    public DbSet<ProcurementCoordinationEvent> ProcurementCoordinationEvents =>
+        Set<ProcurementCoordinationEvent>();
+
+    public DbSet<ProcurementCoordinationRun> ProcurementCoordinationRuns => Set<ProcurementCoordinationRun>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -657,6 +668,58 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
         modelBuilder.Entity<LeadTimeSnapshotRun>(entity =>
         {
             entity.ToTable("supplyarr_lead_time_snapshot_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<TenantProcurementCoordinationSettings>(entity =>
+        {
+            entity.ToTable("supplyarr_tenant_procurement_coordination_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<ProcurementCoordinationRecord>(entity =>
+        {
+            entity.ToTable("supplyarr_procurement_coordination_records");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SubjectType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.DocumentKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.CoordinationStage).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.NextActionRequired).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.VendorDisplayName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.DocumentStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.QuantityOrdered).HasPrecision(18, 4);
+            entity.Property(x => x.QuantityReceived).HasPrecision(18, 4);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.SubjectType, x.SubjectId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.CoordinationStage, x.UpdatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.IsTerminal, x.UpdatedAt });
+        });
+
+        modelBuilder.Entity<ProcurementCoordinationEvent>(entity =>
+        {
+            entity.ToTable("supplyarr_procurement_coordination_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SubjectType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.EventKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Detail).HasMaxLength(512);
+            entity.Property(x => x.SourceEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceEntityId).HasMaxLength(64).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.CoordinationRecordId, x.SequenceNumber });
+            entity.HasOne(x => x.CoordinationRecord)
+                .WithMany(x => x.Events)
+                .HasForeignKey(x => x.CoordinationRecordId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ProcurementCoordinationRun>(entity =>
+        {
+            entity.ToTable("supplyarr_procurement_coordination_runs");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.CreatedAt });

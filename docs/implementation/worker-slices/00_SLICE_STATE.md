@@ -324,6 +324,8 @@
 
 | 176 | RoutArr trip completion rollup worker (`routarr_tenant_trip_completion_rollup_settings`, `routarr_trip_completion_rollups`, `routarr_trip_completion_events`, `routarr_trip_completion_rollup_runs`, internal pending/process-batch, `routarr.trips.completion.rollup`, `/api/trip-completions` + `/api/route-completions`, `RoutArrTripCompletionRollupJob`, `TripCompletionRollupSettingsPanel`, tests, docs) | M12 (partial) | Complete | `b786225` |
 
-## Next slice (Worker 177)
+| 177 | SupplyArr procurement coordination worker (`supplyarr_tenant_procurement_coordination_settings`, `supplyarr_procurement_coordination_records`, `supplyarr_procurement_coordination_events`, `supplyarr_procurement_coordination_runs`, internal pending/process-batch, `supplyarr.procurement.coordination`, `/api/procurement-coordination` + settings, `SupplyArrProcurementCoordinationJob`, `ProcurementCoordinationSettingsPanel`, `ProcurementCoordinationPanel`, tests, docs) | M12 (partial) | Complete | `pending` |
 
-Per backlog: SupplyArr `[M12] procurement coordination worker` — see `02_PRODUCT_IMPLEMENTATION_BACKLOG.md`.
+## Next slice (Worker 178)
+
+Per backlog: SupplyArr `[M12] approval reminder worker` — see `02_PRODUCT_IMPLEMENTATION_BACKLOG.md`.

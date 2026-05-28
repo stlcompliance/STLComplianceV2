@@ -299,6 +299,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<SupplyArrLeadTimeSnapshotJob>();
 
+        builder.Services.Configure<SupplyArrProcurementCoordinationOptions>(
+            builder.Configuration.GetSection(SupplyArrProcurementCoordinationOptions.SectionName));
+
+        builder.Services.AddHttpClient<SupplyArrProcurementCoordinationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<SupplyArrProcurementCoordinationOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.SupplyArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<SupplyArrProcurementCoordinationJob>();
+
         builder.Services.Configure<SupplyArrNotificationDispatchOptions>(
             builder.Configuration.GetSection(SupplyArrNotificationDispatchOptions.SectionName));
 

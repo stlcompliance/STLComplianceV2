@@ -233,6 +233,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["routarr"],
             "routarr.trips.completion.rollup"),
+        Profile(
+            "worker-supplyarr-procurement-coordination",
+            "shared-worker",
+            "SupplyArrProcurementCoordination__ServiceToken",
+            "shared-worker",
+            ["supplyarr"],
+            "supplyarr.procurement.coordination"),
     ];
 
     public static IReadOnlyList<StlIntegrationTokenProfile> ForConsumer(string consumerService) =>

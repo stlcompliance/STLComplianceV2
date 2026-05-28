@@ -38,6 +38,9 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<PriceSnapshotWorkerService>();
         builder.Services.AddScoped<LeadTimeSnapshotSettingsService>();
         builder.Services.AddScoped<LeadTimeSnapshotWorkerService>();
+        builder.Services.AddScoped<ProcurementCoordinationSettingsService>();
+        builder.Services.AddScoped<ProcurementCoordinationWorkerService>();
+        builder.Services.AddScoped<ProcurementCoordinationService>();
         builder.Services.AddScoped<MaintainArrDemandIntakeService>();
         builder.Services.AddScoped<MaintainArrDemandStatusCallbackService>();
         builder.Services.Configure<MaintainArrClientOptions>(builder.Configuration.GetSection(MaintainArrClientOptions.SectionName));

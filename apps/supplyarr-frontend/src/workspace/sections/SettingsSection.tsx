@@ -1,6 +1,7 @@
 import { LeadTimeSnapshotSettingsPanel } from '../../components/LeadTimeSnapshotSettingsPanel'
 import { NotificationSettingsPanel } from '../../components/NotificationSettingsPanel'
 import { PriceSnapshotSettingsPanel } from '../../components/PriceSnapshotSettingsPanel'
+import { ProcurementCoordinationSettingsPanel } from '../../components/ProcurementCoordinationSettingsPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
@@ -15,6 +16,7 @@ export function SettingsSection({ state: s }: Props) {
       <NotificationSettingsPanel accessToken={s.accessToken} canManage={s.canManageNotifications} />
       <PriceSnapshotSettingsPanel accessToken={s.accessToken} canManage={s.canManageNotifications} />
       <LeadTimeSnapshotSettingsPanel accessToken={s.accessToken} canManage={s.canManageNotifications} />
+      <ProcurementCoordinationSettingsPanel accessToken={s.accessToken} canManage={s.canManageNotifications} />
     </div>
   )
 }

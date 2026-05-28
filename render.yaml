@@ -412,6 +412,8 @@ services:
         value: https://supplyarr-api-r963.onrender.com
       - key: SupplyArrLeadTimeSnapshot__SupplyArrBaseUrl
         value: https://supplyarr-api-r963.onrender.com
+      - key: SupplyArrProcurementCoordination__SupplyArrBaseUrl
+        value: https://supplyarr-api-r963.onrender.com
       - key: SupplyArrNotificationDispatch__SupplyArrBaseUrl
         value: https://supplyarr-api-r963.onrender.com
       - key: ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl

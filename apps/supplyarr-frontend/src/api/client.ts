@@ -55,6 +55,11 @@ import type {
   UpsertLeadTimeSnapshotSettingsRequest,
   PendingLeadTimeSnapshotCapturesResponse,
   LeadTimeSnapshotRunsResponse,
+  ProcurementCoordinationDashboardResponse,
+  ProcurementCoordinationSettingsResponse,
+  UpsertProcurementCoordinationSettingsRequest,
+  PendingProcurementCoordinationResponse,
+  ProcurementCoordinationRunsResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_SUPPLYARR_API_BASE ?? ''
@@ -967,5 +972,72 @@ export async function getLeadTimeSnapshotRuns(
   return parseJsonResponse<LeadTimeSnapshotRunsResponse>(
     response,
     'Failed to load lead-time snapshot runs',
+  )
+}
+
+export async function getProcurementCoordinationDashboard(
+  accessToken: string,
+  activeOnly = true,
+): Promise<ProcurementCoordinationDashboardResponse> {
+  const search = new URLSearchParams({ activeOnly: String(activeOnly) })
+  const response = await fetch(`${apiBase}/api/procurement-coordination?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProcurementCoordinationDashboardResponse>(
+    response,
+    'Failed to load procurement coordination dashboard',
+  )
+}
+
+export async function getProcurementCoordinationSettings(
+  accessToken: string,
+): Promise<ProcurementCoordinationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/procurement-coordination-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProcurementCoordinationSettingsResponse>(
+    response,
+    'Failed to load procurement coordination settings',
+  )
+}
+
+export async function upsertProcurementCoordinationSettings(
+  accessToken: string,
+  payload: UpsertProcurementCoordinationSettingsRequest,
+): Promise<ProcurementCoordinationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/procurement-coordination-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<ProcurementCoordinationSettingsResponse>(
+    response,
+    'Failed to save procurement coordination settings',
+  )
+}
+
+export async function getPendingProcurementCoordination(
+  accessToken: string,
+): Promise<PendingProcurementCoordinationResponse> {
+  const response = await fetch(`${apiBase}/api/procurement-coordination-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingProcurementCoordinationResponse>(
+    response,
+    'Failed to load pending procurement coordination',
+  )
+}
+
+export async function getProcurementCoordinationRuns(
+  accessToken: string,
+  limit = 5,
+): Promise<ProcurementCoordinationRunsResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/procurement-coordination-settings/runs?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProcurementCoordinationRunsResponse>(
+    response,
+    'Failed to load procurement coordination runs',
   )
 }

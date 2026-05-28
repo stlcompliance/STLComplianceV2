@@ -785,3 +785,79 @@ export interface LeadTimeSnapshotRunItem {
 export interface LeadTimeSnapshotRunsResponse {
   items: LeadTimeSnapshotRunItem[]
 }
+
+export interface ProcurementCoordinationSummaryResponse {
+  coordinationRecordId: string
+  subjectType: string
+  subjectId: string
+  documentKey: string
+  title: string
+  coordinationStage: string
+  nextActionRequired: string
+  purchaseRequestId: string | null
+  purchaseOrderId: string | null
+  vendorPartyId: string | null
+  vendorDisplayName: string
+  documentStatus: string
+  lineCount: number
+  quantityOrdered: number
+  quantityReceived: number
+  receiptProgressPercent: number | null
+  isTerminal: boolean
+  sourceUpdatedAt: string
+  computedAt: string
+  isMaterialized: boolean
+}
+
+export interface ProcurementCoordinationStageSummaryResponse {
+  coordinationStage: string
+  count: number
+}
+
+export interface ProcurementCoordinationDashboardResponse {
+  activeCount: number
+  terminalCount: number
+  stageCounts: ProcurementCoordinationStageSummaryResponse[]
+  items: ProcurementCoordinationSummaryResponse[]
+}
+
+export interface ProcurementCoordinationSettingsResponse {
+  isEnabled: boolean
+  stalenessHours: number
+  updatedAt: string | null
+}
+
+export interface UpsertProcurementCoordinationSettingsRequest {
+  isEnabled: boolean
+  stalenessHours: number
+}
+
+export interface PendingProcurementCoordinationItem {
+  subjectType: string
+  subjectId: string
+  documentKey: string
+  title: string
+  documentStatus: string
+  sourceUpdatedAt: string
+  lastComputedAt: string | null
+}
+
+export interface PendingProcurementCoordinationResponse {
+  asOfUtc: string
+  stalenessHours: number
+  batchSize: number
+  items: PendingProcurementCoordinationItem[]
+}
+
+export interface ProcurementCoordinationRunItem {
+  runId: string
+  asOfUtc: string
+  candidatesFound: number
+  refreshedCount: number
+  skippedCount: number
+  createdAt: string
+}
+
+export interface ProcurementCoordinationRunsResponse {
+  items: ProcurementCoordinationRunItem[]
+}
