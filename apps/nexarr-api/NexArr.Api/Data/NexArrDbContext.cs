@@ -30,6 +30,7 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
         Set<PlatformAuditPackageGenerationJob>();
 
     public DbSet<CompanionOfflineAction> CompanionOfflineActions => Set<CompanionOfflineAction>();
+    public DbSet<CompanionFieldSubmission> CompanionFieldSubmissions => Set<CompanionFieldSubmission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -208,6 +209,18 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.Property(x => x.ProductKey).HasMaxLength(64).IsRequired();
             entity.HasIndex(x => new { x.TenantId, x.IdempotencyKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.UserId, x.SyncedAt });
+        });
+
+        modelBuilder.Entity<CompanionFieldSubmission>(entity =>
+        {
+            entity.ToTable("nexarr_companion_field_submissions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TaskKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ProductKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SubmissionKind).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.DetailMessage).HasMaxLength(512);
+            entity.HasIndex(x => new { x.TenantId, x.UserId, x.TaskKey, x.RecordedAt });
         });
 
         modelBuilder.Entity<PlatformAuditPackageGenerationJob>(entity =>

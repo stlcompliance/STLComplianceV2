@@ -1,11 +1,14 @@
 using System.Security.Claims;
 using NexArr.Api.Contracts;
+using NexArr.Api.Entities;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
 
 namespace NexArr.Api.Services;
 
-public sealed class CompanionFieldEvidenceService(CompanionProductClient productClient)
+public sealed class CompanionFieldEvidenceService(
+    CompanionProductClient productClient,
+    CompanionFieldSubmissionService submissions)
 {
     private const long MaxEvidenceBytes = 10 * 1024 * 1024;
 
@@ -28,23 +31,71 @@ public sealed class CompanionFieldEvidenceService(CompanionProductClient product
         var captureKind = NormalizeCaptureKind(request.CaptureKind);
         ValidatePayload(request.FileName, request.ContentType, request.ContentBase64);
 
-        return task.ProductKey switch
+        var tenantId = principal.GetTenantId();
+        var userId = principal.GetUserId();
+
+        CompanionFieldEvidenceResponse response;
+        try
         {
-            "trainarr" when string.Equals(task.ResourceType, "assignment", StringComparison.Ordinal) =>
-                await productClient.SubmitTrainArrAssignmentEvidenceAsync(
-                    accessToken,
-                    task.ResourceId,
-                    captureKind,
-                    request.FileName,
-                    request.ContentType,
-                    request.ContentBase64,
-                    request.Notes,
-                    cancellationToken),
-            _ => throw new StlApiException(
-                "companion.field_evidence.unsupported_task",
-                $"Evidence capture is not yet supported for {task.ProductKey} field tasks.",
-                409),
-        };
+            response = task.ProductKey switch
+            {
+                "trainarr" when string.Equals(task.ResourceType, "assignment", StringComparison.Ordinal) =>
+                    await productClient.SubmitTrainArrAssignmentEvidenceAsync(
+                        accessToken,
+                        task.ResourceId,
+                        captureKind,
+                        request.FileName,
+                        request.ContentType,
+                        request.ContentBase64,
+                        request.Notes,
+                        cancellationToken),
+                _ => throw new StlApiException(
+                    "companion.field_evidence.unsupported_task",
+                    $"Evidence capture is not yet supported for {task.ProductKey} field tasks.",
+                    409),
+            };
+        }
+        catch (StlApiException ex)
+        {
+            await submissions.RecordAsync(
+                tenantId,
+                userId,
+                request.TaskKey.Trim(),
+                task.ProductKey,
+                CompanionFieldSubmissionKinds.Evidence,
+                CompanionFieldSubmissionStatuses.Failed,
+                ex.Message,
+                DateTimeOffset.UtcNow,
+                cancellationToken);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            await submissions.RecordAsync(
+                tenantId,
+                userId,
+                request.TaskKey.Trim(),
+                task.ProductKey,
+                CompanionFieldSubmissionKinds.Evidence,
+                CompanionFieldSubmissionStatuses.Failed,
+                ex.Message,
+                DateTimeOffset.UtcNow,
+                cancellationToken);
+            throw;
+        }
+
+        await submissions.RecordAsync(
+            tenantId,
+            userId,
+            request.TaskKey.Trim(),
+            task.ProductKey,
+            CompanionFieldSubmissionKinds.Evidence,
+            CompanionFieldSubmissionStatuses.Synced,
+            $"Uploaded {response.EvidenceTypeKey} evidence ({response.SizeBytes} bytes).",
+            DateTimeOffset.UtcNow,
+            cancellationToken);
+
+        return response;
     }
 
     private static string NormalizeCaptureKind(string captureKind)

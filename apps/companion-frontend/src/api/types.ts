@@ -136,6 +136,18 @@ export interface CompanionFieldEvidenceResponse {
   createdAt: string
 }
 
+export interface FieldTaskSubmissionStatusItem {
+  taskKey: string
+  submissionKind: string
+  status: string
+  detailMessage: string | null
+  recordedAt: string
+}
+
+export interface FieldTaskSubmissionStatusResponse {
+  items: FieldTaskSubmissionStatusItem[]
+}
+
 export interface CompanionMeResponse {
   userId: string
   personId: string

@@ -40,6 +40,7 @@ public static class NexArrServiceRegistration
         builder.Services.AddHttpClient(CompanionNotificationDispatchService.WebhookHttpClientName);
         builder.Services.AddScoped<CompanionOfflineSyncService>();
         builder.Services.AddScoped<CompanionFieldEvidenceService>();
+        builder.Services.AddScoped<CompanionFieldSubmissionService>();
         builder.Services.AddScoped<PlatformHealthService>();
         builder.Services.AddHttpClient(PlatformHealthService.HttpClientName, client =>
         {

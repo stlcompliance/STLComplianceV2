@@ -2,15 +2,19 @@ import type { AggregatedFieldInboxResponse, FieldInboxTaskItem } from '../api/ty
 import { formatWhen, productLabel, taskTypeLabel } from '../lib/fieldInbox'
 import { isTrainarrFieldTask } from '../lib/evidenceCapture'
 import { productLaunchUrl } from '../api/client'
+import type { MergedSubmissionChip } from '../lib/submissionState'
 import { FieldTaskEvidencePanel } from './FieldTaskEvidencePanel'
+import { TaskSubmissionStatusBadge } from './TaskSubmissionStatusBadge'
 
 interface FieldInboxPanelProps {
   inbox: AggregatedFieldInboxResponse
   productFilter: string
   onProductFilterChange: (productKey: string) => void
   accessToken: string
+  getSubmissionChips?: (taskKey: string) => MergedSubmissionChip[]
   acknowledgedTaskKeys?: ReadonlySet<string>
   onAcknowledgeTask?: (task: FieldInboxTaskItem) => void
+  onEvidenceUploadComplete?: () => void
 }
 
 export function FieldInboxPanel({
@@ -18,8 +22,10 @@ export function FieldInboxPanel({
   productFilter,
   onProductFilterChange,
   accessToken,
+  getSubmissionChips,
   acknowledgedTaskKeys,
   onAcknowledgeTask,
+  onEvidenceUploadComplete,
 }: FieldInboxPanelProps) {
   const filteredItems = productFilter
     ? inbox.items.filter((item) => item.productKey === productFilter)
@@ -70,8 +76,10 @@ export function FieldInboxPanel({
               key={task.taskKey}
               task={task}
               accessToken={accessToken}
+              submissionChips={getSubmissionChips?.(task.taskKey) ?? []}
               acknowledged={acknowledgedTaskKeys?.has(task.taskKey) ?? false}
               onAcknowledge={onAcknowledgeTask}
+              onEvidenceUploadComplete={onEvidenceUploadComplete}
             />
           ))}
         </ul>
@@ -131,13 +139,17 @@ function FilterChip({
 function TaskCard({
   task,
   accessToken,
+  submissionChips,
   acknowledged,
   onAcknowledge,
+  onEvidenceUploadComplete,
 }: {
   task: FieldInboxTaskItem
   accessToken: string
+  submissionChips: MergedSubmissionChip[]
   acknowledged: boolean
   onAcknowledge?: (task: FieldInboxTaskItem) => void
+  onEvidenceUploadComplete?: () => void
 }) {
   const launchUrl = task.deepLinkUrl ?? productLaunchUrl(task.productKey, task.deepLinkPath)
 
@@ -169,6 +181,8 @@ function TaskCard({
         )}
       </div>
 
+      <TaskSubmissionStatusBadge chips={submissionChips} />
+
       <div className="mt-4 flex flex-wrap gap-2">
         {onAcknowledge && (
           <button
@@ -196,7 +210,11 @@ function TaskCard({
       </div>
 
       {isTrainarrFieldTask(task.taskKey) && (
-        <FieldTaskEvidencePanel accessToken={accessToken} task={task} />
+        <FieldTaskEvidencePanel
+          accessToken={accessToken}
+          task={task}
+          onUploadComplete={onEvidenceUploadComplete}
+        />
       )}
     </li>
   )

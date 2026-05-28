@@ -25,10 +25,13 @@ public static class StlE2ePlaywrightSpecCatalog
 
     public const string CompanionFieldTaskEvidenceSpec = "companion-field-task-evidence.spec.ts";
 
+    public const string CompanionFieldSubmissionStateSpec = "companion-field-submission-state.spec.ts";
+
     public static readonly IReadOnlyList<string> CompanionOperationalSpecs =
     [
         CompanionOfflineQueueNotificationSpec,
         CompanionFieldTaskEvidenceSpec,
+        CompanionFieldSubmissionStateSpec,
     ];
 
     public static readonly IReadOnlyList<string> DeepLinkSmokeSpecs =

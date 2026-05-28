@@ -6,6 +6,7 @@ import type {
   CompanionOfflineActionsListResponse,
   CompanionSessionResponse,
   CompanionFieldEvidenceResponse,
+  FieldTaskSubmissionStatusResponse,
   SyncCompanionOfflineActionsRequest,
   SyncCompanionOfflineActionsResponse,
   SubmitCompanionFieldEvidenceRequest,
@@ -134,6 +135,25 @@ export async function listCompanionOfflineActions(
   return parseJsonResponse<CompanionOfflineActionsListResponse>(
     response,
     'Failed to load offline action history',
+  )
+}
+
+export async function getFieldTaskSubmissionStatus(
+  accessToken: string,
+  taskKeys: string[],
+): Promise<FieldTaskSubmissionStatusResponse> {
+  const search = new URLSearchParams({
+    taskKeys: taskKeys.slice(0, 50).join(','),
+  })
+  const response = await fetch(
+    `${apiBase}/api/companion/field-tasks/submission-status?${search}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<FieldTaskSubmissionStatusResponse>(
+    response,
+    'Failed to load field task submission status',
   )
 }
 

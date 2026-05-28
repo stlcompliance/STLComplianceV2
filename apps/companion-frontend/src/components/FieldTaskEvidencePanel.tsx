@@ -9,13 +9,19 @@ import {
   type EvidenceCaptureKind,
   fileToBase64,
 } from '../lib/evidenceCapture'
+import { pushSubmissionToast, setLocalSubmission } from '../lib/submissionState'
 
 interface FieldTaskEvidencePanelProps {
   accessToken: string
   task: FieldInboxTaskItem
+  onUploadComplete?: () => void
 }
 
-export function FieldTaskEvidencePanel({ accessToken, task }: FieldTaskEvidencePanelProps) {
+export function FieldTaskEvidencePanel({
+  accessToken,
+  task,
+  onUploadComplete,
+}: FieldTaskEvidencePanelProps) {
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [captureKind, setCaptureKind] = useState<EvidenceCaptureKind>('photo')
@@ -24,6 +30,11 @@ export function FieldTaskEvidencePanel({ accessToken, task }: FieldTaskEvidenceP
 
   const submitMutation = useMutation({
     mutationFn: async (file: File) => {
+      setLocalSubmission({
+        taskKey: task.taskKey,
+        kind: 'evidence',
+        phase: 'uploading',
+      })
       const contentBase64 = await fileToBase64(file)
       return submitCompanionFieldEvidence(accessToken, {
         taskKey: task.taskKey,
@@ -35,10 +46,27 @@ export function FieldTaskEvidencePanel({ accessToken, task }: FieldTaskEvidenceP
       })
     },
     onSuccess: (response) => {
-      setSuccessMessage(
-        `Uploaded ${response.evidenceTypeKey} evidence (${response.sizeBytes} bytes) to TrainArr.`,
-      )
+      const message = `Uploaded ${response.evidenceTypeKey} evidence (${response.sizeBytes} bytes) to TrainArr.`
+      setSuccessMessage(message)
+      setLocalSubmission({
+        taskKey: task.taskKey,
+        kind: 'evidence',
+        phase: 'synced',
+        message,
+      })
+      pushSubmissionToast({ tone: 'success', message })
       void queryClient.invalidateQueries({ queryKey: ['companion-field-inbox', accessToken] })
+      onUploadComplete?.()
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Evidence upload failed.'
+      setLocalSubmission({
+        taskKey: task.taskKey,
+        kind: 'evidence',
+        phase: 'failed',
+        message,
+      })
+      pushSubmissionToast({ tone: 'error', message })
     },
   })
 

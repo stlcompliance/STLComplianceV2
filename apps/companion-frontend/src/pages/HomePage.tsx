@@ -7,6 +7,8 @@ import { loadSession } from '../auth/sessionStorage'
 import { FieldInboxPanel } from '../components/FieldInboxPanel'
 import { NotificationSettingsPanel } from '../components/NotificationSettingsPanel'
 import { OfflineQueuePanel } from '../components/OfflineQueuePanel'
+import { SubmissionActivityBanner } from '../components/SubmissionActivityBanner'
+import { useFieldTaskSubmissionState } from '../hooks/useFieldTaskSubmissionState'
 import { useOfflineQueue } from '../hooks/useOfflineQueue'
 import { entitledProductKeys } from '../lib/fieldInbox'
 
@@ -39,7 +41,16 @@ export function HomePage() {
     [inboxQuery.data],
   )
 
-  const offlineQueue = useOfflineQueue(session?.accessToken ?? '')
+  const taskKeys = useMemo(
+    () => (inboxQuery.data?.items ?? []).map((task) => task.taskKey),
+    [inboxQuery.data?.items],
+  )
+
+  const submissionState = useFieldTaskSubmissionState(session?.accessToken ?? '', taskKeys)
+
+  const offlineQueue = useOfflineQueue(session?.accessToken ?? '', {
+    onSyncComplete: submissionState.refreshServerStatus,
+  })
 
   if (!session || !meQuery.data) {
     return <p className="text-sm text-slate-400">Loading field inbox…</p>
@@ -53,6 +64,11 @@ export function HomePage() {
       <PageHeader
         title="Field inbox"
         subtitle={`${meQuery.data.displayName} · ${session.tenantSlug} · ${entitledProducts.length} entitled products`}
+      />
+
+      <SubmissionActivityBanner
+        toasts={submissionState.toasts}
+        onDismiss={submissionState.dismissToast}
       />
 
       {inboxQuery.isLoading && (
@@ -87,6 +103,7 @@ export function HomePage() {
           productFilter={productFilter}
           onProductFilterChange={setProductFilter}
           accessToken={session.accessToken}
+          getSubmissionChips={submissionState.getChips}
           acknowledgedTaskKeys={acknowledgedTaskKeys}
           onAcknowledgeTask={(task) => {
             offlineQueue.queueAcknowledge({
@@ -96,6 +113,7 @@ export function HomePage() {
             })
             setAcknowledgedTaskKeys((previous) => new Set(previous).add(task.taskKey))
           }}
+          onEvidenceUploadComplete={submissionState.refreshServerStatus}
         />
       )}
 

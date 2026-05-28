@@ -266,6 +266,8 @@
 
 | 147 | Companion field evidence capture (`POST /api/companion/field-tasks/evidence`, TrainArr proxy, photo/document/signature UI, Playwright spec, tests, docs) | M11 (partial) | Complete | `e68e2e8` |
 
-## Next slice (Worker 148)
+| 148 | Companion clear submission state (`nexarr_companion_field_submissions`, submission-status API, inbox status chips + activity toasts, offline/evidence integration, tests, docs) | M11 (partial) | Complete | `6a2cb96` |
 
-Per milestone matrix: **M11 clear submission state** or **product switcher** / QR scan support; or next **product backlog** row (M4–M12).
+## Next slice (Worker 149)
+
+Per milestone matrix: **M11 product switcher** or **QR/barcode scan** support; or next **product backlog** row (M4–M12).

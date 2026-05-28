@@ -8,7 +8,9 @@ using STLCompliance.Shared.Contracts;
 
 namespace NexArr.Api.Services;
 
-public sealed class CompanionOfflineSyncService(NexArrDbContext db)
+public sealed class CompanionOfflineSyncService(
+    NexArrDbContext db,
+    CompanionFieldSubmissionService submissions)
 {
     public async Task<SyncCompanionOfflineActionsResponse> SyncAsync(
         ClaimsPrincipal principal,
@@ -35,6 +37,7 @@ public sealed class CompanionOfflineSyncService(NexArrDbContext db)
         var accepted = 0;
         var duplicates = 0;
         var synced = new List<CompanionOfflineActionSyncedItem>();
+        var newlyAccepted = new List<CompanionOfflineAction>();
 
         foreach (var action in request.Actions)
         {
@@ -68,12 +71,27 @@ public sealed class CompanionOfflineSyncService(NexArrDbContext db)
 
             db.CompanionOfflineActions.Add(entity);
             accepted++;
+            newlyAccepted.Add(entity);
             synced.Add(ToSyncedItem(entity));
         }
 
         if (accepted > 0)
         {
             await db.SaveChangesAsync(cancellationToken);
+
+            foreach (var entity in newlyAccepted)
+            {
+                await submissions.RecordAsync(
+                    tenantId,
+                    userId,
+                    entity.TaskKey,
+                    entity.ProductKey,
+                    CompanionFieldSubmissionKinds.Acknowledge,
+                    CompanionFieldSubmissionStatuses.Synced,
+                    "Field acknowledgment synced to NexArr.",
+                    entity.ClientCreatedAt,
+                    cancellationToken);
+            }
         }
 
         return new SyncCompanionOfflineActionsResponse(accepted, duplicates, synced);
