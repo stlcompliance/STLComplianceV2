@@ -268,6 +268,8 @@
 
 | 148 | Companion clear submission state (`nexarr_companion_field_submissions`, submission-status API, inbox status chips + activity toasts, offline/evidence integration, tests, docs) | M11 (partial) | Complete | `da42bf4` |
 
-## Next slice (Worker 149)
+| 149 | Companion product switcher (`ProductSwitcher` handoff mode, launch context + handoff APIs, `useCompanionProductLaunch`, tests, docs) | M11 (partial) | Complete | `pending` |
 
-Per milestone matrix: **M11 product switcher** or **QR/barcode scan** support; or next **product backlog** row (M4–M12).
+## Next slice (Worker 150)
+
+Per milestone matrix: **M11 QR scan** or **barcode scan** support; or next **product backlog** row (M4–M12).

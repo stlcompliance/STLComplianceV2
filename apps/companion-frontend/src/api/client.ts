@@ -7,6 +7,8 @@ import type {
   CompanionSessionResponse,
   CompanionFieldEvidenceResponse,
   FieldTaskSubmissionStatusResponse,
+  HandoffCreatedResponse,
+  LaunchContextResponse,
   SyncCompanionOfflineActionsRequest,
   SyncCompanionOfflineActionsResponse,
   SubmitCompanionFieldEvidenceRequest,
@@ -49,6 +51,30 @@ export async function redeemHandoff(handoffCode: string): Promise<CompanionSessi
     body: JSON.stringify({ handoffCode }),
   })
   return parseJsonResponse<CompanionSessionResponse>(response, 'Handoff redeem failed')
+}
+
+export async function getLaunchContext(
+  accessToken: string,
+  productKey: string,
+): Promise<LaunchContextResponse> {
+  const search = new URLSearchParams({ productKey })
+  const response = await fetch(`${apiBase}/api/launch/context?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<LaunchContextResponse>(response, 'Failed to load launch context')
+}
+
+export async function createHandoff(
+  accessToken: string,
+  productKey: string,
+  callbackUrl: string,
+): Promise<HandoffCreatedResponse> {
+  const response = await fetch(`${apiBase}/api/launch/handoff`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ productKey, callbackUrl }),
+  })
+  return parseJsonResponse<HandoffCreatedResponse>(response, 'Failed to create product handoff')
 }
 
 export async function getMe(accessToken: string): Promise<CompanionMeResponse> {

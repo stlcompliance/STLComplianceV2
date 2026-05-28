@@ -10,6 +10,8 @@ import {
 } from '@stl/shared-ui'
 import { getMe } from '../api/client'
 import { clearSession, loadSession } from '../auth/sessionStorage'
+import { useCompanionProductLaunch } from '../hooks/useCompanionProductLaunch'
+import { formatProductLaunchError } from '../lib/productLaunch'
 
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
@@ -33,6 +35,12 @@ export function ProductWorkspaceLayout() {
       clearSession()
     }
   }, [meQuery.isError, meQuery.error])
+
+  const productLaunch = useCompanionProductLaunch({
+    accessToken: session?.accessToken ?? '',
+    suiteHomeUrl,
+    productLaunchUrls,
+  })
 
   if (handoff) {
     return <Navigate to={`/launch?handoff=${encodeURIComponent(handoff)}`} replace />
@@ -61,6 +69,15 @@ export function ProductWorkspaceLayout() {
       entitlements={meQuery.data?.entitlements ?? []}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
+      onSelectProduct={(productKey) => {
+        if (session?.accessToken) {
+          void productLaunch.mutate(productKey)
+        }
+      }}
+      isProductLaunchPending={productLaunch.isPending}
+      productLaunchError={
+        productLaunch.isError ? formatProductLaunchError(productLaunch.error) : null
+      }
       workspaceSession={workspaceSession}
       isBootstrapping={Boolean(session?.accessToken) && meQuery.isLoading}
       bootstrapError={bootstrapError}

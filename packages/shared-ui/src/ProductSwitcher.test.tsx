@@ -1,8 +1,30 @@
 import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { ProductSwitcher } from './ProductSwitcher'
 
 describe('ProductSwitcher', () => {
+  it('invokes onSelectProduct for handoff navigation', () => {
+    const onSelectProduct = vi.fn()
+
+    render(
+      <ProductSwitcher
+        currentProductKey="companion"
+        entitlements={['companion', 'trainarr']}
+        suiteHomeUrl="http://localhost:5174"
+        productLaunchUrls={{
+          companion: 'http://localhost:5181/launch',
+          trainarr: 'http://localhost:5176/launch',
+        }}
+        onSelectProduct={onSelectProduct}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Companion/i }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /TrainArr/i }))
+
+    expect(onSelectProduct).toHaveBeenCalledWith('trainarr')
+  })
+
   it('opens an entitlement-aware dropdown with launch URLs', () => {
     render(
       <ProductSwitcher

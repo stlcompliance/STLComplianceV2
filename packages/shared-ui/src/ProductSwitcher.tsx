@@ -14,6 +14,10 @@ export type ProductSwitcherProps = {
   entitlements: readonly string[]
   suiteHomeUrl: string
   productLaunchUrls?: Record<string, string>
+  /** When set, menu items invoke NexArr handoff instead of direct launch URLs. */
+  onSelectProduct?: (productKey: string) => void
+  isPending?: boolean
+  errorMessage?: string | null
 }
 
 function findCatalogEntry(productKey: string): SuiteProductCatalogEntry | undefined {
@@ -28,6 +32,9 @@ export function ProductSwitcher({
   entitlements,
   suiteHomeUrl,
   productLaunchUrls = {},
+  onSelectProduct,
+  isPending = false,
+  errorMessage = null,
 }: ProductSwitcherProps) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -79,8 +86,9 @@ export function ProductSwitcher({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
+        disabled={isPending}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex max-w-[14rem] items-center gap-2 rounded-md border border-slate-600 bg-slate-900/60 px-3 py-1.5 text-left text-sm text-slate-100 hover:border-teal-500/50 hover:bg-slate-800/80"
+        className="inline-flex max-w-[14rem] items-center gap-2 rounded-md border border-slate-600 bg-slate-900/60 px-3 py-1.5 text-left text-sm text-slate-100 hover:border-teal-500/50 hover:bg-slate-800/80 disabled:opacity-50"
       >
         <CurrentIcon className="h-4 w-4 shrink-0 text-teal-400" aria-hidden />
         <span className="min-w-0 truncate font-medium">
@@ -109,33 +117,68 @@ export function ProductSwitcher({
               suiteHomeUrl,
               productLaunchUrls,
             )
+            const itemClassName = [
+              'flex w-full items-start gap-3 px-3 py-2 text-left text-sm transition-colors',
+              isCurrent
+                ? 'bg-slate-800/80 text-white'
+                : 'text-slate-200 hover:bg-slate-800/50 hover:text-white',
+            ].join(' ')
 
             return (
               <li key={product.productKey} role="none">
-                <a
-                  role="menuitem"
-                  href={href}
-                  aria-current={isCurrent ? 'true' : undefined}
-                  onClick={() => setOpen(false)}
-                  className={[
-                    'flex items-start gap-3 px-3 py-2 text-sm transition-colors',
-                    isCurrent
-                      ? 'bg-slate-800/80 text-white'
-                      : 'text-slate-200 hover:bg-slate-800/50 hover:text-white',
-                  ].join(' ')}
-                >
-                  <Icon className="mt-0.5 h-4 w-4 shrink-0 text-teal-400" aria-hidden />
-                  <span className="min-w-0">
-                    <span className="block font-medium">{product.displayName}</span>
-                    {product.description ? (
-                      <span className="mt-0.5 block text-xs text-slate-400">{product.description}</span>
-                    ) : null}
-                  </span>
-                </a>
+                {onSelectProduct ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    aria-current={isCurrent ? 'true' : undefined}
+                    disabled={isPending}
+                    onClick={() => {
+                      setOpen(false)
+                      if (!isCurrent) {
+                        onSelectProduct(product.productKey)
+                      }
+                    }}
+                    className={[itemClassName, 'disabled:opacity-50'].join(' ')}
+                  >
+                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-teal-400" aria-hidden />
+                    <span className="min-w-0">
+                      <span className="block font-medium">{product.displayName}</span>
+                      {product.description ? (
+                        <span className="mt-0.5 block text-xs text-slate-400">
+                          {product.description}
+                        </span>
+                      ) : null}
+                    </span>
+                  </button>
+                ) : (
+                  <a
+                    role="menuitem"
+                    href={href}
+                    aria-current={isCurrent ? 'true' : undefined}
+                    onClick={() => setOpen(false)}
+                    className={itemClassName}
+                  >
+                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-teal-400" aria-hidden />
+                    <span className="min-w-0">
+                      <span className="block font-medium">{product.displayName}</span>
+                      {product.description ? (
+                        <span className="mt-0.5 block text-xs text-slate-400">
+                          {product.description}
+                        </span>
+                      ) : null}
+                    </span>
+                  </a>
+                )}
               </li>
             )
           })}
         </ul>
+      ) : null}
+
+      {errorMessage ? (
+        <p className="absolute right-0 mt-1 w-72 text-xs text-rose-300" role="alert">
+          {errorMessage}
+        </p>
       ) : null}
     </div>
   )

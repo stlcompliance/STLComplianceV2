@@ -21,6 +21,9 @@ export type ProductAppShellProps = {
   entitlements?: readonly string[]
   suiteHomeUrl?: string
   productLaunchUrls?: Record<string, string>
+  onSelectProduct?: (productKey: string) => void
+  isProductLaunchPending?: boolean
+  productLaunchError?: string | null
   navItems?: ProductNavItem[]
   /** Compact layout hides sidebar navigation (field/mobile apps). */
   layoutVariant?: 'standard' | 'compact'
@@ -37,6 +40,9 @@ function WorkspaceTopBar({
   entitlements,
   suiteHomeUrl,
   productLaunchUrls,
+  onSelectProduct,
+  isProductLaunchPending,
+  productLaunchError,
 }: {
   productName: string
   productKey: string
@@ -47,6 +53,9 @@ function WorkspaceTopBar({
   entitlements: readonly string[]
   suiteHomeUrl: string
   productLaunchUrls?: Record<string, string>
+  onSelectProduct?: (productKey: string) => void
+  isProductLaunchPending?: boolean
+  productLaunchError?: string | null
 }) {
   const ProductIcon = getSuiteProductIcon(productKey)
 
@@ -65,6 +74,9 @@ function WorkspaceTopBar({
           entitlements={entitlements}
           suiteHomeUrl={suiteHomeUrl}
           productLaunchUrls={productLaunchUrls}
+          onSelectProduct={onSelectProduct}
+          isPending={isProductLaunchPending}
+          errorMessage={productLaunchError}
         />
         <WorkspaceUserChrome
           userDisplayName={userDisplayName}
@@ -86,6 +98,9 @@ export function ProductAppShell({
   entitlements = [],
   suiteHomeUrl = 'http://localhost:5174/app',
   productLaunchUrls,
+  onSelectProduct,
+  isProductLaunchPending,
+  productLaunchError,
   navItems = [{ label: 'Workspace', to: '/' }],
   layoutVariant = 'standard',
   children,
@@ -106,6 +121,9 @@ export function ProductAppShell({
           entitlements={entitlements}
           suiteHomeUrl={suiteHomeUrl}
           productLaunchUrls={productLaunchUrls}
+          onSelectProduct={onSelectProduct}
+          isProductLaunchPending={isProductLaunchPending}
+          productLaunchError={productLaunchError}
         />
         <main className="min-h-0 flex-1 overflow-auto px-4 pb-8 pt-4">{children}</main>
       </div>
@@ -163,6 +181,9 @@ export function ProductAppShell({
           entitlements={entitlements}
           suiteHomeUrl={suiteHomeUrl}
           productLaunchUrls={productLaunchUrls}
+          onSelectProduct={onSelectProduct}
+          isProductLaunchPending={isProductLaunchPending}
+          productLaunchError={productLaunchError}
         />
         <main className="min-h-0 flex-1 overflow-auto p-6">{children}</main>
       </div>

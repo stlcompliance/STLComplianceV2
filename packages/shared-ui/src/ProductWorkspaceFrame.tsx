@@ -16,6 +16,9 @@ export type ProductWorkspaceFrameProps = {
   entitlements?: readonly string[]
   suiteHomeUrl?: string
   productLaunchUrls?: Record<string, string>
+  onSelectProduct?: (productKey: string) => void
+  isProductLaunchPending?: boolean
+  productLaunchError?: string | null
   workspaceSession: ProductWorkspaceSession | null
   isBootstrapping?: boolean
   bootstrapError?: 'forbidden' | 'expired' | null
@@ -51,6 +54,9 @@ export function ProductWorkspaceFrame({
   entitlements = [],
   suiteHomeUrl,
   productLaunchUrls,
+  onSelectProduct,
+  isProductLaunchPending,
+  productLaunchError,
   workspaceSession,
   isBootstrapping = false,
   bootstrapError = null,
@@ -111,6 +117,9 @@ export function ProductWorkspaceFrame({
       entitlements={entitlements}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
+      onSelectProduct={onSelectProduct}
+      isProductLaunchPending={isProductLaunchPending}
+      productLaunchError={productLaunchError}
       navItems={navItems}
       layoutVariant={layoutVariant}
     >

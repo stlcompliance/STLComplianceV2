@@ -148,6 +148,27 @@ export interface FieldTaskSubmissionStatusResponse {
   items: FieldTaskSubmissionStatusItem[]
 }
 
+export interface LaunchContextResponse {
+  tenantId: string
+  tenantSlug: string
+  tenantDisplayName: string
+  userId: string
+  userEmail: string
+  productKey: string
+  productDisplayName: string
+  baseLaunchUrl: string
+  launchUrl: string
+  canLaunch: boolean
+  denialReasonCode: string | null
+}
+
+export interface HandoffCreatedResponse {
+  handoffCode: string
+  handoffId: string
+  expiresAt: string
+  launchUrl: string
+}
+
 export interface CompanionMeResponse {
   userId: string
   personId: string
