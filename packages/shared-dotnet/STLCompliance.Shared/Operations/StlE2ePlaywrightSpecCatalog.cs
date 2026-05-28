@@ -20,6 +20,13 @@ public static class StlE2ePlaywrightSpecCatalog
         "compliancecore-operator-rule-evaluate-smoke.spec.ts";
     public const string SuiteMultiProductHandoffJourneySpec =
         "suite-multi-product-handoff-journey.spec.ts";
+    public const string CompanionOfflineQueueNotificationSpec =
+        "companion-offline-queue-notification.spec.ts";
+
+    public static readonly IReadOnlyList<string> CompanionOperationalSpecs =
+    [
+        CompanionOfflineQueueNotificationSpec,
+    ];
 
     public static readonly IReadOnlyList<string> DeepLinkSmokeSpecs =
     [
@@ -41,6 +48,7 @@ public static class StlE2ePlaywrightSpecCatalog
         SuiteLoginHandoffSmokeSpec,
         ProductHandoffSmokeSpec,
         ProductHandoffTenantChromeSpec,
+        ..CompanionOperationalSpecs,
         ..DeepLinkSmokeSpecs,
         ..PlatformAdminSmokeSpecs,
         ..OperatorJourneySmokeSpecs,

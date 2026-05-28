@@ -6,12 +6,16 @@ interface FieldInboxPanelProps {
   inbox: AggregatedFieldInboxResponse
   productFilter: string
   onProductFilterChange: (productKey: string) => void
+  acknowledgedTaskKeys?: ReadonlySet<string>
+  onAcknowledgeTask?: (task: FieldInboxTaskItem) => void
 }
 
 export function FieldInboxPanel({
   inbox,
   productFilter,
   onProductFilterChange,
+  acknowledgedTaskKeys,
+  onAcknowledgeTask,
 }: FieldInboxPanelProps) {
   const filteredItems = productFilter
     ? inbox.items.filter((item) => item.productKey === productFilter)
@@ -58,7 +62,12 @@ export function FieldInboxPanel({
       ) : (
         <ul className="space-y-3">
           {filteredItems.map((task) => (
-            <TaskCard key={task.taskKey} task={task} />
+            <TaskCard
+              key={task.taskKey}
+              task={task}
+              acknowledged={acknowledgedTaskKeys?.has(task.taskKey) ?? false}
+              onAcknowledge={onAcknowledgeTask}
+            />
           ))}
         </ul>
       )}
@@ -114,11 +123,22 @@ function FilterChip({
   )
 }
 
-function TaskCard({ task }: { task: FieldInboxTaskItem }) {
+function TaskCard({
+  task,
+  acknowledged,
+  onAcknowledge,
+}: {
+  task: FieldInboxTaskItem
+  acknowledged: boolean
+  onAcknowledge?: (task: FieldInboxTaskItem) => void
+}) {
   const launchUrl = task.deepLinkUrl ?? productLaunchUrl(task.productKey, task.deepLinkPath)
 
   return (
-    <li className="rounded-xl border border-slate-700 bg-slate-900/80 p-4 shadow-sm">
+    <li
+      className="rounded-xl border border-slate-700 bg-slate-900/80 p-4 shadow-sm"
+      data-testid="companion-field-inbox-task"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-teal-300">
@@ -142,16 +162,31 @@ function TaskCard({ task }: { task: FieldInboxTaskItem }) {
         )}
       </div>
 
-      {launchUrl ? (
-        <a
-          href={launchUrl}
-          className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500"
-        >
-          Open in {productLabel(task.productKey)}
-        </a>
-      ) : (
-        <p className="mt-4 text-xs text-slate-500">Deep link unavailable for this product.</p>
-      )}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {onAcknowledge && (
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-100 hover:border-teal-500 disabled:opacity-50"
+            disabled={acknowledged}
+            data-testid="companion-acknowledge-task"
+            onClick={() => onAcknowledge(task)}
+          >
+            {acknowledged ? 'Acknowledged' : 'Acknowledge'}
+          </button>
+        )}
+        {launchUrl ? (
+          <a
+            href={launchUrl}
+            className="inline-flex min-h-11 items-center rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500"
+          >
+            Open in {productLabel(task.productKey)}
+          </a>
+        ) : (
+          <p className="inline-flex min-h-11 items-center text-xs text-slate-500">
+            Deep link unavailable for this product.
+          </p>
+        )}
+      </div>
     </li>
   )
 }

@@ -6,6 +6,8 @@ import { getFieldInbox, getMe } from '../api/client'
 import { loadSession } from '../auth/sessionStorage'
 import { FieldInboxPanel } from '../components/FieldInboxPanel'
 import { NotificationSettingsPanel } from '../components/NotificationSettingsPanel'
+import { OfflineQueuePanel } from '../components/OfflineQueuePanel'
+import { useOfflineQueue } from '../hooks/useOfflineQueue'
 import { entitledProductKeys } from '../lib/fieldInbox'
 
 export function HomePage() {
@@ -17,6 +19,7 @@ export function HomePage() {
 
   const session = loadSession()
   const [productFilter, setProductFilter] = useState('')
+  const [acknowledgedTaskKeys, setAcknowledgedTaskKeys] = useState<Set<string>>(() => new Set())
 
   const meQuery = useQuery({
     queryKey: ['companion-me', session?.accessToken],
@@ -35,6 +38,8 @@ export function HomePage() {
     () => (inboxQuery.data ? entitledProductKeys(inboxQuery.data.sources) : []),
     [inboxQuery.data],
   )
+
+  const offlineQueue = useOfflineQueue(session?.accessToken ?? '')
 
   if (!session || !meQuery.data) {
     return <p className="text-sm text-slate-400">Loading field inbox…</p>
@@ -64,11 +69,32 @@ export function HomePage() {
         </p>
       )}
 
+      <OfflineQueuePanel
+        isOnline={offlineQueue.isOnline}
+        pendingCount={offlineQueue.pendingCount}
+        pending={offlineQueue.pending}
+        lastSyncedAt={offlineQueue.lastSyncedAt}
+        lastSyncError={offlineQueue.lastSyncError}
+        isSyncing={offlineQueue.isSyncing}
+        onSyncNow={() => {
+          void offlineQueue.syncPending()
+        }}
+      />
+
       {inboxQuery.data && (
         <FieldInboxPanel
           inbox={inboxQuery.data}
           productFilter={productFilter}
           onProductFilterChange={setProductFilter}
+          acknowledgedTaskKeys={acknowledgedTaskKeys}
+          onAcknowledgeTask={(task) => {
+            offlineQueue.queueAcknowledge({
+              taskKey: task.taskKey,
+              productKey: task.productKey,
+              title: task.title,
+            })
+            setAcknowledgedTaskKeys((previous) => new Set(previous).add(task.taskKey))
+          }}
         />
       )}
 

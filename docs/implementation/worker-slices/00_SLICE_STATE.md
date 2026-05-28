@@ -262,6 +262,8 @@
 
 | 145 | M13 ship-gate hardening (`StlM13ShipGateCatalog`, entitlement-denial E2E + live probes, NexArr tenant isolation, OpenAPI ship-gate catalog tests, docs) | M13 (partial) | Complete | `8178be2` |
 
-## Next slice (Worker 146)
+| 146 | Companion offline queue + notification Playwright E2E (`nexarr_companion_offline_actions`, companion offline sync UI, push readiness, Playwright spec, e2eApi, catalog, tests, docs) | M11/M13 (partial) | Complete | `pending` |
 
-Per milestone matrix: next **product backlog** feature row (M4–M12) or **Companion Playwright E2E** (offline queue / push notifications per W134 follow-ups).
+## Next slice (Worker 147)
+
+Per milestone matrix: **M11 clear submission state** / evidence capture, or next **product backlog** row (M4–M12).

@@ -3,7 +3,10 @@ import type {
   CompanionMeResponse,
   CompanionNotificationDispatchesResponse,
   CompanionNotificationSettingsResponse,
+  CompanionOfflineActionsListResponse,
   CompanionSessionResponse,
+  SyncCompanionOfflineActionsRequest,
+  SyncCompanionOfflineActionsResponse,
   UpsertCompanionNotificationSettingsRequest,
 } from './types'
 
@@ -100,6 +103,35 @@ export async function getCompanionNotificationDispatches(
   return parseJsonResponse<CompanionNotificationDispatchesResponse>(
     response,
     'Failed to load notification dispatches',
+  )
+}
+
+export async function syncCompanionOfflineActions(
+  accessToken: string,
+  body: SyncCompanionOfflineActionsRequest,
+): Promise<SyncCompanionOfflineActionsResponse> {
+  const response = await fetch(`${apiBase}/api/companion/offline-actions/sync`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<SyncCompanionOfflineActionsResponse>(
+    response,
+    'Failed to sync offline actions',
+  )
+}
+
+export async function listCompanionOfflineActions(
+  accessToken: string,
+  limit = 20,
+): Promise<CompanionOfflineActionsListResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/companion/offline-actions?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CompanionOfflineActionsListResponse>(
+    response,
+    'Failed to load offline action history',
   )
 }
 

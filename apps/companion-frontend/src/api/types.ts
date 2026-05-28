@@ -85,6 +85,36 @@ export interface CompanionSessionResponse {
   entitlements: string[]
 }
 
+export interface CompanionOfflineActionPayload {
+  idempotencyKey: string
+  actionKind: string
+  taskKey: string
+  productKey: string
+  clientCreatedAt: string
+}
+
+export interface SyncCompanionOfflineActionsRequest {
+  actions: CompanionOfflineActionPayload[]
+}
+
+export interface CompanionOfflineActionSyncedItem {
+  idempotencyKey: string
+  actionKind: string
+  taskKey: string
+  productKey: string
+  syncedAt: string
+}
+
+export interface SyncCompanionOfflineActionsResponse {
+  accepted: number
+  duplicates: number
+  synced: CompanionOfflineActionSyncedItem[]
+}
+
+export interface CompanionOfflineActionsListResponse {
+  items: CompanionOfflineActionSyncedItem[]
+}
+
 export interface CompanionMeResponse {
   userId: string
   personId: string

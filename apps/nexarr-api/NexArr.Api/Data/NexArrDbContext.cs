@@ -29,6 +29,8 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
     public DbSet<PlatformAuditPackageGenerationJob> PlatformAuditPackageGenerationJobs =>
         Set<PlatformAuditPackageGenerationJob>();
 
+    public DbSet<CompanionOfflineAction> CompanionOfflineActions => Set<CompanionOfflineAction>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -194,6 +196,18 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.CreatedAt });
             entity.HasIndex(x => new { x.TenantId, x.EventKind, x.RelatedEntityType, x.RelatedEntityId });
+        });
+
+        modelBuilder.Entity<CompanionOfflineAction>(entity =>
+        {
+            entity.ToTable("nexarr_companion_offline_actions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ActionKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.TaskKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ProductKey).HasMaxLength(64).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.IdempotencyKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.UserId, x.SyncedAt });
         });
 
         modelBuilder.Entity<PlatformAuditPackageGenerationJob>(entity =>

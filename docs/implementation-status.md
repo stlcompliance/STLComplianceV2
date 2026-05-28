@@ -1,12 +1,12 @@
 # Implementation status (Arr ecosystem)
 
-**Last updated:** Worker 145 (2026-05-27)
+**Last updated:** Worker 146 (2026-05-27)
 
 ## Latest slice
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 145 | M13 ship-gate hardening | Complete | `8178be2` |
+| 146 | Companion offline queue + notification Playwright E2E | Complete | `pending` |
 
 ## Program summary
 
@@ -16,8 +16,8 @@
 - Playwright: suite login, handoff smokes, deep links, platform-admin audit export, **Compliance Core operator evaluate**, and **multi-product handoff journey** (E2E_LIVE skip)
 - DR: nightly live restore drill validates **all seven** product PostgreSQL databases
 
-## Next recommended slice (Worker 146)
+## Next recommended slice (Worker 147)
 
-Per milestone matrix: next **product backlog** feature row (M4–M12) or **Companion Playwright E2E** (offline queue / push notifications). M13 ship-gate catalog, entitlement denial, and NexArr tenant isolation probes are on `main` (Worker 145).
+Per milestone matrix (**Companion / M11**): **clear submission state** or **evidence capture** (photo/document/signature), or the next open **product backlog** row (M4–M12).
 
 See `FINAL_IMPLEMENTATION_REPORT.md` for ship-gate checklist.

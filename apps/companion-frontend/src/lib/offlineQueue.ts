@@ -1,0 +1,100 @@
+export const OFFLINE_QUEUE_STORAGE_KEY = 'stl-companion-offline-queue-v1'
+
+export const OFFLINE_ACTION_FIELD_INBOX_ACKNOWLEDGE = 'field_inbox.acknowledge'
+
+export interface QueuedOfflineAction {
+  idempotencyKey: string
+  actionKind: typeof OFFLINE_ACTION_FIELD_INBOX_ACKNOWLEDGE
+  taskKey: string
+  productKey: string
+  clientCreatedAt: string
+  title: string
+}
+
+export interface OfflineQueueSnapshot {
+  pending: QueuedOfflineAction[]
+  lastSyncedAt: string | null
+  lastSyncError: string | null
+}
+
+function readRaw(): OfflineQueueSnapshot {
+  if (typeof window === 'undefined') {
+    return { pending: [], lastSyncedAt: null, lastSyncError: null }
+  }
+
+  try {
+    const raw = window.localStorage.getItem(OFFLINE_QUEUE_STORAGE_KEY)
+    if (!raw) {
+      return { pending: [], lastSyncedAt: null, lastSyncError: null }
+    }
+    const parsed = JSON.parse(raw) as OfflineQueueSnapshot
+    return {
+      pending: Array.isArray(parsed.pending) ? parsed.pending : [],
+      lastSyncedAt: parsed.lastSyncedAt ?? null,
+      lastSyncError: parsed.lastSyncError ?? null,
+    }
+  } catch {
+    return { pending: [], lastSyncedAt: null, lastSyncError: null }
+  }
+}
+
+function writeRaw(snapshot: OfflineQueueSnapshot): void {
+  window.localStorage.setItem(OFFLINE_QUEUE_STORAGE_KEY, JSON.stringify(snapshot))
+}
+
+export function getOfflineQueueSnapshot(): OfflineQueueSnapshot {
+  return readRaw()
+}
+
+export function enqueueFieldInboxAcknowledge(input: {
+  taskKey: string
+  productKey: string
+  title: string
+}): QueuedOfflineAction {
+  const snapshot = readRaw()
+  const existing = snapshot.pending.find(
+    (item) => item.taskKey === input.taskKey && item.productKey === input.productKey,
+  )
+  if (existing) {
+    return existing
+  }
+
+  const action: QueuedOfflineAction = {
+    idempotencyKey: crypto.randomUUID(),
+    actionKind: OFFLINE_ACTION_FIELD_INBOX_ACKNOWLEDGE,
+    taskKey: input.taskKey,
+    productKey: input.productKey,
+    clientCreatedAt: new Date().toISOString(),
+    title: input.title,
+  }
+
+  snapshot.pending = [...snapshot.pending, action]
+  writeRaw(snapshot)
+  return action
+}
+
+export function removePendingByIdempotencyKeys(keys: ReadonlySet<string>): void {
+  const snapshot = readRaw()
+  snapshot.pending = snapshot.pending.filter((item) => !keys.has(item.idempotencyKey))
+  writeRaw(snapshot)
+}
+
+export function markSyncSuccess(syncedKeys: ReadonlySet<string>): void {
+  const snapshot = readRaw()
+  snapshot.pending = snapshot.pending.filter((item) => !syncedKeys.has(item.idempotencyKey))
+  snapshot.lastSyncedAt = new Date().toISOString()
+  snapshot.lastSyncError = null
+  writeRaw(snapshot)
+}
+
+export function markSyncFailure(message: string): void {
+  const snapshot = readRaw()
+  snapshot.lastSyncError = message
+  writeRaw(snapshot)
+}
+
+export function clearOfflineQueueForTests(): void {
+  if (typeof window !== 'undefined') {
+    window.localStorage.removeItem(OFFLINE_QUEUE_STORAGE_KEY)
+  }
+}

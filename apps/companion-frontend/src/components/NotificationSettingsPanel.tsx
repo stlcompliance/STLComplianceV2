@@ -2,6 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 
 import {
+  getPushPermissionState,
+  pushReadinessLabel,
+  requestPushPermission,
+} from '../lib/pushNotifications'
+
+import {
   getCompanionNotificationDispatches,
   getCompanionNotificationSettings,
   upsertCompanionNotificationSettings,
@@ -19,6 +25,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
   const [webhookUrl, setWebhookUrl] = useState('')
   const [notifyHandoffRedeemed, setNotifyHandoffRedeemed] = useState(true)
   const [notifyFieldInboxRefreshed, setNotifyFieldInboxRefreshed] = useState(true)
+  const [pushPermission, setPushPermission] = useState(getPushPermissionState)
 
   const settingsQuery = useQuery({
     queryKey: ['companion-notification-settings', accessToken],
@@ -63,7 +70,10 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
   }
 
   return (
-    <section className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
+    <section
+      className="rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+      data-testid="companion-notification-settings-panel"
+    >
       <h2 className="text-lg font-semibold text-slate-50">Operational notifications</h2>
       <p className="mt-1 text-sm text-slate-400">
         Configure HTTPS webhooks for Companion handoff and field inbox lifecycle events. Dispatch runs on a
@@ -115,10 +125,29 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
           </label>
         </fieldset>
 
+        <div className="rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-3 text-sm text-slate-300">
+          <p className="font-medium text-slate-100">Push notification readiness</p>
+          <p className="mt-1 text-slate-400" data-testid="companion-push-readiness-label">
+            {pushReadinessLabel(pushPermission)}
+          </p>
+          <button
+            type="button"
+            className="mt-3 rounded-md border border-slate-600 px-3 py-1.5 text-sm text-slate-100 hover:border-teal-500 disabled:opacity-50"
+            disabled={pushPermission === 'unsupported' || pushPermission === 'granted'}
+            data-testid="companion-request-push-permission"
+            onClick={() => {
+              void requestPushPermission().then(setPushPermission)
+            }}
+          >
+            Request browser push permission
+          </button>
+        </div>
+
         <button
           type="button"
           className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
           disabled={saveMutation.isPending}
+          data-testid="companion-save-notification-settings"
           onClick={() => saveMutation.mutate()}
         >
           {saveMutation.isPending ? 'Saving…' : 'Save notification settings'}

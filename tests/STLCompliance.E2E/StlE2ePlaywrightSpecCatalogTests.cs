@@ -45,11 +45,22 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
     }
 
     [Fact]
+    public void Companion_operational_specs_include_offline_queue_and_notifications()
+    {
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.CompanionOfflineQueueNotificationSpec,
+            StlE2ePlaywrightSpecCatalog.CompanionOperationalSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.CompanionOfflineQueueNotificationSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+    }
+
+    [Fact]
     public void All_specs_lists_handoff_and_deep_link_coverage()
     {
         Assert.Contains(StlE2ePlaywrightSpecCatalog.SuiteLoginHandoffSmokeSpec, StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(StlE2ePlaywrightSpecCatalog.ProductHandoffSmokeSpec, StlE2ePlaywrightSpecCatalog.All);
-        Assert.True(StlE2ePlaywrightSpecCatalog.All.Count >= 9);
+        Assert.True(StlE2ePlaywrightSpecCatalog.All.Count >= 10);
     }
 
     [Fact]

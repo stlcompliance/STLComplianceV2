@@ -174,6 +174,28 @@ async function createActiveTrainingAssignment(
 }
 
 /** Ensures an active TrainArr assignment exists for companion field-inbox deep-link smokes. */
+
+export type CompanionOfflineActionSyncedItem = {
+  idempotencyKey: string
+  actionKind: string
+  taskKey: string
+  productKey: string
+  syncedAt: string
+}
+
+export async function listCompanionOfflineActions(
+  companionAccessToken: string,
+  limit = 10,
+): Promise<{ items: CompanionOfflineActionSyncedItem[] }> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${nexarrApiUrl()}/api/companion/offline-actions?${search}`, {
+    headers: {
+      Authorization: `Bearer ${companionAccessToken}`,
+    },
+  })
+  return readJson<{ items: CompanionOfflineActionSyncedItem[] }>(response)
+}
+
 const platformAuditGenerateScope = 'nexarr.platform_audit_packages.generate'
 
 export async function issueSharedWorkerNexArrServiceToken(
