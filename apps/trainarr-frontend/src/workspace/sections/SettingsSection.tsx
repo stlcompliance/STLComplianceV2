@@ -1,4 +1,5 @@
 import { NotificationSettingsPanel } from '../../components/NotificationSettingsPanel'
+import { QualificationRecalculationSettingsPanel } from '../../components/QualificationRecalculationSettingsPanel'
 import { RecertificationSettingsPanel } from '../../components/RecertificationSettingsPanel'
 import type { TrainArrWorkspaceState } from '../useTrainArrWorkspaceState'
 
@@ -14,6 +15,7 @@ export function SettingsSection({ state }: Props) {
     <div className="space-y-6">
       <NotificationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
       <RecertificationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
+      <QualificationRecalculationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
     </div>
   )
 }

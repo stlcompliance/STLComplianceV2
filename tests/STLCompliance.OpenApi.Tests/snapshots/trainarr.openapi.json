@@ -226,6 +226,84 @@
         }
       }
     },
+    "/api/internal/qualification-recalculation/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingQualificationRecalculations",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "stalenessHours",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/qualification-recalculation/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessQualificationRecalculations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessQualificationRecalculationsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/qualifications/pending-expiration": {
       "get": {
         "tags": [
@@ -280,6 +358,72 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ProcessQualificationExpirationsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/recertification/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingRecertificationAssignments",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/recertification/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessRecertificationAssignments",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessRecertificationAssignmentsRequest"
               }
             }
           },
@@ -351,6 +495,42 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContext",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoff",
         "responses": {
           "200": {
             "description": "OK"
@@ -610,6 +790,155 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/qualification-recalculation-settings": {
+      "get": {
+        "tags": [
+          "QualificationRecalculationSettings"
+        ],
+        "operationId": "GetTrainArrQualificationRecalculationSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "QualificationRecalculationSettings"
+        ],
+        "operationId": "UpsertTrainArrQualificationRecalculationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertQualificationRecalculationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/qualification-recalculation-settings/runs": {
+      "get": {
+        "tags": [
+          "QualificationRecalculationSettings"
+        ],
+        "operationId": "ListTrainArrQualificationRecalculationRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/qualification-recalculation-settings/states": {
+      "get": {
+        "tags": [
+          "QualificationRecalculationSettings"
+        ],
+        "operationId": "ListTrainArrQualificationRecalculationStates",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/recertification-settings": {
+      "get": {
+        "tags": [
+          "RecertificationSettings"
+        ],
+        "operationId": "GetTrainArrRecertificationSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "RecertificationSettings"
+        ],
+        "operationId": "UpsertTrainArrRecertificationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertRecertificationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/recertification-settings/runs": {
+      "get": {
+        "tags": [
+          "RecertificationSettings"
+        ],
+        "operationId": "ListTrainArrRecertificationAssignmentRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2093,6 +2422,81 @@
           }
         }
       },
+      "ProcessQualificationRecalculationsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessRecertificationAssignmentsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ProcessTrainingNotificationsRequest": {
         "required": [
           "tenantId",
@@ -2272,6 +2676,50 @@
           }
         }
       },
+      "UpsertQualificationRecalculationSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "stalenessHours",
+          "autoSuspendOnBlock"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "autoSuspendOnBlock": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpsertRecertificationSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "leadDays"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "leadDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "UpsertTrainingNotificationSettingsRequest": {
         "required": [
           "isEnabled",
@@ -2344,6 +2792,9 @@
       "name": "Me"
     },
     {
+      "name": "Launch"
+    },
+    {
       "name": "TrainingDefinitions"
     },
     {
@@ -2393,6 +2844,12 @@
     },
     {
       "name": "NotificationSettings"
+    },
+    {
+      "name": "RecertificationSettings"
+    },
+    {
+      "name": "QualificationRecalculationSettings"
     }
   ]
 }

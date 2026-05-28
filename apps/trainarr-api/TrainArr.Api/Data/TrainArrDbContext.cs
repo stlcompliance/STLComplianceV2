@@ -62,6 +62,15 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
     public DbSet<TenantRecertificationSettings> TenantRecertificationSettings =>
         Set<TenantRecertificationSettings>();
 
+    public DbSet<TenantQualificationRecalculationSettings> TenantQualificationRecalculationSettings =>
+        Set<TenantQualificationRecalculationSettings>();
+
+    public DbSet<QualificationRecalculationState> QualificationRecalculationStates =>
+        Set<QualificationRecalculationState>();
+
+    public DbSet<QualificationRecalculationRun> QualificationRecalculationRuns =>
+        Set<QualificationRecalculationRun>();
+
     public DbSet<RecertificationAssignmentRun> RecertificationAssignmentRuns =>
         Set<RecertificationAssignmentRun>();
 
@@ -440,6 +449,40 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
             entity.Property(x => x.SkipReason).HasMaxLength(512);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.QualificationIssueId, x.Outcome });
+            entity.HasIndex(x => new { x.TenantId, x.ProcessedAt });
+        });
+
+        modelBuilder.Entity<TenantQualificationRecalculationSettings>(entity =>
+        {
+            entity.ToTable("trainarr_tenant_qualification_recalculation_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<QualificationRecalculationState>(entity =>
+        {
+            entity.ToTable("trainarr_qualification_recalculation_states");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.QualificationKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Outcome).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.ReasonCode).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Message).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.RulePackKey).HasMaxLength(128);
+            entity.Property(x => x.PreviousOutcome).HasMaxLength(16);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.QualificationIssueId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ComputedAt });
+        });
+
+        modelBuilder.Entity<QualificationRecalculationRun>(entity =>
+        {
+            entity.ToTable("trainarr_qualification_recalculation_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CheckOutcome).HasMaxLength(16);
+            entity.Property(x => x.SkipReason).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.QualificationIssueId });
             entity.HasIndex(x => new { x.TenantId, x.ProcessedAt });
         });
 

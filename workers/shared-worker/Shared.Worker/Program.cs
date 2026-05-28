@@ -35,6 +35,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<TrainArrRecertificationAssignmentJob>();
 
+        builder.Services.Configure<TrainArrQualificationRecalculationOptions>(
+            builder.Configuration.GetSection(TrainArrQualificationRecalculationOptions.SectionName));
+
+        builder.Services.AddHttpClient<TrainArrQualificationRecalculationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<TrainArrQualificationRecalculationOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.TrainArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<TrainArrQualificationRecalculationJob>();
+
         builder.Services.Configure<TrainArrNotificationDispatchOptions>(
             builder.Configuration.GetSection(TrainArrNotificationDispatchOptions.SectionName));
 

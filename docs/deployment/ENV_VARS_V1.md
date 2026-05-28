@@ -87,6 +87,10 @@ Issue tokens in NexArr (platform admin / service clients) with the scopes docume
 |----------|---------|
 | `TrainArrQualificationExpiration__TrainArrBaseUrl` | `http://trainarr-api:10000` |
 | `TrainArrQualificationExpiration__ServiceToken` | scope `trainarr.qualifications.expire` |
+| `TrainArrRecertificationAssignment__TrainArrBaseUrl` | same TrainArr host |
+| `TrainArrRecertificationAssignment__ServiceToken` | scope `trainarr.recertification.assign` |
+| `TrainArrQualificationRecalculation__TrainArrBaseUrl` | same TrainArr host |
+| `TrainArrQualificationRecalculation__ServiceToken` | scope `trainarr.qualifications.recalculate` |
 | `StaffArrCertificationExpiration__StaffArrBaseUrl` | `http://staffarr-api:10000` |
 | `StaffArrCertificationExpiration__ServiceToken` | scope `staffarr.certifications.expire` |
 | `StaffArrReadinessRollup__StaffArrBaseUrl` | same StaffArr host |

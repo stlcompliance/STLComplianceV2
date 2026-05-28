@@ -36,6 +36,10 @@ import type {
   RecertificationSettingsResponse,
   UpsertRecertificationSettingsRequest,
   RecertificationAssignmentRunsResponse,
+  QualificationRecalculationSettingsResponse,
+  UpsertQualificationRecalculationSettingsRequest,
+  QualificationRecalculationStatesResponse,
+  QualificationRecalculationRunsResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_TRAINARR_API_BASE ?? ''
@@ -642,5 +646,58 @@ export async function getRecertificationAssignmentRuns(
   return parseJsonResponse<RecertificationAssignmentRunsResponse>(
     response,
     'Failed to load recertification assignment runs',
+  )
+}
+
+export async function getQualificationRecalculationSettings(
+  accessToken: string,
+): Promise<QualificationRecalculationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/qualification-recalculation-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<QualificationRecalculationSettingsResponse>(
+    response,
+    'Failed to load qualification recalculation settings',
+  )
+}
+
+export async function upsertQualificationRecalculationSettings(
+  accessToken: string,
+  payload: UpsertQualificationRecalculationSettingsRequest,
+): Promise<QualificationRecalculationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/qualification-recalculation-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<QualificationRecalculationSettingsResponse>(
+    response,
+    'Failed to save qualification recalculation settings',
+  )
+}
+
+export async function getQualificationRecalculationStates(
+  accessToken: string,
+  limit = 10,
+): Promise<QualificationRecalculationStatesResponse> {
+  const response = await fetch(`${apiBase}/api/qualification-recalculation-settings/states?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<QualificationRecalculationStatesResponse>(
+    response,
+    'Failed to load qualification recalculation states',
+  )
+}
+
+export async function getQualificationRecalculationRuns(
+  accessToken: string,
+  limit = 10,
+): Promise<QualificationRecalculationRunsResponse> {
+  const response = await fetch(`${apiBase}/api/qualification-recalculation-settings/runs?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<QualificationRecalculationRunsResponse>(
+    response,
+    'Failed to load qualification recalculation runs',
   )
 }

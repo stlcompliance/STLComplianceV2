@@ -286,6 +286,8 @@
 
 | 157 | TrainArr recertification assignment worker (`trainarr_tenant_recertification_settings`, `trainarr_recertification_assignment_runs`, `SourceQualificationIssueId`, internal pending/process-batch, `trainarr.recertification.assign`, `/api/recertification-settings`, `TrainArrRecertificationAssignmentJob`, `RecertificationSettingsPanel`, tests, docs) | M12 (partial) | Complete | `62301b0` |
 
-## Next slice (Worker 158)
+| 158 | TrainArr qualification recalculation worker (`trainarr_tenant_qualification_recalculation_settings`, `trainarr_qualification_recalculation_states`, `trainarr_qualification_recalculation_runs`, internal pending/process-batch, `trainarr.qualifications.recalculate`, `/api/qualification-recalculation-settings`, `TrainArrQualificationRecalculationJob`, `QualificationRecalculationSettingsPanel`, tests, docs) | M12 (partial) | Complete | `pending` |
 
-Per milestone matrix: next open **M12** worker backlog row from `00_SLICE_STATE.md` / `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (TrainArr qualification recalculation worker).
+## Next slice (Worker 159)
+
+Per milestone matrix: next open **M12** worker backlog row from `00_SLICE_STATE.md` / `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (TrainArr StaffArr publish retry worker).

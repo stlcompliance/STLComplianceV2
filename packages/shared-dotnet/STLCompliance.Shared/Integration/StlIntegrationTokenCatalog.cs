@@ -47,6 +47,20 @@ public static class StlIntegrationTokenCatalog
 
         Profile("worker-trainarr-expire", "shared-worker", "TrainArrQualificationExpiration__ServiceToken", "shared-worker", ["trainarr"], "trainarr.qualifications.expire"),
         Profile(
+            "worker-trainarr-recertification",
+            "shared-worker",
+            "TrainArrRecertificationAssignment__ServiceToken",
+            "shared-worker",
+            ["trainarr"],
+            "trainarr.recertification.assign"),
+        Profile(
+            "worker-trainarr-recalculate",
+            "shared-worker",
+            "TrainArrQualificationRecalculation__ServiceToken",
+            "shared-worker",
+            ["trainarr"],
+            "trainarr.qualifications.recalculate"),
+        Profile(
             "worker-trainarr-notifications",
             "shared-worker",
             "TrainArrNotificationDispatch__ServiceToken",

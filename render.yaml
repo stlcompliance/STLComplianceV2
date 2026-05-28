@@ -367,6 +367,8 @@ services:
         value: https://trainarr-api-ae2t.onrender.com
       - key: TrainArrRecertificationAssignment__TrainArrBaseUrl
         value: https://trainarr-api-ae2t.onrender.com
+      - key: TrainArrQualificationRecalculation__TrainArrBaseUrl
+        value: https://trainarr-api-ae2t.onrender.com
       - key: TrainArrNotificationDispatch__TrainArrBaseUrl
         value: https://trainarr-api-ae2t.onrender.com
       - key: StaffArrCertificationExpiration__StaffArrBaseUrl

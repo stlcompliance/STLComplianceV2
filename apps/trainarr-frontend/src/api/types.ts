@@ -492,3 +492,44 @@ export interface RecertificationAssignmentRunItem {
 export interface RecertificationAssignmentRunsResponse {
   items: RecertificationAssignmentRunItem[]
 }
+
+export interface QualificationRecalculationSettingsResponse {
+  isEnabled: boolean
+  stalenessHours: number
+  autoSuspendOnBlock: boolean
+  updatedAt: string | null
+}
+
+export interface UpsertQualificationRecalculationSettingsRequest {
+  isEnabled: boolean
+  stalenessHours: number
+  autoSuspendOnBlock: boolean
+}
+
+export interface QualificationRecalculationStateItem {
+  qualificationIssueId: string
+  staffarrPersonId: string
+  qualificationKey: string
+  outcome: string
+  reasonCode: string
+  rulePackKey: string | null
+  previousOutcome: string | null
+  computedAt: string
+}
+
+export interface QualificationRecalculationStatesResponse {
+  items: QualificationRecalculationStateItem[]
+}
+
+export interface QualificationRecalculationRunItem {
+  runId: string
+  qualificationIssueId: string
+  outcome: string
+  checkOutcome: string | null
+  skipReason: string | null
+  processedAt: string
+}
+
+export interface QualificationRecalculationRunsResponse {
+  items: QualificationRecalculationRunItem[]
+}

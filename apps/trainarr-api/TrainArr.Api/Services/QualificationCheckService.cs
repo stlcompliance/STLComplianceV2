@@ -358,6 +358,36 @@ public sealed class QualificationCheckService(
 
     }
 
+    public async Task<QualificationCheckResponse> EvaluateIssueAsync(
+        Guid tenantId,
+        QualificationIssue issue,
+        Guid? trainingDefinitionId,
+        CancellationToken cancellationToken = default)
+    {
+        var qualificationKey = issue.QualificationKey.Trim().ToLowerInvariant();
+        var localState = MapLocalState(issue);
+        var rulePackKey = await ResolveRulePackKeyAsync(
+            tenantId,
+            null,
+            trainingDefinitionId,
+            null,
+            qualificationKey,
+            cancellationToken);
+
+        var complianceSummary = await EvaluateComplianceCoreAsync(
+            tenantId,
+            rulePackKey,
+            null,
+            cancellationToken);
+
+        return BuildCheckResponse(
+            Guid.NewGuid(),
+            issue.StaffarrPersonId,
+            qualificationKey,
+            localState,
+            complianceSummary);
+    }
+
 
 
     private async Task<string?> ResolveRulePackKeyAsync(
