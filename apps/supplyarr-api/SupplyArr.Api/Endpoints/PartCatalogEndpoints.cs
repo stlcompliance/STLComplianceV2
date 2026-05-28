@@ -213,5 +213,27 @@ public static class PartCatalogEndpoints
             return Results.Created($"/api/parts/{partId}/vendor-links/{link.LinkId}", link);
         })
         .WithName("CreatePartVendorLink");
+
+        group.MapPut("/{partId:guid}/vendor-links/{linkId:guid}/catalog-price", async (
+            Guid partId,
+            Guid linkId,
+            UpsertPartVendorLinkCatalogPriceRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartRegistryService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpsertVendorLinkCatalogPriceAsync(
+                tenantId,
+                actorUserId,
+                partId,
+                linkId,
+                request,
+                cancellationToken));
+        })
+        .WithName("UpsertPartVendorLinkCatalogPrice");
     }
 }

@@ -118,6 +118,63 @@ public sealed class PricingSnapshotService(
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
 
+    public async Task<PricingSnapshotResponse> CreateWorkerCaptureAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid partVendorLinkId,
+        decimal unitPrice,
+        string currencyCode,
+        decimal? minimumOrderQuantity,
+        DateTimeOffset effectiveFrom,
+        CancellationToken cancellationToken = default)
+    {
+        var link = await LoadVendorLinkAsync(tenantId, partVendorLinkId, cancellationToken);
+        var normalizedUnitPrice = NormalizeUnitPrice(unitPrice);
+        var normalizedCurrencyCode = NormalizeCurrencyCode(currencyCode);
+        decimal? normalizedMinimumOrderQuantity = minimumOrderQuantity is null
+            ? null
+            : NormalizeMinimumOrderQuantity(minimumOrderQuantity.Value);
+        var snapshotKey = PriceSnapshotCaptureRules.BuildWorkerSnapshotKey(partVendorLinkId, effectiveFrom);
+
+        await CloseOpenSnapshotsAsync(
+            tenantId,
+            link.Id,
+            effectiveFrom,
+            cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new PartVendorPricingSnapshot
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartVendorLinkId = link.Id,
+            SnapshotKey = snapshotKey,
+            UnitPrice = normalizedUnitPrice,
+            CurrencyCode = normalizedCurrencyCode,
+            MinimumOrderQuantity = normalizedMinimumOrderQuantity,
+            EffectiveFrom = effectiveFrom,
+            EffectiveTo = null,
+            Source = SnapshotSources.VendorFeed,
+            Notes = "Automated vendor catalog price capture.",
+            CreatedByUserId = actorUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.PartVendorPricingSnapshots.Add(entity);
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "pricing_snapshot.worker_capture",
+            tenantId,
+            actorUserId,
+            "pricing_snapshot",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return await GetAsync(tenantId, entity.Id, cancellationToken);
+    }
+
     private IQueryable<PartVendorPricingSnapshot> BaseQuery(Guid tenantId) =>
         db.PartVendorPricingSnapshots
             .AsNoTracking()
@@ -315,9 +372,10 @@ public sealed class PricingSnapshotService(
             SnapshotSources.Manual => SnapshotSources.Manual,
             SnapshotSources.Quote => SnapshotSources.Quote,
             SnapshotSources.Contract => SnapshotSources.Contract,
+            SnapshotSources.VendorFeed => SnapshotSources.VendorFeed,
             _ => throw new StlApiException(
                 "pricing_snapshot.source.invalid",
-                "Source must be manual, quote, or contract.",
+                "Source must be manual, quote, contract, or vendor_feed.",
                 400),
         };
     }

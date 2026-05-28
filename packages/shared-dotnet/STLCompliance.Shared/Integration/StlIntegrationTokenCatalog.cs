@@ -129,6 +129,13 @@ public static class StlIntegrationTokenCatalog
             "routarr.notifications.dispatch"),
         Profile("worker-supplyarr-reorder", "shared-worker", "SupplyArrReorderEvaluation__ServiceToken", "shared-worker", ["supplyarr"], "supplyarr.reorder.evaluate"),
         Profile(
+            "worker-supplyarr-price-snapshot",
+            "shared-worker",
+            "SupplyArrPriceSnapshot__ServiceToken",
+            "shared-worker",
+            ["supplyarr"],
+            "supplyarr.pricing.snapshots.capture"),
+        Profile(
             "worker-supplyarr-notifications",
             "shared-worker",
             "SupplyArrNotificationDispatch__ServiceToken",

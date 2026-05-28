@@ -62,6 +62,12 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
     public DbSet<ProcurementNotificationDispatch> ProcurementNotificationDispatches =>
         Set<ProcurementNotificationDispatch>();
 
+    public DbSet<TenantPriceSnapshotSettings> TenantPriceSnapshotSettings => Set<TenantPriceSnapshotSettings>();
+
+    public DbSet<PartVendorPriceCaptureState> PartVendorPriceCaptureStates => Set<PartVendorPriceCaptureState>();
+
+    public DbSet<PriceSnapshotRun> PriceSnapshotRuns => Set<PriceSnapshotRun>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -171,6 +177,9 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.ToTable("supplyarr_part_vendor_links");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.VendorPartNumber).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.CatalogUnitPrice).HasPrecision(18, 4);
+            entity.Property(x => x.CatalogCurrencyCode).HasMaxLength(3).IsRequired();
+            entity.Property(x => x.CatalogMinimumOrderQuantity).HasPrecision(18, 4);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.PartId });
             entity.HasIndex(x => new { x.TenantId, x.PartId, x.ExternalPartyId }).IsUnique();
@@ -588,6 +597,36 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.CreatedAt });
             entity.HasIndex(x => new { x.TenantId, x.EventKind, x.RelatedEntityType, x.RelatedEntityId });
+        });
+
+        modelBuilder.Entity<TenantPriceSnapshotSettings>(entity =>
+        {
+            entity.ToTable("supplyarr_tenant_price_snapshot_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<PartVendorPriceCaptureState>(entity =>
+        {
+            entity.ToTable("supplyarr_part_vendor_price_capture_states");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.LastCapturedUnitPrice).HasPrecision(18, 4);
+            entity.Property(x => x.LastCapturedCurrencyCode).HasMaxLength(3).IsRequired();
+            entity.Property(x => x.LastCapturedMinimumOrderQuantity).HasPrecision(18, 4);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PartVendorLinkId }).IsUnique();
+            entity.HasOne(x => x.PartVendorLink)
+                .WithMany()
+                .HasForeignKey(x => x.PartVendorLinkId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PriceSnapshotRun>(entity =>
+        {
+            entity.ToTable("supplyarr_price_snapshot_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
         });
     }
 }

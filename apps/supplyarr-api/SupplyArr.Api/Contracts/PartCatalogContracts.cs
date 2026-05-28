@@ -34,6 +34,9 @@ public sealed record PartVendorLinkResponse(
     string PartyDisplayName,
     string VendorPartNumber,
     bool IsPreferred,
+    decimal? CatalogUnitPrice,
+    string? CatalogCurrencyCode,
+    decimal? CatalogMinimumOrderQuantity,
     DateTimeOffset CreatedAt);
 
 public sealed record PartResponse(

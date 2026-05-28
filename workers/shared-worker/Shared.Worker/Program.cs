@@ -263,6 +263,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<SupplyArrReorderEvaluationJob>();
 
+        builder.Services.Configure<SupplyArrPriceSnapshotOptions>(
+            builder.Configuration.GetSection(SupplyArrPriceSnapshotOptions.SectionName));
+
+        builder.Services.AddHttpClient<SupplyArrPriceSnapshotClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<SupplyArrPriceSnapshotOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.SupplyArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<SupplyArrPriceSnapshotJob>();
+
         builder.Services.Configure<SupplyArrNotificationDispatchOptions>(
             builder.Configuration.GetSection(SupplyArrNotificationDispatchOptions.SectionName));
 

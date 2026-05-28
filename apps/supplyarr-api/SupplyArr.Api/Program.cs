@@ -31,5 +31,7 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrFieldInboxEndpoints();
         app.MapSupplyArrNotificationSettingsEndpoints();
         app.MapSupplyArrInternalProcurementNotificationEndpoints();
+        app.MapSupplyArrPriceSnapshotSettingsEndpoints();
+        app.MapSupplyArrInternalPriceSnapshotEndpoints();
         await Task.CompletedTask;
     });

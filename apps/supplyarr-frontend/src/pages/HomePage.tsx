@@ -118,6 +118,7 @@ import { PartCatalogPanel } from '../components/PartCatalogPanel'
 
 import { PartyRegistryPanel } from '../components/PartyRegistryPanel'
 import { NotificationSettingsPanel } from '../components/NotificationSettingsPanel'
+import { PriceSnapshotSettingsPanel } from '../components/PriceSnapshotSettingsPanel'
 
 
 
@@ -2384,6 +2385,11 @@ export function HomePage() {
         />
 
         <NotificationSettingsPanel
+          accessToken={session.accessToken}
+          canManage={canManageNotifications}
+        />
+
+        <PriceSnapshotSettingsPanel
           accessToken={session.accessToken}
           canManage={canManageNotifications}
         />

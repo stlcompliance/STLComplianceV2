@@ -77,6 +77,9 @@ export interface PartVendorLinkResponse {
   partyDisplayName: string
   vendorPartNumber: string
   isPreferred: boolean
+  catalogUnitPrice: number | null
+  catalogCurrencyCode: string | null
+  catalogMinimumOrderQuantity: number | null
   createdAt: string
 }
 
@@ -687,4 +690,52 @@ export interface ProcurementNotificationDispatchItem {
 
 export interface ProcurementNotificationDispatchesResponse {
   items: ProcurementNotificationDispatchItem[]
+}
+
+export interface PriceSnapshotSettingsResponse {
+  isEnabled: boolean
+  stalenessHours: number
+  updatedAt: string | null
+}
+
+export interface UpsertPriceSnapshotSettingsRequest {
+  isEnabled: boolean
+  stalenessHours: number
+}
+
+export interface PendingPriceSnapshotCaptureItem {
+  partVendorLinkId: string
+  partId: string
+  partKey: string
+  partDisplayName: string
+  vendorPartyId: string
+  vendorPartyKey: string
+  vendorDisplayName: string
+  vendorPartNumber: string
+  catalogUnitPrice: number
+  catalogCurrencyCode: string
+  catalogMinimumOrderQuantity: number | null
+  currentUnitPrice: number | null
+  currentCurrencyCode: string | null
+  lastCapturedAt: string | null
+}
+
+export interface PendingPriceSnapshotCapturesResponse {
+  asOfUtc: string
+  stalenessHours: number
+  batchSize: number
+  items: PendingPriceSnapshotCaptureItem[]
+}
+
+export interface PriceSnapshotRunItem {
+  runId: string
+  asOfUtc: string
+  candidatesFound: number
+  capturedCount: number
+  skippedCount: number
+  createdAt: string
+}
+
+export interface PriceSnapshotRunsResponse {
+  items: PriceSnapshotRunItem[]
 }

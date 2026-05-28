@@ -47,6 +47,10 @@ import type {
   ProcurementNotificationSettingsResponse,
   UpsertProcurementNotificationSettingsRequest,
   ProcurementNotificationDispatchesResponse,
+  PriceSnapshotSettingsResponse,
+  UpsertPriceSnapshotSettingsRequest,
+  PendingPriceSnapshotCapturesResponse,
+  PriceSnapshotRunsResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_SUPPLYARR_API_BASE ?? ''
@@ -853,5 +857,58 @@ export async function getProcurementNotificationDispatches(
   return parseJsonResponse<ProcurementNotificationDispatchesResponse>(
     response,
     'Failed to load notification dispatches',
+  )
+}
+
+export async function getPriceSnapshotSettings(
+  accessToken: string,
+): Promise<PriceSnapshotSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/price-snapshot-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PriceSnapshotSettingsResponse>(
+    response,
+    'Failed to load price snapshot settings',
+  )
+}
+
+export async function upsertPriceSnapshotSettings(
+  accessToken: string,
+  payload: UpsertPriceSnapshotSettingsRequest,
+): Promise<PriceSnapshotSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/price-snapshot-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<PriceSnapshotSettingsResponse>(
+    response,
+    'Failed to save price snapshot settings',
+  )
+}
+
+export async function getPendingPriceSnapshotCaptures(
+  accessToken: string,
+): Promise<PendingPriceSnapshotCapturesResponse> {
+  const response = await fetch(`${apiBase}/api/price-snapshot-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingPriceSnapshotCapturesResponse>(
+    response,
+    'Failed to load pending price snapshot captures',
+  )
+}
+
+export async function getPriceSnapshotRuns(
+  accessToken: string,
+  limit = 5,
+): Promise<PriceSnapshotRunsResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/price-snapshot-settings/runs?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PriceSnapshotRunsResponse>(
+    response,
+    'Failed to load price snapshot runs',
   )
 }

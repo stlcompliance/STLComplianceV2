@@ -309,6 +309,42 @@ public sealed class PartRegistryService(
         return MapVendorLink(entity, party);
     }
 
+    public async Task<PartVendorLinkResponse> UpsertVendorLinkCatalogPriceAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid partId,
+        Guid linkId,
+        UpsertPartVendorLinkCatalogPriceRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var link = await db.PartVendorLinks
+            .Include(x => x.ExternalParty)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.PartId == partId && x.Id == linkId,
+                cancellationToken);
+        if (link is null)
+        {
+            throw new StlApiException("parts.vendor_link.not_found", "Part vendor link was not found.", 404);
+        }
+
+        link.CatalogUnitPrice = NormalizeCatalogUnitPrice(request.CatalogUnitPrice);
+        link.CatalogCurrencyCode = NormalizeCatalogCurrencyCode(request.CatalogCurrencyCode);
+        link.CatalogMinimumOrderQuantity = NormalizeOptionalCatalogQuantity(request.CatalogMinimumOrderQuantity);
+        link.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "part_vendor_link.catalog_price.upsert",
+            tenantId,
+            actorUserId,
+            "part_vendor_link",
+            link.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return MapVendorLink(link, link.ExternalParty);
+    }
+
     private async Task ValidateCatalogAsync(
         Guid tenantId,
         Guid? catalogId,
@@ -391,7 +427,57 @@ public sealed class PartRegistryService(
             party.DisplayName,
             entity.VendorPartNumber,
             entity.IsPreferred,
+            entity.CatalogUnitPrice,
+            entity.CatalogCurrencyCode,
+            entity.CatalogMinimumOrderQuantity,
             entity.CreatedAt);
+
+    private static decimal NormalizeCatalogUnitPrice(decimal unitPrice)
+    {
+        if (unitPrice <= 0)
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Catalog unit price must be greater than zero.",
+                400);
+        }
+
+        return decimal.Round(unitPrice, 4, MidpointRounding.AwayFromZero);
+    }
+
+    private static string NormalizeCatalogCurrencyCode(string? currencyCode)
+    {
+        var normalized = string.IsNullOrWhiteSpace(currencyCode)
+            ? "USD"
+            : currencyCode.Trim().ToUpperInvariant();
+        if (normalized.Length != 3)
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Catalog currency code must be a 3-letter ISO code.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static decimal? NormalizeOptionalCatalogQuantity(decimal? quantity)
+    {
+        if (quantity is null)
+        {
+            return null;
+        }
+
+        if (quantity <= 0)
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Catalog minimum order quantity must be greater than zero.",
+                400);
+        }
+
+        return decimal.Round(quantity.Value, 4, MidpointRounding.AwayFromZero);
+    }
 
     private static string NormalizePartKey(string value)
     {

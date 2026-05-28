@@ -16,6 +16,12 @@ public sealed class PartVendorLink : IHasTenant
 
     public bool IsPreferred { get; set; }
 
+    public decimal? CatalogUnitPrice { get; set; }
+
+    public string CatalogCurrencyCode { get; set; } = "USD";
+
+    public decimal? CatalogMinimumOrderQuantity { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

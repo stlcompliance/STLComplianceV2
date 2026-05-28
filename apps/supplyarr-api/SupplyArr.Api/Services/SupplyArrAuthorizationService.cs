@@ -320,6 +320,9 @@ public sealed class SupplyArrAuthorizationService
             403);
     }
 
+    public void RequirePriceSnapshotSettingsManage(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }
