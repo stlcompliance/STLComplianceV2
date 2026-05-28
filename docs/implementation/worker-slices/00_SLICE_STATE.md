@@ -202,7 +202,7 @@
 | 113 | StaffArr person export org-unit filter UI (`PersonExportPanel` org-unit dropdown, `orgUnitId` export filter wiring, integration + frontend tests, docs) | M4 (partial) | Complete | `fc6d732` |
 | 114 | M13 weekly Render staging load soak CI (`StlRenderStagingLoadSoakScheduleCatalog`, `load-staging-render.yml` schedule + secret gate, docs) | M13 (partial) | Complete | `7e7dd3b` |
 | 115 | StaffArr person export filter presets (`personExportFilterPresets`, `PersonExportPanel` quick presets, combined filter integration + frontend tests, docs) | M4 (partial) | Complete | `475226f` |
-| 116 | Compliance Core journey k6 seeds (`LoadTestJourneySeedService`, `POST /api/load-test-journey/seed`, staging journey seed scripts, load-staging pre-step, tests, docs) | M5/M13 (partial) | Complete | `pending` |
+| 116 | Compliance Core journey k6 seeds (`LoadTestJourneySeedService`, `POST /api/load-test-journey/seed`, staging journey seed scripts, load-staging pre-step, tests, docs) | M5/M13 (partial) | Complete | `37e44f8` |
 
 ## Next slice (Worker 117)
 
