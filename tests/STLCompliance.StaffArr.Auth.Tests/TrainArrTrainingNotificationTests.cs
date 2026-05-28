@@ -193,7 +193,13 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
             true,
             true,
             true,
-            30));
+            true,
+            true,
+            true,
+            true,
+            30,
+            10,
+            5));
 
         var response = await _trainarrClient.SendAsync(request);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -208,7 +214,10 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-    private async Task UpsertNotificationSettingsAsync(string webhookUrl)
+    private async Task UpsertNotificationSettingsAsync(
+        string webhookUrl,
+        int maxAttempts = 10,
+        int retryIntervalMinutes = 5)
     {
         var token = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
         var request = Authorized(HttpMethod.Put, "/api/notification-settings", token);
@@ -218,9 +227,122 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
             true,
             true,
             true,
-            30));
+            true,
+            true,
+            true,
+            true,
+            30,
+            maxAttempts,
+            retryIntervalMinutes));
         var response = await _trainarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Failed_webhook_retries_then_succeeds_on_second_attempt()
+    {
+        const string signingKey = "test-signing-key-at-least-32-chars-long";
+        var trainArrDbName = $"TrainArrNotificationRetry-{Guid.NewGuid():N}";
+        var retryWebhookRequests = new List<HttpRequestMessage>();
+
+        await using var retryFactory = new WebApplicationFactory<global::TrainArr.Api.Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.UseSetting("ConnectionStrings:Database", string.Empty);
+            builder.UseSetting("DATABASE_URL", string.Empty);
+            builder.UseSetting("Auth:SigningKey", signingKey);
+            builder.UseSetting("ServiceToken:SigningKey", signingKey);
+            builder.UseSetting("StaffArr:BaseUrl", _staffarrClient.BaseAddress!.ToString().TrimEnd('/'));
+            builder.UseSetting("StaffArr:ServiceToken", _trainarrToStaffarrToken);
+            builder.ConfigureServices(services =>
+            {
+                RemoveDbContext<TrainArrDbContext>(services);
+                services.AddDbContext<TrainArrDbContext>(options => options.UseInMemoryDatabase(trainArrDbName));
+                services.AddHttpClient<StaffArrTrainingBlockerClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
+                services.AddHttpClient(TrainingNotificationDispatchService.WebhookHttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new FlakyWebhookCaptureHandler(retryWebhookRequests));
+            });
+        });
+
+        using var retryClient = retryFactory.CreateClient();
+        using (var scope = retryFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<TrainArrDbContext>();
+            await db.Database.EnsureCreatedAsync();
+        }
+
+        const string webhookUrl = "https://hooks.example.test/trainarr-retry";
+        var adminToken = CreateTrainArrAccessTokenForFactory(retryFactory, ["trainarr"], tenantRoleKey: "trainarr_admin");
+        var settingsRequest = Authorized(HttpMethod.Put, "/api/notification-settings", adminToken);
+        settingsRequest.Content = JsonContent.Create(new UpsertTrainingNotificationSettingsRequest(
+            true,
+            webhookUrl,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            30,
+            3,
+            0));
+        (await retryClient.SendAsync(settingsRequest)).EnsureSuccessStatusCode();
+
+        var definitionId = await CreateTrainingDefinitionOnClientAsync(retryClient, adminToken);
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Retry", "Notify", "retry.notify@example.com");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+            personId,
+            definitionId,
+            null,
+            "manual",
+            DateTimeOffset.UtcNow.AddDays(7)));
+        var createResponse = await retryClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var assignment = (await createResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+
+        var failProcess = Authorized(
+            HttpMethod.Post,
+            "/api/internal/training-notifications/process-batch",
+            _sharedWorkerToTrainarrToken);
+        failProcess.Content = JsonContent.Create(new ProcessTrainingNotificationsRequest(
+            PlatformSeeder.DemoTenantId,
+            DateTimeOffset.UtcNow,
+            10));
+        (await retryClient.SendAsync(failProcess)).EnsureSuccessStatusCode();
+
+        using (var scope = retryFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<TrainArrDbContext>();
+            var row = await db.TrainingNotificationDispatches.SingleAsync(x =>
+                x.RelatedEntityId == assignment.AssignmentId);
+            Assert.Equal(TrainingNotificationDispatchStatuses.Pending, row.DispatchStatus);
+            Assert.Equal(1, row.AttemptCount);
+            Assert.NotNull(row.NextRetryAt);
+        }
+
+        var retryProcess = Authorized(
+            HttpMethod.Post,
+            "/api/internal/training-notifications/process-batch",
+            _sharedWorkerToTrainarrToken);
+        retryProcess.Content = JsonContent.Create(new ProcessTrainingNotificationsRequest(
+            PlatformSeeder.DemoTenantId,
+            DateTimeOffset.UtcNow.AddMinutes(1),
+            10));
+        (await retryClient.SendAsync(retryProcess)).EnsureSuccessStatusCode();
+
+        Assert.Equal(2, retryWebhookRequests.Count);
+
+        using var verifyScope = retryFactory.Services.CreateScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<TrainArrDbContext>();
+        var dispatched = await verifyDb.TrainingNotificationDispatches.SingleAsync(x =>
+            x.RelatedEntityId == assignment.AssignmentId);
+        Assert.Equal(TrainingNotificationDispatchStatuses.Sent, dispatched.DispatchStatus);
+        Assert.Equal(2, dispatched.AttemptCount);
     }
 
     private async Task SeedStaffPersonAsync(Guid personId, string givenName, string familyName, string email)
@@ -241,6 +363,43 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
             UpdatedAt = now,
         });
         await db.SaveChangesAsync();
+    }
+
+    private string CreateTrainArrAccessTokenForFactory(
+        WebApplicationFactory<global::TrainArr.Api.Program> factory,
+        IReadOnlyList<string> entitlements,
+        string tenantRoleKey = "tenant_member",
+        Guid? personId = null)
+    {
+        using var scope = factory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<TrainArrTokenService>();
+        var (accessToken, _) = tokenService.CreateAccessToken(
+            PlatformSeeder.DemoAdminUserId,
+            personId ?? PlatformSeeder.DemoAdminUserId,
+            PlatformSeeder.DemoAdminEmail,
+            "Test Admin",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            entitlements,
+            isPlatformAdmin: false);
+
+        return accessToken;
+    }
+
+    private static async Task<Guid> CreateTrainingDefinitionOnClientAsync(HttpClient client, string trainarrAdminToken)
+    {
+        var request = Authorized(HttpMethod.Post, "/api/training-definitions", trainarrAdminToken);
+        request.Content = JsonContent.Create(new CreateTrainingDefinitionRequest(
+            $"notify_{Guid.NewGuid():N}"[..20],
+            "Notification Test Training",
+            "Training definition for notification dispatch tests.",
+            "notification_test",
+            "Notification Test"));
+        var response = await client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var definition = (await response.Content.ReadFromJsonAsync<TrainingDefinitionResponse>())!;
+        return definition.TrainingDefinitionId;
     }
 
     private async Task<Guid> CreateTrainingDefinitionAsync(string trainarrAdminToken)
@@ -354,6 +513,25 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
             CancellationToken cancellationToken)
         {
             captured.Add(request);
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        }
+    }
+
+    private sealed class FlakyWebhookCaptureHandler(List<HttpRequestMessage> captured) : HttpMessageHandler
+    {
+        private int _callCount;
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            captured.Add(request);
+            _callCount++;
+            if (_callCount == 1)
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.InternalServerError));
+            }
+
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
         }
     }

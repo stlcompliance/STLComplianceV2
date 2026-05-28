@@ -46,11 +46,32 @@ public sealed class TrainingNotificationEnqueueService(
             RelatedEntityType = relatedEntityType,
             RelatedEntityId = relatedEntityId,
             DispatchStatus = TrainingNotificationDispatchStatuses.Pending,
+            AttemptCount = 0,
             CreatedAt = now,
+            UpdatedAt = now,
         };
 
         db.TrainingNotificationDispatches.Add(dispatch);
         await db.SaveChangesAsync(cancellationToken);
         return dispatch.Id;
+    }
+
+    public async Task TryEnqueueFromDomainEventAsync(
+        TrainingDomainEvent domainEvent,
+        CancellationToken cancellationToken = default)
+    {
+        var notificationEventKind = TrainingNotificationRules.TryMapDomainEventKind(domainEvent.EventKind);
+        if (notificationEventKind is null)
+        {
+            return;
+        }
+
+        await TryEnqueueAsync(
+            domainEvent.TenantId,
+            notificationEventKind,
+            domainEvent.StaffarrPersonId,
+            domainEvent.RelatedEntityType,
+            domainEvent.RelatedEntityId,
+            cancellationToken);
     }
 }

@@ -18,6 +18,10 @@ public sealed class TrainingNotificationDispatch : IHasTenant
 
     public string DispatchStatus { get; set; } = string.Empty;
 
+    public int AttemptCount { get; set; }
+
+    public DateTimeOffset? NextRetryAt { get; set; }
+
     public string? WebhookHost { get; set; }
 
     public int? HttpStatusCode { get; set; }
@@ -25,6 +29,8 @@ public sealed class TrainingNotificationDispatch : IHasTenant
     public string? ErrorMessage { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset UpdatedAt { get; set; }
 
     public DateTimeOffset? DispatchedAt { get; set; }
 }
@@ -36,6 +42,14 @@ public static class TrainingNotificationEventKinds
     public const string QualificationExpiring = "qualification_expiring";
 
     public const string QualificationExpired = "qualification_expired";
+
+    public const string AssignmentCompleted = "assignment_completed";
+
+    public const string QualificationIssued = "qualification_issued";
+
+    public const string QualificationSuspended = "qualification_suspended";
+
+    public const string QualificationRevoked = "qualification_revoked";
 }
 
 public static class TrainingNotificationDispatchStatuses
@@ -47,4 +61,6 @@ public static class TrainingNotificationDispatchStatuses
     public const string Failed = "failed";
 
     public const string Skipped = "skipped";
+
+    public const string Abandoned = "abandoned";
 }

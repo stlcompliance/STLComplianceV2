@@ -130,6 +130,50 @@ public class StaffArrTrainArrEventProcessingWorkerTests : IAsyncLifetime
         Assert.Single(historyBody.Items);
     }
 
+    [Fact]
+    public async Task Process_events_batch_enqueues_notification_dispatch_from_domain_event()
+    {
+        var personId = Guid.NewGuid();
+        var assignmentId = Guid.NewGuid();
+        await SeedPendingDomainEventAsync(personId, assignmentId);
+
+        using (var scope = _trainarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<TrainArrDbContext>();
+            var now = DateTimeOffset.UtcNow;
+            db.TenantTrainingNotificationSettings.Add(new TenantTrainingNotificationSettings
+            {
+                Id = Guid.NewGuid(),
+                TenantId = PlatformSeeder.DemoTenantId,
+                IsEnabled = true,
+                NotificationWebhookUrl = "https://hooks.example.test/trainarr-event-fanout",
+                NotifyOnAssignmentCreated = true,
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var processRequest = new HttpRequestMessage(HttpMethod.Post, "/api/internal/training-events/process-batch");
+        processRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _sharedWorkerToTrainarrToken);
+        processRequest.Content = JsonContent.Create(new ProcessTrainingDomainEventsRequest(
+            PlatformSeeder.DemoTenantId,
+            DateTimeOffset.UtcNow,
+            25));
+
+        var processResponse = await _trainarrClient.SendAsync(processRequest);
+        processResponse.EnsureSuccessStatusCode();
+
+        using var verifyScope = _trainarrFactory.Services.CreateScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<TrainArrDbContext>();
+        var notification = await verifyDb.TrainingNotificationDispatches.SingleOrDefaultAsync(x =>
+            x.TenantId == PlatformSeeder.DemoTenantId
+            && x.EventKind == TrainingNotificationEventKinds.AssignmentCreated
+            && x.RelatedEntityId == assignmentId);
+        Assert.NotNull(notification);
+        Assert.Equal(TrainingNotificationDispatchStatuses.Pending, notification!.DispatchStatus);
+    }
+
     private async Task SeedPendingDomainEventAsync(Guid personId, Guid assignmentId)
     {
         using var scope = _trainarrFactory.Services.CreateScope();

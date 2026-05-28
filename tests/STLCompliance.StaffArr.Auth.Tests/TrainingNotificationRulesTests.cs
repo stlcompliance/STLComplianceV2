@@ -1,3 +1,4 @@
+using TrainArr.Api.Entities;
 using TrainArr.Api.Services;
 
 namespace STLCompliance.StaffArr.Auth.Tests;
@@ -25,5 +26,24 @@ public sealed class TrainingNotificationRulesTests
     {
         Assert.Equal(20, TrainingNotificationRules.NormalizeDispatchListLimit(null));
         Assert.Equal(100, TrainingNotificationRules.NormalizeDispatchListLimit(500));
+    }
+
+    [Fact]
+    public void TryMapDomainEventKind_maps_lifecycle_events()
+    {
+        Assert.Equal(
+            TrainingNotificationEventKinds.AssignmentCompleted,
+            TrainingNotificationRules.TryMapDomainEventKind(TrainingDomainEventKinds.AssignmentCompleted));
+        Assert.Equal(
+            TrainingNotificationEventKinds.QualificationIssued,
+            TrainingNotificationRules.TryMapDomainEventKind(TrainingDomainEventKinds.QualificationIssued));
+        Assert.Null(TrainingNotificationRules.TryMapDomainEventKind("unknown"));
+    }
+
+    [Fact]
+    public void NormalizeMaxAttempts_clamps()
+    {
+        Assert.Equal(10, TrainingNotificationRules.NormalizeMaxAttempts(null));
+        Assert.Equal(50, TrainingNotificationRules.NormalizeMaxAttempts(500));
     }
 }

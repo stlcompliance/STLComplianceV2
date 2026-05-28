@@ -292,6 +292,8 @@
 
 | 160 | TrainArr event processing worker (`trainarr_tenant_event_processing_settings`, `trainarr_training_domain_events`, `trainarr_person_training_history_entries`, internal pending/process-batch, `trainarr.events.process`, `/api/event-processing-settings`, `/api/person-training-history`, `TrainArrEventProcessingJob`, `EventProcessingSettingsPanel`, `PersonTrainingHistoryPanel`, tests, docs) | M12 (partial) | Complete | `0a4b8ca` |
 
-## Next slice (Worker 161)
+| 161 | TrainArr notification dispatch worker enhancements (retry policy on settings/dispatches, expanded lifecycle event kinds + webhooks, domain-event fan-out to notification outbox, `NotificationSettingsPanel` updates, tests, docs; builds on W123) | M12 (partial) | Complete | `pending` |
 
-Per milestone matrix: next open **M12** worker backlog row from `00_SLICE_STATE.md` / `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (TrainArr notification dispatch worker enhancements or next TrainArr M12 item).
+## Next slice (Worker 162)
+
+Per milestone matrix: next open **M12** TrainArr backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (rule-pack impact worker, evidence retention worker, or orphan reference detection worker).

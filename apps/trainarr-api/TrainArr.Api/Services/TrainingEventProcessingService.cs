@@ -9,6 +9,7 @@ namespace TrainArr.Api.Services;
 public sealed class TrainingEventProcessingService(
     TrainArrDbContext db,
     EventProcessingSettingsService settingsService,
+    TrainingNotificationEnqueueService notificationEnqueueService,
     ITrainArrAuditService audit)
 {
     public const string ProcessEventsActionScope = "trainarr.events.process";
@@ -239,6 +240,8 @@ public sealed class TrainingEventProcessingService(
                 "Succeeded",
                 reasonCode: domainEvent.EventKind,
                 cancellationToken: cancellationToken);
+
+            await notificationEnqueueService.TryEnqueueFromDomainEventAsync(domainEvent, cancellationToken);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

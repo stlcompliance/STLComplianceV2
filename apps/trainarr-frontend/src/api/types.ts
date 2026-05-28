@@ -436,9 +436,15 @@ export interface TrainingNotificationSettingsResponse {
   isEnabled: boolean
   notificationWebhookUrl: string | null
   notifyOnAssignmentCreated: boolean
+  notifyOnAssignmentCompleted: boolean
   notifyOnQualificationExpiring: boolean
+  notifyOnQualificationIssued: boolean
+  notifyOnQualificationSuspended: boolean
+  notifyOnQualificationRevoked: boolean
   notifyOnQualificationExpired: boolean
   expiringLeadDays: number
+  maxAttempts: number
+  retryIntervalMinutes: number
   updatedAt: string | null
 }
 
@@ -446,9 +452,15 @@ export interface UpsertTrainingNotificationSettingsRequest {
   isEnabled: boolean
   notificationWebhookUrl: string | null
   notifyOnAssignmentCreated: boolean
+  notifyOnAssignmentCompleted: boolean
   notifyOnQualificationExpiring: boolean
+  notifyOnQualificationIssued: boolean
+  notifyOnQualificationSuspended: boolean
+  notifyOnQualificationRevoked: boolean
   notifyOnQualificationExpired: boolean
   expiringLeadDays: number
+  maxAttempts: number
+  retryIntervalMinutes: number
 }
 
 export interface TrainingNotificationDispatchItem {
@@ -458,10 +470,12 @@ export interface TrainingNotificationDispatchItem {
   staffarrPersonId: string
   relatedEntityType: string
   relatedEntityId: string
+  attemptCount: number
   webhookHost: string | null
   httpStatusCode: number | null
   errorMessage: string | null
   createdAt: string
+  nextRetryAt: string | null
   dispatchedAt: string | null
 }
 

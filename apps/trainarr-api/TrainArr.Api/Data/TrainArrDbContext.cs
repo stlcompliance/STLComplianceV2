@@ -437,7 +437,7 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
             entity.Property(x => x.WebhookHost).HasMaxLength(256);
             entity.Property(x => x.ErrorMessage).HasMaxLength(512);
             entity.HasIndex(x => x.TenantId);
-            entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.NextRetryAt, x.CreatedAt });
             entity.HasIndex(x => new
             {
                 x.TenantId,

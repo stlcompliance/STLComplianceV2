@@ -64,6 +64,15 @@ public static class TrainingNotificationRules
     public static int NormalizeDispatchListLimit(int? limit) =>
         limit is null or < 1 ? 20 : Math.Min(limit.Value, 100);
 
+    public static int NormalizeMaxAttempts(int? maxAttempts) =>
+        Math.Clamp(maxAttempts ?? 10, 1, 50);
+
+    public static int NormalizeRetryIntervalMinutes(int? retryIntervalMinutes) =>
+        Math.Clamp(retryIntervalMinutes ?? 5, 1, 1440);
+
+    public static DateTimeOffset ComputeNextRetryAt(DateTimeOffset now, int retryIntervalMinutes) =>
+        now.AddMinutes(NormalizeRetryIntervalMinutes(retryIntervalMinutes));
+
     public static bool ShouldNotifyForEvent(
         TenantTrainingNotificationSettingsSnapshot settings,
         string eventKind) =>
@@ -72,9 +81,25 @@ public static class TrainingNotificationRules
         && eventKind switch
         {
             TrainingNotificationEventKinds.AssignmentCreated => settings.NotifyOnAssignmentCreated,
+            TrainingNotificationEventKinds.AssignmentCompleted => settings.NotifyOnAssignmentCompleted,
             TrainingNotificationEventKinds.QualificationExpiring => settings.NotifyOnQualificationExpiring,
+            TrainingNotificationEventKinds.QualificationIssued => settings.NotifyOnQualificationIssued,
+            TrainingNotificationEventKinds.QualificationSuspended => settings.NotifyOnQualificationSuspended,
+            TrainingNotificationEventKinds.QualificationRevoked => settings.NotifyOnQualificationRevoked,
             TrainingNotificationEventKinds.QualificationExpired => settings.NotifyOnQualificationExpired,
             _ => false,
+        };
+
+    public static string? TryMapDomainEventKind(string domainEventKind) =>
+        domainEventKind switch
+        {
+            TrainingDomainEventKinds.AssignmentCreated => TrainingNotificationEventKinds.AssignmentCreated,
+            TrainingDomainEventKinds.AssignmentCompleted => TrainingNotificationEventKinds.AssignmentCompleted,
+            TrainingDomainEventKinds.QualificationIssued => TrainingNotificationEventKinds.QualificationIssued,
+            TrainingDomainEventKinds.QualificationSuspended => TrainingNotificationEventKinds.QualificationSuspended,
+            TrainingDomainEventKinds.QualificationRevoked => TrainingNotificationEventKinds.QualificationRevoked,
+            TrainingDomainEventKinds.QualificationExpired => TrainingNotificationEventKinds.QualificationExpired,
+            _ => null,
         };
 }
 
@@ -82,6 +107,12 @@ public sealed record TenantTrainingNotificationSettingsSnapshot(
     bool IsEnabled,
     string? NotificationWebhookUrl,
     bool NotifyOnAssignmentCreated,
+    bool NotifyOnAssignmentCompleted,
     bool NotifyOnQualificationExpiring,
+    bool NotifyOnQualificationIssued,
+    bool NotifyOnQualificationSuspended,
+    bool NotifyOnQualificationRevoked,
     bool NotifyOnQualificationExpired,
-    int ExpiringLeadDays);
+    int ExpiringLeadDays,
+    int MaxAttempts,
+    int RetryIntervalMinutes);
