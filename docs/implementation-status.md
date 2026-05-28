@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 129 | SupplyArr notification settings | Complete | (this commit) |
+| 129 | SupplyArr notification settings | Complete | `9a59adf` |
 
 ## Program summary
 
