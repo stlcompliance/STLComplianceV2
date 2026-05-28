@@ -872,6 +872,33 @@
         }
       }
     },
+    "/api/people/export/delivery-notifications": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryNotifications",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/people/export/manifest": {
       "get": {
         "tags": [
@@ -2948,7 +2975,10 @@
       "UpsertPersonExportScheduleRequest": {
         "required": [
           "isEnabled",
-          "intervalHours"
+          "intervalHours",
+          "notificationWebhookUrl",
+          "notifyOnSuccess",
+          "notifyOnFailure"
         ],
         "type": "object",
         "properties": {
@@ -2962,6 +2992,18 @@
               "string"
             ],
             "format": "int32"
+          },
+          "notificationWebhookUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notifyOnSuccess": {
+            "type": "boolean"
+          },
+          "notifyOnFailure": {
+            "type": "boolean"
           }
         }
       }

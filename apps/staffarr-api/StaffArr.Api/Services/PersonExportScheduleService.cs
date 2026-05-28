@@ -6,7 +6,10 @@ using STLCompliance.Shared.Contracts;
 
 namespace StaffArr.Api.Services;
 
-public sealed class PersonExportScheduleService(StaffArrDbContext db, IStaffArrAuditService audit)
+public sealed class PersonExportScheduleService(
+    StaffArrDbContext db,
+    IStaffArrAuditService audit,
+    IHostEnvironment hostEnvironment)
 {
     public async Task<PersonExportScheduleResponse> GetAsync(
         Guid tenantId,
@@ -22,7 +25,10 @@ public sealed class PersonExportScheduleService(StaffArrDbContext db, IStaffArrA
                 IsEnabled: false,
                 IntervalHours: PersonExportDeliveryRules.NormalizeIntervalHours(null),
                 LastDeliveredAt: null,
-                UpdatedAt: null);
+                UpdatedAt: null,
+                NotificationWebhookUrl: null,
+                NotifyOnSuccess: true,
+                NotifyOnFailure: true);
         }
 
         return MapResponse(schedule);
@@ -52,6 +58,12 @@ public sealed class PersonExportScheduleService(StaffArrDbContext db, IStaffArrA
 
         entity.IsEnabled = request.IsEnabled;
         entity.IntervalHours = intervalHours;
+        var allowInsecureHttp = hostEnvironment.IsDevelopment() || hostEnvironment.IsEnvironment("Testing");
+        entity.NotificationWebhookUrl = PersonExportDeliveryNotificationRules.NormalizeWebhookUrl(
+            request.NotificationWebhookUrl,
+            allowInsecureHttp);
+        entity.NotifyOnSuccess = request.NotifyOnSuccess;
+        entity.NotifyOnFailure = request.NotifyOnFailure;
         entity.UpdatedByUserId = actorUserId;
         entity.UpdatedAt = now;
 
@@ -74,5 +86,8 @@ public sealed class PersonExportScheduleService(StaffArrDbContext db, IStaffArrA
             schedule.IsEnabled,
             schedule.IntervalHours,
             schedule.LastDeliveredAt,
-            schedule.UpdatedAt);
+            schedule.UpdatedAt,
+            schedule.NotificationWebhookUrl,
+            schedule.NotifyOnSuccess,
+            schedule.NotifyOnFailure);
 }

@@ -163,11 +163,34 @@ export interface PersonExportScheduleResponse {
   intervalHours: number
   lastDeliveredAt: string | null
   updatedAt: string | null
+  notificationWebhookUrl: string | null
+  notifyOnSuccess: boolean
+  notifyOnFailure: boolean
 }
 
 export interface UpsertPersonExportScheduleRequest {
   isEnabled: boolean
   intervalHours: number
+  notificationWebhookUrl?: string | null
+  notifyOnSuccess: boolean
+  notifyOnFailure: boolean
+}
+
+export interface PersonExportDeliveryNotificationItem {
+  notificationId: string
+  deliveryRunId: string | null
+  eventKind: string
+  deliveryStatus: string
+  webhookHost: string | null
+  httpStatusCode: number | null
+  errorMessage: string | null
+  exportId: string | null
+  personCount: number | null
+  attemptedAt: string
+}
+
+export interface PersonExportDeliveryNotificationsResponse {
+  items: PersonExportDeliveryNotificationItem[]
 }
 
 export interface OrgUnitResponse {

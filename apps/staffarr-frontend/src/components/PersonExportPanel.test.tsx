@@ -32,7 +32,11 @@ vi.mock('../api/client', () => ({
     intervalHours: 24,
     lastDeliveredAt: null,
     updatedAt: null,
+    notificationWebhookUrl: null,
+    notifyOnSuccess: true,
+    notifyOnFailure: true,
   }),
+  getPersonExportDeliveryNotifications: vi.fn().mockResolvedValue({ items: [] }),
   upsertPersonExportPreset: vi.fn().mockResolvedValue({
     employmentStatus: 'active',
     orgUnitId: '11111111-1111-1111-1111-111111111111',
@@ -44,6 +48,9 @@ vi.mock('../api/client', () => ({
     intervalHours: 12,
     lastDeliveredAt: null,
     updatedAt: '2026-05-27T12:00:00Z',
+    notificationWebhookUrl: 'https://hooks.example.test/staffarr',
+    notifyOnSuccess: true,
+    notifyOnFailure: true,
   }),
   exportPeopleCsv: vi.fn(),
   exportPeopleJson: vi.fn().mockResolvedValue({
@@ -127,12 +134,18 @@ describe('PersonExportPanel', () => {
     const checkbox = screen.getByRole('checkbox', { name: /Enable scheduled delivery/i })
     fireEvent.click(checkbox)
     fireEvent.change(screen.getByLabelText(/Delivery interval \(hours\)/i), { target: { value: '12' } })
+    fireEvent.change(screen.getByLabelText(/Notification webhook URL/i), {
+      target: { value: 'https://hooks.example.test/staffarr' },
+    })
     fireEvent.click(screen.getByRole('button', { name: /Save schedule/i }))
 
     await waitFor(() => {
       expect(upsertPersonExportSchedule).toHaveBeenCalledWith('token', {
         isEnabled: true,
         intervalHours: 12,
+        notificationWebhookUrl: 'https://hooks.example.test/staffarr',
+        notifyOnSuccess: true,
+        notifyOnFailure: true,
       })
     })
   })

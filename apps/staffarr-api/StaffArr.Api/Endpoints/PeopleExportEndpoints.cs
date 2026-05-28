@@ -123,5 +123,18 @@ public static class PeopleExportEndpoints
             return Results.Ok(schedule);
         })
         .WithName("UpsertStaffArrPeopleExportSchedule");
+
+        exports.MapGet("/delivery-notifications", async (
+            int? limit,
+            StaffArrAuthorizationService authorization,
+            PersonExportDeliveryNotificationService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListRecentAsync(tenantId, limit, cancellationToken));
+        })
+        .WithName("ListStaffArrPeopleExportDeliveryNotifications");
     }
 }

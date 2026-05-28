@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,8 +16,9 @@ using StaffArr.Api.Services;
 
 namespace STLCompliance.StaffArr.Auth.Tests;
 
-public class StaffArrPersonExportDeliveryWorkerTests : IAsyncLifetime
+public sealed class StaffArrPersonExportDeliveryNotificationTests : IAsyncLifetime
 {
+    private readonly List<HttpRequestMessage> _webhookRequests = [];
     private WebApplicationFactory<global::NexArr.Api.Program> _nexarrFactory = null!;
     private WebApplicationFactory<global::StaffArr.Api.Program> _staffarrFactory = null!;
     private HttpClient _nexarrClient = null!;
@@ -27,8 +28,8 @@ public class StaffArrPersonExportDeliveryWorkerTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         const string signingKey = "test-signing-key-at-least-32-chars-long";
-        var nexArrDbName = $"PersonExportDeliveryNexArr-{Guid.NewGuid():N}";
-        var staffArrDbName = $"PersonExportDeliveryStaffArr-{Guid.NewGuid():N}";
+        var nexArrDbName = $"PersonExportNotificationNexArr-{Guid.NewGuid():N}";
+        var staffArrDbName = $"PersonExportNotificationStaffArr-{Guid.NewGuid():N}";
 
         _nexarrFactory = new WebApplicationFactory<global::NexArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -65,6 +66,9 @@ public class StaffArrPersonExportDeliveryWorkerTests : IAsyncLifetime
             {
                 RemoveDbContext<StaffArrDbContext>(services);
                 services.AddDbContext<StaffArrDbContext>(options => options.UseInMemoryDatabase(staffArrDbName));
+
+                services.AddHttpClient(PersonExportDeliveryNotificationService.WebhookHttpClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => new WebhookCaptureHandler(_webhookRequests));
             });
         });
 
@@ -84,58 +88,11 @@ public class StaffArrPersonExportDeliveryWorkerTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Process_batch_rejects_missing_service_token()
+    public async Task Scheduled_delivery_posts_success_webhook_and_records_notification()
     {
-        var response = await _staffarrClient.PostAsJsonAsync(
-            "/api/internal/person-export-deliveries/process-batch",
-            new ProcessPersonExportDeliveriesRequest(PlatformSeeder.DemoTenantId, null, 10));
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Process_batch_rejects_trainarr_source_token()
-    {
-        var adminToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var trainarrToken = await IssueServiceTokenAsync(
-            adminToken,
-            "trainarr",
-            ["staffarr"],
-            PersonExportDeliveryService.ProcessDeliveriesActionScope);
-
-        var processRequest = new HttpRequestMessage(
-            HttpMethod.Post,
-            "/api/internal/person-export-deliveries/process-batch");
-        processRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", trainarrToken);
-        processRequest.Content = JsonContent.Create(new ProcessPersonExportDeliveriesRequest(
-            PlatformSeeder.DemoTenantId,
-            null,
-            10));
-
-        var response = await _staffarrClient.SendAsync(processRequest);
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task List_pending_returns_enabled_schedule_before_processing()
-    {
-        await SeedEnabledScheduleAsync();
-
-        var pendingRequest = Authorized(
-            HttpMethod.Get,
-            $"/api/internal/person-export-deliveries/pending?tenantId={PlatformSeeder.DemoTenantId}",
-            _sharedWorkerToStaffarrToken);
-        var pendingResponse = await _staffarrClient.SendAsync(pendingRequest);
-        pendingResponse.EnsureSuccessStatusCode();
-        var pending = (await pendingResponse.Content.ReadFromJsonAsync<PendingPersonExportDeliveriesResponse>())!;
-        Assert.Single(pending.Items);
-        Assert.Equal(PlatformSeeder.DemoTenantId, pending.Items[0].TenantId);
-    }
-
-    [Fact]
-    public async Task Process_batch_delivers_export_and_records_run()
-    {
-        await SeedPersonAsync(Guid.NewGuid(), "Scheduled", "Export", "scheduled.export@example.com");
-        await SeedEnabledScheduleAsync();
+        await SeedPersonAsync(Guid.NewGuid(), "Notify", "Success", "notify.success@example.com");
+        const string webhookUrl = "https://hooks.example.test/staffarr-export";
+        await SeedScheduleWithWebhookAsync(webhookUrl);
 
         var processRequest = Authorized(
             HttpMethod.Post,
@@ -148,67 +105,68 @@ public class StaffArrPersonExportDeliveryWorkerTests : IAsyncLifetime
 
         var processResponse = await _staffarrClient.SendAsync(processRequest);
         processResponse.EnsureSuccessStatusCode();
-        var result = (await processResponse.Content.ReadFromJsonAsync<ProcessPersonExportDeliveriesResponse>())!;
-        Assert.Equal(1, result.DeliveredCount);
-        Assert.Equal(1, result.Deliveries[0].PersonCount);
+
+        Assert.Single(_webhookRequests);
+        Assert.Equal(HttpMethod.Post, _webhookRequests[0].Method);
+        Assert.Equal(webhookUrl, _webhookRequests[0].RequestUri?.ToString());
 
         using var scope = _staffarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
-        Assert.Equal(1, await db.PersonExportDeliveryRuns.CountAsync(x => x.TenantId == PlatformSeeder.DemoTenantId));
-        var schedule = await db.TenantPersonExportSchedules.SingleAsync(x => x.TenantId == PlatformSeeder.DemoTenantId);
-        Assert.NotNull(schedule.LastDeliveredAt);
-        Assert.Equal(1, await db.AuditEvents.CountAsync(x =>
-            x.TenantId == PlatformSeeder.DemoTenantId && x.Action == "person.export.scheduled_delivery"));
+        var notification = await db.PersonExportDeliveryNotifications.SingleAsync(x =>
+            x.TenantId == PlatformSeeder.DemoTenantId
+            && x.EventKind == PersonExportDeliveryNotificationEventKinds.Success);
+        Assert.Equal(PersonExportDeliveryNotificationStatuses.Sent, notification.DeliveryStatus);
+        Assert.Equal(200, notification.HttpStatusCode);
+        Assert.Equal("hooks.example.test", notification.WebhookHost);
     }
 
     [Fact]
-    public async Task Process_batch_skips_recently_delivered_schedule_until_interval_elapses()
-    {
-        await SeedEnabledScheduleAsync(lastDeliveredAt: DateTimeOffset.UtcNow.AddHours(-1));
-
-        var processRequest = Authorized(
-            HttpMethod.Post,
-            "/api/internal/person-export-deliveries/process-batch",
-            _sharedWorkerToStaffarrToken);
-        processRequest.Content = JsonContent.Create(new ProcessPersonExportDeliveriesRequest(
-            PlatformSeeder.DemoTenantId,
-            null,
-            10));
-
-        var processResponse = await _staffarrClient.SendAsync(processRequest);
-        processResponse.EnsureSuccessStatusCode();
-        var result = (await processResponse.Content.ReadFromJsonAsync<ProcessPersonExportDeliveriesResponse>())!;
-        Assert.Equal(0, result.CandidatesFound);
-        Assert.Equal(0, result.DeliveredCount);
-    }
-
-    [Fact]
-    public async Task Export_schedule_put_and_get_round_trip()
+    public async Task Export_schedule_put_rejects_non_https_webhook_in_testing_when_invalid()
     {
         var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
         var upsertRequest = Authorized(HttpMethod.Put, "/api/people/export/schedule", token);
         upsertRequest.Content = JsonContent.Create(new UpsertPersonExportScheduleRequest(
             true,
-            12,
-            NotificationWebhookUrl: null,
+            24,
+            NotificationWebhookUrl: "not-a-url",
             NotifyOnSuccess: true,
             NotifyOnFailure: true));
 
-        var putResponse = await _staffarrClient.SendAsync(upsertRequest);
-        putResponse.EnsureSuccessStatusCode();
-        var saved = (await putResponse.Content.ReadFromJsonAsync<PersonExportScheduleResponse>())!;
-        Assert.True(saved.IsEnabled);
-        Assert.Equal(12, saved.IntervalHours);
-
-        var getResponse = await _staffarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/people/export/schedule", token));
-        getResponse.EnsureSuccessStatusCode();
-        var loaded = (await getResponse.Content.ReadFromJsonAsync<PersonExportScheduleResponse>())!;
-        Assert.True(loaded.IsEnabled);
-        Assert.Equal(12, loaded.IntervalHours);
+        var response = await _staffarrClient.SendAsync(upsertRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    private async Task SeedEnabledScheduleAsync(DateTimeOffset? lastDeliveredAt = null)
+    [Fact]
+    public async Task Delivery_notifications_list_returns_recent_rows()
+    {
+        await SeedPersonAsync(Guid.NewGuid(), "Notify", "List", "notify.list@example.com");
+        await SeedScheduleWithWebhookAsync("https://hooks.example.test/list");
+        await ProcessBatchAsync();
+
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var listResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/people/export/delivery-notifications?limit=5", token));
+        listResponse.EnsureSuccessStatusCode();
+        var listed = (await listResponse.Content.ReadFromJsonAsync<PersonExportDeliveryNotificationsResponse>())!;
+        Assert.NotEmpty(listed.Items);
+        Assert.Contains(listed.Items, item => item.EventKind == PersonExportDeliveryNotificationEventKinds.Success);
+    }
+
+    private async Task ProcessBatchAsync()
+    {
+        var processRequest = Authorized(
+            HttpMethod.Post,
+            "/api/internal/person-export-deliveries/process-batch",
+            _sharedWorkerToStaffarrToken);
+        processRequest.Content = JsonContent.Create(new ProcessPersonExportDeliveriesRequest(
+            PlatformSeeder.DemoTenantId,
+            null,
+            10));
+        var processResponse = await _staffarrClient.SendAsync(processRequest);
+        processResponse.EnsureSuccessStatusCode();
+    }
+
+    private async Task SeedScheduleWithWebhookAsync(string webhookUrl)
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
@@ -219,7 +177,9 @@ public class StaffArrPersonExportDeliveryWorkerTests : IAsyncLifetime
             TenantId = PlatformSeeder.DemoTenantId,
             IsEnabled = true,
             IntervalHours = 24,
-            LastDeliveredAt = lastDeliveredAt,
+            NotificationWebhookUrl = webhookUrl,
+            NotifyOnSuccess = true,
+            NotifyOnFailure = true,
             CreatedAt = now,
             UpdatedAt = now,
         });
@@ -264,8 +224,8 @@ public class StaffArrPersonExportDeliveryWorkerTests : IAsyncLifetime
     {
         var registerRequest = Authorized(HttpMethod.Post, "/api/service-tokens/clients", adminToken);
         registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
-            $"{sourceProduct}-export-delivery-{Guid.NewGuid():N}",
-            $"{sourceProduct} export delivery test",
+            $"{sourceProduct}-export-notification-{Guid.NewGuid():N}",
+            $"{sourceProduct} export notification test",
             sourceProduct,
             allowedProducts));
         var registerResponse = await _nexarrClient.SendAsync(registerRequest);
@@ -332,6 +292,21 @@ public class StaffArrPersonExportDeliveryWorkerTests : IAsyncLifetime
         foreach (var descriptor in descriptors)
         {
             services.Remove(descriptor);
+        }
+    }
+
+    private sealed class WebhookCaptureHandler(List<HttpRequestMessage> captured) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            captured.Add(request);
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{\"accepted\":true}", System.Text.Encoding.UTF8, "application/json"),
+            };
+            return Task.FromResult(response);
         }
     }
 }

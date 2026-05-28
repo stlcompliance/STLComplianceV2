@@ -25,7 +25,13 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<PeopleExportService>();
         builder.Services.AddScoped<PersonExportPresetService>();
         builder.Services.AddScoped<PersonExportScheduleService>();
+        builder.Services.AddScoped<PersonExportDeliveryNotificationService>();
         builder.Services.AddScoped<PersonExportDeliveryService>();
+
+        builder.Services.AddHttpClient(PersonExportDeliveryNotificationService.WebhookHttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
         builder.Services.AddScoped<ManagerHierarchyService>();
         builder.Services.AddScoped<OrgUnitService>();
         builder.Services.AddScoped<OrgUnitAssignmentService>();

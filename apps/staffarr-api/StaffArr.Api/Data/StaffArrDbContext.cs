@@ -48,6 +48,9 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<PersonExportDeliveryRun> PersonExportDeliveryRuns => Set<PersonExportDeliveryRun>();
 
+    public DbSet<PersonExportDeliveryNotification> PersonExportDeliveryNotifications =>
+        Set<PersonExportDeliveryNotification>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -347,8 +350,21 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
         {
             entity.ToTable("staffarr_tenant_person_export_schedules");
             entity.HasKey(x => x.Id);
+            entity.Property(x => x.NotificationWebhookUrl).HasMaxLength(2048);
             entity.HasIndex(x => x.TenantId).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.IsEnabled, x.LastDeliveredAt });
+        });
+
+        modelBuilder.Entity<PersonExportDeliveryNotification>(entity =>
+        {
+            entity.ToTable("staffarr_person_export_delivery_notifications");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventKind).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.DeliveryStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.WebhookHost).HasMaxLength(256);
+            entity.Property(x => x.ErrorMessage).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.AttemptedAt);
         });
 
         modelBuilder.Entity<PersonExportDeliveryRun>(entity =>

@@ -8,7 +8,8 @@ namespace StaffArr.Api.Services;
 public sealed class PersonExportDeliveryService(
     StaffArrDbContext db,
     PeopleExportService exportService,
-    IStaffArrAuditService audit)
+    IStaffArrAuditService audit,
+    PersonExportDeliveryNotificationService notificationService)
 {
     public const string ProcessDeliveriesActionScope = "staffarr.people.export.scheduled";
 
@@ -54,6 +55,8 @@ public sealed class PersonExportDeliveryService(
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
+                var failedRunId = await RecordFailureRunAsync(candidate, ex.Message, asOf, cancellationToken);
+                await notificationService.NotifyFailureAsync(candidate, ex.Message, failedRunId, cancellationToken);
                 skipped.Add(new PersonExportDeliverySkip(candidate.TenantId, ex.Message));
             }
         }
@@ -98,9 +101,10 @@ public sealed class PersonExportDeliveryService(
             cancellationToken);
 
         var completedAt = DateTimeOffset.UtcNow;
+        var deliveryRunId = Guid.NewGuid();
         db.PersonExportDeliveryRuns.Add(new PersonExportDeliveryRun
         {
-            Id = Guid.NewGuid(),
+            Id = deliveryRunId,
             TenantId = schedule.TenantId,
             ExportId = export.ExportId,
             PersonCount = export.PersonCount,
@@ -127,11 +131,52 @@ public sealed class PersonExportDeliveryService(
             reasonCode: $"{export.PersonCount}",
             cancellationToken: cancellationToken);
 
-        return new PersonExportDeliveryResult(
+        var result = new PersonExportDeliveryResult(
             schedule.TenantId,
             export.ExportId,
             export.PersonCount,
             completedAt);
+
+        await notificationService.NotifySuccessAsync(schedule, result, deliveryRunId, cancellationToken);
+
+        return result;
+    }
+
+    private async Task<Guid> RecordFailureRunAsync(
+        TenantPersonExportSchedule schedule,
+        string reason,
+        DateTimeOffset asOfUtc,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var runId = Guid.NewGuid();
+        db.PersonExportDeliveryRuns.Add(new PersonExportDeliveryRun
+        {
+            Id = runId,
+            TenantId = schedule.TenantId,
+            ExportId = Guid.Empty,
+            PersonCount = 0,
+            Status = "failed",
+            IntervalHours = schedule.IntervalHours,
+            SkipReason = PersonExportDeliveryRules.TruncateSkipReason(reason),
+            StartedAt = asOfUtc,
+            CompletedAt = now,
+            CreatedAt = now,
+        });
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "person.export.scheduled_delivery.failed",
+            schedule.TenantId,
+            WorkerActorUserId,
+            "person_export_delivery",
+            runId.ToString(),
+            "failed",
+            reasonCode: reason,
+            cancellationToken: cancellationToken);
+
+        return runId;
     }
 
     private async Task<List<TenantPersonExportSchedule>> LoadPendingCandidatesAsync(

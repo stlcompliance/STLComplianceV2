@@ -4,11 +4,32 @@ public sealed record PersonExportScheduleResponse(
     bool IsEnabled,
     int IntervalHours,
     DateTimeOffset? LastDeliveredAt,
-    DateTimeOffset? UpdatedAt);
+    DateTimeOffset? UpdatedAt,
+    string? NotificationWebhookUrl,
+    bool NotifyOnSuccess,
+    bool NotifyOnFailure);
 
 public sealed record UpsertPersonExportScheduleRequest(
     bool IsEnabled,
-    int IntervalHours);
+    int IntervalHours,
+    string? NotificationWebhookUrl,
+    bool NotifyOnSuccess,
+    bool NotifyOnFailure);
+
+public sealed record PersonExportDeliveryNotificationItem(
+    Guid NotificationId,
+    Guid? DeliveryRunId,
+    string EventKind,
+    string DeliveryStatus,
+    string? WebhookHost,
+    int? HttpStatusCode,
+    string? ErrorMessage,
+    Guid? ExportId,
+    int? PersonCount,
+    DateTimeOffset AttemptedAt);
+
+public sealed record PersonExportDeliveryNotificationsResponse(
+    IReadOnlyList<PersonExportDeliveryNotificationItem> Items);
 
 public sealed record PendingPersonExportDeliveryItem(
     Guid TenantId,

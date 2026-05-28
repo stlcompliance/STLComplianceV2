@@ -48,6 +48,7 @@ import type {
   PersonExportFilters,
   PersonExportPresetResponse,
   UpsertPersonExportPresetRequest,
+  PersonExportDeliveryNotificationsResponse,
   PersonExportScheduleResponse,
   UpsertPersonExportScheduleRequest,
 } from './types'
@@ -250,6 +251,19 @@ export async function upsertPersonExportSchedule(
     body: JSON.stringify(request),
   })
   return parseJsonResponse<PersonExportScheduleResponse>(response, 'Failed to save tenant export schedule')
+}
+
+export async function getPersonExportDeliveryNotifications(
+  accessToken: string,
+  limit = 5,
+): Promise<PersonExportDeliveryNotificationsResponse> {
+  const response = await fetch(`${apiBase}/api/people/export/delivery-notifications?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonExportDeliveryNotificationsResponse>(
+    response,
+    'Failed to load export delivery notifications',
+  )
 }
 
 export async function getOrgUnits(accessToken: string): Promise<OrgUnitResponse[]> {

@@ -18,4 +18,7 @@ public static class PersonExportDeliveryRules
         var threshold = asOfUtc.AddHours(-intervalHours);
         return lastDeliveredAt < threshold;
     }
+
+    public static string TruncateSkipReason(string reason) =>
+        reason.Length <= 256 ? reason : reason[..256];
 }

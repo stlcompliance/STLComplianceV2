@@ -8,6 +8,7 @@ import {
   getOrgUnits,
   getPeopleExportManifest,
   getPersonExportPreset,
+  getPersonExportDeliveryNotifications,
   getPersonExportSchedule,
   upsertPersonExportPreset,
   upsertPersonExportSchedule,
@@ -37,6 +38,9 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
   const [filtersInitialized, setFiltersInitialized] = useState(false)
   const [scheduleEnabled, setScheduleEnabled] = useState(false)
   const [scheduleIntervalHours, setScheduleIntervalHours] = useState('24')
+  const [notificationWebhookUrl, setNotificationWebhookUrl] = useState('')
+  const [notifyOnSuccess, setNotifyOnSuccess] = useState(true)
+  const [notifyOnFailure, setNotifyOnFailure] = useState(true)
   const [scheduleInitialized, setScheduleInitialized] = useState(false)
   const [lastJsonExport, setLastJsonExport] = useState<PersonExportResponse | null>(null)
 
@@ -64,12 +68,21 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
     enabled: canExport,
   })
 
+  const deliveryNotificationsQuery = useQuery({
+    queryKey: ['staffarr-people-export-delivery-notifications', accessToken],
+    queryFn: () => getPersonExportDeliveryNotifications(accessToken, 5),
+    enabled: canExport,
+  })
+
   useEffect(() => {
     if (scheduleInitialized || exportScheduleQuery.isLoading || !exportScheduleQuery.data) {
       return
     }
     setScheduleEnabled(exportScheduleQuery.data.isEnabled)
     setScheduleIntervalHours(String(exportScheduleQuery.data.intervalHours))
+    setNotificationWebhookUrl(exportScheduleQuery.data.notificationWebhookUrl ?? '')
+    setNotifyOnSuccess(exportScheduleQuery.data.notifyOnSuccess)
+    setNotifyOnFailure(exportScheduleQuery.data.notifyOnFailure)
     setScheduleInitialized(true)
   }, [scheduleInitialized, exportScheduleQuery.data, exportScheduleQuery.isLoading])
 
@@ -121,9 +134,15 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
       upsertPersonExportSchedule(accessToken, {
         isEnabled: scheduleEnabled,
         intervalHours: Number.parseInt(scheduleIntervalHours, 10) || 24,
+        notificationWebhookUrl: notificationWebhookUrl.trim() || null,
+        notifyOnSuccess,
+        notifyOnFailure,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staffarr-people-export-schedule', accessToken] })
+      queryClient.invalidateQueries({
+        queryKey: ['staffarr-people-export-delivery-notifications', accessToken],
+      })
     },
   })
 
@@ -266,6 +285,52 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
             ) : (
               <p className="text-xs text-slate-500">No scheduled delivery recorded yet.</p>
             )}
+            <label className="block text-sm text-slate-300">
+              Notification webhook URL (optional)
+              <input
+                type="url"
+                value={notificationWebhookUrl}
+                onChange={(event) => {
+                  setScheduleInitialized(true)
+                  setNotificationWebhookUrl(event.target.value)
+                }}
+                placeholder="https://hooks.example.com/staffarr-export"
+                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={notifyOnSuccess}
+                onChange={(event) => {
+                  setScheduleInitialized(true)
+                  setNotifyOnSuccess(event.target.checked)
+                }}
+                className="rounded border-slate-600 bg-slate-950"
+              />
+              Notify on successful delivery
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={notifyOnFailure}
+                onChange={(event) => {
+                  setScheduleInitialized(true)
+                  setNotifyOnFailure(event.target.checked)
+                }}
+                className="rounded border-slate-600 bg-slate-950"
+              />
+              Notify on failed delivery
+            </label>
+            {deliveryNotificationsQuery.data?.items[0] ? (
+              <p className="text-xs text-slate-500">
+                Last notification: {deliveryNotificationsQuery.data.items[0].eventKind}{' '}
+                {deliveryNotificationsQuery.data.items[0].deliveryStatus}
+                {deliveryNotificationsQuery.data.items[0].webhookHost
+                  ? ` → ${deliveryNotificationsQuery.data.items[0].webhookHost}`
+                  : ''}
+              </p>
+            ) : null}
             <button
               type="button"
               disabled={saveExportScheduleMutation.isPending}
