@@ -1,0 +1,47 @@
+---
+description: Render static frontend deploy patterns and pre-push checks
+globs: "**/{render.yaml,apps/*-frontend/**,packages/shared-ui/**}"
+alwaysApply: false
+---
+
+# Render Static Frontend Deploy
+
+Source: `render.yaml` static site services + product frontend layout
+
+## Monorepo layout
+
+Product frontends (`apps/*-frontend`) import `@stl/shared-ui` via **tsconfig paths** and **Vite alias** to `packages/shared-ui/src`. TypeScript type-checks those source files during `tsc -b`.
+
+Render runs `npm ci` in each app's `rootDir` only. **`packages/shared-ui/node_modules` is not installed** unless the build command installs it.
+
+## Required buildCommand (product frontends using shared-ui)
+
+```yaml
+buildCommand: npm ci --prefix ../../packages/shared-ui && npm ci && npm run build
+```
+
+Applies to: `staffarr-frontend`, `trainarr-frontend`, `maintainarr-frontend`, `routarr-frontend`, `supplyarr-frontend`, `compliancecore-frontend`, `companion-frontend`.
+
+`suite-frontend` does not use `@stl/shared-ui`; keep `npm ci && npm run build`.
+
+## Pre-push checklist (touched frontends)
+
+1. **`package-lock.json` committed** in the app dir and in `packages/shared-ui` when deps change.
+2. **`rootDir` matches** `apps/<product>-frontend` in `render.yaml`.
+3. **`VITE_*` env vars** set in `render.yaml` for any value read at build time.
+4. **Reproduce Render locally** from the app directory:
+   ```bash
+   npm ci --prefix ../../packages/shared-ui
+   npm ci
+   npm run build
+   ```
+5. After changing `packages/shared-ui`, rebuild **every** product frontend that imports it.
+
+## Common failure signatures
+
+| Log error | Cause |
+|-----------|--------|
+| `Cannot find module 'react'` in `../../packages/shared-ui/src/...` | shared-ui deps not installed before `tsc -b` |
+| `react/jsx-runtime` missing in shared-ui | Same as above |
+| `npm ci` EUSAGE / lock out of sync | Missing or stale `package-lock.json` |
+| Unused import TS6133 in `*.test.tsx` | Strict `noUnusedLocals`; remove or use the import |

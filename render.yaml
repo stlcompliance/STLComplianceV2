@@ -457,7 +457,7 @@ services:
     name: staffarr-frontend
     runtime: static
     rootDir: apps/staffarr-frontend
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci --prefix ../../packages/shared-ui && npm ci && npm run build
     staticPublishPath: dist
     routes:
       - type: rewrite
@@ -471,7 +471,7 @@ services:
     name: trainarr-frontend
     runtime: static
     rootDir: apps/trainarr-frontend
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci --prefix ../../packages/shared-ui && npm ci && npm run build
     staticPublishPath: dist
     routes:
       - type: rewrite
@@ -485,7 +485,7 @@ services:
     name: maintainarr-frontend
     runtime: static
     rootDir: apps/maintainarr-frontend
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci --prefix ../../packages/shared-ui && npm ci && npm run build
     staticPublishPath: dist
     routes:
       - type: rewrite
@@ -499,7 +499,7 @@ services:
     name: routarr-frontend
     runtime: static
     rootDir: apps/routarr-frontend
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci --prefix ../../packages/shared-ui && npm ci && npm run build
     staticPublishPath: dist
     routes:
       - type: rewrite
@@ -513,7 +513,7 @@ services:
     name: supplyarr-frontend
     runtime: static
     rootDir: apps/supplyarr-frontend
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci --prefix ../../packages/shared-ui && npm ci && npm run build
     staticPublishPath: dist
     routes:
       - type: rewrite
@@ -527,7 +527,7 @@ services:
     name: compliancecore-frontend
     runtime: static
     rootDir: apps/compliancecore-frontend
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci --prefix ../../packages/shared-ui && npm ci && npm run build
     staticPublishPath: dist
     routes:
       - type: rewrite
@@ -541,7 +541,7 @@ services:
     name: companion-frontend
     runtime: static
     rootDir: apps/companion-frontend
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci --prefix ../../packages/shared-ui && npm ci && npm run build
     staticPublishPath: dist
     routes:
       - type: rewrite
