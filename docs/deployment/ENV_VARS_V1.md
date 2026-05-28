@@ -91,6 +91,10 @@ Issue tokens in NexArr (platform admin / service clients) with the scopes docume
 | `TrainArrRecertificationAssignment__ServiceToken` | scope `trainarr.recertification.assign` |
 | `TrainArrQualificationRecalculation__TrainArrBaseUrl` | same TrainArr host |
 | `TrainArrQualificationRecalculation__ServiceToken` | scope `trainarr.qualifications.recalculate` |
+| `TrainArrStaffarrPublicationRetry__TrainArrBaseUrl` | same TrainArr host |
+| `TrainArrStaffarrPublicationRetry__ServiceToken` | scope `trainarr.staffarr_publications.retry` |
+| `TrainArrEventProcessing__TrainArrBaseUrl` | same TrainArr host |
+| `TrainArrEventProcessing__ServiceToken` | scope `trainarr.events.process` |
 | `StaffArrCertificationExpiration__StaffArrBaseUrl` | `http://staffarr-api:10000` |
 | `StaffArrCertificationExpiration__ServiceToken` | scope `staffarr.certifications.expire` |
 | `StaffArrReadinessRollup__StaffArrBaseUrl` | same StaffArr host |

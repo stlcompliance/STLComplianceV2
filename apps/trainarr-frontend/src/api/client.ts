@@ -43,6 +43,10 @@ import type {
   StaffarrPublicationSettingsResponse,
   UpsertStaffarrPublicationSettingsRequest,
   StaffarrPublicationDeliveriesResponse,
+  EventProcessingSettingsResponse,
+  UpsertEventProcessingSettingsRequest,
+  TrainingDomainEventsResponse,
+  PersonTrainingHistoryResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_TRAINARR_API_BASE ?? ''
@@ -742,5 +746,60 @@ export async function getStaffarrPublicationDeliveries(
   return parseJsonResponse<StaffarrPublicationDeliveriesResponse>(
     response,
     'Failed to load StaffArr publication deliveries',
+  )
+}
+
+export async function getEventProcessingSettings(
+  accessToken: string,
+): Promise<EventProcessingSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/event-processing-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<EventProcessingSettingsResponse>(
+    response,
+    'Failed to load event processing settings',
+  )
+}
+
+export async function upsertEventProcessingSettings(
+  accessToken: string,
+  body: UpsertEventProcessingSettingsRequest,
+): Promise<EventProcessingSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/event-processing-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<EventProcessingSettingsResponse>(
+    response,
+    'Failed to save event processing settings',
+  )
+}
+
+export async function getTrainingDomainEvents(
+  accessToken: string,
+  limit = 10,
+): Promise<TrainingDomainEventsResponse> {
+  const response = await fetch(`${apiBase}/api/event-processing-settings/events?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TrainingDomainEventsResponse>(
+    response,
+    'Failed to load training domain events',
+  )
+}
+
+export async function getPersonTrainingHistory(
+  accessToken: string,
+  staffarrPersonId: string,
+  limit = 25,
+): Promise<PersonTrainingHistoryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/person-training-history?staffarrPersonId=${encodeURIComponent(staffarrPersonId)}&limit=${limit}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<PersonTrainingHistoryResponse>(
+    response,
+    'Failed to load person training history',
   )
 }

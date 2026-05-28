@@ -83,6 +83,13 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
     public DbSet<StaffarrPublicationDelivery> StaffarrPublicationDeliveries =>
         Set<StaffarrPublicationDelivery>();
 
+    public DbSet<TenantEventProcessingSettings> TenantEventProcessingSettings =>
+        Set<TenantEventProcessingSettings>();
+
+    public DbSet<TrainingDomainEvent> TrainingDomainEvents => Set<TrainingDomainEvent>();
+
+    public DbSet<PersonTrainingHistoryEntry> PersonTrainingHistoryEntries => Set<PersonTrainingHistoryEntry>();
+
     public DbSet<TrainArrAuditEvent> AuditEvents => Set<TrainArrAuditEvent>();
 
 
@@ -510,6 +517,41 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.DeliveryStatus, x.NextRetryAt, x.CreatedAt });
             entity.HasIndex(x => new { x.TenantId, x.CertificationPublicationId, x.OperationKind, x.DeliveryStatus });
+        });
+
+        modelBuilder.Entity<TenantEventProcessingSettings>(entity =>
+        {
+            entity.ToTable("trainarr_tenant_event_processing_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<TrainingDomainEvent>(entity =>
+        {
+            entity.ToTable("trainarr_training_domain_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.RelatedEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PayloadJson).HasMaxLength(8192).IsRequired();
+            entity.Property(x => x.ProcessingStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ErrorMessage).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.IdempotencyKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ProcessingStatus, x.NextRetryAt, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.StaffarrPersonId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<PersonTrainingHistoryEntry>(entity =>
+        {
+            entity.ToTable("trainarr_person_training_history_entries");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Summary).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.RelatedEntityType).HasMaxLength(64).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.SourceDomainEventId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.StaffarrPersonId, x.OccurredAt });
         });
 
         modelBuilder.Entity<TrainArrAuditEvent>(entity =>

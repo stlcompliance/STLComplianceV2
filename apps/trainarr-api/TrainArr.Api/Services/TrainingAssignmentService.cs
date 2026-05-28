@@ -12,6 +12,7 @@ public sealed class TrainingAssignmentService(
     CertificationPublicationService publicationService,
     QualificationIssueService qualificationIssueService,
     TrainingNotificationEnqueueService notificationEnqueueService,
+    TrainingEventEnqueueService trainingEventEnqueueService,
     ITrainArrAuditService audit)
 {
     private static readonly HashSet<string> AllowedAssignmentReasons = new(StringComparer.OrdinalIgnoreCase)
@@ -184,6 +185,12 @@ public sealed class TrainingAssignmentService(
             assignment.Id,
             cancellationToken);
 
+        await trainingEventEnqueueService.TryEnqueueAsync(
+            tenantId,
+            TrainingDomainEventKinds.AssignmentCreated,
+            TrainingEventPayloadBuilder.ForAssignmentCreated(assignment),
+            cancellationToken);
+
         var loaded = await LoadAssignmentAsync(tenantId, assignment.Id, cancellationToken);
         return MapDetail(loaded);
     }
@@ -253,6 +260,12 @@ public sealed class TrainingAssignmentService(
             assignment.Id,
             cancellationToken);
 
+        await trainingEventEnqueueService.TryEnqueueAsync(
+            tenantId,
+            TrainingDomainEventKinds.AssignmentCreated,
+            TrainingEventPayloadBuilder.ForAssignmentCreated(assignment),
+            cancellationToken);
+
         var loaded = await LoadAssignmentAsync(tenantId, assignment.Id, cancellationToken);
         return MapDetail(loaded);
     }
@@ -316,6 +329,12 @@ public sealed class TrainingAssignmentService(
             assignment.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
+
+        await trainingEventEnqueueService.TryEnqueueAsync(
+            tenantId,
+            TrainingDomainEventKinds.AssignmentCompleted,
+            TrainingEventPayloadBuilder.ForAssignmentCompleted(assignment),
+            cancellationToken);
 
         return new CompleteTrainingAssignmentResponse(
             assignment.Id,

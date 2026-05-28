@@ -10,6 +10,7 @@ public sealed class QualificationIssueService(
     TrainArrDbContext db,
     CertificationPublicationService publicationService,
     TrainingNotificationEnqueueService notificationEnqueueService,
+    TrainingEventEnqueueService trainingEventEnqueueService,
     ITrainArrAuditService audit)
 {
     private static readonly HashSet<string> ActiveStatuses = new(StringComparer.OrdinalIgnoreCase)
@@ -72,6 +73,12 @@ public sealed class QualificationIssueService(
 
         db.QualificationIssues.Add(issue);
         await db.SaveChangesAsync(cancellationToken);
+
+        await trainingEventEnqueueService.TryEnqueueAsync(
+            assignment.TenantId,
+            TrainingDomainEventKinds.QualificationIssued,
+            TrainingEventPayloadBuilder.ForQualificationIssued(issue, assignment),
+            cancellationToken);
 
         return MapResponse(issue);
     }
@@ -234,6 +241,23 @@ public sealed class QualificationIssueService(
                 issue.StaffarrPersonId,
                 "qualification_issue",
                 issue.Id,
+                cancellationToken);
+        }
+
+        var eventKind = targetStatus switch
+        {
+            "suspended" => TrainingDomainEventKinds.QualificationSuspended,
+            "revoked" => TrainingDomainEventKinds.QualificationRevoked,
+            "expired" => TrainingDomainEventKinds.QualificationExpired,
+            _ => null
+        };
+
+        if (eventKind is not null)
+        {
+            await trainingEventEnqueueService.TryEnqueueAsync(
+                tenantId,
+                eventKind,
+                TrainingEventPayloadBuilder.ForQualificationLifecycle(issue, lifecycleAction, now),
                 cancellationToken);
         }
 

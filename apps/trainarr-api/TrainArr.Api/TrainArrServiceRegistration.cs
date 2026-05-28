@@ -121,6 +121,11 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<StaffarrPublicationSettingsService>();
         builder.Services.AddScoped<StaffarrPublicationRetryService>();
 
+        builder.Services.AddScoped<EventProcessingSettingsService>();
+        builder.Services.AddScoped<TrainingEventProcessingService>();
+        builder.Services.AddScoped<TrainingEventEnqueueService>();
+        builder.Services.AddScoped<PersonTrainingHistoryService>();
+
         builder.Services.AddScoped<TrainingNotificationSettingsService>();
         builder.Services.AddScoped<TrainingNotificationEnqueueService>();
         builder.Services.AddScoped<TrainingNotificationDispatchService>();

@@ -1,4 +1,5 @@
 import { BatchQualificationCheckPanel } from '../../components/BatchQualificationCheckPanel'
+import { PersonTrainingHistoryPanel } from '../../components/PersonTrainingHistoryPanel'
 import type { TrainArrWorkspaceState } from '../useTrainArrWorkspaceState'
 
 const personIdPattern =
@@ -18,6 +19,8 @@ export function QualificationsSection({ state }: Props) {
   }
 
   return (
+    <div className="space-y-6">
+    <PersonTrainingHistoryPanel accessToken={s.accessToken} defaultStaffarrPersonId={s.me.personId} />
     <BatchQualificationCheckPanel
       batch={s.batchQualificationCheck}
       isChecking={s.batchQualificationCheckMutation.isPending}
@@ -45,5 +48,6 @@ export function QualificationsSection({ state }: Props) {
         label: `${remediation.reasonCategoryKey} · ${remediation.remediationId.slice(0, 8)}`,
       }))}
     />
+    </div>
   )
 }

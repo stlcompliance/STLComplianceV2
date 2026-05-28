@@ -59,6 +59,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<TrainArrStaffarrPublicationRetryJob>();
 
+        builder.Services.Configure<TrainArrEventProcessingOptions>(
+            builder.Configuration.GetSection(TrainArrEventProcessingOptions.SectionName));
+
+        builder.Services.AddHttpClient<TrainArrEventProcessingClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<TrainArrEventProcessingOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.TrainArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<TrainArrEventProcessingJob>();
+
         builder.Services.Configure<TrainArrNotificationDispatchOptions>(
             builder.Configuration.GetSection(TrainArrNotificationDispatchOptions.SectionName));
 

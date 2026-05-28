@@ -477,6 +477,50 @@ public sealed class TrainArrAuthorizationService
             403);
     }
 
+    public void RequireEventProcessingSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireTrainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Training event processing settings require trainarr admin access.",
+            403);
+    }
+
+    public void RequirePersonTrainingHistoryRead(ClaimsPrincipal principal, Guid staffarrPersonId)
+    {
+        RequireTrainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        var roleKey = principal.GetTenantRoleKey();
+        if (MatchesRole(roleKey, "tenant_admin", "trainarr_admin", "trainarr_trainer"))
+        {
+            return;
+        }
+
+        if (MatchesRole(roleKey, "tenant_member") && principal.GetPersonId() == staffarrPersonId)
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Person training history read requires trainarr admin/trainer scope or self access.",
+            403);
+    }
+
     public void RequireSignoffSubmit(ClaimsPrincipal principal, Guid staffarrPersonId, string signoffRole)
     {
         RequireTrainArrEntitlement(principal);

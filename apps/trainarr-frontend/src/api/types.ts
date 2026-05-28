@@ -564,3 +564,48 @@ export interface StaffarrPublicationDeliveryItem {
 export interface StaffarrPublicationDeliveriesResponse {
   items: StaffarrPublicationDeliveryItem[]
 }
+
+export interface EventProcessingSettingsResponse {
+  isEnabled: boolean
+  maxAttempts: number
+  retryIntervalMinutes: number
+  updatedAt: string | null
+}
+
+export interface UpsertEventProcessingSettingsRequest {
+  isEnabled: boolean
+  maxAttempts: number
+  retryIntervalMinutes: number
+}
+
+export interface TrainingDomainEventItem {
+  eventId: string
+  eventKind: string
+  processingStatus: string
+  staffarrPersonId: string
+  relatedEntityType: string
+  relatedEntityId: string
+  attemptCount: number
+  errorMessage: string | null
+  createdAt: string
+  processedAt: string | null
+}
+
+export interface TrainingDomainEventsResponse {
+  items: TrainingDomainEventItem[]
+}
+
+export interface PersonTrainingHistoryEntryItem {
+  entryId: string
+  eventKind: string
+  summary: string
+  relatedEntityType: string
+  relatedEntityId: string
+  occurredAt: string
+}
+
+export interface PersonTrainingHistoryResponse {
+  staffarrPersonId: string
+  totalCount: number
+  items: PersonTrainingHistoryEntryItem[]
+}
