@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 146 | Companion offline queue + notification Playwright E2E | Complete | `pending` |
+| 146 | Companion offline queue + notification Playwright E2E | Complete | `0e434f9` |
 
 ## Program summary
 
