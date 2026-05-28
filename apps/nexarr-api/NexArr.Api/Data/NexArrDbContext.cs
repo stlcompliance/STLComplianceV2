@@ -26,6 +26,8 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
     public DbSet<CompanionNotificationDispatch> CompanionNotificationDispatches =>
         Set<CompanionNotificationDispatch>();
 
+    public DbSet<CompanionPushSubscription> CompanionPushSubscriptions => Set<CompanionPushSubscription>();
+
     public DbSet<PlatformAuditPackageGenerationJob> PlatformAuditPackageGenerationJobs =>
         Set<PlatformAuditPackageGenerationJob>();
 
@@ -197,6 +199,19 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.CreatedAt });
             entity.HasIndex(x => new { x.TenantId, x.EventKind, x.RelatedEntityType, x.RelatedEntityId });
+        });
+
+        modelBuilder.Entity<CompanionPushSubscription>(entity =>
+        {
+            entity.ToTable("nexarr_companion_push_subscriptions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Endpoint).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.P256dhKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.AuthKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.UserAgent).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.UserId });
+            entity.HasIndex(x => new { x.TenantId, x.UserId, x.Endpoint }).IsUnique();
         });
 
         modelBuilder.Entity<CompanionOfflineAction>(entity =>

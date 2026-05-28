@@ -37,6 +37,9 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<CompanionNotificationSettingsService>();
         builder.Services.AddScoped<CompanionNotificationEnqueueService>();
         builder.Services.AddScoped<CompanionNotificationDispatchService>();
+        builder.Services.AddScoped<CompanionPushSubscriptionService>();
+        builder.Services.AddSingleton<ICompanionWebPushSender, CompanionWebPushSender>();
+        builder.Services.Configure<CompanionWebPushOptions>(builder.Configuration.GetSection(CompanionWebPushOptions.SectionName));
         builder.Services.AddHttpClient(CompanionNotificationDispatchService.WebhookHttpClientName);
         builder.Services.AddScoped<CompanionOfflineSyncService>();
         builder.Services.AddScoped<CompanionFieldEvidenceService>();

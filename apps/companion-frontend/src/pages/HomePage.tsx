@@ -11,6 +11,7 @@ import { NotificationSettingsPanel } from '../components/NotificationSettingsPan
 import { OfflineQueuePanel } from '../components/OfflineQueuePanel'
 import { SubmissionActivityBanner } from '../components/SubmissionActivityBanner'
 import { useFieldTaskSubmissionState } from '../hooks/useFieldTaskSubmissionState'
+import { useCompanionWebPush } from '../hooks/useCompanionWebPush'
 import { useOfflineQueue } from '../hooks/useOfflineQueue'
 import { entitledProductKeys } from '../lib/fieldInbox'
 
@@ -54,6 +55,8 @@ export function HomePage() {
   const offlineQueue = useOfflineQueue(session?.accessToken ?? '', {
     onSyncComplete: submissionState.refreshServerStatus,
   })
+
+  useCompanionWebPush(session?.accessToken)
 
   if (!session || !meQuery.data) {
     return <p className="text-sm text-slate-400">Loading field inbox…</p>

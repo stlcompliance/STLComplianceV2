@@ -14,7 +14,11 @@ import type {
   SubmitCompanionFieldEvidenceRequest,
   CompanionScanResolveRequest,
   CompanionScanResolveResponse,
+  CompanionPushVapidPublicKeyResponse,
+  CompanionPushSubscriptionResponse,
+  UnsubscribeCompanionPushRequest,
   UpsertCompanionNotificationSettingsRequest,
+  UpsertCompanionPushSubscriptionRequest,
   ValidateCompanionFieldTaskRequest,
   ValidateCompanionFieldTaskResponse,
 } from './types'
@@ -120,6 +124,52 @@ export async function upsertCompanionNotificationSettings(
     response,
     'Failed to save notification settings',
   )
+}
+
+export async function getCompanionPushVapidPublicKey(
+  accessToken: string,
+): Promise<CompanionPushVapidPublicKeyResponse> {
+  const response = await fetch(`${apiBase}/api/companion/push/vapid-public-key`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CompanionPushVapidPublicKeyResponse>(
+    response,
+    'Failed to load Web Push configuration',
+  )
+}
+
+export async function subscribeCompanionPush(
+  accessToken: string,
+  body: UpsertCompanionPushSubscriptionRequest,
+): Promise<CompanionPushSubscriptionResponse> {
+  const response = await fetch(`${apiBase}/api/companion/push/subscribe`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<CompanionPushSubscriptionResponse>(
+    response,
+    'Failed to register push subscription',
+  )
+}
+
+export async function unsubscribeCompanionPush(
+  accessToken: string,
+  body: UnsubscribeCompanionPushRequest,
+): Promise<void> {
+  const response = await fetch(`${apiBase}/api/companion/push/subscribe`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) {
+    const responseBody = await response.text()
+    throw new CompanionApiError(
+      responseBody || `Failed to remove push subscription (${response.status})`,
+      response.status,
+      responseBody,
+    )
+  }
 }
 
 export async function getCompanionNotificationDispatches(

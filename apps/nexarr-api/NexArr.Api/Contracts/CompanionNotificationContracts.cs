@@ -23,6 +23,7 @@ public sealed record CompanionNotificationDispatchItem(
     string? WebhookHost,
     int? HttpStatusCode,
     string? ErrorMessage,
+    int? PushDeliveredCount,
     DateTimeOffset CreatedAt,
     DateTimeOffset? DispatchedAt);
 

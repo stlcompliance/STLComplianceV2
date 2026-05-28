@@ -5,6 +5,7 @@ import {
   getPushPermissionState,
   pushReadinessLabel,
   requestPushPermission,
+  syncCompanionPushSubscription,
 } from '../lib/pushNotifications'
 
 import {
@@ -26,6 +27,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
   const [notifyHandoffRedeemed, setNotifyHandoffRedeemed] = useState(true)
   const [notifyFieldInboxRefreshed, setNotifyFieldInboxRefreshed] = useState(true)
   const [pushPermission, setPushPermission] = useState(getPushPermissionState)
+  const [pushSyncStatus, setPushSyncStatus] = useState<string | null>(null)
 
   const settingsQuery = useQuery({
     queryKey: ['companion-notification-settings', accessToken],
@@ -76,8 +78,8 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
     >
       <h2 className="text-lg font-semibold text-slate-50">Operational notifications</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Configure HTTPS webhooks for Companion handoff and field inbox lifecycle events. Dispatch runs on a
-        scheduled worker.
+        Configure HTTPS webhooks and browser Web Push for Companion handoff and field inbox lifecycle events.
+        Dispatch runs on the shared worker notification job.
       </p>
 
       {settingsQuery.isError && (
@@ -136,11 +138,29 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
             disabled={pushPermission === 'unsupported' || pushPermission === 'granted'}
             data-testid="companion-request-push-permission"
             onClick={() => {
-              void requestPushPermission().then(setPushPermission)
+              void requestPushPermission().then(async (permission) => {
+                setPushPermission(permission)
+                if (permission !== 'granted') {
+                  return
+                }
+                const result = await syncCompanionPushSubscription(accessToken)
+                setPushSyncStatus(
+                  result === 'subscribed'
+                    ? 'Push subscription registered with NexArr.'
+                    : result === 'skipped'
+                      ? 'Push subscription skipped (not supported or VAPID unavailable).'
+                      : 'Failed to register push subscription.',
+                )
+              })
             }}
           >
             Request browser push permission
           </button>
+          {pushSyncStatus && (
+            <p className="mt-2 text-xs text-slate-500" data-testid="companion-push-sync-status">
+              {pushSyncStatus}
+            </p>
+          )}
         </div>
 
         <button
@@ -177,6 +197,9 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
                 <div className="text-xs text-slate-500">
                   {item.webhookHost ?? '—'}
                   {item.httpStatusCode != null ? ` · HTTP ${item.httpStatusCode}` : ''}
+                  {item.pushDeliveredCount != null && item.pushDeliveredCount > 0
+                    ? ` · push ×${item.pushDeliveredCount}`
+                    : ''}
                   {item.errorMessage ? ` · ${item.errorMessage}` : ''}
                 </div>
               </li>

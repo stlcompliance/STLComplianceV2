@@ -61,17 +61,29 @@ public static class CompanionNotificationRules
     public static int NormalizeDispatchListLimit(int? limit) =>
         limit is null or < 1 ? 20 : Math.Min(limit.Value, 100);
 
-    public static bool ShouldNotifyForEvent(
+    public static bool EventKindEnabled(
         TenantCompanionNotificationSettingsSnapshot settings,
         string eventKind) =>
         settings.IsEnabled
-        && !string.IsNullOrWhiteSpace(settings.NotificationWebhookUrl)
         && eventKind switch
         {
             CompanionNotificationEventKinds.HandoffRedeemed => settings.NotifyOnHandoffRedeemed,
             CompanionNotificationEventKinds.FieldInboxRefreshed => settings.NotifyOnFieldInboxRefreshed,
             _ => false,
         };
+
+    public static bool ShouldNotifyForEvent(
+        TenantCompanionNotificationSettingsSnapshot settings,
+        string eventKind) =>
+        EventKindEnabled(settings, eventKind)
+        && !string.IsNullOrWhiteSpace(settings.NotificationWebhookUrl);
+
+    public static bool ShouldEnqueueForEvent(
+        TenantCompanionNotificationSettingsSnapshot settings,
+        string eventKind,
+        bool targetHasPushSubscription) =>
+        EventKindEnabled(settings, eventKind)
+        && (!string.IsNullOrWhiteSpace(settings.NotificationWebhookUrl) || targetHasPushSubscription);
 }
 
 public sealed record TenantCompanionNotificationSettingsSnapshot(

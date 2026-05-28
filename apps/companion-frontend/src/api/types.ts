@@ -53,8 +53,34 @@ export interface CompanionNotificationDispatchItem {
   webhookHost: string | null
   httpStatusCode: number | null
   errorMessage: string | null
+  pushDeliveredCount: number | null
   createdAt: string
   dispatchedAt: string | null
+}
+
+export interface CompanionPushVapidPublicKeyResponse {
+  publicKey: string
+}
+
+export interface CompanionPushSubscriptionKeys {
+  p256dh: string
+  auth: string
+}
+
+export interface UpsertCompanionPushSubscriptionRequest {
+  endpoint: string
+  keys: CompanionPushSubscriptionKeys
+  userAgent?: string | null
+}
+
+export interface UnsubscribeCompanionPushRequest {
+  endpoint: string
+}
+
+export interface CompanionPushSubscriptionResponse {
+  subscriptionId: string
+  endpoint: string
+  updatedAt: string
 }
 
 export interface CompanionNotificationDispatchesResponse {

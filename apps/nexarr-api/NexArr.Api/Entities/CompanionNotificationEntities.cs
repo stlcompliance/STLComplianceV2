@@ -45,6 +45,8 @@ public sealed class CompanionNotificationDispatch : IHasTenant
 
     public string? ErrorMessage { get; set; }
 
+    public int? PushDeliveredCount { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? DispatchedAt { get; set; }

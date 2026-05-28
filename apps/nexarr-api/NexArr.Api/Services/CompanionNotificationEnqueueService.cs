@@ -6,7 +6,8 @@ namespace NexArr.Api.Services;
 
 public sealed class CompanionNotificationEnqueueService(
     NexArrDbContext db,
-    CompanionNotificationSettingsService settingsService)
+    CompanionNotificationSettingsService settingsService,
+    CompanionPushSubscriptionService pushSubscriptionService)
 {
     public async Task<Guid?> TryEnqueueAsync(
         Guid tenantId,
@@ -17,7 +18,16 @@ public sealed class CompanionNotificationEnqueueService(
         CancellationToken cancellationToken = default)
     {
         var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
-        if (settings is null || !CompanionNotificationRules.ShouldNotifyForEvent(settings, eventKind))
+        if (settings is null)
+        {
+            return null;
+        }
+
+        var targetUserId = ResolveTargetUserId(eventKind, actorUserId, relatedEntityId);
+        var hasPushSubscription = targetUserId is Guid userId
+            && await pushSubscriptionService.UserHasSubscriptionAsync(tenantId, userId, cancellationToken);
+
+        if (!CompanionNotificationRules.ShouldEnqueueForEvent(settings, eventKind, hasPushSubscription))
         {
             return null;
         }
@@ -53,4 +63,12 @@ public sealed class CompanionNotificationEnqueueService(
         await db.SaveChangesAsync(cancellationToken);
         return dispatch.Id;
     }
+
+    public static Guid? ResolveTargetUserId(string eventKind, Guid? actorUserId, Guid relatedEntityId) =>
+        eventKind switch
+        {
+            CompanionNotificationEventKinds.HandoffRedeemed => actorUserId,
+            CompanionNotificationEventKinds.FieldInboxRefreshed => relatedEntityId,
+            _ => actorUserId ?? relatedEntityId,
+        };
 }
