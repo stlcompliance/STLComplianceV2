@@ -206,6 +206,8 @@
 
 | 117 | StaffArr tenant person export preset persistence (`TenantPersonExportPreset`, GET/PUT `/api/people/export/preset`, audit, `PersonExportPanel` tenant default UI, tests, docs) | M4 (partial) | Complete | `fcb5a84` |
 
-## Next slice (Worker 118)
+| 118 | TrainArr staging qualification mirror seed (`LoadTestJourneySeedService`, POST `/api/load-test-journey/seed`, issued qualification mirror for k6, operator scripts, load-staging pre-step, tests, docs) | M6/M13 (partial) | Complete | `eb97cea` |
 
-Recommended: **TrainArr staging qualification mirror seed for k6 journeys**, or **StaffArr export scheduled delivery foundations**.
+## Next slice (Worker 119)
+
+Recommended: **StaffArr export scheduled delivery foundations**, or **RoutArr staging trip mirror seed for dispatch gate k6 journeys**.
