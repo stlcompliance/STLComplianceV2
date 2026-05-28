@@ -59,6 +59,77 @@
         }
       }
     },
+    "/api/audit-packages/jobs": {
+      "post": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "CreateStaffArrAuditPackageGenerationJob",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditPackageGenerationJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/jobs/{jobId}": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetStaffArrAuditPackageGenerationJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/jobs/{jobId}/download": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "DownloadStaffArrAuditPackageGenerationJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/audit-packages/manifest": {
       "get": {
         "tags": [
@@ -412,6 +483,72 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ClearTrainingBlockerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/audit-package-jobs/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingAuditPackageGenerationJobs",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/audit-package-jobs/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessAuditPackageGenerationJobs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessAuditPackageGenerationJobsRequest"
               }
             }
           },
@@ -2151,6 +2288,33 @@
           }
         }
       },
+      "CreateAuditPackageGenerationJobRequest": {
+        "required": [
+          "format",
+          "from",
+          "to"
+        ],
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string"
+          },
+          "from": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "to": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "CreateOrgUnitAssignmentRequest": {
         "required": [
           "siteOrgUnitId",
@@ -2539,6 +2703,39 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "ProcessAuditPackageGenerationJobsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },

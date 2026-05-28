@@ -1,3 +1,4 @@
+using StaffArr.Api.Contracts;
 using StaffArr.Api.Services;
 using STLCompliance.Shared.Auth;
 
@@ -80,5 +81,63 @@ public static class AuditPackageEndpoints
                 $"staffarr-audit-package-{DateTime.UtcNow:yyyyMMddHHmmss}.zip");
         })
         .WithName("ExportStaffArrAuditPackage");
+
+        packages.MapPost("/jobs", async (
+            CreateAuditPackageGenerationJobRequest request,
+            StaffArrAuthorizationService authorization,
+            AuditPackageGenerationService generationService,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAuditPackageExport(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var job = await generationService.CreateJobAsync(
+                tenantId,
+                actorUserId,
+                request,
+                cancellationToken);
+            return Results.Accepted($"/api/audit-packages/jobs/{job.JobId}", job);
+        })
+        .WithName("CreateStaffArrAuditPackageGenerationJob");
+
+        packages.MapGet("/jobs/{jobId:guid}", async (
+            Guid jobId,
+            StaffArrAuthorizationService authorization,
+            AuditPackageGenerationService generationService,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAuditPackageExport(context.User);
+            var tenantId = context.User.GetTenantId();
+            var job = await generationService.GetJobAsync(tenantId, jobId, cancellationToken);
+            return Results.Ok(job);
+        })
+        .WithName("GetStaffArrAuditPackageGenerationJob");
+
+        packages.MapGet("/jobs/{jobId:guid}/download", async (
+            Guid jobId,
+            StaffArrAuthorizationService authorization,
+            AuditPackageGenerationService generationService,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAuditPackageExport(context.User);
+            var tenantId = context.User.GetTenantId();
+            var job = await generationService.GetJobAsync(tenantId, jobId, cancellationToken);
+
+            if (string.Equals(job.Format, "json", StringComparison.OrdinalIgnoreCase))
+            {
+                var package = await generationService.DownloadJsonAsync(tenantId, jobId, cancellationToken);
+                return Results.Ok(package);
+            }
+
+            var (content, contentType, fileName) = await generationService.DownloadZipAsync(
+                tenantId,
+                jobId,
+                cancellationToken);
+            return Results.File(content, contentType, fileName);
+        })
+        .WithName("DownloadStaffArrAuditPackageGenerationJob");
     }
 }

@@ -56,6 +56,13 @@ public static class StlIntegrationTokenCatalog
         Profile("worker-staffarr-cert-expire", "shared-worker", "StaffArrCertificationExpiration__ServiceToken", "shared-worker", ["staffarr"], "staffarr.certifications.expire"),
         Profile("worker-staffarr-readiness", "shared-worker", "StaffArrReadinessRollup__ServiceToken", "shared-worker", ["staffarr"], "staffarr.readiness.rollup"),
         Profile("worker-staffarr-permissions", "shared-worker", "StaffArrPermissionProjection__ServiceToken", "shared-worker", ["staffarr"], "staffarr.permissions.project"),
+        Profile(
+            "worker-staffarr-audit-packages",
+            "shared-worker",
+            "StaffArrAuditPackageGeneration__ServiceToken",
+            "shared-worker",
+            ["staffarr"],
+            "staffarr.audit_packages.generate"),
         Profile("worker-maintainarr-pm", "shared-worker", "MaintainArrPmDueScan__ServiceToken", "shared-worker", ["maintainarr"], "maintainarr.pm.scan"),
         Profile(
             "worker-maintainarr-notifications",

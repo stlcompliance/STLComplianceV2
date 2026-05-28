@@ -37,6 +37,9 @@ vi.mock('../api/client', () => ({
   }),
   exportAuditPackageZip: vi.fn(),
   exportAuditPackageJson: vi.fn(),
+  createAuditPackageGenerationJob: vi.fn(),
+  getAuditPackageGenerationJob: vi.fn(),
+  downloadAuditPackageGenerationJob: vi.fn(),
 }))
 
 describe('AuditPackageExportPanel', () => {
@@ -55,6 +58,7 @@ describe('AuditPackageExportPanel', () => {
     expect(await screen.findByText(/Audit package export/)).toBeTruthy()
     expect(await screen.findByText(/people.create/)).toBeTruthy()
     expect(screen.getByRole('button', { name: /Download ZIP package/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Background ZIP export/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Preview JSON export/i })).toBeTruthy()
   })
 

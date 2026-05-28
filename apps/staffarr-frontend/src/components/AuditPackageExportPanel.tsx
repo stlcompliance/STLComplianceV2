@@ -1,9 +1,12 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import {
+  createAuditPackageGenerationJob,
+  downloadAuditPackageGenerationJob,
   exportAuditPackageJson,
   exportAuditPackageZip,
+  getAuditPackageGenerationJob,
   getAuditPackageManifest,
   getAuditPackageTimeline,
 } from '../api/client'
@@ -18,6 +21,8 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
   const [lastJsonExport, setLastJsonExport] = useState<AuditPackageExportResponse | null>(null)
+  const [activeJobId, setActiveJobId] = useState<string | null>(null)
+  const downloadedJobIdRef = useRef<string | null>(null)
 
   const manifestQuery = useQuery({
     queryKey: ['staffarr-audit-package-manifest', accessToken],
@@ -33,6 +38,16 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
         page: 1,
         pageSize: 15,
       }),
+  })
+
+  const jobStatusQuery = useQuery({
+    queryKey: ['staffarr-audit-package-job', accessToken, activeJobId],
+    queryFn: () => getAuditPackageGenerationJob(accessToken, activeJobId!),
+    enabled: Boolean(activeJobId),
+    refetchInterval: (query) => {
+      const status = query.state.data?.status
+      return status === 'pending' || status === 'processing' ? 2000 : false
+    },
   })
 
   const zipExportMutation = useMutation({
@@ -51,6 +66,19 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
     },
   })
 
+  const backgroundZipMutation = useMutation({
+    mutationFn: () =>
+      createAuditPackageGenerationJob(accessToken, {
+        format: 'zip',
+        from: fromDate || undefined,
+        to: toDate || undefined,
+      }),
+    onSuccess: (job) => {
+      downloadedJobIdRef.current = null
+      setActiveJobId(job.jobId)
+    },
+  })
+
   const jsonExportMutation = useMutation({
     mutationFn: () =>
       exportAuditPackageJson(accessToken, {
@@ -61,6 +89,33 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
       setLastJsonExport(result)
     },
   })
+
+  useEffect(() => {
+    const job = jobStatusQuery.data
+    if (!job || job.status !== 'completed' || !job.downloadReady || !activeJobId) {
+      return
+    }
+
+    if (downloadedJobIdRef.current === job.jobId) {
+      return
+    }
+
+    downloadedJobIdRef.current = job.jobId
+    void downloadAuditPackageGenerationJob(accessToken, activeJobId).then((blob) => {
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = `staffarr-audit-package-${job.packageId ?? 'export'}.zip`
+      anchor.click()
+      URL.revokeObjectURL(url)
+    })
+  }, [accessToken, activeJobId, jobStatusQuery.data])
+
+  const jobStatus = jobStatusQuery.data
+  const jobInFlight =
+    Boolean(activeJobId)
+    && jobStatus
+    && (jobStatus.status === 'pending' || jobStatus.status === 'processing')
 
   return (
     <section className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5">
@@ -147,10 +202,20 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
           <button
             type="button"
             onClick={() => zipExportMutation.mutate()}
-            disabled={zipExportMutation.isPending}
+            disabled={zipExportMutation.isPending || jobInFlight}
             className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
           >
             {zipExportMutation.isPending ? 'Exporting…' : 'Download ZIP package'}
+          </button>
+          <button
+            type="button"
+            onClick={() => backgroundZipMutation.mutate()}
+            disabled={backgroundZipMutation.isPending || jobInFlight}
+            className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
+          >
+            {backgroundZipMutation.isPending || jobInFlight
+              ? 'Background export…'
+              : 'Background ZIP export'}
           </button>
           <button
             type="button"
@@ -166,6 +231,34 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
           Audit package export requires tenant admin, StaffArr admin, or HR admin role.
         </p>
       )}
+
+      {jobStatus ? (
+        <div
+          className="rounded-lg border border-slate-800 bg-slate-950/50 p-4 text-sm text-slate-300"
+          data-testid="audit-package-job-status"
+        >
+          <p>
+            Background job <span className="font-mono text-sky-300">{jobStatus.jobId}</span>:{' '}
+            <span className="font-medium text-slate-100">{jobStatus.status}</span>
+          </p>
+          {jobStatus.packageId ? (
+            <p className="mt-1">
+              Package <span className="font-mono text-sky-300">{jobStatus.packageId}</span>
+              {jobStatus.completedAt
+                ? ` · completed ${new Date(jobStatus.completedAt).toLocaleString()}`
+                : null}
+            </p>
+          ) : null}
+          {jobStatus.errorMessage ? (
+            <p className="mt-2 text-rose-400">{jobStatus.errorMessage}</p>
+          ) : null}
+          {jobInFlight ? (
+            <p className="mt-2 text-xs text-slate-500">
+              Worker is generating the package; download starts automatically when ready.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       {lastJsonExport ? (
         <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4 text-sm text-slate-300">

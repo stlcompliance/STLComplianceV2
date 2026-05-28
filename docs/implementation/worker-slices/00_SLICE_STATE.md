@@ -226,6 +226,8 @@
 
 | 127 | RoutArr dispatch notification hooks (`routarr_tenant_notification_settings`, dispatch outbox, GET/PUT settings + dispatch list, internal process-batch, shared-worker job, trip assign/status hooks, routarr-frontend panel, tests, docs) | M9/M12 (partial) | Complete | `a99c193` |
 
-## Next slice (Worker 128)
+| 128 | StaffArr async audit package generation worker (`staffarr_audit_package_generation_jobs`, POST/GET job APIs + download, internal process-batch, shared-worker job, `AuditPackageExportPanel` background ZIP + status, tests, docs; builds on W106/W126) | M4/M12 (partial) | Complete | (this commit) |
 
-Recommended: **StaffArr async audit package generation worker** (M4/M12) or **SupplyArr notification settings** (M12) per backlog.
+## Next slice (Worker 129)
+
+Recommended: **SupplyArr notification settings** (M12) or **Compliance Core async audit package generation** (M5/M12) per backlog.

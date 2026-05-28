@@ -95,6 +95,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<StaffArrPersonExportDeliveryJob>();
 
+        builder.Services.Configure<StaffArrAuditPackageGenerationOptions>(
+            builder.Configuration.GetSection(StaffArrAuditPackageGenerationOptions.SectionName));
+
+        builder.Services.AddHttpClient<StaffArrAuditPackageGenerationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<StaffArrAuditPackageGenerationOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.StaffArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(10);
+        });
+
+        builder.Services.AddHostedService<StaffArrAuditPackageGenerationJob>();
+
         builder.Services.Configure<MaintainArrPmDueScanOptions>(
             builder.Configuration.GetSection(MaintainArrPmDueScanOptions.SectionName));
 

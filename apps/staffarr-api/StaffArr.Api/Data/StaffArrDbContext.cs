@@ -51,6 +51,8 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
     public DbSet<PersonExportDeliveryNotification> PersonExportDeliveryNotifications =>
         Set<PersonExportDeliveryNotification>();
 
+    public DbSet<AuditPackageGenerationJob> AuditPackageGenerationJobs => Set<AuditPackageGenerationJob>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -376,6 +378,19 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.SkipReason).HasMaxLength(256);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => x.StartedAt);
+        });
+
+        modelBuilder.Entity<AuditPackageGenerationJob>(entity =>
+        {
+            entity.ToTable("staffarr_audit_package_generation_jobs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Format).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.ErrorMessage).HasMaxLength(2000);
+            entity.Property(x => x.ArtifactZip);
+            entity.Property(x => x.ArtifactJson);
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.CreatedAt });
+            entity.HasIndex(x => x.CreatedAt);
         });
     }
 }
