@@ -46,6 +46,7 @@ import {
   getInspectionTemplates,
   getAssetReadinessFleet,
   getMaintenanceHistory,
+  getMaintenanceHistorySummary,
   getMe,
   recordMeterReading,
   replaceInspectionTemplateAssetTypes,
@@ -260,6 +261,12 @@ export function useMaintainArrWorkspaceState() {
   const maintenanceHistoryQuery = useQuery({
     queryKey: ['maintainarr-maintenance-history', historyAssetId],
     queryFn: () => getMaintenanceHistory(accessToken, historyAssetId, 1, 50),
+    enabled: meQuery.isSuccess && Boolean(historyAssetId),
+  })
+
+  const maintenanceHistorySummaryQuery = useQuery({
+    queryKey: ['maintainarr-maintenance-history-summary', historyAssetId],
+    queryFn: () => getMaintenanceHistorySummary(accessToken, historyAssetId),
     enabled: meQuery.isSuccess && Boolean(historyAssetId),
   })
 
@@ -1052,6 +1059,7 @@ export function useMaintainArrWorkspaceState() {
     defectsQuery,
     workOrdersQuery,
     maintenanceHistoryQuery,
+    maintenanceHistorySummaryQuery,
     workOrderDetailQuery,
     workOrderTasksQuery,
     workOrderLaborQuery,

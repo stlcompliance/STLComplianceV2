@@ -26,6 +26,7 @@ describe('MaintenanceHistoryPanel', () => {
       <MaintenanceHistoryPanel
         assets={assets}
         selectedAssetId="11111111-1111-1111-1111-111111111111"
+        summary={null}
         entries={[
           {
             entryId: 'inspection:1:completed',
@@ -72,6 +73,7 @@ describe('MaintenanceHistoryPanel', () => {
       <MaintenanceHistoryPanel
         assets={assets}
         selectedAssetId=""
+        summary={null}
         entries={[]}
         totalCount={0}
         isLoading={false}
@@ -87,6 +89,7 @@ describe('MaintenanceHistoryPanel', () => {
       <MaintenanceHistoryPanel
         assets={assets}
         selectedAssetId="11111111-1111-1111-1111-111111111111"
+        summary={null}
         entries={[]}
         totalCount={0}
         isLoading={false}

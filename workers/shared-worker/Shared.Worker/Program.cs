@@ -382,4 +382,16 @@ await StlWorkerHost.RunAsync(
         });
 
         builder.Services.AddHostedService<MaintainArrAssetStatusRollupJob>();
+
+        builder.Services.Configure<MaintainArrMaintenanceHistoryRollupOptions>(
+            builder.Configuration.GetSection(MaintainArrMaintenanceHistoryRollupOptions.SectionName));
+
+        builder.Services.AddHttpClient<MaintainArrMaintenanceHistoryRollupClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<MaintainArrMaintenanceHistoryRollupOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.MaintainArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<MaintainArrMaintenanceHistoryRollupJob>();
     });

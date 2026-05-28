@@ -41,6 +41,11 @@ import type {
   PendingAssetStatusRollupsResponse,
   AssetStatusRollupRunsResponse,
   AssetStatusScopeRollupSummaryResponse,
+  MaintenanceHistorySummaryResponse,
+  MaintenanceHistoryRollupSettingsResponse,
+  UpsertMaintenanceHistoryRollupSettingsRequest,
+  PendingMaintenanceHistoryRollupsResponse,
+  MaintenanceHistoryRollupRunsResponse,
   MaintenanceHistoryEntryResponse,
   UpsertMaintenanceNotificationSettingsRequest,
   PagedResult,
@@ -705,6 +710,20 @@ export async function getMaintenanceHistory(
   )
 }
 
+export async function getMaintenanceHistorySummary(
+  accessToken: string,
+  assetId: string,
+): Promise<MaintenanceHistorySummaryResponse> {
+  const search = new URLSearchParams({ assetId })
+  const response = await fetch(`${apiBase}/api/maintenance-history/summary?${search.toString()}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenanceHistorySummaryResponse>(
+    response,
+    'Failed to load maintenance history summary',
+  )
+}
+
 export async function getAssetReadiness(
   accessToken: string,
   assetId: string,
@@ -878,6 +897,58 @@ export async function getFleetAssetStatusRollup(
   return parseJsonResponse<AssetStatusScopeRollupSummaryResponse>(
     response,
     'Failed to load fleet asset status rollup',
+  )
+}
+
+export async function getMaintenanceHistoryRollupSettings(
+  accessToken: string,
+): Promise<MaintenanceHistoryRollupSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/maintenance-history-rollup-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenanceHistoryRollupSettingsResponse>(
+    response,
+    'Failed to load maintenance history rollup settings',
+  )
+}
+
+export async function upsertMaintenanceHistoryRollupSettings(
+  accessToken: string,
+  payload: UpsertMaintenanceHistoryRollupSettingsRequest,
+): Promise<MaintenanceHistoryRollupSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/maintenance-history-rollup-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<MaintenanceHistoryRollupSettingsResponse>(
+    response,
+    'Failed to save maintenance history rollup settings',
+  )
+}
+
+export async function getPendingMaintenanceHistoryRollups(
+  accessToken: string,
+): Promise<PendingMaintenanceHistoryRollupsResponse> {
+  const response = await fetch(`${apiBase}/api/maintenance-history-rollup-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingMaintenanceHistoryRollupsResponse>(
+    response,
+    'Failed to load pending maintenance history rollups',
+  )
+}
+
+export async function getMaintenanceHistoryRollupRuns(
+  accessToken: string,
+  limit = 5,
+): Promise<MaintenanceHistoryRollupRunsResponse> {
+  const response = await fetch(`${apiBase}/api/maintenance-history-rollup-settings/runs?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenanceHistoryRollupRunsResponse>(
+    response,
+    'Failed to load maintenance history rollup runs',
   )
 }
 

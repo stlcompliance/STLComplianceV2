@@ -212,6 +212,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["maintainarr"],
             "maintainarr.asset_status.rollup"),
+        Profile(
+            "worker-maintainarr-maintenance-history-rollup",
+            "shared-worker",
+            "MaintainArrMaintenanceHistoryRollup__ServiceToken",
+            "shared-worker",
+            ["maintainarr"],
+            "maintainarr.maintenance_history.rollup"),
     ];
 
     public static IReadOnlyList<StlIntegrationTokenProfile> ForConsumer(string consumerService) =>

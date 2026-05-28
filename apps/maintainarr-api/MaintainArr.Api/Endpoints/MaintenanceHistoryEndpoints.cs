@@ -33,5 +33,23 @@ public static class MaintenanceHistoryEndpoints
                 cancellationToken));
         })
         .WithName("ListMaintenanceHistory");
+
+        group.MapGet("/summary", async (
+            Guid assetId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            MaintenanceHistoryService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireMaintenanceHistoryRead(context.User);
+            if (assetId == Guid.Empty)
+            {
+                return Results.BadRequest(new { error = "assetId is required." });
+            }
+
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetSummaryAsync(tenantId, assetId, cancellationToken));
+        })
+        .WithName("GetMaintenanceHistorySummary");
     }
 }

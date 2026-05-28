@@ -43,6 +43,8 @@ public static class MaintainArrServiceRegistration
         builder.Services.Configure<EvidenceStorageOptions>(builder.Configuration.GetSection(EvidenceStorageOptions.SectionName));
         builder.Services.AddSingleton<MaintainArrEvidenceStorageService>();
         builder.Services.AddScoped<MaintenanceHistoryService>();
+        builder.Services.AddScoped<MaintenanceHistoryRollupSettingsService>();
+        builder.Services.AddScoped<MaintenanceHistoryRollupWorkerService>();
         builder.Services.AddScoped<AssetReadinessService>();
         builder.Services.AddScoped<FieldInboxService>();
         builder.Services.AddSingleton<StlServiceTokenValidator>();

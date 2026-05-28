@@ -74,6 +74,15 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
 
     public DbSet<AssetStatusRollupRun> AssetStatusRollupRuns => Set<AssetStatusRollupRun>();
 
+    public DbSet<TenantMaintenanceHistoryRollupSettings> TenantMaintenanceHistoryRollupSettings =>
+        Set<TenantMaintenanceHistoryRollupSettings>();
+
+    public DbSet<MaintenanceHistoryRollup> MaintenanceHistoryRollups => Set<MaintenanceHistoryRollup>();
+
+    public DbSet<MaintenanceHistoryEvent> MaintenanceHistoryEvents => Set<MaintenanceHistoryEvent>();
+
+    public DbSet<MaintenanceHistoryRollupRun> MaintenanceHistoryRollupRuns => Set<MaintenanceHistoryRollupRun>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -598,6 +607,51 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
         modelBuilder.Entity<AssetStatusRollupRun>(entity =>
         {
             entity.ToTable("maintainarr_asset_status_rollup_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<TenantMaintenanceHistoryRollupSettings>(entity =>
+        {
+            entity.ToTable("maintainarr_tenant_maintenance_history_rollup_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<MaintenanceHistoryRollup>(entity =>
+        {
+            entity.ToTable("maintainarr_maintenance_history_rollups");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.AssetTag).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.AssetName).HasMaxLength(256).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ComputedAt });
+        });
+
+        modelBuilder.Entity<MaintenanceHistoryEvent>(entity =>
+        {
+            entity.ToTable("maintainarr_maintenance_history_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EntryId).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Category).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EventType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.Detail).HasMaxLength(1024);
+            entity.Property(x => x.SourceEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceEntityId).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.RelatedEntityId).HasMaxLength(64);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.OccurredAt });
+            entity.HasIndex(x => new { x.TenantId, x.RollupId });
+            entity.HasOne(x => x.Rollup)
+                .WithMany(x => x.Events)
+                .HasForeignKey(x => x.RollupId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<MaintenanceHistoryRollupRun>(entity =>
+        {
+            entity.ToTable("maintainarr_maintenance_history_rollup_runs");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
         });

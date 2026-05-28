@@ -833,6 +833,58 @@ export interface AssetStatusRollupRunsResponse {
   items: AssetStatusRollupRunItem[]
 }
 
+export interface MaintenanceHistorySummaryResponse {
+  assetId: string
+  assetTag: string
+  assetName: string
+  eventCount: number
+  inspectionCount: number
+  defectCount: number
+  workOrderCount: number
+  pmCount: number
+  lastEventAt: string | null
+  computedAt: string
+  isMaterialized: boolean
+}
+
+export interface MaintenanceHistoryRollupSettingsResponse {
+  isEnabled: boolean
+  stalenessHours: number
+  updatedAt: string | null
+}
+
+export interface UpsertMaintenanceHistoryRollupSettingsRequest {
+  isEnabled: boolean
+  stalenessHours: number
+}
+
+export interface PendingMaintenanceHistoryRollupItem {
+  assetId: string
+  assetTag: string
+  assetName: string
+  lastComputedAt: string | null
+}
+
+export interface PendingMaintenanceHistoryRollupsResponse {
+  asOfUtc: string
+  stalenessHours: number
+  batchSize: number
+  items: PendingMaintenanceHistoryRollupItem[]
+}
+
+export interface MaintenanceHistoryRollupRunItem {
+  runId: string
+  asOfUtc: string
+  candidatesFound: number
+  refreshedCount: number
+  skippedCount: number
+  createdAt: string
+}
+
+export interface MaintenanceHistoryRollupRunsResponse {
+  items: MaintenanceHistoryRollupRunItem[]
+}
+
 export interface AssetStatusScopeRollupSummaryResponse {
   scopeType: string
   scopeEntityId: string

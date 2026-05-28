@@ -10,6 +10,7 @@ export function HistorySection({ state }: Props) {
       <MaintenanceHistoryPanel
         assets={s.assetsQuery.data ?? []}
         entries={s.maintenanceHistoryQuery.data?.items ?? []}
+        summary={s.maintenanceHistorySummaryQuery.data}
         totalCount={s.maintenanceHistoryQuery.data?.totalCount ?? 0}
         selectedAssetId={s.historyAssetId}
         isLoading={s.maintenanceHistoryQuery.isLoading}

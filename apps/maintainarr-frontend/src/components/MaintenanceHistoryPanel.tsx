@@ -1,8 +1,9 @@
-import type { AssetResponse, MaintenanceHistoryEntryResponse } from '../api/types'
+import type { AssetResponse, MaintenanceHistoryEntryResponse, MaintenanceHistorySummaryResponse } from '../api/types'
 
 interface MaintenanceHistoryPanelProps {
   assets: AssetResponse[]
   entries: MaintenanceHistoryEntryResponse[]
+  summary: MaintenanceHistorySummaryResponse | null | undefined
   totalCount: number
   selectedAssetId: string
   isLoading: boolean
@@ -58,6 +59,7 @@ function eventTypeLabel(eventType: string): string {
 export function MaintenanceHistoryPanel({
   assets,
   entries,
+  summary,
   totalCount,
   selectedAssetId,
   isLoading,
@@ -101,6 +103,12 @@ export function MaintenanceHistoryPanel({
         </p>
       ) : (
         <>
+          {summary?.isMaterialized ? (
+            <p className="mt-3 text-xs text-emerald-400">
+              Materialized rollup: {summary.inspectionCount} inspections · {summary.defectCount} defects ·{' '}
+              {summary.workOrderCount} work orders · {summary.pmCount} PM events
+            </p>
+          ) : null}
           <p className="mt-3 text-xs text-slate-500">
             {totalCount} event{totalCount === 1 ? '' : 's'} total for {selectedAsset?.assetTag ?? 'asset'}
           </p>

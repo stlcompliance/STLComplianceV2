@@ -39,5 +39,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrAssetStatusRollupSettingsEndpoints();
         app.MapMaintainArrAssetStatusRollupEndpoints();
         app.MapMaintainArrInternalAssetStatusRollupEndpoints();
+        app.MapMaintainArrMaintenanceHistoryRollupSettingsEndpoints();
+        app.MapMaintainArrInternalMaintenanceHistoryRollupEndpoints();
         await Task.CompletedTask;
     });
