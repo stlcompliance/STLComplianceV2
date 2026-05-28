@@ -34,7 +34,6 @@ import {
   updatePerson,
   updatePersonEmploymentStatus,
   grantPersonCertification,
-  StaffArrApiError,
   updatePersonManager,
   updatePersonOrgAssignment,
   updatePersonOrgAssignmentStatus,
@@ -45,7 +44,7 @@ import {
   updateOrgUnit,
   updateOrgUnitStatus,
 } from '../api/client'
-import { clearSession, loadSession, canExportAuditPackage } from '../auth/sessionStorage'
+import { loadSession, canExportAuditPackage } from '../auth/sessionStorage'
 import { canManagePeople } from '../components/PersonProfileEditorPanel'
 import { canManageIncidents } from '../components/IncidentsPanel'
 import { canOverrideReadiness } from '../components/ReadinessPanel'
