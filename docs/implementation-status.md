@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 145 | M13 ship-gate hardening | Complete | `pending` |
+| 145 | M13 ship-gate hardening | Complete | `8178be2` |
 
 ## Program summary
 

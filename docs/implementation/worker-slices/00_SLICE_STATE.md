@@ -260,7 +260,7 @@
 
 | 144 | M13 Playwright/E2E expansion (Compliance Core operator rule evaluate smoke, suite multi-product handoff journey, e2eApi/handoff helpers, catalog, compliancecore test ids, docs) | M13 (partial) | Complete | `4c0ac21` |
 
-| 145 | M13 ship-gate hardening (`StlM13ShipGateCatalog`, entitlement-denial E2E + live probes, NexArr tenant isolation, OpenAPI ship-gate catalog tests, docs) | M13 (partial) | Complete | `pending` |
+| 145 | M13 ship-gate hardening (`StlM13ShipGateCatalog`, entitlement-denial E2E + live probes, NexArr tenant isolation, OpenAPI ship-gate catalog tests, docs) | M13 (partial) | Complete | `8178be2` |
 
 ## Next slice (Worker 146)
 
