@@ -64,6 +64,16 @@ public static class TrainArrServiceRegistration
 
         });
 
+        builder.Services.AddHttpClient<StaffArrPersonLookupClient>((sp, client) =>
+
+        {
+
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
+
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+
+        });
+
         builder.Services.AddHttpClient<ComplianceCoreRuleEvaluationClient>((sp, client) =>
 
         {
@@ -121,6 +131,8 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<RulePackImpactWorkerService>();
         builder.Services.AddScoped<EvidenceRetentionSettingsService>();
         builder.Services.AddScoped<EvidenceRetentionWorkerService>();
+        builder.Services.AddScoped<OrphanReferenceSettingsService>();
+        builder.Services.AddScoped<OrphanReferenceWorkerService>();
 
         builder.Services.AddScoped<StaffarrPublicationSettingsService>();
         builder.Services.AddScoped<StaffarrPublicationRetryService>();

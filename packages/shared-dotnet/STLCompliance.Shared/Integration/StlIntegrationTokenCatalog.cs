@@ -22,7 +22,7 @@ public static class StlIntegrationTokenCatalog
             "StaffArr__ServiceToken",
             "trainarr",
             ["staffarr"],
-            "staffarr.training_blockers.write,staffarr.certification_grants.write,staffarr.certification_lifecycle.write"),
+            "staffarr.training_blockers.write,staffarr.certification_grants.write,staffarr.certification_lifecycle.write,staffarr.person.lookup"),
         Profile(
             "trainarr-compliancecore",
             "trainarr-api",
@@ -67,6 +67,20 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["trainarr"],
             "trainarr.rulepack_impact.scan"),
+        Profile(
+            "worker-trainarr-evidence-retention",
+            "shared-worker",
+            "TrainArrEvidenceRetention__ServiceToken",
+            "shared-worker",
+            ["trainarr"],
+            "trainarr.evidence.retention.purge"),
+        Profile(
+            "worker-trainarr-orphan-references",
+            "shared-worker",
+            "TrainArrOrphanReference__ServiceToken",
+            "shared-worker",
+            ["trainarr"],
+            "trainarr.orphan_references.scan"),
         Profile(
             "worker-trainarr-staffarr-publish-retry",
             "shared-worker",

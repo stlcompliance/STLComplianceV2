@@ -2,6 +2,7 @@ import { NotificationSettingsPanel } from '../../components/NotificationSettings
 import { QualificationRecalculationSettingsPanel } from '../../components/QualificationRecalculationSettingsPanel'
 import { RulePackImpactSettingsPanel } from '../../components/RulePackImpactSettingsPanel'
 import { EvidenceRetentionSettingsPanel } from '../../components/EvidenceRetentionSettingsPanel'
+import { OrphanReferenceSettingsPanel } from '../../components/OrphanReferenceSettingsPanel'
 import { RecertificationSettingsPanel } from '../../components/RecertificationSettingsPanel'
 import { EventProcessingSettingsPanel } from '../../components/EventProcessingSettingsPanel'
 import { StaffarrPublicationSettingsPanel } from '../../components/StaffarrPublicationSettingsPanel'
@@ -22,6 +23,7 @@ export function SettingsSection({ state }: Props) {
       <QualificationRecalculationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
       <RulePackImpactSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
       <EvidenceRetentionSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
+      <OrphanReferenceSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
       <StaffarrPublicationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
       <EventProcessingSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
     </div>

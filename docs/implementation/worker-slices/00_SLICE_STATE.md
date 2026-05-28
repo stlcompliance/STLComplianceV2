@@ -298,6 +298,8 @@
 
 | 163 | TrainArr evidence retention worker (`trainarr_tenant_evidence_retention_settings`, `trainarr_evidence_retention_runs`, internal pending/process-batch, `trainarr.evidence.retention.purge`, `/api/evidence-retention-settings`, `TrainArrEvidenceRetentionJob`, `EvidenceRetentionSettingsPanel`, storage purge, tests, docs) | M12 (partial) | Complete | `be584af` |
 
-## Next slice (Worker 164)
+| 164 | TrainArr orphan reference detection worker (`trainarr_tenant_orphan_reference_settings`, `trainarr_orphan_reference_findings`, `trainarr_orphan_reference_runs`, internal pending/process-batch, `trainarr.orphan_references.scan`, `/api/orphan-reference-settings`, `TrainArrOrphanReferenceJob`, `OrphanReferenceSettingsPanel`, StaffArr/Compliance Core validation, tests, docs) | M12 (partial) | Complete | `pending` |
 
-Per milestone matrix: next open **M12** TrainArr backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (orphan reference detection worker).
+## Next slice (Worker 165)
+
+Per milestone matrix: next open **M12** TrainArr backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (training audit package).

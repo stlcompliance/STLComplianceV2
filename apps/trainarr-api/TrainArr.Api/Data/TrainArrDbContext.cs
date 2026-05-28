@@ -86,6 +86,15 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
     public DbSet<EvidenceRetentionRun> EvidenceRetentionRuns =>
         Set<EvidenceRetentionRun>();
 
+    public DbSet<TenantOrphanReferenceSettings> TenantOrphanReferenceSettings =>
+        Set<TenantOrphanReferenceSettings>();
+
+    public DbSet<OrphanReferenceFinding> OrphanReferenceFindings =>
+        Set<OrphanReferenceFinding>();
+
+    public DbSet<OrphanReferenceRun> OrphanReferenceRuns =>
+        Set<OrphanReferenceRun>();
+
     public DbSet<RecertificationAssignmentRun> RecertificationAssignmentRuns =>
         Set<RecertificationAssignmentRun>();
 
@@ -556,6 +565,35 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
         modelBuilder.Entity<EvidenceRetentionRun>(entity =>
         {
             entity.ToTable("trainarr_evidence_retention_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SkipReason).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ProcessedAt });
+        });
+
+        modelBuilder.Entity<TenantOrphanReferenceSettings>(entity =>
+        {
+            entity.ToTable("trainarr_tenant_orphan_reference_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<OrphanReferenceFinding>(entity =>
+        {
+            entity.ToTable("trainarr_orphan_reference_findings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ReferenceKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ReferenceKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.SampleSourceEntityType).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ReferenceKind, x.ReferenceKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.IsActive, x.LastDetectedAt });
+        });
+
+        modelBuilder.Entity<OrphanReferenceRun>(entity =>
+        {
+            entity.ToTable("trainarr_orphan_reference_runs");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
             entity.Property(x => x.SkipReason).HasMaxLength(512);

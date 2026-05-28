@@ -617,6 +617,49 @@ export interface EvidenceRetentionRunsResponse {
   items: EvidenceRetentionRunItem[]
 }
 
+export interface OrphanReferenceSettingsResponse {
+  isEnabled: boolean
+  scanStalenessHours: number
+  updatedAt: string | null
+}
+
+export interface UpsertOrphanReferenceSettingsRequest {
+  isEnabled: boolean
+  scanStalenessHours: number
+}
+
+export interface OrphanReferenceFindingItem {
+  findingId: string
+  referenceKind: string
+  referenceKey: string
+  sampleSourceEntityType: string
+  sampleSourceEntityId: string
+  affectedSourceCount: number
+  isActive: boolean
+  firstDetectedAt: string
+  lastDetectedAt: string
+  resolvedAt: string | null
+}
+
+export interface OrphanReferenceFindingsResponse {
+  items: OrphanReferenceFindingItem[]
+}
+
+export interface OrphanReferenceRunItem {
+  runId: string
+  outcome: string
+  referencesCheckedCount: number
+  findingsDetectedCount: number
+  findingsResolvedCount: number
+  skippedCount: number
+  skipReason: string | null
+  processedAt: string
+}
+
+export interface OrphanReferenceRunsResponse {
+  items: OrphanReferenceRunItem[]
+}
+
 export interface StaffarrPublicationSettingsResponse {
   isEnabled: boolean
   maxAttempts: number

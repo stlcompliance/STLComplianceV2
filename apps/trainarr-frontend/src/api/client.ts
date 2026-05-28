@@ -47,6 +47,10 @@ import type {
   EvidenceRetentionSettingsResponse,
   UpsertEvidenceRetentionSettingsRequest,
   EvidenceRetentionRunsResponse,
+  OrphanReferenceSettingsResponse,
+  UpsertOrphanReferenceSettingsRequest,
+  OrphanReferenceFindingsResponse,
+  OrphanReferenceRunsResponse,
   StaffarrPublicationSettingsResponse,
   UpsertStaffarrPublicationSettingsRequest,
   StaffarrPublicationDeliveriesResponse,
@@ -806,6 +810,59 @@ export async function getEvidenceRetentionRuns(
   return parseJsonResponse<EvidenceRetentionRunsResponse>(
     response,
     'Failed to load evidence retention runs',
+  )
+}
+
+export async function getOrphanReferenceSettings(
+  accessToken: string,
+): Promise<OrphanReferenceSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/orphan-reference-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<OrphanReferenceSettingsResponse>(
+    response,
+    'Failed to load orphan reference settings',
+  )
+}
+
+export async function upsertOrphanReferenceSettings(
+  accessToken: string,
+  payload: UpsertOrphanReferenceSettingsRequest,
+): Promise<OrphanReferenceSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/orphan-reference-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<OrphanReferenceSettingsResponse>(
+    response,
+    'Failed to save orphan reference settings',
+  )
+}
+
+export async function getOrphanReferenceFindings(
+  accessToken: string,
+  limit = 10,
+): Promise<OrphanReferenceFindingsResponse> {
+  const response = await fetch(`${apiBase}/api/orphan-reference-settings/findings?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<OrphanReferenceFindingsResponse>(
+    response,
+    'Failed to load orphan reference findings',
+  )
+}
+
+export async function getOrphanReferenceRuns(
+  accessToken: string,
+  limit = 10,
+): Promise<OrphanReferenceRunsResponse> {
+  const response = await fetch(`${apiBase}/api/orphan-reference-settings/runs?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<OrphanReferenceRunsResponse>(
+    response,
+    'Failed to load orphan reference runs',
   )
 }
 
