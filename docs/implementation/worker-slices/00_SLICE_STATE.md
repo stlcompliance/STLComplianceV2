@@ -284,7 +284,7 @@
 
 | 156 | StaffArr personnel history rollup worker (`staffarr_personnel_history_rollups` + `staffarr_personnel_history_events`, internal pending/process-batch, `staffarr.personnel.history.rollup`, `/api/person-history` + TrainArr integration read, `StaffArrPersonnelHistoryRollupJob`, `PersonHistorySummaryPanel`, tests, docs) | M12 (partial) | Complete | `cbfa6db` |
 
-| 157 | TrainArr recertification assignment worker (`trainarr_tenant_recertification_settings`, `trainarr_recertification_assignment_runs`, `SourceQualificationIssueId`, internal pending/process-batch, `trainarr.recertification.assign`, `/api/recertification-settings`, `TrainArrRecertificationAssignmentJob`, `RecertificationSettingsPanel`, tests, docs) | M12 (partial) | Complete | `pending` |
+| 157 | TrainArr recertification assignment worker (`trainarr_tenant_recertification_settings`, `trainarr_recertification_assignment_runs`, `SourceQualificationIssueId`, internal pending/process-batch, `trainarr.recertification.assign`, `/api/recertification-settings`, `TrainArrRecertificationAssignmentJob`, `RecertificationSettingsPanel`, tests, docs) | M12 (partial) | Complete | `62301b0` |
 
 ## Next slice (Worker 158)
 
