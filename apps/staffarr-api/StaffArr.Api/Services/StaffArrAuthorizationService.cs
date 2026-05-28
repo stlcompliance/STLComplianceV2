@@ -42,6 +42,11 @@ public sealed class StaffArrAuthorizationService
 
     public void RequirePersonTimelineRead(ClaimsPrincipal principal, Guid personId)
     {
+        RequirePersonHistoryRead(principal, personId);
+    }
+
+    public void RequirePersonHistoryRead(ClaimsPrincipal principal, Guid personId)
+    {
         RequireStaffArrEntitlement(principal);
         if (principal.IsPlatformAdmin())
         {

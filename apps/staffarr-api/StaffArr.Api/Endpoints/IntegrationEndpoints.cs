@@ -16,6 +16,8 @@ public static class IntegrationEndpoints
 
     public const string TrainarrPersonLookupActionScope = "staffarr.person.lookup";
 
+    public const string TrainarrPersonHistoryReadActionScope = PersonnelHistoryService.IntegrationReadActionScope;
+
     public static void MapStaffArrIntegrationEndpoints(this WebApplication app)
     {
         var integrations = app.MapGroup("/api/integrations").WithTags("Integrations");
@@ -176,5 +178,74 @@ public static class IntegrationEndpoints
             return Results.Ok(await service.GetByEmailAsync(tenantId, email!, cancellationToken));
         })
         .WithName("TrainarrPersonLookup");
+
+        integrations.MapGet("/person-history", async (
+            Guid tenantId,
+            Guid personId,
+            int? page,
+            int? pageSize,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            PersonnelHistoryService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "trainarr",
+                    RequiredTargetProduct = "staffarr",
+                    TenantId = tenantId,
+                    RequiredActionScope = TrainarrPersonHistoryReadActionScope
+                });
+
+            if (personId == Guid.Empty)
+            {
+                return Results.BadRequest(new
+                {
+                    code = "person_history.validation",
+                    message = "personId must be a valid identifier."
+                });
+            }
+
+            return Results.Ok(await service.ListPersonHistoryAsync(
+                tenantId,
+                personId,
+                page ?? 1,
+                pageSize ?? 50,
+                cancellationToken));
+        })
+        .WithName("TrainarrPersonHistory");
+
+        integrations.MapGet("/person-history/summary", async (
+            Guid tenantId,
+            Guid personId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            PersonnelHistoryService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "trainarr",
+                    RequiredTargetProduct = "staffarr",
+                    TenantId = tenantId,
+                    RequiredActionScope = TrainarrPersonHistoryReadActionScope
+                });
+
+            if (personId == Guid.Empty)
+            {
+                return Results.BadRequest(new
+                {
+                    code = "person_history.validation",
+                    message = "personId must be a valid identifier."
+                });
+            }
+
+            return Results.Ok(await service.GetSummaryAsync(tenantId, personId, cancellationToken));
+        })
+        .WithName("TrainarrPersonHistorySummary");
     }
 }

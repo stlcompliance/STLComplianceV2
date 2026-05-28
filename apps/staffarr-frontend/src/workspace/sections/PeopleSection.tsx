@@ -2,6 +2,7 @@ import { StaffArrApiError } from '../../api/client'
 import { PersonProfileEditorPanel } from '../../components/PersonProfileEditorPanel'
 import { PersonLookupPanel } from '../../components/PersonLookupPanel'
 import { PersonTimelinePanel } from '../../components/PersonTimelinePanel'
+import { PersonHistorySummaryPanel } from '../../components/PersonHistorySummaryPanel'
 import { PersonnelNotesPanel } from '../../components/PersonnelNotesPanel'
 import { PersonnelDocumentsPanel } from '../../components/PersonnelDocumentsPanel'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
@@ -183,6 +184,14 @@ export function PeopleSection({ state }: Props) {
           personDisplayName={s.selectedPerson.displayName}
           lookup={s.personLookupQuery.data ?? null}
           isLoading={s.personLookupQuery.isLoading}
+        />
+      ) : null}
+
+      {s.selectedPerson ? (
+        <PersonHistorySummaryPanel
+          personDisplayName={s.selectedPerson.displayName}
+          summary={s.personHistorySummaryQuery.data ?? null}
+          isLoading={s.personHistorySummaryQuery.isLoading}
         />
       ) : null}
 

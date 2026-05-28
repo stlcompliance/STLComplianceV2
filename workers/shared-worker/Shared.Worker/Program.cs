@@ -95,6 +95,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<StaffArrPermissionProjectionJob>();
 
+        builder.Services.Configure<StaffArrPersonnelHistoryRollupOptions>(
+            builder.Configuration.GetSection(StaffArrPersonnelHistoryRollupOptions.SectionName));
+
+        builder.Services.AddHttpClient<StaffArrPersonnelHistoryRollupClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<StaffArrPersonnelHistoryRollupOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.StaffArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(5);
+        });
+
+        builder.Services.AddHostedService<StaffArrPersonnelHistoryRollupJob>();
+
         builder.Services.Configure<StaffArrPersonExportDeliveryOptions>(
             builder.Configuration.GetSection(StaffArrPersonExportDeliveryOptions.SectionName));
 

@@ -692,6 +692,21 @@ export interface PersonTimelineEntryResponse {
   externalReferenceId: string | null
 }
 
+export interface PersonnelHistorySummaryResponse {
+  personId: string
+  eventCount: number
+  incidentCount: number
+  certificationCount: number
+  permissionCount: number
+  readinessCount: number
+  trainingBlockerCount: number
+  personnelNoteCount: number
+  personnelDocumentCount: number
+  lastEventAt: string | null
+  computedAt: string
+  isMaterialized: boolean
+}
+
 export interface AuditPackageSectionDescriptor {
   key: string
   fileName: string

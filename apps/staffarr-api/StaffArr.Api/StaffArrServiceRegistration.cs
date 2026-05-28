@@ -42,6 +42,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<ReadinessOverrideService>();
         builder.Services.AddScoped<ReadinessService>();
         builder.Services.AddScoped<ReadinessRollupService>();
+        builder.Services.AddScoped<PersonnelHistoryService>();
         builder.Services.AddScoped<PermissionProjectionService>();
         builder.Services.AddScoped<TrainingBlockerIngestionService>();
         builder.Services.AddScoped<CertificationGrantIngestionService>();

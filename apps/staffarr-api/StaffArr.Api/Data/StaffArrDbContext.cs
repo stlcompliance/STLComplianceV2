@@ -57,6 +57,10 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<AuditPackageGenerationJob> AuditPackageGenerationJobs => Set<AuditPackageGenerationJob>();
 
+    public DbSet<PersonnelHistoryRollup> PersonnelHistoryRollups => Set<PersonnelHistoryRollup>();
+
+    public DbSet<PersonnelHistoryEvent> PersonnelHistoryEvents => Set<PersonnelHistoryEvent>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -426,6 +430,35 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.ArtifactJson);
             entity.HasIndex(x => new { x.TenantId, x.Status, x.CreatedAt });
             entity.HasIndex(x => x.CreatedAt);
+        });
+
+        modelBuilder.Entity<PersonnelHistoryRollup>(entity =>
+        {
+            entity.ToTable("staffarr_personnel_history_rollups");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ComputedAt });
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+            entity.HasMany(x => x.Events).WithOne(x => x.Rollup).HasForeignKey(x => x.RollupId);
+        });
+
+        modelBuilder.Entity<PersonnelHistoryEvent>(entity =>
+        {
+            entity.ToTable("staffarr_personnel_history_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EntryId).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Category).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EventType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Detail).HasMaxLength(2048);
+            entity.Property(x => x.SourceEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceEntityId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ExternalReferenceId).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.OccurredAt });
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.EntryId }).IsUnique();
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
         });
     }
 }

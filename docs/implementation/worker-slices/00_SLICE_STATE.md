@@ -282,6 +282,8 @@
 
 | 155 | StaffArr product-facing person lookup API (`PersonLookupService`, `/api/person-lookup` + nested lookup routes, TrainArr `/api/integrations/person-lookup`, `staffarr.person.lookup`, `PersonLookupPanel`, tests, docs) | M4 (partial) | Complete | `99c8d67` |
 
-## Next slice (Worker 156)
+| 156 | StaffArr personnel history rollup worker (`staffarr_personnel_history_rollups` + `staffarr_personnel_history_events`, internal pending/process-batch, `staffarr.personnel.history.rollup`, `/api/person-history` + TrainArr integration read, `StaffArrPersonnelHistoryRollupJob`, `PersonHistorySummaryPanel`, tests, docs) | M12 (partial) | Complete | `cbfa6db` |
 
-Per milestone matrix: next open **M12** worker backlog row from implementation status (personnel history rollup worker recommended after W155 person lookup).
+## Next slice (Worker 157)
+
+Per milestone matrix: next open **M12** worker backlog row from `00_SLICE_STATE.md` / `02_PRODUCT_IMPLEMENTATION_BACKLOG.md`.

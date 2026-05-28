@@ -60,6 +60,7 @@ import type {
   PersonExportScheduleResponse,
   UpsertPersonExportScheduleRequest,
   PersonLookupResponse,
+  PersonnelHistorySummaryResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -539,6 +540,31 @@ export async function getPersonTimeline(
     },
   )
   return parseJsonResponse<PagedResult<PersonTimelineEntryResponse>>(response, 'Failed to load person timeline')
+}
+
+export async function getPersonHistory(
+  accessToken: string,
+  personId: string,
+  page = 1,
+  pageSize = 50,
+): Promise<PagedResult<PersonTimelineEntryResponse>> {
+  const response = await fetch(
+    `${apiBase}/api/people/${personId}/person-history?page=${page}&pageSize=${pageSize}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<PagedResult<PersonTimelineEntryResponse>>(response, 'Failed to load person history')
+}
+
+export async function getPersonHistorySummary(
+  accessToken: string,
+  personId: string,
+): Promise<PersonnelHistorySummaryResponse> {
+  const response = await fetch(`${apiBase}/api/person-history/summary?personId=${personId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonnelHistorySummaryResponse>(response, 'Failed to load person history summary')
 }
 
 export async function getCertificationDefinitions(
