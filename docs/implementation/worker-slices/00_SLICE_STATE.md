@@ -298,7 +298,7 @@
 
 | 163 | TrainArr evidence retention worker (`trainarr_tenant_evidence_retention_settings`, `trainarr_evidence_retention_runs`, internal pending/process-batch, `trainarr.evidence.retention.purge`, `/api/evidence-retention-settings`, `TrainArrEvidenceRetentionJob`, `EvidenceRetentionSettingsPanel`, storage purge, tests, docs) | M12 (partial) | Complete | `be584af` |
 
-| 164 | TrainArr orphan reference detection worker (`trainarr_tenant_orphan_reference_settings`, `trainarr_orphan_reference_findings`, `trainarr_orphan_reference_runs`, internal pending/process-batch, `trainarr.orphan_references.scan`, `/api/orphan-reference-settings`, `TrainArrOrphanReferenceJob`, `OrphanReferenceSettingsPanel`, StaffArr/Compliance Core validation, tests, docs) | M12 (partial) | Complete | `pending` |
+| 164 | TrainArr orphan reference detection worker (`trainarr_tenant_orphan_reference_settings`, `trainarr_orphan_reference_findings`, `trainarr_orphan_reference_runs`, internal pending/process-batch, `trainarr.orphan_references.scan`, `/api/orphan-reference-settings`, `TrainArrOrphanReferenceJob`, `OrphanReferenceSettingsPanel`, StaffArr/Compliance Core validation, tests, docs) | M12 (partial) | Complete | `51db338` |
 
 ## Next slice (Worker 165)
 
