@@ -8,6 +8,7 @@ import { PurchasingSection } from './sections/PurchasingSection'
 import { ReceivingSection } from './sections/ReceivingSection'
 import { PricingSection } from './sections/PricingSection'
 import { PlanningSection } from './sections/PlanningSection'
+import { ReportsSection } from './sections/ReportsSection'
 import { SettingsSection } from './sections/SettingsSection'
 
 export function SupplyArrWorkspacePage({ section }: { section: WorkspaceSection }) {
@@ -24,6 +25,7 @@ export function SupplyArrWorkspacePage({ section }: { section: WorkspaceSection 
       {section === 'receiving' ? <ReceivingSection state={state} /> : null}
       {section === 'pricing' ? <PricingSection state={state} /> : null}
       {section === 'planning' ? <PlanningSection state={state} /> : null}
+      {section === 'reports' ? <ReportsSection state={state} /> : null}
       {section === 'settings' ? <SettingsSection state={state} /> : null}
     </WorkspaceShell>
   )

@@ -46,5 +46,7 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrDemandProcessingSettingsEndpoints();
         app.MapSupplyArrInternalDemandProcessingEndpoints();
         app.MapSupplyArrDemandProcessingEndpoints();
+        app.MapSupplyArrVendorReportEndpoints();
+        app.MapSupplyArrPartsInventoryReportEndpoints();
         await Task.CompletedTask;
     });

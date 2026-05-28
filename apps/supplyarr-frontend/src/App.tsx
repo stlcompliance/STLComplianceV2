@@ -8,6 +8,7 @@ import { PlanningPage } from './pages/planning/PlanningPage'
 import { PricingPage } from './pages/pricing/PricingPage'
 import { PurchasingPage } from './pages/purchasing/PurchasingPage'
 import { ReceivingPage } from './pages/receiving/ReceivingPage'
+import { ReportsPage } from './pages/reports/ReportsPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
 import { LaunchPage } from './pages/LaunchPage'
 import { ReceivingWorkspacePage } from './pages/ReceivingWorkspacePage'
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="/receiving/:receivingReceiptId" element={<ReceivingWorkspacePage />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/planning" element={<PlanningPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

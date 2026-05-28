@@ -93,6 +93,10 @@ import {
   canCreatePurchaseOrders,
   canCreatePurchaseRequests,
   canPerformReceiving,
+  canReadVendorReports as userCanReadVendorReports,
+  canExportVendorReports as userCanExportVendorReports,
+  canReadPartsInventoryReports as userCanReadPartsInventoryReports,
+  canExportPartsInventoryReports as userCanExportPartsInventoryReports,
   canManageInventory,
   canManageParties,
   canManageParts,
@@ -1484,6 +1488,22 @@ export function useSupplyArrWorkspaceState() {
     ? canManageNotificationSettings(me.tenantRoleKey, me.isPlatformAdmin)
     : false
 
+  const canReadVendorReports = me
+    ? userCanReadVendorReports(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+
+  const canExportVendorReports = me
+    ? userCanExportVendorReports(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+
+  const canReadPartsInventoryReports = me
+    ? userCanReadPartsInventoryReports(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+
+  const canExportPartsInventoryReports = me
+    ? userCanExportPartsInventoryReports(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+
   const approvedPurchaseRequests =
 
     purchaseRequestsQuery.data?.filter((pr) => pr.status === 'approved' && pr.vendorPartyId) ?? []
@@ -1733,6 +1753,10 @@ export function useSupplyArrWorkspaceState() {
     canApprovePo,
     canReceive,
     canManageNotifications,
+    canReadVendorReports,
+    canExportVendorReports,
+    canReadPartsInventoryReports,
+    canExportPartsInventoryReports,
     approvedPurchaseRequests,
     issuedPurchaseOrders,
     issuedPurchaseOrdersWithReceived,

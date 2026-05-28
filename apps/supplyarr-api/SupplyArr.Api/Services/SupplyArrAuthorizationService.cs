@@ -347,6 +347,18 @@ public sealed class SupplyArrAuthorizationService
     public void RequireDemandProcessingRead(ClaimsPrincipal principal) =>
         RequireDemandRefRead(principal);
 
+    public void RequireVendorReportRead(ClaimsPrincipal principal) =>
+        RequirePartiesRead(principal);
+
+    public void RequireVendorReportExport(ClaimsPrincipal principal) =>
+        RequirePurchaseRequestRead(principal);
+
+    public void RequirePartsInventoryReportRead(ClaimsPrincipal principal) =>
+        RequireInventoryRead(principal);
+
+    public void RequirePartsInventoryReportExport(ClaimsPrincipal principal) =>
+        RequireInventoryRead(principal);
+
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }

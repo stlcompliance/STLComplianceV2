@@ -74,6 +74,11 @@ import type {
   PendingDemandProcessingResponse,
   DemandProcessingRunsResponse,
   DemandProcessingDashboardResponse,
+  VendorReportSummaryResponse,
+  VendorReportDetailResponse,
+  PartsInventoryReportSummaryResponse,
+  PartsInventoryPartDetailResponse,
+  PartsInventoryLocationDetailResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_SUPPLYARR_API_BASE ?? ''
@@ -1239,4 +1244,146 @@ export async function getDemandProcessingRuns(
     response,
     'Failed to load demand processing runs',
   )
+}
+
+export async function getVendorReportSummary(
+  accessToken: string,
+  options?: { approvalStatus?: string; activeOnly?: boolean },
+): Promise<VendorReportSummaryResponse> {
+  const search = new URLSearchParams()
+  if (options?.approvalStatus) {
+    search.set('approvalStatus', options.approvalStatus)
+  }
+  if (options?.activeOnly) {
+    search.set('activeOnly', 'true')
+  }
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/vendors/summary${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<VendorReportSummaryResponse>(
+    response,
+    'Failed to load vendor report summary',
+  )
+}
+
+export async function getVendorReportDetail(
+  accessToken: string,
+  vendorPartyId: string,
+): Promise<VendorReportDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/vendors/${vendorPartyId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<VendorReportDetailResponse>(
+    response,
+    'Failed to load vendor report detail',
+  )
+}
+
+export async function exportVendorReportSummaryCsv(
+  accessToken: string,
+  options?: { approvalStatus?: string; activeOnly?: boolean },
+): Promise<Blob> {
+  const search = new URLSearchParams()
+  if (options?.approvalStatus) {
+    search.set('approvalStatus', options.approvalStatus)
+  }
+  if (options?.activeOnly) {
+    search.set('activeOnly', 'true')
+  }
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/vendors/summary/export${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    throw new Error('Failed to export vendor report summary')
+  }
+  return response.blob()
+}
+
+export async function getPartsInventoryReportSummary(
+  accessToken: string,
+  options?: {
+    activePartsOnly?: boolean
+    belowReorderOnly?: boolean
+    inventoryLocationId?: string
+  },
+): Promise<PartsInventoryReportSummaryResponse> {
+  const search = new URLSearchParams()
+  if (options?.activePartsOnly) {
+    search.set('activePartsOnly', 'true')
+  }
+  if (options?.belowReorderOnly) {
+    search.set('belowReorderOnly', 'true')
+  }
+  if (options?.inventoryLocationId) {
+    search.set('inventoryLocationId', options.inventoryLocationId)
+  }
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/parts-inventory/summary${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<PartsInventoryReportSummaryResponse>(
+    response,
+    'Failed to load parts and inventory report summary',
+  )
+}
+
+export async function getPartsInventoryPartDetail(
+  accessToken: string,
+  partId: string,
+): Promise<PartsInventoryPartDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/parts-inventory/parts/${partId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PartsInventoryPartDetailResponse>(
+    response,
+    'Failed to load part inventory detail',
+  )
+}
+
+export async function getPartsInventoryLocationDetail(
+  accessToken: string,
+  inventoryLocationId: string,
+): Promise<PartsInventoryLocationDetailResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/parts-inventory/locations/${inventoryLocationId}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<PartsInventoryLocationDetailResponse>(
+    response,
+    'Failed to load location inventory detail',
+  )
+}
+
+export async function exportPartsInventoryReportSummaryCsv(
+  accessToken: string,
+  options?: {
+    activePartsOnly?: boolean
+    belowReorderOnly?: boolean
+    inventoryLocationId?: string
+  },
+): Promise<Blob> {
+  const search = new URLSearchParams()
+  if (options?.activePartsOnly) {
+    search.set('activePartsOnly', 'true')
+  }
+  if (options?.belowReorderOnly) {
+    search.set('belowReorderOnly', 'true')
+  }
+  if (options?.inventoryLocationId) {
+    search.set('inventoryLocationId', options.inventoryLocationId)
+  }
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/parts-inventory/summary/export${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    throw new Error('Failed to export parts and inventory report')
+  }
+  return response.blob()
 }

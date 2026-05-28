@@ -1056,3 +1056,154 @@ export interface DemandProcessingDashboardResponse {
   prDraftedCount: number
   items: DemandProcessingSummaryResponse[]
 }
+
+export interface VendorApprovalStatusSummary {
+  approvalStatus: string
+  count: number
+}
+
+export interface VendorReportSummaryItem {
+  vendorPartyId: string
+  partyKey: string
+  displayName: string
+  approvalStatus: string
+  status: string
+  partVendorLinkCount: number
+  preferredPartLinkCount: number
+  openPurchaseRequestCount: number
+  openPurchaseOrderCount: number
+  issuedPurchaseOrderCount: number
+  postedReceivingReceiptCount: number
+  openBackorderCount: number
+  openPurchaseOrderLineQuantity: number
+  lastPurchaseOrderAt: string | null
+  lastReceivingPostedAt: string | null
+}
+
+export interface VendorReportSummaryResponse {
+  generatedAt: string
+  approvalStatusCounts: VendorApprovalStatusSummary[]
+  vendors: VendorReportSummaryItem[]
+}
+
+export interface PartsInventoryReportTotals {
+  totalPartCount: number
+  activePartCount: number
+  locationCount: number
+  binCount: number
+  belowReorderPointCount: number
+  zeroStockPartCount: number
+  totalQuantityOnHand: number
+  totalQuantityReserved: number
+  totalQuantityAvailable: number
+}
+
+export interface PartsInventoryLocationSummaryItem {
+  inventoryLocationId: string
+  locationKey: string
+  name: string
+  status: string
+  binCount: number
+  partCountWithStock: number
+  quantityOnHand: number
+  quantityReserved: number
+  quantityAvailable: number
+}
+
+export interface PartsInventoryPartSummaryItem {
+  partId: string
+  partKey: string
+  displayName: string
+  status: string
+  categoryKey: string
+  reorderPoint: number | null
+  reorderQuantity: number | null
+  quantityOnHand: number
+  quantityReserved: number
+  quantityAvailable: number
+  belowReorderPoint: boolean
+  vendorLinkCount: number
+}
+
+export interface PartsInventoryReportSummaryResponse {
+  generatedAt: string
+  totals: PartsInventoryReportTotals
+  locations: PartsInventoryLocationSummaryItem[]
+  parts: PartsInventoryPartSummaryItem[]
+}
+
+export interface PartsInventoryPartDetailResponse {
+  summary: PartsInventoryPartSummaryItem
+  stockByBin: Array<{
+    partStockLevelId: string
+    inventoryBinId: string
+    binKey: string
+    binName: string
+    inventoryLocationId: string
+    locationKey: string
+    locationName: string
+    quantityOnHand: number
+    quantityReserved: number
+    quantityAvailable: number
+  }>
+  vendorLinks: Array<{
+    partVendorLinkId: string
+    vendorPartyId: string
+    vendorPartyKey: string
+    vendorDisplayName: string
+    vendorPartNumber: string
+    isPreferred: boolean
+  }>
+}
+
+export interface PartsInventoryLocationDetailResponse {
+  summary: PartsInventoryLocationSummaryItem
+  bins: Array<{
+    inventoryBinId: string
+    binKey: string
+    binName: string
+    status: string
+    partCountWithStock: number
+    quantityOnHand: number
+    quantityReserved: number
+  }>
+  parts: Array<{
+    partId: string
+    partKey: string
+    displayName: string
+    quantityOnHand: number
+    quantityReserved: number
+    quantityAvailable: number
+  }>
+}
+
+export interface VendorReportDetailResponse {
+  summary: VendorReportSummaryItem
+  recentPurchaseRequests: Array<{
+    purchaseRequestId: string
+    requestKey: string
+    title: string
+    status: string
+    updatedAt: string
+  }>
+  recentPurchaseOrders: Array<{
+    purchaseOrderId: string
+    orderKey: string
+    title: string
+    status: string
+    lineCount: number
+    quantityOrdered: number
+    quantityReceived: number
+    updatedAt: string
+  }>
+  partLinks: Array<{
+    partVendorLinkId: string
+    partId: string
+    partKey: string
+    partDisplayName: string
+    vendorPartNumber: string
+    isPreferred: boolean
+    catalogUnitPrice: number | null
+    catalogAvailabilityStatus: string | null
+  }>
+}

@@ -49,6 +49,8 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<DemandProcessingSettingsService>();
         builder.Services.AddScoped<DemandProcessingWorkerService>();
         builder.Services.AddScoped<DemandProcessingService>();
+        builder.Services.AddScoped<VendorReportService>();
+        builder.Services.AddScoped<PartsInventoryReportService>();
         builder.Services.AddScoped<MaintainArrDemandIntakeService>();
         builder.Services.AddScoped<MaintainArrDemandStatusCallbackService>();
         builder.Services.Configure<MaintainArrClientOptions>(builder.Configuration.GetSection(MaintainArrClientOptions.SectionName));

@@ -332,6 +332,10 @@
 
 | 180 | SupplyArr availability snapshot worker (`supplyarr_tenant_availability_snapshot_settings`, `supplyarr_part_vendor_availability_capture_states`, `supplyarr_availability_snapshot_runs`, vendor link catalog availability fields, internal pending/process-batch, `supplyarr.availability.snapshots.capture`, `SupplyArrAvailabilitySnapshotJob`, `/api/availability-snapshot-settings`, `AvailabilitySnapshotSettingsPanel`, tests, docs) | M12 (partial) | Complete | `4d068b7` |
 
-## Next slice (Worker 181)
+| 181 | SupplyArr vendor reports (`VendorReportService`, `/api/reports/vendors/summary|{id}|summary/export`, audit events, `VendorReportsPanel`, Reports workspace route, integration + frontend tests, docs) | M12 (partial) | Complete | `pending` |
 
-Per backlog: SupplyArr M12 remaining items (vendor reports, parts/inventory reports, purchasing reports, compliance reports, forgiving search, audit history) or next product milestone per `02_PRODUCT_IMPLEMENTATION_BACKLOG.md`.
+| 182 | SupplyArr parts/inventory reports (`PartsInventoryReportService`, `/api/reports/parts-inventory/summary|parts/{id}|locations/{id}|summary/export`, audit events, `PartsInventoryReportsPanel`, Reports workspace extension, integration + frontend tests, docs) | M12 (partial) | Complete | `pending` |
+
+## Next slice (Worker 183)
+
+Per backlog: SupplyArr M12 remaining items (purchasing reports, compliance reports, forgiving search, audit history) or next product milestone per `02_PRODUCT_IMPLEMENTATION_BACKLOG.md`.

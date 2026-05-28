@@ -92,3 +92,41 @@ export function canManageNotificationSettings(tenantRoleKey: string, isPlatformA
   if (isPlatformAdmin) return true
   return ['tenant_admin', 'supplyarr_admin'].includes(tenantRoleKey.toLowerCase())
 }
+
+const supplyarrReadRoles = [
+  'tenant_admin',
+  'supplyarr_admin',
+  'supplyarr_manager',
+  'supplyarr_clerk',
+  'tenant_member',
+]
+
+const supplyarrProcurementReadRoles = [
+  ...supplyarrReadRoles,
+  'supplyarr_buyer',
+]
+
+export function canReadVendorReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return supplyarrReadRoles.includes(tenantRoleKey.toLowerCase())
+}
+
+export function canExportVendorReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return supplyarrProcurementReadRoles.includes(tenantRoleKey.toLowerCase())
+}
+
+export function canReadPartsInventoryReports(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  if (isPlatformAdmin) return true
+  return supplyarrReadRoles.includes(tenantRoleKey.toLowerCase())
+}
+
+export function canExportPartsInventoryReports(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  return canReadPartsInventoryReports(tenantRoleKey, isPlatformAdmin)
+}
