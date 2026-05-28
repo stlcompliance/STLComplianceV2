@@ -54,6 +54,7 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
 
         app.MapTrainArrInternalQualificationExpirationEndpoints();
         app.MapTrainArrFieldInboxEndpoints();
+        app.MapTrainArrLoadTestJourneySeedEndpoints();
 
         await Task.CompletedTask;
 

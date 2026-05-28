@@ -112,6 +112,8 @@ public static class TrainArrServiceRegistration
 
         builder.Services.AddScoped<QualificationCheckService>();
 
+        builder.Services.AddScoped<LoadTestJourneySeedService>();
+
         builder.Services.AddScoped<StaffarrIncidentRemediationService>();
 
         builder.Services.AddScoped<StaffarrIncidentRemediationQueryService>();
