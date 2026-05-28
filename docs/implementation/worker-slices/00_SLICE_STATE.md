@@ -242,7 +242,7 @@
 
 | 135 | STLComplianceSite marketing spine (`apps/stlcompliancesite`, homepage + product pages + demo/contact + privacy/terms + security/data ownership, branding, `render.yaml` static site, CI, vitest, docs) | M3 (partial) | Complete | `2989c35` |
 
-| 136 | NexArr platform audit export (`/api/platform-admin/audit-packages` manifest/timeline/export + async jobs, internal process-batch, shared-worker job, suite platform-admin audit export UI, tests, docs) | M12 (partial) | Complete | `pending` |
+| 136 | NexArr platform audit export (`/api/platform-admin/audit-packages` manifest/timeline/export + async jobs, internal process-batch, shared-worker job, suite platform-admin audit export UI, tests, docs) | M12 (partial) | Complete | `414454e` |
 
 ## Next slice (Worker 137)
 
