@@ -308,7 +308,7 @@
 
 | 168 | NexArr service-token cleanup worker (`nexarr_platform_service_token_cleanup_settings`, `nexarr_service_token_cleanup_runs`, internal pending/process-batch, `nexarr.service_tokens.cleanup.purge`, `NexArrServiceTokenCleanupJob`, platform-admin service token cleanup UI, tests, docs) | M12 (partial) | Complete | `c0f0189` |
 
-| 169 | NexArr entitlement reconciliation worker (`nexarr_tenant_product_licenses`, `nexarr_platform_entitlement_reconciliation_settings`, `nexarr_entitlement_reconciliation_runs`, internal pending/process-batch, `nexarr.entitlements.reconcile`, `NexArrEntitlementReconciliationJob`, platform-admin entitlement reconciliation UI, tests, docs) | M12 (partial) | Complete | `pending` |
+| 169 | NexArr entitlement reconciliation worker (`nexarr_tenant_product_licenses`, `nexarr_platform_entitlement_reconciliation_settings`, `nexarr_entitlement_reconciliation_runs`, internal pending/process-batch, `nexarr.entitlements.reconcile`, `NexArrEntitlementReconciliationJob`, platform-admin entitlement reconciliation UI, tests, docs) | M12 (partial) | Complete | `381ba05` |
 
 ## Next slice (Worker 170)
 
