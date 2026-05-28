@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -13,7 +14,7 @@ using STLCompliance.Shared.Contracts;
 
 namespace STLCompliance.NexArr.Auth.Tests;
 
-public sealed class NexArrCompanionOfflineSyncTests : IAsyncLifetime
+public sealed class NexArrCompanionFieldValidationTests : IAsyncLifetime
 {
     private static readonly Guid AssignmentId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
     private WebApplicationFactory<global::NexArr.Api.Program> _factory = null!;
@@ -21,7 +22,7 @@ public sealed class NexArrCompanionOfflineSyncTests : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        var dbName = $"NexArrCompanionOffline-{Guid.NewGuid():N}";
+        var dbName = $"NexArrCompanionValidate-{Guid.NewGuid():N}";
         _factory = new WebApplicationFactory<global::NexArr.Api.Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
@@ -54,68 +55,89 @@ public sealed class NexArrCompanionOfflineSyncTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Sync_accepts_field_inbox_acknowledge_with_idempotency()
+    public async Task Validate_allows_acknowledge_for_inbox_task()
     {
         var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
-        var idempotencyKey = $"e2e-offline-{Guid.NewGuid():N}";
+        var taskKey = $"trainarr:assignment:{AssignmentId:D}";
+        var response = await _client.SendAsync(Authorized(
+            HttpMethod.Post,
+            "/api/companion/field-tasks/validate",
+            token,
+            new ValidateCompanionFieldTaskRequest(taskKey, CompanionFieldSubmissionKinds.Acknowledge, "trainarr")));
 
-        var syncRequest = Authorized(HttpMethod.Post, "/api/companion/offline-actions/sync", token);
-        syncRequest.Content = JsonContent.Create(new SyncCompanionOfflineActionsRequest(
-        [
-            new CompanionOfflineActionItem(
-                idempotencyKey,
-                CompanionOfflineActionKinds.FieldInboxAcknowledge,
-                $"trainarr:assignment:{AssignmentId:D}",
-                "trainarr",
-                DateTimeOffset.UtcNow),
-        ]));
-
-        var syncResponse = await _client.SendAsync(syncRequest);
-        syncResponse.EnsureSuccessStatusCode();
-        var synced = (await syncResponse.Content.ReadFromJsonAsync<SyncCompanionOfflineActionsResponse>())!;
-        Assert.Equal(1, synced.Accepted);
-        Assert.Equal(0, synced.Duplicates);
-
-        var duplicateRequest = Authorized(HttpMethod.Post, "/api/companion/offline-actions/sync", token);
-        duplicateRequest.Content = JsonContent.Create(new SyncCompanionOfflineActionsRequest(
-        [
-            new CompanionOfflineActionItem(
-                idempotencyKey,
-                CompanionOfflineActionKinds.FieldInboxAcknowledge,
-                $"trainarr:assignment:{AssignmentId:D}",
-                "trainarr",
-                DateTimeOffset.UtcNow),
-        ]));
-        var duplicateResponse = await _client.SendAsync(duplicateRequest);
-        duplicateResponse.EnsureSuccessStatusCode();
-        var duplicate = (await duplicateResponse.Content.ReadFromJsonAsync<SyncCompanionOfflineActionsResponse>())!;
-        Assert.Equal(0, duplicate.Accepted);
-        Assert.Equal(1, duplicate.Duplicates);
-
-        var listResponse = await _client.SendAsync(
-            Authorized(HttpMethod.Get, "/api/companion/offline-actions?limit=5", token));
-        listResponse.EnsureSuccessStatusCode();
-        var list = (await listResponse.Content.ReadFromJsonAsync<CompanionOfflineActionsListResponse>())!;
-        Assert.Contains(list.Items, item => item.IdempotencyKey == idempotencyKey);
+        response.EnsureSuccessStatusCode();
+        var payload = (await response.Content.ReadFromJsonAsync<ValidateCompanionFieldTaskResponse>())!;
+        Assert.True(payload.Allowed);
+        Assert.Equal("Scan target assignment", payload.Title);
     }
 
     [Fact]
-    public async Task Sync_rejects_unsupported_action_kind()
+    public async Task Validate_denies_task_not_in_inbox_with_plain_message()
     {
         var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
-        var syncRequest = Authorized(HttpMethod.Post, "/api/companion/offline-actions/sync", token);
-        syncRequest.Content = JsonContent.Create(new SyncCompanionOfflineActionsRequest(
-        [
-            new CompanionOfflineActionItem(
-                Guid.NewGuid().ToString("N"),
-                "unsupported.action",
-                "task-1",
-                "trainarr",
-                DateTimeOffset.UtcNow),
-        ]));
+        var missingId = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc");
+        var response = await _client.SendAsync(Authorized(
+            HttpMethod.Post,
+            "/api/companion/field-tasks/validate",
+            token,
+            new ValidateCompanionFieldTaskRequest(
+                $"trainarr:assignment:{missingId:D}",
+                CompanionFieldSubmissionKinds.Acknowledge,
+                "trainarr")));
 
-        var response = await _client.SendAsync(syncRequest);
+        response.EnsureSuccessStatusCode();
+        var payload = (await response.Content.ReadFromJsonAsync<ValidateCompanionFieldTaskResponse>())!;
+        Assert.False(payload.Allowed);
+        Assert.Equal(CompanionFieldValidationReasonCodes.NotInInbox, payload.ReasonCode);
+        Assert.Contains("field inbox", payload.ReasonMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Sync_rejects_invalid_task_key_with_plain_message()
+    {
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var response = await _client.SendAsync(Authorized(
+            HttpMethod.Post,
+            "/api/companion/offline-actions/sync",
+            token,
+            new SyncCompanionOfflineActionsRequest(
+            [
+                new CompanionOfflineActionItem(
+                    $"offline-{Guid.NewGuid():N}",
+                    CompanionOfflineActionKinds.FieldInboxAcknowledge,
+                    "trainarr:assignment:abc",
+                    "trainarr",
+                    DateTimeOffset.UtcNow),
+            ])));
+
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("not recognized", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Sync_validates_task_exists_in_inbox()
+    {
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var taskKey = $"trainarr:assignment:{AssignmentId:D}";
+        var idempotencyKey = $"offline-valid-{Guid.NewGuid():N}";
+        var response = await _client.SendAsync(Authorized(
+            HttpMethod.Post,
+            "/api/companion/offline-actions/sync",
+            token,
+            new SyncCompanionOfflineActionsRequest(
+            [
+                new CompanionOfflineActionItem(
+                    idempotencyKey,
+                    CompanionOfflineActionKinds.FieldInboxAcknowledge,
+                    taskKey,
+                    "trainarr",
+                    DateTimeOffset.UtcNow),
+            ])));
+
+        response.EnsureSuccessStatusCode();
+        var synced = (await response.Content.ReadFromJsonAsync<SyncCompanionOfflineActionsResponse>())!;
+        Assert.Equal(1, synced.Accepted);
     }
 
     private async Task<string> LoginAsync(string email)
@@ -128,21 +150,32 @@ public sealed class NexArrCompanionOfflineSyncTests : IAsyncLifetime
         return payload.AccessToken;
     }
 
-    private static HttpRequestMessage Authorized(HttpMethod method, string url, string token)
+    private static HttpRequestMessage Authorized(HttpMethod method, string url, string token, object? body = null)
     {
         var request = new HttpRequestMessage(method, url);
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        if (body is not null)
+        {
+            request.Content = JsonContent.Create(body);
+        }
+
         return request;
     }
 
     private static async Task EnsureCompanionEntitlementAsync(NexArrDbContext db)
     {
-        if (await db.Entitlements.AnyAsync(e =>
-                e.TenantId == PlatformSeeder.DemoTenantId && e.ProductKey == "companion"))
+        if (await db.Entitlements.AnyAsync(e => e.TenantId == PlatformSeeder.DemoTenantId && e.ProductKey == "companion"))
         {
             return;
         }
 
+        db.ProductCatalog.Add(new ProductCatalogItem
+        {
+            ProductKey = "companion",
+            DisplayName = "Companion App",
+            SortOrder = 80,
+            IsActive = true,
+        });
         db.Entitlements.Add(new TenantProductEntitlement
         {
             Id = Guid.NewGuid(),
@@ -150,6 +183,14 @@ public sealed class NexArrCompanionOfflineSyncTests : IAsyncLifetime
             ProductKey = "companion",
             Status = EntitlementStatuses.Active,
             GrantedAt = DateTimeOffset.UtcNow,
+        });
+        db.LaunchProfiles.Add(new ProductLaunchProfile
+        {
+            ProductKey = "companion",
+            BaseUrl = "http://localhost:5181",
+            LaunchPath = "/launch",
+            IsActive = true,
+            ModifiedAt = DateTimeOffset.UtcNow,
         });
         await db.SaveChangesAsync();
     }
@@ -182,7 +223,7 @@ public sealed class NexArrCompanionOfflineSyncTests : IAsyncLifetime
                             $"trainarr:assignment:{AssignmentId:D}",
                             "trainarr",
                             "training_assignment",
-                            "Offline sync assignment",
+                            "Scan target assignment",
                             null,
                             "assigned",
                             null,

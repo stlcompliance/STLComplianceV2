@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import { syncCompanionOfflineActions } from '../api/client'
+import { syncCompanionOfflineActions, validateCompanionFieldTask } from '../api/client'
+import { companionPlainReason } from '../lib/companionPlainReason'
 import {
   enqueueFieldInboxAcknowledge,
   getOfflineQueueSnapshot,
@@ -76,7 +77,7 @@ export function useOfflineQueue(
       refresh()
       options?.onSyncComplete?.()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Offline sync failed'
+      const message = companionPlainReason(error, 'Offline sync failed')
       markSyncFailure(message)
 
       for (const item of snapshot.pending) {
@@ -112,7 +113,21 @@ export function useOfflineQueue(
   }, [syncPending])
 
   const queueAcknowledge = useCallback(
-    (input: { taskKey: string; productKey: string; title: string }) => {
+    async (input: { taskKey: string; productKey: string; title: string }) => {
+      if (accessToken) {
+        const validation = await validateCompanionFieldTask(accessToken, {
+          taskKey: input.taskKey,
+          submissionKind: 'acknowledge',
+          productKey: input.productKey,
+        })
+        if (!validation.allowed) {
+          const message =
+            validation.reasonMessage ?? 'This acknowledgment cannot be submitted right now.'
+          pushSubmissionToast({ tone: 'error', message })
+          throw new Error(message)
+        }
+      }
+
       const action = enqueueFieldInboxAcknowledge(input)
       setLocalSubmission({
         taskKey: input.taskKey,
@@ -132,7 +147,7 @@ export function useOfflineQueue(
       }
       return action
     },
-    [isOnline, refresh, syncPending],
+    [accessToken, isOnline, refresh, syncPending],
   )
 
   return {

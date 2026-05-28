@@ -8,7 +8,8 @@ namespace NexArr.Api.Services;
 
 public sealed class CompanionFieldEvidenceService(
     CompanionProductClient productClient,
-    CompanionFieldSubmissionService submissions)
+    CompanionFieldSubmissionService submissions,
+    CompanionFieldTaskValidationService validation)
 {
     private const long MaxEvidenceBytes = 10 * 1024 * 1024;
 
@@ -19,12 +20,19 @@ public sealed class CompanionFieldEvidenceService(
         CancellationToken cancellationToken = default)
     {
         CompanionFieldInboxService.RequireCompanionAccess(principal);
+        await validation.EnsureAllowedAsync(
+            principal,
+            accessToken,
+            request.TaskKey,
+            CompanionFieldSubmissionKinds.Evidence,
+            null,
+            cancellationToken);
 
         if (!CompanionFieldTaskKeyParser.TryParse(request.TaskKey, out var task))
         {
             throw new StlApiException(
-                "companion.field_task.invalid_key",
-                "Task key is not a recognized companion field task reference.",
+                CompanionFieldValidationReasonCodes.InvalidTaskKey,
+                CompanionDeniedReasonCatalog.ToPlainMessage(CompanionFieldValidationReasonCodes.InvalidTaskKey),
                 400);
         }
 

@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 
-import { submitCompanionFieldEvidence } from '../api/client'
+import { submitCompanionFieldEvidence, validateCompanionFieldTask } from '../api/client'
+import { companionPlainReason } from '../lib/companionPlainReason'
 import type { FieldInboxTaskItem } from '../api/types'
 import {
   defaultContentType,
@@ -30,6 +31,17 @@ export function FieldTaskEvidencePanel({
 
   const submitMutation = useMutation({
     mutationFn: async (file: File) => {
+      const validation = await validateCompanionFieldTask(accessToken, {
+        taskKey: task.taskKey,
+        submissionKind: 'evidence',
+        productKey: task.productKey,
+      })
+      if (!validation.allowed) {
+        throw new Error(
+          validation.reasonMessage ?? 'Evidence cannot be uploaded for this task right now.',
+        )
+      }
+
       setLocalSubmission({
         taskKey: task.taskKey,
         kind: 'evidence',
@@ -59,7 +71,7 @@ export function FieldTaskEvidencePanel({
       onUploadComplete?.()
     },
     onError: (error) => {
-      const message = error instanceof Error ? error.message : 'Evidence upload failed.'
+      const message = companionPlainReason(error, 'Evidence upload failed.')
       setLocalSubmission({
         taskKey: task.taskKey,
         kind: 'evidence',

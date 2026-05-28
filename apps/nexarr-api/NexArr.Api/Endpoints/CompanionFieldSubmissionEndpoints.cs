@@ -1,5 +1,6 @@
 using NexArr.Api.Contracts;
 using NexArr.Api.Services;
+using STLCompliance.Shared.Contracts;
 
 namespace NexArr.Api.Endpoints;
 
@@ -22,6 +23,30 @@ public static class CompanionFieldSubmissionEndpoints
             return Results.Ok(response);
         })
         .WithName("GetCompanionFieldTaskSubmissionStatus");
+
+        group.MapPost("/validate", async (
+            ValidateCompanionFieldTaskRequest request,
+            CompanionFieldTaskValidationService service,
+            HttpContext httpContext,
+            CancellationToken cancellationToken) =>
+        {
+            var authorization = httpContext.Request.Headers.Authorization.ToString();
+            var accessToken = authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                ? authorization["Bearer ".Length..].Trim()
+                : string.Empty;
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                throw new StlApiException("auth.unauthorized", "Bearer access token is required.", 401);
+            }
+
+            var response = await service.ValidateAsync(
+                httpContext.User,
+                accessToken,
+                request,
+                cancellationToken);
+            return Results.Ok(response);
+        })
+        .WithName("ValidateCompanionFieldTask");
     }
 
     private static IReadOnlyList<string> ParseTaskKeys(string? taskKeys)

@@ -129,12 +129,16 @@ export function HomePage() {
           getSubmissionChips={submissionState.getChips}
           acknowledgedTaskKeys={acknowledgedTaskKeys}
           onAcknowledgeTask={(task) => {
-            offlineQueue.queueAcknowledge({
-              taskKey: task.taskKey,
-              productKey: task.productKey,
-              title: task.title,
-            })
-            setAcknowledgedTaskKeys((previous) => new Set(previous).add(task.taskKey))
+            void offlineQueue
+              .queueAcknowledge({
+                taskKey: task.taskKey,
+                productKey: task.productKey,
+                title: task.title,
+              })
+              .then(() => {
+                setAcknowledgedTaskKeys((previous) => new Set(previous).add(task.taskKey))
+              })
+              .catch(() => undefined)
           }}
           onEvidenceUploadComplete={submissionState.refreshServerStatus}
           highlightedTaskKey={highlightedTaskKey}

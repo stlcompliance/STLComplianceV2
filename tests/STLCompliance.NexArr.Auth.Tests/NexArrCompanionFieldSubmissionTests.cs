@@ -15,6 +15,7 @@ namespace STLCompliance.NexArr.Auth.Tests;
 
 public sealed class NexArrCompanionFieldSubmissionTests : IAsyncLifetime
 {
+    private static readonly Guid AssignmentId = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd");
     private WebApplicationFactory<global::NexArr.Api.Program> _factory = null!;
     private HttpClient _client = null!;
 
@@ -28,10 +29,13 @@ public sealed class NexArrCompanionFieldSubmissionTests : IAsyncLifetime
             builder.UseSetting("DATABASE_URL", string.Empty);
             builder.UseSetting("Auth:SigningKey", "test-signing-key-at-least-32-chars-long");
             builder.UseSetting("ServiceToken:SigningKey", "test-signing-key-at-least-32-chars-long");
+            builder.UseSetting("TrainArr__BaseUrl", "http://trainarr.test");
             builder.ConfigureServices(services =>
             {
                 RemoveDbContext<NexArrDbContext>(services);
                 services.AddDbContext<NexArrDbContext>(options => options.UseInMemoryDatabase(dbName));
+                services.AddHttpClient(nameof(CompanionProductClient))
+                    .ConfigurePrimaryHttpMessageHandler(() => new FieldInboxStubHandler());
             });
         });
 
@@ -53,7 +57,7 @@ public sealed class NexArrCompanionFieldSubmissionTests : IAsyncLifetime
     public async Task Offline_sync_records_acknowledge_submission_status()
     {
         var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
-        var taskKey = $"trainarr:assignment:{Guid.NewGuid():N}";
+        var taskKey = $"trainarr:assignment:{AssignmentId:D}";
 
         var syncRequest = Authorized(HttpMethod.Post, "/api/companion/offline-actions/sync", token);
         syncRequest.Content = JsonContent.Create(new SyncCompanionOfflineActionsRequest(
@@ -143,5 +147,48 @@ public sealed class NexArrCompanionFieldSubmissionTests : IAsyncLifetime
             GrantedAt = DateTimeOffset.UtcNow,
         });
         await db.SaveChangesAsync();
+    }
+
+    private sealed class FieldInboxStubHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            if (request.RequestUri?.AbsolutePath.EndsWith("/api/field-inbox", StringComparison.OrdinalIgnoreCase) == true
+                && request.RequestUri.Host.Contains("trainarr", StringComparison.OrdinalIgnoreCase))
+            {
+                var inbox = new FieldInboxResponse(
+                    new FieldInboxSummary(1, 0, new Dictionary<string, int> { ["trainarr"] = 1 }),
+                    [
+                        new FieldInboxTaskItem(
+                            $"trainarr:assignment:{AssignmentId:D}",
+                            "trainarr",
+                            "training_assignment",
+                            "Submission status assignment",
+                            null,
+                            "assigned",
+                            null,
+                            null,
+                            DateTimeOffset.UtcNow,
+                            $"/assignments/{AssignmentId:D}",
+                            null,
+                            $"http://trainarr.test/assignments/{AssignmentId:D}"),
+                    ]);
+
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(inbox),
+                });
+            }
+
+            var empty = new FieldInboxResponse(
+                FieldInboxRules.BuildProductResponse([]).Summary,
+                []);
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(empty),
+            });
+        }
     }
 }

@@ -115,6 +115,22 @@ export interface CompanionOfflineActionsListResponse {
   items: CompanionOfflineActionSyncedItem[]
 }
 
+export interface ValidateCompanionFieldTaskRequest {
+  taskKey: string
+  submissionKind: string
+  productKey?: string | null
+}
+
+export interface ValidateCompanionFieldTaskResponse {
+  allowed: boolean
+  reasonCode: string | null
+  reasonMessage: string | null
+  taskKey: string
+  productKey: string
+  title: string | null
+  blockedReason: string | null
+}
+
 export interface SubmitCompanionFieldEvidenceRequest {
   taskKey: string
   captureKind: string

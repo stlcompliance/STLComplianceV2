@@ -10,10 +10,12 @@ namespace NexArr.Api.Services;
 
 public sealed class CompanionOfflineSyncService(
     NexArrDbContext db,
-    CompanionFieldSubmissionService submissions)
+    CompanionFieldSubmissionService submissions,
+    CompanionFieldTaskValidationService validation)
 {
     public async Task<SyncCompanionOfflineActionsResponse> SyncAsync(
         ClaimsPrincipal principal,
+        string accessToken,
         SyncCompanionOfflineActionsRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -42,6 +44,13 @@ public sealed class CompanionOfflineSyncService(
         foreach (var action in request.Actions)
         {
             ValidateAction(action);
+            await validation.EnsureAllowedAsync(
+                principal,
+                accessToken,
+                action.TaskKey,
+                CompanionFieldSubmissionKinds.Acknowledge,
+                action.ProductKey,
+                cancellationToken);
 
             var existing = await db.CompanionOfflineActions.AsNoTracking()
                 .FirstOrDefaultAsync(

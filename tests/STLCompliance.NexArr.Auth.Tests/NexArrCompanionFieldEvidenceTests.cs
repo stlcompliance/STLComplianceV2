@@ -11,6 +11,7 @@ using NexArr.Api.Contracts;
 using NexArr.Api.Data;
 using NexArr.Api.Entities;
 using NexArr.Api.Services;
+using STLCompliance.Shared.Contracts;
 
 namespace STLCompliance.NexArr.Auth.Tests;
 
@@ -157,6 +158,32 @@ public sealed class NexArrCompanionFieldEvidenceTests : IAsyncLifetime
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
+            if (request.RequestUri?.AbsolutePath.EndsWith("/api/field-inbox", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                var inbox = new FieldInboxResponse(
+                    new FieldInboxSummary(1, 0, new Dictionary<string, int> { ["trainarr"] = 1 }),
+                    [
+                        new FieldInboxTaskItem(
+                            $"trainarr:assignment:{assignmentId:D}",
+                            "trainarr",
+                            "training_assignment",
+                            "Evidence assignment",
+                            null,
+                            "assigned",
+                            null,
+                            null,
+                            DateTimeOffset.UtcNow,
+                            $"/assignments/{assignmentId:D}",
+                            "Upload training evidence to begin",
+                            $"http://trainarr.test/assignments/{assignmentId:D}"),
+                    ]);
+
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = JsonContent.Create(inbox),
+                };
+            }
+
             onRequest(request);
 
             var body = await request.Content!.ReadAsStringAsync(cancellationToken);

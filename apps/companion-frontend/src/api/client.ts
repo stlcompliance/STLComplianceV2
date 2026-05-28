@@ -15,6 +15,8 @@ import type {
   CompanionScanResolveRequest,
   CompanionScanResolveResponse,
   UpsertCompanionNotificationSettingsRequest,
+  ValidateCompanionFieldTaskRequest,
+  ValidateCompanionFieldTaskResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_NEXARR_API_BASE ?? ''
@@ -163,6 +165,21 @@ export async function listCompanionOfflineActions(
   return parseJsonResponse<CompanionOfflineActionsListResponse>(
     response,
     'Failed to load offline action history',
+  )
+}
+
+export async function validateCompanionFieldTask(
+  accessToken: string,
+  body: ValidateCompanionFieldTaskRequest,
+): Promise<ValidateCompanionFieldTaskResponse> {
+  const response = await fetch(`${apiBase}/api/companion/field-tasks/validate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<ValidateCompanionFieldTaskResponse>(
+    response,
+    'Failed to validate field task',
   )
 }
 
