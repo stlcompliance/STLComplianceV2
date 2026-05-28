@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 127 | RoutArr dispatch notification hooks | Complete | (this commit) |
+| 127 | RoutArr dispatch notification hooks | Complete | `a99c193` |
 
 ## Program summary
 

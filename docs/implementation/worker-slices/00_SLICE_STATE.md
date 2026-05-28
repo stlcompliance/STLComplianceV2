@@ -224,7 +224,7 @@
 
 | 126 | StaffArr audit package export + timeline (`GET /api/audit-packages/export` ZIP/JSON, `GET /api/audit-packages/timeline` paginated audit browse, date filters, `AuditPackageExportPanel` timeline preview, tests, docs; builds on W106 `2778bde`) | M4/M12 (partial) | Complete | `6e3bf19` |
 
-| 127 | RoutArr dispatch notification hooks (`routarr_tenant_notification_settings`, dispatch outbox, GET/PUT settings + dispatch list, internal process-batch, shared-worker job, trip assign/status hooks, routarr-frontend panel, tests, docs) | M9/M12 (partial) | Complete | (this commit) |
+| 127 | RoutArr dispatch notification hooks (`routarr_tenant_notification_settings`, dispatch outbox, GET/PUT settings + dispatch list, internal process-batch, shared-worker job, trip assign/status hooks, routarr-frontend panel, tests, docs) | M9/M12 (partial) | Complete | `a99c193` |
 
 ## Next slice (Worker 128)
 
