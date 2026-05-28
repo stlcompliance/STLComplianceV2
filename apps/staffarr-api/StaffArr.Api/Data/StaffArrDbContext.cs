@@ -44,6 +44,10 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<TenantPersonExportPreset> TenantPersonExportPresets => Set<TenantPersonExportPreset>();
 
+    public DbSet<TenantPersonExportSchedule> TenantPersonExportSchedules => Set<TenantPersonExportSchedule>();
+
+    public DbSet<PersonExportDeliveryRun> PersonExportDeliveryRuns => Set<PersonExportDeliveryRun>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -337,6 +341,25 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.PresetKey).HasMaxLength(64);
             entity.HasIndex(x => x.TenantId).IsUnique();
             entity.HasOne(x => x.OrgUnit).WithMany().HasForeignKey(x => x.OrgUnitId);
+        });
+
+        modelBuilder.Entity<TenantPersonExportSchedule>(entity =>
+        {
+            entity.ToTable("staffarr_tenant_person_export_schedules");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.IsEnabled, x.LastDeliveredAt });
+        });
+
+        modelBuilder.Entity<PersonExportDeliveryRun>(entity =>
+        {
+            entity.ToTable("staffarr_person_export_delivery_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.EmploymentStatus).HasMaxLength(32);
+            entity.Property(x => x.SkipReason).HasMaxLength(256);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.StartedAt);
         });
     }
 }

@@ -96,5 +96,32 @@ public static class PeopleExportEndpoints
             return Results.Ok(preset);
         })
         .WithName("UpsertStaffArrPeopleExportPreset");
+
+        exports.MapGet("/schedule", async (
+            StaffArrAuthorizationService authorization,
+            PersonExportScheduleService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetAsync(tenantId, cancellationToken));
+        })
+        .WithName("GetStaffArrPeopleExportSchedule");
+
+        exports.MapPut("/schedule", async (
+            UpsertPersonExportScheduleRequest request,
+            StaffArrAuthorizationService authorization,
+            PersonExportScheduleService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePeopleWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var schedule = await service.UpsertAsync(tenantId, actorUserId, request, cancellationToken);
+            return Results.Ok(schedule);
+        })
+        .WithName("UpsertStaffArrPeopleExportSchedule");
     }
 }

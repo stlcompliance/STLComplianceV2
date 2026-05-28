@@ -158,6 +158,18 @@ export interface UpsertPersonExportPresetRequest {
   presetKey?: string | null
 }
 
+export interface PersonExportScheduleResponse {
+  isEnabled: boolean
+  intervalHours: number
+  lastDeliveredAt: string | null
+  updatedAt: string | null
+}
+
+export interface UpsertPersonExportScheduleRequest {
+  isEnabled: boolean
+  intervalHours: number
+}
+
 export interface OrgUnitResponse {
   orgUnitId: string
   unitType: string

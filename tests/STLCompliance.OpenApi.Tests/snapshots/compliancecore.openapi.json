@@ -829,6 +829,19 @@
         }
       }
     },
+    "/api/load-test-journey/seed": {
+      "post": {
+        "tags": [
+          "LoadTestJourney"
+        ],
+        "operationId": "SeedLoadTestJourney",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/material-keys": {
       "get": {
         "tags": [
@@ -2499,6 +2512,9 @@
     },
     {
       "name": "ComplianceCore.Api"
+    },
+    {
+      "name": "LoadTestJourney"
     },
     {
       "name": "Auth"

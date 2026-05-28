@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PersonExportPanel } from './PersonExportPanel'
-import { exportPeopleJson, getOrgUnits, getPersonExportPreset, upsertPersonExportPreset } from '../api/client'
+import { exportPeopleJson, getOrgUnits, getPersonExportPreset, getPersonExportSchedule, upsertPersonExportPreset, upsertPersonExportSchedule } from '../api/client'
 
 vi.mock('../api/client', () => ({
   getPeopleExportManifest: vi.fn().mockResolvedValue({
@@ -27,10 +27,22 @@ vi.mock('../api/client', () => ({
     },
   ]),
   getPersonExportPreset: vi.fn().mockResolvedValue(null),
+  getPersonExportSchedule: vi.fn().mockResolvedValue({
+    isEnabled: false,
+    intervalHours: 24,
+    lastDeliveredAt: null,
+    updatedAt: null,
+  }),
   upsertPersonExportPreset: vi.fn().mockResolvedValue({
     employmentStatus: 'active',
     orgUnitId: '11111111-1111-1111-1111-111111111111',
     presetKey: 'active-at-org-unit',
+    updatedAt: '2026-05-27T12:00:00Z',
+  }),
+  upsertPersonExportSchedule: vi.fn().mockResolvedValue({
+    isEnabled: true,
+    intervalHours: 12,
+    lastDeliveredAt: null,
     updatedAt: '2026-05-27T12:00:00Z',
   }),
   exportPeopleCsv: vi.fn(),
@@ -104,6 +116,23 @@ describe('PersonExportPanel', () => {
         employmentStatus: 'active',
         orgUnitId: null,
         presetKey: 'active-workforce',
+      })
+    })
+  })
+
+  it('saves tenant export schedule', async () => {
+    renderPanel(true)
+    await screen.findByRole('button', { name: /Save schedule/i })
+
+    const checkbox = screen.getByRole('checkbox', { name: /Enable scheduled delivery/i })
+    fireEvent.click(checkbox)
+    fireEvent.change(screen.getByLabelText(/Delivery interval \(hours\)/i), { target: { value: '12' } })
+    fireEvent.click(screen.getByRole('button', { name: /Save schedule/i }))
+
+    await waitFor(() => {
+      expect(upsertPersonExportSchedule).toHaveBeenCalledWith('token', {
+        isEnabled: true,
+        intervalHours: 12,
       })
     })
   })

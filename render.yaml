@@ -337,6 +337,8 @@ services:
         value: https://staffarr-api-srdo.onrender.com
       - key: StaffArrPermissionProjection__StaffArrBaseUrl
         value: https://staffarr-api-srdo.onrender.com
+      - key: StaffArrPersonExportDelivery__StaffArrBaseUrl
+        value: https://staffarr-api-srdo.onrender.com
       - key: MaintainArrPmDueScan__MaintainArrBaseUrl
         value: https://maintainarr-api-82rg.onrender.com
       - key: SupplyArrReorderEvaluation__SupplyArrBaseUrl

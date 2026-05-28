@@ -48,6 +48,8 @@ import type {
   PersonExportFilters,
   PersonExportPresetResponse,
   UpsertPersonExportPresetRequest,
+  PersonExportScheduleResponse,
+  UpsertPersonExportScheduleRequest,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -226,6 +228,28 @@ export async function upsertPersonExportPreset(
     body: JSON.stringify(request),
   })
   return parseJsonResponse<PersonExportPresetResponse>(response, 'Failed to save tenant export preset')
+}
+
+export async function getPersonExportSchedule(accessToken: string): Promise<PersonExportScheduleResponse> {
+  const response = await fetch(`${apiBase}/api/people/export/schedule`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonExportScheduleResponse>(response, 'Failed to load tenant export schedule')
+}
+
+export async function upsertPersonExportSchedule(
+  accessToken: string,
+  request: UpsertPersonExportScheduleRequest,
+): Promise<PersonExportScheduleResponse> {
+  const response = await fetch(`${apiBase}/api/people/export/schedule`, {
+    method: 'PUT',
+    headers: {
+      ...authHeaders(accessToken),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonExportScheduleResponse>(response, 'Failed to save tenant export schedule')
 }
 
 export async function getOrgUnits(accessToken: string): Promise<OrgUnitResponse[]> {

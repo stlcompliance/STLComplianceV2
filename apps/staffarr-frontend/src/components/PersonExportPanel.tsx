@@ -8,7 +8,9 @@ import {
   getOrgUnits,
   getPeopleExportManifest,
   getPersonExportPreset,
+  getPersonExportSchedule,
   upsertPersonExportPreset,
+  upsertPersonExportSchedule,
 } from '../api/client'
 import type { PersonExportFilters, PersonExportResponse } from '../api/types'
 import {
@@ -33,6 +35,9 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
   const [employmentStatus, setEmploymentStatus] = useState('')
   const [orgUnitId, setOrgUnitId] = useState('')
   const [filtersInitialized, setFiltersInitialized] = useState(false)
+  const [scheduleEnabled, setScheduleEnabled] = useState(false)
+  const [scheduleIntervalHours, setScheduleIntervalHours] = useState('24')
+  const [scheduleInitialized, setScheduleInitialized] = useState(false)
   const [lastJsonExport, setLastJsonExport] = useState<PersonExportResponse | null>(null)
 
   const manifestQuery = useQuery({
@@ -52,6 +57,21 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
     queryFn: () => getPersonExportPreset(accessToken),
     enabled: canExport,
   })
+
+  const exportScheduleQuery = useQuery({
+    queryKey: ['staffarr-people-export-schedule', accessToken],
+    queryFn: () => getPersonExportSchedule(accessToken),
+    enabled: canExport,
+  })
+
+  useEffect(() => {
+    if (scheduleInitialized || exportScheduleQuery.isLoading || !exportScheduleQuery.data) {
+      return
+    }
+    setScheduleEnabled(exportScheduleQuery.data.isEnabled)
+    setScheduleIntervalHours(String(exportScheduleQuery.data.intervalHours))
+    setScheduleInitialized(true)
+  }, [scheduleInitialized, exportScheduleQuery.data, exportScheduleQuery.isLoading])
 
   useEffect(() => {
     if (filtersInitialized || tenantPresetQuery.isLoading || tenantPresetQuery.data === undefined) {
@@ -93,6 +113,17 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staffarr-people-export-preset', accessToken] })
+    },
+  })
+
+  const saveExportScheduleMutation = useMutation({
+    mutationFn: () =>
+      upsertPersonExportSchedule(accessToken, {
+        isEnabled: scheduleEnabled,
+        intervalHours: Number.parseInt(scheduleIntervalHours, 10) || 24,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staffarr-people-export-schedule', accessToken] })
     },
   })
 
@@ -194,6 +225,57 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
             </div>
             {saveTenantPresetMutation.isSuccess ? (
               <p className="text-xs text-emerald-400">Tenant default saved.</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2 rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+            <p className="text-sm text-slate-300">Scheduled export delivery</p>
+            <p className="text-xs text-slate-500">
+              Runs workforce exports on an interval using the tenant default filters. Delivery is recorded in StaffArr audit history.
+            </p>
+            <label className="flex items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={scheduleEnabled}
+                onChange={(event) => {
+                  setScheduleInitialized(true)
+                  setScheduleEnabled(event.target.checked)
+                }}
+                className="rounded border-slate-600 bg-slate-950"
+              />
+              Enable scheduled delivery
+            </label>
+            <label className="block text-sm text-slate-300">
+              Delivery interval (hours)
+              <input
+                type="number"
+                min={1}
+                max={720}
+                value={scheduleIntervalHours}
+                onChange={(event) => {
+                  setScheduleInitialized(true)
+                  setScheduleIntervalHours(event.target.value)
+                }}
+                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              />
+            </label>
+            {exportScheduleQuery.data?.lastDeliveredAt ? (
+              <p className="text-xs text-slate-500">
+                Last delivered {new Date(exportScheduleQuery.data.lastDeliveredAt).toLocaleString()}
+              </p>
+            ) : (
+              <p className="text-xs text-slate-500">No scheduled delivery recorded yet.</p>
+            )}
+            <button
+              type="button"
+              disabled={saveExportScheduleMutation.isPending}
+              onClick={() => saveExportScheduleMutation.mutate()}
+              className="rounded-md border border-slate-600 px-3 py-1.5 text-xs text-slate-100 hover:bg-slate-800 disabled:opacity-50"
+            >
+              Save schedule
+            </button>
+            {saveExportScheduleMutation.isSuccess ? (
+              <p className="text-xs text-emerald-400">Export schedule saved.</p>
             ) : null}
           </div>
 
