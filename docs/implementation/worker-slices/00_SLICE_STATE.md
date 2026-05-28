@@ -318,7 +318,7 @@
 
 | 173 | MaintainArr maintenance history rollup worker (`maintainarr_tenant_maintenance_history_rollup_settings`, `maintainarr_maintenance_history_rollups`, `maintainarr_maintenance_history_events`, `maintainarr_maintenance_history_rollup_runs`, internal pending/process-batch, `maintainarr.maintenance_history.rollup`, `MaintainArrMaintenanceHistoryRollupJob`, materialized-first maintenance history reads + summary API, `MaintenanceHistoryRollupSettingsPanel`, tests, docs) | M12 (partial) | Complete | `d7d9328` |
 
-| 174 | SupplyArr price snapshot worker (`supplyarr_tenant_price_snapshot_settings`, `supplyarr_part_vendor_price_capture_states`, `supplyarr_price_snapshot_runs`, vendor link catalog price fields, internal pending/process-batch, `supplyarr.pricing.snapshots.capture`, `SupplyArrPriceSnapshotJob`, `/api/price-snapshot-settings`, `PriceSnapshotSettingsPanel`, tests, docs) | M12 (partial) | Complete | `pending` |
+| 174 | SupplyArr price snapshot worker (`supplyarr_tenant_price_snapshot_settings`, `supplyarr_part_vendor_price_capture_states`, `supplyarr_price_snapshot_runs`, vendor link catalog price fields, internal pending/process-batch, `supplyarr.pricing.snapshots.capture`, `SupplyArrPriceSnapshotJob`, `/api/price-snapshot-settings`, `PriceSnapshotSettingsPanel`, tests, docs) | M12 (partial) | Complete | `41bcb89` |
 
 ## Next slice (Worker 175)
 
