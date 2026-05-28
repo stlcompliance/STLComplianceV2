@@ -80,6 +80,7 @@ export interface PartVendorLinkResponse {
   catalogUnitPrice: number | null
   catalogCurrencyCode: string | null
   catalogMinimumOrderQuantity: number | null
+  catalogLeadTimeDays: number | null
   createdAt: string
 }
 
@@ -738,4 +739,49 @@ export interface PriceSnapshotRunItem {
 
 export interface PriceSnapshotRunsResponse {
   items: PriceSnapshotRunItem[]
+}
+
+export interface LeadTimeSnapshotSettingsResponse {
+  isEnabled: boolean
+  stalenessHours: number
+  updatedAt: string | null
+}
+
+export interface UpsertLeadTimeSnapshotSettingsRequest {
+  isEnabled: boolean
+  stalenessHours: number
+}
+
+export interface PendingLeadTimeSnapshotCaptureItem {
+  partVendorLinkId: string
+  partId: string
+  partKey: string
+  partDisplayName: string
+  vendorPartyId: string
+  vendorPartyKey: string
+  vendorDisplayName: string
+  vendorPartNumber: string
+  catalogLeadTimeDays: number
+  currentLeadTimeDays: number | null
+  lastCapturedAt: string | null
+}
+
+export interface PendingLeadTimeSnapshotCapturesResponse {
+  asOfUtc: string
+  stalenessHours: number
+  batchSize: number
+  items: PendingLeadTimeSnapshotCaptureItem[]
+}
+
+export interface LeadTimeSnapshotRunItem {
+  runId: string
+  asOfUtc: string
+  candidatesFound: number
+  capturedCount: number
+  skippedCount: number
+  createdAt: string
+}
+
+export interface LeadTimeSnapshotRunsResponse {
+  items: LeadTimeSnapshotRunItem[]
 }

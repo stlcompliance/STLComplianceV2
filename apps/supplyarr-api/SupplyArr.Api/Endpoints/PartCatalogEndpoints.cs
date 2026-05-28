@@ -235,5 +235,27 @@ public static class PartCatalogEndpoints
                 cancellationToken));
         })
         .WithName("UpsertPartVendorLinkCatalogPrice");
+
+        group.MapPut("/{partId:guid}/vendor-links/{linkId:guid}/catalog-lead-time", async (
+            Guid partId,
+            Guid linkId,
+            UpsertPartVendorLinkCatalogLeadTimeRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartRegistryService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpsertVendorLinkCatalogLeadTimeAsync(
+                tenantId,
+                actorUserId,
+                partId,
+                linkId,
+                request,
+                cancellationToken));
+        })
+        .WithName("UpsertPartVendorLinkCatalogLeadTime");
     }
 }

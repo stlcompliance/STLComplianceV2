@@ -37,6 +37,7 @@ public sealed record PartVendorLinkResponse(
     decimal? CatalogUnitPrice,
     string? CatalogCurrencyCode,
     decimal? CatalogMinimumOrderQuantity,
+    int? CatalogLeadTimeDays,
     DateTimeOffset CreatedAt);
 
 public sealed record PartResponse(

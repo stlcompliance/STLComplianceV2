@@ -22,6 +22,8 @@ public sealed class PartVendorLink : IHasTenant
 
     public decimal? CatalogMinimumOrderQuantity { get; set; }
 
+    public int? CatalogLeadTimeDays { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

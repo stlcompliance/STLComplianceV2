@@ -112,6 +112,55 @@ public sealed class LeadTimeSnapshotService(
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
 
+    public async Task<LeadTimeSnapshotResponse> CreateWorkerCaptureAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid partVendorLinkId,
+        int leadTimeDays,
+        DateTimeOffset effectiveFrom,
+        CancellationToken cancellationToken = default)
+    {
+        var link = await LoadVendorLinkAsync(tenantId, partVendorLinkId, cancellationToken);
+        var normalizedLeadTimeDays = LeadTimeSnapshotCaptureRules.NormalizeLeadTimeDays(leadTimeDays);
+        var snapshotKey = LeadTimeSnapshotCaptureRules.BuildWorkerSnapshotKey(partVendorLinkId, effectiveFrom);
+
+        await CloseOpenSnapshotsAsync(
+            tenantId,
+            link.Id,
+            effectiveFrom,
+            cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new PartVendorLeadTimeSnapshot
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartVendorLinkId = link.Id,
+            SnapshotKey = snapshotKey,
+            LeadTimeDays = normalizedLeadTimeDays,
+            EffectiveFrom = effectiveFrom,
+            EffectiveTo = null,
+            Source = SnapshotSources.VendorFeed,
+            Notes = "Automated vendor catalog lead-time capture.",
+            CreatedByUserId = actorUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.PartVendorLeadTimeSnapshots.Add(entity);
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "lead_time_snapshot.worker_capture",
+            tenantId,
+            actorUserId,
+            "lead_time_snapshot",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return await GetAsync(tenantId, entity.Id, cancellationToken);
+    }
+
     private IQueryable<PartVendorLeadTimeSnapshot> BaseQuery(Guid tenantId) =>
         db.PartVendorLeadTimeSnapshots
             .AsNoTracking()

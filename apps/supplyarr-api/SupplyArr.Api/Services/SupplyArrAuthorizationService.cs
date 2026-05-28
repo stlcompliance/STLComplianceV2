@@ -323,6 +323,9 @@ public sealed class SupplyArrAuthorizationService
     public void RequirePriceSnapshotSettingsManage(ClaimsPrincipal principal) =>
         RequireNotificationSettingsManage(principal);
 
+    public void RequireLeadTimeSnapshotSettingsManage(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }

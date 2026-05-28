@@ -320,6 +320,8 @@
 
 | 174 | SupplyArr price snapshot worker (`supplyarr_tenant_price_snapshot_settings`, `supplyarr_part_vendor_price_capture_states`, `supplyarr_price_snapshot_runs`, vendor link catalog price fields, internal pending/process-batch, `supplyarr.pricing.snapshots.capture`, `SupplyArrPriceSnapshotJob`, `/api/price-snapshot-settings`, `PriceSnapshotSettingsPanel`, tests, docs) | M12 (partial) | Complete | `41bcb89` |
 
-## Next slice (Worker 175)
+| 175 | SupplyArr lead-time snapshot worker (`supplyarr_tenant_lead_time_snapshot_settings`, `supplyarr_part_vendor_lead_time_capture_states`, `supplyarr_lead_time_snapshot_runs`, vendor link catalog lead time field, internal pending/process-batch, `supplyarr.leadtime.snapshots.capture`, `SupplyArrLeadTimeSnapshotJob`, `/api/lead-time-snapshot-settings`, `LeadTimeSnapshotSettingsPanel`, tests, docs) | M12 (partial) | Complete | `99e0e06` |
 
-Per backlog: SupplyArr `[M12] lead-time snapshot worker` or RoutArr `[M12] trip completion rollup worker` — see `02_PRODUCT_IMPLEMENTATION_BACKLOG.md`.
+## Next slice (Worker 176)
+
+Per backlog: RoutArr `[M12] trip completion rollup worker` or SupplyArr `[M12] procurement coordination worker` — see `02_PRODUCT_IMPLEMENTATION_BACKLOG.md`.

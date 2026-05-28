@@ -345,6 +345,40 @@ public sealed class PartRegistryService(
         return MapVendorLink(link, link.ExternalParty);
     }
 
+    public async Task<PartVendorLinkResponse> UpsertVendorLinkCatalogLeadTimeAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid partId,
+        Guid linkId,
+        UpsertPartVendorLinkCatalogLeadTimeRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var link = await db.PartVendorLinks
+            .Include(x => x.ExternalParty)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.PartId == partId && x.Id == linkId,
+                cancellationToken);
+        if (link is null)
+        {
+            throw new StlApiException("parts.vendor_link.not_found", "Part vendor link was not found.", 404);
+        }
+
+        link.CatalogLeadTimeDays = LeadTimeSnapshotCaptureRules.NormalizeLeadTimeDays(request.CatalogLeadTimeDays);
+        link.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "part_vendor_link.catalog_lead_time.upsert",
+            tenantId,
+            actorUserId,
+            "part_vendor_link",
+            link.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return MapVendorLink(link, link.ExternalParty);
+    }
+
     private async Task ValidateCatalogAsync(
         Guid tenantId,
         Guid? catalogId,
@@ -430,6 +464,7 @@ public sealed class PartRegistryService(
             entity.CatalogUnitPrice,
             entity.CatalogCurrencyCode,
             entity.CatalogMinimumOrderQuantity,
+            entity.CatalogLeadTimeDays,
             entity.CreatedAt);
 
     private static decimal NormalizeCatalogUnitPrice(decimal unitPrice)

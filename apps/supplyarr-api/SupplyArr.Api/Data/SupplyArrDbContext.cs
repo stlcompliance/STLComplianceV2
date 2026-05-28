@@ -68,6 +68,12 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
 
     public DbSet<PriceSnapshotRun> PriceSnapshotRuns => Set<PriceSnapshotRun>();
 
+    public DbSet<TenantLeadTimeSnapshotSettings> TenantLeadTimeSnapshotSettings => Set<TenantLeadTimeSnapshotSettings>();
+
+    public DbSet<PartVendorLeadTimeCaptureState> PartVendorLeadTimeCaptureStates => Set<PartVendorLeadTimeCaptureState>();
+
+    public DbSet<LeadTimeSnapshotRun> LeadTimeSnapshotRuns => Set<LeadTimeSnapshotRun>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -624,6 +630,33 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
         modelBuilder.Entity<PriceSnapshotRun>(entity =>
         {
             entity.ToTable("supplyarr_price_snapshot_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<TenantLeadTimeSnapshotSettings>(entity =>
+        {
+            entity.ToTable("supplyarr_tenant_lead_time_snapshot_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<PartVendorLeadTimeCaptureState>(entity =>
+        {
+            entity.ToTable("supplyarr_part_vendor_lead_time_capture_states");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PartVendorLinkId }).IsUnique();
+            entity.HasOne(x => x.PartVendorLink)
+                .WithMany()
+                .HasForeignKey(x => x.PartVendorLinkId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<LeadTimeSnapshotRun>(entity =>
+        {
+            entity.ToTable("supplyarr_lead_time_snapshot_runs");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.CreatedAt });

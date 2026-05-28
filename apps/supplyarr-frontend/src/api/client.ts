@@ -51,6 +51,10 @@ import type {
   UpsertPriceSnapshotSettingsRequest,
   PendingPriceSnapshotCapturesResponse,
   PriceSnapshotRunsResponse,
+  LeadTimeSnapshotSettingsResponse,
+  UpsertLeadTimeSnapshotSettingsRequest,
+  PendingLeadTimeSnapshotCapturesResponse,
+  LeadTimeSnapshotRunsResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_SUPPLYARR_API_BASE ?? ''
@@ -910,5 +914,58 @@ export async function getPriceSnapshotRuns(
   return parseJsonResponse<PriceSnapshotRunsResponse>(
     response,
     'Failed to load price snapshot runs',
+  )
+}
+
+export async function getLeadTimeSnapshotSettings(
+  accessToken: string,
+): Promise<LeadTimeSnapshotSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/lead-time-snapshot-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<LeadTimeSnapshotSettingsResponse>(
+    response,
+    'Failed to load lead-time snapshot settings',
+  )
+}
+
+export async function upsertLeadTimeSnapshotSettings(
+  accessToken: string,
+  payload: UpsertLeadTimeSnapshotSettingsRequest,
+): Promise<LeadTimeSnapshotSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/lead-time-snapshot-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<LeadTimeSnapshotSettingsResponse>(
+    response,
+    'Failed to save lead-time snapshot settings',
+  )
+}
+
+export async function getPendingLeadTimeSnapshotCaptures(
+  accessToken: string,
+): Promise<PendingLeadTimeSnapshotCapturesResponse> {
+  const response = await fetch(`${apiBase}/api/lead-time-snapshot-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingLeadTimeSnapshotCapturesResponse>(
+    response,
+    'Failed to load pending lead-time snapshot captures',
+  )
+}
+
+export async function getLeadTimeSnapshotRuns(
+  accessToken: string,
+  limit = 5,
+): Promise<LeadTimeSnapshotRunsResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/lead-time-snapshot-settings/runs?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<LeadTimeSnapshotRunsResponse>(
+    response,
+    'Failed to load lead-time snapshot runs',
   )
 }
