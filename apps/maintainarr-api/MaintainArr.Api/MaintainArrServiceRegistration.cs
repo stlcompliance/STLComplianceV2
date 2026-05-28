@@ -48,6 +48,13 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddSingleton<StlServiceTokenValidator>();
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
         builder.Services.AddScoped<IMaintainArrAuditService, MaintainArrAuditService>();
+        builder.Services.AddScoped<MaintenanceNotificationSettingsService>();
+        builder.Services.AddScoped<MaintenanceNotificationEnqueueService>();
+        builder.Services.AddScoped<MaintenanceNotificationDispatchService>();
+        builder.Services.AddHttpClient(MaintenanceNotificationDispatchService.WebhookHttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
 
         var frontendOrigin = builder.Configuration["Cors:MaintainArrFrontendOrigin"] ?? "http://localhost:5178";
         builder.Services.AddCors(options =>

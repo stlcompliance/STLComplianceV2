@@ -57,6 +57,13 @@ public static class StlIntegrationTokenCatalog
         Profile("worker-staffarr-readiness", "shared-worker", "StaffArrReadinessRollup__ServiceToken", "shared-worker", ["staffarr"], "staffarr.readiness.rollup"),
         Profile("worker-staffarr-permissions", "shared-worker", "StaffArrPermissionProjection__ServiceToken", "shared-worker", ["staffarr"], "staffarr.permissions.project"),
         Profile("worker-maintainarr-pm", "shared-worker", "MaintainArrPmDueScan__ServiceToken", "shared-worker", ["maintainarr"], "maintainarr.pm.scan"),
+        Profile(
+            "worker-maintainarr-notifications",
+            "shared-worker",
+            "MaintainArrNotificationDispatch__ServiceToken",
+            "shared-worker",
+            ["maintainarr"],
+            "maintainarr.notifications.dispatch"),
         Profile("worker-supplyarr-reorder", "shared-worker", "SupplyArrReorderEvaluation__ServiceToken", "shared-worker", ["supplyarr"], "supplyarr.reorder.evaluate"),
         Profile(
             "worker-compliancecore-scheduled",

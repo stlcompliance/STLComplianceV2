@@ -107,6 +107,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<MaintainArrPmDueScanJob>();
 
+        builder.Services.Configure<MaintainArrNotificationDispatchOptions>(
+            builder.Configuration.GetSection(MaintainArrNotificationDispatchOptions.SectionName));
+
+        builder.Services.AddHttpClient<MaintainArrNotificationDispatchClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<MaintainArrNotificationDispatchOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.MaintainArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<MaintainArrNotificationDispatchJob>();
+
         builder.Services.Configure<SupplyArrReorderEvaluationOptions>(
             builder.Configuration.GetSection(SupplyArrReorderEvaluationOptions.SectionName));
 

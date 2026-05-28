@@ -60,9 +60,11 @@ import {
   canCreateWorkOrders,
   canManageAssets,
   canManageDefectStatus,
+  canManageNotificationSettings,
   canViewAllInspectionRuns,
   loadSession,
 } from '../auth/sessionStorage'
+import { NotificationSettingsPanel } from '../components/NotificationSettingsPanel'
 import { AssetRegistryPanel } from '../components/AssetRegistryPanel'
 import { DefectsPanel } from '../components/DefectsPanel'
 import { WorkOrdersPanel } from '../components/WorkOrdersPanel'
@@ -323,6 +325,9 @@ export function HomePage() {
 
   const canManage = meQuery.data
     ? canManageAssets(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
+    : false
+  const canManageNotifications = meQuery.data
+    ? canManageNotificationSettings(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
     : false
 
   const viewAllRuns = meQuery.data
@@ -1203,6 +1208,12 @@ export function HomePage() {
         isCreatingType={createTypeMutation.isPending}
         isCreatingAsset={createAssetMutation.isPending}
       />
+
+      {canManageNotifications && (
+        <div className="mt-8">
+          <NotificationSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
+        </div>
+      )}
 
       <div className="mt-8">
         <MaintenanceHistoryPanel

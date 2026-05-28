@@ -49,6 +49,14 @@ export function clearSession(): void {
   sessionStorage.removeItem(STORAGE_KEY)
 }
 
+export function canManageNotificationSettings(
+  tenantRoleKey: string,
+  isPlatformAdmin: boolean,
+): boolean {
+  if (isPlatformAdmin) return true
+  return ['tenant_admin', 'maintainarr_admin'].includes(tenantRoleKey.toLowerCase())
+}
+
 export function canManageAssets(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true
   return ['tenant_admin', 'maintainarr_admin', 'maintainarr_manager'].includes(tenantRoleKey.toLowerCase())

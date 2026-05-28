@@ -220,6 +220,8 @@
 
 | 124 | Playwright shell tenant chrome after handoff (`TenantDisplayName` on handoff redeem, `WorkspaceUserChrome` test ids, suite + six-product Playwright specs, docs) | M3/M13 (partial) | Complete | `fdac1d7` |
 
-## Next slice (Worker 125)
+| 125 | MaintainArr notification settings foundations (`maintainarr_tenant_notification_settings`, dispatch outbox, GET/PUT settings + dispatch list, internal process-batch, shared-worker job, work order/PM hooks, maintainarr-frontend panel, tests, docs) | M12 (partial) | Complete | `pending` |
 
-Recommended: **MaintainArr notification settings foundations** (M12), or **StaffArr audit package export** per backlog.
+## Next slice (Worker 126)
+
+Recommended: **StaffArr audit package export** (`GET /api/audit-packages/export`) or **RoutArr dispatch notification hooks** per backlog.

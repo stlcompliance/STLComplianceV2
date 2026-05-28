@@ -683,3 +683,38 @@ export interface AssetReadinessSummaryResponse {
   blockerCount: number
   primaryBlockerMessage: string | null
 }
+
+export interface MaintenanceNotificationSettingsResponse {
+  isEnabled: boolean
+  notificationWebhookUrl: string | null
+  notifyOnWorkOrderCreated: boolean
+  notifyOnPmScheduleDue: boolean
+  notifyOnPmScheduleOverdue: boolean
+  updatedAt: string | null
+}
+
+export interface UpsertMaintenanceNotificationSettingsRequest {
+  isEnabled: boolean
+  notificationWebhookUrl: string | null
+  notifyOnWorkOrderCreated: boolean
+  notifyOnPmScheduleDue: boolean
+  notifyOnPmScheduleOverdue: boolean
+}
+
+export interface MaintenanceNotificationDispatchItem {
+  notificationId: string
+  eventKind: string
+  dispatchStatus: string
+  assetId: string
+  relatedEntityType: string
+  relatedEntityId: string
+  webhookHost: string | null
+  httpStatusCode: number | null
+  errorMessage: string | null
+  createdAt: string
+  dispatchedAt: string | null
+}
+
+export interface MaintenanceNotificationDispatchesResponse {
+  items: MaintenanceNotificationDispatchItem[]
+}

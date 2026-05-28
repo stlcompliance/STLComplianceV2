@@ -50,6 +50,12 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
 
     public DbSet<WorkOrderPartsDemandStatusEvent> WorkOrderPartsDemandStatusEvents => Set<WorkOrderPartsDemandStatusEvent>();
 
+    public DbSet<TenantMaintenanceNotificationSettings> TenantMaintenanceNotificationSettings =>
+        Set<TenantMaintenanceNotificationSettings>();
+
+    public DbSet<MaintenanceNotificationDispatch> MaintenanceNotificationDispatches =>
+        Set<MaintenanceNotificationDispatch>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -471,6 +477,28 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.MaintainarrPublicationId, x.OccurredAt });
             entity.HasIndex(x => new { x.TenantId, x.SupplyarrCallbackPublicationId }).IsUnique();
+        });
+
+        modelBuilder.Entity<TenantMaintenanceNotificationSettings>(entity =>
+        {
+            entity.ToTable("maintainarr_tenant_notification_settings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.NotificationWebhookUrl).HasMaxLength(2048);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<MaintenanceNotificationDispatch>(entity =>
+        {
+            entity.ToTable("maintainarr_notification_dispatches");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.RelatedEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DispatchStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.WebhookHost).HasMaxLength(256);
+            entity.Property(x => x.ErrorMessage).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.EventKind, x.RelatedEntityType, x.RelatedEntityId });
         });
     }
 }

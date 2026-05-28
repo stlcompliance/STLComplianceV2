@@ -9,7 +9,8 @@ namespace MaintainArr.Api.Services;
 public sealed class PmDueScanService(
     MaintainArrDbContext db,
     WorkOrderService workOrders,
-    IMaintainArrAuditService audit)
+    IMaintainArrAuditService audit,
+    MaintenanceNotificationEnqueueService notificationEnqueueService)
 {
     public const string ProcessDueScanActionScope = "maintainarr.pm.scan";
 
@@ -173,6 +174,18 @@ public sealed class PmDueScanService(
             entity.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
+
+        var eventKind = MaintenanceNotificationRules.MapPmDueStatusToEventKind(targetDueStatus);
+        if (eventKind is not null)
+        {
+            await notificationEnqueueService.TryEnqueueAsync(
+                entity.TenantId,
+                eventKind,
+                entity.AssetId,
+                "pm_schedule",
+                entity.Id,
+                cancellationToken);
+        }
 
         return targetDueStatus;
     }

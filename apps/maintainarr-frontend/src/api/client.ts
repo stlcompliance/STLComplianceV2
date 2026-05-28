@@ -26,7 +26,10 @@ import type {
   MaintainArrMeResponse,
   AssetReadinessResponse,
   AssetReadinessSummaryResponse,
+  MaintenanceNotificationDispatchesResponse,
+  MaintenanceNotificationSettingsResponse,
   MaintenanceHistoryEntryResponse,
+  UpsertMaintenanceNotificationSettingsRequest,
   PagedResult,
   PmProgramDetailResponse,
   PmProgramSummaryResponse,
@@ -707,4 +710,45 @@ export async function getAssetReadinessFleet(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<AssetReadinessSummaryResponse[]>(response, 'Failed to load asset readiness fleet')
+}
+
+export async function getMaintenanceNotificationSettings(
+  accessToken: string,
+): Promise<MaintenanceNotificationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/notification-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenanceNotificationSettingsResponse>(
+    response,
+    'Failed to load notification settings',
+  )
+}
+
+export async function upsertMaintenanceNotificationSettings(
+  accessToken: string,
+  payload: UpsertMaintenanceNotificationSettingsRequest,
+): Promise<MaintenanceNotificationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/notification-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<MaintenanceNotificationSettingsResponse>(
+    response,
+    'Failed to save notification settings',
+  )
+}
+
+export async function getMaintenanceNotificationDispatches(
+  accessToken: string,
+  limit = 20,
+): Promise<MaintenanceNotificationDispatchesResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/notification-settings/dispatches?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenanceNotificationDispatchesResponse>(
+    response,
+    'Failed to load notification dispatches',
+  )
 }

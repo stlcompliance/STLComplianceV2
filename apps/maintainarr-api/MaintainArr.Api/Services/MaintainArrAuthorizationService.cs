@@ -282,6 +282,25 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireAssetReadinessRead(ClaimsPrincipal principal) => RequireAssetsRead(principal);
 
+    public void RequireNotificationSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "maintainarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Maintenance notification settings require maintainarr admin access.",
+            403);
+    }
+
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }

@@ -8,7 +8,8 @@ namespace MaintainArr.Api.Services;
 
 public sealed class WorkOrderService(
     MaintainArrDbContext db,
-    IMaintainArrAuditService audit)
+    IMaintainArrAuditService audit,
+    MaintenanceNotificationEnqueueService notificationEnqueueService)
 {
     public async Task<IReadOnlyList<WorkOrderSummaryResponse>> ListAsync(
         Guid tenantId,
@@ -116,6 +117,14 @@ public sealed class WorkOrderService(
             entity.Source,
             cancellationToken: cancellationToken);
 
+        await notificationEnqueueService.TryEnqueueAsync(
+            tenantId,
+            MaintenanceNotificationEventKinds.WorkOrderCreated,
+            entity.AssetId,
+            "work_order",
+            entity.Id,
+            cancellationToken);
+
         return await MapDetailAsync(tenantId, entity, cancellationToken);
     }
 
@@ -202,6 +211,14 @@ public sealed class WorkOrderService(
             defectId.ToString(),
             cancellationToken: cancellationToken);
 
+        await notificationEnqueueService.TryEnqueueAsync(
+            tenantId,
+            MaintenanceNotificationEventKinds.WorkOrderCreated,
+            entity.AssetId,
+            "work_order",
+            entity.Id,
+            cancellationToken);
+
         return await MapDetailAsync(tenantId, entity, cancellationToken);
     }
 
@@ -284,6 +301,14 @@ public sealed class WorkOrderService(
             entity.Id.ToString(),
             pmScheduleId.ToString(),
             cancellationToken: cancellationToken);
+
+        await notificationEnqueueService.TryEnqueueAsync(
+            schedule.TenantId,
+            MaintenanceNotificationEventKinds.WorkOrderCreated,
+            entity.AssetId,
+            "work_order",
+            entity.Id,
+            cancellationToken);
 
         return new PmWorkOrderGenerationResult(entity.Id, entity.WorkOrderNumber, LinkedExisting: false);
     }
