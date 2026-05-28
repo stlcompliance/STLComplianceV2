@@ -46,10 +46,19 @@ public static class StlJwtAuthenticationExtensions
                 jwt.MapInboundClaims = false;
                 jwt.Events = new JwtBearerEvents
                 {
+                    OnMessageReceived = context =>
+                    {
+                        // Internal routes use service tokens validated in endpoint handlers.
+                        if (context.Request.Path.StartsWithSegments("/api/internal", StringComparison.OrdinalIgnoreCase))
+                        {
+                            context.Token = null;
+                        }
+
+                        return Task.CompletedTask;
+                    },
                     OnAuthenticationFailed = context =>
                     {
-                        // Internal routes validate service tokens separately; malformed Bearer
-                        // headers must not surface as unhandled 500s from the JWT middleware.
+                        // Malformed Bearer headers must not surface as unhandled 500s from JWT middleware.
                         context.NoResult();
                         return Task.CompletedTask;
                     }

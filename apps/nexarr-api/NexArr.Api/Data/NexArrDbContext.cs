@@ -154,7 +154,7 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.Property(x => x.Jti).HasMaxLength(64).IsRequired();
             entity.Property(x => x.TokenHash).HasMaxLength(128).IsRequired();
             entity.Property(x => x.AllowedProductKeys).HasMaxLength(512).IsRequired();
-            entity.Property(x => x.ActionScope).HasMaxLength(128);
+            entity.Property(x => x.ActionScope).HasMaxLength(512);
             entity.HasIndex(x => x.Jti).IsUnique();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => x.ExpiresAt);
