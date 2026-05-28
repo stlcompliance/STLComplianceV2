@@ -163,6 +163,60 @@ export interface ApiErrorBody {
   message?: string
 }
 
+export interface PlatformAuditPackageSection {
+  key: string
+  fileName: string
+  label: string
+  description: string
+}
+
+export interface PlatformAuditPackageManifest {
+  packageVersion: string
+  sections: PlatformAuditPackageSection[]
+}
+
+export interface PlatformAuditEventTimelineItem {
+  auditEventId: string
+  tenantId: string | null
+  actorUserId: string | null
+  action: string
+  targetType: string
+  targetId: string | null
+  result: string
+  reasonCode: string | null
+  correlationId: string
+  occurredAt: string
+}
+
+export interface PlatformAuditPackageGenerationJob {
+  jobId: string
+  scopeTenantId: string | null
+  status: string
+  format: string
+  packageId: string | null
+  errorMessage: string | null
+  createdAt: string
+  completedAt: string | null
+  downloadReady: boolean
+}
+
+export interface PlatformAuditPackageExportPreview {
+  packageId: string
+  scopeTenantId: string | null
+  generatedAt: string
+  counts: {
+    auditEvents: number
+    tenants: number
+    tenantEntitlements: number
+    productCatalog: number
+    platformUsers: number
+    serviceClients: number
+    serviceTokens: number
+    launchProfiles: number
+    callbackAllowlist: number
+  }
+}
+
 export class NexarrApiError extends Error {
   readonly status: number
   readonly code?: string

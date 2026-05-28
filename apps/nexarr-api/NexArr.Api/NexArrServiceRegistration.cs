@@ -26,6 +26,8 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<LaunchService>();
         builder.Services.AddScoped<CallbackAllowlistAdminService>();
         builder.Services.AddScoped<PlatformAdminService>();
+        builder.Services.AddScoped<PlatformAuditPackageService>();
+        builder.Services.AddScoped<PlatformAuditPackageGenerationService>();
         builder.Services.AddScoped<CompanionAuthService>();
         builder.Services.AddScoped<CompanionFieldInboxService>();
         builder.Services.AddScoped<CompanionProductClient>();

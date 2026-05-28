@@ -10,6 +10,7 @@ import { ProductSurfacePage } from '../pages/ProductSurfacePage'
 import { LaunchDiagnosticsPage } from '../pages/platform-admin/LaunchDiagnosticsPage'
 import { PlatformAdminDashboardPage } from '../pages/platform-admin/PlatformAdminDashboardPage'
 import { ProductOverviewPage } from '../pages/platform-admin/ProductOverviewPage'
+import { PlatformAuditExportPage } from '../pages/platform-admin/PlatformAuditExportPage'
 import { TenantOverviewPage } from '../pages/platform-admin/TenantOverviewPage'
 
 export function AppRoutes() {
@@ -27,6 +28,7 @@ export function AppRoutes() {
                 <Route path="launch" element={<LaunchDiagnosticsPage />} />
                 <Route path="tenants" element={<TenantOverviewPage />} />
                 <Route path="products" element={<ProductOverviewPage />} />
+                <Route path="audit-export" element={<PlatformAuditExportPage />} />
               </Route>
             </Route>
             <Route path="/app/:productKey" element={<ProductShellLayout />}>

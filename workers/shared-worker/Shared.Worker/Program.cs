@@ -191,6 +191,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<NexArrCompanionNotificationDispatchJob>();
 
+        builder.Services.Configure<NexArrPlatformAuditPackageGenerationOptions>(
+            builder.Configuration.GetSection(NexArrPlatformAuditPackageGenerationOptions.SectionName));
+
+        builder.Services.AddHttpClient<NexArrPlatformAuditPackageGenerationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<NexArrPlatformAuditPackageGenerationOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.NexArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(10);
+        });
+
+        builder.Services.AddHostedService<NexArrPlatformAuditPackageGenerationJob>();
+
         builder.Services.Configure<MaintainArrAuditPackageGenerationOptions>(
             builder.Configuration.GetSection(MaintainArrAuditPackageGenerationOptions.SectionName));
 

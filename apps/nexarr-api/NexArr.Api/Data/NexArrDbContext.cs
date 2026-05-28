@@ -26,6 +26,9 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
     public DbSet<CompanionNotificationDispatch> CompanionNotificationDispatches =>
         Set<CompanionNotificationDispatch>();
 
+    public DbSet<PlatformAuditPackageGenerationJob> PlatformAuditPackageGenerationJobs =>
+        Set<PlatformAuditPackageGenerationJob>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -191,6 +194,17 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.CreatedAt });
             entity.HasIndex(x => new { x.TenantId, x.EventKind, x.RelatedEntityType, x.RelatedEntityId });
+        });
+
+        modelBuilder.Entity<PlatformAuditPackageGenerationJob>(entity =>
+        {
+            entity.ToTable("nexarr_platform_audit_package_generation_jobs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Format).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.ErrorMessage).HasMaxLength(2000);
+            entity.HasIndex(x => x.CreatedAt);
+            entity.HasIndex(x => new { x.ScopeTenantId, x.Status, x.CreatedAt });
         });
     }
 }

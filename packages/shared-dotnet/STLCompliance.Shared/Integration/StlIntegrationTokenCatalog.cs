@@ -108,6 +108,13 @@ public static class StlIntegrationTokenCatalog
             ["nexarr"],
             "nexarr.companion.notifications.dispatch"),
         Profile(
+            "worker-nexarr-platform-audit-packages",
+            "shared-worker",
+            "NexArrPlatformAuditPackageGeneration__ServiceToken",
+            "shared-worker",
+            ["nexarr"],
+            "nexarr.platform_audit_packages.generate"),
+        Profile(
             "worker-maintainarr-audit-packages",
             "shared-worker",
             "MaintainArrAuditPackageGeneration__ServiceToken",

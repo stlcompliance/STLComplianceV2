@@ -242,6 +242,8 @@
 
 | 135 | STLComplianceSite marketing spine (`apps/stlcompliancesite`, homepage + product pages + demo/contact + privacy/terms + security/data ownership, branding, `render.yaml` static site, CI, vitest, docs) | M3 (partial) | Complete | `2989c35` |
 
-## Next slice (Worker 136)
+| 136 | NexArr platform audit export (`/api/platform-admin/audit-packages` manifest/timeline/export + async jobs, internal process-batch, shared-worker job, suite platform-admin audit export UI, tests, docs) | M12 (partial) | Complete | `pending` |
 
-Per milestone matrix: **NexArr platform audit export** (M12) or **STLComplianceSite products hub / SEO hardening** (M12) — extend marketing or control-plane audit APIs.
+## Next slice (Worker 137)
+
+Per milestone matrix: **STLComplianceSite SEO / products hub hardening** (M12) or **M13 E2E** platform-admin audit export smoke — extend marketing or verification harness.

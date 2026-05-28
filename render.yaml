@@ -381,6 +381,8 @@ services:
         value: https://compliancecore-api-qfu7.onrender.com
       - key: NexArrCompanionNotificationDispatch__NexArrBaseUrl
         value: https://nexarr-api-jdyi.onrender.com
+      - key: NexArrPlatformAuditPackageGeneration__NexArrBaseUrl
+        value: https://nexarr-api-jdyi.onrender.com
       - key: MaintainArrAuditPackageGeneration__MaintainArrBaseUrl
         value: https://maintainarr-api-82rg.onrender.com
 
