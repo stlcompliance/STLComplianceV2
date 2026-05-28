@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 141 | STLComplianceSite comparison content | Complete | `pending` |
+| 141 | STLComplianceSite comparison content | Complete | `d9897a9` |
 
 ## Program summary
 
