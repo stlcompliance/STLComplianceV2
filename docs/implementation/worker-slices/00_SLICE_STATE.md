@@ -304,7 +304,7 @@
 
 | 166 | TrainArr integration settings (`trainarr_tenant_integration_settings`, GET/PUT `/api/integration-settings` + probes, enforcement on StaffArr/Compliance Core/RoutArr paths, `IntegrationSettingsPanel`, integration + frontend tests, docs) | M6 (partial) | Complete | `ea3e198` |
 
-| 167 | TrainArr async audit package generation (`trainarr_audit_package_generation_jobs`, sync manifest/export + POST/GET job APIs + download, internal process-batch, shared-worker job, `AuditPackageExportPanel` background ZIP + status, tests, docs; builds on W165) | M12 (partial) | Complete | `pending` |
+| 167 | TrainArr async audit package generation (`trainarr_audit_package_generation_jobs`, sync manifest/export + POST/GET job APIs + download, internal process-batch, shared-worker job, `AuditPackageExportPanel` background ZIP + status, tests, docs; builds on W165) | M12 (partial) | Complete | `4a45dfd` |
 
 ## Next slice (Worker 168)
 
