@@ -25,6 +25,8 @@ await StlApiHost.RunAsync<NexArrDbContext>(
         app.MapNexArrInternalServiceTokenCleanupEndpoints();
         app.MapPlatformEntitlementReconciliationEndpoints();
         app.MapNexArrInternalEntitlementReconciliationEndpoints();
+        app.MapPlatformTenantLifecycleEndpoints();
+        app.MapNexArrInternalTenantLifecycleEndpoints();
         app.MapPlatformHealthEndpoints();
         app.MapCompanionEndpoints();
         app.MapCompanionNotificationEndpoints();

@@ -277,6 +277,48 @@ export interface PendingEntitlementReconciliationResponse {
   items: PendingEntitlementReconciliationItem[]
 }
 
+export interface TenantLifecycleSettings {
+  isEnabled: boolean
+  autoSuspendWhenNoValidLicense: boolean
+  suspendGraceDaysAfterLastLicenseExpiry: number
+  autoReactivateWhenValidLicense: boolean
+  revokeSessionsOnSuspend: boolean
+  updatedAt: string | null
+}
+
+export interface TenantLifecycleRunItem {
+  runId: string
+  outcome: string
+  pendingCount: number
+  suspendedCount: number
+  reactivatedCount: number
+  sessionsRevokedCount: number
+  skippedCount: number
+  skipReason: string | null
+  processedAt: string
+}
+
+export interface TenantLifecycleRunsResponse {
+  items: TenantLifecycleRunItem[]
+}
+
+export interface PendingTenantLifecycleItem {
+  tenantId: string
+  tenantSlug: string
+  tenantDisplayName: string
+  currentStatus: string
+  actionKind: string
+  hasValidLicense: boolean
+  lastLicenseCoverageEndedAt: string | null
+  eligibleAt: string | null
+}
+
+export interface PendingTenantLifecycleResponse {
+  asOfUtc: string
+  batchSize: number
+  items: PendingTenantLifecycleItem[]
+}
+
 export class NexarrApiError extends Error {
   readonly status: number
   readonly code?: string

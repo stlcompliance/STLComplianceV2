@@ -346,4 +346,16 @@ await StlWorkerHost.RunAsync(
         });
 
         builder.Services.AddHostedService<NexArrEntitlementReconciliationJob>();
+
+        builder.Services.Configure<NexArrTenantLifecycleOptions>(
+            builder.Configuration.GetSection(NexArrTenantLifecycleOptions.SectionName));
+
+        builder.Services.AddHttpClient<NexArrTenantLifecycleClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<NexArrTenantLifecycleOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.NexArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<NexArrTenantLifecycleJob>();
     });

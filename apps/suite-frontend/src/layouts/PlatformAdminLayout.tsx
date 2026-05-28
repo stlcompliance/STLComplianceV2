@@ -1,4 +1,4 @@
-import { Activity, Archive, Building2, KeyRound, LayoutDashboard, Package, Scale } from 'lucide-react'
+import { Activity, Archive, Building2, KeyRound, LayoutDashboard, Package, RefreshCw, Scale } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 
 const navItems = [
@@ -9,6 +9,7 @@ const navItems = [
   { to: '/app/platform-admin/audit-export', label: 'Audit export', icon: Archive, end: false },
   { to: '/app/platform-admin/service-tokens', label: 'Service tokens', icon: KeyRound, end: false },
   { to: '/app/platform-admin/entitlements', label: 'Entitlements', icon: Scale, end: false },
+  { to: '/app/platform-admin/tenant-lifecycle', label: 'Tenant lifecycle', icon: RefreshCw, end: false },
 ] as const
 
 export function PlatformAdminLayout() {

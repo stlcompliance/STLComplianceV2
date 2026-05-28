@@ -111,6 +111,8 @@ Issue tokens in NexArr (platform admin / service clients) with the scopes docume
 | `NexArrServiceTokenCleanup__ServiceToken` | scope `nexarr.service_tokens.cleanup.purge` |
 | `NexArrEntitlementReconciliation__NexArrBaseUrl` | `http://nexarr-api:10000` |
 | `NexArrEntitlementReconciliation__ServiceToken` | scope `nexarr.entitlements.reconcile` |
+| `NexArrTenantLifecycle__NexArrBaseUrl` | `http://nexarr-api:10000` |
+| `NexArrTenantLifecycle__ServiceToken` | scope `nexarr.tenants.lifecycle.process` |
 
 ## CORS (product APIs)
 

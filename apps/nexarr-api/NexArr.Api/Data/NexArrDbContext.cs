@@ -44,6 +44,11 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
     public DbSet<EntitlementReconciliationRun> EntitlementReconciliationRuns =>
         Set<EntitlementReconciliationRun>();
 
+    public DbSet<PlatformTenantLifecycleSettings> PlatformTenantLifecycleSettings =>
+        Set<PlatformTenantLifecycleSettings>();
+
+    public DbSet<TenantLifecycleRun> TenantLifecycleRuns => Set<TenantLifecycleRun>();
+
     public DbSet<CompanionOfflineAction> CompanionOfflineActions => Set<CompanionOfflineAction>();
     public DbSet<CompanionFieldSubmission> CompanionFieldSubmissions => Set<CompanionFieldSubmission>();
 
@@ -294,6 +299,21 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.DetailMessage).HasMaxLength(512);
             entity.HasIndex(x => new { x.TenantId, x.UserId, x.TaskKey, x.RecordedAt });
+        });
+
+        modelBuilder.Entity<PlatformTenantLifecycleSettings>(entity =>
+        {
+            entity.ToTable("nexarr_platform_tenant_lifecycle_settings");
+            entity.HasKey(x => x.Id);
+        });
+
+        modelBuilder.Entity<TenantLifecycleRun>(entity =>
+        {
+            entity.ToTable("nexarr_tenant_lifecycle_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SkipReason).HasMaxLength(512);
+            entity.HasIndex(x => x.ProcessedAt);
         });
 
         modelBuilder.Entity<PlatformAuditPackageGenerationJob>(entity =>

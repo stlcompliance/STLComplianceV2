@@ -310,6 +310,8 @@
 
 | 169 | NexArr entitlement reconciliation worker (`nexarr_tenant_product_licenses`, `nexarr_platform_entitlement_reconciliation_settings`, `nexarr_entitlement_reconciliation_runs`, internal pending/process-batch, `nexarr.entitlements.reconcile`, `NexArrEntitlementReconciliationJob`, platform-admin entitlement reconciliation UI, tests, docs) | M12 (partial) | Complete | `381ba05` |
 
-## Next slice (Worker 170)
+| 170 | NexArr tenant lifecycle worker (`nexarr_platform_tenant_lifecycle_settings`, `nexarr_tenant_lifecycle_runs`, internal pending/process-batch, `nexarr.tenants.lifecycle.process`, `NexArrTenantLifecycleJob`, platform-admin tenant lifecycle UI, session revoke on suspend, tests, docs) | M12 (partial) | Complete | `389221d` |
 
-Per milestone matrix: next open backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (NexArr tenant lifecycle worker or remaining M12 items).
+## Next slice (Worker 171)
+
+Per milestone matrix: next open backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (remaining M12 items).

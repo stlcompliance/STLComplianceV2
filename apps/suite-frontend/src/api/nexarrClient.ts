@@ -30,6 +30,9 @@ import type {
   EntitlementReconciliationSettings,
   EntitlementReconciliationRunsResponse,
   PendingEntitlementReconciliationResponse,
+  TenantLifecycleSettings,
+  TenantLifecycleRunsResponse,
+  PendingTenantLifecycleResponse,
   TenantOverviewRow,
 } from './types'
 import { NexarrApiError } from './types'
@@ -495,4 +498,56 @@ export async function getEntitlementReconciliationPending(
     throw await parseError(response)
   }
   return (await response.json()) as PendingEntitlementReconciliationResponse
+}
+
+export async function getTenantLifecycleSettings(): Promise<TenantLifecycleSettings> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/tenant-lifecycle/settings')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantLifecycleSettings
+}
+
+export async function upsertTenantLifecycleSettings(
+  payload: Pick<
+    TenantLifecycleSettings,
+    | 'isEnabled'
+    | 'autoSuspendWhenNoValidLicense'
+    | 'suspendGraceDaysAfterLastLicenseExpiry'
+    | 'autoReactivateWhenValidLicense'
+    | 'revokeSessionsOnSuspend'
+  >,
+): Promise<TenantLifecycleSettings> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/tenant-lifecycle/settings', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantLifecycleSettings
+}
+
+export async function getTenantLifecycleRuns(limit = 8): Promise<TenantLifecycleRunsResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/tenant-lifecycle/runs?limit=${limit}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantLifecycleRunsResponse
+}
+
+export async function getTenantLifecyclePending(
+  batchSize = 20,
+): Promise<PendingTenantLifecycleResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/tenant-lifecycle/pending?batchSize=${batchSize}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PendingTenantLifecycleResponse
 }
