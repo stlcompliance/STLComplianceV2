@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 123 | TrainArr notification settings + dispatch worker | Complete | `f66c668` |
+| 123 | TrainArr notification settings + dispatch worker | Complete | `a78fad9` |
 
 ## Program summary
 
