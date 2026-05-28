@@ -239,6 +239,44 @@ export interface ServiceTokenCleanupRunsResponse {
   items: ServiceTokenCleanupRunItem[]
 }
 
+export interface EntitlementReconciliationSettings {
+  isEnabled: boolean
+  autoGrantFromLicense: boolean
+  autoRevokeStaleEntitlements: boolean
+  updatedAt: string | null
+}
+
+export interface EntitlementReconciliationRunItem {
+  runId: string
+  outcome: string
+  driftFoundCount: number
+  grantedCount: number
+  revokedCount: number
+  skippedCount: number
+  skipReason: string | null
+  processedAt: string
+}
+
+export interface EntitlementReconciliationRunsResponse {
+  items: EntitlementReconciliationRunItem[]
+}
+
+export interface PendingEntitlementReconciliationItem {
+  tenantId: string
+  tenantDisplayName: string
+  productKey: string
+  productDisplayName: string
+  driftKind: string
+  entitlementActive: boolean
+  licenseValid: boolean
+}
+
+export interface PendingEntitlementReconciliationResponse {
+  asOfUtc: string
+  batchSize: number
+  items: PendingEntitlementReconciliationItem[]
+}
+
 export class NexarrApiError extends Error {
   readonly status: number
   readonly code?: string

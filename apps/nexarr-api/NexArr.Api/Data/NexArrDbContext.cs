@@ -36,6 +36,14 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
 
     public DbSet<ServiceTokenCleanupRun> ServiceTokenCleanupRuns => Set<ServiceTokenCleanupRun>();
 
+    public DbSet<TenantProductLicense> TenantProductLicenses => Set<TenantProductLicense>();
+
+    public DbSet<PlatformEntitlementReconciliationSettings> PlatformEntitlementReconciliationSettings =>
+        Set<PlatformEntitlementReconciliationSettings>();
+
+    public DbSet<EntitlementReconciliationRun> EntitlementReconciliationRuns =>
+        Set<EntitlementReconciliationRun>();
+
     public DbSet<CompanionOfflineAction> CompanionOfflineActions => Set<CompanionOfflineAction>();
     public DbSet<CompanionFieldSubmission> CompanionFieldSubmissions => Set<CompanionFieldSubmission>();
 
@@ -158,6 +166,35 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
         modelBuilder.Entity<ServiceTokenCleanupRun>(entity =>
         {
             entity.ToTable("nexarr_service_token_cleanup_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SkipReason).HasMaxLength(512);
+            entity.HasIndex(x => x.ProcessedAt);
+        });
+
+        modelBuilder.Entity<TenantProductLicense>(entity =>
+        {
+            entity.ToTable("nexarr_tenant_product_licenses");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProductKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ExternalReference).HasMaxLength(128);
+            entity.HasIndex(x => new { x.TenantId, x.ProductKey }).IsUnique();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.ValidTo);
+            entity.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
+            entity.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductKey);
+        });
+
+        modelBuilder.Entity<PlatformEntitlementReconciliationSettings>(entity =>
+        {
+            entity.ToTable("nexarr_platform_entitlement_reconciliation_settings");
+            entity.HasKey(x => x.Id);
+        });
+
+        modelBuilder.Entity<EntitlementReconciliationRun>(entity =>
+        {
+            entity.ToTable("nexarr_entitlement_reconciliation_runs");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
             entity.Property(x => x.SkipReason).HasMaxLength(512);

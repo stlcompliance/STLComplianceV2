@@ -27,6 +27,9 @@ import type {
   PlatformAuditEventTimelineItem,
   ServiceTokenCleanupRunsResponse,
   ServiceTokenCleanupSettings,
+  EntitlementReconciliationSettings,
+  EntitlementReconciliationRunsResponse,
+  PendingEntitlementReconciliationResponse,
   TenantOverviewRow,
 } from './types'
 import { NexarrApiError } from './types'
@@ -440,4 +443,56 @@ export async function getServiceTokenCleanupRuns(limit = 8): Promise<ServiceToke
     throw await parseError(response)
   }
   return (await response.json()) as ServiceTokenCleanupRunsResponse
+}
+
+export async function getEntitlementReconciliationSettings(): Promise<EntitlementReconciliationSettings> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/entitlement-reconciliation/settings')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as EntitlementReconciliationSettings
+}
+
+export async function upsertEntitlementReconciliationSettings(
+  payload: Pick<
+    EntitlementReconciliationSettings,
+    'isEnabled' | 'autoGrantFromLicense' | 'autoRevokeStaleEntitlements'
+  >,
+): Promise<EntitlementReconciliationSettings> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/entitlement-reconciliation/settings', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as EntitlementReconciliationSettings
+}
+
+export async function getEntitlementReconciliationRuns(
+  limit = 8,
+): Promise<EntitlementReconciliationRunsResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/entitlement-reconciliation/runs?limit=${limit}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as EntitlementReconciliationRunsResponse
+}
+
+export async function getEntitlementReconciliationPending(
+  batchSize = 20,
+): Promise<PendingEntitlementReconciliationResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/entitlement-reconciliation/pending?batchSize=${batchSize}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PendingEntitlementReconciliationResponse
 }

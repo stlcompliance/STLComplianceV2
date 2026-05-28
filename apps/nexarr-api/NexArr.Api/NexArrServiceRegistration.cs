@@ -30,6 +30,9 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<PlatformAuditPackageGenerationService>();
         builder.Services.AddScoped<ServiceTokenCleanupSettingsService>();
         builder.Services.AddScoped<ServiceTokenCleanupWorkerService>();
+        builder.Services.AddScoped<TenantProductLicenseAdminService>();
+        builder.Services.AddScoped<EntitlementReconciliationSettingsService>();
+        builder.Services.AddScoped<EntitlementReconciliationWorkerService>();
         builder.Services.AddScoped<CompanionAuthService>();
         builder.Services.AddScoped<CompanionFieldInboxService>();
         builder.Services.AddScoped<CompanionProductClient>();

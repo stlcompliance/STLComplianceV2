@@ -184,6 +184,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["nexarr"],
             "nexarr.service_tokens.cleanup.purge"),
+        Profile(
+            "worker-nexarr-entitlement-reconciliation",
+            "shared-worker",
+            "NexArrEntitlementReconciliation__ServiceToken",
+            "shared-worker",
+            ["nexarr"],
+            "nexarr.entitlements.reconcile"),
     ];
 
     public static IReadOnlyList<StlIntegrationTokenProfile> ForConsumer(string consumerService) =>

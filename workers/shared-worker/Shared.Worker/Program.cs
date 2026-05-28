@@ -334,4 +334,16 @@ await StlWorkerHost.RunAsync(
         });
 
         builder.Services.AddHostedService<NexArrServiceTokenCleanupJob>();
+
+        builder.Services.Configure<NexArrEntitlementReconciliationOptions>(
+            builder.Configuration.GetSection(NexArrEntitlementReconciliationOptions.SectionName));
+
+        builder.Services.AddHttpClient<NexArrEntitlementReconciliationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<NexArrEntitlementReconciliationOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.NexArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<NexArrEntitlementReconciliationJob>();
     });

@@ -157,6 +157,28 @@ public static class PlatformSeeder
             });
         }
 
+        foreach (var product in Products)
+        {
+            if (await db.TenantProductLicenses.AnyAsync(
+                    l => l.TenantId == DemoTenantId && l.ProductKey == product.Key,
+                    cancellationToken))
+            {
+                continue;
+            }
+
+            db.TenantProductLicenses.Add(new TenantProductLicense
+            {
+                Id = Guid.NewGuid(),
+                TenantId = DemoTenantId,
+                ProductKey = product.Key,
+                Status = LicenseStatuses.Active,
+                ValidFrom = now.AddYears(-1),
+                ValidTo = now.AddYears(1),
+                CreatedAt = now,
+                ModifiedAt = now,
+            });
+        }
+
         await SeedLaunchProfilesAsync(db, launchOptions, now, cancellationToken);
         SeedCallbackAllowlist(db, now);
 
