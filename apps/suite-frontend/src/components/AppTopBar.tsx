@@ -46,9 +46,19 @@ export function AppTopBar() {
       <div className="flex items-center gap-4 text-sm">
         <ProductSwitcher />
         {me && (
-          <div className="hidden text-right sm:block">
-            <p className="font-medium">{me.displayName}</p>
-            <p className="text-xs text-slate-300">{me.tenantDisplayName}</p>
+          <div
+            data-testid="suite-user-chrome"
+            className="hidden text-right sm:block"
+          >
+            <p data-testid="suite-user-display-name" className="font-medium">
+              {me.displayName}
+            </p>
+            <p data-testid="suite-tenant-display-name" className="text-xs text-slate-300">
+              {me.tenantDisplayName}
+            </p>
+            <p data-testid="suite-tenant-slug" className="font-mono text-xs text-slate-400">
+              {me.tenantSlug}
+            </p>
           </div>
         )}
       </div>

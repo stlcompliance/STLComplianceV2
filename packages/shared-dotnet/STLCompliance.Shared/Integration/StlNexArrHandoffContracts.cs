@@ -8,6 +8,7 @@ public sealed record StlNexArrHandoffRedeemedResponse(
     string DisplayName,
     Guid TenantId,
     string TenantSlug,
+    string TenantDisplayName,
     string TargetProductKey,
     Guid SessionId,
     string TenantRoleKey,

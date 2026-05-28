@@ -9,6 +9,7 @@ export interface StoredTrainArrSession {
   personId: string
   tenantId: string
   tenantSlug: string
+  tenantDisplayName: string
   displayName: string
   email: string
 }
@@ -21,6 +22,7 @@ export function toStoredSession(session: HandoffSessionResponse): StoredTrainArr
     personId: session.personId,
     tenantId: session.tenantId,
     tenantSlug: session.tenantSlug,
+    tenantDisplayName: session.tenantDisplayName,
     displayName: session.displayName,
     email: session.email,
   }

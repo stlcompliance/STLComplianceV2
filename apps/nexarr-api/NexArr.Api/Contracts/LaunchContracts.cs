@@ -29,6 +29,7 @@ public sealed record HandoffRedeemedResponse(
     string DisplayName,
     Guid TenantId,
     string TenantSlug,
+    string TenantDisplayName,
     string TargetProductKey,
     Guid SessionId,
     string TenantRoleKey,

@@ -17,9 +17,11 @@ export function AppShellLayout() {
           </p>
           <h1 className="text-lg font-semibold text-white">Suite</h1>
           {me && (
-            <p className="mt-1 text-xs text-slate-400">
-              {me.displayName} · {me.tenantDisplayName}
-            </p>
+            <div className="mt-1 space-y-0.5 text-xs text-slate-400">
+              <p>{me.displayName}</p>
+              <p>{me.tenantDisplayName}</p>
+              <p className="font-mono text-slate-500">{me.tenantSlug}</p>
+            </div>
           )}
         </div>
 

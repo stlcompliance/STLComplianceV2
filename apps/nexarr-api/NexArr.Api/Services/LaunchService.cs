@@ -230,6 +230,7 @@ public sealed class LaunchService(
             record.User.DisplayName,
             record.TenantId,
             record.Tenant.Slug,
+            record.Tenant.DisplayName,
             record.TargetProductKey,
             record.SessionId,
             tenantRoleKey,

@@ -4,6 +4,7 @@ import { ProductAppShell, type ProductAppShellProps } from './ProductAppShell'
 export type ProductWorkspaceSession = {
   userDisplayName: string
   tenantDisplayName: string
+  tenantSlug: string
 }
 
 export type ProductWorkspaceFrameProps = {
@@ -105,6 +106,7 @@ export function ProductWorkspaceFrame({
       productKey={productKey}
       workspaceSubtitle={workspaceSubtitle}
       tenantDisplayName={workspaceSession.tenantDisplayName}
+      tenantSlug={workspaceSession.tenantSlug}
       userDisplayName={workspaceSession.userDisplayName}
       entitlements={entitlements}
       suiteHomeUrl={suiteHomeUrl}

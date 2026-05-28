@@ -134,6 +134,7 @@ public sealed class CompanionAuthService(
             record.User.DisplayName,
             record.TenantId,
             record.Tenant.Slug,
+            record.Tenant.DisplayName,
             tenantRoleKey,
             record.User.IsPlatformAdmin,
             entitlements);

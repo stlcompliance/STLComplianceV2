@@ -11,6 +11,7 @@ public sealed record HandoffSessionResponse(
     string DisplayName,
     Guid TenantId,
     string TenantSlug,
+    string TenantDisplayName,
     Guid SessionId,
     string TenantRoleKey,
     bool IsPlatformAdmin,

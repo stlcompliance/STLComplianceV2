@@ -59,6 +59,7 @@ public sealed class HandoffAuthService(
             redeemed.DisplayName,
             redeemed.TenantId,
             redeemed.TenantSlug,
+            redeemed.TenantDisplayName,
             redeemed.SessionId,
             redeemed.TenantRoleKey,
             redeemed.IsPlatformAdmin,

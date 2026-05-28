@@ -65,6 +65,13 @@ export const demoCredentials = {
     process.env.E2E_DEMO_TENANT_ID ?? '11111111-1111-1111-1111-111111111101',
 }
 
+/** Seeded demo tenant values used by Playwright tenant-chrome assertions. */
+export const demoTenant = {
+  displayName: process.env.E2E_DEMO_TENANT_DISPLAY_NAME ?? 'STL Demo Tenant',
+  slug: process.env.E2E_DEMO_TENANT_SLUG ?? 'demo-stl',
+  userDisplayName: process.env.E2E_DEMO_USER_DISPLAY_NAME ?? 'Demo Platform Admin',
+}
+
 export async function signInFromSuite(page: import('@playwright/test').Page): Promise<void> {
   await page.goto('/login')
   await page.getByLabel('Email').fill(demoCredentials.email)

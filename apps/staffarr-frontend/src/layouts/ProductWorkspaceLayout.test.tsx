@@ -15,7 +15,11 @@ vi.mock('@stl/shared-ui', () => ({
   }: {
     children: React.ReactNode
     productKey?: string
-    workspaceSession: { userDisplayName: string; tenantDisplayName: string } | null
+    workspaceSession: {
+      userDisplayName: string
+      tenantDisplayName: string
+      tenantSlug: string
+    } | null
     isBootstrapping?: boolean
     bootstrapError?: 'forbidden' | 'expired' | null
   }) => (
@@ -24,7 +28,8 @@ vi.mock('@stl/shared-ui', () => ({
       {isBootstrapping ? <p data-testid="bootstrapping">loading</p> : null}
       {workspaceSession ? (
         <p data-testid="session-context">
-          {workspaceSession.userDisplayName} · {workspaceSession.tenantDisplayName}
+          {workspaceSession.userDisplayName} · {workspaceSession.tenantDisplayName} ·{' '}
+          {workspaceSession.tenantSlug}
         </p>
       ) : null}
       {workspaceSession ? children : null}
@@ -38,6 +43,8 @@ vi.mock('@stl/shared-ui', () => ({
     }
     return null
   },
+  resolveSuiteHomeUrl: (url?: string) => url ?? 'http://localhost:5174/app',
+  buildProductLaunchUrlMap: () => ({}),
 }))
 
 vi.mock('../api/client', () => ({
@@ -86,6 +93,7 @@ describe('ProductWorkspaceLayout', () => {
       personId: 'person',
       tenantId: 'tenant',
       tenantSlug: 'demo-stl',
+      tenantDisplayName: 'STL Demo Tenant',
       displayName: 'Demo Admin',
       email: 'admin@demo.stl',
     })

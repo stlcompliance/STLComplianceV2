@@ -45,6 +45,7 @@ export interface CompanionSessionResponse {
   displayName: string
   tenantId: string
   tenantSlug: string
+  tenantDisplayName: string
   tenantRoleKey: string
   isPlatformAdmin: boolean
   entitlements: string[]

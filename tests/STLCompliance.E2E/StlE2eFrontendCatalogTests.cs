@@ -39,4 +39,12 @@ public sealed class StlE2eFrontendCatalogTests
         Assert.Equal(5174, StlE2eFrontendCatalog.SuitePort);
         Assert.Equal("http://localhost:5174", StlE2eFrontendCatalog.SuiteDefaultBaseUrl);
     }
+
+    [Fact]
+    public void Playwright_catalog_includes_tenant_chrome_handoff_spec()
+    {
+        Assert.Equal(
+            "product-handoff-tenant-chrome.spec.ts",
+            StlE2eFrontendCatalog.PlaywrightTenantChromeHandoffSpec);
+    }
 }

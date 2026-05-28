@@ -26,7 +26,8 @@ describe('ProductWorkspaceFrame', () => {
           entitlements={['staffarr', 'trainarr']}
           workspaceSession={{
             userDisplayName: 'Demo Admin',
-            tenantDisplayName: 'demo-stl',
+            tenantDisplayName: 'STL Demo Tenant',
+            tenantSlug: 'demo-stl',
           }}
         >
           <p>Workspace content</p>
@@ -34,8 +35,11 @@ describe('ProductWorkspaceFrame', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('Demo Admin')).toBeInTheDocument()
-    expect(screen.getByText('demo-stl')).toBeInTheDocument()
+    expect(screen.getByTestId('workspace-user-display-name')).toHaveTextContent('Demo Admin')
+    expect(screen.getByTestId('workspace-tenant-display-name')).toHaveTextContent(
+      'STL Demo Tenant',
+    )
+    expect(screen.getByTestId('workspace-tenant-slug')).toHaveTextContent('demo-stl')
     expect(screen.getByText('Workspace content')).toBeInTheDocument()
   })
 

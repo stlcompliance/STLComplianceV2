@@ -46,7 +46,8 @@ export function ProductWorkspaceLayout() {
     session && meQuery.data && !bootstrapError
       ? {
           userDisplayName: meQuery.data.displayName,
-          tenantDisplayName: session.tenantSlug,
+          tenantDisplayName: session.tenantDisplayName,
+          tenantSlug: session.tenantSlug,
         }
       : null
 

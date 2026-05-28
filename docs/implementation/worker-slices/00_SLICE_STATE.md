@@ -218,6 +218,8 @@
 
 | 123 | TrainArr notification settings foundations (`trainarr_tenant_training_notification_settings`, dispatch outbox, GET/PUT settings + dispatch list, internal process-batch, shared-worker job, assignment/expire hooks, trainarr-frontend panel, tests, docs) | M6/M12 (partial) | Complete | `a78fad9` |
 
-## Next slice (Worker 124)
+| 124 | Playwright shell tenant chrome after handoff (`TenantDisplayName` on handoff redeem, `WorkspaceUserChrome` test ids, suite + six-product Playwright specs, docs) | M3/M13 (partial) | Complete | `pending` |
 
-Recommended: **Playwright shell tenant chrome after handoff**, or **MaintainArr notification settings** if M12 matrix prioritizes it next.
+## Next slice (Worker 125)
+
+Recommended: **MaintainArr notification settings foundations** (M12), or **StaffArr audit package export** per backlog.

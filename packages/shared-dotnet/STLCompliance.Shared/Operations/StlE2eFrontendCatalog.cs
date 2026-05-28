@@ -16,6 +16,8 @@ public static class StlE2eFrontendCatalog
     public const int SuitePort = 5174;
     public const string SuiteDefaultBaseUrl = "http://localhost:5174";
 
+    public const string PlaywrightTenantChromeHandoffSpec = "product-handoff-tenant-chrome.spec.ts";
+
     public static readonly StlE2eFrontendEndpoint SuiteFrontend =
         new(Suite, SuitePort, SuiteDefaultBaseUrl, LaunchPath: "/login");
 

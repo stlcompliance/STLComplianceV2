@@ -14,6 +14,7 @@ public sealed record CompanionSessionResponse(
     string DisplayName,
     Guid TenantId,
     string TenantSlug,
+    string TenantDisplayName,
     string TenantRoleKey,
     bool IsPlatformAdmin,
     IReadOnlyList<string> Entitlements);

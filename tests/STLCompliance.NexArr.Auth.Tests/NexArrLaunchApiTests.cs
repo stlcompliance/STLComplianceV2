@@ -106,6 +106,8 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         Assert.NotNull(redeemed);
         Assert.Equal(PlatformSeeder.DemoAdminUserId, redeemed.UserId);
         Assert.Equal("staffarr", redeemed.TargetProductKey);
+        Assert.Equal("STL Demo Tenant", redeemed.TenantDisplayName);
+        Assert.Equal("demo-stl", redeemed.TenantSlug);
         Assert.Equal(callbackUrl, redeemed.CallbackUrl);
     }
 

@@ -10,6 +10,7 @@ export interface StoredCompanionSession {
   personId: string
   tenantId: string
   tenantSlug: string
+  tenantDisplayName: string
   displayName: string
   email: string
   tenantRoleKey: string
@@ -26,6 +27,7 @@ export function toStoredSession(session: CompanionSessionResponse): StoredCompan
     personId: session.personId,
     tenantId: session.tenantId,
     tenantSlug: session.tenantSlug,
+    tenantDisplayName: session.tenantDisplayName,
     displayName: session.displayName,
     email: session.email,
     tenantRoleKey: session.tenantRoleKey,

@@ -7,6 +7,7 @@ export interface HandoffSessionResponse {
   displayName: string
   tenantId: string
   tenantSlug: string
+  tenantDisplayName: string
   sessionId: string
   tenantRoleKey: string
   isPlatformAdmin: boolean

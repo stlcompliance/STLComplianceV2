@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { getSuiteProductIcon } from './productCatalog'
 import { ProductSwitcher } from './ProductSwitcher'
+import { WorkspaceUserChrome } from './WorkspaceUserChrome'
 
 export type ProductNavItem = {
   label: string
@@ -15,6 +16,7 @@ export type ProductAppShellProps = {
   productKey: string
   workspaceSubtitle?: string
   tenantDisplayName?: string
+  tenantSlug?: string
   userDisplayName?: string
   entitlements?: readonly string[]
   suiteHomeUrl?: string
@@ -30,6 +32,7 @@ function WorkspaceTopBar({
   productKey,
   workspaceSubtitle,
   tenantDisplayName,
+  tenantSlug,
   userDisplayName,
   entitlements,
   suiteHomeUrl,
@@ -39,6 +42,7 @@ function WorkspaceTopBar({
   productKey: string
   workspaceSubtitle: string
   tenantDisplayName?: string
+  tenantSlug?: string
   userDisplayName?: string
   entitlements: readonly string[]
   suiteHomeUrl: string
@@ -62,12 +66,11 @@ function WorkspaceTopBar({
           suiteHomeUrl={suiteHomeUrl}
           productLaunchUrls={productLaunchUrls}
         />
-        {(userDisplayName || tenantDisplayName) && (
-          <div className="hidden text-right text-sm sm:block">
-            {userDisplayName && <p className="font-medium text-slate-100">{userDisplayName}</p>}
-            {tenantDisplayName && <p className="text-xs text-slate-400">{tenantDisplayName}</p>}
-          </div>
-        )}
+        <WorkspaceUserChrome
+          userDisplayName={userDisplayName}
+          tenantDisplayName={tenantDisplayName}
+          tenantSlug={tenantSlug}
+        />
       </div>
     </header>
   )
@@ -78,6 +81,7 @@ export function ProductAppShell({
   productKey,
   workspaceSubtitle = 'Operational workspace',
   tenantDisplayName,
+  tenantSlug,
   userDisplayName,
   entitlements = [],
   suiteHomeUrl = 'http://localhost:5174/app',
@@ -97,6 +101,7 @@ export function ProductAppShell({
           productKey={productKey}
           workspaceSubtitle={workspaceSubtitle}
           tenantDisplayName={tenantDisplayName}
+          tenantSlug={tenantSlug}
           userDisplayName={userDisplayName}
           entitlements={entitlements}
           suiteHomeUrl={suiteHomeUrl}
@@ -113,10 +118,12 @@ export function ProductAppShell({
         <div className="mb-6 shrink-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-teal-400">STL Compliance</p>
           <h1 className="text-lg font-semibold text-white">{productName}</h1>
-          {(userDisplayName || tenantDisplayName) && (
-            <p className="mt-1 text-xs text-slate-400">
-              {[userDisplayName, tenantDisplayName].filter(Boolean).join(' · ')}
-            </p>
+          {(userDisplayName || tenantDisplayName || tenantSlug) && (
+            <div className="mt-1 space-y-0.5 text-xs text-slate-400">
+              {userDisplayName ? <p>{userDisplayName}</p> : null}
+              {tenantDisplayName ? <p>{tenantDisplayName}</p> : null}
+              {tenantSlug ? <p className="font-mono text-slate-500">{tenantSlug}</p> : null}
+            </div>
           )}
         </div>
 
@@ -151,6 +158,7 @@ export function ProductAppShell({
           productKey={productKey}
           workspaceSubtitle={workspaceSubtitle}
           tenantDisplayName={tenantDisplayName}
+          tenantSlug={tenantSlug}
           userDisplayName={userDisplayName}
           entitlements={entitlements}
           suiteHomeUrl={suiteHomeUrl}
