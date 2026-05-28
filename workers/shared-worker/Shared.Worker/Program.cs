@@ -310,4 +310,16 @@ await StlWorkerHost.RunAsync(
         });
 
         builder.Services.AddHostedService<MaintainArrAuditPackageGenerationJob>();
+
+        builder.Services.Configure<TrainArrAuditPackageGenerationOptions>(
+            builder.Configuration.GetSection(TrainArrAuditPackageGenerationOptions.SectionName));
+
+        builder.Services.AddHttpClient<TrainArrAuditPackageGenerationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<TrainArrAuditPackageGenerationOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.TrainArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(10);
+        });
+
+        builder.Services.AddHostedService<TrainArrAuditPackageGenerationJob>();
     });

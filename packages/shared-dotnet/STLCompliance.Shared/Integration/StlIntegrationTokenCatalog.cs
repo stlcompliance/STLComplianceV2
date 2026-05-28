@@ -170,6 +170,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["maintainarr"],
             "maintainarr.audit_packages.generate"),
+        Profile(
+            "worker-trainarr-audit-packages",
+            "shared-worker",
+            "TrainArrAuditPackageGeneration__ServiceToken",
+            "shared-worker",
+            ["trainarr"],
+            "trainarr.audit_packages.generate"),
     ];
 
     public static IReadOnlyList<StlIntegrationTokenProfile> ForConsumer(string consumerService) =>

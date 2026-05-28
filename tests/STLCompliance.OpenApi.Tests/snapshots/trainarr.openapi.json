@@ -21,6 +21,128 @@
         }
       }
     },
+    "/api/audit-packages/export": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "ExportTrainArrAuditPackage",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/jobs": {
+      "post": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "CreateTrainArrAuditPackageGenerationJob",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditPackageGenerationJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/jobs/{jobId}": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetTrainArrAuditPackageGenerationJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/jobs/{jobId}/download": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "DownloadTrainArrAuditPackageGenerationJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/manifest": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetTrainArrAuditPackageManifest",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/auth/handoff/redeem": {
       "post": {
         "tags": [
@@ -111,6 +233,128 @@
         }
       }
     },
+    "/api/event-processing-settings": {
+      "get": {
+        "tags": [
+          "EventProcessingSettings"
+        ],
+        "operationId": "GetTrainArrEventProcessingSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "EventProcessingSettings"
+        ],
+        "operationId": "UpsertTrainArrEventProcessingSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertEventProcessingSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/event-processing-settings/events": {
+      "get": {
+        "tags": [
+          "EventProcessingSettings"
+        ],
+        "operationId": "ListTrainArrTrainingDomainEvents",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/evidence-retention-settings": {
+      "get": {
+        "tags": [
+          "EvidenceRetentionSettings"
+        ],
+        "operationId": "GetTrainArrEvidenceRetentionSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "EvidenceRetentionSettings"
+        ],
+        "operationId": "UpsertTrainArrEvidenceRetentionSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertEvidenceRetentionSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/evidence-retention-settings/runs": {
+      "get": {
+        "tags": [
+          "EvidenceRetentionSettings"
+        ],
+        "operationId": "ListTrainArrEvidenceRetentionRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/field-inbox": {
       "get": {
         "tags": [
@@ -180,6 +424,53 @@
         }
       }
     },
+    "/api/integration-settings": {
+      "get": {
+        "tags": [
+          "IntegrationSettings"
+        ],
+        "operationId": "GetTrainArrIntegrationSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "IntegrationSettings"
+        ],
+        "operationId": "UpsertTrainArrIntegrationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertIntegrationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integration-settings/probes": {
+      "get": {
+        "tags": [
+          "IntegrationSettings"
+        ],
+        "operationId": "GetTrainArrIntegrationProbes",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/incident-remediations": {
       "post": {
         "tags": [
@@ -214,6 +505,216 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RoutarrQualificationCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/audit-package-jobs/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingTrainArrAuditPackageGenerationJobs",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/audit-package-jobs/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessTrainArrAuditPackageGenerationJobs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessAuditPackageGenerationJobsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/evidence-retention/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingEvidenceRetention",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/evidence-retention/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessEvidenceRetention",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessEvidenceRetentionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/orphan-references/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingOrphanReferenceScans",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "stalenessHours",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/orphan-references/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessOrphanReferenceScans",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessOrphanReferenceScansRequest"
               }
             }
           },
@@ -436,6 +937,216 @@
         }
       }
     },
+    "/api/internal/rule-pack-impact/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingRulePackImpactScans",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "stalenessHours",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/rule-pack-impact/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessRulePackImpactScans",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessRulePackImpactScansRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/staffarr-publication-retries/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingStaffarrPublicationRetries",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/staffarr-publication-retries/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessStaffarrPublicationRetries",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessStaffarrPublicationRetriesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/training-events/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingTrainingDomainEvents",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/training-events/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessTrainingDomainEvents",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessTrainingDomainEventsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/training-notifications/pending": {
       "get": {
         "tags": [
@@ -605,6 +1316,166 @@
         ],
         "operationId": "ListTrainArrNotificationDispatches",
         "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/orphan-reference-settings": {
+      "get": {
+        "tags": [
+          "OrphanReferenceSettings"
+        ],
+        "operationId": "GetTrainArrOrphanReferenceSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "OrphanReferenceSettings"
+        ],
+        "operationId": "UpsertTrainArrOrphanReferenceSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertOrphanReferenceSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/orphan-reference-settings/findings": {
+      "get": {
+        "tags": [
+          "OrphanReferenceSettings"
+        ],
+        "operationId": "ListTrainArrOrphanReferenceFindings",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/orphan-reference-settings/runs": {
+      "get": {
+        "tags": [
+          "OrphanReferenceSettings"
+        ],
+        "operationId": "ListTrainArrOrphanReferenceRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/{staffarrPersonId}/training-history": {
+      "get": {
+        "tags": [
+          "PersonTrainingHistory"
+        ],
+        "operationId": "GetTrainArrPersonTrainingHistoryByPersonRoute",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/person-training-history": {
+      "get": {
+        "tags": [
+          "PersonTrainingHistory"
+        ],
+        "operationId": "GetTrainArrPersonTrainingHistory",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           {
             "name": "limit",
             "in": "query",
@@ -988,6 +1859,94 @@
         }
       }
     },
+    "/api/rule-pack-impact-settings": {
+      "get": {
+        "tags": [
+          "RulePackImpactSettings"
+        ],
+        "operationId": "GetTrainArrRulePackImpactSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "RulePackImpactSettings"
+        ],
+        "operationId": "UpsertTrainArrRulePackImpactSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertRulePackImpactSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-pack-impact-settings/runs": {
+      "get": {
+        "tags": [
+          "RulePackImpactSettings"
+        ],
+        "operationId": "ListTrainArrRulePackImpactRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-pack-impact-settings/states": {
+      "get": {
+        "tags": [
+          "RulePackImpactSettings"
+        ],
+        "operationId": "ListTrainArrRulePackImpactStates",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/rule-pack-impact/assess": {
       "post": {
         "tags": [
@@ -1061,6 +2020,67 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/staffarr-publication-settings": {
+      "get": {
+        "tags": [
+          "StaffarrPublicationSettings"
+        ],
+        "operationId": "GetTrainArrStaffarrPublicationSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "StaffarrPublicationSettings"
+        ],
+        "operationId": "UpsertTrainArrStaffarrPublicationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertStaffarrPublicationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/staffarr-publication-settings/deliveries": {
+      "get": {
+        "tags": [
+          "StaffarrPublicationSettings"
+        ],
+        "operationId": "ListTrainArrStaffarrPublicationDeliveries",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2094,6 +3114,33 @@
           }
         }
       },
+      "CreateAuditPackageGenerationJobRequest": {
+        "required": [
+          "format",
+          "from",
+          "to"
+        ],
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string"
+          },
+          "from": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "to": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "CreateBatchQualificationCheckRequest": {
         "required": [
           "qualificationKey",
@@ -2390,6 +3437,115 @@
           }
         }
       },
+      "ProcessAuditPackageGenerationJobsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessEvidenceRetentionRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessOrphanReferenceScansRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ProcessQualificationExpirationsRequest": {
         "required": [
           "tenantId",
@@ -2490,6 +3646,115 @@
           "batchSize": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessRulePackImpactScansRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessStaffarrPublicationRetriesRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessTrainingDomainEventsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
               "integer",
               "string"
             ],
@@ -2676,6 +3941,110 @@
           }
         }
       },
+      "UpsertEventProcessingSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "maxAttempts",
+          "retryIntervalMinutes"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "maxAttempts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "retryIntervalMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertEvidenceRetentionSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "retentionDaysAfterAssignmentClose"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "retentionDaysAfterAssignmentClose": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertIntegrationSettingsRequest": {
+        "required": [
+          "staffArrIntegrationEnabled",
+          "staffArrIncidentIntakeEnabled",
+          "staffArrPublicationDeliveryEnabled",
+          "complianceCoreIntegrationEnabled",
+          "complianceCoreQualificationChecksEnabled",
+          "routarrIntegrationEnabled",
+          "routarrQualificationDispatchEnabled"
+        ],
+        "type": "object",
+        "properties": {
+          "staffArrIntegrationEnabled": {
+            "type": "boolean"
+          },
+          "staffArrIncidentIntakeEnabled": {
+            "type": "boolean"
+          },
+          "staffArrPublicationDeliveryEnabled": {
+            "type": "boolean"
+          },
+          "complianceCoreIntegrationEnabled": {
+            "type": "boolean"
+          },
+          "complianceCoreQualificationChecksEnabled": {
+            "type": "boolean"
+          },
+          "routarrIntegrationEnabled": {
+            "type": "boolean"
+          },
+          "routarrQualificationDispatchEnabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpsertOrphanReferenceSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "scanStalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "scanStalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "UpsertQualificationRecalculationSettingsRequest": {
         "required": [
           "isEnabled",
@@ -2720,14 +4089,73 @@
           }
         }
       },
+      "UpsertRulePackImpactSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "stalenessHours",
+          "autoUpdateRequirementBaselines"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "autoUpdateRequirementBaselines": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpsertStaffarrPublicationSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "maxAttempts",
+          "retryIntervalMinutes"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "maxAttempts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "retryIntervalMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "UpsertTrainingNotificationSettingsRequest": {
         "required": [
           "isEnabled",
           "notificationWebhookUrl",
           "notifyOnAssignmentCreated",
+          "notifyOnAssignmentCompleted",
           "notifyOnQualificationExpiring",
+          "notifyOnQualificationIssued",
+          "notifyOnQualificationSuspended",
+          "notifyOnQualificationRevoked",
           "notifyOnQualificationExpired",
-          "expiringLeadDays"
+          "expiringLeadDays",
+          "maxAttempts",
+          "retryIntervalMinutes"
         ],
         "type": "object",
         "properties": {
@@ -2743,13 +4171,41 @@
           "notifyOnAssignmentCreated": {
             "type": "boolean"
           },
+          "notifyOnAssignmentCompleted": {
+            "type": "boolean"
+          },
           "notifyOnQualificationExpiring": {
+            "type": "boolean"
+          },
+          "notifyOnQualificationIssued": {
+            "type": "boolean"
+          },
+          "notifyOnQualificationSuspended": {
+            "type": "boolean"
+          },
+          "notifyOnQualificationRevoked": {
             "type": "boolean"
           },
           "notifyOnQualificationExpired": {
             "type": "boolean"
           },
           "expiringLeadDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "maxAttempts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "retryIntervalMinutes": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -2781,6 +4237,9 @@
     },
     {
       "name": "LoadTestJourney"
+    },
+    {
+      "name": "PersonTrainingHistory"
     },
     {
       "name": "Auth"
@@ -2850,6 +4309,27 @@
     },
     {
       "name": "QualificationRecalculationSettings"
+    },
+    {
+      "name": "RulePackImpactSettings"
+    },
+    {
+      "name": "EvidenceRetentionSettings"
+    },
+    {
+      "name": "OrphanReferenceSettings"
+    },
+    {
+      "name": "StaffarrPublicationSettings"
+    },
+    {
+      "name": "EventProcessingSettings"
+    },
+    {
+      "name": "AuditPackages"
+    },
+    {
+      "name": "IntegrationSettings"
     }
   ]
 }

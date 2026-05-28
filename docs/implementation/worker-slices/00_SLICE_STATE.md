@@ -304,6 +304,8 @@
 
 | 166 | TrainArr integration settings (`trainarr_tenant_integration_settings`, GET/PUT `/api/integration-settings` + probes, enforcement on StaffArr/Compliance Core/RoutArr paths, `IntegrationSettingsPanel`, integration + frontend tests, docs) | M6 (partial) | Complete | `ea3e198` |
 
-## Next slice (Worker 167)
+| 167 | TrainArr async audit package generation (`trainarr_audit_package_generation_jobs`, sync manifest/export + POST/GET job APIs + download, internal process-batch, shared-worker job, `AuditPackageExportPanel` background ZIP + status, tests, docs; builds on W165) | M12 (partial) | Complete | `pending` |
 
-Per milestone matrix: next open backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (other product M12 items or remaining M6 gaps).
+## Next slice (Worker 168)
+
+Per milestone matrix: next open backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (NexArr M12 service-token cleanup worker or remaining M12 items).

@@ -188,6 +188,8 @@ public static class TrainArrServiceRegistration
 
         builder.Services.AddScoped<AuditPackageService>();
 
+        builder.Services.AddScoped<AuditPackageGenerationService>();
+
         var frontendOrigin = builder.Configuration["Cors:TrainArrFrontendOrigin"] ?? "http://localhost:5176";
 
         builder.Services.AddCors(options =>

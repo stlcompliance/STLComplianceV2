@@ -76,6 +76,7 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
         app.MapTrainArrInternalStaffarrPublicationRetryEndpoints();
         app.MapTrainArrInternalTrainingEventProcessingEndpoints();
         app.MapTrainArrAuditPackageEndpoints();
+        app.MapTrainArrInternalAuditPackageGenerationEndpoints();
         app.MapTrainArrIntegrationSettingsEndpoints();
 
         await Task.CompletedTask;

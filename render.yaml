@@ -412,6 +412,8 @@ services:
         value: https://nexarr-api-jdyi.onrender.com
       - key: MaintainArrAuditPackageGeneration__MaintainArrBaseUrl
         value: https://maintainarr-api-82rg.onrender.com
+      - key: TrainArrAuditPackageGeneration__TrainArrBaseUrl
+        value: https://trainarr-api-ae2t.onrender.com
 
   # --- Product heartbeat workers (reserved for product-local jobs) ---
   - type: worker

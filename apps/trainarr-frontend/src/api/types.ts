@@ -788,6 +788,20 @@ export interface AuditPackageExportResponse {
   personTrainingHistory: unknown[]
 }
 
+export interface AuditPackageGenerationJobResponse {
+  jobId: string
+  status: string
+  format: string
+  from: string | null
+  to: string | null
+  packageId: string | null
+  errorMessage: string | null
+  createdAt: string
+  startedAt: string | null
+  completedAt: string | null
+  downloadReady: boolean
+}
+
 export interface IntegrationSettingsResponse {
   staffArrIntegrationEnabled: boolean
   staffArrIncidentIntakeEnabled: boolean
