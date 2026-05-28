@@ -133,6 +133,16 @@ public sealed class TenantIsolationFlowTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task NexArr_tenant_A_admin_cannot_get_tenant_B_detail()
+    {
+        var tenantAToken = await _nexarr.LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+        var response = await _nexarr.Client.SendAsync(
+            HttpTestClient.Authorized(HttpMethod.Get, $"/api/tenants/{E2ETenants.TenantBId}", tenantAToken));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task StaffArr_tenant_B_cannot_read_tenant_A_person()
     {
         var tenantAPersonId = await SeedStaffPersonAsync(E2ETenants.TenantAId, "Tenant A Person", "tenant-a-person@e2e.stl");

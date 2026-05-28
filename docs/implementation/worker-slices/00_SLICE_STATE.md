@@ -260,6 +260,8 @@
 
 | 144 | M13 Playwright/E2E expansion (Compliance Core operator rule evaluate smoke, suite multi-product handoff journey, e2eApi/handoff helpers, catalog, compliancecore test ids, docs) | M13 (partial) | Complete | `4c0ac21` |
 
-## Next slice (Worker 145)
+| 145 | M13 ship-gate hardening (`StlM13ShipGateCatalog`, entitlement-denial E2E + live probes, NexArr tenant isolation, OpenAPI ship-gate catalog tests, docs) | M13 (partial) | Complete | `pending` |
 
-Per milestone matrix: next product backlog slice (M4–M12 feature row) or M13 ship-gate hardening (OpenAPI parity, isolation probes).
+## Next slice (Worker 146)
+
+Per milestone matrix: next **product backlog** feature row (M4–M12) or **Companion Playwright E2E** (offline queue / push notifications per W134 follow-ups).

@@ -21,8 +21,10 @@ Live tests probe real `/health` endpoints and optional NexArr demo login. They *
 3. **TrainArrAssignmentCompleteFlowTests** — incident route → assignment → complete → StaffArr certification/unblock
 4. **MaintainArrWorkOrderFlowTests** — handoff → work order create → in_progress → completed
 5. **RoutArrDispatchAssignFlowTests** — trip → workflow gate block → preview → override assign
-6. **TenantIsolationFlowTests** — multi-tenant JWT/service-token denial across StaffArr, MaintainArr, RoutArr, TrainArr, Compliance Core, SupplyArr (`Area=TenantIsolation`)
-7. **StlE2eFrontendCatalogTests** / **StlE2ePlaywrightSpecCatalogTests** — canonical Vite preview ports (5174–5181) and Playwright spec filenames including platform-admin audit export (`Category=E2e`)
+6. **TenantIsolationFlowTests** — multi-tenant JWT/service-token denial across NexArr, StaffArr, MaintainArr, RoutArr, TrainArr, Compliance Core, SupplyArr (`Area=TenantIsolation`)
+7. **EntitlementDenialFlowTests** — JWT without product entitlement denied on `/api/me`; NexArr launch context denied for unknown product (`Area=EntitlementDenial`)
+8. **StlM13ShipGateCatalogTests** — ship-gate minimums aligned with `StlM13ShipGateCatalog` (`Area=ShipGate`)
+9. **StlE2eFrontendCatalogTests** / **StlE2ePlaywrightSpecCatalogTests** — canonical Vite preview ports (5174–5181) and Playwright spec filenames including platform-admin audit export (`Category=E2e`)
 
 ## Playwright browser smokes (`tests/e2e-playwright`)
 

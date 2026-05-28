@@ -1,5 +1,6 @@
 using System.Net;
 using STLCompliance.OpenApi.Tests.Support;
+using STLCompliance.Shared.Operations;
 
 namespace STLCompliance.OpenApi.Tests;
 
@@ -31,8 +32,10 @@ public abstract class OpenApiParityTestsBase<TProgram>(string productKey)
         response.EnsureSuccessStatusCode();
 
         var openApiJson = await response.Content.ReadAsStringAsync();
-        Assert.Contains("/health", openApiJson, StringComparison.Ordinal);
-        Assert.Contains("/api/", openApiJson, StringComparison.Ordinal);
+        foreach (var fragment in StlM13ShipGateCatalog.RequiredOpenApiPathFragments)
+        {
+            Assert.Contains(fragment, openApiJson, StringComparison.Ordinal);
+        }
     }
 }
 
