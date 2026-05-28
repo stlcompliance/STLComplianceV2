@@ -1,6 +1,7 @@
 using StaffArr.Api;
 using StaffArr.Api.Data;
 using StaffArr.Api.Endpoints;
+using STLCompliance.Shared.Endpoints;
 using STLCompliance.Shared.Hosting;
 
 await StlApiHost.RunAsync<StaffArrDbContext>(
@@ -11,6 +12,7 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
     async app =>
     {
         app.MapStaffArrAuthEndpoints();
+        app.MapStlProductLaunchEndpoints();
         app.MapStaffArrPeopleEndpoints();
         app.MapStaffArrPersonLookupEndpoints();
         app.MapStaffArrPeopleExportEndpoints();

@@ -1,6 +1,7 @@
 using SupplyArr.Api;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Endpoints;
+using STLCompliance.Shared.Endpoints;
 using STLCompliance.Shared.Hosting;
 
 await StlApiHost.RunAsync<SupplyArrDbContext>(
@@ -11,6 +12,7 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
     async app =>
     {
         app.MapSupplyArrAuthEndpoints();
+        app.MapStlProductLaunchEndpoints();
         app.MapSupplyArrPartyRegistryEndpoints();
         app.MapSupplyArrPartCatalogEndpoints();
         app.MapSupplyArrInventoryEndpoints();

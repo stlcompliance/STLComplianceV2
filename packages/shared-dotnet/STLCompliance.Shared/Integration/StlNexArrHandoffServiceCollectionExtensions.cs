@@ -12,13 +12,16 @@ public static class StlNexArrHandoffServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddHttpClient<StlNexArrHandoffClient>((_, client) =>
+        void ConfigureNexArrClient(HttpClient client)
         {
             var baseUrl = configuration[NexArrBaseUrlConfigurationKey]
                 ?? configuration["NexArr__BaseUrl"]
                 ?? throw new InvalidOperationException("NexArr:BaseUrl is not configured.");
             client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(baseUrl).TrimEnd('/') + "/");
-        });
+        }
+
+        services.AddHttpClient<StlNexArrHandoffClient>((_, client) => ConfigureNexArrClient(client));
+        services.AddHttpClient<StlNexArrLaunchClient>((_, client) => ConfigureNexArrClient(client));
 
         return services;
     }

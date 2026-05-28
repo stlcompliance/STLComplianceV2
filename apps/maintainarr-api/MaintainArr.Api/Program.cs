@@ -1,6 +1,7 @@
 using MaintainArr.Api;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Endpoints;
+using STLCompliance.Shared.Endpoints;
 using STLCompliance.Shared.Hosting;
 
 await StlApiHost.RunAsync<MaintainArrDbContext>(
@@ -11,6 +12,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
     async app =>
     {
         app.MapMaintainArrAuthEndpoints();
+        app.MapStlProductLaunchEndpoints();
         app.MapMaintainArrAssetClassEndpoints();
         app.MapMaintainArrAssetTypeEndpoints();
         app.MapMaintainArrAssetEndpoints();

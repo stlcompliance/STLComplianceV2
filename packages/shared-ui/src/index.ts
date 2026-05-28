@@ -20,6 +20,15 @@ export {
   resolveProductLaunchUrl,
 } from './productLaunchUrls'
 export {
+  buildProductWorkspaceCallbackUrl,
+  createProductHandoff,
+  formatProductLaunchError,
+  getLaunchContext,
+  ProductLaunchError,
+} from './productLaunchHandoff'
+export type { HandoffCreatedResponse, LaunchContextResponse } from './productLaunchHandoff'
+export { useProductWorkspaceLaunch } from './useProductWorkspaceLaunch'
+export {
   isProductWorkspaceAuthError,
   resolveProductWorkspaceBootstrapError,
 } from './productWorkspaceAuth'

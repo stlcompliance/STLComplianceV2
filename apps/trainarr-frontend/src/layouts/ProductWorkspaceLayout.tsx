@@ -4,8 +4,10 @@ import { Navigate, Outlet, useSearchParams } from 'react-router-dom'
 import {
   ProductWorkspaceFrame,
   buildProductLaunchUrlMap,
+  formatProductLaunchError,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
+  useProductWorkspaceLaunch,
 } from '@stl/shared-ui'
 import { getMe } from '../api/client'
 import { clearSession, loadSession } from '../auth/sessionStorage'
@@ -13,6 +15,7 @@ import { trainarrNavItems } from '../navigation/productNav'
 
 const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 const productLaunchUrls = buildProductLaunchUrlMap(import.meta.env)
+const apiBase = import.meta.env.VITE_TRAINARR_API_BASE ?? ''
 
 export function ProductWorkspaceLayout() {
   const [searchParams] = useSearchParams()
@@ -31,6 +34,14 @@ export function ProductWorkspaceLayout() {
       clearSession()
     }
   }, [meQuery.isError, meQuery.error])
+
+  const productLaunch = useProductWorkspaceLaunch({
+    apiBase,
+    accessToken: session?.accessToken ?? '',
+    currentProductKey: 'trainarr',
+    suiteHomeUrl,
+    productLaunchUrls,
+  })
 
   if (handoff) {
     return <Navigate to={`/launch?handoff=${encodeURIComponent(handoff)}`} replace />
@@ -58,6 +69,15 @@ export function ProductWorkspaceLayout() {
       entitlements={meQuery.data?.entitlements ?? []}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
+      onSelectProduct={(productKey) => {
+        if (session?.accessToken) {
+          void productLaunch.mutate(productKey)
+        }
+      }}
+      isProductLaunchPending={productLaunch.isPending}
+      productLaunchError={
+        productLaunch.isError ? formatProductLaunchError(productLaunch.error) : null
+      }
       workspaceSession={workspaceSession}
       isBootstrapping={Boolean(session?.accessToken) && meQuery.isLoading}
       bootstrapError={bootstrapError}

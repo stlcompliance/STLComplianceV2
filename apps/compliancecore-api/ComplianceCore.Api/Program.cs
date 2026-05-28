@@ -3,6 +3,7 @@ using ComplianceCore.Api.Data;
 using ComplianceCore.Api.Endpoints;
 using ComplianceCore.Api.Services;
 using STLCompliance.Shared.Data;
+using STLCompliance.Shared.Endpoints;
 using STLCompliance.Shared.Hosting;
 
 await StlApiHost.RunAsync<ComplianceCoreDbContext>(
@@ -13,6 +14,7 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
     async app =>
     {
         app.MapComplianceCoreAuthEndpoints();
+        app.MapStlProductLaunchEndpoints();
         app.MapComplianceCoreVocabularyEndpoints();
         app.MapComplianceCoreComplianceKeyEndpoints();
         app.MapComplianceCoreMaterialKeyEndpoints();

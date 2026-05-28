@@ -1,6 +1,7 @@
 using RoutArr.Api;
 using RoutArr.Api.Data;
 using RoutArr.Api.Endpoints;
+using STLCompliance.Shared.Endpoints;
 using STLCompliance.Shared.Hosting;
 
 await StlApiHost.RunAsync<RoutArrDbContext>(
@@ -11,6 +12,7 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
     async app =>
     {
         app.MapRoutArrAuthEndpoints();
+        app.MapStlProductLaunchEndpoints();
         app.MapRoutArrTripEndpoints();
         app.MapRoutArrRouteEndpoints();
         app.MapRoutArrDispatchEndpoints();
