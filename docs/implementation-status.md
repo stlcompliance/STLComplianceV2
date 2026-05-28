@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 148 | Companion clear submission state | Complete | `6a2cb96` |
+| 148 | Companion clear submission state | Complete | `da42bf4` |
 
 ## Program summary
 

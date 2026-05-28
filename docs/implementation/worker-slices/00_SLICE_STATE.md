@@ -266,7 +266,7 @@
 
 | 147 | Companion field evidence capture (`POST /api/companion/field-tasks/evidence`, TrainArr proxy, photo/document/signature UI, Playwright spec, tests, docs) | M11 (partial) | Complete | `e68e2e8` |
 
-| 148 | Companion clear submission state (`nexarr_companion_field_submissions`, submission-status API, inbox status chips + activity toasts, offline/evidence integration, tests, docs) | M11 (partial) | Complete | `6a2cb96` |
+| 148 | Companion clear submission state (`nexarr_companion_field_submissions`, submission-status API, inbox status chips + activity toasts, offline/evidence integration, tests, docs) | M11 (partial) | Complete | `da42bf4` |
 
 ## Next slice (Worker 149)
 
