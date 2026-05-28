@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 142 | STLComplianceSite implementation maturity status | Complete | `pending` |
+| 142 | STLComplianceSite implementation maturity status | Complete | `be0e623` |
 
 ## Program summary
 

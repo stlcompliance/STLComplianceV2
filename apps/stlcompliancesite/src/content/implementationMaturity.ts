@@ -5,7 +5,7 @@ export const PROGRAM_SNAPSHOT = {
   lastUpdatedLabel: 'Worker 142 (2026-05-28)',
   completedWorkersThrough: 142,
   latestSliceSummary: 'STLComplianceSite implementation maturity status',
-  latestCommitShort: 'pending',
+  latestCommitShort: 'be0e623',
   sliceStateDoc: 'docs/implementation/worker-slices/00_SLICE_STATE.md',
   statusDoc: 'docs/implementation-status.md',
 } as const

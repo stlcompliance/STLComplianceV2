@@ -254,7 +254,7 @@
 
 | 141 | STLComplianceSite comparison content (`/compare` vs spreadsheets/point tools, nav/footer/resources, SEO + sitemap, vitest, docs) | M3/M12 (partial) | Complete | `d9897a9` |
 
-| 142 | STLComplianceSite implementation maturity status (`/maturity` product + milestone snapshot, nav/footer/resources, SEO + sitemap, vitest, docs) | M3/M12 (partial) | Complete | `pending` |
+| 142 | STLComplianceSite implementation maturity status (`/maturity` product + milestone snapshot, nav/footer/resources, SEO + sitemap, vitest, docs) | M3/M12 (partial) | Complete | `be0e623` |
 
 ## Next slice (Worker 143)
 
