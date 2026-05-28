@@ -566,6 +566,75 @@ export interface CreatePersonnelIncidentRequest {
   occurredAt: string
 }
 
+export type PersonnelNoteCategoryKey =
+  | 'general'
+  | 'performance'
+  | 'coaching'
+  | 'disciplinary'
+  | 'medical'
+  | 'other'
+
+export type PersonnelNoteVisibilityKey = 'hr_only' | 'management' | 'personnel_visible'
+
+export interface PersonnelNoteSummaryResponse {
+  noteId: string
+  personId: string
+  categoryKey: PersonnelNoteCategoryKey
+  visibilityKey: PersonnelNoteVisibilityKey
+  subject: string
+  status: string
+  createdByUserId: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PersonnelNoteDetailResponse extends PersonnelNoteSummaryResponse {
+  body: string
+}
+
+export interface CreatePersonnelNoteRequest {
+  categoryKey: PersonnelNoteCategoryKey
+  visibilityKey: PersonnelNoteVisibilityKey
+  subject: string
+  body: string
+}
+
+export type PersonnelDocumentTypeKey =
+  | 'id_verification'
+  | 'employment_contract'
+  | 'certification_copy'
+  | 'medical_form'
+  | 'policy_acknowledgment'
+  | 'other'
+
+export interface PersonnelDocumentSummaryResponse {
+  documentId: string
+  personId: string
+  documentTypeKey: PersonnelDocumentTypeKey
+  title: string
+  fileName: string
+  contentType: string
+  sizeBytes: number
+  description: string | null
+  expiresAt: string | null
+  status: string
+  uploadedByUserId: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PersonnelDocumentDetailResponse extends PersonnelDocumentSummaryResponse {}
+
+export interface CreatePersonnelDocumentRequest {
+  documentTypeKey: PersonnelDocumentTypeKey
+  title: string
+  fileName: string
+  contentType: string
+  contentBase64: string
+  description: string | null
+  expiresAt: string | null
+}
+
 export interface PagedResult<T> {
   items: T[]
   page: number
@@ -577,7 +646,7 @@ export interface PagedResult<T> {
 export interface PersonTimelineEntryResponse {
   entryId: string
   personId: string
-  category: 'incident' | 'incident_routing' | 'readiness' | 'certification' | 'permission' | 'training_blocker'
+  category: 'incident' | 'incident_routing' | 'readiness' | 'certification' | 'permission' | 'training_blocker' | 'personnel_note' | 'personnel_document'
   eventType: string
   title: string
   detail: string | null

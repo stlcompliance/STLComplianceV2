@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using StaffArr.Api.Entities;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Contracts;
 
@@ -291,6 +292,123 @@ public sealed class StaffArrAuthorizationService
         throw new StlApiException(
             "auth.forbidden",
             "Audit package export requires staffarr.audit.export scope.",
+            403);
+    }
+
+    public void RequirePersonnelNotesRead(ClaimsPrincipal principal, Guid personId)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (CanReadByRole(principal.GetTenantRoleKey()))
+        {
+            return;
+        }
+
+        if (principal.GetPersonId() == personId)
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Personnel notes read access requires staffarr.notes.read scope.",
+            403);
+    }
+
+    public void RequirePersonnelNotesManageWrite(ClaimsPrincipal principal)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Personnel note creation requires staffarr.notes.manage scope.",
+            403);
+    }
+
+    public bool CanViewPersonnelNote(ClaimsPrincipal principal, Guid personId, PersonnelNote note)
+    {
+        if (principal.IsPlatformAdmin())
+        {
+            return true;
+        }
+
+        var roleKey = principal.GetTenantRoleKey();
+        if (MatchesRole(roleKey, "tenant_admin", "staffarr_admin", "hr_admin"))
+        {
+            return true;
+        }
+
+        if (string.Equals(note.VisibilityKey, "hr_only", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (string.Equals(note.VisibilityKey, "management", StringComparison.OrdinalIgnoreCase))
+        {
+            return MatchesRole(roleKey, "supervisor");
+        }
+
+        if (string.Equals(note.VisibilityKey, "personnel_visible", StringComparison.OrdinalIgnoreCase))
+        {
+            return MatchesRole(roleKey, "supervisor") || principal.GetPersonId() == personId;
+        }
+
+        return false;
+    }
+
+    public void RequirePersonnelDocumentsRead(ClaimsPrincipal principal, Guid personId)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (CanReadByRole(principal.GetTenantRoleKey()))
+        {
+            return;
+        }
+
+        if (principal.GetPersonId() == personId)
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Personnel documents read access requires staffarr.documents.read scope.",
+            403);
+    }
+
+    public void RequirePersonnelDocumentsManageWrite(ClaimsPrincipal principal)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "staffarr_admin", "hr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Personnel document upload requires staffarr.documents.manage scope.",
             403);
     }
 

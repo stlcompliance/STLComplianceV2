@@ -1,4 +1,5 @@
 using StaffArr.Api.Options;
+using StaffArr.Api.Options;
 using StaffArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
@@ -56,6 +57,10 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<FieldInboxService>();
         builder.Services.AddScoped<IncidentRoutingService>();
         builder.Services.AddScoped<PersonTimelineService>();
+        builder.Services.AddScoped<PersonnelNoteService>();
+        builder.Services.AddScoped<PersonnelDocumentService>();
+        builder.Services.Configure<DocumentStorageOptions>(builder.Configuration.GetSection(DocumentStorageOptions.SectionName));
+        builder.Services.AddSingleton<StaffArrDocumentStorageService>();
         builder.Services.AddScoped<AuditPackageService>();
         builder.Services.AddScoped<AuditPackageGenerationService>();
         builder.Services.AddScoped<IStaffArrAuditService, StaffArrAuditService>();

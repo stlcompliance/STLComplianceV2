@@ -35,6 +35,12 @@ import type {
   PersonnelIncidentDetailResponse,
   CreatePersonnelIncidentRequest,
   RouteIncidentToTrainarrResponse,
+  PersonnelNoteSummaryResponse,
+  PersonnelNoteDetailResponse,
+  CreatePersonnelNoteRequest,
+  PersonnelDocumentSummaryResponse,
+  PersonnelDocumentDetailResponse,
+  CreatePersonnelDocumentRequest,
   PagedResult,
   PersonTimelineEntryResponse,
   AuditPackageManifestResponse,
@@ -679,6 +685,78 @@ export async function routePersonnelIncidentToTrainarr(
     response,
     'Failed to route incident to TrainArr',
   )
+}
+
+export async function listPersonnelNotes(
+  accessToken: string,
+  personId: string,
+): Promise<PersonnelNoteSummaryResponse[]> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/notes`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonnelNoteSummaryResponse[]>(response, 'Failed to load personnel notes')
+}
+
+export async function getPersonnelNote(
+  accessToken: string,
+  personId: string,
+  noteId: string,
+): Promise<PersonnelNoteDetailResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/notes/${noteId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonnelNoteDetailResponse>(response, 'Failed to load personnel note')
+}
+
+export async function createPersonnelNote(
+  accessToken: string,
+  personId: string,
+  request: CreatePersonnelNoteRequest,
+): Promise<PersonnelNoteDetailResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/notes`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonnelNoteDetailResponse>(response, 'Failed to create personnel note')
+}
+
+export async function listPersonnelDocuments(
+  accessToken: string,
+  personId: string,
+): Promise<PersonnelDocumentSummaryResponse[]> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/documents`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonnelDocumentSummaryResponse[]>(response, 'Failed to load personnel documents')
+}
+
+export async function getPersonnelDocument(
+  accessToken: string,
+  personId: string,
+  documentId: string,
+): Promise<PersonnelDocumentDetailResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/documents/${documentId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonnelDocumentDetailResponse>(response, 'Failed to load personnel document')
+}
+
+export async function createPersonnelDocument(
+  accessToken: string,
+  personId: string,
+  request: CreatePersonnelDocumentRequest,
+): Promise<PersonnelDocumentDetailResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/documents`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonnelDocumentDetailResponse>(response, 'Failed to upload personnel document')
+}
+
+export function personnelDocumentContentUrl(personId: string, documentId: string): string {
+  return `${apiBase}/api/people/${personId}/documents/${documentId}/content`
 }
 
 function buildAuditPackageQuery(options?: {

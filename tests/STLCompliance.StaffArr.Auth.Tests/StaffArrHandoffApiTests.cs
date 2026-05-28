@@ -49,6 +49,12 @@ using GrantReadinessOverrideRequest = StaffArr.Api.Contracts.GrantReadinessOverr
 using CreatePersonnelIncidentRequest = StaffArr.Api.Contracts.CreatePersonnelIncidentRequest;
 using PersonnelIncidentSummaryResponse = StaffArr.Api.Contracts.PersonnelIncidentSummaryResponse;
 using PersonnelIncidentDetailResponse = StaffArr.Api.Contracts.PersonnelIncidentDetailResponse;
+using CreatePersonnelNoteRequest = StaffArr.Api.Contracts.CreatePersonnelNoteRequest;
+using PersonnelNoteSummaryResponse = StaffArr.Api.Contracts.PersonnelNoteSummaryResponse;
+using PersonnelNoteDetailResponse = StaffArr.Api.Contracts.PersonnelNoteDetailResponse;
+using CreatePersonnelDocumentRequest = StaffArr.Api.Contracts.CreatePersonnelDocumentRequest;
+using PersonnelDocumentSummaryResponse = StaffArr.Api.Contracts.PersonnelDocumentSummaryResponse;
+using PersonnelDocumentDetailResponse = StaffArr.Api.Contracts.PersonnelDocumentDetailResponse;
 using PersonTimelineEntryResponse = StaffArr.Api.Contracts.PersonTimelineEntryResponse;
 using StaffArrTokenService = StaffArr.Api.Services.StaffArrTokenService;
 using StaffArrDbContext = StaffArr.Api.Data.StaffArrDbContext;
@@ -1338,6 +1344,140 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         var otherResponse = await _staffarrClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/people/{otherPersonId}/timeline", memberToken));
         Assert.Equal(HttpStatusCode.Forbidden, otherResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Personnel_note_create_list_and_detail_with_visibility_filtering()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "hr_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Notes Subject", "notes.subject@example.com");
+
+        var createRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/notes", token);
+        createRequest.Content = JsonContent.Create(new CreatePersonnelNoteRequest(
+            "coaching",
+            "personnel_visible",
+            "Quarterly coaching follow-up",
+            "Documented coaching conversation and agreed follow-up actions for next review cycle."));
+        var createResponse = await _staffarrClient.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = (await createResponse.Content.ReadFromJsonAsync<PersonnelNoteDetailResponse>())!;
+
+        var listResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/notes", token));
+        listResponse.EnsureSuccessStatusCode();
+        var notes = (await listResponse.Content.ReadFromJsonAsync<List<PersonnelNoteSummaryResponse>>())!;
+        Assert.Contains(notes, x => x.NoteId == created.NoteId);
+
+        var detailResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/notes/{created.NoteId}", token));
+        detailResponse.EnsureSuccessStatusCode();
+        var detail = (await detailResponse.Content.ReadFromJsonAsync<PersonnelNoteDetailResponse>())!;
+        Assert.Contains("coaching conversation", detail.Body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Personnel_note_hr_only_hidden_from_tenant_member_self()
+    {
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Notes Visibility User", "notes.visibility@example.com");
+
+        var adminToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var createRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/notes", adminToken);
+        createRequest.Content = JsonContent.Create(new CreatePersonnelNoteRequest(
+            "disciplinary",
+            "hr_only",
+            "Confidential HR note",
+            "This note should remain hidden from tenant members even when viewing self."));
+        var createResponse = await _staffarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+
+        var memberToken = CreateStaffArrAccessToken(
+            ["staffarr"],
+            tenantRoleKey: "tenant_member",
+            personId: personId);
+        var listResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/notes", memberToken));
+        listResponse.EnsureSuccessStatusCode();
+        var notes = (await listResponse.Content.ReadFromJsonAsync<List<PersonnelNoteSummaryResponse>>())!;
+        Assert.Empty(notes);
+    }
+
+    [Fact]
+    public async Task Personnel_note_create_denies_supervisor_role()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Notes Denied User", "notes.denied@example.com");
+
+        var createRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/notes", token);
+        createRequest.Content = JsonContent.Create(new CreatePersonnelNoteRequest(
+            "general",
+            "management",
+            "Supervisor should not create notes",
+            "Supervisor role lacks staffarr.notes.manage scope for note creation."));
+        var response = await _staffarrClient.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Personnel_document_upload_list_download_and_timeline()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "hr_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Documents Subject", "documents.subject@example.com");
+        var fileBytes = "Signed offer letter content"u8.ToArray();
+
+        var createRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/documents", token);
+        createRequest.Content = JsonContent.Create(new CreatePersonnelDocumentRequest(
+            "employment_contract",
+            "Signed offer letter",
+            "offer-letter.txt",
+            "text/plain",
+            Convert.ToBase64String(fileBytes),
+            "Initial employment contract upload",
+            null));
+        var createResponse = await _staffarrClient.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = (await createResponse.Content.ReadFromJsonAsync<PersonnelDocumentDetailResponse>())!;
+
+        var listResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/documents", token));
+        listResponse.EnsureSuccessStatusCode();
+        var documents = (await listResponse.Content.ReadFromJsonAsync<List<PersonnelDocumentSummaryResponse>>())!;
+        Assert.Contains(documents, x => x.DocumentId == created.DocumentId);
+
+        var downloadResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/documents/{created.DocumentId}/content", token));
+        downloadResponse.EnsureSuccessStatusCode();
+        var downloaded = await downloadResponse.Content.ReadAsByteArrayAsync();
+        Assert.Equal(fileBytes, downloaded);
+
+        var timelineResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/timeline", token));
+        timelineResponse.EnsureSuccessStatusCode();
+        var timeline = (await timelineResponse.Content.ReadFromJsonAsync<PagedResult<PersonTimelineEntryResponse>>())!;
+        Assert.Contains(timeline.Items, x => x.EventType == "personnel_document_uploaded");
+    }
+
+    [Fact]
+    public async Task Personnel_document_upload_denies_supervisor_role()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Documents Denied User", "documents.denied@example.com");
+
+        var createRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/documents", token);
+        createRequest.Content = JsonContent.Create(new CreatePersonnelDocumentRequest(
+            "other",
+            "Supervisor upload attempt",
+            "attempt.txt",
+            "text/plain",
+            Convert.ToBase64String("denied"u8.ToArray()),
+            null,
+            null));
+        var response = await _staffarrClient.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     private async Task<string> CreateHandoffAsync()

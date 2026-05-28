@@ -19,6 +19,13 @@ import {
   createPersonnelIncident,
   routePersonnelIncidentToTrainarr,
   getPersonnelIncident,
+  listPersonnelNotes,
+  getPersonnelNote,
+  createPersonnelNote,
+  listPersonnelDocuments,
+  getPersonnelDocument,
+  createPersonnelDocument,
+  personnelDocumentContentUrl,
   getPersonReadiness,
   getSiteReadinessRollups,
   getTeamReadinessRollups,
@@ -47,6 +54,8 @@ import {
 import { loadSession, canExportAuditPackage } from '../auth/sessionStorage'
 import { canManagePeople } from '../components/PersonProfileEditorPanel'
 import { canManageIncidents } from '../components/IncidentsPanel'
+import { canManagePersonnelNotes } from '../components/PersonnelNotesPanel'
+import { canManagePersonnelDocuments } from '../components/PersonnelDocumentsPanel'
 import { canOverrideReadiness } from '../components/ReadinessPanel'
 import { canViewReadinessRollups } from '../components/ReadinessRollupSupervisorPanel'
 import { canManageOrgHierarchy } from '../components/OrgHierarchyManager'
@@ -188,6 +197,34 @@ export function useStaffArrWorkspaceState() {
     queryKey: ['staffarr-incident-detail', session?.accessToken, selectedIncidentId],
     queryFn: () => getPersonnelIncident(session!.accessToken, selectedIncidentId!),
     enabled: Boolean(session?.accessToken && selectedIncidentId),
+  })
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
+  useEffect(() => {
+    setSelectedNoteId(null)
+  }, [effectivePersonId])
+  const personNotesQuery = useQuery({
+    queryKey: ['staffarr-person-notes', session?.accessToken, effectivePersonId],
+    queryFn: () => listPersonnelNotes(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const noteDetailQuery = useQuery({
+    queryKey: ['staffarr-note-detail', session?.accessToken, effectivePersonId, selectedNoteId],
+    queryFn: () => getPersonnelNote(session!.accessToken, effectivePersonId!, selectedNoteId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId && selectedNoteId),
+  })
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null)
+  useEffect(() => {
+    setSelectedDocumentId(null)
+  }, [effectivePersonId])
+  const personDocumentsQuery = useQuery({
+    queryKey: ['staffarr-person-documents', session?.accessToken, effectivePersonId],
+    queryFn: () => listPersonnelDocuments(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const documentDetailQuery = useQuery({
+    queryKey: ['staffarr-document-detail', session?.accessToken, effectivePersonId, selectedDocumentId],
+    queryFn: () => getPersonnelDocument(session!.accessToken, effectivePersonId!, selectedDocumentId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId && selectedDocumentId),
   })
 
   const createOrgUnitMutation = useMutation({
@@ -491,6 +528,28 @@ export function useStaffArrWorkspaceState() {
       ])
     },
   })
+  const createNoteMutation = useMutation({
+    mutationFn: (payload: Parameters<typeof createPersonnelNote>[2]) =>
+      createPersonnelNote(session!.accessToken, effectivePersonId!, payload),
+    onSuccess: async (created) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-notes', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+      ])
+      setSelectedNoteId(created.noteId)
+    },
+  })
+  const uploadDocumentMutation = useMutation({
+    mutationFn: (payload: Parameters<typeof createPersonnelDocument>[2]) =>
+      createPersonnelDocument(session!.accessToken, effectivePersonId!, payload),
+    onSuccess: async (created) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-documents', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+      ])
+      setSelectedDocumentId(created.documentId)
+    },
+  })
 
   const me = meQuery.data
   const people = peopleQuery.data ?? []
@@ -514,6 +573,8 @@ export function useStaffArrWorkspaceState() {
   const canManageHierarchy = canManageOrgUnits
   const canOverridePersonReadiness = me ? canOverrideReadiness(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canManagePersonIncidents = me ? canManageIncidents(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canManagePersonNotes = me ? canManagePersonnelNotes(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canManagePersonDocuments = me ? canManagePersonnelDocuments(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canManagePeopleProfiles = me ? canManagePeople(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canExportAudit = me ? canExportAuditPackage(me.tenantRoleKey, me.isPlatformAdmin) : false
   const personIncidents = personIncidentsQuery.data ?? []
@@ -535,6 +596,8 @@ export function useStaffArrWorkspaceState() {
     grantReadinessOverrideMutation.error ?? clearReadinessOverrideMutation.error ?? null
   const incidentMutationError =
     createIncidentMutation.error ?? routeIncidentToTrainarrMutation.error ?? null
+  const noteMutationError = createNoteMutation.error ?? null
+  const documentMutationError = uploadDocumentMutation.error ?? null
   const personProfileMutationError =
     updatePersonMutation.error ?? updateEmploymentStatusMutation.error ?? null
 
@@ -553,6 +616,10 @@ export function useStaffArrWorkspaceState() {
     setSelectedSubordinateId,
     selectedIncidentId,
     setSelectedIncidentId,
+    selectedNoteId,
+    setSelectedNoteId,
+    selectedDocumentId,
+    setSelectedDocumentId,
     queryClient,
     meQuery,
     peopleQuery,
@@ -598,6 +665,12 @@ export function useStaffArrWorkspaceState() {
     clearReadinessOverrideMutation,
     createIncidentMutation,
     routeIncidentToTrainarrMutation,
+    createNoteMutation,
+    uploadDocumentMutation,
+    personNotesQuery,
+    noteDetailQuery,
+    personDocumentsQuery,
+    documentDetailQuery,
     people,
     orgUnits,
     profile,
@@ -619,9 +692,13 @@ export function useStaffArrWorkspaceState() {
     canManageHierarchy,
     canOverridePersonReadiness,
     canManagePersonIncidents,
+    canManagePersonNotes,
+    canManagePersonDocuments,
     canManagePeopleProfiles,
     canExportAudit,
     personIncidents,
+    personNotes: personNotesQuery.data ?? [],
+    personDocuments: personDocumentsQuery.data ?? [],
     orgMutationError,
     assignmentMutationError,
     managerMutationError,
@@ -629,7 +706,10 @@ export function useStaffArrWorkspaceState() {
     certificationMutationError,
     readinessOverrideMutationError,
     incidentMutationError,
+    noteMutationError,
+    documentMutationError,
     personProfileMutationError,
+    personnelDocumentContentUrl,
   }
 }
 

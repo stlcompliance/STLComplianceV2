@@ -21,6 +21,10 @@ function categoryLabel(category: PersonTimelineEntryResponse['category']): strin
       return 'Permission'
     case 'training_blocker':
       return 'Training blocker'
+    case 'personnel_note':
+      return 'Personnel note'
+    case 'personnel_document':
+      return 'Personnel document'
     default:
       return category
   }
@@ -42,6 +46,10 @@ function eventTypeLabel(eventType: string): string {
       return 'Training blocker published'
     case 'training_blocker_cleared':
       return 'Training blocker cleared'
+    case 'personnel_note_created':
+      return 'Personnel note created'
+    case 'personnel_document_uploaded':
+      return 'Personnel document uploaded'
     case 'assignment_created':
       return 'Role assignment created'
     case 'assignment_status_updated':
@@ -63,8 +71,8 @@ export function PersonTimelinePanel({
     <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
       <h2 className="text-sm font-medium text-slate-300">Person history timeline</h2>
       <p className="mt-2 text-xs text-slate-500">
-        Unified workforce history for {personDisplayName} from incidents, readiness, certifications, permissions, and
-        training blockers.
+        Unified workforce history for {personDisplayName} from incidents, readiness, certifications, permissions,
+        training blockers, personnel notes, and documents.
       </p>
 
       {isLoading ? (

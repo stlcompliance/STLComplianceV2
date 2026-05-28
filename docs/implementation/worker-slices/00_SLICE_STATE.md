@@ -278,6 +278,8 @@
 
 | 153 | Companion Web Push subscription and delivery (`nexarr_companion_push_subscriptions`, VAPID APIs, Web Push on notification dispatch, service worker + companion subscribe UI, render VAPID env, tests, docs) | M11 (partial) | Complete | `b5bbd69` |
 
-## Next slice (Worker 154)
+| 154 | StaffArr personnel notes + documents foundations (`staffarr_personnel_notes`, `staffarr_personnel_documents`, note/document APIs with visibility + file storage, person timeline integration, People workspace UI, tests, docs) | M4 (partial) | Complete | `pending` |
 
-Per milestone matrix: **M4** StaffArr personnel notes + documents foundations; or next open **M12** worker backlog row.
+## Next slice (Worker 155)
+
+Per milestone matrix: next open **M4** or **M12** worker backlog row from implementation status.

@@ -41,6 +41,8 @@ Common actions: access, read, create, edit, delete, manage, assign, approve, rej
 - staffarr.certifications.manage
 - staffarr.readiness.override
 - staffarr.incidents.manage
+- staffarr.notes.manage
+- staffarr.documents.manage
 - staffarr.audit.export
 
 ### TrainArr

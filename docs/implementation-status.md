@@ -18,6 +18,6 @@
 
 ## Next recommended slice (Worker 154)
 
-Per milestone matrix (**StaffArr / M4**): personnel notes + documents foundations; or the next open **M12** worker backlog row.
+Per milestone matrix: next open **M4** or **M12** worker backlog row (StaffArr personnel notes + documents foundations completed in Worker 154).
 
 See `FINAL_IMPLEMENTATION_REPORT.md` for ship-gate checklist.

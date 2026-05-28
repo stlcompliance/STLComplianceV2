@@ -240,6 +240,48 @@ public sealed class PersonTimelineService(StaffArrDbContext db)
             }
         }
 
+        var personnelNotes = await db.PersonnelNotes
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.PersonId == personId && x.Status == "active")
+            .ToListAsync(cancellationToken);
+
+        foreach (var note in personnelNotes)
+        {
+            entries.Add(new PersonTimelineEntryResponse(
+                $"personnel_note:{note.Id}:created",
+                personId,
+                "personnel_note",
+                "personnel_note_created",
+                $"Personnel note: {note.Subject}",
+                $"{note.CategoryKey} · {note.VisibilityKey}",
+                note.CreatedAt,
+                note.CreatedByUserId,
+                "personnel_note",
+                note.Id.ToString(),
+                null));
+        }
+
+        var personnelDocuments = await db.PersonnelDocuments
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.PersonId == personId && x.Status == "active")
+            .ToListAsync(cancellationToken);
+
+        foreach (var document in personnelDocuments)
+        {
+            entries.Add(new PersonTimelineEntryResponse(
+                $"personnel_document:{document.Id}:uploaded",
+                personId,
+                "personnel_document",
+                "personnel_document_uploaded",
+                $"Personnel document uploaded: {document.Title}",
+                $"{document.DocumentTypeKey} · {document.FileName}",
+                document.CreatedAt,
+                document.UploadedByUserId,
+                "personnel_document",
+                document.Id.ToString(),
+                null));
+        }
+
         return entries;
     }
 }

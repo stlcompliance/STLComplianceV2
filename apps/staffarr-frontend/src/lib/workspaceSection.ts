@@ -26,7 +26,7 @@ export const workspaceSectionHeaders: Record<
 > = {
   people: {
     title: 'People directory',
-    subtitle: 'Profiles, directory, and person timeline',
+    subtitle: 'Profiles, notes, documents, and person timeline',
   },
   org: {
     title: 'Org structure',

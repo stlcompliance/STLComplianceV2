@@ -30,6 +30,10 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<PersonnelIncident> PersonnelIncidents => Set<PersonnelIncident>();
 
+    public DbSet<PersonnelNote> PersonnelNotes => Set<PersonnelNote>();
+
+    public DbSet<PersonnelDocument> PersonnelDocuments => Set<PersonnelDocument>();
+
     public DbSet<PersonTrainingBlocker> PersonTrainingBlockers => Set<PersonTrainingBlocker>();
 
     public DbSet<IncidentTrainarrRouting> IncidentTrainarrRoutings => Set<IncidentTrainarrRouting>();
@@ -266,6 +270,37 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.PersonId, x.ReportedAt });
             entity.HasIndex(x => new { x.TenantId, x.Status, x.ReportedAt });
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+        });
+
+        modelBuilder.Entity<PersonnelNote>(entity =>
+        {
+            entity.ToTable("staffarr_personnel_notes");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.CategoryKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.VisibilityKey).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Subject).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Body).HasMaxLength(8192).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.CreatedAt });
+            entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+        });
+
+        modelBuilder.Entity<PersonnelDocument>(entity =>
+        {
+            entity.ToTable("staffarr_personnel_documents");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DocumentTypeKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.FileName).HasMaxLength(255).IsRequired();
+            entity.Property(x => x.ContentType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.StorageKey).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1024);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.DocumentTypeKey, x.Status });
             entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
         });
 

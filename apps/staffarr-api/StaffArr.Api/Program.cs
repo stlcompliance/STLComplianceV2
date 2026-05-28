@@ -21,6 +21,8 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrReadinessEndpoints();
         app.MapStaffArrReadinessRollupEndpoints();
         app.MapStaffArrIncidentEndpoints();
+        app.MapStaffArrPersonnelNoteEndpoints();
+        app.MapStaffArrPersonnelDocumentEndpoints();
         app.MapStaffArrIntegrationEndpoints();
         app.MapStaffArrInternalCertificationExpirationEndpoints();
         app.MapStaffArrInternalReadinessRollupEndpoints();

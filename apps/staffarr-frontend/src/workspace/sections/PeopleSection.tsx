@@ -1,6 +1,8 @@
 import { StaffArrApiError } from '../../api/client'
 import { PersonProfileEditorPanel } from '../../components/PersonProfileEditorPanel'
 import { PersonTimelinePanel } from '../../components/PersonTimelinePanel'
+import { PersonnelNotesPanel } from '../../components/PersonnelNotesPanel'
+import { PersonnelDocumentsPanel } from '../../components/PersonnelDocumentsPanel'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
 
 type Props = { state: StaffArrWorkspaceState }
@@ -123,6 +125,54 @@ export function PeopleSection({ state }: Props) {
               ...request,
             })
           }}
+        />
+      ) : null}
+
+      {s.selectedPerson ? (
+        <PersonnelNotesPanel
+          personId={s.selectedPerson.personId}
+          personDisplayName={s.selectedPerson.displayName}
+          notes={s.personNotes}
+          selectedNote={s.noteDetailQuery.data ?? null}
+          isLoading={s.personNotesQuery.isLoading}
+          isLoadingDetail={s.noteDetailQuery.isLoading}
+          canManage={s.canManagePersonNotes}
+          isSubmitting={s.createNoteMutation.isPending}
+          errorMessage={
+            s.noteMutationError instanceof StaffArrApiError
+              ? s.noteMutationError.body || s.noteMutationError.message
+              : null
+          }
+          onSelectNote={s.setSelectedNoteId}
+          onCreateNote={async (payload) => {
+            await s.createNoteMutation.mutateAsync(payload)
+          }}
+        />
+      ) : null}
+
+      {s.selectedPerson ? (
+        <PersonnelDocumentsPanel
+          personId={s.selectedPerson.personId}
+          personDisplayName={s.selectedPerson.displayName}
+          accessToken={s.accessToken}
+          documents={s.personDocuments}
+          selectedDocument={s.documentDetailQuery.data ?? null}
+          isLoading={s.personDocumentsQuery.isLoading}
+          isLoadingDetail={s.documentDetailQuery.isLoading}
+          canManage={s.canManagePersonDocuments}
+          isSubmitting={s.uploadDocumentMutation.isPending}
+          errorMessage={
+            s.documentMutationError instanceof StaffArrApiError
+              ? s.documentMutationError.body || s.documentMutationError.message
+              : null
+          }
+          onSelectDocument={s.setSelectedDocumentId}
+          onUploadDocument={async (payload) => {
+            await s.uploadDocumentMutation.mutateAsync(payload)
+          }}
+          contentUrlFor={(documentId) =>
+            s.personnelDocumentContentUrl(s.selectedPerson!.personId, documentId)
+          }
         />
       ) : null}
 
