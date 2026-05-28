@@ -1,7 +1,12 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
-import { exportAuditPackageJson, exportAuditPackageZip, getAuditPackageManifest } from '../api/client'
+import {
+  exportAuditPackageJson,
+  exportAuditPackageZip,
+  getAuditPackageManifest,
+  getAuditPackageTimeline,
+} from '../api/client'
 import type { AuditPackageExportResponse } from '../api/types'
 
 interface AuditPackageExportPanelProps {
@@ -17,6 +22,17 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
   const manifestQuery = useQuery({
     queryKey: ['staffarr-audit-package-manifest', accessToken],
     queryFn: () => getAuditPackageManifest(accessToken),
+  })
+
+  const timelineQuery = useQuery({
+    queryKey: ['staffarr-audit-package-timeline', accessToken, fromDate, toDate],
+    queryFn: () =>
+      getAuditPackageTimeline(accessToken, {
+        from: fromDate || undefined,
+        to: toDate || undefined,
+        page: 1,
+        pageSize: 15,
+      }),
   })
 
   const zipExportMutation = useMutation({
@@ -66,6 +82,43 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
             </li>
           ))}
         </ul>
+      </div>
+
+      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+        <h3 className="text-sm font-medium text-slate-200">Audit timeline preview</h3>
+        <p className="mt-1 text-xs text-slate-500">
+          Recent tenant audit events matching the selected date range (newest first).
+        </p>
+        {timelineQuery.isLoading ? (
+          <p className="mt-3 text-sm text-slate-500">Loading audit timeline…</p>
+        ) : timelineQuery.isError ? (
+          <p className="mt-3 text-sm text-rose-400">Failed to load audit timeline.</p>
+        ) : timelineQuery.data && timelineQuery.data.items.length === 0 ? (
+          <p className="mt-3 text-sm text-slate-500">No audit events in this range.</p>
+        ) : timelineQuery.data ? (
+          <>
+            <ul className="mt-3 divide-y divide-slate-800 text-sm">
+              {timelineQuery.data.items.map((item) => (
+                <li key={item.auditEventId} className="py-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-mono text-sky-300">{item.action}</span>
+                    <span className="text-xs text-slate-500">
+                      {new Date(item.occurredAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    {item.targetType}
+                    {item.targetId ? ` · ${item.targetId}` : ''} · {item.result}
+                    {item.reasonCode ? ` · ${item.reasonCode}` : ''}
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-slate-500">
+              Showing {timelineQuery.data.items.length} of {timelineQuery.data.totalCount} events.
+            </p>
+          </>
+        ) : null}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">

@@ -17,6 +17,51 @@ public sealed class AuditPackageService(
         WriteIndented = true,
     };
 
+    public async Task<PagedResult<StaffArrAuditEventExportItem>> ListAuditTimelineAsync(
+        Guid tenantId,
+        DateTimeOffset? from,
+        DateTimeOffset? to,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateDateRange(from, to);
+        page = page < 1 ? 1 : page;
+        pageSize = pageSize switch
+        {
+            < 1 => 25,
+            > 100 => 100,
+            _ => pageSize,
+        };
+
+        var query = db.AuditEvents.AsNoTracking().Where(x => x.TenantId == tenantId);
+        query = ApplyOccurredAtFilter(query, from, to);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(x => x.OccurredAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => new StaffArrAuditEventExportItem(
+                x.Id,
+                x.ActorUserId,
+                x.Action,
+                x.TargetType,
+                x.TargetId,
+                x.Result,
+                x.ReasonCode,
+                x.CorrelationId,
+                x.OccurredAt))
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<StaffArrAuditEventExportItem>(
+            items,
+            page,
+            pageSize,
+            totalCount,
+            page * pageSize < totalCount);
+    }
+
     public AuditPackageManifestResponse GetManifest() =>
         new(
             PackageVersion: "1",

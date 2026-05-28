@@ -21,6 +21,29 @@ public static class AuditPackageEndpoints
         })
         .WithName("GetStaffArrAuditPackageManifest");
 
+        packages.MapGet("/timeline", async (
+            DateTimeOffset? from,
+            DateTimeOffset? to,
+            int? page,
+            int? pageSize,
+            StaffArrAuthorizationService authorization,
+            AuditPackageService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAuditPackageRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var result = await service.ListAuditTimelineAsync(
+                tenantId,
+                from,
+                to,
+                page ?? 1,
+                pageSize ?? 25,
+                cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("GetStaffArrAuditPackageTimeline");
+
         packages.MapGet("/export", async (
             string? format,
             DateTimeOffset? from,

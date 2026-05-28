@@ -610,6 +610,18 @@ export interface AuditPackageCountsResponse {
   trainingBlockers: number
 }
 
+export interface StaffArrAuditEventExportItem {
+  auditEventId: string
+  actorUserId: string | null
+  action: string
+  targetType: string
+  targetId: string | null
+  result: string
+  reasonCode: string | null
+  correlationId: string
+  occurredAt: string
+}
+
 export interface AuditPackageExportResponse {
   packageId: string
   tenantId: string

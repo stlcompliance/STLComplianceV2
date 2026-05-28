@@ -11,6 +11,7 @@ using StaffArr.Api.Contracts;
 using StaffArr.Api.Data;
 using StaffArr.Api.Entities;
 using StaffArr.Api.Services;
+using STLCompliance.Shared.Contracts;
 
 namespace STLCompliance.StaffArr.Auth.Tests;
 
@@ -136,6 +137,40 @@ public class StaffArrAuditPackageTests : IAsyncLifetime
                 $"/api/audit-packages/export?format=json&from={Uri.EscapeDataString(from.ToString("O"))}&to={Uri.EscapeDataString(to.ToString("O"))}",
                 adminToken));
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Audit_package_timeline_returns_paged_audit_events()
+    {
+        var supervisorToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
+        await SeedAuditEventsWithDatesAsync();
+
+        var response = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/audit-packages/timeline?page=1&pageSize=10", supervisorToken));
+        response.EnsureSuccessStatusCode();
+        var timeline = (await response.Content.ReadFromJsonAsync<PagedResult<StaffArrAuditEventExportItem>>())!;
+        Assert.Equal(2, timeline.TotalCount);
+        Assert.Equal(2, timeline.Items.Count);
+        Assert.Equal("org_unit.update", timeline.Items[0].Action);
+    }
+
+    [Fact]
+    public async Task Audit_package_timeline_date_filter_limits_results()
+    {
+        var supervisorToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "hr_admin");
+        await SeedAuditEventsWithDatesAsync();
+
+        var from = new DateTimeOffset(2026, 1, 10, 0, 0, 0, TimeSpan.Zero);
+        var to = new DateTimeOffset(2026, 1, 20, 23, 59, 59, TimeSpan.Zero);
+        var response = await _staffarrClient.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/audit-packages/timeline?from={Uri.EscapeDataString(from.ToString("O"))}&to={Uri.EscapeDataString(to.ToString("O"))}",
+                supervisorToken));
+        response.EnsureSuccessStatusCode();
+        var timeline = (await response.Content.ReadFromJsonAsync<PagedResult<StaffArrAuditEventExportItem>>())!;
+        Assert.Equal(1, timeline.TotalCount);
+        Assert.Equal("org_unit.create", timeline.Items[0].Action);
     }
 
     [Fact]

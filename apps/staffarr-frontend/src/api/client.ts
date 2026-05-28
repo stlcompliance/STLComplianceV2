@@ -39,6 +39,8 @@ import type {
   PersonTimelineEntryResponse,
   AuditPackageManifestResponse,
   AuditPackageExportResponse,
+  StaffArrAuditEventExportItem,
+  PagedResult,
   UpdateStaffPersonRequest,
   UpdatePersonEmploymentStatusRequest,
   BulkPersonImportRequest,
@@ -679,7 +681,13 @@ export async function routePersonnelIncidentToTrainarr(
   )
 }
 
-function buildAuditPackageQuery(options?: { from?: string; to?: string; format?: string }): string {
+function buildAuditPackageQuery(options?: {
+  from?: string
+  to?: string
+  format?: string
+  page?: number
+  pageSize?: number
+}): string {
   const params = new URLSearchParams()
   if (options?.from) {
     params.set('from', options.from)
@@ -690,8 +698,30 @@ function buildAuditPackageQuery(options?: { from?: string; to?: string; format?:
   if (options?.format) {
     params.set('format', options.format)
   }
+  if (options?.page != null) {
+    params.set('page', String(options.page))
+  }
+  if (options?.pageSize != null) {
+    params.set('pageSize', String(options.pageSize))
+  }
   const query = params.toString()
   return query ? `?${query}` : ''
+}
+
+export async function getAuditPackageTimeline(
+  accessToken: string,
+  options?: { from?: string; to?: string; page?: number; pageSize?: number },
+): Promise<PagedResult<StaffArrAuditEventExportItem>> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/timeline${buildAuditPackageQuery(options)}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<PagedResult<StaffArrAuditEventExportItem>>(
+    response,
+    'Failed to load audit timeline',
+  )
 }
 
 export async function getAuditPackageManifest(
