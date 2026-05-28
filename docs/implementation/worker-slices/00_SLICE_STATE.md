@@ -250,7 +250,7 @@
 
 | 139 | STLComplianceSite pricing narrative (`/pricing` licensing page, no checkout, nav/footer/resources links, SEO + sitemap, vitest, docs) | M3 (partial) | Complete | `eafc0f6` |
 
-| 140 | M13 operations deep-link E2E (MaintainArr/RoutArr/SupplyArr SPA workspace routes, field inbox `deepLinkUrl`, companion Playwright spec, e2eApi fixtures, catalog, docker/render frontend base URLs, docs) | M13 (partial) | Complete | `pending` |
+| 140 | M13 operations deep-link E2E (MaintainArr/RoutArr/SupplyArr SPA workspace routes, field inbox `deepLinkUrl`, companion Playwright spec, e2eApi fixtures, catalog, docker/render frontend base URLs, docs) | M13 (partial) | Complete | `45c6b22` |
 
 ## Next slice (Worker 141)
 
