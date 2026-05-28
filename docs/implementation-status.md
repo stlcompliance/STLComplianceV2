@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 125 | MaintainArr notification settings foundations | Complete | `pending` |
+| 125 | MaintainArr notification settings foundations | Complete | `20f4ed2` |
 
 ## Program summary
 
