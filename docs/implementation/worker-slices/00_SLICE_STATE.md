@@ -234,6 +234,8 @@
 
 | 131 | Companion operational notification hooks (`nexarr_companion_notification_*`, companion notification-settings APIs, internal process-batch, shared-worker job, handoff + field-inbox hooks, `companion-frontend` admin panel, tests, docs) | M12 (partial) | Complete | `fc16d20` |
 
-## Next slice (Worker 132)
+| 132 | MaintainArr async audit package generation (`maintainarr_audit_package_generation_jobs`, sync manifest/export + POST/GET job APIs + download, internal process-batch, shared-worker job, `AuditPackageExportPanel` background ZIP + status, tests, docs) | M6/M12 (partial) | Complete | `pending` |
 
-Recommended: **MaintainArr async audit package generation** (M6/M12) or **TrainArr field-inbox deep links** per backlog.
+## Next slice (Worker 133)
+
+Recommended: **TrainArr field-inbox deep links** (M6/M13) per backlog.

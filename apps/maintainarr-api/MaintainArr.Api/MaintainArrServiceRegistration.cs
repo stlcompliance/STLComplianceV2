@@ -51,6 +51,8 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<MaintenanceNotificationSettingsService>();
         builder.Services.AddScoped<MaintenanceNotificationEnqueueService>();
         builder.Services.AddScoped<MaintenanceNotificationDispatchService>();
+        builder.Services.AddScoped<AuditPackageService>();
+        builder.Services.AddScoped<AuditPackageGenerationService>();
         builder.Services.AddHttpClient(MaintenanceNotificationDispatchService.WebhookHttpClientName, client =>
         {
             client.Timeout = TimeSpan.FromSeconds(30);

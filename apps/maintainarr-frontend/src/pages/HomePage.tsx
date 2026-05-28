@@ -60,10 +60,12 @@ import {
   canCreateWorkOrders,
   canManageAssets,
   canManageDefectStatus,
+  canExportAuditPackage,
   canManageNotificationSettings,
   canViewAllInspectionRuns,
   loadSession,
 } from '../auth/sessionStorage'
+import { AuditPackageExportPanel } from '../components/AuditPackageExportPanel'
 import { NotificationSettingsPanel } from '../components/NotificationSettingsPanel'
 import { AssetRegistryPanel } from '../components/AssetRegistryPanel'
 import { DefectsPanel } from '../components/DefectsPanel'
@@ -328,6 +330,9 @@ export function HomePage() {
     : false
   const canManageNotifications = meQuery.data
     ? canManageNotificationSettings(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
+    : false
+  const canExportAudit = meQuery.data
+    ? canExportAuditPackage(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
     : false
 
   const viewAllRuns = meQuery.data
@@ -1214,6 +1219,10 @@ export function HomePage() {
           <NotificationSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
         </div>
       )}
+
+      <div className="mt-8">
+        <AuditPackageExportPanel accessToken={accessToken} canExport={canExportAudit} />
+      </div>
 
       <div className="mt-8">
         <MaintenanceHistoryPanel

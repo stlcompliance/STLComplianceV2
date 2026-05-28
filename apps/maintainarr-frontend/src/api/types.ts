@@ -718,3 +718,43 @@ export interface MaintenanceNotificationDispatchItem {
 export interface MaintenanceNotificationDispatchesResponse {
   items: MaintenanceNotificationDispatchItem[]
 }
+
+export interface AuditPackageSectionDescriptor {
+  key: string
+  fileName: string
+  label: string
+  description: string
+}
+
+export interface AuditPackageManifestResponse {
+  packageVersion: string
+  sections: AuditPackageSectionDescriptor[]
+}
+
+export interface AuditPackageCountsResponse {
+  auditEvents: number
+  assets: number
+  workOrders: number
+  defects: number
+  inspectionRuns: number
+  pmSchedules: number
+}
+
+export interface AuditPackageGenerationJobResponse {
+  jobId: string
+  status: string
+  format: string
+  packageId: string | null
+  requestedAt: string
+  startedAt: string | null
+  completedAt: string | null
+  downloadReady: boolean
+  errorMessage: string | null
+}
+
+export interface AuditPackageExportResponse {
+  packageId: string
+  tenantId: string
+  generatedAt: string
+  counts: AuditPackageCountsResponse
+}

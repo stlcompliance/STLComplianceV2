@@ -26,6 +26,9 @@ import type {
   MaintainArrMeResponse,
   AssetReadinessResponse,
   AssetReadinessSummaryResponse,
+  AuditPackageExportResponse,
+  AuditPackageGenerationJobResponse,
+  AuditPackageManifestResponse,
   MaintenanceNotificationDispatchesResponse,
   MaintenanceNotificationSettingsResponse,
   MaintenanceHistoryEntryResponse,
@@ -737,6 +740,127 @@ export async function upsertMaintenanceNotificationSettings(
     response,
     'Failed to save notification settings',
   )
+}
+
+function buildAuditPackageQuery(options?: { from?: string; to?: string; format?: string }): string {
+  const params = new URLSearchParams()
+  if (options?.from) {
+    params.set('from', options.from)
+  }
+  if (options?.to) {
+    params.set('to', options.to)
+  }
+  if (options?.format) {
+    params.set('format', options.format)
+  }
+  const query = params.toString()
+  return query ? `?${query}` : ''
+}
+
+function auditPackageDateBody(from?: string, to?: string): { from?: string; to?: string } {
+  const body: { from?: string; to?: string } = {}
+  if (from) {
+    body.from = `${from}T00:00:00.000Z`
+  }
+  if (to) {
+    body.to = `${to}T23:59:59.999Z`
+  }
+  return body
+}
+
+export async function getAuditPackageManifest(
+  accessToken: string,
+): Promise<AuditPackageManifestResponse> {
+  const response = await fetch(`${apiBase}/api/audit-packages/manifest`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AuditPackageManifestResponse>(response, 'Failed to load audit package manifest')
+}
+
+export async function exportAuditPackageZip(
+  accessToken: string,
+  options?: { from?: string; to?: string },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/export${buildAuditPackageQuery(options)}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new MaintainArrApiError(
+      body || `Audit package export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function exportAuditPackageJson(
+  accessToken: string,
+  options?: { from?: string; to?: string },
+): Promise<AuditPackageExportResponse> {
+  const response = await fetch(
+    `${apiBase}/api/audit-packages/export${buildAuditPackageQuery({ ...options, format: 'json' })}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<AuditPackageExportResponse>(response, 'Failed to export audit package JSON')
+}
+
+export async function createAuditPackageGenerationJob(
+  accessToken: string,
+  options: { format: 'zip' | 'json'; from?: string; to?: string },
+): Promise<AuditPackageGenerationJobResponse> {
+  const response = await fetch(`${apiBase}/api/audit-packages/jobs`, {
+    method: 'POST',
+    headers: {
+      ...authHeaders(accessToken),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      format: options.format,
+      ...auditPackageDateBody(options.from, options.to),
+    }),
+  })
+  return parseJsonResponse<AuditPackageGenerationJobResponse>(
+    response,
+    'Failed to queue audit package generation job',
+  )
+}
+
+export async function getAuditPackageGenerationJob(
+  accessToken: string,
+  jobId: string,
+): Promise<AuditPackageGenerationJobResponse> {
+  const response = await fetch(`${apiBase}/api/audit-packages/jobs/${jobId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AuditPackageGenerationJobResponse>(
+    response,
+    'Failed to load audit package generation job',
+  )
+}
+
+export async function downloadAuditPackageGenerationJob(
+  accessToken: string,
+  jobId: string,
+): Promise<Blob> {
+  const response = await fetch(`${apiBase}/api/audit-packages/jobs/${jobId}/download`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new MaintainArrApiError(
+      body || `Audit package download failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
 }
 
 export async function getMaintenanceNotificationDispatches(

@@ -57,6 +57,13 @@ export function canManageNotificationSettings(
   return ['tenant_admin', 'maintainarr_admin'].includes(tenantRoleKey.toLowerCase())
 }
 
+export function canExportAuditPackage(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return ['tenant_admin', 'maintainarr_admin', 'maintainarr_manager'].includes(
+    tenantRoleKey.toLowerCase(),
+  )
+}
+
 export function canManageAssets(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true
   return ['tenant_admin', 'maintainarr_admin', 'maintainarr_manager'].includes(tenantRoleKey.toLowerCase())

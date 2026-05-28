@@ -16,8 +16,8 @@
 - Playwright: suite login + **six product handoff** smokes with per-frontend skip semantics
 - DR: nightly live restore drill validates **all seven** product PostgreSQL databases
 
-## Next recommended slice (Worker 132)
+## Next recommended slice (Worker 133)
 
-**MaintainArr async audit package generation** (M6/M12) or **TrainArr field-inbox deep links** per backlog.
+**TrainArr field-inbox deep links** (M6/M13) per backlog. Worker 132 (MaintainArr async audit package generation) is complete on `main`.
 
 See `FINAL_IMPLEMENTATION_REPORT.md` for ship-gate checklist.

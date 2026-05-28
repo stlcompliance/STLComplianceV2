@@ -30,5 +30,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrInternalPmDueScanEndpoints();
         app.MapMaintainArrNotificationSettingsEndpoints();
         app.MapMaintainArrInternalMaintenanceNotificationEndpoints();
+        app.MapMaintainArrAuditPackageEndpoints();
+        app.MapMaintainArrInternalAuditPackageGenerationEndpoints();
         await Task.CompletedTask;
     });

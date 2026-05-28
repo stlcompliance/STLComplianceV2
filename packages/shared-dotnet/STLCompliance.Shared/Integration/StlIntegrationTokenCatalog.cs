@@ -107,6 +107,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["nexarr"],
             "nexarr.companion.notifications.dispatch"),
+        Profile(
+            "worker-maintainarr-audit-packages",
+            "shared-worker",
+            "MaintainArrAuditPackageGeneration__ServiceToken",
+            "shared-worker",
+            ["maintainarr"],
+            "maintainarr.audit_packages.generate"),
     ];
 
     public static IReadOnlyList<StlIntegrationTokenProfile> ForConsumer(string consumerService) =>

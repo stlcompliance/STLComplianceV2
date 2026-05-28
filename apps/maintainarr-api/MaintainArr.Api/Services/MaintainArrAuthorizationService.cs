@@ -282,6 +282,31 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireAssetReadinessRead(ClaimsPrincipal principal) => RequireAssetsRead(principal);
 
+    public void RequireAuditPackageRead(ClaimsPrincipal principal) => RequireAssetsRead(principal);
+
+    public void RequireAuditPackageExport(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "maintainarr_admin",
+                "maintainarr_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Audit package export requires MaintainArr administrator access.",
+            403);
+    }
+
     public void RequireNotificationSettingsManage(ClaimsPrincipal principal)
     {
         RequireMaintainArrEntitlement(principal);
