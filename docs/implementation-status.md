@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 122 | k6 optional STL_LOAD_JOURNEY_TRIP_ID from RoutArr seed | Complete | `pending` |
+| 122 | k6 optional STL_LOAD_JOURNEY_TRIP_ID from RoutArr seed | Complete | `ebf326f` |
 
 ## Program summary
 
