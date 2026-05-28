@@ -238,6 +238,8 @@
 
 | 133 | TrainArr field-inbox deep links (`deepLinkPath` + `deepLinkUrl` on field inbox items, `/assignments/{id}` + `/evidence` TrainArr routes, companion inbox prefers API URL, tests, docs) | M6/M13 (partial) | Complete | `68984fa` |
 
-## Next slice (Worker 134)
+| 134 | M13 Playwright deep-link E2E (`companion-field-inbox-trainarr-deep-link`, `product-trainarr-assignment-deep-link`, `StlE2ePlaywrightSpecCatalog`, companion preview 5181, `e2eApi` journey seed, `Category=E2e` catalog tests, docs) | M13 (partial) | Complete | `pending` |
 
-Recommended: **M13 Playwright E2E harness** (companion + product deep-link smoke) per backlog after field inbox links.
+## Next slice (Worker 135)
+
+Per `feature_to_milestone_matrix.csv` / ship-gate: **STLComplianceSite marketing** (M3/M12) or **NexArr audit export** (M12) — pick next incomplete required row.

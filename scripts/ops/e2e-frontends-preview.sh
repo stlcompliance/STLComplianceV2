@@ -30,6 +30,20 @@ start_preview maintainarr-frontend 5178 VITE_MAINTAINARR_PROXY_TARGET http://127
 start_preview supplyarr-frontend 5179 VITE_SUPPLYARR_PROXY_TARGET http://127.0.0.1:5106
 start_preview routarr-frontend 5180 VITE_ROUTARR_PROXY_TARGET http://127.0.0.1:5105
 
+echo "Building companion-frontend..."
+(
+  cd "$ROOT/apps/companion-frontend"
+  export VITE_NEXARR_PROXY_TARGET=http://127.0.0.1:5101
+  export VITE_TRAINARR_FRONTEND_BASE="http://${HOST}:5176"
+  export VITE_STAFFARR_FRONTEND_BASE="http://${HOST}:5175"
+  export VITE_MAINTAINARR_FRONTEND_BASE="http://${HOST}:5178"
+  export VITE_ROUTARR_FRONTEND_BASE="http://${HOST}:5180"
+  export VITE_SUPPLYARR_FRONTEND_BASE="http://${HOST}:5179"
+  export VITE_COMPLIANCECORE_FRONTEND_BASE="http://${HOST}:5177"
+  npm ci --silent && npm run build --silent
+  nohup npm run preview -- --host "$HOST" --port 5181 >"$LOG_DIR/companion-frontend.log" 2>&1 &
+)
+
 echo "Waiting for suite frontend on http://${HOST}:5174 ..."
 for i in $(seq 1 30); do
   if curl -sf "http://${HOST}:5174/" >/dev/null; then

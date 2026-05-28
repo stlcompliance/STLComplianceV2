@@ -12,7 +12,20 @@ $frontends = @(
     @{ App = "compliancecore-frontend"; Port = 5177; Env = @{ VITE_COMPLIANCECORE_PROXY_TARGET = "http://127.0.0.1:5107" } },
     @{ App = "maintainarr-frontend"; Port = 5178; Env = @{ VITE_MAINTAINARR_PROXY_TARGET = "http://127.0.0.1:5104" } },
     @{ App = "supplyarr-frontend"; Port = 5179; Env = @{ VITE_SUPPLYARR_PROXY_TARGET = "http://127.0.0.1:5106" } },
-    @{ App = "routarr-frontend"; Port = 5180; Env = @{ VITE_ROUTARR_PROXY_TARGET = "http://127.0.0.1:5105" } }
+    @{ App = "routarr-frontend"; Port = 5180; Env = @{ VITE_ROUTARR_PROXY_TARGET = "http://127.0.0.1:5105" } },
+    @{
+        App = "companion-frontend"
+        Port = 5181
+        Env = @{
+            VITE_NEXARR_PROXY_TARGET = "http://127.0.0.1:5101"
+            VITE_TRAINARR_FRONTEND_BASE = "http://127.0.0.1:5176"
+            VITE_STAFFARR_FRONTEND_BASE = "http://127.0.0.1:5175"
+            VITE_MAINTAINARR_FRONTEND_BASE = "http://127.0.0.1:5178"
+            VITE_ROUTARR_FRONTEND_BASE = "http://127.0.0.1:5180"
+            VITE_SUPPLYARR_FRONTEND_BASE = "http://127.0.0.1:5179"
+            VITE_COMPLIANCECORE_FRONTEND_BASE = "http://127.0.0.1:5177"
+        }
+    }
 )
 
 $logDir = Join-Path $repoRoot ".e2e-preview-logs"

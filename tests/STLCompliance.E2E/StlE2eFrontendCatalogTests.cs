@@ -44,7 +44,15 @@ public sealed class StlE2eFrontendCatalogTests
     public void Playwright_catalog_includes_tenant_chrome_handoff_spec()
     {
         Assert.Equal(
-            "product-handoff-tenant-chrome.spec.ts",
+            StlE2ePlaywrightSpecCatalog.ProductHandoffTenantChromeSpec,
             StlE2eFrontendCatalog.PlaywrightTenantChromeHandoffSpec);
+    }
+
+    [Fact]
+    public void All_frontends_include_companion_field_inbox_app()
+    {
+        Assert.Contains(
+            StlE2eFrontendCatalog.All,
+            endpoint => endpoint.ProductKey == "companion" && endpoint.Port == 5181);
     }
 }

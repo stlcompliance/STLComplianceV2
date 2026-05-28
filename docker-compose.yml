@@ -64,6 +64,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       DATABASE_URL: Host=postgres;Port=5432;Database=trainarr;Username=stl;Password=stl_dev_password
+      TrainArr__FrontendBaseUrl: http://127.0.0.1:5176
     depends_on:
       postgres:
         condition: service_healthy

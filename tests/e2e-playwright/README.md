@@ -8,7 +8,7 @@ Optional smoke tests for **suite-frontend**: NexArr login → unified dashboard 
 # APIs
 ./scripts/ops/e2e-stack-up.ps1
 
-# All seven frontends on 5174–5180 (background preview processes)
+# Suite + six product frontends (5174–5180) and Companion (5181)
 ./scripts/ops/e2e-frontends-preview.ps1
 
 cd tests/e2e-playwright
@@ -42,6 +42,10 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 |-----------|----------|
 | `suite-login-handoff-smoke.spec.ts` | Login, StaffArr launch surface, StaffArr handoff redirect |
 | `product-handoff-smoke.spec.ts` | Handoff redirect for all six product frontends |
+| `companion-field-inbox-trainarr-deep-link.spec.ts` | Companion field inbox → TrainArr assignment deep link (W133) |
+| `product-trainarr-assignment-deep-link.spec.ts` | TrainArr `/assignments/{id}/evidence` route smoke |
+
+Catalog: `StlE2ePlaywrightSpecCatalog` + `StlE2eFrontendCatalog.CompanionFrontend` in shared .NET (`Category=E2e` tests).
 
 ## Skip behavior
 
@@ -63,5 +67,7 @@ Compose files: `docker-compose.yml` + `docker-compose.e2e.yml` with profile `e2e
 | `E2E_MAINTAINARR_URL` | `http://localhost:5178` |
 | `E2E_SUPPLYARR_URL` | `http://localhost:5179` |
 | `E2E_ROUTARR_URL` | `http://localhost:5180` |
+| `E2E_COMPANION_URL` | `http://localhost:5181` |
+| `E2E_TRAINARR_API_URL` | `http://localhost:5103` |
 | `E2E_DEMO_EMAIL` | `admin@demo.stl` |
 | `E2E_DEMO_PASSWORD` | `ChangeMe!Demo2026` |

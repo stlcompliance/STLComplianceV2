@@ -4,6 +4,12 @@ export type HandoffProductFrontend = {
   baseUrl: string
 }
 
+export const companionFrontend: HandoffProductFrontend = {
+  productKey: 'companion',
+  port: 5181,
+  baseUrl: process.env.E2E_COMPANION_URL ?? 'http://localhost:5181',
+}
+
 export const handoffProductFrontends: readonly HandoffProductFrontend[] = [
   { productKey: 'staffarr', port: 5175, baseUrl: process.env.E2E_STAFFARR_URL ?? 'http://localhost:5175' },
   { productKey: 'trainarr', port: 5176, baseUrl: process.env.E2E_TRAINARR_URL ?? 'http://localhost:5176' },
