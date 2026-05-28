@@ -43,6 +43,14 @@ export const RESOURCE_LINKS: ResourceLink[] = [
     category: 'ownership',
   },
   {
+    id: 'compare-approaches',
+    title: 'Compare spreadsheets, point tools, and the suite',
+    summary:
+      'Honest architecture comparison — when spreadsheets or single-domain tools fit, and how bounded Arr products differ.',
+    href: '/compare',
+    category: 'suite',
+  },
+  {
     id: 'pricing-licensing',
     title: 'Pricing and licensing narrative',
     summary:

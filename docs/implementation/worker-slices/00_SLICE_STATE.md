@@ -252,6 +252,8 @@
 
 | 140 | M13 operations deep-link E2E (MaintainArr/RoutArr/SupplyArr SPA workspace routes, field inbox `deepLinkUrl`, companion Playwright spec, e2eApi fixtures, catalog, docker/render frontend base URLs, docs) | M13 (partial) | Complete | `45c6b22` |
 
-## Next slice (Worker 141)
+| 141 | STLComplianceSite comparison content (`/compare` vs spreadsheets/point tools, nav/footer/resources, SEO + sitemap, vitest, docs) | M3/M12 (partial) | Complete | `pending` |
 
-Per milestone matrix: **STLComplianceSite comparison content** or **implementation maturity status** page, or **k6/load harness** journey extensions.
+## Next slice (Worker 142)
+
+Per milestone matrix: **implementation maturity status** page (public honesty surface) or **k6/load harness** journey extensions.

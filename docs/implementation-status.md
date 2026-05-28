@@ -1,12 +1,12 @@
 # Implementation status (Arr ecosystem)
 
-**Last updated:** Worker 140 (2026-05-28)
+**Last updated:** Worker 141 (2026-05-28)
 
 ## Latest slice
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 140 | M13 operations product deep-link E2E | Complete | `45c6b22` |
+| 141 | STLComplianceSite comparison content | Complete | `pending` |
 
 ## Program summary
 
@@ -16,8 +16,8 @@
 - Playwright: suite login + **six product handoff** smokes with per-frontend skip semantics
 - DR: nightly live restore drill validates **all seven** product PostgreSQL databases
 
-## Next recommended slice (Worker 141)
+## Next recommended slice (Worker 142)
 
-Per milestone matrix: **STLComplianceSite comparison content** or **implementation maturity status** page, or **k6 journey** extensions. Worker 140 (operations deep-link E2E) is complete on `main`.
+Per milestone matrix: **implementation maturity status** page (public honesty surface) or **k6/load harness** journey extensions. Worker 141 (comparison content) is complete on `main`.
 
 See `FINAL_IMPLEMENTATION_REPORT.md` for ship-gate checklist.

@@ -28,6 +28,12 @@ export function HomePage() {
           Request a demo
         </Link>
         <Link
+          to="/compare"
+          className="rounded-lg border border-slate-500 px-5 py-2.5 text-sm font-semibold text-slate-100 hover:border-teal-400"
+        >
+          Compare approaches
+        </Link>
+        <Link
           to="/pricing"
           className="rounded-lg border border-slate-500 px-5 py-2.5 text-sm font-semibold text-slate-100 hover:border-teal-400"
         >

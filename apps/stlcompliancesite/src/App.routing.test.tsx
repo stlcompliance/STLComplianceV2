@@ -19,6 +19,21 @@ describe('App routing', () => {
     expect(screen.getByText(/Owns/i)).toBeInTheDocument()
   })
 
+  it('renders compare page with honest disclaimer', async () => {
+    render(
+      <MemoryRouter initialEntries={['/compare']}>
+        <App />
+      </MemoryRouter>,
+    )
+    expect(
+      await screen.findByRole('heading', {
+        name: /Spreadsheets, point tools, or a bounded product suite/i,
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('compare-disclaimer')).toBeInTheDocument()
+    expect(screen.getByTestId('compare-dimensions-table')).toBeInTheDocument()
+  })
+
   it('renders pricing page without checkout', async () => {
     render(
       <MemoryRouter initialEntries={['/pricing']}>

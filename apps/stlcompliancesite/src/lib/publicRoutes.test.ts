@@ -15,6 +15,7 @@ describe('publicRoutes', () => {
     expect(paths).toContain('/products')
 
     expect(paths).toContain('/resources')
+    expect(paths).toContain('/compare')
     expect(paths).toContain('/pricing')
 
     for (const key of MARKETING_PRODUCT_KEYS) {

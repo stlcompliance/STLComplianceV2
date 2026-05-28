@@ -19,6 +19,7 @@ export function buildStaticPublicPaths(): string[] {
     '/',
     '/products',
     '/resources',
+    '/compare',
     '/pricing',
     '/security',
     '/data-ownership',
