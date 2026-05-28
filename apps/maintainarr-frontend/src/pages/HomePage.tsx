@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
+import { PageHeader } from '@stl/shared-ui'
 import {
   activateInspectionTemplate,
   completeInspectionRun,
@@ -47,7 +48,6 @@ import {
   getAssetReadinessFleet,
   getMaintenanceHistory,
   getMe,
-  MaintainArrApiError,
   recordMeterReading,
   replaceInspectionTemplateAssetTypes,
   startInspectionRun,
@@ -61,7 +61,6 @@ import {
   canManageAssets,
   canManageDefectStatus,
   canViewAllInspectionRuns,
-  clearSession,
   loadSession,
 } from '../auth/sessionStorage'
 import { AssetRegistryPanel } from '../components/AssetRegistryPanel'
@@ -92,6 +91,7 @@ export function HomePage() {
   }
 
   const session = loadSession()
+  const accessToken = session?.accessToken ?? ''
   const queryClient = useQueryClient()
   const [classKey, setClassKey] = useState('')
   const [className, setClassName] = useState('')
@@ -168,99 +168,89 @@ export function HomePage() {
   const [historyAssetId, setHistoryAssetId] = useState('')
   const [apiError, setApiError] = useState<string | null>(null)
 
-  if (!session) {
-    return (
-      <main className="flex min-h-screen items-center justify-center p-6">
-        <div className="max-w-md rounded-xl border border-slate-700 bg-slate-900/80 p-8 text-center">
-          <h1 className="text-lg font-semibold">MaintainArr</h1>
-          <p className="mt-3 text-sm text-slate-300">Launch MaintainArr from the suite to open the asset registry.</p>
-        </div>
-      </main>
-    )
-  }
-
   const meQuery = useQuery({
-    queryKey: ['maintainarr-me'],
-    queryFn: () => getMe(session.accessToken),
+    queryKey: ['maintainarr-me', session?.accessToken],
+    queryFn: () => getMe(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
     retry: false,
   })
 
   const classesQuery = useQuery({
     queryKey: ['maintainarr-asset-classes'],
-    queryFn: () => getAssetClasses(session.accessToken),
+    queryFn: () => getAssetClasses(accessToken),
     enabled: meQuery.isSuccess,
   })
 
   const typesQuery = useQuery({
     queryKey: ['maintainarr-asset-types'],
-    queryFn: () => getAssetTypes(session.accessToken),
+    queryFn: () => getAssetTypes(accessToken),
     enabled: meQuery.isSuccess,
   })
 
   const assetsQuery = useQuery({
     queryKey: ['maintainarr-assets'],
-    queryFn: () => getAssets(session.accessToken),
+    queryFn: () => getAssets(accessToken),
     enabled: meQuery.isSuccess,
   })
 
   const assetReadinessFleetQuery = useQuery({
     queryKey: ['maintainarr-asset-readiness-fleet'],
-    queryFn: () => getAssetReadinessFleet(session.accessToken),
+    queryFn: () => getAssetReadinessFleet(accessToken),
     enabled: meQuery.isSuccess,
   })
 
   const duePmQuery = useQuery({
     queryKey: ['maintainarr-pm-due'],
-    queryFn: () => getDuePmSchedules(session.accessToken),
+    queryFn: () => getDuePmSchedules(accessToken),
     enabled: meQuery.isSuccess,
   })
 
   const pmProgramsQuery = useQuery({
     queryKey: ['maintainarr-pm-programs'],
-    queryFn: () => getPmPrograms(session.accessToken),
+    queryFn: () => getPmPrograms(accessToken),
     enabled: meQuery.isSuccess,
   })
 
   const pmProgramDetailQuery = useQuery({
     queryKey: ['maintainarr-pm-program', selectedProgramId],
-    queryFn: () => getPmProgram(session.accessToken, selectedProgramId),
+    queryFn: () => getPmProgram(accessToken, selectedProgramId),
     enabled: meQuery.isSuccess && Boolean(selectedProgramId),
   })
 
   const pmSchedulesQuery = useQuery({
     queryKey: ['maintainarr-pm-schedules'],
-    queryFn: () => getPmSchedules(session.accessToken),
+    queryFn: () => getPmSchedules(accessToken),
     enabled: meQuery.isSuccess,
   })
 
   const templatesQuery = useQuery({
     queryKey: ['maintainarr-inspection-templates'],
-    queryFn: () => getInspectionTemplates(session.accessToken),
+    queryFn: () => getInspectionTemplates(accessToken),
     enabled: meQuery.isSuccess,
   })
 
   const templateDetailQuery = useQuery({
     queryKey: ['maintainarr-inspection-template', selectedTemplateId],
-    queryFn: () => getInspectionTemplate(session.accessToken, selectedTemplateId),
+    queryFn: () => getInspectionTemplate(accessToken, selectedTemplateId),
     enabled: meQuery.isSuccess && Boolean(selectedTemplateId),
   })
 
   const inspectionRunsQuery = useQuery({
     queryKey: ['maintainarr-inspection-runs'],
-    queryFn: () => getInspectionRuns(session.accessToken),
+    queryFn: () => getInspectionRuns(accessToken),
     enabled: meQuery.isSuccess,
   })
 
   const inspectionRunQuery = useQuery({
     queryKey: ['maintainarr-inspection-run', selectedRunId],
-    queryFn: () => getInspectionRun(session.accessToken, selectedRunId),
+    queryFn: () => getInspectionRun(accessToken, selectedRunId),
     enabled: meQuery.isSuccess && Boolean(selectedRunId),
   })
 
   const defectsQuery = useQuery({
     queryKey: ['maintainarr-defects', defectStatusFilter],
     queryFn: () =>
-      getDefects(session.accessToken, {
+      getDefects(accessToken, {
         status: defectStatusFilter || undefined,
       }),
     enabled: meQuery.isSuccess,
@@ -269,7 +259,7 @@ export function HomePage() {
   const workOrdersQuery = useQuery({
     queryKey: ['maintainarr-work-orders', workOrderStatusFilter],
     queryFn: () =>
-      getWorkOrders(session.accessToken, {
+      getWorkOrders(accessToken, {
         status: workOrderStatusFilter || undefined,
       }),
     enabled: meQuery.isSuccess,
@@ -277,55 +267,55 @@ export function HomePage() {
 
   const maintenanceHistoryQuery = useQuery({
     queryKey: ['maintainarr-maintenance-history', historyAssetId],
-    queryFn: () => getMaintenanceHistory(session.accessToken, historyAssetId, 1, 50),
+    queryFn: () => getMaintenanceHistory(accessToken, historyAssetId, 1, 50),
     enabled: meQuery.isSuccess && Boolean(historyAssetId),
   })
 
   const workOrderDetailQuery = useQuery({
     queryKey: ['maintainarr-work-order', selectedWorkOrderId],
-    queryFn: () => getWorkOrder(session.accessToken, selectedWorkOrderId),
+    queryFn: () => getWorkOrder(accessToken, selectedWorkOrderId),
     enabled: meQuery.isSuccess && Boolean(selectedWorkOrderId),
   })
 
   const workOrderTasksQuery = useQuery({
     queryKey: ['maintainarr-work-order-tasks', selectedWorkOrderId],
-    queryFn: () => getWorkOrderTasks(session.accessToken, selectedWorkOrderId),
+    queryFn: () => getWorkOrderTasks(accessToken, selectedWorkOrderId),
     enabled: meQuery.isSuccess && Boolean(selectedWorkOrderId),
   })
 
   const workOrderLaborQuery = useQuery({
     queryKey: ['maintainarr-work-order-labor', selectedWorkOrderId],
-    queryFn: () => getWorkOrderLabor(session.accessToken, selectedWorkOrderId),
+    queryFn: () => getWorkOrderLabor(accessToken, selectedWorkOrderId),
     enabled: meQuery.isSuccess && Boolean(selectedWorkOrderId),
   })
 
   const workOrderEvidenceQuery = useQuery({
     queryKey: ['maintainarr-work-order-evidence', selectedWorkOrderId],
-    queryFn: () => getWorkOrderEvidence(session.accessToken, selectedWorkOrderId),
+    queryFn: () => getWorkOrderEvidence(accessToken, selectedWorkOrderId),
     enabled: meQuery.isSuccess && Boolean(selectedWorkOrderId),
   })
 
   const workOrderPartsDemandQuery = useQuery({
     queryKey: ['maintainarr-work-order-parts-demand', selectedWorkOrderId],
-    queryFn: () => getWorkOrderPartsDemand(session.accessToken, selectedWorkOrderId),
+    queryFn: () => getWorkOrderPartsDemand(accessToken, selectedWorkOrderId),
     enabled: meQuery.isSuccess && Boolean(selectedWorkOrderId),
   })
 
   const assetMetersQuery = useQuery({
     queryKey: ['maintainarr-asset-meters', meterAssetId],
-    queryFn: () => getAssetMeters(session.accessToken, meterAssetId),
+    queryFn: () => getAssetMeters(accessToken, meterAssetId),
     enabled: meQuery.isSuccess && Boolean(meterAssetId),
   })
 
   const meterReadingsQuery = useQuery({
     queryKey: ['maintainarr-meter-readings', selectedMeterId],
-    queryFn: () => getMeterReadings(session.accessToken, selectedMeterId),
+    queryFn: () => getMeterReadings(accessToken, selectedMeterId),
     enabled: meQuery.isSuccess && Boolean(selectedMeterId),
   })
 
   const meterForecastQuery = useQuery({
     queryKey: ['maintainarr-meter-forecast', selectedMeterId],
-    queryFn: () => getMeterPmForecast(session.accessToken, selectedMeterId),
+    queryFn: () => getMeterPmForecast(accessToken, selectedMeterId),
     enabled: meQuery.isSuccess && Boolean(selectedMeterId),
   })
 
@@ -446,7 +436,7 @@ export function HomePage() {
 
   const createClassMutation = useMutation({
     mutationFn: () =>
-      createAssetClass(session.accessToken, {
+      createAssetClass(accessToken, {
         classKey,
         name: className,
         description: classDescription,
@@ -463,7 +453,7 @@ export function HomePage() {
 
   const createTypeMutation = useMutation({
     mutationFn: () =>
-      createAssetType(session.accessToken, {
+      createAssetType(accessToken, {
         assetClassId: selectedClassId,
         typeKey,
         name: typeName,
@@ -481,7 +471,7 @@ export function HomePage() {
 
   const createTemplateMutation = useMutation({
     mutationFn: () =>
-      createInspectionTemplate(session.accessToken, {
+      createInspectionTemplate(accessToken, {
         templateKey,
         name: templateName,
         description: templateDescription,
@@ -500,7 +490,7 @@ export function HomePage() {
 
   const createCategoryMutation = useMutation({
     mutationFn: () =>
-      createInspectionTemplateCategory(session.accessToken, selectedTemplateId, {
+      createInspectionTemplateCategory(accessToken, selectedTemplateId, {
         categoryKey,
         name: categoryName,
         sortOrder: 10,
@@ -516,7 +506,7 @@ export function HomePage() {
 
   const createItemMutation = useMutation({
     mutationFn: () =>
-      createInspectionChecklistItem(session.accessToken, selectedTemplateId, {
+      createInspectionChecklistItem(accessToken, selectedTemplateId, {
         itemKey,
         prompt: itemPrompt,
         itemType,
@@ -535,7 +525,7 @@ export function HomePage() {
 
   const saveAssetTypesMutation = useMutation({
     mutationFn: () =>
-      replaceInspectionTemplateAssetTypes(session.accessToken, selectedTemplateId, selectedAssetTypeIds),
+      replaceInspectionTemplateAssetTypes(accessToken, selectedTemplateId, selectedAssetTypeIds),
     onSuccess: async () => {
       setApiError(null)
       await invalidateTemplates(selectedTemplateId)
@@ -544,7 +534,7 @@ export function HomePage() {
   })
 
   const activateTemplateMutation = useMutation({
-    mutationFn: () => activateInspectionTemplate(session.accessToken, selectedTemplateId),
+    mutationFn: () => activateInspectionTemplate(accessToken, selectedTemplateId),
     onSuccess: async () => {
       setApiError(null)
       await invalidateTemplates(selectedTemplateId)
@@ -554,7 +544,7 @@ export function HomePage() {
 
   const startRunMutation = useMutation({
     mutationFn: () =>
-      startInspectionRun(session.accessToken, {
+      startInspectionRun(accessToken, {
         assetId: runAssetId,
         inspectionTemplateId: runTemplateId,
       }),
@@ -605,7 +595,7 @@ export function HomePage() {
         })
         .filter((answer): answer is NonNullable<typeof answer> => answer !== null)
 
-      return submitInspectionRunAnswers(session.accessToken, run.inspectionRunId, { answers })
+      return submitInspectionRunAnswers(accessToken, run.inspectionRunId, { answers })
     },
     onSuccess: async () => {
       setApiError(null)
@@ -615,7 +605,7 @@ export function HomePage() {
   })
 
   const completeRunMutation = useMutation({
-    mutationFn: () => completeInspectionRun(session.accessToken, selectedRunId),
+    mutationFn: () => completeInspectionRun(accessToken, selectedRunId),
     onSuccess: async () => {
       setAnswerDrafts({})
       setApiError(null)
@@ -627,7 +617,7 @@ export function HomePage() {
 
   const createDefectsFromRunMutation = useMutation({
     mutationFn: () =>
-      createDefectsFromInspectionRun(session.accessToken, selectedRunId, { checklistItemIds: null }),
+      createDefectsFromInspectionRun(accessToken, selectedRunId, { checklistItemIds: null }),
     onSuccess: async () => {
       setApiError(null)
       await invalidateDefects()
@@ -638,7 +628,7 @@ export function HomePage() {
 
   const createMeterMutation = useMutation({
     mutationFn: () =>
-      createAssetMeter(session.accessToken, meterAssetId, {
+      createAssetMeter(accessToken, meterAssetId, {
         meterKey,
         name: meterName,
         description: '',
@@ -658,7 +648,7 @@ export function HomePage() {
 
   const recordMeterReadingMutation = useMutation({
     mutationFn: () =>
-      recordMeterReading(session.accessToken, selectedMeterId, {
+      recordMeterReading(accessToken, selectedMeterId, {
         readingValue: Number(readingValue),
         notes: readingNotes,
         isCorrection: false,
@@ -674,7 +664,7 @@ export function HomePage() {
 
   const createDefectMutation = useMutation({
     mutationFn: () =>
-      createDefect(session.accessToken, {
+      createDefect(accessToken, {
         assetId: defectAssetId,
         title: defectTitle,
         description: defectDescription,
@@ -691,7 +681,7 @@ export function HomePage() {
 
   const updateDefectStatusMutation = useMutation({
     mutationFn: ({ defectId, status }: { defectId: string; status: string }) =>
-      updateDefectStatus(session.accessToken, defectId, { status }),
+      updateDefectStatus(accessToken, defectId, { status }),
     onSuccess: async () => {
       setApiError(null)
       await invalidateDefects()
@@ -701,7 +691,7 @@ export function HomePage() {
 
   const createWorkOrderMutation = useMutation({
     mutationFn: () =>
-      createWorkOrder(session.accessToken, {
+      createWorkOrder(accessToken, {
         assetId: workOrderAssetId,
         title: workOrderTitle,
         description: workOrderDescription,
@@ -722,7 +712,7 @@ export function HomePage() {
   const createWorkOrderFromDefectMutation = useMutation({
     mutationFn: (defectId: string) => {
       setCreatingWorkOrderDefectId(defectId)
-      return createWorkOrderFromDefect(session.accessToken, defectId, {})
+      return createWorkOrderFromDefect(accessToken, defectId, {})
     },
     onSuccess: async (created) => {
       setCreatingWorkOrderDefectId(null)
@@ -738,7 +728,7 @@ export function HomePage() {
 
   const updateWorkOrderStatusMutation = useMutation({
     mutationFn: ({ workOrderId, status }: { workOrderId: string; status: string }) =>
-      updateWorkOrderStatus(session.accessToken, workOrderId, { status }),
+      updateWorkOrderStatus(accessToken, workOrderId, { status }),
     onSuccess: async (_, variables) => {
       setApiError(null)
       await invalidateWorkOrders(variables.workOrderId)
@@ -748,7 +738,7 @@ export function HomePage() {
 
   const addWorkOrderTaskMutation = useMutation({
     mutationFn: () =>
-      createWorkOrderTask(session.accessToken, selectedWorkOrderId, {
+      createWorkOrderTask(accessToken, selectedWorkOrderId, {
         title: woTaskTitle,
         description: null,
         sortOrder: null,
@@ -763,8 +753,8 @@ export function HomePage() {
 
   const logWorkOrderLaborMutation = useMutation({
     mutationFn: () =>
-      logWorkOrderLabor(session.accessToken, selectedWorkOrderId, {
-        personId: woLaborPersonId.trim() || session.personId,
+      logWorkOrderLabor(accessToken, selectedWorkOrderId, {
+        personId: woLaborPersonId.trim() || session!.personId,
         hoursWorked: Number.parseFloat(woLaborHours),
         laborTypeKey: woLaborTypeKey,
         workOrderTaskLineId: woSelectedTaskLineId || null,
@@ -783,7 +773,7 @@ export function HomePage() {
         throw new Error('Select a file to upload')
       }
       const contentBase64 = await fileToBase64(woEvidenceFile)
-      return uploadWorkOrderEvidence(session.accessToken, selectedWorkOrderId, {
+      return uploadWorkOrderEvidence(accessToken, selectedWorkOrderId, {
         evidenceTypeKey: woEvidenceTypeKey,
         fileName: woEvidenceFile.name,
         contentType: woEvidenceFile.type || 'application/octet-stream',
@@ -802,7 +792,7 @@ export function HomePage() {
 
   const addWorkOrderPartsDemandMutation = useMutation({
     mutationFn: () =>
-      createWorkOrderPartsDemandLine(session.accessToken, selectedWorkOrderId, {
+      createWorkOrderPartsDemandLine(accessToken, selectedWorkOrderId, {
         supplyarrPartId: demandSupplyarrPartId || null,
         partNumber: demandPartNumber || null,
         quantityRequested: Number.parseFloat(demandQuantity),
@@ -822,7 +812,7 @@ export function HomePage() {
 
   const publishWorkOrderPartsDemandMutation = useMutation({
     mutationFn: () =>
-      publishWorkOrderPartsDemand(session.accessToken, selectedWorkOrderId, {
+      publishWorkOrderPartsDemand(accessToken, selectedWorkOrderId, {
         createPurchaseRequestDraft,
       }),
     onSuccess: async () => {
@@ -834,7 +824,7 @@ export function HomePage() {
 
   const createAssetMutation = useMutation({
     mutationFn: () =>
-      createAsset(session.accessToken, {
+      createAsset(accessToken, {
         assetTypeId: selectedTypeId,
         assetTag,
         name: assetName,
@@ -854,7 +844,7 @@ export function HomePage() {
 
   const createPmProgramMutation = useMutation({
     mutationFn: () =>
-      createPmProgram(session.accessToken, {
+      createPmProgram(accessToken, {
         programKey,
         name: programName,
         description: programDescription,
@@ -877,7 +867,7 @@ export function HomePage() {
 
   const savePmProgramSchedulesMutation = useMutation({
     mutationFn: () =>
-      replacePmProgramSchedules(session.accessToken, selectedProgramId, {
+      replacePmProgramSchedules(accessToken, selectedProgramId, {
         pmScheduleIds: selectedProgramScheduleIds,
       }),
     onSuccess: async (updated) => {
@@ -888,7 +878,7 @@ export function HomePage() {
   })
 
   const activatePmProgramMutation = useMutation({
-    mutationFn: () => activatePmProgram(session.accessToken, selectedProgramId),
+    mutationFn: () => activatePmProgram(accessToken, selectedProgramId),
     onSuccess: async (updated) => {
       setApiError(null)
       await invalidatePmPrograms(updated.pmProgramId)
@@ -896,37 +886,16 @@ export function HomePage() {
     onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to activate PM program'),
   })
 
-  if (meQuery.isError) {
-    const err = meQuery.error
-    if (err instanceof MaintainArrApiError && (err.status === 401 || err.status === 403)) {
-      clearSession()
-    }
-    return (
-      <main className="flex min-h-screen items-center justify-center p-6">
-        <div className="max-w-md rounded-xl border border-red-800 bg-slate-900/80 p-8 text-center">
-          <h1 className="text-lg font-semibold text-red-300">Session expired</h1>
-          <p className="mt-3 text-sm text-slate-300">Relaunch MaintainArr from the suite.</p>
-        </div>
-      </main>
-    )
-  }
-
-  if (meQuery.isLoading) {
-    return (
-      <main className="flex min-h-screen items-center justify-center p-6">
-        <p className="text-slate-300">Loading MaintainArr session…</p>
-      </main>
-    )
+  if (!session || !meQuery.data) {
+    return <p className="text-sm text-slate-400">Loading asset workspace…</p>
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-6xl p-6">
-      <header className="mb-8 border-b border-slate-700 pb-6">
-        <h1 className="text-2xl font-semibold text-white">MaintainArr</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Signed in as {meQuery.data?.displayName} ({meQuery.data?.tenantRoleKey})
-        </p>
-      </header>
+    <div className="mx-auto max-w-6xl space-y-6">
+      <PageHeader
+        title="Asset and maintenance workspace"
+        subtitle={`Signed in as ${meQuery.data.displayName} (${meQuery.data.tenantRoleKey})`}
+      />
 
       {apiError ? <p className="mb-4 rounded-lg border border-red-800 bg-red-950/40 p-3 text-sm text-red-200">{apiError}</p> : null}
 
@@ -1245,6 +1214,6 @@ export function HomePage() {
           onSelectedAssetIdChange={setHistoryAssetId}
         />
       </div>
-    </main>
+    </div>
   )
 }

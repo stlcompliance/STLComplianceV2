@@ -8,9 +8,12 @@ export type ProductWorkspaceSession = {
 
 export type ProductWorkspaceFrameProps = {
   productName: string
+  productKey: string
   workspaceSubtitle?: string
   navItems?: ProductAppShellProps['navItems']
   layoutVariant?: ProductAppShellProps['layoutVariant']
+  entitlements?: readonly string[]
+  suiteHomeUrl?: string
   workspaceSession: ProductWorkspaceSession | null
   isBootstrapping?: boolean
   bootstrapError?: 'forbidden' | 'expired' | null
@@ -39,9 +42,12 @@ function WorkspaceMessage({
 
 export function ProductWorkspaceFrame({
   productName,
+  productKey,
   workspaceSubtitle,
   navItems,
   layoutVariant,
+  entitlements = [],
+  suiteHomeUrl,
   workspaceSession,
   isBootstrapping = false,
   bootstrapError = null,
@@ -94,9 +100,12 @@ export function ProductWorkspaceFrame({
   return (
     <ProductAppShell
       productName={productName}
+      productKey={productKey}
       workspaceSubtitle={workspaceSubtitle}
       tenantDisplayName={workspaceSession.tenantDisplayName}
       userDisplayName={workspaceSession.userDisplayName}
+      entitlements={entitlements}
+      suiteHomeUrl={suiteHomeUrl}
       navItems={navItems}
       layoutVariant={layoutVariant}
     >

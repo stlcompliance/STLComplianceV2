@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
+import { PageHeader } from '@stl/shared-ui'
 import {
   assignTripDriver,
   createRoute,
@@ -22,7 +23,6 @@ import {
   canViewAllTrips,
   canManageDriverAvailability,
   canManageEquipmentAvailability,
-  clearSession,
   loadSession,
 } from '../auth/sessionStorage'
 import { TripsPanel } from '../components/TripsPanel'
@@ -198,46 +198,20 @@ export function HomePage() {
     },
   })
 
-  if (!session) {
-    return (
-      <main className="flex min-h-screen items-center justify-center p-6">
-        <div className="max-w-md rounded-xl border border-slate-700 bg-slate-900/80 p-8 text-center">
-          <h1 className="text-lg font-semibold text-white">RoutArr</h1>
-          <p className="mt-3 text-sm text-slate-300">Launch RoutArr from the suite to begin dispatch work.</p>
-        </div>
-      </main>
-    )
-  }
-
-  if (meQuery.isError) {
-    clearSession()
-    return <Navigate to="/" replace />
+  if (!session || !meQuery.data) {
+    return <p className="text-sm text-slate-400">Loading dispatch workspace…</p>
   }
 
   const me = meQuery.data
-  const roleKey = me?.tenantRoleKey ?? 'tenant_member'
-  const isPlatformAdmin = me?.isPlatformAdmin ?? false
+  const roleKey = me.tenantRoleKey ?? 'tenant_member'
+  const isPlatformAdmin = me.isPlatformAdmin ?? false
 
   return (
-    <main className="mx-auto min-h-screen max-w-6xl p-6">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-700 pb-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-white">RoutArr</h1>
-          <p className="text-sm text-slate-400">
-            {me?.displayName ?? session.displayName} · {me?.tenantRoleKey ?? 'member'}
-          </p>
-        </div>
-        <button
-          type="button"
-          className="rounded border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-800"
-          onClick={() => {
-            clearSession()
-            window.location.href = '/'
-          }}
-        >
-          Sign out
-        </button>
-      </header>
+    <div className="mx-auto max-w-6xl space-y-6">
+      <PageHeader
+        title="Dispatch workspace"
+        subtitle={`${me.displayName} · ${me.tenantRoleKey ?? 'member'}`}
+      />
 
       <DispatchBoardPanel
         accessToken={session.accessToken}
@@ -376,6 +350,6 @@ export function HomePage() {
           onUpdateStopStatus={(stopId, status) => updateStopStatusMutation.mutate({ stopId, status })}
         />
       </div>
-    </main>
+    </div>
   )
 }

@@ -14,6 +14,7 @@ vi.mock('@stl/shared-ui', () => ({
     bootstrapError,
   }: {
     children: React.ReactNode
+    productKey?: string
     workspaceSession: { userDisplayName: string; tenantDisplayName: string } | null
     isBootstrapping?: boolean
     bootstrapError?: 'forbidden' | 'expired' | null

@@ -4,10 +4,13 @@ import { Navigate, Outlet, useSearchParams } from 'react-router-dom'
 import {
   ProductWorkspaceFrame,
   resolveProductWorkspaceBootstrapError,
+  resolveSuiteHomeUrl,
   type ProductNavItem,
 } from '@stl/shared-ui'
 import { getMe } from '../api/client'
 import { clearSession, loadSession } from '../auth/sessionStorage'
+
+const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
 
 const navItems: ProductNavItem[] = [{ label: 'Procurement', to: '/' }]
 
@@ -48,8 +51,11 @@ export function ProductWorkspaceLayout() {
   return (
     <ProductWorkspaceFrame
       productName="SupplyArr"
-      workspaceSubtitle="Vendors, purchasing, and inventory"
+      productKey="supplyarr"
+      workspaceSubtitle="Vendors, parts, and procurement"
       navItems={navItems}
+      entitlements={meQuery.data?.entitlements ?? []}
+      suiteHomeUrl={suiteHomeUrl}
       workspaceSession={workspaceSession}
       isBootstrapping={Boolean(session?.accessToken) && meQuery.isLoading}
       bootstrapError={bootstrapError}

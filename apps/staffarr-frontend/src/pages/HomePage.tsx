@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import { Link, Navigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useSearchParams } from 'react-router-dom'
+import { PageHeader } from '@stl/shared-ui'
 import {
   createPersonOrgAssignment,
   createPersonRoleAssignment,
@@ -502,48 +503,8 @@ export function HomePage() {
     },
   })
 
-  if (!session) {
-    return (
-      <main className="flex min-h-screen items-center justify-center p-6">
-        <div className="max-w-md rounded-xl border border-slate-700 bg-slate-900/80 p-8 text-center">
-          <h1 className="text-xl font-semibold text-white">StaffArr</h1>
-          <p className="mt-4 text-sm text-slate-400">
-            No active session. Launch from the suite to receive a handoff code.
-          </p>
-          <Link className="mt-6 inline-block text-sm text-sky-400 hover:underline" to="/launch">
-            Open launch path
-          </Link>
-        </div>
-      </main>
-    )
-  }
-
-  if (meQuery.isLoading) {
-    return (
-      <main className="flex min-h-screen items-center justify-center p-6">
-        <p className="text-slate-400">Loading your workspace…</p>
-      </main>
-    )
-  }
-
-  if (meQuery.isError || !meQuery.data) {
-    if (meQuery.error instanceof StaffArrApiError && (meQuery.error.status === 401 || meQuery.error.status === 403)) {
-      clearSession()
-    }
-
-    return (
-      <main className="flex min-h-screen items-center justify-center p-6">
-        <div className="max-w-md rounded-xl border border-slate-700 bg-slate-900/80 p-8 text-center">
-          <h1 className="text-xl font-semibold text-white">StaffArr</h1>
-          <p className="mt-4 text-sm text-red-300">
-            {meQuery.error instanceof StaffArrApiError && meQuery.error.status === 403
-              ? 'Your session is not entitled for StaffArr access.'
-              : 'Could not load your StaffArr profile.'}
-          </p>
-          <p className="mt-2 text-xs text-slate-500">Relaunch StaffArr from the suite shell.</p>
-        </div>
-      </main>
-    )
+  if (!session || !meQuery.data) {
+    return <p className="text-sm text-slate-400">Loading workspace data…</p>
   }
 
   if (
@@ -582,13 +543,9 @@ export function HomePage() {
     }
 
     return (
-      <main className="flex min-h-screen items-center justify-center p-6">
-        <div className="max-w-md rounded-xl border border-slate-700 bg-slate-900/80 p-8 text-center">
-          <h1 className="text-xl font-semibold text-white">StaffArr</h1>
-          <p className="mt-4 text-sm text-red-300">Could not load people directory data.</p>
-          <p className="mt-2 text-xs text-slate-500">Relaunch StaffArr from the suite shell.</p>
-        </div>
-      </main>
+      <div className="rounded-xl border border-red-800/60 bg-red-950/30 p-6 text-center">
+        <p className="text-sm text-red-200">Could not load people directory data.</p>
+      </div>
     )
   }
 
@@ -639,12 +596,11 @@ export function HomePage() {
     updatePersonMutation.error ?? updateEmploymentStatusMutation.error ?? null
 
   return (
-    <main className="mx-auto max-w-6xl p-8">
-      <header className="border-b border-slate-700 pb-6">
-        <p className="text-xs uppercase tracking-wide text-slate-500">STL Compliance</p>
-        <h1 className="mt-1 text-3xl font-semibold text-white">StaffArr</h1>
-        <p className="mt-2 text-slate-400">People directory and profile workspace</p>
-      </header>
+    <div className="mx-auto max-w-6xl space-y-6">
+      <PageHeader
+        title="People directory"
+        subtitle="Profiles, org structure, permissions, readiness, and incidents"
+      />
 
       {canViewReadinessRollupSummaries ? (
         <ReadinessRollupSupervisorPanel
@@ -1060,6 +1016,6 @@ export function HomePage() {
           </div>
         </dl>
       </section>
-    </main>
+    </div>
   )
 }

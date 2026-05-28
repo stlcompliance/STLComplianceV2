@@ -4,12 +4,15 @@ import { Navigate, Outlet, useSearchParams } from 'react-router-dom'
 import {
   ProductWorkspaceFrame,
   resolveProductWorkspaceBootstrapError,
+  resolveSuiteHomeUrl,
   type ProductNavItem,
 } from '@stl/shared-ui'
 import { getMe } from '../api/client'
 import { clearSession, loadSession } from '../auth/sessionStorage'
 
-const navItems: ProductNavItem[] = [{ label: 'Compliance', to: '/' }]
+const suiteHomeUrl = resolveSuiteHomeUrl(import.meta.env.VITE_SUITE_URL)
+
+const navItems: ProductNavItem[] = [{ label: 'Compliance registry', to: '/' }]
 
 export function ProductWorkspaceLayout() {
   const [searchParams] = useSearchParams()
@@ -48,8 +51,11 @@ export function ProductWorkspaceLayout() {
   return (
     <ProductWorkspaceFrame
       productName="Compliance Core"
-      workspaceSubtitle="Vocabulary, rules, and evaluations"
+      productKey="compliancecore"
+      workspaceSubtitle="Vocabulary, rules, and regulatory references"
       navItems={navItems}
+      entitlements={meQuery.data?.entitlements ?? []}
+      suiteHomeUrl={suiteHomeUrl}
       workspaceSession={workspaceSession}
       isBootstrapping={Boolean(session?.accessToken) && meQuery.isLoading}
       bootstrapError={bootstrapError}

@@ -6,7 +6,7 @@ import { ProductWorkspaceFrame } from './ProductWorkspaceFrame'
 describe('ProductWorkspaceFrame', () => {
   it('shows sign-in guidance when no session is present', () => {
     render(
-      <ProductWorkspaceFrame productName="StaffArr" workspaceSession={null}>
+      <ProductWorkspaceFrame productName="StaffArr" productKey="staffarr" workspaceSession={null}>
         <p>Workspace content</p>
       </ProductWorkspaceFrame>,
     )
@@ -21,7 +21,9 @@ describe('ProductWorkspaceFrame', () => {
       <MemoryRouter>
         <ProductWorkspaceFrame
           productName="StaffArr"
+          productKey="staffarr"
           workspaceSubtitle="People, org, and readiness"
+          entitlements={['staffarr', 'trainarr']}
           workspaceSession={{
             userDisplayName: 'Demo Admin',
             tenantDisplayName: 'demo-stl',
@@ -41,6 +43,7 @@ describe('ProductWorkspaceFrame', () => {
     render(
       <ProductWorkspaceFrame
         productName="TrainArr"
+        productKey="trainarr"
         workspaceSession={null}
         bootstrapError="forbidden"
       >

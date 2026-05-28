@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { useEffect, useState } from 'react'
 
-import { Navigate } from 'react-router-dom'
+import { PageHeader } from '@stl/shared-ui'
 
 import {
 
@@ -96,7 +96,6 @@ import {
   canManageInventory,
   canManageParties,
   canManageParts,
-  clearSession,
   loadSession,
 } from '../auth/sessionStorage'
 
@@ -1477,19 +1476,9 @@ export function HomePage() {
 
 
 
-  if (!session) {
+  if (!session || !meQuery.data) {
 
-    return <Navigate to="/launch" replace />
-
-  }
-
-
-
-  if (meQuery.isError) {
-
-    clearSession()
-
-    return <Navigate to="/launch" replace />
+    return <p className="text-sm text-slate-400">Loading procurement workspace…</p>
 
   }
 
@@ -1605,36 +1594,12 @@ export function HomePage() {
 
   return (
 
-    <main className="mx-auto max-w-6xl p-6">
+    <div className="mx-auto max-w-6xl space-y-6">
 
-      <header className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-6">
-
-        <div>
-
-          <h1 className="text-2xl font-semibold text-white">SupplyArr</h1>
-
-          <p className="mt-1 text-sm text-slate-400">
-
-            Vendor registry, part catalog, inventory, procurement, receiving, backorders, and
-            returns.
-
-          </p>
-
-        </div>
-
-        {me ? (
-
-          <div className="text-right text-sm text-slate-400">
-
-            <div className="text-slate-200">{me.displayName}</div>
-
-            <div>{me.tenantRoleKey}</div>
-
-          </div>
-
-        ) : null}
-
-      </header>
+      <PageHeader
+        title="Procurement workspace"
+        subtitle={`Vendor registry, inventory, procurement, and receiving · ${me.displayName} · ${me.tenantRoleKey}`}
+      />
 
 
 
@@ -2414,7 +2379,7 @@ export function HomePage() {
 
       </div>
 
-    </main>
+    </div>
 
   )
 

@@ -3,10 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 
 import { Navigate, useSearchParams } from 'react-router-dom'
+import { PageHeader } from '@stl/shared-ui'
 
 import {
-
-  ComplianceCoreApiError,
 
   createCitation,
 
@@ -86,7 +85,7 @@ import type {
   WorkflowGateCheckResponse,
 } from '../api/types'
 
-import { canExportAuditPackage, canManageVocabulary, clearSession, loadSession } from '../auth/sessionStorage'
+import { canExportAuditPackage, canManageVocabulary, loadSession } from '../auth/sessionStorage'
 
 import { CitationFactCatalogPanel } from '../components/CitationFactCatalogPanel'
 
@@ -1146,67 +1145,9 @@ export function HomePage() {
 
 
 
-  if (!session) {
+  if (!session || !meQuery.data) {
 
-    return (
-
-      <main className="mx-auto max-w-3xl p-6">
-
-        <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-8 text-center">
-
-          <h1 className="text-xl font-semibold">Compliance Core</h1>
-
-          <p className="mt-3 text-sm text-slate-400">Launch Compliance Core from the suite to sign in.</p>
-
-        </div>
-
-      </main>
-
-    )
-
-  }
-
-
-
-  if (meQuery.isError) {
-
-    const err = meQuery.error
-
-    if (err instanceof ComplianceCoreApiError && (err.status === 401 || err.status === 403)) {
-
-      clearSession()
-
-    }
-
-    return (
-
-      <main className="mx-auto max-w-3xl p-6">
-
-        <div className="rounded-xl border border-red-800 bg-red-950/30 p-8 text-center">
-
-          <p className="text-sm text-red-200">Session expired or not entitled. Relaunch Compliance Core from the suite.</p>
-
-        </div>
-
-      </main>
-
-    )
-
-  }
-
-
-
-  if (meQuery.isLoading || !meQuery.data) {
-
-    return (
-
-      <main className="mx-auto max-w-3xl p-6">
-
-        <p className="text-slate-400">Loading Compliance Core…</p>
-
-      </main>
-
-    )
+    return <p className="text-sm text-slate-400">Loading compliance registry…</p>
 
   }
 
@@ -1221,31 +1162,14 @@ export function HomePage() {
 
   return (
 
-    <main className="mx-auto max-w-5xl space-y-6 p-6">
+    <div className="mx-auto max-w-5xl space-y-6">
 
-      <header className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
+      <PageHeader
+        title="Compliance authority registry"
+        subtitle={`${me.displayName} · ${me.tenantRoleKey.replace('_', ' ')} · ${typesQuery.data?.length ?? 0} vocabulary types · ${rulePacksQuery.data?.length ?? 0} rule packs · ${citationsQuery.data?.length ?? 0} citations · ${regulatoryMappingsQuery.data?.length ?? 0} mappings · ${factSourcesQuery.data?.length ?? 0} fact sources · ${ruleEvaluationsQuery.data?.length ?? 0} evaluations · ${findingsQuery.data?.length ?? 0} findings · ${workflowGatesQuery.data?.length ?? 0} gates`}
+      />
 
-        <p className="text-xs uppercase tracking-wide text-slate-500">Compliance Core</p>
-
-        <h1 className="text-2xl font-semibold text-slate-50">Compliance authority registry</h1>
-
-        <p className="mt-1 text-sm text-slate-400">
-
-          {me.displayName} · {me.tenantRoleKey.replace('_', ' ')} · {typesQuery.data?.length ?? 0} vocabulary types ·{' '}
-
-          {rulePacksQuery.data?.length ?? 0} rule packs · {citationsQuery.data?.length ?? 0} citations ·{' '}
-
-          {regulatoryMappingsQuery.data?.length ?? 0} mappings ·{' '}
-
-          {factSourcesQuery.data?.length ?? 0} fact sources ·{' '}
-
-          {ruleEvaluationsQuery.data?.length ?? 0} evaluations · {findingsQuery.data?.length ?? 0} findings ·{' '}
-
-          {workflowGatesQuery.data?.length ?? 0} gates
-
-        </p>
-
-        <nav className="mt-4 flex flex-wrap gap-2">
+      <nav className="flex flex-wrap gap-2 border-b border-slate-700 pb-4">
 
           <button
 
@@ -1467,9 +1391,7 @@ export function HomePage() {
 
           </button>
 
-        </nav>
-
-      </header>
+      </nav>
 
 
 
@@ -1667,7 +1589,7 @@ export function HomePage() {
 
       )}
 
-    </main>
+    </div>
 
   )
 

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
+import { PageHeader } from '@stl/shared-ui'
 import {
   completeTrainingAssignment,
   createQualificationCheck,
@@ -33,7 +34,6 @@ import {
   removeTrainingDefinitionRulePackRequirement,
   removeTrainingProgramRulePackRequirement,
   assessRulePackImpact,
-  TrainArrApiError,
 } from '../api/client'
 import {
   canCompleteAssignment,
@@ -46,7 +46,6 @@ import {
   canSubmitTraineeSignoff,
   canSubmitTrainerSignoff,
   canUploadEvidence,
-  clearSession,
   loadSession,
 } from '../auth/sessionStorage'
 import { AssignmentsPanel } from '../components/AssignmentsPanel'
@@ -489,37 +488,8 @@ export function HomePage() {
     },
   })
 
-  if (!session) {
-    return (
-      <main className="mx-auto max-w-3xl p-6">
-        <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-8 text-center">
-          <h1 className="text-xl font-semibold">TrainArr</h1>
-          <p className="mt-3 text-sm text-slate-400">Launch TrainArr from the suite to sign in.</p>
-        </div>
-      </main>
-    )
-  }
-
-  if (meQuery.isError) {
-    const err = meQuery.error
-    if (err instanceof TrainArrApiError && (err.status === 401 || err.status === 403)) {
-      clearSession()
-    }
-    return (
-      <main className="mx-auto max-w-3xl p-6">
-        <div className="rounded-xl border border-red-800 bg-red-950/30 p-8 text-center">
-          <p className="text-sm text-red-200">Session expired or not entitled. Relaunch TrainArr from the suite.</p>
-        </div>
-      </main>
-    )
-  }
-
-  if (meQuery.isLoading || !meQuery.data) {
-    return (
-      <main className="mx-auto max-w-3xl p-6">
-        <p className="text-slate-400">Loading TrainArr…</p>
-      </main>
-    )
+  if (!session || !meQuery.data) {
+    return <p className="text-sm text-slate-400">Loading training workspace…</p>
   }
 
   const me = meQuery.data
@@ -557,14 +527,11 @@ export function HomePage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 p-6">
-      <header className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
-        <p className="text-xs uppercase tracking-wide text-slate-500">TrainArr</p>
-        <h1 className="text-2xl font-semibold text-slate-50">TrainArr qualification workspace</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          {me.displayName} · {me.tenantRoleKey.replace('_', ' ')}
-        </p>
-      </header>
+    <div className="mx-auto max-w-5xl space-y-6">
+      <PageHeader
+        title="Training qualification workspace"
+        subtitle={`${me.displayName} · ${me.tenantRoleKey.replace('_', ' ')}`}
+      />
 
       <ProgramBuilderPanel
         programs={programsQuery.data ?? []}
@@ -975,6 +942,6 @@ export function HomePage() {
           />
         </div>
       </div>
-    </main>
+    </div>
   )
 }

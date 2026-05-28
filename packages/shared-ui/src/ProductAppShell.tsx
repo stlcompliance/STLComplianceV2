@@ -1,6 +1,8 @@
-import { LayoutGrid, type LucideIcon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
+import { getSuiteProductIcon } from './productCatalog'
+import { ProductSwitcher } from './ProductSwitcher'
 
 export type ProductNavItem = {
   label: string
@@ -10,9 +12,12 @@ export type ProductNavItem = {
 
 export type ProductAppShellProps = {
   productName: string
+  productKey: string
   workspaceSubtitle?: string
   tenantDisplayName?: string
   userDisplayName?: string
+  entitlements?: readonly string[]
+  suiteHomeUrl?: string
   navItems?: ProductNavItem[]
   /** Compact layout hides sidebar navigation (field/mobile apps). */
   layoutVariant?: 'standard' | 'compact'
@@ -21,42 +26,61 @@ export type ProductAppShellProps = {
 
 export function ProductAppShell({
   productName,
+  productKey,
   workspaceSubtitle = 'Operational workspace',
   tenantDisplayName,
   userDisplayName,
+  entitlements = [],
+  suiteHomeUrl = 'http://localhost:5174/app',
   navItems = [{ label: 'Workspace', to: '/' }],
   layoutVariant = 'standard',
   children,
 }: ProductAppShellProps) {
   const showSidebar = layoutVariant === 'standard'
+  const ProductIcon = getSuiteProductIcon(productKey)
 
   return (
     <div className="flex min-h-screen flex-col bg-[#0f172a] text-slate-100">
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-700/70 bg-[#0a101c] px-6">
         <div className="flex min-w-0 items-center gap-3">
-          <LayoutGrid className="h-5 w-5 shrink-0 text-sky-400" aria-hidden />
+          <ProductIcon className="h-5 w-5 shrink-0 text-teal-400" aria-hidden />
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-white">{productName}</p>
             <p className="truncate text-xs text-slate-400">{workspaceSubtitle}</p>
           </div>
         </div>
-        {(userDisplayName || tenantDisplayName) && (
-          <div className="hidden text-right text-sm sm:block">
-            {userDisplayName && <p className="font-medium text-slate-100">{userDisplayName}</p>}
-            {tenantDisplayName && <p className="text-xs text-slate-400">{tenantDisplayName}</p>}
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {!showSidebar ? (
+            <ProductSwitcher
+              currentProductKey={productKey}
+              entitlements={entitlements}
+              suiteHomeUrl={suiteHomeUrl}
+              layoutVariant="compact"
+            />
+          ) : null}
+          {(userDisplayName || tenantDisplayName) && (
+            <div className="hidden text-right text-sm sm:block">
+              {userDisplayName && <p className="font-medium text-slate-100">{userDisplayName}</p>}
+              {tenantDisplayName && <p className="text-xs text-slate-400">{tenantDisplayName}</p>}
+            </div>
+          )}
+        </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
         {showSidebar ? (
           <aside className="flex w-56 shrink-0 flex-col border-r border-slate-700/70 bg-[#0a101c] p-4">
+            <ProductSwitcher
+              currentProductKey={productKey}
+              entitlements={entitlements}
+              suiteHomeUrl={suiteHomeUrl}
+            />
             <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Navigation
+              {productName}
             </p>
             <nav aria-label={`${productName} navigation`} className="mt-3 flex flex-col gap-1">
               {navItems.map((item) => {
-                const Icon = item.icon ?? LayoutGrid
+                const Icon = item.icon ?? ProductIcon
                 return (
                   <NavLink
                     key={item.to}
@@ -66,7 +90,7 @@ export function ProductAppShell({
                       [
                         'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                         isActive
-                          ? 'border-l-2 border-sky-400 bg-slate-800/80 pl-[10px] text-white'
+                          ? 'border-l-2 border-teal-400 bg-slate-800/80 pl-[10px] text-white'
                           : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
                       ].join(' ')
                     }
