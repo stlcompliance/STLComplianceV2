@@ -477,6 +477,25 @@ public sealed class TrainArrAuthorizationService
             403);
     }
 
+    public void RequireEvidenceRetentionSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireTrainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "trainarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Evidence retention settings require trainarr admin access.",
+            403);
+    }
+
     public void RequireStaffarrPublicationSettingsManage(ClaimsPrincipal principal)
     {
         RequireTrainArrEntitlement(principal);

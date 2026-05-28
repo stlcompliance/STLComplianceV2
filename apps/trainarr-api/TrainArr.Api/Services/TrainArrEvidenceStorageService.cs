@@ -86,6 +86,32 @@ public sealed class TrainArrEvidenceStorageService(IHostEnvironment environment,
 
 
 
+    public long TryDelete(string storageKey)
+
+    {
+
+        var absolutePath = Path.Combine(_rootPath, storageKey.Replace('/', Path.DirectorySeparatorChar));
+
+        if (!File.Exists(absolutePath))
+
+        {
+
+            return 0;
+
+        }
+
+
+
+        var length = new FileInfo(absolutePath).Length;
+
+        File.Delete(absolutePath);
+
+        return length;
+
+    }
+
+
+
     private static string ResolveRootPath(string contentRoot, string configuredRoot)
 
     {

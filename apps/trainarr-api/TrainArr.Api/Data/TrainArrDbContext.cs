@@ -80,6 +80,12 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
     public DbSet<RulePackImpactRun> RulePackImpactRuns =>
         Set<RulePackImpactRun>();
 
+    public DbSet<TenantEvidenceRetentionSettings> TenantEvidenceRetentionSettings =>
+        Set<TenantEvidenceRetentionSettings>();
+
+    public DbSet<EvidenceRetentionRun> EvidenceRetentionRuns =>
+        Set<EvidenceRetentionRun>();
+
     public DbSet<RecertificationAssignmentRun> RecertificationAssignmentRuns =>
         Set<RecertificationAssignmentRun>();
 
@@ -537,6 +543,23 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
             entity.Property(x => x.SkipReason).HasMaxLength(512);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.RulePackKey });
+            entity.HasIndex(x => new { x.TenantId, x.ProcessedAt });
+        });
+
+        modelBuilder.Entity<TenantEvidenceRetentionSettings>(entity =>
+        {
+            entity.ToTable("trainarr_tenant_evidence_retention_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<EvidenceRetentionRun>(entity =>
+        {
+            entity.ToTable("trainarr_evidence_retention_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SkipReason).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.ProcessedAt });
         });
 

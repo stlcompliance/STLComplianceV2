@@ -296,6 +296,8 @@
 
 | 162 | TrainArr rule-pack impact worker (`trainarr_tenant_rule_pack_impact_settings`, `trainarr_rule_pack_impact_states`, `trainarr_rule_pack_impact_runs`, internal pending/process-batch, `trainarr.rulepack_impact.scan`, `/api/rule-pack-impact-settings`, `TrainArrRulePackImpactJob`, `RulePackImpactSettingsPanel`, tests, docs; builds on W42) | M12 (partial) | Complete | `a3e992d` |
 
-## Next slice (Worker 163)
+| 163 | TrainArr evidence retention worker (`trainarr_tenant_evidence_retention_settings`, `trainarr_evidence_retention_runs`, internal pending/process-batch, `trainarr.evidence.retention.purge`, `/api/evidence-retention-settings`, `TrainArrEvidenceRetentionJob`, `EvidenceRetentionSettingsPanel`, storage purge, tests, docs) | M12 (partial) | Complete | `1dd493e` |
 
-Per milestone matrix: next open **M12** TrainArr backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (evidence retention worker or orphan reference detection worker).
+## Next slice (Worker 164)
+
+Per milestone matrix: next open **M12** TrainArr backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (orphan reference detection worker).

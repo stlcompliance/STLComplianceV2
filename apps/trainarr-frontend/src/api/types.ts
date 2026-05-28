@@ -592,6 +592,31 @@ export interface RulePackImpactRunsResponse {
   items: RulePackImpactRunItem[]
 }
 
+export interface EvidenceRetentionSettingsResponse {
+  isEnabled: boolean
+  retentionDaysAfterAssignmentClose: number
+  updatedAt: string | null
+}
+
+export interface UpsertEvidenceRetentionSettingsRequest {
+  isEnabled: boolean
+  retentionDaysAfterAssignmentClose: number
+}
+
+export interface EvidenceRetentionRunItem {
+  runId: string
+  outcome: string
+  evidencePurgedCount: number
+  bytesReclaimed: number
+  skippedCount: number
+  skipReason: string | null
+  processedAt: string
+}
+
+export interface EvidenceRetentionRunsResponse {
+  items: EvidenceRetentionRunItem[]
+}
+
 export interface StaffarrPublicationSettingsResponse {
   isEnabled: boolean
   maxAttempts: number

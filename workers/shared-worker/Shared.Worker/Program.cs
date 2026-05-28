@@ -59,6 +59,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<TrainArrRulePackImpactJob>();
 
+        builder.Services.Configure<TrainArrEvidenceRetentionOptions>(
+            builder.Configuration.GetSection(TrainArrEvidenceRetentionOptions.SectionName));
+
+        builder.Services.AddHttpClient<TrainArrEvidenceRetentionClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<TrainArrEvidenceRetentionOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.TrainArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(5);
+        });
+
+        builder.Services.AddHostedService<TrainArrEvidenceRetentionJob>();
+
         builder.Services.Configure<TrainArrStaffarrPublicationRetryOptions>(
             builder.Configuration.GetSection(TrainArrStaffarrPublicationRetryOptions.SectionName));
 

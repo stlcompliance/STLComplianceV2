@@ -44,6 +44,9 @@ import type {
   UpsertRulePackImpactSettingsRequest,
   RulePackImpactStatesResponse,
   RulePackImpactRunsResponse,
+  EvidenceRetentionSettingsResponse,
+  UpsertEvidenceRetentionSettingsRequest,
+  EvidenceRetentionRunsResponse,
   StaffarrPublicationSettingsResponse,
   UpsertStaffarrPublicationSettingsRequest,
   StaffarrPublicationDeliveriesResponse,
@@ -763,6 +766,46 @@ export async function getRulePackImpactRuns(
   return parseJsonResponse<RulePackImpactRunsResponse>(
     response,
     'Failed to load rule pack impact runs',
+  )
+}
+
+export async function getEvidenceRetentionSettings(
+  accessToken: string,
+): Promise<EvidenceRetentionSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/evidence-retention-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<EvidenceRetentionSettingsResponse>(
+    response,
+    'Failed to load evidence retention settings',
+  )
+}
+
+export async function upsertEvidenceRetentionSettings(
+  accessToken: string,
+  payload: UpsertEvidenceRetentionSettingsRequest,
+): Promise<EvidenceRetentionSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/evidence-retention-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<EvidenceRetentionSettingsResponse>(
+    response,
+    'Failed to save evidence retention settings',
+  )
+}
+
+export async function getEvidenceRetentionRuns(
+  accessToken: string,
+  limit = 10,
+): Promise<EvidenceRetentionRunsResponse> {
+  const response = await fetch(`${apiBase}/api/evidence-retention-settings/runs?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<EvidenceRetentionRunsResponse>(
+    response,
+    'Failed to load evidence retention runs',
   )
 }
 
