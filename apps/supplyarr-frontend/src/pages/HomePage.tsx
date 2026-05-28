@@ -96,6 +96,7 @@ import {
   canManageInventory,
   canManageParties,
   canManageParts,
+  canManageNotificationSettings,
   loadSession,
 } from '../auth/sessionStorage'
 
@@ -116,6 +117,7 @@ import { PurchaseRequestPanel } from '../components/PurchaseRequestPanel'
 import { PartCatalogPanel } from '../components/PartCatalogPanel'
 
 import { PartyRegistryPanel } from '../components/PartyRegistryPanel'
+import { NotificationSettingsPanel } from '../components/NotificationSettingsPanel'
 
 
 
@@ -1502,6 +1504,10 @@ export function HomePage() {
 
   const canReceive = me ? canPerformReceiving(me.tenantRoleKey, me.isPlatformAdmin) : false
 
+  const canManageNotifications = me
+    ? canManageNotificationSettings(me.tenantRoleKey, me.isPlatformAdmin)
+    : false
+
   const approvedPurchaseRequests =
 
     purchaseRequestsQuery.data?.filter((pr) => pr.status === 'approved' && pr.vendorPartyId) ?? []
@@ -2375,6 +2381,11 @@ export function HomePage() {
 
           isCreating={false}
 
+        />
+
+        <NotificationSettingsPanel
+          accessToken={session.accessToken}
+          canManage={canManageNotifications}
         />
 
       </div>

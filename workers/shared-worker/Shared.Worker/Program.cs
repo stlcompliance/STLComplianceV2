@@ -154,4 +154,16 @@ await StlWorkerHost.RunAsync(
         });
 
         builder.Services.AddHostedService<SupplyArrReorderEvaluationJob>();
+
+        builder.Services.Configure<SupplyArrNotificationDispatchOptions>(
+            builder.Configuration.GetSection(SupplyArrNotificationDispatchOptions.SectionName));
+
+        builder.Services.AddHttpClient<SupplyArrNotificationDispatchClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<SupplyArrNotificationDispatchOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.SupplyArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<SupplyArrNotificationDispatchJob>();
     });

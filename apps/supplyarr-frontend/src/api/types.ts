@@ -651,3 +651,40 @@ export interface CreatePurchaseRequestFromDemandRefRequest {
   title: string
   notes?: string | null
 }
+
+export interface ProcurementNotificationSettingsResponse {
+  isEnabled: boolean
+  notificationWebhookUrl: string | null
+  notifyOnPurchaseRequestSubmitted: boolean
+  notifyOnPurchaseRequestApproved: boolean
+  notifyOnPurchaseOrderIssued: boolean
+  notifyOnReceivingReceiptPosted: boolean
+  updatedAt: string | null
+}
+
+export interface UpsertProcurementNotificationSettingsRequest {
+  isEnabled: boolean
+  notificationWebhookUrl: string | null
+  notifyOnPurchaseRequestSubmitted: boolean
+  notifyOnPurchaseRequestApproved: boolean
+  notifyOnPurchaseOrderIssued: boolean
+  notifyOnReceivingReceiptPosted: boolean
+}
+
+export interface ProcurementNotificationDispatchItem {
+  notificationId: string
+  eventKind: string
+  dispatchStatus: string
+  vendorPartyId: string | null
+  relatedEntityType: string
+  relatedEntityId: string
+  webhookHost: string | null
+  httpStatusCode: number | null
+  errorMessage: string | null
+  createdAt: string
+  dispatchedAt: string | null
+}
+
+export interface ProcurementNotificationDispatchesResponse {
+  items: ProcurementNotificationDispatchItem[]
+}

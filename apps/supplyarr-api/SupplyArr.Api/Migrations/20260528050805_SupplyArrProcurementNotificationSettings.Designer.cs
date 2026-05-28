@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SupplyArr.Api.Data;
@@ -11,9 +12,11 @@ using SupplyArr.Api.Data;
 namespace SupplyArr.Api.Migrations
 {
     [DbContext(typeof(SupplyArrDbContext))]
-    partial class SupplyArrDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260528050805_SupplyArrProcurementNotificationSettings")]
+    partial class SupplyArrProcurementNotificationSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

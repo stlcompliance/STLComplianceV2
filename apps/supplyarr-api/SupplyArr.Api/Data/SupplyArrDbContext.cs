@@ -56,6 +56,12 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
 
     public DbSet<MaintainArrDemandRefLine> MaintainArrDemandRefLines => Set<MaintainArrDemandRefLine>();
 
+    public DbSet<TenantProcurementNotificationSettings> TenantProcurementNotificationSettings =>
+        Set<TenantProcurementNotificationSettings>();
+
+    public DbSet<ProcurementNotificationDispatch> ProcurementNotificationDispatches =>
+        Set<ProcurementNotificationDispatch>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -560,6 +566,28 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
                 .WithMany()
                 .HasForeignKey(x => x.PartId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<TenantProcurementNotificationSettings>(entity =>
+        {
+            entity.ToTable("supplyarr_tenant_notification_settings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.NotificationWebhookUrl).HasMaxLength(2048);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<ProcurementNotificationDispatch>(entity =>
+        {
+            entity.ToTable("supplyarr_notification_dispatches");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.RelatedEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DispatchStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.WebhookHost).HasMaxLength(256);
+            entity.Property(x => x.ErrorMessage).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.EventKind, x.RelatedEntityType, x.RelatedEntityId });
         });
     }
 }

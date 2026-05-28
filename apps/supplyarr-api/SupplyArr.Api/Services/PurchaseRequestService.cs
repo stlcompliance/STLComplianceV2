@@ -9,6 +9,7 @@ namespace SupplyArr.Api.Services;
 public sealed class PurchaseRequestService(
     SupplyArrDbContext db,
     MaintainArrDemandStatusCallbackService demandStatusCallbacks,
+    ProcurementNotificationEnqueueService notificationEnqueue,
     ISupplyArrAuditService audit)
 {
     public async Task<IReadOnlyList<PurchaseRequestResponse>> ListAsync(
@@ -283,6 +284,14 @@ public sealed class PurchaseRequestService(
             now,
             cancellationToken);
 
+        await notificationEnqueue.TryEnqueueAsync(
+            tenantId,
+            ProcurementNotificationEventKinds.PurchaseRequestSubmitted,
+            entity.VendorPartyId,
+            "purchase_request",
+            entity.Id,
+            cancellationToken);
+
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
 
@@ -321,6 +330,14 @@ public sealed class PurchaseRequestService(
             tenantId,
             entity.Id,
             now,
+            cancellationToken);
+
+        await notificationEnqueue.TryEnqueueAsync(
+            tenantId,
+            ProcurementNotificationEventKinds.PurchaseRequestApproved,
+            entity.VendorPartyId,
+            "purchase_request",
+            entity.Id,
             cancellationToken);
 
         return await GetAsync(tenantId, entity.Id, cancellationToken);

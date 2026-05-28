@@ -11,6 +11,7 @@ public sealed class ReceivingService(
     PartStockService stock,
     BackorderService backorders,
     MaintainArrDemandStatusCallbackService demandStatusCallbacks,
+    ProcurementNotificationEnqueueService notificationEnqueue,
     ISupplyArrAuditService audit)
 {
     public async Task<IReadOnlyList<ReceivingReceiptResponse>> ListAsync(
@@ -328,6 +329,14 @@ public sealed class ReceivingService(
             entity.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
+
+        await notificationEnqueue.TryEnqueueAsync(
+            tenantId,
+            ProcurementNotificationEventKinds.ReceivingReceiptPosted,
+            entity.PurchaseOrder?.VendorPartyId,
+            "receiving_receipt",
+            entity.Id,
+            cancellationToken);
 
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }

@@ -228,6 +228,8 @@
 
 | 128 | StaffArr async audit package generation worker (`staffarr_audit_package_generation_jobs`, POST/GET job APIs + download, internal process-batch, shared-worker job, `AuditPackageExportPanel` background ZIP + status, tests, docs; builds on W106/W126) | M4/M12 (partial) | Complete | `72d6e2a` |
 
-## Next slice (Worker 129)
+| 129 | SupplyArr notification settings (`supplyarr_tenant_notification_settings`, dispatch outbox, GET/PUT settings + dispatch list, internal process-batch, shared-worker job, PR/PO/receiving hooks, supplyarr-frontend panel, tests, docs) | M7/M12 (partial) | Complete | (this commit) |
 
-Recommended: **SupplyArr notification settings** (M12) or **Compliance Core async audit package generation** (M5/M12) per backlog.
+## Next slice (Worker 130)
+
+Recommended: **Compliance Core async audit package generation** (M5/M12) or **Companion operational notification hooks** (M12) per backlog.

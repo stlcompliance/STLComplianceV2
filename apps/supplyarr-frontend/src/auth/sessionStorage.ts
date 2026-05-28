@@ -87,3 +87,8 @@ export function canPerformReceiving(tenantRoleKey: string, isPlatformAdmin: bool
     tenantRoleKey.toLowerCase(),
   )
 }
+
+export function canManageNotificationSettings(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return ['tenant_admin', 'supplyarr_admin'].includes(tenantRoleKey.toLowerCase())
+}

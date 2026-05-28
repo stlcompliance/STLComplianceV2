@@ -43,6 +43,13 @@ public static class SupplyArrServiceRegistration
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
         builder.Services.AddScoped<ISupplyArrAuditService, SupplyArrAuditService>();
+        builder.Services.AddScoped<ProcurementNotificationSettingsService>();
+        builder.Services.AddScoped<ProcurementNotificationEnqueueService>();
+        builder.Services.AddScoped<ProcurementNotificationDispatchService>();
+        builder.Services.AddHttpClient(ProcurementNotificationDispatchService.WebhookHttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
         builder.Services.AddSingleton<StlServiceTokenValidator>();
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
 

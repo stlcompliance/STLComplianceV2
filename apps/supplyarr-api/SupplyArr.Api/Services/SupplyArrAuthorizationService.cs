@@ -301,6 +301,25 @@ public sealed class SupplyArrAuthorizationService
     public void RequireReturnManage(ClaimsPrincipal principal) =>
         RequireReceivingPerform(principal);
 
+    public void RequireNotificationSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireSupplyArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "supplyarr_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Procurement notification settings require SupplyArr admin access.",
+            403);
+    }
+
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }

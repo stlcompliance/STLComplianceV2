@@ -712,6 +712,72 @@
         }
       }
     },
+    "/api/internal/procurement-notifications/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingProcurementNotifications",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/procurement-notifications/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessProcurementNotifications",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessProcurementNotificationsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/reorder/pending": {
       "get": {
         "tags": [
@@ -1176,6 +1242,67 @@
           "Me"
         ],
         "operationId": "SupplyArrGetMe",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/notification-settings": {
+      "get": {
+        "tags": [
+          "NotificationSettings"
+        ],
+        "operationId": "GetSupplyArrNotificationSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "NotificationSettings"
+        ],
+        "operationId": "UpsertSupplyArrNotificationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertProcurementNotificationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/notification-settings/dispatches": {
+      "get": {
+        "tags": [
+          "NotificationSettings"
+        ],
+        "operationId": "ListSupplyArrNotificationDispatches",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -4033,6 +4160,39 @@
           }
         }
       },
+      "ProcessProcurementNotificationsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ProcessReorderEvaluationRequest": {
         "required": [
           "tenantId",
@@ -4406,6 +4566,40 @@
             "format": "double"
           }
         }
+      },
+      "UpsertProcurementNotificationSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "notificationWebhookUrl",
+          "notifyOnPurchaseRequestSubmitted",
+          "notifyOnPurchaseRequestApproved",
+          "notifyOnPurchaseOrderIssued",
+          "notifyOnReceivingReceiptPosted"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "notificationWebhookUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notifyOnPurchaseRequestSubmitted": {
+            "type": "boolean"
+          },
+          "notifyOnPurchaseRequestApproved": {
+            "type": "boolean"
+          },
+          "notifyOnPurchaseOrderIssued": {
+            "type": "boolean"
+          },
+          "notifyOnReceivingReceiptPosted": {
+            "type": "boolean"
+          }
+        }
       }
     }
   },
@@ -4472,6 +4666,9 @@
     },
     {
       "name": "FieldInbox"
+    },
+    {
+      "name": "NotificationSettings"
     }
   ]
 }

@@ -44,6 +44,9 @@ import type {
   CreatePurchaseRequestFromReorderRequest,
   MaintainArrDemandRefResponse,
   CreatePurchaseRequestFromDemandRefRequest,
+  ProcurementNotificationSettingsResponse,
+  UpsertProcurementNotificationSettingsRequest,
+  ProcurementNotificationDispatchesResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_SUPPLYARR_API_BASE ?? ''
@@ -799,5 +802,46 @@ export async function createPurchaseRequestFromDemandRef(
   return parseJsonResponse<PurchaseRequestResponse>(
     response,
     'Failed to create purchase request from demand reference',
+  )
+}
+
+export async function getProcurementNotificationSettings(
+  accessToken: string,
+): Promise<ProcurementNotificationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/notification-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProcurementNotificationSettingsResponse>(
+    response,
+    'Failed to load notification settings',
+  )
+}
+
+export async function upsertProcurementNotificationSettings(
+  accessToken: string,
+  payload: UpsertProcurementNotificationSettingsRequest,
+): Promise<ProcurementNotificationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/notification-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<ProcurementNotificationSettingsResponse>(
+    response,
+    'Failed to save notification settings',
+  )
+}
+
+export async function getProcurementNotificationDispatches(
+  accessToken: string,
+  limit = 20,
+): Promise<ProcurementNotificationDispatchesResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/notification-settings/dispatches?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProcurementNotificationDispatchesResponse>(
+    response,
+    'Failed to load notification dispatches',
   )
 }
