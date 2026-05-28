@@ -25,6 +25,8 @@ import type {
   PlatformAuditPackageGenerationJob,
   PlatformAuditPackageManifest,
   PlatformAuditEventTimelineItem,
+  ServiceTokenCleanupRunsResponse,
+  ServiceTokenCleanupSettings,
   TenantOverviewRow,
 } from './types'
 import { NexarrApiError } from './types'
@@ -404,4 +406,38 @@ export async function downloadPlatformAuditPackageGenerationJob(jobId: string): 
     throw await parseError(response)
   }
   return response.blob()
+}
+
+export async function getServiceTokenCleanupSettings(): Promise<ServiceTokenCleanupSettings> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/service-token-cleanup/settings')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ServiceTokenCleanupSettings
+}
+
+export async function upsertServiceTokenCleanupSettings(
+  payload: Pick<ServiceTokenCleanupSettings, 'isEnabled' | 'retentionDaysAfterExpiry' | 'retentionDaysAfterRevoke'>,
+): Promise<ServiceTokenCleanupSettings> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/service-token-cleanup/settings', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ServiceTokenCleanupSettings
+}
+
+export async function getServiceTokenCleanupRuns(limit = 8): Promise<ServiceTokenCleanupRunsResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/service-token-cleanup/runs?limit=${limit}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ServiceTokenCleanupRunsResponse
 }

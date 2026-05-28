@@ -217,6 +217,28 @@ export interface PlatformAuditPackageExportPreview {
   }
 }
 
+export interface ServiceTokenCleanupSettings {
+  isEnabled: boolean
+  retentionDaysAfterExpiry: number
+  retentionDaysAfterRevoke: number
+  updatedAt: string | null
+}
+
+export interface ServiceTokenCleanupRunItem {
+  runId: string
+  outcome: string
+  purgedCount: number
+  expiredPurgeCount: number
+  revokedPurgeCount: number
+  skippedCount: number
+  skipReason: string | null
+  processedAt: string
+}
+
+export interface ServiceTokenCleanupRunsResponse {
+  items: ServiceTokenCleanupRunItem[]
+}
+
 export class NexarrApiError extends Error {
   readonly status: number
   readonly code?: string

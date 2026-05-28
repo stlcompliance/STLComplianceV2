@@ -322,4 +322,16 @@ await StlWorkerHost.RunAsync(
         });
 
         builder.Services.AddHostedService<TrainArrAuditPackageGenerationJob>();
+
+        builder.Services.Configure<NexArrServiceTokenCleanupOptions>(
+            builder.Configuration.GetSection(NexArrServiceTokenCleanupOptions.SectionName));
+
+        builder.Services.AddHttpClient<NexArrServiceTokenCleanupClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<NexArrServiceTokenCleanupOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.NexArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<NexArrServiceTokenCleanupJob>();
     });

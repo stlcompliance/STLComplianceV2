@@ -177,6 +177,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["trainarr"],
             "trainarr.audit_packages.generate"),
+        Profile(
+            "worker-nexarr-service-token-cleanup",
+            "shared-worker",
+            "NexArrServiceTokenCleanup__ServiceToken",
+            "shared-worker",
+            ["nexarr"],
+            "nexarr.service_tokens.cleanup.purge"),
     ];
 
     public static IReadOnlyList<StlIntegrationTokenProfile> ForConsumer(string consumerService) =>

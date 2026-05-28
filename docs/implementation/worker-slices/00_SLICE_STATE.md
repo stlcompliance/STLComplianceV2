@@ -306,6 +306,8 @@
 
 | 167 | TrainArr async audit package generation (`trainarr_audit_package_generation_jobs`, sync manifest/export + POST/GET job APIs + download, internal process-batch, shared-worker job, `AuditPackageExportPanel` background ZIP + status, tests, docs; builds on W165) | M12 (partial) | Complete | `4a45dfd` |
 
-## Next slice (Worker 168)
+| 168 | NexArr service-token cleanup worker (`nexarr_platform_service_token_cleanup_settings`, `nexarr_service_token_cleanup_runs`, internal pending/process-batch, `nexarr.service_tokens.cleanup.purge`, `NexArrServiceTokenCleanupJob`, platform-admin service token cleanup UI, tests, docs) | M12 (partial) | Complete | `pending` |
 
-Per milestone matrix: next open backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (NexArr M12 service-token cleanup worker or remaining M12 items).
+## Next slice (Worker 169)
+
+Per milestone matrix: next open backlog row from `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (NexArr entitlement reconciliation worker or remaining M12 items).

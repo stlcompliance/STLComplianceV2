@@ -31,6 +31,11 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
     public DbSet<PlatformAuditPackageGenerationJob> PlatformAuditPackageGenerationJobs =>
         Set<PlatformAuditPackageGenerationJob>();
 
+    public DbSet<PlatformServiceTokenCleanupSettings> PlatformServiceTokenCleanupSettings =>
+        Set<PlatformServiceTokenCleanupSettings>();
+
+    public DbSet<ServiceTokenCleanupRun> ServiceTokenCleanupRuns => Set<ServiceTokenCleanupRun>();
+
     public DbSet<CompanionOfflineAction> CompanionOfflineActions => Set<CompanionOfflineAction>();
     public DbSet<CompanionFieldSubmission> CompanionFieldSubmissions => Set<CompanionFieldSubmission>();
 
@@ -140,7 +145,23 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasIndex(x => x.Jti).IsUnique();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => x.ExpiresAt);
+            entity.HasIndex(x => x.RevokedAt);
             entity.HasOne(x => x.ServiceClient).WithMany(x => x.Tokens).HasForeignKey(x => x.ServiceClientId);
+        });
+
+        modelBuilder.Entity<PlatformServiceTokenCleanupSettings>(entity =>
+        {
+            entity.ToTable("nexarr_platform_service_token_cleanup_settings");
+            entity.HasKey(x => x.Id);
+        });
+
+        modelBuilder.Entity<ServiceTokenCleanupRun>(entity =>
+        {
+            entity.ToTable("nexarr_service_token_cleanup_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SkipReason).HasMaxLength(512);
+            entity.HasIndex(x => x.ProcessedAt);
         });
 
         modelBuilder.Entity<ProductLaunchProfile>(entity =>
