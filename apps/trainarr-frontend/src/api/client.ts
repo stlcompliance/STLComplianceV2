@@ -40,6 +40,9 @@ import type {
   UpsertQualificationRecalculationSettingsRequest,
   QualificationRecalculationStatesResponse,
   QualificationRecalculationRunsResponse,
+  StaffarrPublicationSettingsResponse,
+  UpsertStaffarrPublicationSettingsRequest,
+  StaffarrPublicationDeliveriesResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_TRAINARR_API_BASE ?? ''
@@ -699,5 +702,45 @@ export async function getQualificationRecalculationRuns(
   return parseJsonResponse<QualificationRecalculationRunsResponse>(
     response,
     'Failed to load qualification recalculation runs',
+  )
+}
+
+export async function getStaffarrPublicationSettings(
+  accessToken: string,
+): Promise<StaffarrPublicationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/staffarr-publication-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffarrPublicationSettingsResponse>(
+    response,
+    'Failed to load StaffArr publication settings',
+  )
+}
+
+export async function upsertStaffarrPublicationSettings(
+  accessToken: string,
+  body: UpsertStaffarrPublicationSettingsRequest,
+): Promise<StaffarrPublicationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/staffarr-publication-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<StaffarrPublicationSettingsResponse>(
+    response,
+    'Failed to save StaffArr publication settings',
+  )
+}
+
+export async function getStaffarrPublicationDeliveries(
+  accessToken: string,
+  limit = 10,
+): Promise<StaffarrPublicationDeliveriesResponse> {
+  const response = await fetch(`${apiBase}/api/staffarr-publication-settings/deliveries?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffarrPublicationDeliveriesResponse>(
+    response,
+    'Failed to load StaffArr publication deliveries',
   )
 }

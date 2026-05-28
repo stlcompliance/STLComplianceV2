@@ -533,3 +533,34 @@ export interface QualificationRecalculationRunItem {
 export interface QualificationRecalculationRunsResponse {
   items: QualificationRecalculationRunItem[]
 }
+
+export interface StaffarrPublicationSettingsResponse {
+  isEnabled: boolean
+  maxAttempts: number
+  retryIntervalMinutes: number
+  updatedAt: string | null
+}
+
+export interface UpsertStaffarrPublicationSettingsRequest {
+  isEnabled: boolean
+  maxAttempts: number
+  retryIntervalMinutes: number
+}
+
+export interface StaffarrPublicationDeliveryItem {
+  deliveryId: string
+  certificationPublicationId: string
+  operationKind: string
+  deliveryStatus: string
+  staffarrPersonId: string
+  attemptCount: number
+  httpStatusCode: number | null
+  errorMessage: string | null
+  createdAt: string
+  nextRetryAt: string | null
+  deliveredAt: string | null
+}
+
+export interface StaffarrPublicationDeliveriesResponse {
+  items: StaffarrPublicationDeliveryItem[]
+}

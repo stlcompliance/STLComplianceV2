@@ -288,6 +288,8 @@
 
 | 158 | TrainArr qualification recalculation worker (`trainarr_tenant_qualification_recalculation_settings`, `trainarr_qualification_recalculation_states`, `trainarr_qualification_recalculation_runs`, internal pending/process-batch, `trainarr.qualifications.recalculate`, `/api/qualification-recalculation-settings`, `TrainArrQualificationRecalculationJob`, `QualificationRecalculationSettingsPanel`, tests, docs) | M12 (partial) | Complete | `f3ecd04` |
 
-## Next slice (Worker 159)
+| 159 | TrainArr StaffArr publish retry worker (`trainarr_tenant_staffarr_publication_settings`, `trainarr_staffarr_publication_deliveries`, outbox delivery on certification publications, internal pending/process-batch, `trainarr.staffarr_publications.retry`, `/api/staffarr-publication-settings`, `TrainArrStaffarrPublicationRetryJob`, `StaffarrPublicationSettingsPanel`, tests, docs) | M12 (partial) | Complete | `pending` |
 
-Per milestone matrix: next open **M12** worker backlog row from `00_SLICE_STATE.md` / `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (TrainArr StaffArr publish retry worker).
+## Next slice (Worker 160)
+
+Per milestone matrix: next open **M12** worker backlog row from `00_SLICE_STATE.md` / `02_PRODUCT_IMPLEMENTATION_BACKLOG.md` (TrainArr event processing worker).

@@ -77,6 +77,12 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
     public DbSet<TrainingNotificationDispatch> TrainingNotificationDispatches =>
         Set<TrainingNotificationDispatch>();
 
+    public DbSet<TenantStaffarrPublicationSettings> TenantStaffarrPublicationSettings =>
+        Set<TenantStaffarrPublicationSettings>();
+
+    public DbSet<StaffarrPublicationDelivery> StaffarrPublicationDeliveries =>
+        Set<StaffarrPublicationDelivery>();
+
     public DbSet<TrainArrAuditEvent> AuditEvents => Set<TrainArrAuditEvent>();
 
 
@@ -484,6 +490,26 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.QualificationIssueId });
             entity.HasIndex(x => new { x.TenantId, x.ProcessedAt });
+        });
+
+        modelBuilder.Entity<TenantStaffarrPublicationSettings>(entity =>
+        {
+            entity.ToTable("trainarr_tenant_staffarr_publication_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<StaffarrPublicationDelivery>(entity =>
+        {
+            entity.ToTable("trainarr_staffarr_publication_deliveries");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.OperationKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PayloadJson).HasMaxLength(8192).IsRequired();
+            entity.Property(x => x.DeliveryStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ErrorMessage).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.DeliveryStatus, x.NextRetryAt, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.CertificationPublicationId, x.OperationKind, x.DeliveryStatus });
         });
 
         modelBuilder.Entity<TrainArrAuditEvent>(entity =>
