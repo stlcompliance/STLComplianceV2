@@ -248,7 +248,7 @@
 
 | 138 | M13 Playwright platform-admin audit export smoke (`platform-admin-audit-export-smoke.spec.ts`, suite `/app/platform-admin/audit-export`, manifest/timeline/sync ZIP+JSON+background job via internal process-batch helper, `StlE2ePlaywrightSpecCatalog`, panel test ids, docs) | M13 (partial) | Complete | `2293d6a` |
 
-| 139 | STLComplianceSite pricing narrative (`/pricing` licensing page, no checkout, nav/footer/resources links, SEO + sitemap, vitest, docs) | M3 (partial) | Complete | `pending` |
+| 139 | STLComplianceSite pricing narrative (`/pricing` licensing page, no checkout, nav/footer/resources links, SEO + sitemap, vitest, docs) | M3 (partial) | Complete | `eafc0f6` |
 
 ## Next slice (Worker 140)
 

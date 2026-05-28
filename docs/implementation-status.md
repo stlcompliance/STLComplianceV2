@@ -6,7 +6,7 @@
 
 | Worker | Slice | Status | Commit |
 |--------|-------|--------|--------|
-| 139 | STLComplianceSite pricing narrative | Complete | `pending` |
+| 139 | STLComplianceSite pricing narrative | Complete | `eafc0f6` |
 
 ## Program summary
 
