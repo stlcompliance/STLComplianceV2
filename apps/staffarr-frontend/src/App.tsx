@@ -29,6 +29,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/launch" element={<LaunchPage />} />
+          <Route path="/auth/nexarr/callback" element={<LaunchPage />} />
           <Route element={<ProductWorkspaceLayout />}>
             <Route index element={<Navigate to="/people" replace />} />
             <Route path="/me" element={<MePage />} />
@@ -49,4 +50,5 @@ export default function App() {
     </QueryClientProvider>
   )
 }
+
 

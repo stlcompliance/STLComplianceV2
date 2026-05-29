@@ -61,6 +61,7 @@ export default function App() {
         <Routes>
 
           <Route path="/launch" element={<LaunchPage />} />
+          <Route path="/auth/nexarr/callback" element={<LaunchPage />} />
 
           <Route element={<ProductWorkspaceLayout />}>
 
@@ -105,5 +106,6 @@ export default function App() {
   )
 
 }
+
 
 
