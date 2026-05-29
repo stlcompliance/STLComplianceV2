@@ -234,9 +234,10 @@ export function FieldTaskWorkOrderPanel({
 
       {editable && (
         <div className="mt-4 space-y-3">
-          <label className="block text-sm text-slate-200">
+          <label className="block text-sm text-slate-200" htmlFor="companion-work-order-labor-hours">
             Hours worked
             <input
+              id="companion-work-order-labor-hours"
               type="number"
               min="0.25"
               step="0.25"
@@ -247,9 +248,10 @@ export function FieldTaskWorkOrderPanel({
             />
           </label>
 
-          <label className="block text-sm text-slate-200">
+          <label className="block text-sm text-slate-200" htmlFor="companion-work-order-labor-type">
             Labor type
             <select
+              id="companion-work-order-labor-type"
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
               value={laborTypeKey}
               onChange={(event) =>
@@ -265,9 +267,10 @@ export function FieldTaskWorkOrderPanel({
             </select>
           </label>
 
-          <label className="block text-sm text-slate-200">
-            Notes
+          <label className="block text-sm text-slate-200" htmlFor="companion-work-order-labor-notes">
+            Labor notes
             <textarea
+              id="companion-work-order-labor-notes"
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
               rows={2}
               value={laborNotes}

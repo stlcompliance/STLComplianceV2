@@ -22,12 +22,15 @@ export function GeneratedKeyField({
   label = 'Key',
 }: GeneratedKeyFieldProps) {
   const displayKey = confirmedKey ?? generatedKey
+  const previewId = 'generated-key-preview-output'
+  const manualOverrideId = 'generated-key-manual-override-input'
 
   return (
     <div className="space-y-2" data-testid="generated-key-field">
-      <label className="block text-sm text-slate-300">
+      <label htmlFor={previewId} className="block text-sm text-slate-300">
         {label}
         <output
+          id={previewId}
           className="mt-1 block w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-200"
           data-testid="generated-key-preview"
         >
@@ -43,9 +46,10 @@ export function GeneratedKeyField({
         </p>
       ) : null}
       {showAdvancedKey ? (
-        <label className="block text-sm text-slate-400">
+        <label htmlFor={manualOverrideId} className="block text-sm text-slate-400">
           Manual key override
           <input
+            id={manualOverrideId}
             type="text"
             value={manualOverride}
             onChange={(event) => onManualOverrideChange(event.target.value)}

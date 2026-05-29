@@ -102,14 +102,21 @@ export function StaffArrScheduledWorkerSettingsPanel({
       </dl>
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm text-slate-200">
-          <input type="checkbox" checked={isEnabled} onChange={(event) => setIsEnabled(event.target.checked)} />
+        <label htmlFor={`${config.workerKey}-enabled`} className="flex items-center gap-2 text-sm text-slate-200">
+          <input
+            id={`${config.workerKey}-enabled`}
+            type="checkbox"
+            data-testid={`${config.workerKey}-enabled`}
+            checked={isEnabled}
+            onChange={(event) => setIsEnabled(event.target.checked)}
+          />
           Enable worker for this tenant
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label htmlFor={`${config.workerKey}-scan-interval`} className="block text-sm text-slate-200">
           Scan interval (minutes)
           <input
+            id={`${config.workerKey}-scan-interval`}
             className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
             type="number"
             min={1}
@@ -119,9 +126,10 @@ export function StaffArrScheduledWorkerSettingsPanel({
           />
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label htmlFor={`${config.workerKey}-batch-size`} className="block text-sm text-slate-200">
           Batch size
           <input
+            id={`${config.workerKey}-batch-size`}
             className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
             type="number"
             min={1}
@@ -132,9 +140,10 @@ export function StaffArrScheduledWorkerSettingsPanel({
         </label>
 
         {config.supportsStaleness ? (
-          <label className="block text-sm text-slate-200">
+          <label htmlFor={`${config.workerKey}-staleness-hours`} className="block text-sm text-slate-200">
             Staleness window (hours)
             <input
+              id={`${config.workerKey}-staleness-hours`}
               className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
               type="number"
               min={1}

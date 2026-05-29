@@ -119,7 +119,7 @@ export function PmDueScanSettingsPanel({ accessToken, canManage }: PmDueScanSett
 
       <div className="mt-4 space-y-3">
         <label className="flex items-center gap-2 text-sm">
-          <input
+          <input id="pmduescansettings"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -127,9 +127,9 @@ export function PmDueScanSettingsPanel({ accessToken, canManage }: PmDueScanSett
           Enable PM due scan worker
         </label>
 
-        <label className="block text-sm">
+        <label className="block text-sm" htmlFor="pmduescansettings-scan-interval-minutes">
           <span>Scan interval (minutes)</span>
-          <input
+          <input id="pmduescansettings-scan-interval-minutes" id="pmduescansettings-scan-interval-minutes"
             className="mt-1 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2"
             type="number"
             min={1}
@@ -139,9 +139,9 @@ export function PmDueScanSettingsPanel({ accessToken, canManage }: PmDueScanSett
           />
         </label>
 
-        <label className="block text-sm">
+        <label className="block text-sm" htmlFor="pmduescansettings-batch-size">
           <span>Batch size</span>
-          <input
+          <input id="pmduescansettings-batch-size" id="pmduescansettings-batch-size"
             className="mt-1 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2"
             type="number"
             min={1}
@@ -151,9 +151,9 @@ export function PmDueScanSettingsPanel({ accessToken, canManage }: PmDueScanSett
           />
         </label>
 
-        <label className="block text-sm">
+        <label className="block text-sm" htmlFor="pmduescansettings-overdue-grace-days">
           <span>Overdue grace (days)</span>
-          <input
+          <input id="pmduescansettings-overdue-grace-days" id="pmduescansettings-overdue-grace-days"
             className="mt-1 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2"
             type="number"
             min={0}

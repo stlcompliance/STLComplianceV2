@@ -76,16 +76,16 @@ export function ComplianceReportsPanel({
 
       <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-300">
         <label className="flex items-center gap-2">
-          <input
+          <input id="compliancereports"
             type="checkbox"
             checked={attentionOnly}
             onChange={(event) => setAttentionOnly(event.target.checked)}
           />
           Attention only
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2" htmlFor="compliancereports-site">
           Site
-          <input
+          <input id="compliancereports-site"
             className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100"
             value={siteRef}
             onChange={(event) => setSiteRef(event.target.value)}

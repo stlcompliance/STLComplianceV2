@@ -198,9 +198,10 @@ export function ReadinessPanel({
             </div>
           ) : (
             <form className="mt-3 grid gap-3" onSubmit={(event) => void handleGrantOverride(event)}>
-              <label className="grid gap-1 text-sm">
+              <label htmlFor="readiness-override-reason" className="grid gap-1 text-sm">
                 <span className="text-slate-400">Reason (required, min 8 characters)</span>
                 <textarea
+                  id="readiness-override-reason"
                   value={overrideReason}
                   onChange={(event) => setOverrideReason(event.target.value)}
                   rows={3}
@@ -209,9 +210,10 @@ export function ReadinessPanel({
                   minLength={8}
                 />
               </label>
-              <label className="grid gap-1 text-sm">
+              <label htmlFor="readiness-override-expires-at" className="grid gap-1 text-sm">
                 <span className="text-slate-400">Expires at (optional)</span>
                 <input
+                  id="readiness-override-expires-at"
                   type="datetime-local"
                   value={overrideExpiresAt}
                   onChange={(event) => setOverrideExpiresAt(event.target.value)}

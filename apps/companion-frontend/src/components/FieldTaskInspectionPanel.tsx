@@ -236,18 +236,23 @@ export function FieldTaskInspectionPanel({
               className="rounded-md border border-slate-800 bg-slate-900/70 p-3"
               data-testid={`companion-inspection-item-${item.itemKey}`}
             >
-              <p className="text-sm text-slate-100">
+              <p
+                id={`companion-inspection-prompt-${item.itemKey}`}
+                className="text-sm text-slate-100"
+              >
                 {item.prompt}
                 {item.isRequired && <span className="text-rose-300"> *</span>}
               </p>
 
               {item.itemType === 'pass_fail' && (
                 <select
+                  id={`companion-inspection-pass-fail-${item.itemKey}`}
                   className="mt-2 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
                   value={draft.passFailValue}
                   onChange={(event) =>
                     updateDraft(item.checklistItemId, { passFailValue: event.target.value })
                   }
+                  aria-labelledby={`companion-inspection-prompt-${item.itemKey}`}
                   data-testid={`companion-inspection-pass-fail-${item.itemKey}`}
                 >
                   <option value="">Select…</option>
@@ -259,24 +264,28 @@ export function FieldTaskInspectionPanel({
 
               {item.itemType === 'numeric' && (
                 <input
+                  id={`companion-inspection-numeric-${item.itemKey}`}
                   type="number"
                   className="mt-2 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
                   value={draft.numericValue}
                   onChange={(event) =>
                     updateDraft(item.checklistItemId, { numericValue: event.target.value })
                   }
+                  aria-labelledby={`companion-inspection-prompt-${item.itemKey}`}
                   data-testid={`companion-inspection-numeric-${item.itemKey}`}
                 />
               )}
 
               {item.itemType === 'text' && (
                 <textarea
+                  id={`companion-inspection-text-${item.itemKey}`}
                   className="mt-2 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
                   rows={2}
                   value={draft.textValue}
                   onChange={(event) =>
                     updateDraft(item.checklistItemId, { textValue: event.target.value })
                   }
+                  aria-labelledby={`companion-inspection-prompt-${item.itemKey}`}
                   data-testid={`companion-inspection-text-${item.itemKey}`}
                 />
               )}

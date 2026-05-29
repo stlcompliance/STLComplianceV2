@@ -75,8 +75,9 @@ export function EventProcessingSettingsPanel({ accessToken, canManage }: EventPr
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm">
+        <label htmlFor="event-processing-enabled" className="flex items-center gap-2 text-sm">
           <input
+            id="event-processing-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -84,18 +85,20 @@ export function EventProcessingSettingsPanel({ accessToken, canManage }: EventPr
           />
           Enable training event processing
         </label>
-        <label className="block text-sm">
+        <label htmlFor="event-processing-max-attempts" className="block text-sm">
           Max processing attempts
           <input
+            id="event-processing-max-attempts"
             className="mt-1 w-full rounded border border-border px-2 py-1"
             value={maxAttempts}
             onChange={(event) => setMaxAttempts(event.target.value)}
             data-testid="event-processing-max-attempts"
           />
         </label>
-        <label className="block text-sm">
+        <label htmlFor="event-processing-retry-interval" className="block text-sm">
           Retry interval (minutes)
           <input
+            id="event-processing-retry-interval"
             className="mt-1 w-full rounded border border-border px-2 py-1"
             value={retryIntervalMinutes}
             onChange={(event) => setRetryIntervalMinutes(event.target.value)}

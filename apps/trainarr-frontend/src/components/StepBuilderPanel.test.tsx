@@ -31,15 +31,14 @@ describe('StepBuilderPanel', () => {
       />,
     )
 
-    fireEvent.change(screen.getByLabelText(/Step key/i), { target: { value: 'intro' } })
-    fireEvent.change(screen.getByLabelText(/^Name/i), { target: { value: 'Intro content' } })
+    fireEvent.change(screen.getByLabelText(/^Name/i), { target: { value: 'intro' } })
     fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: 'Read the safety overview.' } })
     fireEvent.click(screen.getByRole('button', { name: /Add step/i }))
 
     expect(onCreateStep).toHaveBeenCalledWith(
       expect.objectContaining({
         stepKey: 'intro',
-        name: 'Intro content',
+        name: 'intro',
         stepType: 'content',
       }),
     )

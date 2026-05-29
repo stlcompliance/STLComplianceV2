@@ -71,9 +71,10 @@ export function RuleChangeMonitoringPanel({ accessToken }: RuleChangeMonitoringP
       )}
 
       <div className="flex flex-wrap gap-3">
-        <label className="flex flex-col gap-1 text-sm text-slate-400">
-          Change type
+        <label htmlFor="rule-change-filter-type" className="flex flex-col gap-1 text-sm text-slate-400">
+          Rule change type
           <select
+            id="rule-change-filter-type"
             value={changeType}
             onChange={(event) => setChangeType(event.target.value)}
             className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-slate-200"
@@ -85,9 +86,10 @@ export function RuleChangeMonitoringPanel({ accessToken }: RuleChangeMonitoringP
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-sm text-slate-400">
-          Pack key filter
+        <label htmlFor="rule-change-filter-pack-key" className="flex flex-col gap-1 text-sm text-slate-400">
+          Rule pack key filter
           <input
+            id="rule-change-filter-pack-key"
             type="text"
             value={packKey}
             onChange={(event) => setPackKey(event.target.value)}

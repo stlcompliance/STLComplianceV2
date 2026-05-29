@@ -32,10 +32,12 @@ export function CheckboxMultiSelect({
         {options.map((option) => {
           const checked = values.includes(option.value)
           const isDisabled = disabled || (option.inactive && !checked)
+          const optionId = testId ? `${testId}-${option.value}` : `checkbox-multi-${option.value}`
           return (
             <li key={option.value}>
-              <label className="flex items-center gap-2 text-sm text-slate-200">
+              <label htmlFor={optionId} className="flex items-center gap-2 text-sm text-slate-200">
                 <input
+                  id={optionId}
                   type="checkbox"
                   checked={checked}
                   disabled={isDisabled}

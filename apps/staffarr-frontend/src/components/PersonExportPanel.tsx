@@ -252,9 +252,11 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
             <p className="text-xs text-slate-500">
               Runs workforce exports on an interval using the tenant default filters. Delivery is recorded in StaffArr audit history.
             </p>
-            <label className="flex items-center gap-2 text-sm text-slate-300">
+            <label htmlFor="person-export-schedule-enabled" className="flex items-center gap-2 text-sm text-slate-300">
               <input
+                id="person-export-schedule-enabled"
                 type="checkbox"
+                data-testid="person-export-schedule-enabled"
                 checked={scheduleEnabled}
                 onChange={(event) => {
                   setScheduleInitialized(true)
@@ -264,9 +266,10 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
               />
               Enable scheduled delivery
             </label>
-            <label className="block text-sm text-slate-300">
+            <label htmlFor="person-export-schedule-interval-hours" className="block text-sm text-slate-300">
               Delivery interval (hours)
               <input
+                id="person-export-schedule-interval-hours"
                 type="number"
                 min={1}
                 max={720}
@@ -285,22 +288,24 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
             ) : (
               <p className="text-xs text-slate-500">No scheduled delivery recorded yet.</p>
             )}
-            <label className="block text-sm text-slate-300">
+            <label htmlFor="person-export-schedule-webhook-url" className="block text-sm text-slate-300">
               Notification webhook URL (optional)
               <input
+                id="person-export-schedule-webhook-url"
                 type="url"
                 value={notificationWebhookUrl}
                 onChange={(event) => {
                   setScheduleInitialized(true)
                   setNotificationWebhookUrl(event.target.value)
                 }}
-                placeholder="https://hooks.example.com/staffarr-export"
                 className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               />
             </label>
-            <label className="flex items-center gap-2 text-sm text-slate-300">
+            <label htmlFor="person-export-schedule-notify-success" className="flex items-center gap-2 text-sm text-slate-300">
               <input
+                id="person-export-schedule-notify-success"
                 type="checkbox"
+                data-testid="person-export-schedule-notify-success"
                 checked={notifyOnSuccess}
                 onChange={(event) => {
                   setScheduleInitialized(true)
@@ -310,9 +315,11 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
               />
               Notify on successful delivery
             </label>
-            <label className="flex items-center gap-2 text-sm text-slate-300">
+            <label htmlFor="person-export-schedule-notify-failure" className="flex items-center gap-2 text-sm text-slate-300">
               <input
+                id="person-export-schedule-notify-failure"
                 type="checkbox"
+                data-testid="person-export-schedule-notify-failure"
                 checked={notifyOnFailure}
                 onChange={(event) => {
                   setScheduleInitialized(true)
@@ -344,9 +351,10 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
             ) : null}
           </div>
 
-          <label className="block text-sm text-slate-300">
+          <label htmlFor="person-export-employment-status" className="block text-sm text-slate-300">
             Employment status filter (optional)
             <select
+              id="person-export-employment-status"
               value={employmentStatus}
               onChange={(event) => setEmploymentStatus(event.target.value)}
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -358,9 +366,10 @@ export function PersonExportPanel({ accessToken, canExport }: PersonExportPanelP
             </select>
           </label>
 
-          <label className="block text-sm text-slate-300">
+          <label htmlFor="person-export-org-unit" className="block text-sm text-slate-300">
             Primary org unit filter (optional)
             <select
+              id="person-export-org-unit"
               value={orgUnitId}
               onChange={(event) => setOrgUnitId(event.target.value)}
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"

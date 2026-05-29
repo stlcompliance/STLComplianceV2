@@ -80,9 +80,10 @@ export function QualificationReportsPanel({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-4 text-sm text-foreground">
-        <label className="flex items-center gap-2">
-          Status
+        <label htmlFor="qualification-reports-status" className="flex items-center gap-2">
+          <span>Status</span>
           <select
+            id="qualification-reports-status"
             className="rounded border border-border bg-background px-2 py-1"
             value={status}
             onChange={(event) => setStatus(event.target.value)}

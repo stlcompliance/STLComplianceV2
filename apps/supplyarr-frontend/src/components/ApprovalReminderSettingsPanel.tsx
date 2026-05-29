@@ -98,8 +98,9 @@ export function ApprovalReminderSettingsPanel({
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="approval-reminder-enabled" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="approval-reminder-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -107,9 +108,10 @@ export function ApprovalReminderSettingsPanel({
           Enable automated approval reminders
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label htmlFor="approval-reminder-pr-hours" className="block text-sm text-slate-200">
           <span className="font-medium">PR reminder after (hours)</span>
           <input
+            id="approval-reminder-pr-hours"
             className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             type="number"
             min={1}
@@ -119,9 +121,10 @@ export function ApprovalReminderSettingsPanel({
           />
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label htmlFor="approval-reminder-po-hours" className="block text-sm text-slate-200">
           <span className="font-medium">PO reminder after (hours)</span>
           <input
+            id="approval-reminder-po-hours"
             className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             type="number"
             min={1}
@@ -131,9 +134,10 @@ export function ApprovalReminderSettingsPanel({
           />
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label htmlFor="approval-reminder-cooldown-hours" className="block text-sm text-slate-200">
           <span className="font-medium">Reminder cooldown (hours)</span>
           <input
+            id="approval-reminder-cooldown-hours"
             className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             type="number"
             min={1}
@@ -143,9 +147,10 @@ export function ApprovalReminderSettingsPanel({
           />
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label htmlFor="approval-reminder-max-per-subject" className="block text-sm text-slate-200">
           <span className="font-medium">Max reminders per subject</span>
           <input
+            id="approval-reminder-max-per-subject"
             className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             type="number"
             min={1}
@@ -155,8 +160,9 @@ export function ApprovalReminderSettingsPanel({
           />
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="approval-reminder-notify-pr" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="approval-reminder-notify-pr"
             type="checkbox"
             checked={notifyOnPrApprovalReminder}
             onChange={(event) => setNotifyOnPrApprovalReminder(event.target.checked)}
@@ -164,8 +170,9 @@ export function ApprovalReminderSettingsPanel({
           Notify on PR approval reminders (requires notification webhook)
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="approval-reminder-notify-po" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="approval-reminder-notify-po"
             type="checkbox"
             checked={notifyOnPoApprovalReminder}
             onChange={(event) => setNotifyOnPoApprovalReminder(event.target.checked)}

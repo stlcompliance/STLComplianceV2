@@ -96,8 +96,9 @@ export function PurchasingReportsPanel({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3 text-sm">
-        <label className="flex items-center gap-2 text-slate-300">
+        <label htmlFor="purchasing-report-open-only" className="flex items-center gap-2 text-slate-300">
           <input
+            id="purchasing-report-open-only"
             type="checkbox"
             checked={openDocumentsOnly}
             onChange={(event) => setOpenDocumentsOnly(event.target.checked)}

@@ -165,9 +165,10 @@ export function PersonnelNotesPanel({
         <form onSubmit={handleSubmit} className="mt-6 space-y-3 border-t border-slate-700 pt-4">
           <h3 className="text-sm font-medium text-slate-200">Add personnel note</h3>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-xs text-slate-400">
+            <label htmlFor="personnel-note-category" className="block text-xs text-slate-400">
               Category
               <select
+                id="personnel-note-category"
                 value={categoryKey}
                 onChange={(event) => setCategoryKey(event.target.value as PersonnelNoteCategoryKey)}
                 className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -179,9 +180,10 @@ export function PersonnelNotesPanel({
                 ))}
               </select>
             </label>
-            <label className="block text-xs text-slate-400">
+            <label htmlFor="personnel-note-visibility" className="block text-xs text-slate-400">
               Visibility
               <select
+                id="personnel-note-visibility"
                 value={visibilityKey}
                 onChange={(event) => setVisibilityKey(event.target.value as PersonnelNoteVisibilityKey)}
                 className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -194,9 +196,10 @@ export function PersonnelNotesPanel({
               </select>
             </label>
           </div>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="personnel-note-subject" className="block text-xs text-slate-400">
             Subject
             <input
+              id="personnel-note-subject"
               value={subject}
               onChange={(event) => setSubject(event.target.value)}
               required
@@ -204,9 +207,10 @@ export function PersonnelNotesPanel({
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             />
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="personnel-note-body" className="block text-xs text-slate-400">
             Body
             <textarea
+              id="personnel-note-body"
               value={body}
               onChange={(event) => setBody(event.target.value)}
               required

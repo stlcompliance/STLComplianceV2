@@ -72,8 +72,9 @@ export function StaffarrPublicationSettingsPanel({ accessToken, canManage }: Sta
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm">
+        <label htmlFor="staffarr-publication-retry-enabled" className="flex items-center gap-2 text-sm">
           <input
+            id="staffarr-publication-retry-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -82,9 +83,10 @@ export function StaffarrPublicationSettingsPanel({ accessToken, canManage }: Sta
           Enable scheduled StaffArr publication retries
         </label>
 
-        <label className="block text-sm">
+        <label htmlFor="staffarr-publication-max-attempts" className="block text-sm">
           <span className="font-medium">Max delivery attempts</span>
           <input
+            id="staffarr-publication-max-attempts"
             className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
             type="number"
             min={1}
@@ -95,9 +97,10 @@ export function StaffarrPublicationSettingsPanel({ accessToken, canManage }: Sta
           />
         </label>
 
-        <label className="block text-sm">
+        <label htmlFor="staffarr-publication-retry-interval" className="block text-sm">
           <span className="font-medium">Retry interval (minutes)</span>
           <input
+            id="staffarr-publication-retry-interval"
             className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
             type="number"
             min={1}

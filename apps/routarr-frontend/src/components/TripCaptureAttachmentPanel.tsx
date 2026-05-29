@@ -197,9 +197,9 @@ export function TripCaptureAttachmentPanel({
       )}
 
       <div className="mt-2 flex flex-wrap gap-2">
-        <label className="cursor-pointer rounded bg-slate-800 px-2 py-1 text-xs text-slate-200">
+        <label className="cursor-pointer rounded bg-slate-800 px-2 py-1 text-xs text-slate-200" htmlFor="tripcaptureattachment-photo">
           Photo
-          <input
+          <input id="tripcaptureattachment-photo"
             type="file"
             accept="image/*"
             capture="environment"
@@ -208,9 +208,9 @@ export function TripCaptureAttachmentPanel({
             onChange={(event) => void onFileSelected('photo', event)}
           />
         </label>
-        <label className="cursor-pointer rounded bg-slate-800 px-2 py-1 text-xs text-slate-200">
+        <label className="cursor-pointer rounded bg-slate-800 px-2 py-1 text-xs text-slate-200" htmlFor="tripcaptureattachment-document">
           Document
-          <input
+          <input id="tripcaptureattachment-document"
             type="file"
             accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,image/*,application/pdf"
             className="hidden"

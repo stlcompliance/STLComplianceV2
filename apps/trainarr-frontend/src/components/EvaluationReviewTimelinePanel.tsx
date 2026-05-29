@@ -102,9 +102,10 @@ export function EvaluationReviewTimelinePanel({
         workspace for full history and re-evaluation.
       </p>
 
-      <label className="mt-3 block text-xs text-slate-400">
+      <label htmlFor="evaluation-review-result-filter" className="mt-3 block text-xs text-slate-400">
         Result filter
         <select
+          id="evaluation-review-result-filter"
           className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
           value={resultFilter}
           onChange={(event) => setResultFilter(event.target.value)}

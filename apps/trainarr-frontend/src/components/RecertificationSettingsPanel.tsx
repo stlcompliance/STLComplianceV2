@@ -69,8 +69,9 @@ export function RecertificationSettingsPanel({ accessToken, canManage }: Recerti
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm">
+        <label htmlFor="recertification-enabled" className="flex items-center gap-2 text-sm">
           <input
+            id="recertification-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -79,9 +80,10 @@ export function RecertificationSettingsPanel({ accessToken, canManage }: Recerti
           Enable automatic recertification assignments
         </label>
 
-        <label className="block text-sm">
+        <label htmlFor="recertification-lead-days" className="block text-sm">
           <span className="font-medium">Lead window (days before expiry)</span>
           <input
+            id="recertification-lead-days"
             className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
             type="number"
             min={1}

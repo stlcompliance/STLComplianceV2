@@ -164,9 +164,10 @@ export function SupplierOnboardingPanel({
       ) : null}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label className="text-sm text-slate-400">
-          Party
+        <label htmlFor="supplier-onboarding-party" className="text-sm text-slate-400">
+          Onboarding party
           <select
+            id="supplier-onboarding-party"
             className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
             value={selectedPartyId}
             onChange={(e) => setSelectedPartyId(e.target.value)}
@@ -179,9 +180,10 @@ export function SupplierOnboardingPanel({
             ))}
           </select>
         </label>
-        <label className="text-sm text-slate-400">
-          Notes
+        <label htmlFor="supplier-onboarding-notes" className="text-sm text-slate-400">
+          Onboarding notes
           <input
+            id="supplier-onboarding-notes"
             className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
             value={onboardingNotes}
             onChange={(e) => setOnboardingNotes(e.target.value)}
@@ -237,20 +239,25 @@ export function SupplierOnboardingPanel({
         <div className="mt-4 rounded-lg border border-slate-800 p-3">
           <h3 className="text-sm font-medium text-slate-300">Upload document (metadata)</h3>
           <div className="mt-2 grid gap-2 sm:grid-cols-3">
-            <select
-              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-              value={docTypeKey}
-              onChange={(e) => setDocTypeKey(e.target.value)}
-            >
-              {requirementsQuery.data?.requirements.map((r) => (
-                <option key={r.documentTypeKey} value={r.documentTypeKey}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
-            <label className="block text-sm text-slate-400">
-              Title
+            <label htmlFor="supplier-onboarding-doc-type" className="block text-sm text-slate-400">
+              Document type
+              <select
+                id="supplier-onboarding-doc-type"
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                value={docTypeKey}
+                onChange={(e) => setDocTypeKey(e.target.value)}
+              >
+                {requirementsQuery.data?.requirements.map((r) => (
+                  <option key={r.documentTypeKey} value={r.documentTypeKey}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label htmlFor="supplier-onboarding-doc-title" className="block text-sm text-slate-400">
+              Document title
               <input
+                id="supplier-onboarding-doc-title"
                 className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                 placeholder="Title"
                 value={docTitle}
@@ -306,12 +313,16 @@ export function SupplierOnboardingPanel({
           >
             Approve onboarding
           </button>
-          <input
-            className="min-w-[12rem] flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-            placeholder="Rejection reason"
-            value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
-          />
+          <label htmlFor="supplier-onboarding-reject-reason" className="block min-w-[12rem] flex-1 text-sm text-slate-400">
+            Rejection reason
+            <input
+              id="supplier-onboarding-reject-reason"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              placeholder="Rejection reason"
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+            />
+          </label>
           <button
             type="button"
             className="rounded-lg bg-rose-700 px-3 py-1.5 text-sm text-white disabled:opacity-50"

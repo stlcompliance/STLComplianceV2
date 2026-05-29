@@ -214,9 +214,10 @@ export function CertificationPanel({
 
       {canManage ? (
         <form className="mt-6 grid gap-3 border-t border-slate-700 pt-4 md:grid-cols-2" onSubmit={handleGrantSubmit}>
-          <label className="grid gap-1 text-xs text-slate-400 md:col-span-2">
+          <label htmlFor="certification-grant-definition" className="grid gap-1 text-xs text-slate-400 md:col-span-2">
             Certification definition
             <select
+              id="certification-grant-definition"
               value={selectedDefinitionId}
               onChange={(event) => setSelectedDefinitionId(event.target.value)}
               className="rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
@@ -230,18 +231,20 @@ export function CertificationPanel({
               ))}
             </select>
           </label>
-          <label className="grid gap-1 text-xs text-slate-400">
+          <label htmlFor="certification-grant-expires-at" className="grid gap-1 text-xs text-slate-400">
             Expiration override (optional)
             <input
+              id="certification-grant-expires-at"
               type="date"
               value={expiresAt}
               onChange={(event) => setExpiresAt(event.target.value)}
               className="rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
             />
           </label>
-          <label className="grid gap-1 text-xs text-slate-400 md:col-span-2">
+          <label htmlFor="certification-grant-notes" className="grid gap-1 text-xs text-slate-400 md:col-span-2">
             Grant notes (optional)
             <textarea
+              id="certification-grant-notes"
               value={grantNotes}
               onChange={(event) => setGrantNotes(event.target.value)}
               rows={2}

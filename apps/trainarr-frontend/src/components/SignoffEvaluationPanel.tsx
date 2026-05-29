@@ -51,9 +51,10 @@ function EvaluationSubmitForm({
 }) {
   return (
     <div className="space-y-2">
-      <label className="block text-xs text-slate-400">
+      <label htmlFor="evaluation-submit-result" className="block text-xs text-slate-400">
         Result
         <select
+          id="evaluation-submit-result"
           className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
           value={evaluationResult}
           onChange={(e) => onEvaluationResultChange(e.target.value)}
@@ -63,18 +64,20 @@ function EvaluationSubmitForm({
           <option value="incomplete">incomplete</option>
         </select>
       </label>
-      <label className="block text-xs text-slate-400">
+      <label htmlFor="evaluation-submit-score" className="block text-xs text-slate-400">
         Score (optional)
         <input
+          id="evaluation-submit-score"
           type="number"
           className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
           value={evaluationScore}
           onChange={(e) => onEvaluationScoreChange(e.target.value)}
         />
       </label>
-      <label className="block text-xs text-slate-400">
+      <label htmlFor="evaluation-submit-notes" className="block text-xs text-slate-400">
         Notes
         <input
+          id="evaluation-submit-notes"
           className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
           value={evaluationNotes}
           onChange={(e) => onEvaluationNotesChange(e.target.value)}
@@ -196,9 +199,10 @@ export function SignoffEvaluationPanel({
         </ul>
 
         {assignmentOpen && (canSubmitTraineeSignoff || canSubmitTrainerSignoff) && (
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="signoff-notes" className="block text-xs text-slate-400">
             Signoff notes (optional)
             <input
+              id="signoff-notes"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
               value={signoffNotes}
               onChange={(e) => onSignoffNotesChange(e.target.value)}

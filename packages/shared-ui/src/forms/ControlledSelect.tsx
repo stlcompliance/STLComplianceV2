@@ -6,6 +6,7 @@ export type ControlledSelectProps = {
   options: PickerOption[]
   selectedOption?: PickerOption
   label?: string
+  id?: string
   emptyLabel?: string
   disabled?: boolean
   testId?: string
@@ -18,15 +19,18 @@ export function ControlledSelect({
   options,
   selectedOption,
   label,
+  id,
   emptyLabel = 'Select…',
   disabled = false,
   testId,
   className = 'mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100',
 }: ControlledSelectProps) {
   const mergedOptions = mergePickerOptions(options, value, selectedOption)
+  const fieldId = id ?? testId
 
   const field = (
     <select
+      id={fieldId}
       value={value}
       onChange={(event) => onChange(event.target.value)}
       disabled={disabled}
@@ -47,7 +51,7 @@ export function ControlledSelect({
   }
 
   return (
-    <label className="block text-sm text-slate-300">
+    <label htmlFor={fieldId} className="block text-sm text-slate-300">
       {label}
       {field}
     </label>

@@ -214,267 +214,159 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
 
 
       <div className="mt-4 space-y-3">
-
-        <label className="flex items-center gap-2 text-sm">
-
+        <label htmlFor="notification-settings-enabled" className="flex items-center gap-2 text-sm">
           <input
-
+            id="notification-settings-enabled"
             type="checkbox"
-
+            data-testid="notification-settings-enabled"
             checked={isEnabled}
-
             onChange={(event) => setIsEnabled(event.target.checked)}
-
           />
-
           Enable training notifications
-
         </label>
 
-
-
-        <label className="block text-sm">
-
+        <label htmlFor="notification-settings-webhook-url" className="block text-sm">
           <span className="font-medium">Webhook URL</span>
-
           <input
-
+            id="notification-settings-webhook-url"
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-
             type="url"
-
-            placeholder="https://hooks.example.com/trainarr"
-
             value={webhookUrl}
-
             onChange={(event) => setWebhookUrl(event.target.value)}
-
           />
-
         </label>
-
-
 
         <fieldset className="space-y-2 text-sm">
-
           <legend className="font-medium">Notify on</legend>
-
-          <label className="flex items-center gap-2">
-
+          <label htmlFor="notification-settings-notify-assignment-created" className="flex items-center gap-2">
             <input
-
+              id="notification-settings-notify-assignment-created"
               type="checkbox"
-
+              data-testid="notification-settings-notify-assignment-created"
               checked={notifyAssignmentCreated}
-
               onChange={(event) => setNotifyAssignmentCreated(event.target.checked)}
-
             />
-
             Training assignment created
-
           </label>
-
-          <label className="flex items-center gap-2">
-
+          <label htmlFor="notification-settings-notify-assignment-completed" className="flex items-center gap-2">
             <input
-
+              id="notification-settings-notify-assignment-completed"
               type="checkbox"
-
+              data-testid="notification-settings-notify-assignment-completed"
               checked={notifyAssignmentCompleted}
-
               onChange={(event) => setNotifyAssignmentCompleted(event.target.checked)}
-
             />
-
             Training assignment completed
-
           </label>
-
-          <label className="flex items-center gap-2">
-
+          <label htmlFor="notification-settings-notify-qualification-expiring" className="flex items-center gap-2">
             <input
-
+              id="notification-settings-notify-qualification-expiring"
               type="checkbox"
-
+              data-testid="notification-settings-notify-qualification-expiring"
               checked={notifyQualificationExpiring}
-
               onChange={(event) => setNotifyQualificationExpiring(event.target.checked)}
-
             />
-
             Qualification expiring soon
-
           </label>
-
-          <label className="flex items-center gap-2">
-
+          <label htmlFor="notification-settings-notify-qualification-issued" className="flex items-center gap-2">
             <input
-
+              id="notification-settings-notify-qualification-issued"
               type="checkbox"
-
+              data-testid="notification-settings-notify-qualification-issued"
               checked={notifyQualificationIssued}
-
               onChange={(event) => setNotifyQualificationIssued(event.target.checked)}
-
             />
-
             Qualification issued
-
           </label>
-
-          <label className="flex items-center gap-2">
-
+          <label htmlFor="notification-settings-notify-qualification-suspended" className="flex items-center gap-2">
             <input
-
+              id="notification-settings-notify-qualification-suspended"
               type="checkbox"
-
+              data-testid="notification-settings-notify-qualification-suspended"
               checked={notifyQualificationSuspended}
-
               onChange={(event) => setNotifyQualificationSuspended(event.target.checked)}
-
             />
-
             Qualification suspended
-
           </label>
-
-          <label className="flex items-center gap-2">
-
+          <label htmlFor="notification-settings-notify-qualification-revoked" className="flex items-center gap-2">
             <input
-
+              id="notification-settings-notify-qualification-revoked"
               type="checkbox"
-
+              data-testid="notification-settings-notify-qualification-revoked"
               checked={notifyQualificationRevoked}
-
               onChange={(event) => setNotifyQualificationRevoked(event.target.checked)}
-
             />
-
             Qualification revoked
-
           </label>
-
-          <label className="flex items-center gap-2">
-
+          <label htmlFor="notification-settings-notify-qualification-expired" className="flex items-center gap-2">
             <input
-
+              id="notification-settings-notify-qualification-expired"
               type="checkbox"
-
+              data-testid="notification-settings-notify-qualification-expired"
               checked={notifyQualificationExpired}
-
               onChange={(event) => setNotifyQualificationExpired(event.target.checked)}
-
             />
-
             Qualification expired
-
           </label>
-
-          <label className="flex items-center gap-2">
-
+          <label htmlFor="notification-settings-notify-assignment-due-reminder" className="flex items-center gap-2">
             <input
-
+              id="notification-settings-notify-assignment-due-reminder"
               type="checkbox"
-
+              data-testid="notification-settings-notify-assignment-due-reminder"
               checked={notifyAssignmentDueReminder}
-
               onChange={(event) => setNotifyAssignmentDueReminder(event.target.checked)}
-
             />
-
             Assignment due reminder (scheduled worker)
-
           </label>
-
-          <label className="flex items-center gap-2">
-
+          <label htmlFor="notification-settings-notify-assignment-overdue-escalation" className="flex items-center gap-2">
             <input
-
+              id="notification-settings-notify-assignment-overdue-escalation"
               type="checkbox"
-
+              data-testid="notification-settings-notify-assignment-overdue-escalation"
               checked={notifyAssignmentOverdueEscalation}
-
               onChange={(event) => setNotifyAssignmentOverdueEscalation(event.target.checked)}
-
             />
-
             Assignment overdue escalation (scheduled worker)
-
           </label>
-
         </fieldset>
 
-
-
         <div className="flex flex-wrap gap-4">
-
-          <label className="block text-sm">
-
+          <label htmlFor="notification-settings-expiring-lead-days" className="block text-sm">
             <span className="font-medium">Expiring lead (days)</span>
-
             <input
-
+              id="notification-settings-expiring-lead-days"
               className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
-
               type="number"
-
               min={1}
-
               max={365}
-
               value={expiringLeadDays}
-
               onChange={(event) => setExpiringLeadDays(event.target.value)}
-
             />
-
           </label>
-
-          <label className="block text-sm">
-
+          <label htmlFor="notification-settings-max-attempts" className="block text-sm">
             <span className="font-medium">Max attempts</span>
-
             <input
-
+              id="notification-settings-max-attempts"
               className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
-
               type="number"
-
               min={1}
-
               max={50}
-
               value={maxAttempts}
-
               onChange={(event) => setMaxAttempts(event.target.value)}
-
             />
-
           </label>
-
-          <label className="block text-sm">
-
+          <label htmlFor="notification-settings-retry-interval" className="block text-sm">
             <span className="font-medium">Retry interval (minutes)</span>
-
             <input
-
+              id="notification-settings-retry-interval"
               className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
-
               type="number"
-
               min={1}
-
               max={1440}
-
               value={retryIntervalMinutes}
-
               onChange={(event) => setRetryIntervalMinutes(event.target.value)}
-
             />
-
           </label>
-
         </div>
 
 

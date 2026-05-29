@@ -516,9 +516,9 @@ export function TripExecutionWorkspacePanel({
             Operator override for dispatch status. Capture requirements still apply on driver portal
             start/complete.
           </p>
-          <label className="mt-3 block text-sm text-slate-300">
-            Dispatch status
-            <select
+          <label className="mt-3 block text-sm text-slate-300" htmlFor="tripexecutionworkspace-dispatch-status">
+          Dispatch status
+          <select id="tripexecutionworkspace-dispatch-status"
               className="mt-1 w-full max-w-xs rounded border border-slate-600 bg-slate-950 px-3 py-2"
               value={trip.dispatchStatus}
               disabled={statusMutation.isPending}

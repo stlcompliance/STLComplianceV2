@@ -193,9 +193,10 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Export filters</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <label className="block text-sm text-slate-300">
+          <label htmlFor="staffarr-audit-filter-from" className="block text-sm text-slate-300">
             From (optional)
             <input
+              id="staffarr-audit-filter-from"
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
@@ -203,9 +204,10 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             />
           </label>
-          <label className="block text-sm text-slate-300">
+          <label htmlFor="staffarr-audit-filter-to" className="block text-sm text-slate-300">
             To (optional)
             <input
+              id="staffarr-audit-filter-to"
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
@@ -213,9 +215,10 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             />
           </label>
-          <label className="block text-sm text-slate-300">
+          <label htmlFor="staffarr-audit-filter-action" className="block text-sm text-slate-300">
             Action
             <select
+              id="staffarr-audit-filter-action"
               value={action}
               onChange={(e) => setAction(e.target.value)}
               data-testid="staffarr-audit-filter-action"
@@ -229,9 +232,10 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-300">
+          <label htmlFor="staffarr-audit-filter-result" className="block text-sm text-slate-300">
             Result
             <select
+              id="staffarr-audit-filter-result"
               value={result}
               onChange={(e) => setResult(e.target.value)}
               data-testid="staffarr-audit-filter-result"
@@ -245,9 +249,10 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-300">
+          <label htmlFor="staffarr-audit-filter-target-type" className="block text-sm text-slate-300">
             Target type
             <select
+              id="staffarr-audit-filter-target-type"
               value={targetType}
               onChange={(e) => setTargetType(e.target.value)}
               data-testid="staffarr-audit-filter-target-type"

@@ -145,17 +145,19 @@ export function WarrantyClaimsPanel({
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label className="text-sm text-slate-300">
+        <label htmlFor="warranty-claim-key" className="text-sm text-slate-300">
           Claim key
           <input
+            id="warranty-claim-key"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
             value={claimKey}
             onChange={(e) => setClaimKey(e.target.value)}
           />
         </label>
-        <label className="text-sm text-slate-300">
-          Type
+        <label htmlFor="warranty-claim-type" className="text-sm text-slate-300">
+          Claim type
           <select
+            id="warranty-claim-type"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
             value={claimType}
             onChange={(e) => setClaimType(e.target.value as (typeof CLAIM_TYPES)[number])}
@@ -167,9 +169,10 @@ export function WarrantyClaimsPanel({
             ))}
           </select>
         </label>
-        <label className="text-sm text-slate-300">
+        <label htmlFor="warranty-claim-vendor" className="text-sm text-slate-300">
           Vendor
           <select
+            id="warranty-claim-vendor"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
             value={vendorPartyId}
             onChange={(e) => setVendorPartyId(e.target.value)}
@@ -182,9 +185,10 @@ export function WarrantyClaimsPanel({
             ))}
           </select>
         </label>
-        <label className="text-sm text-slate-300">
+        <label htmlFor="warranty-claim-part" className="text-sm text-slate-300">
           Part
           <select
+            id="warranty-claim-part"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
             value={partId}
             onChange={(e) => setPartId(e.target.value)}
@@ -197,9 +201,10 @@ export function WarrantyClaimsPanel({
             ))}
           </select>
         </label>
-        <label className="text-sm text-slate-300">
+        <label htmlFor="warranty-claim-purchase-order" className="text-sm text-slate-300">
           Purchase order (optional)
           <select
+            id="warranty-claim-purchase-order"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
             value={purchaseOrderId}
             onChange={(e) => {
@@ -215,9 +220,10 @@ export function WarrantyClaimsPanel({
             ))}
           </select>
         </label>
-        <label className="text-sm text-slate-300">
+        <label htmlFor="warranty-claim-po-line" className="text-sm text-slate-300">
           PO line (optional)
           <select
+            id="warranty-claim-po-line"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
             value={purchaseOrderLineId}
             onChange={(e) => setPurchaseOrderLineId(e.target.value)}
@@ -231,17 +237,19 @@ export function WarrantyClaimsPanel({
             ))}
           </select>
         </label>
-        <label className="text-sm text-slate-300">
+        <label htmlFor="warranty-claim-quantity" className="text-sm text-slate-300">
           Quantity claimed
           <input
+            id="warranty-claim-quantity"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
             value={quantityClaimed}
             onChange={(e) => setQuantityClaimed(e.target.value)}
           />
         </label>
-        <label className="text-sm text-slate-300 sm:col-span-2">
+        <label htmlFor="warranty-claim-problem-description" className="text-sm text-slate-300 sm:col-span-2">
           Problem description
           <textarea
+            id="warranty-claim-problem-description"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
             rows={2}
             value={problemDescription}
@@ -305,9 +313,10 @@ export function WarrantyClaimsPanel({
 
           {selectedClaim.status === 'submitted' && (
             <>
-              <label className="mt-2 block text-slate-300">
-                Vendor disposition
+              <label htmlFor="warranty-vendor-disposition-select" className="mt-2 block text-slate-300">
+                Vendor disposition outcome
                 <select
+                  id="warranty-vendor-disposition-select"
                   className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
                   value={vendorDisposition}
                   onChange={(e) =>
@@ -321,13 +330,16 @@ export function WarrantyClaimsPanel({
                   ))}
                 </select>
               </label>
-              <textarea
-                className="mt-2 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
-                rows={2}
-                placeholder="Vendor response notes"
-                value={vendorResponseNotes}
-                onChange={(e) => setVendorResponseNotes(e.target.value)}
-              />
+              <label htmlFor="warranty-vendor-response-notes" className="mt-2 block text-slate-300">
+                Vendor response notes
+                <textarea
+                  id="warranty-vendor-response-notes"
+                  className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
+                  rows={2}
+                  value={vendorResponseNotes}
+                  onChange={(e) => setVendorResponseNotes(e.target.value)}
+                />
+              </label>
               <button
                 type="button"
                 className="mt-2 rounded bg-violet-600 px-2 py-1 text-xs text-white"
@@ -335,13 +347,16 @@ export function WarrantyClaimsPanel({
               >
                 Record vendor response
               </button>
-              <textarea
-                className="mt-2 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
-                rows={2}
-                placeholder="Denial reason"
-                value={denialReason}
-                onChange={(e) => setDenialReason(e.target.value)}
-              />
+              <label htmlFor="warranty-denial-reason" className="mt-2 block text-slate-300">
+                Denial reason
+                <textarea
+                  id="warranty-denial-reason"
+                  className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
+                  rows={2}
+                  value={denialReason}
+                  onChange={(e) => setDenialReason(e.target.value)}
+                />
+              </label>
               <button
                 type="button"
                 className="mt-2 ml-2 rounded bg-rose-600 px-2 py-1 text-xs text-white"
@@ -355,13 +370,16 @@ export function WarrantyClaimsPanel({
           {selectedClaim.status === 'vendor_responded' &&
             selectedClaim.vendorDisposition !== 'denied' && (
               <>
-                <textarea
-                  className="mt-2 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
-                  rows={2}
-                  placeholder="Closure notes"
-                  value={closureNotes}
-                  onChange={(e) => setClosureNotes(e.target.value)}
-                />
+                <label htmlFor="warranty-closure-notes" className="mt-2 block text-slate-300">
+                  Closure notes
+                  <textarea
+                    id="warranty-closure-notes"
+                    className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
+                    rows={2}
+                    value={closureNotes}
+                    onChange={(e) => setClosureNotes(e.target.value)}
+                  />
+                </label>
                 <button
                   type="button"
                   className="mt-2 rounded bg-emerald-600 px-2 py-1 text-xs text-white"
@@ -374,13 +392,16 @@ export function WarrantyClaimsPanel({
 
           {(selectedClaim.status === 'draft' || selectedClaim.status === 'submitted') && (
             <>
-              <textarea
-                className="mt-2 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
-                rows={2}
-                placeholder="Cancel reason"
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-              />
+              <label htmlFor="warranty-cancel-reason" className="mt-2 block text-slate-300">
+                Cancel reason
+                <textarea
+                  id="warranty-cancel-reason"
+                  className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
+                  rows={2}
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                />
+              </label>
               <button
                 type="button"
                 className="mt-2 rounded bg-slate-600 px-2 py-1 text-xs text-white"

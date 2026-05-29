@@ -127,9 +127,10 @@ export function ReturnsPanel({
       </p>
 
       <div className="mt-4 flex flex-wrap items-end gap-3">
-        <label className="block text-sm text-slate-400">
-          Status filter
+        <label htmlFor="vendor-return-status-filter" className="block text-sm text-slate-400">
+          Return status filter
           <select
+            id="vendor-return-status-filter"
             className="mt-1 block w-full min-w-[8rem] rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
             value={statusFilter}
             onChange={(e) => onStatusFilterChange(e.target.value)}
@@ -185,9 +186,10 @@ export function ReturnsPanel({
         <div className="mt-6 grid gap-4 border-t border-slate-800 pt-4 md:grid-cols-2">
           <div className="space-y-3">
             <h3 className="text-sm font-medium text-slate-300">Create return</h3>
-            <label className="block text-sm text-slate-400">
-              Source
+            <label htmlFor="vendor-return-source" className="block text-sm text-slate-400">
+              Return source
               <select
+                id="vendor-return-source"
                 className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                 value={returnSource}
                 onChange={(e) =>
@@ -198,17 +200,19 @@ export function ReturnsPanel({
                 <option value="purchase_order_line">From PO line</option>
               </select>
             </label>
-            <label className="block text-sm text-slate-400">
+            <label htmlFor="vendor-return-key" className="block text-sm text-slate-400">
               Return key
               <input
+                id="vendor-return-key"
                 className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                 value={returnKey}
                 onChange={(e) => onReturnKeyChange(e.target.value)}
               />
             </label>
-            <label className="block text-sm text-slate-400">
+            <label htmlFor="vendor-return-inventory-bin" className="block text-sm text-slate-400">
               Inventory bin
               <select
+                id="vendor-return-inventory-bin"
                 className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                 value={selectedInventoryBinId}
                 onChange={(e) => onSelectedInventoryBinIdChange(e.target.value)}
@@ -223,9 +227,10 @@ export function ReturnsPanel({
             </label>
             {returnSource === 'stock' ? (
               <>
-                <label className="block text-sm text-slate-400">
-                  Vendor
+                <label htmlFor="vendor-return-vendor" className="block text-sm text-slate-400">
+                  Return vendor
                   <select
+                    id="vendor-return-vendor"
                     className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                     value={selectedVendorPartyId}
                     onChange={(e) => onSelectedVendorPartyIdChange(e.target.value)}
@@ -238,9 +243,10 @@ export function ReturnsPanel({
                     ))}
                   </select>
                 </label>
-                <label className="block text-sm text-slate-400">
-                  Part
+                <label htmlFor="vendor-return-part" className="block text-sm text-slate-400">
+                  Return part
                   <select
+                    id="vendor-return-part"
                     className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                     value={selectedReturnPartId}
                     onChange={(e) => onSelectedReturnPartIdChange(e.target.value)}
@@ -255,9 +261,10 @@ export function ReturnsPanel({
                 </label>
               </>
             ) : (
-              <label className="block text-sm text-slate-400">
-                PO line
+              <label htmlFor="vendor-return-po-line" className="block text-sm text-slate-400">
+                Return PO line
                 <select
+                  id="vendor-return-po-line"
                   className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                   value={selectedReturnPoLineId}
                   onChange={(e) => onSelectedReturnPoLineIdChange(e.target.value)}
@@ -271,9 +278,10 @@ export function ReturnsPanel({
                 </select>
               </label>
             )}
-            <label className="block text-sm text-slate-400">
-              Quantity
+            <label htmlFor="vendor-return-quantity" className="block text-sm text-slate-400">
+              Return quantity
               <input
+                id="vendor-return-quantity"
                 type="number"
                 min="0"
                 step="any"
@@ -282,17 +290,19 @@ export function ReturnsPanel({
                 onChange={(e) => onReturnQuantityChange(e.target.value)}
               />
             </label>
-            <label className="block text-sm text-slate-400">
+            <label htmlFor="vendor-return-rma-number" className="block text-sm text-slate-400">
               RMA number
               <input
+                id="vendor-return-rma-number"
                 className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                 value={rmaNumber}
                 onChange={(e) => onRmaNumberChange(e.target.value)}
               />
             </label>
-            <label className="block text-sm text-slate-400">
-              Notes
+            <label htmlFor="vendor-return-notes" className="block text-sm text-slate-400">
+              Return notes
               <input
+                id="vendor-return-notes"
                 className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                 value={returnNotes}
                 onChange={(e) => onReturnNotesChange(e.target.value)}
@@ -341,9 +351,10 @@ export function ReturnsPanel({
                     >
                       {isPosting ? 'Posting…' : 'Post return'}
                     </button>
-                    <label className="mt-3 block text-sm text-slate-400">
-                      Cancel reason
+                    <label htmlFor="vendor-return-cancel-reason" className="mt-3 block text-sm text-slate-400">
+                      Return cancel reason
                       <input
+                        id="vendor-return-cancel-reason"
                         className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                         value={cancelReason}
                         onChange={(e) => onCancelReasonChange(e.target.value)}

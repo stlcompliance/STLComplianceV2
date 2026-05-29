@@ -60,8 +60,9 @@ export function ServiceTokenCleanupSettingsPanel() {
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="service-token-cleanup-enabled" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="service-token-cleanup-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -70,9 +71,10 @@ export function ServiceTokenCleanupSettingsPanel() {
           Enable scheduled service token cleanup
         </label>
 
-        <label className="block text-sm text-slate-200">
-          <span className="font-medium">Grace after expiry (days)</span>
+        <label htmlFor="service-token-cleanup-expiry-days" className="block text-sm text-slate-200">
+          Grace after token expiry (days)
           <input
+            id="service-token-cleanup-expiry-days"
             className="mt-1 w-32 rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
             type="number"
             min={0}
@@ -83,9 +85,10 @@ export function ServiceTokenCleanupSettingsPanel() {
           />
         </label>
 
-        <label className="block text-sm text-slate-200">
-          <span className="font-medium">Grace after revoke (days)</span>
+        <label htmlFor="service-token-cleanup-revoke-days" className="block text-sm text-slate-200">
+          Grace after token revoke (days)
           <input
+            id="service-token-cleanup-revoke-days"
             className="mt-1 w-32 rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
             type="number"
             min={0}

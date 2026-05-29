@@ -80,33 +80,33 @@ export function RoutesPanel({
 
       {canCreate ? (
         <div className="mb-6 grid gap-3 rounded-lg border border-slate-700/80 bg-slate-950/40 p-4 md:grid-cols-2">
-          <label className="text-sm text-slate-300 md:col-span-2">
-            Route title
-            <input
+          <label className="text-sm text-slate-300 md:col-span-2" htmlFor="routes-route-title">
+          Route title
+          <input id="routes-route-title"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
               value={routeTitle}
               onChange={(event) => onRouteTitleChange(event.target.value)}
             />
           </label>
-          <label className="text-sm text-slate-300 md:col-span-2">
-            Description
-            <input
+          <label className="text-sm text-slate-300 md:col-span-2" htmlFor="routes-description">
+          Description
+          <input id="routes-description"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
               value={routeDescription}
               onChange={(event) => onRouteDescriptionChange(event.target.value)}
             />
           </label>
-          <label className="text-sm text-slate-300">
-            First stop key
-            <input
+          <label className="text-sm text-slate-300" htmlFor="routes-first-stop-key">
+          First stop key
+          <input id="routes-first-stop-key"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
               value={stopKey}
               onChange={(event) => onStopKeyChange(event.target.value)}
             />
           </label>
-          <label className="text-sm text-slate-300">
-            Stop type
-            <select
+          <label className="text-sm text-slate-300" htmlFor="routes-stop-type">
+          Stop type
+          <select id="routes-stop-type"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
               value={stopType}
               onChange={(event) => onStopTypeChange(event.target.value)}
@@ -117,17 +117,17 @@ export function RoutesPanel({
               <option value="depot">Depot</option>
             </select>
           </label>
-          <label className="text-sm text-slate-300">
-            Stop label
-            <input
+          <label className="text-sm text-slate-300" htmlFor="routes-stop-label">
+          Stop label
+          <input id="routes-stop-label"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
               value={stopLabel}
               onChange={(event) => onStopLabelChange(event.target.value)}
             />
           </label>
-          <label className="text-sm text-slate-300">
-            Address label
-            <input
+          <label className="text-sm text-slate-300" htmlFor="routes-address-label">
+          Address label
+          <input id="routes-address-label"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
               value={stopAddress}
               onChange={(event) => onStopAddressChange(event.target.value)}

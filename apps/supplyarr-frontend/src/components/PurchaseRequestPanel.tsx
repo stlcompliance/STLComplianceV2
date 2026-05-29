@@ -1,7 +1,13 @@
+import { useEffect, useState } from 'react'
 import { ControlledSelect } from '@stl/shared-ui'
 
 import type { PartResponse, PurchaseRequestResponse } from '../api/types'
-import { toPartPickerOptions, toPartyPickerOptions } from '../forms/controlledFormHelpers'
+import {
+  formatProcurementReason,
+  PROCUREMENT_REJECTION_REASON_OPTIONS,
+  toPartPickerOptions,
+  toPartyPickerOptions,
+} from '../forms/controlledFormHelpers'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface PurchaseRequestPanelProps {
@@ -95,6 +101,13 @@ export function PurchaseRequestPanel({
   isApproving,
   isRejecting,
 }: PurchaseRequestPanelProps) {
+  const [rejectionReasonCode, setRejectionReasonCode] = useState('')
+  const [rejectionReasonNotes, setRejectionReasonNotes] = useState('')
+
+  useEffect(() => {
+    onRejectionReasonChange(formatProcurementReason(rejectionReasonCode, rejectionReasonNotes))
+  }, [rejectionReasonCode, rejectionReasonNotes, onRejectionReasonChange])
+
   const selected = purchaseRequests.find((pr) => pr.purchaseRequestId === selectedPurchaseRequestId)
   const existingRequestKeys = purchaseRequests.map((pr) => pr.requestKey)
 
@@ -218,17 +231,36 @@ export function PurchaseRequestPanel({
                 >
                   {isApproving ? 'Approving…' : 'Approve'}
                 </button>
-                <input
-                  className="min-w-[10rem] flex-1 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-200"
-                  placeholder="Rejection reason"
-                  value={rejectionReason}
-                  onChange={(e) => onRejectionReasonChange(e.target.value)}
-                  data-testid="purchase-request-rejection-reason-input"
-                />
+                <div className="min-w-[12rem] flex-1 space-y-2">
+                  <ControlledSelect
+                    id="purchase-request-rejection-reason-code"
+                    label="Rejection reason code"
+                    value={rejectionReasonCode}
+                    onChange={setRejectionReasonCode}
+                    options={PROCUREMENT_REJECTION_REASON_OPTIONS}
+                    emptyLabel="Select reason code…"
+                    testId="purchase-request-rejection-reason-code"
+                    className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-200"
+                  />
+                  <label
+                    htmlFor="purchase-request-rejection-reason-notes"
+                    className="block text-xs text-slate-500"
+                  >
+                    Rejection notes (optional)
+                    <textarea
+                      id="purchase-request-rejection-reason-notes"
+                      className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-200"
+                      rows={2}
+                      value={rejectionReasonNotes}
+                      onChange={(e) => setRejectionReasonNotes(e.target.value)}
+                      data-testid="purchase-request-rejection-reason-notes"
+                    />
+                  </label>
+                </div>
                 <button
                   type="button"
                   className="rounded-md bg-rose-700 px-3 py-1.5 text-sm text-white hover:bg-rose-600 disabled:opacity-50"
-                  disabled={isRejecting || !rejectionReason.trim()}
+                  disabled={isRejecting || !rejectionReason.trim() || !rejectionReasonCode.trim()}
                   onClick={onReject}
                   data-testid="purchase-request-reject-button"
                 >
@@ -244,11 +276,11 @@ export function PurchaseRequestPanel({
         <div className="mt-6 border-t border-slate-800 pt-4" data-testid="purchase-request-create-form">
           <h3 className="text-sm font-medium text-slate-200">New purchase request</h3>
           <div className="mt-3 space-y-3">
-            <label className="block text-xs text-slate-500">
-              Title
+            <label htmlFor="purchase-request-create-title" className="block text-xs text-slate-500">
+              Request title
               <input
+                id="purchase-request-create-title"
                 className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
-                placeholder="Title"
                 value={title}
                 onChange={(e) => onTitleChange(e.target.value)}
               />
@@ -259,13 +291,16 @@ export function PurchaseRequestPanel({
               onKeyChange={onRequestKeyChange}
               label="Request key"
             />
-            <textarea
-              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
-              placeholder="Notes"
-              rows={2}
-              value={notes}
-              onChange={(e) => onNotesChange(e.target.value)}
-            />
+            <label htmlFor="purchase-request-create-notes" className="block text-xs text-slate-500">
+              Notes
+              <textarea
+                id="purchase-request-create-notes"
+                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
+                rows={2}
+                value={notes}
+                onChange={(e) => onNotesChange(e.target.value)}
+              />
+            </label>
             <ControlledSelect
               label="Vendor (optional)"
               value={selectedVendorId}
@@ -283,22 +318,28 @@ export function PurchaseRequestPanel({
                   emptyLabel="Part for first line"
                 />
               </div>
-              <input
-                className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
-                placeholder="Qty"
-                type="number"
-                min="0"
-                step="any"
-                value={lineQuantity}
-                onChange={(e) => onLineQuantityChange(e.target.value)}
-              />
+              <label htmlFor="purchase-request-line-qty" className="block text-xs text-slate-500">
+                Line quantity
+                <input
+                  id="purchase-request-line-qty"
+                  className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={lineQuantity}
+                  onChange={(e) => onLineQuantityChange(e.target.value)}
+                />
+              </label>
             </div>
-            <input
-              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
-              placeholder="Line notes"
-              value={lineNotes}
-              onChange={(e) => onLineNotesChange(e.target.value)}
-            />
+            <label htmlFor="purchase-request-line-notes" className="block text-xs text-slate-500">
+              Line notes
+              <input
+                id="purchase-request-line-notes"
+                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
+                value={lineNotes}
+                onChange={(e) => onLineNotesChange(e.target.value)}
+              />
+            </label>
             <button
               type="button"
               className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"

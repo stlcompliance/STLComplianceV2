@@ -86,9 +86,9 @@ export function MaintenanceReportsPanel({
         ) : null}
       </div>
 
-      <label className="mt-4 flex items-center gap-2 text-sm text-slate-300">
-        Lifecycle
-        <select
+      <label className="mt-4 flex items-center gap-2 text-sm text-slate-300" htmlFor="maintenancereports-lifecycle">
+          Lifecycle
+          <select id="maintenancereports-lifecycle"
           className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100"
           value={lifecycleFilter}
           onChange={(event) => {

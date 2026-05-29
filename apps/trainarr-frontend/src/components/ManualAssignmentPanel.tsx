@@ -1,3 +1,5 @@
+import { AdvancedReferenceField, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+
 import type { QualificationCheckResponse, TrainingDefinitionResponse } from '../api/types'
 import { QualificationCheckPanel } from './QualificationCheckPanel'
 
@@ -12,7 +14,8 @@ interface ManualAssignmentPanelProps {
   onRunQualificationCheck: () => void
   rulePackKey: string
   onRulePackKeyChange: (value: string) => void
-  rulePackOptions: import('@stl/shared-ui').PickerOption[]
+  rulePackOptions: PickerOption[]
+  personPickerOptions: PickerOption[]
   onCreateAssignment: () => void
   isCreating: boolean
   canManage: boolean
@@ -30,6 +33,7 @@ export function ManualAssignmentPanel({
   rulePackKey,
   onRulePackKeyChange,
   rulePackOptions,
+  personPickerOptions,
   onCreateAssignment,
   isCreating,
   canManage,
@@ -51,20 +55,27 @@ export function ManualAssignmentPanel({
       </p>
 
       <div className="mt-3 space-y-3">
-        <label className="block text-xs text-slate-400">
-          StaffArr person ID
-          <input
-            type="text"
-            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 font-mono text-xs text-slate-100"
-            value={staffarrPersonId}
-            onChange={(e) => onStaffarrPersonIdChange(e.target.value)}
-            placeholder="00000000-0000-0000-0000-000000000001"
-          />
-        </label>
+        <StaticSearchPicker
+          id="manual-assignment-person-picker"
+          label="StaffArr person"
+          value={staffarrPersonId}
+          onChange={onStaffarrPersonIdChange}
+          options={personPickerOptions}
+          placeholder="Search people from assignments and qualifications…"
+          testId="manual-assignment-person-picker"
+        />
+        <AdvancedReferenceField
+          id="manual-assignment-person-advanced"
+          value={staffarrPersonId}
+          onChange={onStaffarrPersonIdChange}
+          label="StaffArr person (advanced)"
+          testId="manual-assignment-person-advanced"
+        />
 
-        <label className="block text-xs text-slate-400">
+        <label htmlFor="manual-assignment-definition" className="block text-xs text-slate-400">
           Training definition
           <select
+            id="manual-assignment-definition"
             className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm text-slate-100"
             value={selectedDefinitionId}
             onChange={(e) => onSelectDefinition(e.target.value)}

@@ -70,8 +70,9 @@ export function AvailabilitySnapshotsPanel({
         Record vendor part link quantity and availability status history with effective dates.
       </p>
 
-      <label className="mt-4 flex items-center gap-2 text-sm text-slate-400">
+      <label htmlFor="availability-current-only-filter" className="mt-4 flex items-center gap-2 text-sm text-slate-400">
         <input
+          id="availability-current-only-filter"
           type="checkbox"
           className="rounded border-slate-600"
           checked={currentOnlyFilter}
@@ -116,9 +117,10 @@ export function AvailabilitySnapshotsPanel({
 
       {canManage ? (
         <div className="mt-6 space-y-4 rounded-lg border border-slate-800 bg-slate-950/40 p-4">
-          <label className="block text-sm text-slate-400">
+          <label htmlFor="availability-vendor-link" className="block text-sm text-slate-400">
             Vendor part link
             <select
+              id="availability-vendor-link"
               className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
               value={selectedVendorLinkId}
               onChange={(e) => onSelectedVendorLinkIdChange(e.target.value)}
@@ -133,17 +135,19 @@ export function AvailabilitySnapshotsPanel({
           </label>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-sm text-slate-400">
+            <label htmlFor="availability-snapshot-key" className="block text-sm text-slate-400">
               Snapshot key
               <input
+                id="availability-snapshot-key"
                 className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                 value={snapshotKey}
                 onChange={(e) => onSnapshotKeyChange(e.target.value)}
               />
             </label>
-            <label className="block text-sm text-slate-400">
+            <label htmlFor="availability-status" className="block text-sm text-slate-400">
               Availability status
               <select
+                id="availability-status"
                 className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                 value={availabilityStatus}
                 onChange={(e) => onAvailabilityStatusChange(e.target.value)}
@@ -155,9 +159,10 @@ export function AvailabilitySnapshotsPanel({
                 <option value="discontinued">Discontinued</option>
               </select>
             </label>
-            <label className="block text-sm text-slate-400 sm:col-span-2">
+            <label htmlFor="availability-quantity" className="block text-sm text-slate-400 sm:col-span-2">
               Quantity available (optional)
               <input
+                id="availability-quantity"
                 type="number"
                 min="0"
                 step="0.01"
@@ -168,9 +173,10 @@ export function AvailabilitySnapshotsPanel({
             </label>
           </div>
 
-          <label className="block text-sm text-slate-400">
-            Notes
+          <label htmlFor="availability-snapshot-notes" className="block text-sm text-slate-400">
+            Snapshot notes
             <input
+              id="availability-snapshot-notes"
               className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
               value={snapshotNotes}
               onChange={(e) => onSnapshotNotesChange(e.target.value)}

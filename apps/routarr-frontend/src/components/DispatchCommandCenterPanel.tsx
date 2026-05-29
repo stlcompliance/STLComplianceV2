@@ -71,7 +71,7 @@ function TripCard({
       ) : null}
       {canAssign ? (
         <div className="mt-2 flex flex-wrap gap-1">
-          <select
+          <select id="dispatchcommandcenter-select-field"
             className="min-w-0 flex-1 rounded border border-slate-600 bg-slate-900 px-1 py-0.5 text-slate-200"
             value={selectedDriver}
             onChange={(e) => setSelectedDriver(e.target.value)}

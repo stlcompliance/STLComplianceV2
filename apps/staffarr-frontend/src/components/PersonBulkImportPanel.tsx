@@ -99,9 +99,10 @@ export function PersonBulkImportPanel({ accessToken, canImport, onComplete }: Pe
 
       {canImport ? (
         <>
-          <label className="block text-sm text-slate-300">
+          <label htmlFor="person-bulk-import-csv" className="block text-sm text-slate-300">
             CSV rows
             <textarea
+              id="person-bulk-import-csv"
               value={csvText}
               onChange={(event) => setCsvText(event.target.value)}
               rows={8}
@@ -109,9 +110,11 @@ export function PersonBulkImportPanel({ accessToken, canImport, onComplete }: Pe
             />
           </label>
 
-          <label className="flex items-center gap-2 text-sm text-slate-300">
+          <label htmlFor="person-bulk-import-dry-run" className="flex items-center gap-2 text-sm text-slate-300">
             <input
+              id="person-bulk-import-dry-run"
               type="checkbox"
+              data-testid="person-bulk-import-dry-run"
               checked={dryRun}
               onChange={(event) => setDryRun(event.target.checked)}
             />

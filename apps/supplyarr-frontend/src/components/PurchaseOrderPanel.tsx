@@ -159,13 +159,16 @@ export function PurchaseOrderPanel({
             ) : null}
             {canCancelSelected ? (
               <>
-                <input
-                  className="min-w-[10rem] flex-1 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-200"
-                  placeholder="Cancellation reason"
-                  value={cancellationReason}
-                  onChange={(e) => onCancellationReasonChange(e.target.value)}
-                  data-testid="purchase-order-cancellation-reason-input"
-                />
+                <label htmlFor="purchase-order-cancellation-reason-input" className="min-w-[10rem] flex-1 text-xs text-slate-500">
+                  Cancellation reason
+                  <input
+                    id="purchase-order-cancellation-reason-input"
+                    className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-200"
+                    value={cancellationReason}
+                    onChange={(e) => onCancellationReasonChange(e.target.value)}
+                    data-testid="purchase-order-cancellation-reason-input"
+                  />
+                </label>
                 <button
                   type="button"
                   className="rounded-md bg-rose-700 px-3 py-1.5 text-sm text-white hover:bg-rose-600 disabled:opacity-50"
@@ -185,9 +188,10 @@ export function PurchaseOrderPanel({
         <div className="mt-6 border-t border-slate-800 pt-4" data-testid="purchase-order-create-form">
           <h3 className="text-sm font-medium text-slate-200">Create from approved PR</h3>
           <div className="mt-3 space-y-3">
-            <label className="block text-xs text-slate-500">
+            <label htmlFor="purchase-order-create-pr-select" className="block text-xs text-slate-500">
               Approved purchase request
               <select
+                id="purchase-order-create-pr-select"
                 className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
                 value={selectedPurchaseRequestId}
                 onChange={(e) => onSelectedPurchaseRequestIdChange(e.target.value)}
@@ -205,13 +209,13 @@ export function PurchaseOrderPanel({
                 Vendor: {selectedPr.vendorDisplayName ?? 'none'} · {selectedPr.lines.length} line(s)
               </p>
             ) : null}
-            <label className="block text-xs text-slate-500">
+            <label htmlFor="purchase-order-create-order-key" className="block text-xs text-slate-500">
               Order key
               <input
+                id="purchase-order-create-order-key"
                 className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
                 value={orderKey}
                 onChange={(e) => onOrderKeyChange(e.target.value)}
-                placeholder="po-2026-001"
               />
             </label>
             <button

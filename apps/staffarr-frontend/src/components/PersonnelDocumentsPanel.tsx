@@ -234,9 +234,10 @@ export function PersonnelDocumentsPanel({
       {canManage ? (
         <form onSubmit={handleSubmit} className="mt-6 space-y-3 border-t border-slate-700 pt-4">
           <h3 className="text-sm font-medium text-slate-200">Upload personnel document</h3>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="personnel-document-type" className="block text-xs text-slate-400">
             Document type
             <select
+              id="personnel-document-type"
               value={documentTypeKey}
               onChange={(event) => setDocumentTypeKey(event.target.value as PersonnelDocumentTypeKey)}
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -248,9 +249,10 @@ export function PersonnelDocumentsPanel({
               ))}
             </select>
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="personnel-document-title" className="block text-xs text-slate-400">
             Title
             <input
+              id="personnel-document-title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               required
@@ -258,27 +260,30 @@ export function PersonnelDocumentsPanel({
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             />
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="personnel-document-description" className="block text-xs text-slate-400">
             Description
             <textarea
+              id="personnel-document-description"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               rows={2}
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             />
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="personnel-document-expires-at" className="block text-xs text-slate-400">
             Expires at (optional)
             <input
+              id="personnel-document-expires-at"
               type="datetime-local"
               value={expiresAt}
               onChange={(event) => setExpiresAt(event.target.value)}
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             />
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="personnel-document-file" className="block text-xs text-slate-400">
             File
             <input
+              id="personnel-document-file"
               type="file"
               required
               onChange={handleFileChange}

@@ -241,9 +241,10 @@ export function PlatformAuditPackageExportPanel() {
             testId="platform-audit-filter-tenant"
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 sm:col-span-2 lg:col-span-3"
           />
-          <label className="block text-sm text-slate-300">
-            From (optional)
+          <label htmlFor="platform-audit-filter-from" className="block text-sm text-slate-300">
+            Audit events from (optional)
             <input
+              id="platform-audit-filter-from"
               type="date"
               value={fromDate}
               onChange={(event) => setFromDate(event.target.value)}
@@ -251,9 +252,10 @@ export function PlatformAuditPackageExportPanel() {
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             />
           </label>
-          <label className="block text-sm text-slate-300">
-            To (optional)
+          <label htmlFor="platform-audit-filter-to" className="block text-sm text-slate-300">
+            Audit events to (optional)
             <input
+              id="platform-audit-filter-to"
               type="date"
               value={toDate}
               onChange={(event) => setToDate(event.target.value)}

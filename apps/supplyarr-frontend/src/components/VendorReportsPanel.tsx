@@ -79,9 +79,10 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3 text-sm">
-        <label className="flex items-center gap-2 text-slate-300">
-          Approval
+        <label htmlFor="vendor-report-approval-filter" className="flex items-center gap-2 text-slate-300">
+          Vendor approval filter
           <select
+            id="vendor-report-approval-filter"
             className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100"
             value={approvalFilter}
             onChange={(event) => setApprovalFilter(event.target.value)}
@@ -92,8 +93,9 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
             <option value="restricted">Restricted</option>
           </select>
         </label>
-        <label className="flex items-center gap-2 text-slate-300">
+        <label htmlFor="vendor-report-active-only" className="flex items-center gap-2 text-slate-300">
           <input
+            id="vendor-report-active-only"
             type="checkbox"
             checked={activeOnly}
             onChange={(event) => setActiveOnly(event.target.checked)}

@@ -169,62 +169,78 @@ export function PersonOrgAssignmentsManager({
             {!hasAllUnitTypes ? (
               <p className="text-xs text-amber-300">Create active site/department/team/position org units first.</p>
             ) : null}
-            <select
-              value={createSiteId}
-              onChange={(event) => setCreateSiteId(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              required
-              disabled={!hasAllUnitTypes}
-            >
-              <option value="">Select site</option>
-              {siteUnits.map((unit) => (
-                <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                  {unit.name}
-                </option>
-              ))}
-            </select>
-            <select
-              value={createDepartmentId}
-              onChange={(event) => setCreateDepartmentId(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              required
-              disabled={!hasAllUnitTypes}
-            >
-              <option value="">Select department</option>
-              {departmentUnits.map((unit) => (
-                <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                  {unit.name}
-                </option>
-              ))}
-            </select>
-            <select
-              value={createTeamId}
-              onChange={(event) => setCreateTeamId(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              required
-              disabled={!hasAllUnitTypes}
-            >
-              <option value="">Select team</option>
-              {teamUnits.map((unit) => (
-                <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                  {unit.name}
-                </option>
-              ))}
-            </select>
-            <select
-              value={createPositionId}
-              onChange={(event) => setCreatePositionId(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              required
-              disabled={!hasAllUnitTypes}
-            >
-              <option value="">Select position</option>
-              {positionUnits.map((unit) => (
-                <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                  {unit.name}
-                </option>
-              ))}
-            </select>
+            <label htmlFor="create-assignment-site" className="block text-sm text-slate-300">
+              Site
+              <select
+                id="create-assignment-site"
+                value={createSiteId}
+                onChange={(event) => setCreateSiteId(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                required
+                disabled={!hasAllUnitTypes}
+              >
+                <option value="">Select site</option>
+                {siteUnits.map((unit) => (
+                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
+                    {unit.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label htmlFor="create-assignment-department" className="block text-sm text-slate-300">
+              Department
+              <select
+                id="create-assignment-department"
+                value={createDepartmentId}
+                onChange={(event) => setCreateDepartmentId(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                required
+                disabled={!hasAllUnitTypes}
+              >
+                <option value="">Select department</option>
+                {departmentUnits.map((unit) => (
+                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
+                    {unit.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label htmlFor="create-assignment-team" className="block text-sm text-slate-300">
+              Team
+              <select
+                id="create-assignment-team"
+                value={createTeamId}
+                onChange={(event) => setCreateTeamId(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                required
+                disabled={!hasAllUnitTypes}
+              >
+                <option value="">Select team</option>
+                {teamUnits.map((unit) => (
+                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
+                    {unit.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label htmlFor="create-assignment-position" className="block text-sm text-slate-300">
+              Position
+              <select
+                id="create-assignment-position"
+                value={createPositionId}
+                onChange={(event) => setCreatePositionId(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                required
+                disabled={!hasAllUnitTypes}
+              >
+                <option value="">Select position</option>
+                {positionUnits.map((unit) => (
+                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
+                    {unit.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button
               type="submit"
               className="rounded bg-sky-600 px-3 py-2 text-sm text-white disabled:opacity-50"
@@ -237,62 +253,78 @@ export function PersonOrgAssignmentsManager({
           <form className="space-y-3" onSubmit={handleUpdate}>
             <h3 className="text-sm font-medium text-slate-300">Edit selected assignment</h3>
             {!selected ? <p className="text-sm text-slate-500">Select an assignment from the list to edit.</p> : null}
-            <select
-              value={editSiteId}
-              onChange={(event) => setEditSiteId(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              required
-              disabled={!selected}
-            >
-              <option value="">Select site</option>
-              {siteUnits.map((unit) => (
-                <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                  {unit.name}
-                </option>
-              ))}
-            </select>
-            <select
-              value={editDepartmentId}
-              onChange={(event) => setEditDepartmentId(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              required
-              disabled={!selected}
-            >
-              <option value="">Select department</option>
-              {departmentUnits.map((unit) => (
-                <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                  {unit.name}
-                </option>
-              ))}
-            </select>
-            <select
-              value={editTeamId}
-              onChange={(event) => setEditTeamId(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              required
-              disabled={!selected}
-            >
-              <option value="">Select team</option>
-              {teamUnits.map((unit) => (
-                <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                  {unit.name}
-                </option>
-              ))}
-            </select>
-            <select
-              value={editPositionId}
-              onChange={(event) => setEditPositionId(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              required
-              disabled={!selected}
-            >
-              <option value="">Select position</option>
-              {positionUnits.map((unit) => (
-                <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                  {unit.name}
-                </option>
-              ))}
-            </select>
+            <label htmlFor="edit-assignment-site" className="block text-sm text-slate-300">
+              Site
+              <select
+                id="edit-assignment-site"
+                value={editSiteId}
+                onChange={(event) => setEditSiteId(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                required
+                disabled={!selected}
+              >
+                <option value="">Select site</option>
+                {siteUnits.map((unit) => (
+                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
+                    {unit.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label htmlFor="edit-assignment-department" className="block text-sm text-slate-300">
+              Department
+              <select
+                id="edit-assignment-department"
+                value={editDepartmentId}
+                onChange={(event) => setEditDepartmentId(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                required
+                disabled={!selected}
+              >
+                <option value="">Select department</option>
+                {departmentUnits.map((unit) => (
+                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
+                    {unit.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label htmlFor="edit-assignment-team" className="block text-sm text-slate-300">
+              Team
+              <select
+                id="edit-assignment-team"
+                value={editTeamId}
+                onChange={(event) => setEditTeamId(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                required
+                disabled={!selected}
+              >
+                <option value="">Select team</option>
+                {teamUnits.map((unit) => (
+                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
+                    {unit.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label htmlFor="edit-assignment-position" className="block text-sm text-slate-300">
+              Position
+              <select
+                id="edit-assignment-position"
+                value={editPositionId}
+                onChange={(event) => setEditPositionId(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                required
+                disabled={!selected}
+              >
+                <option value="">Select position</option>
+                {positionUnits.map((unit) => (
+                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
+                    {unit.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <div className="flex gap-3">
               <button
                 type="submit"

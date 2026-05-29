@@ -112,18 +112,21 @@ export function PersonExportDeliverySettingsPanel({
       </dl>
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="person-export-delivery-enabled" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="person-export-delivery-enabled"
             type="checkbox"
+            data-testid="person-export-delivery-enabled"
             checked={scheduleEnabled}
             onChange={(event) => setScheduleEnabled(event.target.checked)}
           />
           Enable scheduled delivery
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label htmlFor="person-export-delivery-interval-hours" className="block text-sm text-slate-200">
           Delivery interval (hours)
           <input
+            id="person-export-delivery-interval-hours"
             className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
             type="number"
             min={1}
@@ -133,29 +136,33 @@ export function PersonExportDeliverySettingsPanel({
           />
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label htmlFor="person-export-delivery-webhook-url" className="block text-sm text-slate-200">
           Notification webhook URL (optional)
           <input
+            id="person-export-delivery-webhook-url"
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
             type="url"
             value={notificationWebhookUrl}
             onChange={(event) => setNotificationWebhookUrl(event.target.value)}
-            placeholder="https://hooks.example.com/staffarr-export"
           />
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="person-export-delivery-notify-success" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="person-export-delivery-notify-success"
             type="checkbox"
+            data-testid="person-export-delivery-notify-success"
             checked={notifyOnSuccess}
             onChange={(event) => setNotifyOnSuccess(event.target.checked)}
           />
           Notify on successful delivery
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="person-export-delivery-notify-failure" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="person-export-delivery-notify-failure"
             type="checkbox"
+            data-testid="person-export-delivery-notify-failure"
             checked={notifyOnFailure}
             onChange={(event) => setNotifyOnFailure(event.target.checked)}
           />

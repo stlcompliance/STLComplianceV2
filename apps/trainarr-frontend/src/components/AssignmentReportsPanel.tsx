@@ -84,9 +84,10 @@ export function AssignmentReportsPanel({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-4 text-sm text-foreground">
-        <label className="flex items-center gap-2">
-          Status
+        <label htmlFor="assignment-reports-status" className="flex items-center gap-2">
+          <span>Status</span>
           <select
+            id="assignment-reports-status"
             className="rounded border border-border bg-background px-2 py-1"
             value={status}
             onChange={(event) => setStatus(event.target.value)}
@@ -97,9 +98,11 @@ export function AssignmentReportsPanel({
             <option value="completed">Completed</option>
           </select>
         </label>
-        <label className="flex items-center gap-2">
+        <label htmlFor="assignment-reports-overdue-only" className="flex items-center gap-2">
           <input
+            id="assignment-reports-overdue-only"
             type="checkbox"
+            data-testid="assignment-reports-overdue-only"
             checked={overdueOnly}
             onChange={(event) => setOverdueOnly(event.target.checked)}
           />

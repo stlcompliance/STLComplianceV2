@@ -95,9 +95,10 @@ export function HybridDataPlanePanel() {
         </p>
       </header>
 
-      <label className="block max-w-xl text-sm text-slate-300">
-        Tenant
+      <label htmlFor="data-plane-tenant" className="block max-w-xl text-sm text-slate-300">
+        Data-plane tenant
         <select
+          id="data-plane-tenant"
           value={tenantId}
           onChange={(event) => setTenantId(event.target.value)}
           data-testid="data-plane-tenant"
@@ -137,9 +138,10 @@ export function HybridDataPlanePanel() {
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Configure product data plane</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="block text-sm text-slate-300">
-            Product
+          <label htmlFor="data-plane-product" className="block text-sm text-slate-300">
+            Product data plane
             <select
+              id="data-plane-product"
               value={productKey}
               onChange={(event) => setProductKey(event.target.value)}
               data-testid="data-plane-product"
@@ -153,9 +155,10 @@ export function HybridDataPlanePanel() {
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-300">
+          <label htmlFor="data-plane-deployment-mode" className="block text-sm text-slate-300">
             Deployment mode
             <select
+              id="data-plane-deployment-mode"
               value={deploymentMode}
               onChange={(event) => {
                 setDeploymentMode(event.target.value)
@@ -173,9 +176,10 @@ export function HybridDataPlanePanel() {
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-300 sm:col-span-2">
-            Data endpoint URL {endpointRequired ? '(required)' : '(hosted default)'}
+          <label htmlFor="data-plane-endpoint" className="block text-sm text-slate-300 sm:col-span-2">
+            Customer data endpoint URL {endpointRequired ? '(required)' : '(hosted default)'}
             <input
+              id="data-plane-endpoint"
               value={dataEndpointUrl}
               onChange={(event) => setDataEndpointUrl(event.target.value)}
               placeholder={endpointRequired ? 'https://customer.example/api' : 'Not used for hosted mode'}
@@ -184,9 +188,10 @@ export function HybridDataPlanePanel() {
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 disabled:opacity-50"
             />
           </label>
-          <label className="block text-sm text-slate-300">
-            Trust status
+          <label htmlFor="data-plane-trust-status" className="block text-sm text-slate-300">
+            Endpoint trust status
             <select
+              id="data-plane-trust-status"
               value={trustStatus}
               onChange={(event) => setTrustStatus(event.target.value)}
               data-testid="data-plane-trust-status"
@@ -205,9 +210,10 @@ export function HybridDataPlanePanel() {
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-300 sm:col-span-2">
-            Notes (optional)
+          <label htmlFor="data-plane-notes" className="block text-sm text-slate-300 sm:col-span-2">
+            Data-plane notes (optional)
             <input
+              id="data-plane-notes"
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               data-testid="data-plane-notes"

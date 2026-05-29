@@ -180,9 +180,9 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
       </div>
 
       <div className="mb-4 grid gap-4 md:grid-cols-2">
-        <label className="block text-sm text-slate-300">
+        <label className="block text-sm text-slate-300" htmlFor="dispatchcloseout-remaining-trips">
           Remaining trips
-          <select
+          <select id="dispatchcloseout-remaining-trips"
             className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-2 py-1.5 text-white"
             value={tripDisposition}
             onChange={(event) => {
@@ -194,9 +194,9 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
             <option value="complete">Complete in-flight trips (cancel planned)</option>
           </select>
         </label>
-        <label className="block text-sm text-slate-300">
+        <label className="block text-sm text-slate-300" htmlFor="dispatchcloseout-open-stops">
           Open stops
-          <select
+          <select id="dispatchcloseout-open-stops"
             className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-2 py-1.5 text-white"
             value={stopDisposition}
             onChange={(event) => {
@@ -240,7 +240,7 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
               return (
                 <li key={trip.tripId} className="px-3 py-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <input
+                    <input id="dispatchcloseout-input-field"
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleTrip(trip.tripId)}

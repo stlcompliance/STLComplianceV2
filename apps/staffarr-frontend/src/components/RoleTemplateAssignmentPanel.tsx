@@ -252,26 +252,35 @@ export function RoleTemplateAssignmentPanel({
         <div className="mt-6 grid gap-6 xl:grid-cols-3">
           <form className="space-y-3" onSubmit={handlePermissionSubmit}>
             <h3 className="text-sm font-medium text-slate-300">Upsert permission template</h3>
-            <input
-              value={permissionKey}
-              onChange={(event) => setPermissionKey(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              placeholder="staffarr.permissions.assign"
-              required
-            />
-            <input
-              value={permissionName}
-              onChange={(event) => setPermissionName(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              placeholder="Permission name"
-              required
-            />
-            <input
-              value={permissionDescription}
-              onChange={(event) => setPermissionDescription(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              placeholder="Description (optional)"
-            />
+            <label htmlFor="permission-template-key" className="block text-sm text-slate-300">
+              Permission key
+              <input
+                id="permission-template-key"
+                value={permissionKey}
+                onChange={(event) => setPermissionKey(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                required
+              />
+            </label>
+            <label htmlFor="permission-template-name" className="block text-sm text-slate-300">
+              Permission name
+              <input
+                id="permission-template-name"
+                value={permissionName}
+                onChange={(event) => setPermissionName(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                required
+              />
+            </label>
+            <label htmlFor="permission-template-description" className="block text-sm text-slate-300">
+              Description (optional)
+              <input
+                id="permission-template-description"
+                value={permissionDescription}
+                onChange={(event) => setPermissionDescription(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+              />
+            </label>
             <button
               type="submit"
               className="rounded bg-sky-600 px-3 py-2 text-sm text-white disabled:opacity-50"
@@ -283,74 +292,97 @@ export function RoleTemplateAssignmentPanel({
 
           <form className="space-y-3" onSubmit={handleRoleTemplateSubmit}>
             <h3 className="text-sm font-medium text-slate-300">Create role template</h3>
-            <input
-              value={roleKey}
-              onChange={(event) => setRoleKey(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              placeholder="staffarr.viewer"
-              required
-            />
-            <input
-              value={roleName}
-              onChange={(event) => setRoleName(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              placeholder="Role template name"
-              required
-            />
-            <input
-              value={roleDescription}
-              onChange={(event) => setRoleDescription(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              placeholder="Description (optional)"
-            />
-            <select
-              value={roleScopeType}
-              onChange={(event) => setRoleScopeType(event.target.value as (typeof SCOPE_TYPES)[number])}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-            >
-              {SCOPE_TYPES.map((scopeType) => (
-                <option key={scopeType} value={scopeType}>
-                  {scopeType}
-                </option>
-              ))}
-            </select>
-            {roleScopeType === 'tenant' ? null : (
-              <select
-                value={roleScopeValue}
-                onChange={(event) => setRoleScopeValue(event.target.value)}
-                className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+            <label htmlFor="role-template-key" className="block text-sm text-slate-300">
+              Role key
+              <input
+                id="role-template-key"
+                value={roleKey}
+                onChange={(event) => setRoleKey(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
                 required
+              />
+            </label>
+            <label htmlFor="role-template-name" className="block text-sm text-slate-300">
+              Role template name
+              <input
+                id="role-template-name"
+                value={roleName}
+                onChange={(event) => setRoleName(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                required
+              />
+            </label>
+            <label htmlFor="role-template-description" className="block text-sm text-slate-300">
+              Description (optional)
+              <input
+                id="role-template-description"
+                value={roleDescription}
+                onChange={(event) => setRoleDescription(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+              />
+            </label>
+            <label htmlFor="role-template-scope-type" className="block text-sm text-slate-300">
+              Permission scope type
+              <select
+                id="role-template-scope-type"
+                value={roleScopeType}
+                onChange={(event) => setRoleScopeType(event.target.value as (typeof SCOPE_TYPES)[number])}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
               >
-                <option value="">Select scope unit</option>
-                {roleScopeUnits.map((unit) => (
-                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                    {unit.name}
+                {SCOPE_TYPES.map((scopeType) => (
+                  <option key={scopeType} value={scopeType}>
+                    {scopeType}
                   </option>
                 ))}
               </select>
+            </label>
+            {roleScopeType === 'tenant' ? null : (
+              <label htmlFor="role-template-scope-value" className="block text-sm text-slate-300">
+                Permission scope unit
+                <select
+                  id="role-template-scope-value"
+                  value={roleScopeValue}
+                  onChange={(event) => setRoleScopeValue(event.target.value)}
+                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                  required
+                >
+                  <option value="">Select scope unit</option>
+                  {roleScopeUnits.map((unit) => (
+                    <option key={unit.orgUnitId} value={unit.orgUnitId}>
+                      {unit.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
             )}
-            <div className="max-h-32 overflow-y-auto rounded border border-slate-700 p-2">
+            <fieldset className="max-h-32 overflow-y-auto rounded border border-slate-700 p-2">
+              <legend className="px-1 text-xs text-slate-400">Permission mappings</legend>
               {permissionTemplates.length === 0 ? (
                 <p className="text-xs text-slate-500">Add permission templates first.</p>
               ) : (
-                permissionTemplates.map((permission) => (
-                  <label key={permission.permissionTemplateId} className="flex items-center gap-2 text-xs text-slate-200">
-                    <input
-                      type="checkbox"
-                      checked={selectedPermissionIds.includes(permission.permissionTemplateId)}
-                      onChange={(event) => {
-                        setSelectedPermissionIds((current) =>
-                          event.target.checked
-                            ? [...current, permission.permissionTemplateId]
-                            : current.filter((id) => id !== permission.permissionTemplateId),
-                        )
-                      }}
-                    />
-                    <span>{permission.permissionKey}</span>
-                  </label>
-                ))
+                permissionTemplates.map((permission) => {
+                  const checkboxId = `role-template-permission-${permission.permissionTemplateId}`
+                  return (
+                    <label key={permission.permissionTemplateId} htmlFor={checkboxId} className="flex items-center gap-2 text-xs text-slate-200">
+                      <input
+                        id={checkboxId}
+                        type="checkbox"
+                        data-testid={checkboxId}
+                        checked={selectedPermissionIds.includes(permission.permissionTemplateId)}
+                        onChange={(event) => {
+                          setSelectedPermissionIds((current) =>
+                            event.target.checked
+                              ? [...current, permission.permissionTemplateId]
+                              : current.filter((id) => id !== permission.permissionTemplateId),
+                          )
+                        }}
+                      />
+                      <span>{permission.permissionKey}</span>
+                    </label>
+                  )
+                })
               )}
-            </div>
+            </fieldset>
             <button
               type="submit"
               className="rounded bg-sky-600 px-3 py-2 text-sm text-white disabled:opacity-50"
@@ -362,46 +394,58 @@ export function RoleTemplateAssignmentPanel({
 
           <form className="space-y-3" onSubmit={handleRoleAssignmentSubmit}>
             <h3 className="text-sm font-medium text-slate-300">Assign role to person</h3>
-            <select
-              value={assignmentRoleTemplateId}
-              onChange={(event) => setAssignmentRoleTemplateId(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              required
-            >
-              <option value="">Select role template</option>
-              {roleTemplates
-                .filter((role) => role.status === 'active')
-                .map((role) => (
-                  <option key={role.roleTemplateId} value={role.roleTemplateId}>
-                    {role.name}
-                  </option>
-                ))}
-            </select>
-            <select
-              value={assignmentScopeType}
-              onChange={(event) => setAssignmentScopeType(event.target.value as (typeof SCOPE_TYPES)[number])}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-            >
-              {SCOPE_TYPES.map((scopeType) => (
-                <option key={scopeType} value={scopeType}>
-                  {scopeType}
-                </option>
-              ))}
-            </select>
-            {assignmentScopeType === 'tenant' ? null : (
+            <label htmlFor="role-assignment-template" className="block text-sm text-slate-300">
+              Role template
               <select
-                value={assignmentScopeValue}
-                onChange={(event) => setAssignmentScopeValue(event.target.value)}
-                className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                id="role-assignment-template"
+                value={assignmentRoleTemplateId}
+                onChange={(event) => setAssignmentRoleTemplateId(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
                 required
               >
-                <option value="">Select scope unit</option>
-                {assignmentScopeUnits.map((unit) => (
-                  <option key={unit.orgUnitId} value={unit.orgUnitId}>
-                    {unit.name}
+                <option value="">Select role template</option>
+                {roleTemplates
+                  .filter((role) => role.status === 'active')
+                  .map((role) => (
+                    <option key={role.roleTemplateId} value={role.roleTemplateId}>
+                      {role.name}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            <label htmlFor="role-assignment-scope-type" className="block text-sm text-slate-300">
+              Assignment scope type
+              <select
+                id="role-assignment-scope-type"
+                value={assignmentScopeType}
+                onChange={(event) => setAssignmentScopeType(event.target.value as (typeof SCOPE_TYPES)[number])}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+              >
+                {SCOPE_TYPES.map((scopeType) => (
+                  <option key={scopeType} value={scopeType}>
+                    {scopeType}
                   </option>
                 ))}
               </select>
+            </label>
+            {assignmentScopeType === 'tenant' ? null : (
+              <label htmlFor="role-assignment-scope-value" className="block text-sm text-slate-300">
+                Assignment scope unit
+                <select
+                  id="role-assignment-scope-value"
+                  value={assignmentScopeValue}
+                  onChange={(event) => setAssignmentScopeValue(event.target.value)}
+                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                  required
+                >
+                  <option value="">Select scope unit</option>
+                  {assignmentScopeUnits.map((unit) => (
+                    <option key={unit.orgUnitId} value={unit.orgUnitId}>
+                      {unit.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
             )}
             <button
               type="submit"

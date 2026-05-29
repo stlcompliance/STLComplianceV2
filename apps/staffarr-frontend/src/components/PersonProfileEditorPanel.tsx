@@ -84,27 +84,30 @@ export function PersonProfileEditorPanel({
 
       {canManage ? (
         <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-          <label className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-given-name" className="block text-sm text-slate-300">
             Given name
             <input
+              id="edit-person-given-name"
               value={givenName}
               onChange={(event) => setGivenName(event.target.value)}
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               required
             />
           </label>
-          <label className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-family-name" className="block text-sm text-slate-300">
             Family name
             <input
+              id="edit-person-family-name"
               value={familyName}
               onChange={(event) => setFamilyName(event.target.value)}
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               required
             />
           </label>
-          <label className="block text-sm text-slate-300 md:col-span-2">
+          <label htmlFor="edit-person-primary-email" className="block text-sm text-slate-300 md:col-span-2">
             Primary email
             <input
+              id="edit-person-primary-email"
               type="email"
               value={primaryEmail}
               onChange={(event) => setPrimaryEmail(event.target.value)}
@@ -112,9 +115,10 @@ export function PersonProfileEditorPanel({
               required
             />
           </label>
-          <label className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-primary-org-unit" className="block text-sm text-slate-300">
             Primary org unit
             <select
+              id="edit-person-primary-org-unit"
               value={primaryOrgUnitId}
               onChange={(event) => setPrimaryOrgUnitId(event.target.value)}
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -127,9 +131,10 @@ export function PersonProfileEditorPanel({
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-300">
+          <label htmlFor="edit-person-manager" className="block text-sm text-slate-300">
             Manager
             <select
+              id="edit-person-manager"
               value={managerPersonId}
               onChange={(event) => setManagerPersonId(event.target.value)}
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -142,9 +147,10 @@ export function PersonProfileEditorPanel({
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-300 md:col-span-2">
+          <label htmlFor="edit-person-job-title" className="block text-sm text-slate-300 md:col-span-2">
             Job title
             <input
+              id="edit-person-job-title"
               value={jobTitle}
               onChange={(event) => setJobTitle(event.target.value)}
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -169,9 +175,10 @@ export function PersonProfileEditorPanel({
       {canManage ? (
         <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
           <h3 className="text-sm font-medium text-slate-200">Employment status</h3>
-          <label className="mt-3 block text-sm text-slate-300">
+          <label htmlFor="edit-person-status-reason" className="mt-3 block text-sm text-slate-300">
             Reason (optional)
             <input
+              id="edit-person-status-reason"
               value={statusReason}
               onChange={(event) => setStatusReason(event.target.value)}
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"

@@ -96,8 +96,9 @@ export function PricingLeadTimePanel({
         Record vendor part link unit price and lead-time history with effective dates.
       </p>
 
-      <label className="mt-4 flex items-center gap-2 text-sm text-slate-400">
+      <label htmlFor="pricing-lead-time-current-only-filter" className="mt-4 flex items-center gap-2 text-sm text-slate-400">
         <input
+          id="pricing-lead-time-current-only-filter"
           type="checkbox"
           className="rounded border-slate-600"
           checked={currentOnlyFilter}
@@ -178,9 +179,10 @@ export function PricingLeadTimePanel({
 
       {canManage ? (
         <div className="mt-6 space-y-4 rounded-lg border border-slate-800 bg-slate-950/40 p-4">
-          <label className="block text-sm text-slate-400">
+          <label htmlFor="pricing-lead-time-vendor-link" className="block text-sm text-slate-400">
             Vendor part link
             <select
+              id="pricing-lead-time-vendor-link"
               className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
               value={selectedVendorLinkId}
               onChange={(e) => onSelectedVendorLinkIdChange(e.target.value)}
@@ -207,9 +209,10 @@ export function PricingLeadTimePanel({
               onKeyChange={onLeadTimeSnapshotKeyChange}
               label="Lead-time snapshot key"
             />
-            <label className="block text-sm text-slate-400">
+            <label htmlFor="pricing-lead-time-unit-price" className="block text-sm text-slate-400">
               Unit price
               <input
+                id="pricing-lead-time-unit-price"
                 type="number"
                 min="0"
                 step="0.01"
@@ -219,14 +222,16 @@ export function PricingLeadTimePanel({
               />
             </label>
             <ControlledSelect
+              id="pricing-lead-time-currency"
               label="Currency"
               value={currencyCode}
               onChange={onCurrencyCodeChange}
               options={CURRENCY_OPTIONS}
             />
-            <label className="block text-sm text-slate-400">
+            <label htmlFor="pricing-lead-time-min-order-qty" className="block text-sm text-slate-400">
               Minimum order qty (optional)
               <input
+                id="pricing-lead-time-min-order-qty"
                 type="number"
                 min="0"
                 step="0.01"
@@ -235,9 +240,10 @@ export function PricingLeadTimePanel({
                 onChange={(e) => onMinimumOrderQuantityChange(e.target.value)}
               />
             </label>
-            <label className="block text-sm text-slate-400">
+            <label htmlFor="pricing-lead-time-days" className="block text-sm text-slate-400">
               Lead time (days)
               <input
+                id="pricing-lead-time-days"
                 type="number"
                 min="0"
                 step="1"
@@ -248,9 +254,10 @@ export function PricingLeadTimePanel({
             </label>
           </div>
 
-          <label className="block text-sm text-slate-400">
-            Notes
+          <label htmlFor="pricing-lead-time-snapshot-notes" className="block text-sm text-slate-400">
+            Snapshot notes
             <textarea
+              id="pricing-lead-time-snapshot-notes"
               className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
               rows={2}
               value={snapshotNotes}

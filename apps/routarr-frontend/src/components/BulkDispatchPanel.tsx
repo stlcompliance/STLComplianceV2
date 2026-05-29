@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { AdvancedReferenceField, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import { AdvancedReferenceField, ControlledSelect, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import { applyBulkDispatch, listDrivers, listVehicleRefs, getTrips, previewBulkDispatch } from '../api/client'
 import type { BulkDispatchItemPreview, TripSummaryResponse } from '../api/types'
@@ -24,6 +24,11 @@ type BulkDispatchPanelProps = {
 
 const ACTIVE_STATUSES = new Set(['planned', 'assigned', 'dispatched', 'in_progress'])
 const STATUS_OPTIONS = ['', 'assigned', 'dispatched', 'in_progress', 'completed', 'cancelled']
+
+const DISPATCH_STATUS_PICKER_OPTIONS: PickerOption[] = STATUS_OPTIONS.map((status) => ({
+  value: status,
+  label: status ? status.replace(/_/g, ' ') : 'No change',
+}))
 
 export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelProps) {
   const queryClient = useQueryClient()
@@ -245,7 +250,8 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           <div>
             <StaticSearchPicker
-              label="Driver"
+              id="bulk-dispatch-driver-picker"
+              label="Driver person"
               value={driverPersonId}
               onChange={(value) => {
                 setDriverPersonId(value)
@@ -263,13 +269,14 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
                 setDriverPersonId(value)
                 setPreviewItems(null)
               }}
-              label="Driver person id"
+              label="Driver person (advanced)"
               testId="bulk-dispatch-driver-advanced"
             />
           </div>
           <div>
             <StaticSearchPicker
-              label="Vehicle"
+              id="bulk-dispatch-vehicle-picker"
+              label="Vehicle reference"
               value={vehicleRefKey}
               onChange={(value) => {
                 setVehicleRefKey(value)
@@ -287,27 +294,23 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
                 setVehicleRefKey(value)
                 setPreviewItems(null)
               }}
-              label="Vehicle ref key"
+              label="Vehicle reference (advanced)"
               testId="bulk-dispatch-vehicle-advanced"
             />
           </div>
-          <label className="block text-xs text-slate-400">
-            Dispatch status
-            <select
-              value={dispatchStatus}
-              onChange={(event) => {
-                setDispatchStatus(event.target.value)
-                setPreviewItems(null)
-              }}
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
-            >
-              {STATUS_OPTIONS.map((status) => (
-                <option key={status || 'none'} value={status}>
-                  {status ? status.replace('_', ' ') : 'No change'}
-                </option>
-              ))}
-            </select>
-          </label>
+          <ControlledSelect
+            id="bulk-dispatch-dispatch-status"
+            label="Dispatch status"
+            value={dispatchStatus}
+            onChange={(value) => {
+              setDispatchStatus(value)
+              setPreviewItems(null)
+            }}
+            options={DISPATCH_STATUS_PICKER_OPTIONS}
+            emptyLabel="No change"
+            testId="bulk-dispatch-dispatch-status"
+            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
+          />
         </div>
         <div className="mt-4 flex flex-wrap gap-3">
           <button
@@ -387,7 +390,7 @@ function TripSelectRow({
 }) {
   return (
     <li className="flex items-start gap-3 rounded border border-slate-700 p-3">
-      <input
+      <input id="bulkdispatch-input-field"
         type="checkbox"
         checked={selected}
         onChange={onToggle}

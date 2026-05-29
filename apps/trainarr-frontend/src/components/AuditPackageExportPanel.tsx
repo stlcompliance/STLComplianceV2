@@ -264,40 +264,25 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
 
       <div className="grid gap-3 sm:grid-cols-2">
 
-        <label className="block text-sm text-slate-300">
-
+        <label htmlFor="trainarr-audit-filter-from" className="block text-sm text-slate-300">
           From date
-
           <input
-
+            id="trainarr-audit-filter-from"
             type="date"
-
             value={fromDate}
-
             onChange={(event) => setFromDate(event.target.value)}
-
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100"
-
           />
-
         </label>
-
-        <label className="block text-sm text-slate-300">
-
+        <label htmlFor="trainarr-audit-filter-to" className="block text-sm text-slate-300">
           To date
-
           <input
-
+            id="trainarr-audit-filter-to"
             type="date"
-
             value={toDate}
-
             onChange={(event) => setToDate(event.target.value)}
-
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100"
-
           />
-
         </label>
 
       </div>

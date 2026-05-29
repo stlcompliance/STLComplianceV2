@@ -97,9 +97,10 @@ export function FindingsWorkflowGatesPanel({
           Gates evaluate the linked rule pack and return allow, warn, or block with reasons.
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label className="block text-xs text-slate-400">
-            Gate
+          <label htmlFor="findings-workflow-gate-select" className="block text-xs text-slate-400">
+            Workflow gate to check
             <select
+              id="findings-workflow-gate-select"
               data-testid="findings-workflow-gate-select"
               value={selectedGateKey}
               onChange={(event) => setSelectedGateKey(event.target.value)}
@@ -113,24 +114,28 @@ export function FindingsWorkflowGatesPanel({
               ))}
             </select>
           </label>
-          <label className="flex items-end gap-2 text-xs text-slate-300">
+          <label htmlFor="findings-workflow-gate-emit-findings" className="flex items-end gap-2 text-xs text-slate-300">
             <input
+              id="findings-workflow-gate-emit-findings"
               type="checkbox"
               data-testid="findings-workflow-gate-emit-findings"
               checked={emitFindings}
               onChange={(event) => setEmitFindings(event.target.checked)}
               className="rounded border-slate-600"
             />
-            Emit findings when blocked
+            Emit findings when gate blocks
           </label>
         </div>
         {selectedGate && (
           <p className="mt-2 text-xs text-slate-500">{selectedGate.description}</p>
         )}
         <div className="mt-4 space-y-2">
-          {factKeys.map((factKey) => (
-            <label key={factKey} className="flex items-center gap-2 text-sm text-slate-200">
+          {factKeys.map((factKey) => {
+            const factInputId = `findings-workflow-gate-fact-${factKey.replace(/[^a-zA-Z0-9_-]/g, '-')}`
+            return (
+            <label key={factKey} htmlFor={factInputId} className="flex items-center gap-2 text-sm text-slate-200">
               <input
+                id={factInputId}
                 type="checkbox"
                 checked={factInputs[factKey] ?? false}
                 onChange={(event) =>
@@ -143,7 +148,8 @@ export function FindingsWorkflowGatesPanel({
               />
               {factKey}
             </label>
-          ))}
+            )
+          })}
         </div>
         <button
           type="button"

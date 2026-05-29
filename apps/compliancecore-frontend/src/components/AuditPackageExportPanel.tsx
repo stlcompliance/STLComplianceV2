@@ -132,18 +132,20 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block text-sm text-slate-300">
-          From (optional)
+        <label htmlFor="compliancecore-audit-export-from" className="block text-sm text-slate-300">
+          Audit package from date (optional)
           <input
+            id="compliancecore-audit-export-from"
             type="date"
             value={fromDate}
             onChange={(event) => setFromDate(event.target.value)}
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
           />
         </label>
-        <label className="block text-sm text-slate-300">
-          To (optional)
+        <label htmlFor="compliancecore-audit-export-to" className="block text-sm text-slate-300">
+          Audit package to date (optional)
           <input
+            id="compliancecore-audit-export-to"
             type="date"
             value={toDate}
             onChange={(event) => setToDate(event.target.value)}

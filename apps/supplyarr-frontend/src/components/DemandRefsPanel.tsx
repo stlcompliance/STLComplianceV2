@@ -220,25 +220,28 @@ export function DemandRefsPanel({
 
           {canCreatePurchaseRequest && !selected.purchaseRequestId ? (
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <label className="block text-xs text-slate-400">
+              <label htmlFor="demand-ref-pr-request-key" className="block text-xs text-slate-400">
                 PR request key
                 <input
+                  id="demand-ref-pr-request-key"
                   className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
                   value={prRequestKey}
                   onChange={(event) => onPrRequestKeyChange(event.target.value)}
                 />
               </label>
-              <label className="block text-xs text-slate-400">
+              <label htmlFor="demand-ref-pr-title" className="block text-xs text-slate-400">
                 PR title
                 <input
+                  id="demand-ref-pr-title"
                   className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
                   value={prTitle}
                   onChange={(event) => onPrTitleChange(event.target.value)}
                 />
               </label>
-              <label className="md:col-span-2 block text-xs text-slate-400">
+              <label htmlFor="demand-ref-pr-notes" className="md:col-span-2 block text-xs text-slate-400">
                 PR notes
                 <input
+                  id="demand-ref-pr-notes"
                   className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
                   value={prNotes}
                   onChange={(event) => onPrNotesChange(event.target.value)}

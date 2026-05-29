@@ -69,9 +69,10 @@ export function EntitlementAdminPanel() {
       </header>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block text-sm text-slate-300">
-          Tenant
+        <label htmlFor="entitlement-admin-tenant" className="block text-sm text-slate-300">
+          Entitlement tenant
           <select
+            id="entitlement-admin-tenant"
             value={tenantId}
             onChange={(event) => setTenantId(event.target.value)}
             data-testid="entitlement-admin-tenant"
@@ -86,9 +87,10 @@ export function EntitlementAdminPanel() {
           </select>
         </label>
 
-        <label className="block text-sm text-slate-300">
+        <label htmlFor="entitlement-admin-product" className="block text-sm text-slate-300">
           Product to grant
           <select
+            id="entitlement-admin-product"
             value={productKey}
             onChange={(event) => setProductKey(event.target.value)}
             data-testid="entitlement-admin-product"

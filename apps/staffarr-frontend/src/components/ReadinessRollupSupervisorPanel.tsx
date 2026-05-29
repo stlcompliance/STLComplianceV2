@@ -168,9 +168,10 @@ function RollupMembersDrillDown({
             Drill-down for {selectedRollup.scopeType} scope. Select a person to load readiness detail below.
           </p>
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-400">
+        <label htmlFor="readiness-rollup-member-filter" className="flex items-center gap-2 text-sm text-slate-400">
           <span>Show</span>
           <select
+            id="readiness-rollup-member-filter"
             data-testid="readiness-rollup-member-filter"
             value={memberReadinessFilter}
             onChange={(event) =>
@@ -276,9 +277,10 @@ export function ReadinessRollupSupervisorPanel({
             Materialized summaries refreshed by the readiness rollup worker. Select a unit to drill into members.
           </p>
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-400">
+        <label htmlFor="readiness-rollup-site-filter" className="flex items-center gap-2 text-sm text-slate-400">
           <span>Filter teams by site</span>
           <select
+            id="readiness-rollup-site-filter"
             data-testid="readiness-rollup-site-filter"
             value={siteFilterOrgUnitId ?? ''}
             onChange={(event) => onSiteFilterChange(event.target.value || null)}

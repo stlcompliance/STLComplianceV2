@@ -148,9 +148,10 @@ export function ServiceTokenAdminPanel() {
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Register service client</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="block text-sm text-slate-300">
-            Display name
+          <label htmlFor="service-token-client-display-name" className="block text-sm text-slate-300">
+            Service client display name
             <input
+              id="service-token-client-display-name"
               value={clientDisplayName}
               onChange={(event) => {
                 setClientDisplayName(event.target.value)
@@ -221,18 +222,20 @@ export function ServiceTokenAdminPanel() {
             emptyLabel="Platform-wide"
             testId="service-token-issue-tenant"
           />
-          <label className="block text-sm text-slate-300">
-            Action scope (optional)
+          <label htmlFor="service-token-issue-scope" className="block text-sm text-slate-300">
+            Token action scope (optional)
             <input
+              id="service-token-issue-scope"
               value={issueActionScope}
               onChange={(event) => setIssueActionScope(event.target.value)}
               data-testid="service-token-issue-scope"
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             />
           </label>
-          <label className="block text-sm text-slate-300">
-            Lifetime (minutes)
+          <label htmlFor="service-token-issue-lifetime" className="block text-sm text-slate-300">
+            Token lifetime (minutes)
             <input
+              id="service-token-issue-lifetime"
               type="number"
               min={1}
               max={1440}

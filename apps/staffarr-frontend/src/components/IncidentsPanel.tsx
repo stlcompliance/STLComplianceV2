@@ -215,9 +215,10 @@ export function IncidentsPanel({
         <form onSubmit={handleSubmit} className="mt-6 space-y-3 border-t border-slate-700 pt-4">
           <h3 className="text-sm font-medium text-slate-200">Record incident intake</h3>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-xs text-slate-400">
+            <label htmlFor="incident-intake-reason-category" className="block text-xs text-slate-400">
               Reason category
               <select
+                id="incident-intake-reason-category"
                 value={reasonCategoryKey}
                 onChange={(event) =>
                   setReasonCategoryKey(event.target.value as PersonnelIncidentReasonCategory)
@@ -231,9 +232,10 @@ export function IncidentsPanel({
                 ))}
               </select>
             </label>
-            <label className="block text-xs text-slate-400">
+            <label htmlFor="incident-intake-severity" className="block text-xs text-slate-400">
               Severity
               <select
+                id="incident-intake-severity"
                 value={severity}
                 onChange={(event) => setSeverity(event.target.value as PersonnelIncidentSeverity)}
                 className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -246,9 +248,10 @@ export function IncidentsPanel({
               </select>
             </label>
           </div>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="incident-intake-title" className="block text-xs text-slate-400">
             Title
             <input
+              id="incident-intake-title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               required
@@ -256,9 +259,10 @@ export function IncidentsPanel({
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             />
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="incident-intake-description" className="block text-xs text-slate-400">
             Description
             <textarea
+              id="incident-intake-description"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               required
@@ -267,9 +271,10 @@ export function IncidentsPanel({
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             />
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="incident-intake-occurred-at" className="block text-xs text-slate-400">
             Occurred at
             <input
+              id="incident-intake-occurred-at"
               type="datetime-local"
               value={occurredAt}
               onChange={(event) => setOccurredAt(event.target.value)}

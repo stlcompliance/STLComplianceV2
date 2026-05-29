@@ -74,27 +74,28 @@ export function TrainingMatrixPanel({
         <p className="mt-3 text-sm text-slate-400">Matrix editing requires trainarr admin access.</p>
       ) : (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="training-matrix-applicability-key" className="block text-xs text-slate-400">
             Applicability key
             <input
+              id="training-matrix-applicability-key"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
               value={applicabilityKey}
               onChange={(e) => onApplicabilityKeyChange(e.target.value)}
-              placeholder="driver"
             />
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="training-matrix-label" className="block text-xs text-slate-400">
             Label
             <input
+              id="training-matrix-label"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
               value={applicabilityLabel}
               onChange={(e) => onApplicabilityLabelChange(e.target.value)}
-              placeholder="Commercial driver"
             />
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="training-matrix-target-type" className="block text-xs text-slate-400">
             Target type
             <select
+              id="training-matrix-target-type"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
               value={targetType}
               onChange={(e) => onTargetTypeChange(e.target.value as 'program' | 'definition')}
@@ -103,9 +104,10 @@ export function TrainingMatrixPanel({
               <option value="definition">Definition</option>
             </select>
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="training-matrix-target" className="block text-xs text-slate-400">
             Target
             <select
+              id="training-matrix-target"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
               value={targetId}
               onChange={(e) => onTargetIdChange(e.target.value)}
@@ -118,9 +120,10 @@ export function TrainingMatrixPanel({
               ))}
             </select>
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="training-matrix-requirement-level" className="block text-xs text-slate-400">
             Requirement
             <select
+              id="training-matrix-requirement-level"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
               value={requirementLevel}
               onChange={(e) => onRequirementLevelChange(e.target.value)}
@@ -129,9 +132,10 @@ export function TrainingMatrixPanel({
               <option value="recommended">Recommended</option>
             </select>
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="training-matrix-sort-order" className="block text-xs text-slate-400">
             Sort order
             <input
+              id="training-matrix-sort-order"
               type="number"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
               value={sortOrder}

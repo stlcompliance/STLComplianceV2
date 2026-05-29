@@ -81,8 +81,9 @@ export function CsvImportExportPanel({ accessToken, canManage }: CsvImportExport
       {canManage ? (
         <div className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/50 p-4">
           <h3 className="text-sm font-medium text-slate-200">Import</h3>
-          <label className="flex items-center gap-2 text-sm text-slate-300">
+          <label htmlFor="csv-import-export-dry-run" className="flex items-center gap-2 text-sm text-slate-300">
             <input
+              id="csv-import-export-dry-run"
               type="checkbox"
               checked={dryRun}
               onChange={(event) => setDryRun(event.target.checked)}
@@ -90,13 +91,17 @@ export function CsvImportExportPanel({ accessToken, canManage }: CsvImportExport
             />
             Dry run (validate only)
           </label>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv,.zip"
-            multiple
-            className="block w-full text-sm text-slate-300 file:mr-3 file:rounded-md file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-sm file:text-slate-100"
-          />
+          <label htmlFor="csv-import-export-files" className="block text-sm text-slate-300">
+            CSV or ZIP bundle files
+            <input
+              id="csv-import-export-files"
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,.zip"
+              multiple
+              className="mt-1 block w-full text-sm text-slate-300 file:mr-3 file:rounded-md file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-sm file:text-slate-100"
+            />
+          </label>
           <button
             type="button"
             onClick={() => {

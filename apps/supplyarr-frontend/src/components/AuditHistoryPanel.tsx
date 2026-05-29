@@ -83,9 +83,10 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="text-xs text-slate-400">
+        <label htmlFor="audit-history-action-filter" className="text-xs text-slate-400">
           Action contains
           <input
+            id="audit-history-action-filter"
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
             value={actionFilter}
             onChange={(event) => {
@@ -95,9 +96,10 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
             }}
           />
         </label>
-        <label className="text-xs text-slate-400">
+        <label htmlFor="audit-history-target-type-filter" className="text-xs text-slate-400">
           Target type
           <input
+            id="audit-history-target-type-filter"
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
             value={targetTypeFilter}
             onChange={(event) => {
@@ -107,9 +109,10 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
             }}
           />
         </label>
-        <label className="text-xs text-slate-400">
+        <label htmlFor="audit-history-target-id-filter" className="text-xs text-slate-400">
           Target id
           <input
+            id="audit-history-target-id-filter"
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
             value={targetIdFilter}
             onChange={(event) => {
@@ -119,9 +122,10 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
             }}
           />
         </label>
-        <label className="text-xs text-slate-400">
-          Result
+        <label htmlFor="audit-history-result-filter" className="text-xs text-slate-400">
+          Audit result filter
           <select
+            id="audit-history-result-filter"
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
             value={resultFilter}
             onChange={(event) => {

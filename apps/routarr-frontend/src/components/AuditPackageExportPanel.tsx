@@ -187,9 +187,9 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Pro
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Export filters</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <label className="block text-sm text-slate-300">
-            From (optional)
-            <input
+          <label className="block text-sm text-slate-300" htmlFor="auditpackageexport-from-optional">
+          From (optional)
+          <input id="auditpackageexport-from-optional"
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
@@ -197,9 +197,9 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Pro
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             />
           </label>
-          <label className="block text-sm text-slate-300">
-            To (optional)
-            <input
+          <label className="block text-sm text-slate-300" htmlFor="auditpackageexport-to-optional">
+          To (optional)
+          <input id="auditpackageexport-to-optional"
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
@@ -207,9 +207,9 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Pro
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             />
           </label>
-          <label className="block text-sm text-slate-300">
-            Action
-            <select
+          <label className="block text-sm text-slate-300" htmlFor="auditpackageexport-action">
+          Action
+          <select id="auditpackageexport-action"
               value={action}
               onChange={(e) => setAction(e.target.value)}
               data-testid="routarr-audit-filter-action"
@@ -223,9 +223,9 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Pro
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-300">
-            Result
-            <select
+          <label className="block text-sm text-slate-300" htmlFor="auditpackageexport-result">
+          Result
+          <select id="auditpackageexport-result"
               value={result}
               onChange={(e) => setResult(e.target.value)}
               data-testid="routarr-audit-filter-result"
@@ -239,9 +239,9 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Pro
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-300">
-            Target type
-            <select
+          <label className="block text-sm text-slate-300" htmlFor="auditpackageexport-target-type">
+          Target type
+          <select id="auditpackageexport-target-type"
               value={targetType}
               onChange={(e) => setTargetType(e.target.value)}
               data-testid="routarr-audit-filter-target-type"

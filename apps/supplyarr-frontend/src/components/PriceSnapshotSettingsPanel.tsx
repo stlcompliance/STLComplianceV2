@@ -81,8 +81,9 @@ export function PriceSnapshotSettingsPanel({ accessToken, canManage }: PriceSnap
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="price-snapshot-settings-enabled" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="price-snapshot-settings-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -90,9 +91,10 @@ export function PriceSnapshotSettingsPanel({ accessToken, canManage }: PriceSnap
           Enable automated price snapshot capture
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label htmlFor="price-snapshot-staleness-hours" className="block text-sm text-slate-200">
           <span className="font-medium">Staleness window (hours)</span>
           <input
+            id="price-snapshot-staleness-hours"
             className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             type="number"
             min={1}

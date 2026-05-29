@@ -74,13 +74,14 @@ export function OperatorReportsPanel({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-300">
-        <label className="flex items-center gap-2">
+        <label htmlFor="operator-reports-attention-only" className="flex items-center gap-2">
           <input
+            id="operator-reports-attention-only"
             type="checkbox"
             checked={attentionOnly}
             onChange={(event) => setAttentionOnly(event.target.checked)}
           />
-          Attention only
+          Show attention-only metrics
         </label>
       </div>
 

@@ -84,8 +84,9 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="notification-settings-enabled" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="notification-settings-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -94,9 +95,10 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
           Enable procurement notifications
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label htmlFor="notification-settings-webhook" className="block text-sm text-slate-200">
           <span className="font-medium">Webhook URL</span>
           <input
+            id="notification-settings-webhook"
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             type="url"
             placeholder="https://hooks.example.com/supplyarr"
@@ -108,32 +110,36 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
 
         <fieldset className="space-y-2 text-sm text-slate-200">
           <legend className="font-medium text-slate-100">Notify on</legend>
-          <label className="flex items-center gap-2">
+          <label htmlFor="notification-settings-pr-submitted" className="flex items-center gap-2">
             <input
+              id="notification-settings-pr-submitted"
               type="checkbox"
               checked={notifyPurchaseRequestSubmitted}
               onChange={(event) => setNotifyPurchaseRequestSubmitted(event.target.checked)}
             />
             Purchase request submitted
           </label>
-          <label className="flex items-center gap-2">
+          <label htmlFor="notification-settings-pr-approved" className="flex items-center gap-2">
             <input
+              id="notification-settings-pr-approved"
               type="checkbox"
               checked={notifyPurchaseRequestApproved}
               onChange={(event) => setNotifyPurchaseRequestApproved(event.target.checked)}
             />
             Purchase request approved
           </label>
-          <label className="flex items-center gap-2">
+          <label htmlFor="notification-settings-po-issued" className="flex items-center gap-2">
             <input
+              id="notification-settings-po-issued"
               type="checkbox"
               checked={notifyPurchaseOrderIssued}
               onChange={(event) => setNotifyPurchaseOrderIssued(event.target.checked)}
             />
             Purchase order issued
           </label>
-          <label className="flex items-center gap-2">
+          <label htmlFor="notification-settings-receiving-posted" className="flex items-center gap-2">
             <input
+              id="notification-settings-receiving-posted"
               type="checkbox"
               checked={notifyReceivingReceiptPosted}
               onChange={(event) => setNotifyReceivingReceiptPosted(event.target.checked)}

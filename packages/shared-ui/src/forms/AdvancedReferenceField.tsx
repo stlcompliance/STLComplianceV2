@@ -4,6 +4,7 @@ export type AdvancedReferenceFieldProps = {
   value: string
   onChange: (value: string) => void
   label?: string
+  id?: string
   placeholder?: string
   followUpId?: string
   disabled?: boolean
@@ -14,12 +15,14 @@ export function AdvancedReferenceField({
   value,
   onChange,
   label = 'Reference ID',
+  id,
   placeholder = 'Paste GUID or key…',
   followUpId,
   disabled = false,
   testId,
 }: AdvancedReferenceFieldProps) {
   const [open, setOpen] = useState(false)
+  const inputId = id ?? (testId ? `${testId}-input` : 'advanced-reference-input')
 
   return (
     <div data-testid={testId}>
@@ -32,9 +35,10 @@ export function AdvancedReferenceField({
         {open ? 'Hide advanced reference' : 'Advanced reference'}
       </button>
       {open ? (
-        <label className="mt-2 block text-sm text-slate-400">
+        <label htmlFor={inputId} className="mt-2 block text-sm text-slate-400">
           {label}
           <input
+            id={inputId}
             type="text"
             value={value}
             onChange={(event) => onChange(event.target.value)}

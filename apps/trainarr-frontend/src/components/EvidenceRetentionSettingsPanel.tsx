@@ -79,8 +79,9 @@ export function EvidenceRetentionSettingsPanel({ accessToken, canManage }: Evide
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm">
+        <label htmlFor="evidence-retention-enabled" className="flex items-center gap-2 text-sm">
           <input
+            id="evidence-retention-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -89,9 +90,10 @@ export function EvidenceRetentionSettingsPanel({ accessToken, canManage }: Evide
           Enable scheduled evidence retention purges
         </label>
 
-        <label className="block text-sm">
+        <label htmlFor="evidence-retention-days" className="block text-sm">
           <span className="font-medium">Retention after assignment close (days)</span>
           <input
+            id="evidence-retention-days"
             className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
             type="number"
             min={30}

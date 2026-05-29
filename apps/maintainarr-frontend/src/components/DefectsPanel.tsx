@@ -105,9 +105,10 @@ export function DefectsPanel({
       </header>
 
       <div className="mb-4 flex flex-wrap gap-3">
-        <label className="block text-sm">
+        <label className="block text-sm" htmlFor="defects-status-filter">
           <span className="text-slate-300">Status filter</span>
           <select
+            id="defects-status-filter"
             className="mt-1 rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
             value={statusFilter}
             onChange={(event) => onStatusFilterChange(event.target.value)}
@@ -124,9 +125,10 @@ export function DefectsPanel({
 
       {canCreate ? (
         <div className="mb-6 grid gap-4 rounded-lg border border-slate-800 bg-slate-950/50 p-4 md:grid-cols-2">
-          <label className="block text-sm md:col-span-2">
-            <span className="text-slate-300">Asset</span>
+          <label className="block text-sm md:col-span-2" htmlFor="defect-create-asset">
+            <span className="text-slate-300">Asset for defect</span>
             <select
+              id="defect-create-asset"
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
               value={selectedAssetId}
               onChange={(event) => onSelectedAssetIdChange(event.target.value)}
@@ -140,18 +142,20 @@ export function DefectsPanel({
             </select>
           </label>
 
-          <label className="block text-sm md:col-span-2">
-            <span className="text-slate-300">Title</span>
+          <label className="block text-sm md:col-span-2" htmlFor="defect-create-title">
+            <span className="text-slate-300">Defect title</span>
             <input
+              id="defect-create-title"
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
               value={defectTitle}
               onChange={(event) => onDefectTitleChange(event.target.value)}
             />
           </label>
 
-          <label className="block text-sm md:col-span-2">
-            <span className="text-slate-300">Description</span>
+          <label className="block text-sm md:col-span-2" htmlFor="defect-create-description">
+            <span className="text-slate-300">Defect description</span>
             <textarea
+              id="defect-create-description"
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
               rows={2}
               value={defectDescription}
@@ -159,9 +163,10 @@ export function DefectsPanel({
             />
           </label>
 
-          <label className="block text-sm">
-            <span className="text-slate-300">Severity</span>
+          <label className="block text-sm" htmlFor="defect-create-severity">
+            <span className="text-slate-300">Defect severity</span>
             <select
+              id="defect-create-severity"
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
               value={defectSeverity}
               onChange={(event) => onDefectSeverityChange(event.target.value)}
@@ -251,9 +256,11 @@ export function DefectsPanel({
                         ) : null}
                         {canManageStatus ? (
                           <select
+                            id={`defect-status-${defect.defectId}`}
                             className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-white"
                             value={defect.status}
                             disabled={isUpdatingStatus}
+                            aria-label={`Defect status for ${defect.title}`}
                             onChange={(event) => onUpdateStatus(defect.defectId, event.target.value)}
                           >
                             <option value="open">Open</option>

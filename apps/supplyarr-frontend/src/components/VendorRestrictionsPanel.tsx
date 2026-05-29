@@ -110,9 +110,10 @@ export function VendorRestrictionsPanel({
       )}
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <label className="block text-sm text-slate-400 md:col-span-2">
-          Party
+        <label htmlFor="vendor-restriction-party" className="block text-sm text-slate-400 md:col-span-2">
+          Vendor or supplier party
           <select
+            id="vendor-restriction-party"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
             value={selectedPartyId}
             onChange={(event) => setSelectedPartyId(event.target.value)}
@@ -150,18 +151,20 @@ export function VendorRestrictionsPanel({
 
         {selectedPartyId && (
           <>
-            <label className="block text-sm text-slate-400">
+            <label htmlFor="vendor-restriction-key" className="block text-sm text-slate-400">
               Restriction key
               <input
+                id="vendor-restriction-key"
                 className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                 value={restrictionKey}
                 onChange={(event) => setRestrictionKey(event.target.value)}
                 placeholder="e.g. quality-hold-2026"
               />
             </label>
-            <label className="block text-sm text-slate-400 md:col-span-2">
-              Reason
+            <label htmlFor="vendor-restriction-reason" className="block text-sm text-slate-400 md:col-span-2">
+              Restriction reason
               <textarea
+                id="vendor-restriction-reason"
                 className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                 rows={2}
                 value={reason}
@@ -172,8 +175,9 @@ export function VendorRestrictionsPanel({
               <legend className="text-sm font-medium text-slate-300">Scopes</legend>
               <div className="mt-2 flex flex-wrap gap-3">
                 {SCOPE_OPTIONS.map((scope) => (
-                  <label key={scope.value} className="flex items-center gap-2 text-sm text-slate-400">
+                  <label key={scope.value} htmlFor={`vendor-restriction-scope-${scope.value}`} className="flex items-center gap-2 text-sm text-slate-400">
                     <input
+                      id={`vendor-restriction-scope-${scope.value}`}
                       type="checkbox"
                       checked={selectedScopes.includes(scope.value)}
                       onChange={(event) => {

@@ -52,9 +52,10 @@ export function QualificationManagementPanel({
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Qualification management</h2>
       <p className="mt-1 text-xs text-slate-500">Issue, suspend, revoke, and expire qualifications across assignments.</p>
 
-      <label className="mt-4 block text-xs text-slate-400">
+      <label htmlFor="qualification-management-status-filter" className="mt-4 block text-xs text-slate-400">
         Status filter
         <select
+          id="qualification-management-status-filter"
           className="mt-1 w-full max-w-xs rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
           value={statusFilter}
           onChange={(e) => onStatusFilterChange(e.target.value)}
@@ -101,9 +102,10 @@ export function QualificationManagementPanel({
           {selected.lifecycleReason ? (
             <p className="text-xs text-slate-400">Reason: {selected.lifecycleReason}</p>
           ) : null}
-          <label className="grid gap-1 text-xs text-slate-400">
+          <label htmlFor="qualification-management-lifecycle-reason" className="grid gap-1 text-xs text-slate-400">
             Lifecycle reason (optional)
             <textarea
+              id="qualification-management-lifecycle-reason"
               value={lifecycleReason}
               onChange={(e) => onLifecycleReasonChange(e.target.value)}
               rows={2}

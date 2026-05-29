@@ -103,9 +103,9 @@ function DriverAvailabilityRecordRow({
             updateMutation.mutate()
           }}
         >
-          <label className="block text-sm text-slate-300">
-            Status
-            <select
+          <label className="block text-sm text-slate-300" htmlFor="driveravailability-status">
+          Status
+          <select id="driveravailability-status"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
               value={availabilityStatus}
               onChange={(event) => setAvailabilityStatus(event.target.value)}
@@ -115,17 +115,17 @@ function DriverAvailabilityRecordRow({
               <option value="available">Available</option>
             </select>
           </label>
-          <label className="block text-sm text-slate-300">
-            Reason
-            <input
+          <label className="block text-sm text-slate-300" htmlFor="driveravailability-reason">
+          Reason
+          <input id="driveravailability-reason"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
               value={reason}
               onChange={(event) => setReason(event.target.value)}
             />
           </label>
-          <label className="block text-sm text-slate-300">
-            Starts at
-            <input
+          <label className="block text-sm text-slate-300" htmlFor="driveravailability-starts-at">
+          Starts at
+          <input id="driveravailability-starts-at"
               type="datetime-local"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
               value={startsAt}
@@ -133,9 +133,9 @@ function DriverAvailabilityRecordRow({
               required
             />
           </label>
-          <label className="block text-sm text-slate-300">
-            Ends at
-            <input
+          <label className="block text-sm text-slate-300" htmlFor="driveravailability-ends-at">
+          Ends at
+          <input id="driveravailability-ends-at"
               type="datetime-local"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
               value={endsAt}
@@ -382,9 +382,9 @@ export function DriverAvailabilityPanel({
               testId="driver-availability-person-advanced"
             />
           </div>
-          <label className="block text-sm text-slate-300">
-            Status
-            <select
+          <label className="block text-sm text-slate-300" htmlFor="driveravailability-status-2">
+          Status
+          <select id="driveravailability-status-2"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
               value={availabilityStatus}
               onChange={(event) => setAvailabilityStatus(event.target.value)}
@@ -394,9 +394,9 @@ export function DriverAvailabilityPanel({
               <option value="available">Available</option>
             </select>
           </label>
-          <label className="block text-sm text-slate-300 sm:col-span-2">
-            Reason
-            <input
+          <label className="block text-sm text-slate-300 sm:col-span-2" htmlFor="driveravailability-reason-2">
+          Reason
+          <input id="driveravailability-reason-2"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
               value={reason}
               onChange={(event) => setReason(event.target.value)}

@@ -54,10 +54,13 @@ export function BatchWorkflowGateCheckPanel({
         <p className="mt-3 text-sm text-slate-500">Define workflow gates before running a batch check.</p>
       ) : (
         <ul className="mt-4 max-h-40 space-y-2 overflow-y-auto rounded-lg border border-slate-800 bg-slate-950/60 p-2">
-          {workflowGates.map((gate) => (
+          {workflowGates.map((gate) => {
+            const gateInputId = `batch-workflow-gate-gate-${gate.gateKey}`
+            return (
             <li key={gate.workflowGateId}>
-              <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-200">
+              <label htmlFor={gateInputId} className="flex cursor-pointer items-start gap-2 text-sm text-slate-200">
                 <input
+                  id={gateInputId}
                   type="checkbox"
                   className="mt-1 rounded border-slate-600"
                   data-testid={`batch-workflow-gate-gate-${gate.gateKey}`}
@@ -72,14 +75,18 @@ export function BatchWorkflowGateCheckPanel({
                 </span>
               </label>
             </li>
-          ))}
+            )
+          })}
         </ul>
       )}
 
       <div className="mt-4 space-y-2">
-        {factKeys.map((factKey) => (
-          <label key={factKey} className="flex items-center gap-2 text-sm text-slate-200">
+        {factKeys.map((factKey) => {
+          const factInputId = `batch-workflow-gate-fact-${factKey.replace(/[^a-zA-Z0-9_-]/g, '-')}`
+          return (
+          <label key={factKey} htmlFor={factInputId} className="flex items-center gap-2 text-sm text-slate-200">
             <input
+              id={factInputId}
               type="checkbox"
               checked={factInputs[factKey] ?? false}
               onChange={(event) =>
@@ -92,18 +99,20 @@ export function BatchWorkflowGateCheckPanel({
             />
             {factKey}
           </label>
-        ))}
+          )
+        })}
       </div>
 
-      <label className="mt-4 flex items-center gap-2 text-xs text-slate-300">
+      <label htmlFor="batch-workflow-gate-emit-findings" className="mt-4 flex items-center gap-2 text-xs text-slate-300">
         <input
+          id="batch-workflow-gate-emit-findings"
           type="checkbox"
           data-testid="batch-workflow-gate-emit-findings"
           checked={emitFindings}
           onChange={(event) => setEmitFindings(event.target.checked)}
           className="rounded border-slate-600"
         />
-        Emit findings when blocked
+        Emit findings when batch gate blocks
       </label>
 
       <button

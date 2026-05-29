@@ -83,9 +83,10 @@ export function ComplianceReportsPanel({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-300">
-        <label className="flex items-center gap-2">
-          Severity
+        <label htmlFor="compliance-reports-severity" className="flex items-center gap-2">
+          Finding severity filter
           <select
+            id="compliance-reports-severity"
             className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100"
             value={severity}
             onChange={(event) => setSeverity(event.target.value)}
@@ -95,13 +96,14 @@ export function ComplianceReportsPanel({
             <option value="warn">Warn</option>
           </select>
         </label>
-        <label className="flex items-center gap-2">
+        <label htmlFor="compliance-reports-open-only" className="flex items-center gap-2">
           <input
+            id="compliance-reports-open-only"
             type="checkbox"
             checked={openOnly}
             onChange={(event) => setOpenOnly(event.target.checked)}
           />
-          Open only
+          Open findings only
         </label>
       </div>
 

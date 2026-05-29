@@ -58,14 +58,14 @@ export function BatchQualificationCheckPanel({
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label className="block text-xs text-slate-400">
+        <label htmlFor="batch-qualification-key" className="block text-xs text-slate-400">
           Qualification key
           <input
+            id="batch-qualification-key"
             type="text"
             className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm text-slate-100"
             value={qualificationKey}
             onChange={(e) => onQualificationKeyChange(e.target.value)}
-            placeholder="hazmat_endorsement"
           />
         </label>
         <ControlledSelect
@@ -83,11 +83,15 @@ export function BatchQualificationCheckPanel({
         <div className="mt-4">
           <p className="text-xs font-medium uppercase tracking-wide text-slate-500">From incident remediations</p>
           <ul className="mt-2 max-h-36 space-y-1 overflow-y-auto rounded border border-slate-700 bg-slate-950/60 p-2">
-            {remediationPersonOptions.map((option) => (
+            {remediationPersonOptions.map((option) => {
+              const checkboxId = `batch-remediation-person-${option.staffarrPersonId}`
+              return (
               <li key={option.remediationId}>
-                <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-200">
+                <label htmlFor={checkboxId} className="flex cursor-pointer items-start gap-2 text-sm text-slate-200">
                   <input
+                    id={checkboxId}
                     type="checkbox"
+                    data-testid={checkboxId}
                     className="mt-1"
                     checked={selectedRemediationPersonIds.includes(option.staffarrPersonId)}
                     onChange={() => onToggleRemediationPerson(option.staffarrPersonId)}
@@ -98,7 +102,8 @@ export function BatchQualificationCheckPanel({
                   </span>
                 </label>
               </li>
-            ))}
+              )
+            })}
           </ul>
         </div>
       )}

@@ -125,12 +125,16 @@ export function AssetBulkImportPanel({ accessToken, canImport, onComplete }: Ass
 
       {canImport ? (
         <>
-          <textarea
-            className="mt-4 h-40 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100"
-            value={csvText}
-            onChange={(event) => setCsvText(event.target.value)}
-            spellCheck={false}
-          />
+          <label className="mt-4 block text-sm text-slate-300" htmlFor="asset-bulk-import-csv">
+            Asset import CSV
+            <textarea
+              id="asset-bulk-import-csv"
+              className="mt-1 h-40 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100"
+              value={csvText}
+              onChange={(event) => setCsvText(event.target.value)}
+              spellCheck={false}
+            />
+          </label>
 
           <div className="mt-3 flex flex-wrap gap-2">
             <button

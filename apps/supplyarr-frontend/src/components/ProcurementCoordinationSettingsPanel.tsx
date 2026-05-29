@@ -83,8 +83,9 @@ export function ProcurementCoordinationSettingsPanel({
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="procurement-coordination-enabled" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="procurement-coordination-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -92,9 +93,10 @@ export function ProcurementCoordinationSettingsPanel({
           Enable automated procurement coordination refresh
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label htmlFor="procurement-coordination-staleness-hours" className="block text-sm text-slate-200">
           <span className="font-medium">Staleness window (hours)</span>
           <input
+            id="procurement-coordination-staleness-hours"
             className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             type="number"
             min={1}

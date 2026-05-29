@@ -9,6 +9,7 @@ export type StaticSearchPickerProps = {
   options: PickerOption[]
   selectedOption?: PickerOption
   label?: string
+  id?: string
   placeholder?: string
   disabled?: boolean
   testId?: string
@@ -20,6 +21,7 @@ export function StaticSearchPicker({
   options,
   selectedOption,
   label,
+  id,
   placeholder = 'Search…',
   disabled = false,
   testId,
@@ -33,6 +35,7 @@ export function StaticSearchPicker({
   )
 
   const selected = mergedOptions.find((option) => option.value === value)
+  const fieldId = id ?? testId
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -48,10 +51,17 @@ export function StaticSearchPicker({
 
   return (
     <div className="relative" data-testid={testId}>
-      {label ? <span className="mb-1 block text-sm text-slate-300">{label}</span> : null}
+      {label && fieldId ? (
+        <label htmlFor={fieldId} className="mb-1 block text-sm text-slate-300">
+          {label}
+        </label>
+      ) : label ? (
+        <span className="mb-1 block text-sm text-slate-300">{label}</span>
+      ) : null}
       <div className="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-950 px-3 py-2">
         <Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
         <input
+          id={fieldId}
           type="search"
           value={isOpen ? query : selected ? formatPickerLabel(selected) : query}
           onChange={(event) => {

@@ -86,7 +86,7 @@ export function AttachmentRetentionSettingsPanel({
 
       <div className="mt-4 space-y-3">
         <label className="flex items-center gap-2 text-sm text-slate-200">
-          <input
+          <input id="attachmentretentionsettings"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -95,9 +95,9 @@ export function AttachmentRetentionSettingsPanel({
           Enable scheduled capture attachment retention purges
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label className="block text-sm text-slate-200" htmlFor="attachmentretentionsettings-retention-after-trip-close-days">
           <span className="font-medium">Retention after trip close (days)</span>
-          <input
+          <input id="attachmentretentionsettings-retention-after-trip-close-days"
             className="mt-1 w-32 rounded border border-slate-600 bg-slate-950 px-3 py-2 text-slate-100"
             type="number"
             min={30}

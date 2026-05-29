@@ -221,9 +221,9 @@ export function FieldTaskReceivingPanel({
                 </p>
 
                 {editable && (
-                  <label className="mt-2 block text-sm text-slate-200">
-                    Quantity received
-                    <input
+                  <label className="mt-2 block text-sm text-slate-200" htmlFor="fieldtaskreceiving-quantity-received">
+          Quantity received
+          <input id="fieldtaskreceiving-quantity-received"
                       type="number"
                       min="0"
                       step="1"

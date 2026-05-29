@@ -239,9 +239,10 @@ export function ReceivingPanel({
                   <span className="ml-2 text-rose-400">{openExceptionCount} open</span>
                 ) : null}
               </div>
-              <label className="text-xs text-slate-500">
-                Filter
+              <label htmlFor="receiving-exception-filter" className="text-xs text-slate-500">
+                Exception filter
                 <select
+                  id="receiving-exception-filter"
                   className="ml-2 rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-200"
                   value={exceptionFilter}
                   onChange={(e) => setExceptionFilter(e.target.value as ExceptionFilter)}
@@ -326,9 +327,10 @@ export function ReceivingPanel({
               data-testid="receiving-line-adjustments"
             >
               <h4 className="text-sm font-medium text-slate-300">Line adjustments</h4>
-              <label className="block text-xs text-slate-500">
+              <label htmlFor="receiving-line-quantity-input" className="block text-xs text-slate-500">
                 Good quantity received
                 <input
+                  id="receiving-line-quantity-input"
                   type="number"
                   min="0"
                   step="any"
@@ -350,9 +352,10 @@ export function ReceivingPanel({
 
               <div data-testid="receiving-exception-record-form">
                 <h4 className="text-sm font-medium text-slate-300">Record exception</h4>
-                <label className="mt-2 block text-xs text-slate-500">
-                  Type
+                <label htmlFor="receiving-exception-type-select" className="mt-2 block text-xs text-slate-500">
+                  Exception type
                   <select
+                    id="receiving-exception-type-select"
                     className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
                     value={exceptionType}
                     onChange={(e) => onExceptionTypeChange(e.target.value)}
@@ -363,9 +366,10 @@ export function ReceivingPanel({
                     <option value="damage">Damage</option>
                   </select>
                 </label>
-                <label className="mt-2 block text-xs text-slate-500">
-                  Quantity
+                <label htmlFor="receiving-exception-quantity-input" className="mt-2 block text-xs text-slate-500">
+                  Exception quantity
                   <input
+                    id="receiving-exception-quantity-input"
                     type="number"
                     min="0"
                     step="any"
@@ -375,13 +379,13 @@ export function ReceivingPanel({
                     data-testid="receiving-exception-quantity-input"
                   />
                 </label>
-                <label className="mt-2 block text-xs text-slate-500">
-                  Notes
+                <label htmlFor="receiving-exception-notes-input" className="mt-2 block text-xs text-slate-500">
+                  Exception notes (optional)
                   <input
+                    id="receiving-exception-notes-input"
                     className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
                     value={exceptionNotes}
                     onChange={(e) => onExceptionNotesChange(e.target.value)}
-                    placeholder="Optional notes"
                     data-testid="receiving-exception-notes-input"
                   />
                 </label>
@@ -418,9 +422,10 @@ export function ReceivingPanel({
           data-testid="receiving-create-form"
         >
           <h3 className="text-sm font-medium text-slate-300">Create draft receipt</h3>
-          <label className="block text-xs text-slate-500">
+          <label htmlFor="receiving-create-po-select" className="block text-xs text-slate-500">
             Issued purchase order
             <select
+              id="receiving-create-po-select"
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
               value={selectedPurchaseOrderId}
               onChange={(e) => onSelectedPurchaseOrderIdChange(e.target.value)}
@@ -440,19 +445,20 @@ export function ReceivingPanel({
               {selectedPo.lines.reduce((sum, l) => sum + l.quantityRemaining, 0)} units remaining
             </p>
           ) : null}
-          <label className="block text-xs text-slate-500">
+          <label htmlFor="receiving-create-key-input" className="block text-xs text-slate-500">
             Receipt key
             <input
+              id="receiving-create-key-input"
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
               value={receiptKey}
               onChange={(e) => onReceiptKeyChange(e.target.value)}
-              placeholder="rcpt-2026-001"
               data-testid="receiving-create-key-input"
             />
           </label>
-          <label className="block text-xs text-slate-500">
+          <label htmlFor="receiving-create-bin-select" className="block text-xs text-slate-500">
             Destination bin
             <select
+              id="receiving-create-bin-select"
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
               value={selectedBinId}
               onChange={(e) => onSelectedBinIdChange(e.target.value)}

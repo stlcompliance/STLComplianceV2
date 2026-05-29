@@ -97,33 +97,33 @@ export function PmProgramBuilderPanel({
 
       {canManage ? (
         <div className="mt-6 grid gap-4 rounded-lg border border-slate-700 bg-slate-950/40 p-4 md:grid-cols-3">
-          <label className="block text-sm">
-            <span className="text-slate-300">Program key</span>
-            <input
+          <label className="block text-sm" htmlFor="pmprogrambuilder-program-key">
+          <span className="text-slate-300">Program key</span>
+          <input id="pmprogrambuilder-program-key"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
               value={programKey}
               onChange={(e) => onProgramKeyChange(e.target.value)}
             />
           </label>
-          <label className="block text-sm">
-            <span className="text-slate-300">Name</span>
-            <input
+          <label className="block text-sm" htmlFor="pmprogrambuilder-name">
+          <span className="text-slate-300">Name</span>
+          <input id="pmprogrambuilder-name"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
               value={programName}
               onChange={(e) => onProgramNameChange(e.target.value)}
             />
           </label>
-          <label className="block text-sm">
-            <span className="text-slate-300">Description</span>
-            <input
+          <label className="block text-sm" htmlFor="pmprogrambuilder-description">
+          <span className="text-slate-300">Description</span>
+          <input id="pmprogrambuilder-description"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
               value={programDescription}
               onChange={(e) => onProgramDescriptionChange(e.target.value)}
             />
           </label>
-          <label className="block text-sm">
-            <span className="text-slate-300">Scope type</span>
-            <select
+          <label className="block text-sm" htmlFor="pmprogrambuilder-scope-type">
+          <span className="text-slate-300">Scope type</span>
+          <select id="pmprogrambuilder-scope-type"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
               value={scopeType}
               onChange={(e) => onScopeTypeChange(e.target.value)}
@@ -133,9 +133,9 @@ export function PmProgramBuilderPanel({
             </select>
           </label>
           {scopeType === 'asset_type' ? (
-            <label className="block text-sm md:col-span-2">
-              <span className="text-slate-300">Asset type</span>
-              <select
+            <label className="block text-sm md:col-span-2" htmlFor="pmprogrambuilder-asset-type">
+          <span className="text-slate-300">Asset type</span>
+          <select id="pmprogrambuilder-asset-type"
                 className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
                 value={selectedAssetTypeId}
                 onChange={(e) => onSelectedAssetTypeIdChange(e.target.value)}
@@ -149,9 +149,9 @@ export function PmProgramBuilderPanel({
               </select>
             </label>
           ) : (
-            <label className="block text-sm md:col-span-2">
-              <span className="text-slate-300">Asset</span>
-              <select
+            <label className="block text-sm md:col-span-2" htmlFor="pmprogrambuilder-asset">
+          <span className="text-slate-300">Asset</span>
+          <select id="pmprogrambuilder-asset"
                 className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
                 value={selectedAssetId}
                 onChange={(e) => onSelectedAssetIdChange(e.target.value)}
@@ -255,7 +255,7 @@ export function PmProgramBuilderPanel({
                       {availableSchedules.map((schedule) => (
                         <li key={schedule.pmScheduleId}>
                           <label className="flex items-center gap-2 text-sm text-slate-300">
-                            <input
+                            <input id="pmprogrambuilder"
                               type="checkbox"
                               checked={selectedScheduleIds.includes(schedule.pmScheduleId)}
                               onChange={() => toggleSchedule(schedule.pmScheduleId)}

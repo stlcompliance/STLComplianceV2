@@ -79,9 +79,9 @@ export function MeterReadingsPanel({
       ) : (
         <>
           <div className="mb-6 grid gap-4 md:grid-cols-2">
-            <label className="block text-sm">
-              <span className="text-slate-300">Asset</span>
-              <select
+            <label className="block text-sm" htmlFor="meterreadings-asset">
+          <span className="text-slate-300">Asset</span>
+          <select id="meterreadings-asset"
                 className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
                 value={selectedAssetId}
                 onChange={(e) => onSelectedAssetIdChange(e.target.value)}
@@ -95,9 +95,9 @@ export function MeterReadingsPanel({
               </select>
             </label>
 
-            <label className="block text-sm">
-              <span className="text-slate-300">Meter</span>
-              <select
+            <label className="block text-sm" htmlFor="meterreadings-meter">
+          <span className="text-slate-300">Meter</span>
+          <select id="meterreadings-meter"
                 className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
                 value={selectedMeterId}
                 onChange={(e) => onSelectedMeterIdChange(e.target.value)}
@@ -141,19 +141,19 @@ export function MeterReadingsPanel({
                   showAdvancedKey
                   label="Meter key"
                 />
-                <input
+                <input id="meterreadings-input-field-5"
                   className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
                   placeholder="Display name"
                   value={meterName}
                   onChange={(e) => onMeterNameChange(e.target.value)}
                 />
-                <input
+                <input id="meterreadings-input-field-4"
                   className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
                   placeholder="Unit (hours, miles)"
                   value={meterUnit}
                   onChange={(e) => onMeterUnitChange(e.target.value)}
                 />
-                <input
+                <input id="meterreadings-input-field-3"
                   className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
                   placeholder="Baseline reading"
                   value={baselineReading}
@@ -175,13 +175,13 @@ export function MeterReadingsPanel({
             <div className="mb-6 rounded-lg border border-slate-700 bg-slate-950/50 p-4">
               <h3 className="text-sm font-medium text-slate-200">Record reading</h3>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
-                <input
+                <input id="meterreadings-input-field-2"
                   className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
                   placeholder="Reading value"
                   value={readingValue}
                   onChange={(e) => onReadingValueChange(e.target.value)}
                 />
-                <input
+                <input id="meterreadings-input-field"
                   className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
                   placeholder="Notes (optional)"
                   value={readingNotes}

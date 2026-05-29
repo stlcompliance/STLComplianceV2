@@ -40,9 +40,10 @@ export function VocabularyPanel({
           )}
         </div>
 
-        <label className="mt-4 block text-xs text-slate-500">
-          Vocabulary type
+        <label htmlFor="vocabulary-type-filter" className="mt-4 block text-xs text-slate-500">
+          Vocabulary type filter
           <select
+            id="vocabulary-type-filter"
             value={selectedTypeKey}
             onChange={(event) => onSelectType(event.target.value)}
             className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"

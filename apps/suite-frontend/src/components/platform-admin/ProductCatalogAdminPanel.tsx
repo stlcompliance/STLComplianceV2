@@ -77,35 +77,39 @@ export function ProductCatalogAdminPanel() {
       ) : null}
 
       <form className="grid gap-3 md:grid-cols-4" onSubmit={handleCreate}>
-        <label className="block text-sm text-slate-700">
-          Product key
+        <label htmlFor="product-catalog-create-key" className="block text-sm text-slate-700">
+          New product key
           <input
+            id="product-catalog-create-key"
             value={productKey}
             onChange={(event) => setProductKey(event.target.value)}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             required
           />
         </label>
-        <label className="block text-sm text-slate-700 md:col-span-2">
-          Display name
+        <label htmlFor="product-catalog-create-display-name" className="block text-sm text-slate-700 md:col-span-2">
+          New product display name
           <input
+            id="product-catalog-create-display-name"
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             required
           />
         </label>
-        <label className="block text-sm text-slate-700">
-          Sort order
+        <label htmlFor="product-catalog-create-sort-order" className="block text-sm text-slate-700">
+          Catalog sort order
           <input
+            id="product-catalog-create-sort-order"
             type="number"
             value={sortOrder}
             onChange={(event) => setSortOrder(event.target.value)}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
           />
         </label>
-        <label className="flex items-center gap-2 text-sm text-slate-700 md:col-span-4">
+        <label htmlFor="product-catalog-create-active" className="flex items-center gap-2 text-sm text-slate-700 md:col-span-4">
           <input
+            id="product-catalog-create-active"
             type="checkbox"
             checked={isActive}
             onChange={(event) => setIsActive(event.target.checked)}
@@ -124,9 +128,10 @@ export function ProductCatalogAdminPanel() {
       </form>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <label className="block text-sm text-slate-700">
-          Selected product
+        <label htmlFor="product-catalog-selected-product" className="block text-sm text-slate-700">
+          Product to edit
           <select
+            id="product-catalog-selected-product"
             value={selectedProductKey}
             onChange={(event) => {
               const key = event.target.value

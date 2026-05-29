@@ -102,9 +102,9 @@ function EquipmentAvailabilityRecordRow({
             updateMutation.mutate()
           }}
         >
-          <label className="block text-sm text-slate-300">
-            Status
-            <select
+          <label className="block text-sm text-slate-300" htmlFor="equipmentavailability-status">
+          Status
+          <select id="equipmentavailability-status"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
               value={availabilityStatus}
               onChange={(event) => setAvailabilityStatus(event.target.value)}
@@ -114,17 +114,17 @@ function EquipmentAvailabilityRecordRow({
               <option value="available">Available</option>
             </select>
           </label>
-          <label className="block text-sm text-slate-300">
-            Reason
-            <input
+          <label className="block text-sm text-slate-300" htmlFor="equipmentavailability-reason">
+          Reason
+          <input id="equipmentavailability-reason"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
               value={reason}
               onChange={(event) => setReason(event.target.value)}
             />
           </label>
-          <label className="block text-sm text-slate-300">
-            Starts at
-            <input
+          <label className="block text-sm text-slate-300" htmlFor="equipmentavailability-starts-at">
+          Starts at
+          <input id="equipmentavailability-starts-at"
               type="datetime-local"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
               value={startsAt}
@@ -132,9 +132,9 @@ function EquipmentAvailabilityRecordRow({
               required
             />
           </label>
-          <label className="block text-sm text-slate-300">
-            Ends at
-            <input
+          <label className="block text-sm text-slate-300" htmlFor="equipmentavailability-ends-at">
+          Ends at
+          <input id="equipmentavailability-ends-at"
               type="datetime-local"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
               value={endsAt}
@@ -379,9 +379,9 @@ export function EquipmentAvailabilityPanel({
               testId="equipment-availability-vehicle-advanced"
             />
           </div>
-          <label className="block text-sm text-slate-300">
-            Status
-            <select
+          <label className="block text-sm text-slate-300" htmlFor="equipmentavailability-status-2">
+          Status
+          <select id="equipmentavailability-status-2"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
               value={availabilityStatus}
               onChange={(event) => setAvailabilityStatus(event.target.value)}
@@ -391,9 +391,9 @@ export function EquipmentAvailabilityPanel({
               <option value="available">Available</option>
             </select>
           </label>
-          <label className="block text-sm text-slate-300 sm:col-span-2">
-            Reason
-            <input
+          <label className="block text-sm text-slate-300 sm:col-span-2" htmlFor="equipmentavailability-reason-2">
+          Reason
+          <input id="equipmentavailability-reason-2"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
               value={reason}
               onChange={(event) => setReason(event.target.value)}

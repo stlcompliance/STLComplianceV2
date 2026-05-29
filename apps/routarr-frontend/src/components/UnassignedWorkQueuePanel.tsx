@@ -87,7 +87,7 @@ function TripRow({
     >
       <div className="flex flex-wrap items-start gap-2">
         {canAssign ? (
-          <input
+          <input id="unassignedworkqueue-input-field"
             type="checkbox"
             checked={selected}
             onChange={onToggle}
@@ -109,7 +109,7 @@ function TripRow({
       {canAssign ? (
         <div className="mt-2 space-y-2">
           <div className="flex flex-wrap gap-1">
-            <select
+            <select id="unassignedworkqueue-select-field-2"
               className="min-w-0 flex-1 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-xs text-slate-200"
               value={driverId}
               onChange={(e) => setDriverId(e.target.value)}
@@ -313,7 +313,7 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <label className="flex items-center gap-2 text-xs text-slate-400">
-          <input
+          <input id="unassignedworkqueue"
             type="checkbox"
             checked={attentionOnly}
             onChange={(e) => setAttentionOnly(e.target.checked)}
@@ -331,7 +331,7 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
       {canAssign && queue.items.length > 0 ? (
         <div className="mt-4 space-y-3 rounded-lg border border-slate-700 bg-slate-900/50 p-3">
           <div className="flex flex-wrap items-center gap-2">
-            <select
+            <select id="unassignedworkqueue-select-field"
               className="rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200"
               value={bulkDriverId}
               onChange={(e) => setBulkDriverId(e.target.value)}

@@ -100,9 +100,12 @@ export function AssignmentStepsPanel({
                         <fieldset key={`${step.stepId}-${index}`} className="text-sm text-slate-300">
                           <legend>{question.prompt}</legend>
                           <div className="mt-2 space-y-1">
-                            {question.options.map((option, optionIndex) => (
-                              <label key={option} className="flex items-center gap-2">
+                            {question.options.map((option, optionIndex) => {
+                              const optionId = `${step.stepId}-question-${index}-option-${optionIndex}`
+                              return (
+                              <label key={option} htmlFor={optionId} className="flex items-center gap-2">
                                 <input
+                                  id={optionId}
                                   type="radio"
                                   name={`${step.stepId}-${index}`}
                                   checked={quizSelections[step.stepId]?.[index] === optionIndex}
@@ -117,16 +120,18 @@ export function AssignmentStepsPanel({
                                 />
                                 {option}
                               </label>
-                            ))}
+                              )
+                            })}
                           </div>
                         </fieldset>
                       ))
                     : null}
 
                   {step.stepType === 'practical' ? (
-                    <label className="block text-sm text-slate-300">
+                    <label htmlFor={`${step.stepId}-practical-result`} className="block text-sm text-slate-300">
                       Practical result
                       <select
+                        id={`${step.stepId}-practical-result`}
                         value={practicalResults[step.stepId] ?? 'pass'}
                         onChange={(event) =>
                           setPracticalResults((previous) => ({
@@ -142,9 +147,10 @@ export function AssignmentStepsPanel({
                     </label>
                   ) : null}
 
-                  <label className="block text-sm text-slate-300">
+                  <label htmlFor={`${step.stepId}-step-notes`} className="block text-sm text-slate-300">
                     Notes
                     <input
+                      id={`${step.stepId}-step-notes`}
                       value={notesByStep[step.stepId] ?? ''}
                       onChange={(event) =>
                         setNotesByStep((previous) => ({

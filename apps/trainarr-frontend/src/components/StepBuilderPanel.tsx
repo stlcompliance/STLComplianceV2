@@ -1,4 +1,5 @@
-import { type FormEvent, useEffect, useState } from 'react'
+import { GeneratedKeyField, slugifyKey } from '@stl/shared-ui'
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type { TrainingDefinitionResponse, TrainingDefinitionStepResponse } from '../api/types'
 
 interface StepBuilderPanelProps {
@@ -68,12 +69,16 @@ export function StepBuilderPanel({
   onCreateStep,
   onDeleteStep,
 }: StepBuilderPanelProps) {
-  const [stepKey, setStepKey] = useState('')
+  const [stepKeyManual, setStepKeyManual] = useState('')
+  const [showAdvancedStepKey, setShowAdvancedStepKey] = useState(false)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [stepType, setStepType] = useState<'content' | 'quiz' | 'practical'>('content')
   const [configJson, setConfigJson] = useState(DEFAULT_CONTENT_CONFIG)
   const [sortOrder, setSortOrder] = useState('0')
+
+  const generatedStepKey = useMemo(() => slugifyKey(name), [name])
+  const resolvedStepKey = stepKeyManual.trim() || generatedStepKey
 
   useEffect(() => {
     setSortOrder(String(steps.length))
@@ -91,7 +96,7 @@ export function StepBuilderPanel({
     }
 
     await onCreateStep({
-      stepKey: stepKey.trim(),
+      stepKey: resolvedStepKey.trim(),
       name: name.trim(),
       description: description.trim(),
       stepType,
@@ -99,7 +104,8 @@ export function StepBuilderPanel({
       sortOrder: Number.parseInt(sortOrder, 10) || 0,
     })
 
-    setStepKey('')
+    setStepKeyManual('')
+    setShowAdvancedStepKey(false)
     setName('')
     setDescription('')
     setStepType('content')
@@ -116,9 +122,10 @@ export function StepBuilderPanel({
         </p>
       </header>
 
-      <label className="mt-4 block text-sm text-slate-300">
+      <label htmlFor="step-builder-definition" className="mt-4 block text-sm text-slate-300">
         Training definition
         <select
+          id="step-builder-definition"
           value={selectedDefinitionId ?? ''}
           onChange={(event) => onSelectDefinition(event.target.value)}
           className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -168,28 +175,39 @@ export function StepBuilderPanel({
 
           {canManage ? (
             <form className="mt-6 grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-              <label className="block text-sm text-slate-300">
-                Step key
-                <input
-                  value={stepKey}
-                  onChange={(event) => setStepKey(event.target.value)}
-                  className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                  required
-                  minLength={2}
+              <div className="md:col-span-2">
+                <GeneratedKeyField
+                  label="Generated step key"
+                  sourceLabel={name}
+                  generatedKey={generatedStepKey}
+                  manualOverride={stepKeyManual}
+                  onManualOverrideChange={setStepKeyManual}
+                  showAdvancedKey={showAdvancedStepKey}
                 />
-              </label>
-              <label className="block text-sm text-slate-300">
+                {!showAdvancedStepKey ? (
+                  <button
+                    type="button"
+                    className="mt-1 text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                    onClick={() => setShowAdvancedStepKey(true)}
+                  >
+                    Customize step key
+                  </button>
+                ) : null}
+              </div>
+              <label htmlFor="step-builder-sort-order" className="block text-sm text-slate-300">
                 Sort order
                 <input
+                  id="step-builder-sort-order"
                   type="number"
                   value={sortOrder}
                   onChange={(event) => setSortOrder(event.target.value)}
                   className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                 />
               </label>
-              <label className="block text-sm text-slate-300 md:col-span-2">
+              <label htmlFor="step-builder-name" className="block text-sm text-slate-300 md:col-span-2">
                 Name
                 <input
+                  id="step-builder-name"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -197,9 +215,10 @@ export function StepBuilderPanel({
                   minLength={2}
                 />
               </label>
-              <label className="block text-sm text-slate-300 md:col-span-2">
+              <label htmlFor="step-builder-description" className="block text-sm text-slate-300 md:col-span-2">
                 Description
                 <textarea
+                  id="step-builder-description"
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -208,9 +227,10 @@ export function StepBuilderPanel({
                   rows={2}
                 />
               </label>
-              <label className="block text-sm text-slate-300">
+              <label htmlFor="step-builder-type" className="block text-sm text-slate-300">
                 Step type
                 <select
+                  id="step-builder-type"
                   value={stepType}
                   onChange={(event) =>
                     handleStepTypeChange(event.target.value as 'content' | 'quiz' | 'practical')
@@ -222,9 +242,10 @@ export function StepBuilderPanel({
                   <option value="practical">Practical evaluation</option>
                 </select>
               </label>
-              <label className="block text-sm text-slate-300 md:col-span-2">
+              <label htmlFor="step-builder-config-json" className="block text-sm text-slate-300 md:col-span-2">
                 Config JSON
                 <textarea
+                  id="step-builder-config-json"
                   value={configJson}
                   onChange={(event) => setConfigJson(event.target.value)}
                   className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100"

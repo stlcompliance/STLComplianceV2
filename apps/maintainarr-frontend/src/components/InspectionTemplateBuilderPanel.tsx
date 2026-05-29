@@ -100,25 +100,25 @@ export function InspectionTemplateBuilderPanel({
 
       {canManage ? (
         <div className="mt-6 grid gap-4 rounded-lg border border-slate-700 bg-slate-950/40 p-4 md:grid-cols-3">
-          <label className="block text-sm">
-            <span className="text-slate-300">Template key</span>
-            <input
+          <label className="block text-sm" htmlFor="inspectiontemplatebuilder-template-key">
+          <span className="text-slate-300">Template key</span>
+          <input id="inspectiontemplatebuilder-template-key"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
               value={templateKey}
               onChange={(e) => onTemplateKeyChange(e.target.value)}
             />
           </label>
-          <label className="block text-sm">
-            <span className="text-slate-300">Name</span>
-            <input
+          <label className="block text-sm" htmlFor="inspectiontemplatebuilder-name">
+          <span className="text-slate-300">Name</span>
+          <input id="inspectiontemplatebuilder-name"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
               value={templateName}
               onChange={(e) => onTemplateNameChange(e.target.value)}
             />
           </label>
-          <label className="block text-sm md:col-span-1">
-            <span className="text-slate-300">Description</span>
-            <input
+          <label className="block text-sm md:col-span-1" htmlFor="inspectiontemplatebuilder-description">
+          <span className="text-slate-300">Description</span>
+          <input id="inspectiontemplatebuilder-description"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
               value={templateDescription}
               onChange={(e) => onTemplateDescriptionChange(e.target.value)}
@@ -182,17 +182,17 @@ export function InspectionTemplateBuilderPanel({
           </div>
 
           <div className="grid gap-4 rounded-lg border border-slate-700 bg-slate-950/40 p-4 md:grid-cols-3">
-            <label className="block text-sm">
-              <span className="text-slate-300">Category key</span>
-              <input
+            <label className="block text-sm" htmlFor="inspectiontemplatebuilder-category-key">
+          <span className="text-slate-300">Category key</span>
+          <input id="inspectiontemplatebuilder-category-key"
                 className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
                 value={categoryKey}
                 onChange={(e) => onCategoryKeyChange(e.target.value)}
               />
             </label>
-            <label className="block text-sm">
-              <span className="text-slate-300">Category name</span>
-              <input
+            <label className="block text-sm" htmlFor="inspectiontemplatebuilder-category-name">
+          <span className="text-slate-300">Category name</span>
+          <input id="inspectiontemplatebuilder-category-name"
                 className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
                 value={categoryName}
                 onChange={(e) => onCategoryNameChange(e.target.value)}
@@ -211,17 +211,17 @@ export function InspectionTemplateBuilderPanel({
           </div>
 
           <div className="grid gap-4 rounded-lg border border-slate-700 bg-slate-950/40 p-4 md:grid-cols-2">
-            <label className="block text-sm">
-              <span className="text-slate-300">Item key</span>
-              <input
+            <label className="block text-sm" htmlFor="inspectiontemplatebuilder-item-key">
+          <span className="text-slate-300">Item key</span>
+          <input id="inspectiontemplatebuilder-item-key"
                 className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
                 value={itemKey}
                 onChange={(e) => onItemKeyChange(e.target.value)}
               />
             </label>
-            <label className="block text-sm">
-              <span className="text-slate-300">Item type</span>
-              <select
+            <label className="block text-sm" htmlFor="inspectiontemplatebuilder-item-type">
+          <span className="text-slate-300">Item type</span>
+          <select id="inspectiontemplatebuilder-item-type"
                 className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
                 value={itemType}
                 onChange={(e) => onItemTypeChange(e.target.value)}
@@ -231,17 +231,17 @@ export function InspectionTemplateBuilderPanel({
                 <option value="text">Text</option>
               </select>
             </label>
-            <label className="block text-sm md:col-span-2">
-              <span className="text-slate-300">Prompt</span>
-              <input
+            <label className="block text-sm md:col-span-2" htmlFor="inspectiontemplatebuilder-prompt">
+          <span className="text-slate-300">Prompt</span>
+          <input id="inspectiontemplatebuilder-prompt"
                 className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
                 value={itemPrompt}
                 onChange={(e) => onItemPromptChange(e.target.value)}
               />
             </label>
-            <label className="block text-sm">
-              <span className="text-slate-300">Category (optional)</span>
-              <select
+            <label className="block text-sm" htmlFor="inspectiontemplatebuilder-category-optional">
+          <span className="text-slate-300">Category (optional)</span>
+          <select id="inspectiontemplatebuilder-category-optional"
                 className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
                 value={selectedCategoryId}
                 onChange={(e) => onSelectedCategoryIdChange(e.target.value)}
@@ -274,7 +274,7 @@ export function InspectionTemplateBuilderPanel({
                   key={type.assetTypeId}
                   className="flex cursor-pointer items-center gap-2 rounded border border-slate-700 px-3 py-2 text-sm"
                 >
-                  <input
+                  <input id="inspectiontemplatebuilder"
                     type="checkbox"
                     checked={selectedAssetTypeIds.includes(type.assetTypeId)}
                     onChange={() => toggleAssetType(type.assetTypeId)}

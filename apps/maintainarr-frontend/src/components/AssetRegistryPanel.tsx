@@ -144,13 +144,13 @@ export function AssetRegistryPanel({
               showAdvancedKey
               label="Class key"
             />
-            <input
+            <input id="assetregistry-input-field-8"
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
               placeholder="Class name"
               value={className}
               onChange={(event) => onClassNameChange(event.target.value)}
             />
-            <input
+            <input id="assetregistry-input-field-7"
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
               placeholder="Description"
               value={classDescription}
@@ -203,13 +203,13 @@ export function AssetRegistryPanel({
               showAdvancedKey
               label="Type key"
             />
-            <input
+            <input id="assetregistry-input-field-6"
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
               placeholder="Type name"
               value={typeName}
               onChange={(event) => onTypeNameChange(event.target.value)}
             />
-            <input
+            <input id="assetregistry-input-field-5"
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
               placeholder="Description"
               value={typeDescription}
@@ -294,25 +294,25 @@ export function AssetRegistryPanel({
               emptyLabel="Select asset type"
               className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm md:col-span-2"
             />
-            <input
+            <input id="assetregistry-input-field-4"
               className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
               placeholder="Asset tag"
               value={assetTag}
               onChange={(event) => onAssetTagChange(event.target.value)}
             />
-            <input
+            <input id="assetregistry-input-field-3"
               className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
               placeholder="Asset name"
               value={assetName}
               onChange={(event) => onAssetNameChange(event.target.value)}
             />
-            <input
+            <input id="assetregistry-input-field-2"
               className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm md:col-span-2"
               placeholder="Description"
               value={assetDescription}
               onChange={(event) => onAssetDescriptionChange(event.target.value)}
             />
-            <input
+            <input id="assetregistry-input-field"
               className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm md:col-span-2"
               placeholder="Site reference (optional)"
               value={siteRef}

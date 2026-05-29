@@ -95,9 +95,10 @@ export function BackordersPanel({
       </p>
 
       <div className="mt-4 flex flex-wrap items-end gap-3">
-        <label className="block text-sm text-slate-400">
-          Status filter
+        <label htmlFor="backorder-status-filter" className="block text-sm text-slate-400">
+          Backorder status filter
           <select
+            id="backorder-status-filter"
             className="mt-1 block w-full min-w-[8rem] rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
             value={statusFilter}
             onChange={(e) => onStatusFilterChange(e.target.value)}
@@ -152,9 +153,10 @@ export function BackordersPanel({
         <div className="mt-6 grid gap-4 border-t border-slate-800 pt-4 md:grid-cols-2">
           <div className="space-y-3">
             <h3 className="text-sm font-medium text-slate-300">Record from PO line</h3>
-            <label className="block text-sm text-slate-400">
-              PO line
+            <label htmlFor="backorder-po-line" className="block text-sm text-slate-400">
+              Backorder PO line
               <select
+                id="backorder-po-line"
                 className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                 value={selectedPurchaseOrderLineId}
                 onChange={(e) => onSelectedPurchaseOrderLineIdChange(e.target.value)}
@@ -167,17 +169,19 @@ export function BackordersPanel({
                 ))}
               </select>
             </label>
-            <label className="block text-sm text-slate-400">
+            <label htmlFor="backorder-key" className="block text-sm text-slate-400">
               Backorder key
               <input
+                id="backorder-key"
                 className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                 value={backorderKey}
                 onChange={(e) => onBackorderKeyChange(e.target.value)}
               />
             </label>
-            <label className="block text-sm text-slate-400">
-              Quantity (optional)
+            <label htmlFor="backorder-quantity" className="block text-sm text-slate-400">
+              Backorder quantity (optional)
               <input
+                id="backorder-quantity"
                 type="number"
                 min="0"
                 step="any"
@@ -186,9 +190,10 @@ export function BackordersPanel({
                 onChange={(e) => onBackorderQuantityChange(e.target.value)}
               />
             </label>
-            <label className="block text-sm text-slate-400">
-              Notes
+            <label htmlFor="backorder-notes" className="block text-sm text-slate-400">
+              Backorder notes
               <input
+                id="backorder-notes"
                 className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                 value={backorderNotes}
                 onChange={(e) => onBackorderNotesChange(e.target.value)}
@@ -224,9 +229,10 @@ export function BackordersPanel({
                     >
                       {isFulfilling ? 'Fulfilling…' : 'Mark fulfilled'}
                     </button>
-                    <label className="mt-3 block text-sm text-slate-400">
-                      Cancel reason
+                    <label htmlFor="backorder-cancel-reason" className="mt-3 block text-sm text-slate-400">
+                      Backorder cancel reason
                       <input
+                        id="backorder-cancel-reason"
                         className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
                         value={cancelReason}
                         onChange={(e) => onCancelReasonChange(e.target.value)}

@@ -184,9 +184,9 @@ export function TripsPanel({
             {viewAllTrips ? 'Dispatch board view' : 'Showing trips you created or drive'}
           </p>
         </div>
-        <label className="text-sm text-slate-300">
+        <label className="text-sm text-slate-300" htmlFor="trips-status-filter">
           Status filter
-          <select
+          <select id="trips-status-filter"
             className="ml-2 rounded border border-slate-600 bg-slate-950 px-2 py-1"
             value={statusFilter}
             onChange={(event) => onStatusFilterChange(event.target.value)}
@@ -204,17 +204,17 @@ export function TripsPanel({
 
       {canCreate ? (
         <div className="mb-6 grid gap-3 rounded-lg border border-slate-700/80 bg-slate-950/40 p-4 md:grid-cols-2">
-          <label className="text-sm text-slate-300 md:col-span-2">
-            Title
-            <input
+          <label className="text-sm text-slate-300 md:col-span-2" htmlFor="trips-title">
+          Title
+          <input id="trips-title"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
               value={tripTitle}
               onChange={(event) => onTripTitleChange(event.target.value)}
             />
           </label>
-          <label className="text-sm text-slate-300 md:col-span-2">
-            Description
-            <input
+          <label className="text-sm text-slate-300 md:col-span-2" htmlFor="trips-description">
+          Description
+          <input id="trips-description"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
               value={tripDescription}
               onChange={(event) => onTripDescriptionChange(event.target.value)}
@@ -234,7 +234,7 @@ export function TripsPanel({
             <AdvancedReferenceField
               value={vehicleRefKey}
               onChange={onVehicleRefKeyChange}
-              label="Vehicle ref key"
+              label="Vehicle reference (advanced)"
               testId="trip-create-vehicle-advanced"
             />
           </div>
@@ -256,17 +256,17 @@ export function TripsPanel({
               {showAdvancedLoadKey ? 'Hide manual key override' : 'Manual key override'}
             </button>
           </div>
-          <label className="text-sm text-slate-300">
-            Load origin
-            <input
+          <label className="text-sm text-slate-300" htmlFor="trips-load-origin">
+          Load origin
+          <input id="trips-load-origin"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
               value={loadOrigin}
               onChange={(event) => onLoadOriginChange(event.target.value)}
             />
           </label>
-          <label className="text-sm text-slate-300">
-            Load destination
-            <input
+          <label className="text-sm text-slate-300" htmlFor="trips-load-destination">
+          Load destination
+          <input id="trips-load-destination"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
               value={loadDestination}
               onChange={(event) => onLoadDestinationChange(event.target.value)}
@@ -399,7 +399,7 @@ export function TripsPanel({
                   <AdvancedReferenceField
                     value={driverPersonId}
                     onChange={onDriverPersonIdChange}
-                    label="Driver person id"
+                    label="Driver person (advanced)"
                     testId="trip-assign-driver-advanced"
                   />
                   <button
@@ -417,11 +417,13 @@ export function TripsPanel({
               selectedTrip.dispatchStatus !== 'completed' &&
               selectedTrip.dispatchStatus !== 'cancelled' ? (
                 <div className="space-y-2">
-                  <label className="block text-sm text-slate-300">
-                    Dispatch status
+                  <label className="block text-sm text-slate-300" htmlFor="trips-dispatch-status">
+                    Dispatch status for {selectedTrip.title}
                     <select
+                      id="trips-dispatch-status"
                       className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
                       defaultValue={selectedTrip.dispatchStatus}
+                      aria-label={`Dispatch status for ${selectedTrip.title}`}
                       onChange={(event) => onUpdateStatus(selectedTrip.tripId, event.target.value)}
                       disabled={isUpdatingStatus}
                     >

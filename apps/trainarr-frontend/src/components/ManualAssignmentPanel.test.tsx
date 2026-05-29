@@ -2,6 +2,32 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ManualAssignmentPanel } from './ManualAssignmentPanel'
 
+vi.mock('@stl/shared-ui', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@stl/shared-ui')>()
+  return {
+    ...mod,
+    StaticSearchPicker: ({
+      label,
+      value,
+      onChange,
+    }: {
+      label?: string
+      value: string
+      onChange: (v: string) => void
+    }) => (
+      <label htmlFor="mock-static-search-picker">
+        {label}
+        <input
+          id="mock-static-search-picker"
+          aria-label={label}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </label>
+    ),
+  }
+})
+
 describe('ManualAssignmentPanel', () => {
   afterEach(() => {
     cleanup()
@@ -35,12 +61,14 @@ describe('ManualAssignmentPanel', () => {
         rulePackKey="driver_qualification"
         onRulePackKeyChange={vi.fn()}
         rulePackOptions={[{ value: 'driver_qualification', label: 'driver_qualification' }]}
+        personPickerOptions={[{ value: 'person-1', label: 'Person 1' }]}
         onCreateAssignment={vi.fn()}
         isCreating={false}
         canManage
       />,
     )
 
+    expect(screen.getByLabelText(/StaffArr person/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /create manual assignment/i })).toBeDisabled()
     expect(screen.getByText(/run an authorization check before creating/i)).toBeInTheDocument()
   })
@@ -70,6 +98,7 @@ describe('ManualAssignmentPanel', () => {
         rulePackKey="driver_qualification"
         onRulePackKeyChange={vi.fn()}
         rulePackOptions={[{ value: 'driver_qualification', label: 'driver_qualification' }]}
+        personPickerOptions={[{ value: 'person-1', label: 'Person 1' }]}
         onCreateAssignment={onCreateAssignment}
         isCreating={false}
         canManage

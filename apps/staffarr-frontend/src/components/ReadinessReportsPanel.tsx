@@ -83,9 +83,10 @@ export function ReadinessReportsPanel({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-300">
-        <label className="flex items-center gap-2">
-          Scope
+        <label htmlFor="readiness-reports-scope" className="flex items-center gap-2">
+          <span>Scope</span>
           <select
+            id="readiness-reports-scope"
             className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100"
             value={scopeType}
             onChange={(event) => setScopeType(event.target.value)}
@@ -96,9 +97,11 @@ export function ReadinessReportsPanel({
             <option value="team">Team</option>
           </select>
         </label>
-        <label className="flex items-center gap-2">
+        <label htmlFor="readiness-reports-attention-only" className="flex items-center gap-2">
           <input
+            id="readiness-reports-attention-only"
             type="checkbox"
+            data-testid="readiness-reports-attention-only"
             checked={attentionOnly}
             onChange={(event) => setAttentionOnly(event.target.checked)}
           />

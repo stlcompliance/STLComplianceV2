@@ -74,8 +74,9 @@ export function TenantLifecycleSettingsPanel() {
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="tenant-lifecycle-enabled" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="tenant-lifecycle-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -84,8 +85,9 @@ export function TenantLifecycleSettingsPanel() {
           Enable scheduled tenant lifecycle processing
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="tenant-lifecycle-auto-suspend" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="tenant-lifecycle-auto-suspend"
             type="checkbox"
             checked={autoSuspendWhenNoValidLicense}
             onChange={(event) => setAutoSuspendWhenNoValidLicense(event.target.checked)}
@@ -94,9 +96,10 @@ export function TenantLifecycleSettingsPanel() {
           Auto-suspend when no valid license remains
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label htmlFor="tenant-lifecycle-grace-days" className="block text-sm text-slate-200">
           Grace days after last license coverage ends
           <input
+            id="tenant-lifecycle-grace-days"
             type="number"
             min={0}
             max={365}
@@ -107,8 +110,9 @@ export function TenantLifecycleSettingsPanel() {
           />
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="tenant-lifecycle-auto-reactivate" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="tenant-lifecycle-auto-reactivate"
             type="checkbox"
             checked={autoReactivateWhenValidLicense}
             onChange={(event) => setAutoReactivateWhenValidLicense(event.target.checked)}
@@ -117,8 +121,9 @@ export function TenantLifecycleSettingsPanel() {
           Auto-reactivate when a valid license is present
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="tenant-lifecycle-revoke-sessions" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="tenant-lifecycle-revoke-sessions"
             type="checkbox"
             checked={revokeSessionsOnSuspend}
             onChange={(event) => setRevokeSessionsOnSuspend(event.target.checked)}

@@ -158,8 +158,9 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label className="flex items-center gap-2 text-sm text-slate-200" htmlFor="notification-settings-enabled">
           <input
+            id="notification-settings-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => {
@@ -177,9 +178,10 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
           Enable dispatch notifications
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label className="block text-sm text-slate-200" htmlFor="notification-settings-webhook">
           <span className="font-medium">Webhook URL</span>
           <input
+            id="notification-settings-webhook"
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             type="url"
             placeholder="https://hooks.example.com/routarr"
@@ -205,8 +207,9 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
         </label>
 
         {!isEnabled && (
-          <label className="flex items-center gap-2 text-sm text-slate-200">
+          <label className="flex items-center gap-2 text-sm text-slate-200" htmlFor="notification-settings-clear-webhook-on-disable">
             <input
+              id="notification-settings-clear-webhook-on-disable"
               type="checkbox"
               checked={clearWebhookOnDisable}
               onChange={(event) => {
@@ -227,8 +230,9 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
 
         <fieldset className="space-y-2 text-sm text-slate-200">
           <legend className="font-medium">Notify on</legend>
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2" htmlFor="notification-trip-assigned">
             <input
+              id="notification-trip-assigned"
               type="checkbox"
               checked={notifyTripAssigned}
               onChange={(event) => setNotifyTripAssigned(event.target.checked)}
@@ -236,8 +240,9 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
             />
             Trip assigned
           </label>
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2" htmlFor="notification-trip-dispatched">
             <input
+              id="notification-trip-dispatched"
               type="checkbox"
               checked={notifyTripDispatched}
               onChange={(event) => setNotifyTripDispatched(event.target.checked)}
@@ -245,8 +250,9 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
             />
             Trip dispatched
           </label>
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2" htmlFor="notification-trip-in-progress">
             <input
+              id="notification-trip-in-progress"
               type="checkbox"
               checked={notifyTripInProgress}
               onChange={(event) => setNotifyTripInProgress(event.target.checked)}
@@ -254,8 +260,9 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
             />
             Trip in progress
           </label>
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2" htmlFor="notification-trip-completed">
             <input
+              id="notification-trip-completed"
               type="checkbox"
               checked={notifyTripCompleted}
               onChange={(event) => setNotifyTripCompleted(event.target.checked)}
@@ -263,8 +270,9 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
             />
             Trip completed
           </label>
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2" htmlFor="notification-trip-cancelled">
             <input
+              id="notification-trip-cancelled"
               type="checkbox"
               checked={notifyTripCancelled}
               onChange={(event) => setNotifyTripCancelled(event.target.checked)}

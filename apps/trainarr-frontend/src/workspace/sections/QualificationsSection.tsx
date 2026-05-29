@@ -108,6 +108,8 @@ export function QualificationsSection({ state }: Props) {
 
         rulePackOptions={s.rulePackOptions}
 
+        personPickerOptions={s.personPickerOptions}
+
         onRunCheck={() => s.operationsQualificationCheckMutation.mutate()}
 
       />

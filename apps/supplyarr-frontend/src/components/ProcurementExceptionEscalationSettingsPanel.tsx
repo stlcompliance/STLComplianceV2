@@ -107,8 +107,9 @@ export function ProcurementExceptionEscalationSettingsPanel({
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="procurement-exception-escalation-enabled" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="procurement-exception-escalation-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -117,9 +118,10 @@ export function ProcurementExceptionEscalationSettingsPanel({
           Enable automated SLA escalation worker
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label htmlFor="procurement-exception-escalation-cooldown-hours" className="block text-sm text-slate-200">
           <span className="font-medium">Escalation cooldown (hours)</span>
           <input
+            id="procurement-exception-escalation-cooldown-hours"
             className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             type="number"
             min={1}
@@ -130,9 +132,10 @@ export function ProcurementExceptionEscalationSettingsPanel({
           />
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label htmlFor="procurement-exception-escalation-max-escalations" className="block text-sm text-slate-200">
           <span className="font-medium">Max escalations per exception</span>
           <input
+            id="procurement-exception-escalation-max-escalations"
             className="mt-1 w-full max-w-xs rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             type="number"
             min={1}
@@ -143,8 +146,9 @@ export function ProcurementExceptionEscalationSettingsPanel({
           />
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="procurement-exception-escalation-notify" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="procurement-exception-escalation-notify"
             type="checkbox"
             checked={notifyOnProcurementExceptionSlaEscalation}
             onChange={(event) => setNotifyOnProcurementExceptionSlaEscalation(event.target.checked)}

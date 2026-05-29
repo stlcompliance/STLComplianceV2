@@ -100,25 +100,28 @@ export function PartsInventoryReportsPanel({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3 text-sm">
-        <label className="flex items-center gap-2 text-slate-300">
+        <label htmlFor="parts-inventory-active-only" className="flex items-center gap-2 text-slate-300">
           <input
+            id="parts-inventory-active-only"
             type="checkbox"
             checked={activePartsOnly}
             onChange={(event) => setActivePartsOnly(event.target.checked)}
           />
           Active parts only
         </label>
-        <label className="flex items-center gap-2 text-slate-300">
+        <label htmlFor="parts-inventory-below-reorder" className="flex items-center gap-2 text-slate-300">
           <input
+            id="parts-inventory-below-reorder"
             type="checkbox"
             checked={belowReorderOnly}
             onChange={(event) => setBelowReorderOnly(event.target.checked)}
           />
           Below reorder point only
         </label>
-        <label className="flex items-center gap-2 text-slate-300">
-          Location
+        <label htmlFor="parts-inventory-location-filter" className="flex items-center gap-2 text-slate-300">
+          Inventory location filter
           <select
+            id="parts-inventory-location-filter"
             className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100"
             value={locationFilter}
             onChange={(event) => {

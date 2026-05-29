@@ -40,27 +40,29 @@ export function CitationAttachmentPanel({
 
       {canManage ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="citation-attachment-citation-id" className="block text-xs text-slate-400">
             Compliance Core citation id
             <input
+              id="citation-attachment-citation-id"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-xs text-slate-100"
               value={citationIdInput}
               onChange={(e) => onCitationIdChange(e.target.value)}
-              placeholder="00000000-0000-0000-0000-000000000000"
             />
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="citation-attachment-citation-key" className="block text-xs text-slate-400">
             Citation key
             <input
+              id="citation-attachment-citation-key"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
               value={citationKeyInput}
               onChange={(e) => onCitationKeyChange(e.target.value)}
-              placeholder="cfr_391_11"
             />
           </label>
-          <label className="flex items-center gap-2 text-xs text-slate-400 sm:col-span-2">
+          <label htmlFor="citation-attachment-validate-compliance-core" className="flex items-center gap-2 text-xs text-slate-400 sm:col-span-2">
             <input
+              id="citation-attachment-validate-compliance-core"
               type="checkbox"
+              data-testid="citation-attachment-validate-compliance-core"
               checked={validateWithComplianceCore}
               onChange={(e) => onValidateWithComplianceCoreChange(e.target.checked)}
             />

@@ -310,6 +310,7 @@ export function ProcurementExceptionsPanel({
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <ControlledSelect
+          id="procurement-exception-subject-type"
           label="Subject type"
           value={subjectType}
           onChange={(value) => {
@@ -321,6 +322,7 @@ export function ProcurementExceptionsPanel({
         />
 
         <ControlledSelect
+          id="procurement-exception-subject-record"
           label="Subject record"
           value={subjectId}
           onChange={setSubjectId}
@@ -329,9 +331,10 @@ export function ProcurementExceptionsPanel({
           testId="procurement-exception-subject-record"
         />
 
-        <label className="block text-sm text-slate-400 md:col-span-2">
-          Title
+        <label htmlFor="procurement-exception-title" className="block text-sm text-slate-400 md:col-span-2">
+          Exception title
           <input
+            id="procurement-exception-title"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
@@ -348,15 +351,17 @@ export function ProcurementExceptionsPanel({
         </div>
 
         <ControlledSelect
-          label="Category"
+          id="procurement-exception-category"
+          label="Exception category"
           value={category}
           onChange={(value) => setCategory(value as (typeof CATEGORIES)[number])}
           options={CATEGORY_OPTIONS}
           testId="procurement-exception-category"
         />
 
-        <label className="flex items-center gap-2 text-sm text-slate-400 md:col-span-2">
+        <label htmlFor="procurement-exception-assign-on-create" className="flex items-center gap-2 text-sm text-slate-400 md:col-span-2">
           <input
+            id="procurement-exception-assign-on-create"
             type="checkbox"
             checked={assignOnCreate}
             onChange={(event) => setAssignOnCreate(event.target.checked)}
@@ -364,9 +369,10 @@ export function ProcurementExceptionsPanel({
           Assign to me on create (category-based SLA applied automatically)
         </label>
 
-        <label className="block text-sm text-slate-400 md:col-span-2">
-          Description
+        <label htmlFor="procurement-exception-description" className="block text-sm text-slate-400 md:col-span-2">
+          Exception description
           <textarea
+            id="procurement-exception-description"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
             rows={2}
             value={description}
@@ -375,6 +381,7 @@ export function ProcurementExceptionsPanel({
         </label>
 
         <ControlledSelect
+          id="procurement-exception-resolution-template"
           label="Resolution template"
           value={resolutionTemplateKey}
           onChange={setResolutionTemplateKey}
@@ -383,9 +390,10 @@ export function ProcurementExceptionsPanel({
           testId="procurement-exception-resolution-template"
         />
 
-        <label className="block text-sm text-slate-400 md:col-span-2">
+        <label htmlFor="procurement-exception-resolution-notes" className="block text-sm text-slate-400 md:col-span-2">
           Resolution notes
           <textarea
+            id="procurement-exception-resolution-notes"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
             rows={2}
             value={resolutionNotes}
@@ -393,9 +401,10 @@ export function ProcurementExceptionsPanel({
           />
         </label>
 
-        <label className="block text-sm text-slate-400 md:col-span-2">
+        <label htmlFor="procurement-exception-waive-justification" className="block text-sm text-slate-400 md:col-span-2">
           Waive justification (for waive request)
           <textarea
+            id="procurement-exception-waive-justification"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
             rows={2}
             data-testid="procurement-exception-waive-justification"
@@ -404,9 +413,10 @@ export function ProcurementExceptionsPanel({
           />
         </label>
 
-        <label className="block text-sm text-slate-400 md:col-span-2">
+        <label htmlFor="procurement-exception-cancel-reason" className="block text-sm text-slate-400 md:col-span-2">
           Cancel reason (for cancel action)
           <textarea
+            id="procurement-exception-cancel-reason"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
             rows={2}
             data-testid="procurement-exception-cancel-reason"
@@ -446,9 +456,10 @@ export function ProcurementExceptionsPanel({
           </p>
 
           <div className="mt-3 grid gap-3 md:grid-cols-2">
-            <label className="block text-xs text-slate-400">
+            <label htmlFor="procurement-exception-link-pr" className="block text-xs text-slate-400">
               Link follow-up PR
               <select
+                id="procurement-exception-link-pr"
                 className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                 data-testid="procurement-exception-link-pr"
                 value={linkedPrId}
@@ -462,9 +473,10 @@ export function ProcurementExceptionsPanel({
                 ))}
               </select>
             </label>
-            <label className="block text-xs text-slate-400">
+            <label htmlFor="procurement-exception-link-po" className="block text-xs text-slate-400">
               Link follow-up PO
               <select
+                id="procurement-exception-link-po"
                 className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                 data-testid="procurement-exception-link-po"
                 value={linkedPoId}

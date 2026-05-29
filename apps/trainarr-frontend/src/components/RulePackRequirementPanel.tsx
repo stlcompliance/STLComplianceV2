@@ -36,18 +36,20 @@ export function RulePackRequirementPanel({
 
       {canManage ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label className="block text-xs text-slate-400 sm:col-span-2">
+          <label htmlFor="rule-pack-requirement-key" className="block text-xs text-slate-400 sm:col-span-2">
             Rule pack key
             <input
+              id="rule-pack-requirement-key"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
               value={rulePackKeyInput}
               onChange={(e) => onRulePackKeyChange(e.target.value)}
-              placeholder="driver_qualification"
             />
           </label>
-          <label className="flex items-center gap-2 text-xs text-slate-400 sm:col-span-2">
+          <label htmlFor="rule-pack-requirement-validate-compliance-core" className="flex items-center gap-2 text-xs text-slate-400 sm:col-span-2">
             <input
+              id="rule-pack-requirement-validate-compliance-core"
               type="checkbox"
+              data-testid="rule-pack-requirement-validate-compliance-core"
               checked={validateWithComplianceCore}
               onChange={(e) => onValidateWithComplianceCoreChange(e.target.checked)}
             />

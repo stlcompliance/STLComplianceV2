@@ -32,6 +32,7 @@ export function AssignmentsSection({ state }: Props) {
         rulePackKey={s.rulePackKey}
         onRulePackKeyChange={s.setRulePackKey}
         rulePackOptions={s.rulePackOptions}
+        personPickerOptions={s.personPickerOptions}
         onCreateAssignment={() => s.createManualAssignmentMutation.mutate()}
         isCreating={s.createManualAssignmentMutation.isPending}
         canManage={s.canManage}

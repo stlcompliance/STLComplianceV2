@@ -62,9 +62,10 @@ export function RemediationAssignmentPanel({
         <p className="mt-3 text-sm text-slate-400">No remediations awaiting assignment.</p>
       ) : (
         <div className="mt-3 space-y-3">
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="remediation-assignment-remediation" className="block text-xs text-slate-400">
             Remediation
             <select
+              id="remediation-assignment-remediation"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm text-slate-100"
               value={selectedRemediationId ?? ''}
               onChange={(e) => onSelectRemediation(e.target.value)}
@@ -78,9 +79,10 @@ export function RemediationAssignmentPanel({
             </select>
           </label>
 
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="remediation-assignment-definition" className="block text-xs text-slate-400">
             Training definition
             <select
+              id="remediation-assignment-definition"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm text-slate-100"
               value={selectedDefinitionId}
               onChange={(e) => onSelectDefinition(e.target.value)}

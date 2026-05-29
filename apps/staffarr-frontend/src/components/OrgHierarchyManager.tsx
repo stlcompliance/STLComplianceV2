@@ -149,32 +149,42 @@ export function OrgHierarchyManager({
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <form className="space-y-3" onSubmit={handleCreate}>
             <h3 className="text-sm font-medium text-slate-300">Create org unit</h3>
-            <input
-              value={createName}
-              onChange={(event) => setCreateName(event.target.value)}
-              placeholder="Unit name"
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              required
-            />
-            <input
-              value={createUnitType}
-              onChange={(event) => setCreateUnitType(event.target.value)}
-              placeholder="Unit type"
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              required
-            />
-            <select
-              value={createParentId}
-              onChange={(event) => setCreateParentId(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-            >
+            <label htmlFor="create-org-unit-name" className="block text-sm text-slate-300">
+              Org unit name
+              <input
+                id="create-org-unit-name"
+                value={createName}
+                onChange={(event) => setCreateName(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                required
+              />
+            </label>
+            <label htmlFor="create-org-unit-type" className="block text-sm text-slate-300">
+              Org unit type
+              <input
+                id="create-org-unit-type"
+                value={createUnitType}
+                onChange={(event) => setCreateUnitType(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                required
+              />
+            </label>
+            <label htmlFor="create-org-unit-parent" className="block text-sm text-slate-300">
+              Parent org unit
+              <select
+                id="create-org-unit-parent"
+                value={createParentId}
+                onChange={(event) => setCreateParentId(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+              >
               <option value="">No parent (root)</option>
               {rows.map(({ node }) => (
                 <option key={node.orgUnitId} value={node.orgUnitId}>
                   {node.name}
                 </option>
               ))}
-            </select>
+              </select>
+            </label>
             <button
               type="submit"
               className="rounded bg-sky-600 px-3 py-2 text-sm text-white disabled:opacity-50"
@@ -187,35 +197,45 @@ export function OrgHierarchyManager({
           <form className="space-y-3" onSubmit={handleUpdate}>
             <h3 className="text-sm font-medium text-slate-300">Edit selected org unit</h3>
             {!selected ? <p className="text-sm text-slate-500">Select a unit from the hierarchy to edit.</p> : null}
-            <input
-              value={editName}
-              onChange={(event) => setEditName(event.target.value)}
-              placeholder="Unit name"
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              disabled={!selected}
-              required
-            />
-            <input
-              value={editUnitType}
-              onChange={(event) => setEditUnitType(event.target.value)}
-              placeholder="Unit type"
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              disabled={!selected}
-              required
-            />
-            <select
-              value={editParentId}
-              onChange={(event) => setEditParentId(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-              disabled={!selected}
-            >
+            <label htmlFor="edit-org-unit-name" className="block text-sm text-slate-300">
+              Org unit name
+              <input
+                id="edit-org-unit-name"
+                value={editName}
+                onChange={(event) => setEditName(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                disabled={!selected}
+                required
+              />
+            </label>
+            <label htmlFor="edit-org-unit-type" className="block text-sm text-slate-300">
+              Org unit type
+              <input
+                id="edit-org-unit-type"
+                value={editUnitType}
+                onChange={(event) => setEditUnitType(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                disabled={!selected}
+                required
+              />
+            </label>
+            <label htmlFor="edit-org-unit-parent" className="block text-sm text-slate-300">
+              Parent org unit
+              <select
+                id="edit-org-unit-parent"
+                value={editParentId}
+                onChange={(event) => setEditParentId(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+                disabled={!selected}
+              >
               <option value="">No parent (root)</option>
               {selectableParents.map((unit) => (
                 <option key={unit.orgUnitId} value={unit.orgUnitId}>
                   {unit.name}
                 </option>
               ))}
-            </select>
+              </select>
+            </label>
             <div className="flex gap-3">
               <button
                 type="submit"

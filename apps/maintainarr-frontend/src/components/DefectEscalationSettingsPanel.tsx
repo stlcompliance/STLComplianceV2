@@ -110,7 +110,7 @@ export function DefectEscalationSettingsPanel({
 
       <div className="mt-4 space-y-3">
         <label className="flex items-center gap-2 text-sm">
-          <input
+          <input id="defectescalationsettings-5"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -122,7 +122,7 @@ export function DefectEscalationSettingsPanel({
           <legend className="col-span-full font-medium">Stagnation thresholds (hours)</legend>
           <label className="block">
             <span>Low severity</span>
-            <input
+            <input id="defectescalationsettings-low-severity"
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
               type="number"
               min={1}
@@ -133,7 +133,7 @@ export function DefectEscalationSettingsPanel({
           </label>
           <label className="block">
             <span>Medium severity</span>
-            <input
+            <input id="defectescalationsettings-medium-severity"
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
               type="number"
               min={1}
@@ -144,7 +144,7 @@ export function DefectEscalationSettingsPanel({
           </label>
           <label className="block">
             <span>High severity</span>
-            <input
+            <input id="defectescalationsettings-high-severity"
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
               type="number"
               min={1}
@@ -155,7 +155,7 @@ export function DefectEscalationSettingsPanel({
           </label>
           <label className="block">
             <span>Critical severity</span>
-            <input
+            <input id="defectescalationsettings-critical-severity"
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2"
               type="number"
               min={1}
@@ -169,19 +169,19 @@ export function DefectEscalationSettingsPanel({
         <fieldset className="space-y-2 text-sm">
           <legend className="font-medium">Escalation actions</legend>
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={autoAcknowledge} onChange={(e) => setAutoAcknowledge(e.target.checked)} />
+            <input id="defectescalationsettings-4" type="checkbox" checked={autoAcknowledge} onChange={(e) => setAutoAcknowledge(e.target.checked)} />
             Auto-acknowledge open defects
           </label>
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={autoCreateWorkOrder} onChange={(e) => setAutoCreateWorkOrder(e.target.checked)} />
+            <input id="defectescalationsettings-3" type="checkbox" checked={autoCreateWorkOrder} onChange={(e) => setAutoCreateWorkOrder(e.target.checked)} />
             Auto-create work orders when missing
           </label>
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={bumpSeverity} onChange={(e) => setBumpSeverity(e.target.checked)} />
+            <input id="defectescalationsettings-2" type="checkbox" checked={bumpSeverity} onChange={(e) => setBumpSeverity(e.target.checked)} />
             Bump severity on repeat escalation
           </label>
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={notifyOnEscalation} onChange={(e) => setNotifyOnEscalation(e.target.checked)} />
+            <input id="defectescalationsettings" type="checkbox" checked={notifyOnEscalation} onChange={(e) => setNotifyOnEscalation(e.target.checked)} />
             Enqueue defect-escalated notifications
           </label>
         </fieldset>

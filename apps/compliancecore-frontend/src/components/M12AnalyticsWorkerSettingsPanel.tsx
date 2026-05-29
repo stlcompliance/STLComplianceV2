@@ -83,8 +83,9 @@ export function M12AnalyticsWorkerSettingsPanel({
         </p>
       </header>
 
-      <label className="flex items-center gap-2 text-sm text-slate-200">
+      <label htmlFor="compliancecore-m12-worker-enabled" className="flex items-center gap-2 text-sm text-slate-200">
         <input
+          id="compliancecore-m12-worker-enabled"
           type="checkbox"
           checked={isEnabled}
           onChange={(e) => setIsEnabled(e.target.checked)}
@@ -94,9 +95,10 @@ export function M12AnalyticsWorkerSettingsPanel({
       </label>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block text-sm text-slate-300">
-          Default scope key
+        <label htmlFor="compliancecore-m12-worker-scope" className="block text-sm text-slate-300">
+          Default analytics scope key
           <input
+            id="compliancecore-m12-worker-scope"
             type="text"
             value={defaultScopeKey}
             onChange={(e) => setDefaultScopeKey(e.target.value)}
@@ -104,9 +106,10 @@ export function M12AnalyticsWorkerSettingsPanel({
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
           />
         </label>
-        <label className="block text-sm text-slate-300">
-          Interval (hours)
+        <label htmlFor="compliancecore-m12-worker-interval" className="block text-sm text-slate-300">
+          Batch interval (hours)
           <input
+            id="compliancecore-m12-worker-interval"
             type="number"
             min={1}
             max={168}
@@ -121,44 +124,49 @@ export function M12AnalyticsWorkerSettingsPanel({
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Batch steps</h3>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          <label className="flex items-center gap-2 text-sm text-slate-300">
+          <label htmlFor="compliancecore-m12-worker-risk" className="flex items-center gap-2 text-sm text-slate-300">
             <input
+              id="compliancecore-m12-worker-risk"
               type="checkbox"
               checked={riskScoringEnabled}
               onChange={(e) => setRiskScoringEnabled(e.target.checked)}
               data-testid="compliancecore-m12-worker-risk"
             />
-            Risk scoring
+            Risk scoring batch step
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-300">
+          <label htmlFor="compliancecore-m12-worker-missing-evidence" className="flex items-center gap-2 text-sm text-slate-300">
             <input
+              id="compliancecore-m12-worker-missing-evidence"
               type="checkbox"
               checked={missingEvidenceEnabled}
               onChange={(e) => setMissingEvidenceEnabled(e.target.checked)}
               data-testid="compliancecore-m12-worker-missing-evidence"
             />
-            Missing evidence warnings
+            Missing evidence warnings batch step
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-300">
+          <label htmlFor="compliancecore-m12-worker-control" className="flex items-center gap-2 text-sm text-slate-300">
             <input
+              id="compliancecore-m12-worker-control"
               type="checkbox"
               checked={controlEffectivenessEnabled}
               onChange={(e) => setControlEffectivenessEnabled(e.target.checked)}
               data-testid="compliancecore-m12-worker-control"
             />
-            Control effectiveness
+            Control effectiveness batch step
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-300">
+          <label htmlFor="compliancecore-m12-worker-forecast" className="flex items-center gap-2 text-sm text-slate-300">
             <input
+              id="compliancecore-m12-worker-forecast"
               type="checkbox"
               checked={readinessForecastEnabled}
               onChange={(e) => setReadinessForecastEnabled(e.target.checked)}
               data-testid="compliancecore-m12-worker-forecast"
             />
-            Readiness forecast (runs all analytics when due)
+            Readiness forecast batch step
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-300 sm:col-span-2">
+          <label htmlFor="compliancecore-m12-worker-audit-delivery" className="flex items-center gap-2 text-sm text-slate-300 sm:col-span-2">
             <input
+              id="compliancecore-m12-worker-audit-delivery"
               type="checkbox"
               checked={auditDeliveryEnabled}
               onChange={(e) => setAuditDeliveryEnabled(e.target.checked)}

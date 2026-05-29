@@ -112,19 +112,26 @@ export function InspectionRunEvidencePanel({
                 testId="inspection-evidence-type"
                 className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
               />
-              <input
-                type="file"
-                className="block w-full text-sm text-slate-300"
-                data-testid="inspection-evidence-file"
-                onChange={(event) => onSelectFile(event.target.files?.[0] ?? null)}
-              />
+              <label className="block text-sm text-slate-300" htmlFor="inspection-evidence-file">
+                Inspection evidence file
+                <input
+                  id="inspection-evidence-file"
+                  type="file"
+                  className="mt-1 block w-full text-sm text-slate-300"
+                  data-testid="inspection-evidence-file"
+                  onChange={(event) => onSelectFile(event.target.files?.[0] ?? null)}
+                />
+              </label>
               {selectedFileName ? <p className="text-xs text-slate-500">{selectedFileName}</p> : null}
-              <input
-                className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
-                placeholder="Notes (optional)"
-                value={evidenceNotes}
-                onChange={(event) => onEvidenceNotesChange(event.target.value)}
-              />
+              <label className="block text-sm text-slate-300" htmlFor="inspection-evidence-notes">
+                Notes (optional)
+                <input
+                  id="inspection-evidence-notes"
+                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
+                  value={evidenceNotes}
+                  onChange={(event) => onEvidenceNotesChange(event.target.value)}
+                />
+              </label>
               <button
                 type="button"
                 className="rounded bg-emerald-800 px-3 py-1 text-sm text-white hover:bg-emerald-700 disabled:opacity-50"

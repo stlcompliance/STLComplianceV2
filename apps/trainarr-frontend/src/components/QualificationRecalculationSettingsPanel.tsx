@@ -80,8 +80,9 @@ export function QualificationRecalculationSettingsPanel({ accessToken, canManage
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm">
+        <label htmlFor="qualification-recalculation-enabled" className="flex items-center gap-2 text-sm">
           <input
+            id="qualification-recalculation-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -90,9 +91,10 @@ export function QualificationRecalculationSettingsPanel({ accessToken, canManage
           Enable scheduled qualification recalculation
         </label>
 
-        <label className="block text-sm">
+        <label htmlFor="qualification-recalculation-staleness-hours" className="block text-sm">
           <span className="font-medium">Staleness window (hours)</span>
           <input
+            id="qualification-recalculation-staleness-hours"
             className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
             type="number"
             min={1}
@@ -103,8 +105,9 @@ export function QualificationRecalculationSettingsPanel({ accessToken, canManage
           />
         </label>
 
-        <label className="flex items-center gap-2 text-sm">
+        <label htmlFor="qualification-recalculation-auto-suspend" className="flex items-center gap-2 text-sm">
           <input
+            id="qualification-recalculation-auto-suspend"
             type="checkbox"
             checked={autoSuspendOnBlock}
             onChange={(event) => setAutoSuspendOnBlock(event.target.checked)}

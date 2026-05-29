@@ -245,32 +245,44 @@ export function PartyRegistryPanel({
             <>
               <div className="mt-4 space-y-2 border-t border-slate-800 pt-4" data-testid="party-registry-edit-form">
                 <h4 className="text-xs font-medium uppercase tracking-wide text-slate-500">Edit profile</h4>
-                <input
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                  placeholder="Display name"
-                  value={editDisplayName}
-                  onChange={(e) => setEditDisplayName(e.target.value)}
-                  data-testid="party-registry-edit-display-name"
-                />
-                <input
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                  placeholder="Legal name"
-                  value={editLegalName}
-                  onChange={(e) => setEditLegalName(e.target.value)}
-                />
-                <input
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                  placeholder="Tax identifier (optional)"
-                  value={editTaxIdentifier}
-                  onChange={(e) => setEditTaxIdentifier(e.target.value)}
-                />
-                <textarea
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                  placeholder="Notes"
-                  rows={2}
-                  value={editNotes}
-                  onChange={(e) => setEditNotes(e.target.value)}
-                />
+                <label htmlFor="party-registry-edit-display-name" className="block text-sm text-slate-400">
+                  Display name
+                  <input
+                    id="party-registry-edit-display-name"
+                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                    value={editDisplayName}
+                    onChange={(e) => setEditDisplayName(e.target.value)}
+                    data-testid="party-registry-edit-display-name"
+                  />
+                </label>
+                <label htmlFor="party-registry-edit-legal-name" className="block text-sm text-slate-400">
+                  Legal name
+                  <input
+                    id="party-registry-edit-legal-name"
+                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                    value={editLegalName}
+                    onChange={(e) => setEditLegalName(e.target.value)}
+                  />
+                </label>
+                <label htmlFor="party-registry-edit-tax-id" className="block text-sm text-slate-400">
+                  Tax identifier (optional)
+                  <input
+                    id="party-registry-edit-tax-id"
+                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                    value={editTaxIdentifier}
+                    onChange={(e) => setEditTaxIdentifier(e.target.value)}
+                  />
+                </label>
+                <label htmlFor="party-registry-edit-notes" className="block text-sm text-slate-400">
+                  Notes
+                  <textarea
+                    id="party-registry-edit-notes"
+                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                    rows={2}
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                  />
+                </label>
                 <button
                   type="button"
                   className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
@@ -292,10 +304,11 @@ export function PartyRegistryPanel({
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <ControlledSelect
                   label="Approval status"
+                  id="party-registry-approval-select"
                   value={editApprovalStatus}
                   onChange={setEditApprovalStatus}
                   options={APPROVAL_OPTIONS}
-                  data-testid="party-registry-approval-select"
+                  testId="party-registry-approval-select"
                 />
                 <button
                   type="button"
@@ -310,10 +323,11 @@ export function PartyRegistryPanel({
                 </button>
                 <ControlledSelect
                   label="Lifecycle status"
+                  id="party-registry-status-select"
                   value={editStatus}
                   onChange={setEditStatus}
                   options={STATUS_OPTIONS}
-                  data-testid="party-registry-status-select"
+                  testId="party-registry-status-select"
                 />
                 <button
                   type="button"
@@ -331,33 +345,46 @@ export function PartyRegistryPanel({
                 data-testid="party-registry-contact-form"
               >
                 <h4 className="text-xs font-medium uppercase tracking-wide text-slate-500">Add contact</h4>
-                <input
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                  placeholder="Contact name"
-                  value={contactName}
-                  onChange={(e) => setContactName(e.target.value)}
-                  data-testid="party-registry-contact-name-input"
-                />
-                <input
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                  placeholder="Email"
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                />
-                <input
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                  placeholder="Phone"
-                  value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
-                />
-                <input
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                  placeholder="Role label"
-                  value={contactRoleLabel}
-                  onChange={(e) => setContactRoleLabel(e.target.value)}
-                />
-                <label className="flex items-center gap-2 text-sm text-slate-400">
+                <label htmlFor="party-registry-contact-name-input" className="block text-sm text-slate-400">
+                  Contact name
                   <input
+                    id="party-registry-contact-name-input"
+                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                    data-testid="party-registry-contact-name-input"
+                  />
+                </label>
+                <label htmlFor="party-registry-contact-email" className="block text-sm text-slate-400">
+                  Email
+                  <input
+                    id="party-registry-contact-email"
+                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                  />
+                </label>
+                <label htmlFor="party-registry-contact-phone" className="block text-sm text-slate-400">
+                  Phone
+                  <input
+                    id="party-registry-contact-phone"
+                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                  />
+                </label>
+                <label htmlFor="party-registry-contact-role" className="block text-sm text-slate-400">
+                  Role label
+                  <input
+                    id="party-registry-contact-role"
+                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                    value={contactRoleLabel}
+                    onChange={(e) => setContactRoleLabel(e.target.value)}
+                  />
+                </label>
+                <label htmlFor="party-registry-contact-primary" className="flex items-center gap-2 text-sm text-slate-400">
+                  <input
+                    id="party-registry-contact-primary"
                     type="checkbox"
                     checked={contactIsPrimary}
                     onChange={(e) => setContactIsPrimary(e.target.checked)}
@@ -395,11 +422,11 @@ export function PartyRegistryPanel({
       {canManage ? (
         <div className="mt-4 space-y-2 border-t border-slate-800 pt-4" data-testid="party-registry-create-form">
           <h3 className="text-sm font-medium text-slate-200">New {title.slice(0, -1).toLowerCase()}</h3>
-          <label className="block text-sm text-slate-400">
+          <label htmlFor="party-registry-create-display-name" className="block text-sm text-slate-400">
             Display name
             <input
+              id="party-registry-create-display-name"
               className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-              placeholder="Display name"
               value={displayName}
               onChange={(e) => onDisplayNameChange(e.target.value)}
             />
@@ -410,25 +437,34 @@ export function PartyRegistryPanel({
             onKeyChange={onPartyKeyChange}
             label="Party key"
           />
-          <input
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            placeholder="Legal name"
-            value={legalName}
-            onChange={(e) => onLegalNameChange(e.target.value)}
-          />
-          <input
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            placeholder="Tax identifier (optional)"
-            value={taxIdentifier}
-            onChange={(e) => onTaxIdentifierChange(e.target.value)}
-          />
-          <textarea
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            placeholder="Notes"
-            rows={2}
-            value={notes}
-            onChange={(e) => onNotesChange(e.target.value)}
-          />
+          <label htmlFor="party-registry-create-legal-name" className="block text-sm text-slate-400">
+            Legal name
+            <input
+              id="party-registry-create-legal-name"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              value={legalName}
+              onChange={(e) => onLegalNameChange(e.target.value)}
+            />
+          </label>
+          <label htmlFor="party-registry-create-tax-id" className="block text-sm text-slate-400">
+            Tax identifier (optional)
+            <input
+              id="party-registry-create-tax-id"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              value={taxIdentifier}
+              onChange={(e) => onTaxIdentifierChange(e.target.value)}
+            />
+          </label>
+          <label htmlFor="party-registry-create-notes" className="block text-sm text-slate-400">
+            Notes
+            <textarea
+              id="party-registry-create-notes"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              rows={2}
+              value={notes}
+              onChange={(e) => onNotesChange(e.target.value)}
+            />
+          </label>
           <button
             type="button"
             className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"

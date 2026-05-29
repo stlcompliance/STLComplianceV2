@@ -67,8 +67,9 @@ export function EntitlementReconciliationSettingsPanel() {
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="entitlement-reconciliation-enabled" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="entitlement-reconciliation-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -77,8 +78,9 @@ export function EntitlementReconciliationSettingsPanel() {
           Enable scheduled entitlement reconciliation
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="entitlement-reconciliation-auto-grant" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="entitlement-reconciliation-auto-grant"
             type="checkbox"
             checked={autoGrantFromLicense}
             onChange={(event) => setAutoGrantFromLicense(event.target.checked)}
@@ -87,8 +89,9 @@ export function EntitlementReconciliationSettingsPanel() {
           Auto-grant entitlements when a valid license exists
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-slate-200">
+        <label htmlFor="entitlement-reconciliation-auto-revoke" className="flex items-center gap-2 text-sm text-slate-200">
           <input
+            id="entitlement-reconciliation-auto-revoke"
             type="checkbox"
             checked={autoRevokeStaleEntitlements}
             onChange={(event) => setAutoRevokeStaleEntitlements(event.target.checked)}

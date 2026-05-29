@@ -139,9 +139,10 @@ export function SupplierIncidentsPanel({
       )}
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <label className="block text-sm text-slate-400 md:col-span-2">
-          Party
+        <label htmlFor="supplier-incident-party" className="block text-sm text-slate-400 md:col-span-2">
+          Vendor or supplier party
           <select
+            id="supplier-incident-party"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
             value={selectedPartyId}
             onChange={(event) => setSelectedPartyId(event.target.value)}
@@ -157,17 +158,19 @@ export function SupplierIncidentsPanel({
 
         {selectedPartyId && (
           <>
-            <label className="block text-sm text-slate-400">
+            <label htmlFor="supplier-incident-key" className="block text-sm text-slate-400">
               Incident key
               <input
+                id="supplier-incident-key"
                 className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                 value={incidentKey}
                 onChange={(event) => setIncidentKey(event.target.value)}
               />
             </label>
-            <label className="block text-sm text-slate-400">
-              Type
+            <label htmlFor="supplier-incident-type" className="block text-sm text-slate-400">
+              Incident type
               <select
+                id="supplier-incident-type"
                 className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                 value={incidentType}
                 onChange={(event) =>
@@ -181,9 +184,10 @@ export function SupplierIncidentsPanel({
                 ))}
               </select>
             </label>
-            <label className="block text-sm text-slate-400">
-              Severity
+            <label htmlFor="supplier-incident-severity" className="block text-sm text-slate-400">
+              Incident severity
               <select
+                id="supplier-incident-severity"
                 className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                 value={severity}
                 onChange={(event) =>
@@ -197,17 +201,19 @@ export function SupplierIncidentsPanel({
                 ))}
               </select>
             </label>
-            <label className="block text-sm text-slate-400 md:col-span-2">
-              Title
+            <label htmlFor="supplier-incident-title" className="block text-sm text-slate-400 md:col-span-2">
+              Incident title
               <input
+                id="supplier-incident-title"
                 className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
               />
             </label>
-            <label className="block text-sm text-slate-400 md:col-span-2">
-              Description
+            <label htmlFor="supplier-incident-description" className="block text-sm text-slate-400 md:col-span-2">
+              Incident description
               <textarea
+                id="supplier-incident-description"
                 className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                 rows={2}
                 value={description}

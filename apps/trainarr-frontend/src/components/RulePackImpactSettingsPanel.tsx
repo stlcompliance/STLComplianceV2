@@ -80,8 +80,9 @@ export function RulePackImpactSettingsPanel({ accessToken, canManage }: RulePack
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm">
+        <label htmlFor="rule-pack-impact-enabled" className="flex items-center gap-2 text-sm">
           <input
+            id="rule-pack-impact-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -90,9 +91,10 @@ export function RulePackImpactSettingsPanel({ accessToken, canManage }: RulePack
           Enable scheduled rule pack impact scans
         </label>
 
-        <label className="block text-sm">
+        <label htmlFor="rule-pack-impact-staleness-hours" className="block text-sm">
           <span className="font-medium">Staleness window (hours)</span>
           <input
+            id="rule-pack-impact-staleness-hours"
             className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
             type="number"
             min={1}
@@ -103,8 +105,9 @@ export function RulePackImpactSettingsPanel({ accessToken, canManage }: RulePack
           />
         </label>
 
-        <label className="flex items-center gap-2 text-sm">
+        <label htmlFor="rule-pack-impact-auto-update-baselines" className="flex items-center gap-2 text-sm">
           <input
+            id="rule-pack-impact-auto-update-baselines"
             type="checkbox"
             checked={autoUpdateRequirementBaselines}
             onChange={(event) => setAutoUpdateRequirementBaselines(event.target.checked)}

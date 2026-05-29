@@ -147,8 +147,9 @@ export function DemandProcessingSettingsPanel({
 
       {settingsQuery.data && (
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
+          <label htmlFor="demand-processing-enabled" className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
             <input
+              id="demand-processing-enabled"
               type="checkbox"
               checked={isEnabled}
               onChange={(event) => setIsEnabled(event.target.checked)}
@@ -165,9 +166,11 @@ export function DemandProcessingSettingsPanel({
               {SOURCE_LABELS.map(({ key, label, help }) => (
                 <label
                   key={key}
+                  htmlFor={`demand-processing-source-${key}`}
                   className="flex gap-2 rounded-md border border-slate-800 p-2 text-sm text-slate-400"
                 >
                   <input
+                    id={`demand-processing-source-${key}`}
                     type="checkbox"
                     className="mt-1"
                     checked={sourceFlags[key]}
@@ -186,17 +189,19 @@ export function DemandProcessingSettingsPanel({
           {settingsValidationError ? (
             <p className="text-sm text-amber-300 md:col-span-2">{settingsValidationError}</p>
           ) : null}
-          <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
+          <label htmlFor="demand-processing-auto-pr-draft" className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
             <input
+              id="demand-processing-auto-pr-draft"
               type="checkbox"
               checked={autoCreatePrDraftWhenShort}
               onChange={(event) => setAutoCreatePrDraftWhenShort(event.target.checked)}
             />
             Auto-create PR draft when stock is short
           </label>
-          <label className="block text-sm text-slate-400">
+          <label htmlFor="demand-processing-min-hours" className="block text-sm text-slate-400">
             Min hours before first processing
             <input
+              id="demand-processing-min-hours"
               type="number"
               min={0}
               max={168}
@@ -205,9 +210,10 @@ export function DemandProcessingSettingsPanel({
               onChange={(event) => setMinHoursBeforeProcessing(Number(event.target.value))}
             />
           </label>
-          <label className="block text-sm text-slate-400">
+          <label htmlFor="demand-processing-staleness-hours" className="block text-sm text-slate-400">
             Reprocess staleness (hours)
             <input
+              id="demand-processing-staleness-hours"
               type="number"
               min={1}
               max={168}
@@ -216,8 +222,9 @@ export function DemandProcessingSettingsPanel({
               onChange={(event) => setStalenessHours(Number(event.target.value))}
             />
           </label>
-          <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
+          <label htmlFor="demand-processing-notify-pr-draft" className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
             <input
+              id="demand-processing-notify-pr-draft"
               type="checkbox"
               checked={notifyOnPrDraftCreated}
               onChange={(event) => setNotifyOnPrDraftCreated(event.target.checked)}

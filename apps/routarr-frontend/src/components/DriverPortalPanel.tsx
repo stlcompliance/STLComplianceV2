@@ -188,7 +188,7 @@ function TripProofDvirSection({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <select
+            <select id="driverportal-select-field"
               className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs text-slate-100"
               value={proofType}
               onChange={(e) => setProofType(e.target.value as 'pickup' | 'delivery')}
@@ -196,7 +196,7 @@ function TripProofDvirSection({
               <option value="pickup">Pickup proof</option>
               <option value="delivery">Delivery proof</option>
             </select>
-            <input
+            <input id="driverportal-input-field-2"
               type="text"
               className="min-w-[120px] flex-1 rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs text-slate-100"
               placeholder="Reference (BOL, POD…)"
@@ -204,7 +204,7 @@ function TripProofDvirSection({
               onChange={(e) => setReferenceKey(e.target.value)}
             />
           </div>
-          <input
+          <input id="driverportal-input-field"
             type="text"
             className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs text-slate-100"
             placeholder="Notes"

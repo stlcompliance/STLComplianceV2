@@ -206,9 +206,10 @@ export function WorkOrdersPanel({
       </header>
 
       <div className="mb-4 flex flex-wrap gap-3">
-        <label className="block text-sm">
+        <label className="block text-sm" htmlFor="work-orders-status-filter">
           <span className="text-slate-300">Status filter</span>
           <select
+            id="work-orders-status-filter"
             className="mt-1 rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
             value={statusFilter}
             onChange={(event) => onStatusFilterChange(event.target.value)}
@@ -224,9 +225,10 @@ export function WorkOrdersPanel({
 
       {canCreate ? (
         <div className="mb-6 grid gap-4 rounded-lg border border-slate-800 bg-slate-950/50 p-4 md:grid-cols-2">
-          <label className="block text-sm md:col-span-2">
-            <span className="text-slate-300">Asset</span>
+          <label className="block text-sm md:col-span-2" htmlFor="work-order-create-asset">
+            <span className="text-slate-300">Asset for work order</span>
             <select
+              id="work-order-create-asset"
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
               value={selectedAssetId}
               onChange={(event) => onSelectedAssetIdChange(event.target.value)}
@@ -240,18 +242,20 @@ export function WorkOrdersPanel({
             </select>
           </label>
 
-          <label className="block text-sm md:col-span-2">
-            <span className="text-slate-300">Title</span>
+          <label className="block text-sm md:col-span-2" htmlFor="work-order-create-title">
+            <span className="text-slate-300">Work order title</span>
             <input
+              id="work-order-create-title"
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
               value={workOrderTitle}
               onChange={(event) => onWorkOrderTitleChange(event.target.value)}
             />
           </label>
 
-          <label className="block text-sm md:col-span-2">
-            <span className="text-slate-300">Description</span>
+          <label className="block text-sm md:col-span-2" htmlFor="work-order-create-description">
+            <span className="text-slate-300">Work order description</span>
             <textarea
+              id="work-order-create-description"
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
               rows={2}
               value={workOrderDescription}
@@ -259,9 +263,10 @@ export function WorkOrdersPanel({
             />
           </label>
 
-          <label className="block text-sm">
-            <span className="text-slate-300">Priority</span>
+          <label className="block text-sm" htmlFor="work-order-create-priority">
+            <span className="text-slate-300">Work order priority</span>
             <select
+              id="work-order-create-priority"
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
               value={workOrderPriority}
               onChange={(event) => onWorkOrderPriorityChange(event.target.value)}
@@ -273,9 +278,10 @@ export function WorkOrdersPanel({
             </select>
           </label>
 
-          <label className="block text-sm">
+          <label className="block text-sm" htmlFor="work-order-create-assigned-technician">
             <span className="text-slate-300">Assigned technician</span>
             <select
+              id="work-order-create-assigned-technician"
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
               value={assignedPersonId}
               onChange={(event) => onAssignedPersonIdChange(event.target.value)}
@@ -356,9 +362,11 @@ export function WorkOrdersPanel({
                     <td className="px-3 py-2">
                       {workOrder.status === 'open' || workOrder.status === 'in_progress' ? (
                         <select
+                          id={`work-order-status-${workOrder.workOrderId}`}
                           className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-white"
                           value={workOrder.status}
                           disabled={isUpdatingStatus}
+                          aria-label={`Work order status for ${workOrder.title}`}
                           onChange={(event) => onUpdateStatus(workOrder.workOrderId, event.target.value)}
                         >
                           {statusOptionsFor(workOrder.status, canClose).map((status) => (

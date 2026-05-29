@@ -94,7 +94,7 @@ export function AssetStatusRollupSettingsPanel({
 
       <div className="mt-4 space-y-3">
         <label className="flex items-center gap-2 text-sm">
-          <input
+          <input id="assetstatusrollupsettings"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -102,9 +102,9 @@ export function AssetStatusRollupSettingsPanel({
           Enable asset status rollup worker
         </label>
 
-        <label className="block text-sm">
+        <label className="block text-sm" htmlFor="assetstatusrollupsettings-staleness-window-hours">
           <span>Staleness window (hours)</span>
-          <input
+          <input id="assetstatusrollupsettings-staleness-window-hours" id="assetstatusrollupsettings-staleness-window-hours"
             className="mt-1 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2"
             type="number"
             min={1}

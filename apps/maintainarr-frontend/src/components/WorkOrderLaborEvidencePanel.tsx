@@ -113,13 +113,16 @@ export function WorkOrderLaborEvidencePanel({
           </ul>
         )}
         {canPerform && editable ? (
-          <div className="mt-3 flex flex-wrap gap-2">
-            <input
-              className="min-w-[12rem] flex-1 rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
-              placeholder="Task title"
-              value={taskTitle}
-              onChange={(event) => onTaskTitleChange(event.target.value)}
-            />
+          <div className="mt-3 flex flex-wrap items-end gap-2">
+            <label className="min-w-[12rem] flex-1 text-sm text-slate-300" htmlFor="work-order-task-title">
+              Task title
+              <input
+                id="work-order-task-title"
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
+                value={taskTitle}
+                onChange={(event) => onTaskTitleChange(event.target.value)}
+              />
+            </label>
             <button
               type="button"
               className="rounded bg-slate-700 px-3 py-1 text-sm text-white hover:bg-slate-600 disabled:opacity-50"
@@ -152,11 +155,14 @@ export function WorkOrderLaborEvidencePanel({
         )}
         {canPerform && editable ? (
           <div className="mt-3 grid gap-2 md:grid-cols-2">
-            <select
-              className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
-              value={laborPersonId}
-              onChange={(event) => onLaborPersonIdChange(event.target.value)}
-            >
+            <label className="block text-sm text-slate-300" htmlFor="work-order-labor-technician">
+              Technician for labor
+              <select
+                id="work-order-labor-technician"
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
+                value={laborPersonId}
+                onChange={(event) => onLaborPersonIdChange(event.target.value)}
+              >
               <option value="">Select technician…</option>
               <option value={sessionPersonId}>Me ({sessionPersonId})</option>
               {technicianRefs
@@ -167,29 +173,40 @@ export function WorkOrderLaborEvidencePanel({
                   </option>
                 ))}
             </select>
-            <input
-              className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
-              placeholder="Hours"
-              type="number"
-              min="0.01"
-              step="0.25"
-              value={laborHours}
-              onChange={(event) => onLaborHoursChange(event.target.value)}
-            />
-            <select
-              className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
-              value={laborTypeKey}
-              onChange={(event) => onLaborTypeKeyChange(event.target.value)}
-            >
+            </label>
+            <label className="block text-sm text-slate-300" htmlFor="work-order-labor-hours">
+              Labor hours
+              <input
+                id="work-order-labor-hours"
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
+                type="number"
+                min="0.01"
+                step="0.25"
+                value={laborHours}
+                onChange={(event) => onLaborHoursChange(event.target.value)}
+              />
+            </label>
+            <label className="block text-sm text-slate-300" htmlFor="work-order-labor-type">
+              Labor type
+              <select
+                id="work-order-labor-type"
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
+                value={laborTypeKey}
+                onChange={(event) => onLaborTypeKeyChange(event.target.value)}
+              >
               <option value="regular">Regular</option>
               <option value="overtime">Overtime</option>
               <option value="travel">Travel</option>
             </select>
-            <select
-              className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
-              value={selectedTaskLineId}
-              onChange={(event) => onSelectedTaskLineIdChange(event.target.value)}
-            >
+            </label>
+            <label className="block text-sm text-slate-300" htmlFor="work-order-labor-task-link">
+              Linked task line
+              <select
+                id="work-order-labor-task-link"
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
+                value={selectedTaskLineId}
+                onChange={(event) => onSelectedTaskLineIdChange(event.target.value)}
+              >
               <option value="">No task link</option>
               {tasks.map((task) => (
                 <option key={task.taskLineId} value={task.taskLineId}>
@@ -197,6 +214,7 @@ export function WorkOrderLaborEvidencePanel({
                 </option>
               ))}
             </select>
+            </label>
             <button
               type="button"
               className="rounded bg-sky-800 px-3 py-1 text-sm text-white hover:bg-sky-700 disabled:opacity-50 md:col-span-2"
@@ -238,18 +256,25 @@ export function WorkOrderLaborEvidencePanel({
               testId="work-order-evidence-type"
               className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
             />
-            <input
-              type="file"
-              className="block w-full text-sm text-slate-300"
-              onChange={(event) => onSelectFile(event.target.files?.[0] ?? null)}
-            />
+            <label className="block text-sm text-slate-300" htmlFor="work-order-evidence-file">
+              Work order evidence file
+              <input
+                id="work-order-evidence-file"
+                type="file"
+                className="mt-1 block w-full text-sm text-slate-300"
+                onChange={(event) => onSelectFile(event.target.files?.[0] ?? null)}
+              />
+            </label>
             {selectedFileName ? <p className="text-xs text-slate-500">{selectedFileName}</p> : null}
-            <input
-              className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
-              placeholder="Notes (optional)"
-              value={evidenceNotes}
-              onChange={(event) => onEvidenceNotesChange(event.target.value)}
-            />
+            <label className="block text-sm text-slate-300" htmlFor="work-order-evidence-notes">
+              Evidence notes (optional)
+              <input
+                id="work-order-evidence-notes"
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
+                value={evidenceNotes}
+                onChange={(event) => onEvidenceNotesChange(event.target.value)}
+              />
+            </label>
             <button
               type="button"
               className="rounded bg-violet-800 px-3 py-1 text-sm text-white hover:bg-violet-700 disabled:opacity-50"

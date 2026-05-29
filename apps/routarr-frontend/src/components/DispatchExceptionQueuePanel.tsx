@@ -71,7 +71,7 @@ function ExceptionRow({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex items-start gap-2">
           {canTriage ? (
-            <input
+            <input id="dispatchexceptionqueue-input-field-5"
               type="checkbox"
               checked={selected}
               aria-label={`Select ${item.exceptionKey}`}
@@ -144,7 +144,7 @@ function ExceptionRow({
           >
             Link trip
           </button>
-          <input
+          <input id="dispatchexceptionqueue-input-field-4"
             className="min-w-[10rem] flex-1 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-xs text-slate-200"
             placeholder="Resolution notes…"
             value={resolveNotes}
@@ -341,8 +341,8 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
             in queue
           </p>
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
-          <input
+        <label className="flex items-center gap-2 text-sm text-slate-300" htmlFor="exception-overdue-filter">
+          <input id="exception-overdue-filter"
             type="checkbox"
             checked={overdueOnly}
             data-testid="exception-overdue-filter"
@@ -363,20 +363,20 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
             createMutation.mutate()
           }}
         >
-          <input
+          <input id="dispatchexceptionqueue-input-field-3"
             className="rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200 md:col-span-2"
             placeholder="Exception title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
           />
-          <input
+          <input id="dispatchexceptionqueue-input-field-2"
             className="rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200 md:col-span-2"
             placeholder="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
-          <select
+          <select id="dispatchexceptionqueue-select-field"
             className="rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -405,8 +405,8 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
               testId="exception-create-trip-advanced"
             />
           </div>
-          <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
-            <input
+          <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2" htmlFor="exception-assign-on-create">
+            <input id="exception-assign-on-create"
               type="checkbox"
               checked={assignOnCreate}
               data-testid="exception-assign-on-create"
@@ -432,7 +432,7 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
           <p className="w-full text-xs text-slate-400">
             {selectedIds.length} selected · resolution template for row/bulk resolve
           </p>
-          <select
+          <select id="exception-resolution-template"
             className="rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200"
             value={bulkTemplateKey || defaultTemplateKey}
             data-testid="exception-resolution-template"
@@ -445,7 +445,7 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
               </option>
             ))}
           </select>
-          <input
+          <input id="dispatchexceptionqueue-input-field"
             className="min-w-[12rem] flex-1 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200"
             placeholder="Bulk resolve notes…"
             value={bulkResolveNotes}

@@ -115,9 +115,10 @@ export function PersonTimelinePanel({
       </p>
 
       <div className="mt-4 flex flex-wrap items-end gap-3">
-        <label className="block text-sm text-slate-400">
+        <label htmlFor="person-timeline-category-filter" className="block text-sm text-slate-400">
           Category
           <select
+            id="person-timeline-category-filter"
             className="mt-1 block w-full min-w-[12rem] rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
             value={categoryFilter}
             onChange={(e) => onCategoryFilterChange(e.target.value as PersonTimelineCategoryFilter)}
@@ -130,9 +131,10 @@ export function PersonTimelinePanel({
             ))}
           </select>
         </label>
-        <label className="block text-sm text-slate-400">
+        <label htmlFor="person-timeline-page-size" className="block text-sm text-slate-400">
           Page size
           <select
+            id="person-timeline-page-size"
             className="mt-1 block w-full min-w-[6rem] rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}

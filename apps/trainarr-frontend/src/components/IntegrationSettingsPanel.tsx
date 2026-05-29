@@ -86,8 +86,9 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
       <div className="mt-4 space-y-4">
         <fieldset className="space-y-2 rounded border border-border p-3">
           <legend className="px-1 text-sm font-semibold">StaffArr</legend>
-          <label className="flex items-center gap-2 text-sm">
+          <label htmlFor="integration-staffarr-enabled" className="flex items-center gap-2 text-sm">
             <input
+              id="integration-staffarr-enabled"
               type="checkbox"
               checked={staffArrIntegrationEnabled}
               onChange={(event) => setStaffArrIntegrationEnabled(event.target.checked)}
@@ -95,8 +96,9 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
             />
             Enable StaffArr integration
           </label>
-          <label className="flex items-center gap-2 text-sm">
+          <label htmlFor="integration-staffarr-incident-intake" className="flex items-center gap-2 text-sm">
             <input
+              id="integration-staffarr-incident-intake"
               type="checkbox"
               checked={staffArrIncidentIntakeEnabled}
               disabled={!staffArrIntegrationEnabled}
@@ -105,8 +107,9 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
             />
             Accept incident remediation intake from StaffArr
           </label>
-          <label className="flex items-center gap-2 text-sm">
+          <label htmlFor="integration-staffarr-publication-delivery" className="flex items-center gap-2 text-sm">
             <input
+              id="integration-staffarr-publication-delivery"
               type="checkbox"
               checked={staffArrPublicationDeliveryEnabled}
               disabled={!staffArrIntegrationEnabled}
@@ -119,8 +122,9 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
 
         <fieldset className="space-y-2 rounded border border-border p-3">
           <legend className="px-1 text-sm font-semibold">Compliance Core</legend>
-          <label className="flex items-center gap-2 text-sm">
+          <label htmlFor="integration-compliancecore-enabled" className="flex items-center gap-2 text-sm">
             <input
+              id="integration-compliancecore-enabled"
               type="checkbox"
               checked={complianceCoreIntegrationEnabled}
               onChange={(event) => setComplianceCoreIntegrationEnabled(event.target.checked)}
@@ -128,8 +132,9 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
             />
             Enable Compliance Core integration
           </label>
-          <label className="flex items-center gap-2 text-sm">
+          <label htmlFor="integration-compliancecore-qualification-checks" className="flex items-center gap-2 text-sm">
             <input
+              id="integration-compliancecore-qualification-checks"
               type="checkbox"
               checked={complianceCoreQualificationChecksEnabled}
               disabled={!complianceCoreIntegrationEnabled}
@@ -142,8 +147,9 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
 
         <fieldset className="space-y-2 rounded border border-border p-3">
           <legend className="px-1 text-sm font-semibold">RoutArr</legend>
-          <label className="flex items-center gap-2 text-sm">
+          <label htmlFor="integration-routarr-enabled" className="flex items-center gap-2 text-sm">
             <input
+              id="integration-routarr-enabled"
               type="checkbox"
               checked={routarrIntegrationEnabled}
               onChange={(event) => setRoutarrIntegrationEnabled(event.target.checked)}
@@ -151,8 +157,9 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
             />
             Enable RoutArr integration
           </label>
-          <label className="flex items-center gap-2 text-sm">
+          <label htmlFor="integration-routarr-qualification-dispatch" className="flex items-center gap-2 text-sm">
             <input
+              id="integration-routarr-qualification-dispatch"
               type="checkbox"
               checked={routarrQualificationDispatchEnabled}
               disabled={!routarrIntegrationEnabled}

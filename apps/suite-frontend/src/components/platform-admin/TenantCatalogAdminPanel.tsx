@@ -76,18 +76,20 @@ export function TenantCatalogAdminPanel() {
       ) : null}
 
       <form className="grid gap-3 md:grid-cols-3" onSubmit={handleCreate}>
-        <label className="block text-sm text-slate-700">
-          Slug
+        <label htmlFor="tenant-catalog-create-slug" className="block text-sm text-slate-700">
+          New tenant slug
           <input
+            id="tenant-catalog-create-slug"
             value={slug}
             onChange={(event) => setSlug(event.target.value)}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             required
           />
         </label>
-        <label className="block text-sm text-slate-700 md:col-span-2">
-          Display name
+        <label htmlFor="tenant-catalog-create-display-name" className="block text-sm text-slate-700 md:col-span-2">
+          New tenant display name
           <input
+            id="tenant-catalog-create-display-name"
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
             className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
@@ -106,9 +108,10 @@ export function TenantCatalogAdminPanel() {
       </form>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <label className="block text-sm text-slate-700">
-          Selected tenant
+        <label htmlFor="tenant-catalog-selected-tenant" className="block text-sm text-slate-700">
+          Tenant to edit
           <select
+            id="tenant-catalog-selected-tenant"
             value={selectedTenantId}
             onChange={(event) => {
               const tenantId = event.target.value
@@ -129,17 +132,19 @@ export function TenantCatalogAdminPanel() {
         </label>
         {selectedTenant ? (
           <>
-            <label className="block text-sm text-slate-700">
-              Update display name
+            <label htmlFor="tenant-catalog-edit-display-name" className="block text-sm text-slate-700">
+              Updated tenant display name
               <input
+                id="tenant-catalog-edit-display-name"
                 value={editDisplayName}
                 onChange={(event) => setEditDisplayName(event.target.value)}
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
               />
             </label>
-            <label className="block text-sm text-slate-700">
-              Status
+            <label htmlFor="tenant-catalog-edit-status" className="block text-sm text-slate-700">
+              Tenant lifecycle status
               <select
+                id="tenant-catalog-edit-status"
                 value={status}
                 onChange={(event) => setStatus(event.target.value)}
                 className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"

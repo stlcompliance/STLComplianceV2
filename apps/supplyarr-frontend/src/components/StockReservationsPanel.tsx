@@ -101,9 +101,10 @@ export function StockReservationsPanel({
       </p>
 
       <div className="mt-4 flex flex-wrap items-end gap-3">
-        <label className="block text-sm text-slate-400">
-          Status filter
+        <label htmlFor="stock-reservation-status-filter" className="block text-sm text-slate-400">
+          Reservation status filter
           <select
+            id="stock-reservation-status-filter"
             className="mt-1 block w-full min-w-[8rem] rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
             value={statusFilter}
             onChange={(e) => onStatusFilterChange(e.target.value)}
@@ -171,12 +172,16 @@ export function StockReservationsPanel({
             </button>
           </div>
           <div className="mt-3">
-            <input
-              className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
-              placeholder="Release reason (optional)"
-              value={releaseReason}
-              onChange={(e) => onReleaseReasonChange(e.target.value)}
-            />
+            <label htmlFor="stock-reservation-release-reason" className="block text-sm text-slate-400">
+              Release reason (optional)
+              <input
+                id="stock-reservation-release-reason"
+                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                placeholder="Release reason (optional)"
+                value={releaseReason}
+                onChange={(e) => onReleaseReasonChange(e.target.value)}
+              />
+            </label>
             <button
               type="button"
               className="mt-2 rounded bg-slate-700 px-3 py-1.5 text-sm text-white hover:bg-slate-600 disabled:opacity-50"
@@ -194,6 +199,7 @@ export function StockReservationsPanel({
           <h3 className="text-sm font-medium text-slate-300">Create reservation</h3>
           <div className="grid gap-2 sm:grid-cols-2">
             <ControlledSelect
+              id="stock-reservation-part"
               label="Part"
               value={selectedReservationPartId}
               onChange={onSelectedReservationPartIdChange}
@@ -201,15 +207,17 @@ export function StockReservationsPanel({
               emptyLabel="Select part"
             />
             <ControlledSelect
+              id="stock-reservation-bin"
               label="Bin"
               value={selectedReservationBinId}
               onChange={onSelectedReservationBinIdChange}
               options={toBinPickerOptions(bins)}
               emptyLabel="Select bin"
             />
-            <label className="block text-sm text-slate-400 sm:col-span-2">
-              Notes (optional)
+            <label htmlFor="stock-reservation-notes" className="block text-sm text-slate-400 sm:col-span-2">
+              Reservation notes (optional)
               <input
+                id="stock-reservation-notes"
                 className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
                 placeholder="Notes (optional)"
                 value={reservationNotes}
@@ -224,9 +232,10 @@ export function StockReservationsPanel({
                 label="Reservation key"
               />
             </div>
-            <label className="block text-sm text-slate-400">
-              Quantity
+            <label htmlFor="stock-reservation-quantity" className="block text-sm text-slate-400">
+              Reservation quantity
               <input
+                id="stock-reservation-quantity"
                 className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
                 placeholder="Quantity"
                 type="number"

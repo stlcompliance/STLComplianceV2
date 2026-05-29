@@ -121,9 +121,10 @@ export function FieldTaskEvidencePanel({
         ))}
       </div>
 
-      <label className="mt-3 block text-xs text-slate-300">
-        <span className="font-medium">File</span>
+      <label className="mt-3 block text-xs text-slate-300" htmlFor="companion-evidence-file-input">
+        <span className="font-medium">Evidence file</span>
         <input
+          id="companion-evidence-file-input"
           ref={fileInputRef}
           className="mt-1 block w-full text-sm text-slate-200"
           type="file"
@@ -133,9 +134,10 @@ export function FieldTaskEvidencePanel({
         />
       </label>
 
-      <label className="mt-3 block text-xs text-slate-300">
+      <label className="mt-3 block text-xs text-slate-300" htmlFor="companion-evidence-notes">
         <span className="font-medium">Notes (optional)</span>
         <textarea
+          id="companion-evidence-notes"
           className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
           rows={2}
           value={notes}

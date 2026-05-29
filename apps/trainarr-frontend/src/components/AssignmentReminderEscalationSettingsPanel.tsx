@@ -150,8 +150,9 @@ export function AssignmentReminderEscalationSettingsPanel({
         <div data-testid="due-reminder-settings-section">
           <h3 className="text-sm font-semibold text-foreground">Due reminders</h3>
           <div className="mt-3 space-y-3">
-            <label className="flex items-center gap-2 text-sm">
+            <label htmlFor="due-reminder-enabled" className="flex items-center gap-2 text-sm">
               <input
+                id="due-reminder-enabled"
                 type="checkbox"
                 checked={reminderEnabled}
                 onChange={(event) => setReminderEnabled(event.target.checked)}
@@ -160,9 +161,10 @@ export function AssignmentReminderEscalationSettingsPanel({
               Enable assignment due reminders
             </label>
             <div className="flex flex-wrap gap-4">
-              <label className="block text-sm">
+              <label htmlFor="due-reminder-lead-days" className="block text-sm">
                 <span className="font-medium">Due soon lead (days)</span>
                 <input
+                  id="due-reminder-lead-days"
                   className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   type="number"
                   min={1}
@@ -171,9 +173,10 @@ export function AssignmentReminderEscalationSettingsPanel({
                   onChange={(event) => setDueSoonLeadDays(event.target.value)}
                 />
               </label>
-              <label className="block text-sm">
+              <label htmlFor="due-reminder-cooldown-hours" className="block text-sm">
                 <span className="font-medium">Cooldown (hours)</span>
                 <input
+                  id="due-reminder-cooldown-hours"
                   className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   type="number"
                   min={1}
@@ -182,9 +185,10 @@ export function AssignmentReminderEscalationSettingsPanel({
                   onChange={(event) => setReminderCooldownHours(event.target.value)}
                 />
               </label>
-              <label className="block text-sm">
+              <label htmlFor="due-reminder-max-reminders" className="block text-sm">
                 <span className="font-medium">Max reminders</span>
                 <input
+                  id="due-reminder-max-reminders"
                   className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   type="number"
                   min={1}
@@ -223,8 +227,9 @@ export function AssignmentReminderEscalationSettingsPanel({
         <div data-testid="assignment-escalation-settings-section">
           <h3 className="text-sm font-semibold text-foreground">Overdue escalations</h3>
           <div className="mt-3 space-y-3">
-            <label className="flex items-center gap-2 text-sm">
+            <label htmlFor="assignment-escalation-enabled" className="flex items-center gap-2 text-sm">
               <input
+                id="assignment-escalation-enabled"
                 type="checkbox"
                 checked={escalationEnabled}
                 onChange={(event) => setEscalationEnabled(event.target.checked)}
@@ -233,9 +238,10 @@ export function AssignmentReminderEscalationSettingsPanel({
               Enable assignment overdue escalations
             </label>
             <div className="flex flex-wrap gap-4">
-              <label className="block text-sm">
+              <label htmlFor="assignment-escalation-overdue-hours" className="block text-sm">
                 <span className="font-medium">Overdue after (hours)</span>
                 <input
+                  id="assignment-escalation-overdue-hours"
                   className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   type="number"
                   min={1}
@@ -244,9 +250,10 @@ export function AssignmentReminderEscalationSettingsPanel({
                   onChange={(event) => setOverdueHours(event.target.value)}
                 />
               </label>
-              <label className="block text-sm">
+              <label htmlFor="assignment-escalation-cooldown-hours" className="block text-sm">
                 <span className="font-medium">Cooldown (hours)</span>
                 <input
+                  id="assignment-escalation-cooldown-hours"
                   className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   type="number"
                   min={1}
@@ -255,9 +262,10 @@ export function AssignmentReminderEscalationSettingsPanel({
                   onChange={(event) => setEscalationCooldownHours(event.target.value)}
                 />
               </label>
-              <label className="block text-sm">
+              <label htmlFor="assignment-escalation-max-escalations" className="block text-sm">
                 <span className="font-medium">Max escalations</span>
                 <input
+                  id="assignment-escalation-max-escalations"
                   className="mt-1 w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   type="number"
                   min={1}

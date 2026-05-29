@@ -82,9 +82,10 @@ export function ReorderEvaluationPanel({
 
       {canManagePolicy ? (
         <div className="mt-4 grid gap-3 md:grid-cols-4">
-          <label className="block text-sm text-slate-400 md:col-span-2">
-            Part
+          <label htmlFor="reorder-policy-part" className="block text-sm text-slate-400 md:col-span-2">
+            Reorder policy part
             <select
+              id="reorder-policy-part"
               className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
               value={selectedPartId}
               onChange={(event) => onSelectedPartIdChange(event.target.value)}
@@ -97,18 +98,20 @@ export function ReorderEvaluationPanel({
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-400">
+          <label htmlFor="reorder-policy-point" className="block text-sm text-slate-400">
             Reorder point
             <input
+              id="reorder-policy-point"
               className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
               value={reorderPoint}
               onChange={(event) => onReorderPointChange(event.target.value)}
               placeholder="e.g. 10"
             />
           </label>
-          <label className="block text-sm text-slate-400">
+          <label htmlFor="reorder-policy-quantity" className="block text-sm text-slate-400">
             Reorder quantity
             <input
+              id="reorder-policy-quantity"
               className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
               value={reorderQuantity}
               onChange={(event) => onReorderQuantityChange(event.target.value)}
@@ -151,7 +154,11 @@ export function ReorderEvaluationPanel({
                 <tr key={suggestion.partId} className="border-b border-slate-900/80">
                   {canCreatePurchaseRequest ? (
                     <td className="py-2 pr-3">
+                      <label htmlFor={`reorder-suggestion-${suggestion.partId}`} className="sr-only">
+                        Select {suggestion.partKey} for reorder purchase request
+                      </label>
                       <input
+                        id={`reorder-suggestion-${suggestion.partId}`}
                         type="checkbox"
                         checked={selectedSuggestionPartIds.includes(suggestion.partId)}
                         disabled={suggestion.hasOpenPurchaseRequest}
@@ -189,25 +196,28 @@ export function ReorderEvaluationPanel({
 
       {canCreatePurchaseRequest && suggestions.some((x) => !x.hasOpenPurchaseRequest) ? (
         <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <label className="block text-sm text-slate-400">
-            PR key
+          <label htmlFor="reorder-pr-request-key" className="block text-sm text-slate-400">
+            PR request key
             <input
+              id="reorder-pr-request-key"
               className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
               value={prRequestKey}
               onChange={(event) => onPrRequestKeyChange(event.target.value)}
             />
           </label>
-          <label className="block text-sm text-slate-400">
-            Title
+          <label htmlFor="reorder-pr-title" className="block text-sm text-slate-400">
+            PR title
             <input
+              id="reorder-pr-title"
               className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
               value={prTitle}
               onChange={(event) => onPrTitleChange(event.target.value)}
             />
           </label>
-          <label className="block text-sm text-slate-400 md:col-span-1">
-            Notes
+          <label htmlFor="reorder-pr-notes" className="block text-sm text-slate-400 md:col-span-1">
+            PR notes
             <input
+              id="reorder-pr-notes"
               className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
               value={prNotes}
               onChange={(event) => onPrNotesChange(event.target.value)}

@@ -144,9 +144,10 @@ export function InspectionRunnerPanel({
         <>
           {canExecute ? (
             <div className="mb-6 grid gap-4 md:grid-cols-2">
-              <label className="block text-sm">
-                <span className="text-slate-300">Asset</span>
+              <label className="block text-sm" htmlFor="inspection-runner-asset">
+                <span className="text-slate-300">Asset for inspection</span>
                 <select
+                  id="inspection-runner-asset"
                   className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
                   value={selectedAssetId}
                   onChange={(event) => onSelectedAssetIdChange(event.target.value)}
@@ -160,9 +161,10 @@ export function InspectionRunnerPanel({
                 </select>
               </label>
 
-              <label className="block text-sm">
-                <span className="text-slate-300">Active template</span>
+              <label className="block text-sm" htmlFor="inspection-runner-template">
+                <span className="text-slate-300">Active inspection template</span>
                 <select
+                  id="inspection-runner-template"
                   className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
                   value={selectedTemplateId}
                   onChange={(event) => onSelectedTemplateIdChange(event.target.value)}
@@ -243,8 +245,9 @@ export function InspectionRunnerPanel({
               {inProgressRun && canExecute ? (
                 <div className="mb-4 rounded-lg border border-violet-900/60 bg-violet-950/20 p-3">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <label className="flex items-center gap-2 text-sm text-slate-200">
+                    <label className="flex items-center gap-2 text-sm text-slate-200" htmlFor="inspection-runner-voice-guidance">
                       <input
+                        id="inspection-runner-voice-guidance"
                         type="checkbox"
                         checked={voiceGuidanceEnabled}
                         disabled={!voiceGuidanceSupported}
@@ -303,7 +306,10 @@ export function InspectionRunnerPanel({
                       key={item.checklistItemId}
                       className="rounded-lg border border-slate-800 bg-slate-900/80 p-3 text-sm"
                     >
-                      <div className="mb-2 font-medium text-slate-100">
+                      <div
+                        id={`inspection-item-prompt-${item.checklistItemId}`}
+                        className="mb-2 font-medium text-slate-100"
+                      >
                         {item.prompt}
                         {item.isRequired ? <span className="ml-1 text-red-300">*</span> : null}
                       </div>
@@ -315,8 +321,10 @@ export function InspectionRunnerPanel({
                       {inProgressRun && canExecute ? (
                         item.itemType === 'pass_fail' ? (
                           <select
+                            id={`inspection-answer-pass-fail-${item.checklistItemId}`}
                             className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-white"
                             value={draft.passFailValue ?? existing?.passFailValue ?? ''}
+                            aria-labelledby={`inspection-item-prompt-${item.checklistItemId}`}
                             onChange={(event) =>
                               onAnswerDraftChange(item.checklistItemId, 'passFailValue', event.target.value)
                             }
@@ -328,18 +336,22 @@ export function InspectionRunnerPanel({
                           </select>
                         ) : item.itemType === 'numeric' ? (
                           <input
+                            id={`inspection-answer-numeric-${item.checklistItemId}`}
                             type="number"
                             className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-white"
                             value={draft.numericValue ?? (existing?.numericValue?.toString() ?? '')}
+                            aria-labelledby={`inspection-item-prompt-${item.checklistItemId}`}
                             onChange={(event) =>
                               onAnswerDraftChange(item.checklistItemId, 'numericValue', event.target.value)
                             }
                           />
                         ) : (
                           <textarea
+                            id={`inspection-answer-text-${item.checklistItemId}`}
                             className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-white"
                             rows={2}
                             value={draft.textValue ?? existing?.textValue ?? ''}
+                            aria-labelledby={`inspection-item-prompt-${item.checklistItemId}`}
                             onChange={(event) =>
                               onAnswerDraftChange(item.checklistItemId, 'textValue', event.target.value)
                             }

@@ -60,10 +60,13 @@ export function BatchRuleEvaluationPanel({
         <p className="mt-3 text-sm text-slate-500">Create rule packs with content before running a batch evaluation.</p>
       ) : (
         <ul className="mt-4 max-h-40 space-y-2 overflow-y-auto rounded-lg border border-slate-800 bg-slate-950/60 p-2">
-          {packsWithContent.map((pack) => (
+          {packsWithContent.map((pack) => {
+            const packInputId = `batch-rule-evaluation-pack-${pack.packKey}`
+            return (
             <li key={pack.rulePackId}>
-              <label className="flex cursor-pointer items-start gap-2 text-sm text-slate-200">
+              <label htmlFor={packInputId} className="flex cursor-pointer items-start gap-2 text-sm text-slate-200">
                 <input
+                  id={packInputId}
                   type="checkbox"
                   className="mt-1 rounded border-slate-600"
                   data-testid={`batch-rule-evaluation-pack-${pack.packKey}`}
@@ -78,7 +81,8 @@ export function BatchRuleEvaluationPanel({
                 </span>
               </label>
             </li>
-          ))}
+            )
+          })}
         </ul>
       )}
 
@@ -86,9 +90,12 @@ export function BatchRuleEvaluationPanel({
         {factKeys.length === 0 ? (
           <p className="text-xs text-slate-500">Add rule content with fact keys to configure batch fact inputs.</p>
         ) : (
-          factKeys.map((factKey) => (
-            <label key={factKey} className="flex items-center gap-2 text-sm text-slate-200">
+          factKeys.map((factKey) => {
+            const factInputId = `batch-rule-evaluation-fact-${factKey.replace(/[^a-zA-Z0-9_-]/g, '-')}`
+            return (
+            <label key={factKey} htmlFor={factInputId} className="flex items-center gap-2 text-sm text-slate-200">
               <input
+                id={factInputId}
                 type="checkbox"
                 checked={factInputs[factKey] ?? false}
                 onChange={(event) =>
@@ -101,19 +108,21 @@ export function BatchRuleEvaluationPanel({
               />
               <span className="font-mono text-xs text-sky-300">{factKey}</span>
             </label>
-          ))
+            )
+          })
         )}
       </div>
 
-      <label className="mt-4 flex items-center gap-2 text-xs text-slate-300">
+      <label htmlFor="batch-rule-evaluation-emit-findings" className="mt-4 flex items-center gap-2 text-xs text-slate-300">
         <input
+          id="batch-rule-evaluation-emit-findings"
           type="checkbox"
           data-testid="batch-rule-evaluation-emit-findings"
           checked={emitFindings}
           onChange={(event) => setEmitFindings(event.target.checked)}
           className="rounded border-slate-600"
         />
-        Emit findings when evaluation fails
+        Emit findings when batch evaluation fails
       </label>
 
       <button

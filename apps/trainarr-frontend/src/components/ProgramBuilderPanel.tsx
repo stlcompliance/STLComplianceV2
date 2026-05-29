@@ -78,9 +78,11 @@ export function ProgramBuilderPanel({
         <ul className="mt-2 space-y-1">
           {definitions.map((definition) => (
             <li key={definition.trainingDefinitionId} className="flex flex-wrap items-center gap-2">
-              <label className="flex items-center gap-2 text-sm text-slate-200">
+              <label htmlFor={`program-builder-definition-${definition.trainingDefinitionId}`} className="flex items-center gap-2 text-sm text-slate-200">
                 <input
+                  id={`program-builder-definition-${definition.trainingDefinitionId}`}
                   type="checkbox"
+                  data-testid={`program-builder-definition-${definition.trainingDefinitionId}`}
                   checked={selectedDefinitionIds.includes(definition.trainingDefinitionId)}
                   onChange={() => onToggleDefinition(definition.trainingDefinitionId)}
                   disabled={!canManage}
@@ -146,33 +148,33 @@ export function ProgramBuilderPanel({
       {!isEditing ? (
         <>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <label className="block text-xs text-slate-400">
+            <label htmlFor="program-builder-key" className="block text-xs text-slate-400">
               Program key
               <input
+                id="program-builder-key"
                 className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
                 value={programKey}
                 onChange={(e) => onProgramKeyChange(e.target.value)}
-                placeholder="annual_onboarding"
               />
             </label>
-            <label className="block text-xs text-slate-400">
+            <label htmlFor="program-builder-name" className="block text-xs text-slate-400">
               Program name
               <input
+                id="program-builder-name"
                 className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
                 value={programName}
                 onChange={(e) => onProgramNameChange(e.target.value)}
-                placeholder="Annual onboarding"
               />
             </label>
           </div>
-          <label className="mt-3 block text-xs text-slate-400">
+          <label htmlFor="program-builder-description" className="mt-3 block text-xs text-slate-400">
             Description
             <textarea
+              id="program-builder-description"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
               rows={2}
               value={programDescription}
               onChange={(e) => onProgramDescriptionChange(e.target.value)}
-              placeholder="Required training bundle for new operational staff."
             />
           </label>
           {definitionPicker}
@@ -194,17 +196,19 @@ export function ProgramBuilderPanel({
               <span className="ml-2 font-mono text-xs text-slate-500">{selectedProgramDetail.programKey}</span>
             ) : null}
           </p>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="program-builder-edit-name" className="block text-xs text-slate-400">
             Program name
             <input
+              id="program-builder-edit-name"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
               value={programName}
               onChange={(e) => onProgramNameChange(e.target.value)}
             />
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="program-builder-edit-description" className="block text-xs text-slate-400">
             Description
             <textarea
+              id="program-builder-edit-description"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
               rows={2}
               value={programDescription}

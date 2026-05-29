@@ -133,11 +133,11 @@ export function SdsHazComReferencesPanel({
                 createSdsMutation.mutate()
               }}
             >
-              <label className="block text-sm text-slate-300">
-                Product name
+              <label htmlFor="sds-reference-product-name" className="block text-sm text-slate-300">
+                SDS product name
                 <input
+                  id="sds-reference-product-name"
                   className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm"
-                  placeholder="product name"
                   value={productName}
                   onChange={(event) => {
                     setProductName(event.target.value)
@@ -181,11 +181,11 @@ export function SdsHazComReferencesPanel({
                 createHazComMutation.mutate()
               }}
             >
-              <label className="block text-sm text-slate-300">
-                Title
+              <label htmlFor="hazcom-reference-title" className="block text-sm text-slate-300">
+                HazCom reference title
                 <input
+                  id="hazcom-reference-title"
                   className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm"
-                  placeholder="title"
                   value={hazComTitle}
                   onChange={(event) => {
                     setHazComTitle(event.target.value)

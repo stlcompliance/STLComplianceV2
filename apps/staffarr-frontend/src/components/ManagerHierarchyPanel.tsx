@@ -164,18 +164,22 @@ export function ManagerHierarchyPanel({
         {canManage ? (
           <form className="space-y-3" onSubmit={handleSubmit}>
             <h3 className="text-sm font-medium text-slate-300">Update selected person manager</h3>
-            <select
-              value={managerPersonId}
-              onChange={(event) => setManagerPersonId(event.target.value)}
-              className="w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-            >
+            <label htmlFor="manager-hierarchy-manager" className="block text-sm text-slate-300">
+              Manager
+              <select
+                id="manager-hierarchy-manager"
+                value={managerPersonId}
+                onChange={(event) => setManagerPersonId(event.target.value)}
+                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
+              >
               <option value="">No manager</option>
               {managerCandidates.map((candidate) => (
                 <option key={candidate.personId} value={candidate.personId}>
                   {candidate.displayName}
                 </option>
               ))}
-            </select>
+              </select>
+            </label>
             <button
               type="submit"
               className="rounded bg-sky-600 px-3 py-2 text-sm text-white disabled:opacity-50"

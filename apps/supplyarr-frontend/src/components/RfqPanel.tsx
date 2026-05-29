@@ -174,11 +174,11 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <label className="block text-sm text-slate-400 sm:col-span-2">
-          Title
+        <label htmlFor="rfq-create-title" className="block text-sm text-slate-400 sm:col-span-2">
+          RFQ title
           <input
+            id="rfq-create-title"
             className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
-            placeholder="Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
@@ -208,18 +208,22 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
 
       {rfqsQuery.isLoading && <p className="mt-3 text-sm text-slate-500">Loading RFQs…</p>}
       {rfqsQuery.data && rfqsQuery.data.length > 0 && (
-        <select
-          className="mt-4 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm"
-          value={selectedRfqId}
-          onChange={(e) => setSelectedRfqId(e.target.value)}
-        >
-          <option value="">Select RFQ</option>
-          {rfqsQuery.data.map((r) => (
-            <option key={r.rfqId} value={r.rfqId}>
-              {r.rfqKey} · {r.status} · {r.title}
-            </option>
-          ))}
-        </select>
+        <label htmlFor="rfq-select" className="mt-4 block text-sm text-slate-400">
+          Select RFQ
+          <select
+            id="rfq-select"
+            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm"
+            value={selectedRfqId}
+            onChange={(e) => setSelectedRfqId(e.target.value)}
+          >
+            <option value="">Select RFQ</option>
+            {rfqsQuery.data.map((r) => (
+              <option key={r.rfqId} value={r.rfqId}>
+                {r.rfqKey} · {r.status} · {r.title}
+              </option>
+            ))}
+          </select>
+        </label>
       )}
 
       {selectedRfq && (
@@ -293,18 +297,24 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
                   label="Quote key"
                 />
               </div>
-              <input
-                className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs"
-                placeholder="Unit price"
-                value={quoteUnitPrice}
-                onChange={(e) => setQuoteUnitPrice(e.target.value)}
-              />
-              <input
-                className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs"
-                placeholder="Lead days"
-                value={quoteLeadDays}
-                onChange={(e) => setQuoteLeadDays(e.target.value)}
-              />
+              <label htmlFor="rfq-quote-unit-price" className="block text-xs text-slate-400">
+                Unit price
+                <input
+                  id="rfq-quote-unit-price"
+                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs"
+                  value={quoteUnitPrice}
+                  onChange={(e) => setQuoteUnitPrice(e.target.value)}
+                />
+              </label>
+              <label htmlFor="rfq-quote-lead-days" className="block text-xs text-slate-400">
+                Lead days
+                <input
+                  id="rfq-quote-lead-days"
+                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs"
+                  value={quoteLeadDays}
+                  onChange={(e) => setQuoteLeadDays(e.target.value)}
+                />
+              </label>
               <button
                 type="button"
                 className="rounded bg-slate-700 px-2 py-1 text-xs text-white"
@@ -383,20 +393,24 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
 
           {selectedRfq.status === 'submitted' && canAward && (
             <div className="flex flex-wrap items-end gap-2">
-              <select
-                className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs"
-                value={selectedQuoteId}
-                onChange={(e) => setSelectedQuoteId(e.target.value)}
-              >
-                <option value="">Select winning quote</option>
-                {selectedRfq.quotes
-                  .filter((q) => q.status === 'submitted')
-                  .map((q) => (
-                    <option key={q.vendorQuoteId} value={q.vendorQuoteId}>
-                      {q.vendorDisplayName} · {q.totalAmount?.toFixed(2)}
-                    </option>
-                  ))}
-              </select>
+              <label htmlFor="rfq-winning-quote" className="block text-xs text-slate-400">
+                Winning quote
+                <select
+                  id="rfq-winning-quote"
+                  className="mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs"
+                  value={selectedQuoteId}
+                  onChange={(e) => setSelectedQuoteId(e.target.value)}
+                >
+                  <option value="">Select winning quote</option>
+                  {selectedRfq.quotes
+                    .filter((q) => q.status === 'submitted')
+                    .map((q) => (
+                      <option key={q.vendorQuoteId} value={q.vendorQuoteId}>
+                        {q.vendorDisplayName} · {q.totalAmount?.toFixed(2)}
+                      </option>
+                    ))}
+                </select>
+              </label>
               <button
                 type="button"
                 className="rounded bg-emerald-700 px-2 py-1 text-xs text-white"

@@ -165,11 +165,11 @@ export function EmergencyPurchasePanel({
 
       {canCreate ? (
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <label className="block text-sm text-slate-400 sm:col-span-2">
-            Title
+          <label htmlFor="emergency-purchase-title" className="block text-sm text-slate-400 sm:col-span-2">
+            Emergency purchase title
             <input
+              id="emergency-purchase-title"
               className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-              placeholder="Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
@@ -182,12 +182,15 @@ export function EmergencyPurchasePanel({
               label="Request key"
             />
           </div>
-          <input
-            className="sm:col-span-2 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            placeholder="Emergency reason (required)"
-            value={emergencyReason}
-            onChange={(e) => setEmergencyReason(e.target.value)}
-          />
+          <label htmlFor="emergency-purchase-reason" className="block text-sm text-slate-400 sm:col-span-2">
+            Emergency reason
+            <input
+              id="emergency-purchase-reason"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              value={emergencyReason}
+              onChange={(e) => setEmergencyReason(e.target.value)}
+            />
+          </label>
           <ControlledSelect
             label="Vendor"
             value={vendorId}
@@ -221,9 +224,10 @@ export function EmergencyPurchasePanel({
       ) : null}
 
       <div className="mt-4">
-        <label className="text-sm text-slate-400">
+        <label htmlFor="emergency-purchase-select" className="block text-sm text-slate-400">
           Active emergency purchases
           <select
+            id="emergency-purchase-select"
             className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
@@ -273,12 +277,15 @@ export function EmergencyPurchasePanel({
 
       {canOverride && selected ? (
         <div className="mt-3 flex flex-wrap gap-2">
-          <input
-            className="min-w-[12rem] flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-            placeholder="Override justification"
-            value={justification}
-            onChange={(e) => setJustification(e.target.value)}
-          />
+          <label htmlFor="emergency-purchase-override-justification" className="min-w-[12rem] flex-1 text-sm text-slate-400">
+            Override justification
+            <input
+              id="emergency-purchase-override-justification"
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              value={justification}
+              onChange={(e) => setJustification(e.target.value)}
+            />
+          </label>
           <button
             type="button"
             className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"

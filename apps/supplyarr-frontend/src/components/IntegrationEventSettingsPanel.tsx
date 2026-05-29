@@ -81,17 +81,19 @@ export function IntegrationEventSettingsPanel({
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <label className="flex items-center gap-2 text-sm">
+        <label htmlFor="integration-event-enabled" className="flex items-center gap-2 text-sm">
           <input
+            id="integration-event-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(e) => setIsEnabled(e.target.checked)}
           />
-          Enabled
+          Enable integration event worker
         </label>
-        <label className="text-sm">
-          Max attempts
+        <label htmlFor="integration-event-max-attempts" className="text-sm">
+          Max retry attempts
           <input
+            id="integration-event-max-attempts"
             className="mt-1 w-full rounded border border-input bg-background px-2 py-1"
             type="number"
             min={1}
@@ -100,9 +102,10 @@ export function IntegrationEventSettingsPanel({
             onChange={(e) => setMaxAttempts(Number(e.target.value))}
           />
         </label>
-        <label className="text-sm">
+        <label htmlFor="integration-event-retry-interval" className="text-sm">
           Retry interval (minutes)
           <input
+            id="integration-event-retry-interval"
             className="mt-1 w-full rounded border border-input bg-background px-2 py-1"
             type="number"
             min={1}

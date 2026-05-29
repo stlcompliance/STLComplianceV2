@@ -75,9 +75,10 @@ export function CreatePersonPanel({
       </header>
 
       <form className="mt-4 grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-        <label className="block text-sm text-slate-300">
+        <label htmlFor="create-person-given-name" className="block text-sm text-slate-300">
           Given name
           <input
+            id="create-person-given-name"
             value={givenName}
             onChange={(event) => setGivenName(event.target.value)}
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -85,9 +86,10 @@ export function CreatePersonPanel({
             minLength={1}
           />
         </label>
-        <label className="block text-sm text-slate-300">
+        <label htmlFor="create-person-family-name" className="block text-sm text-slate-300">
           Family name
           <input
+            id="create-person-family-name"
             value={familyName}
             onChange={(event) => setFamilyName(event.target.value)}
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -95,9 +97,10 @@ export function CreatePersonPanel({
             minLength={1}
           />
         </label>
-        <label className="block text-sm text-slate-300 md:col-span-2">
+        <label htmlFor="create-person-primary-email" className="block text-sm text-slate-300 md:col-span-2">
           Primary email
           <input
+            id="create-person-primary-email"
             type="email"
             value={primaryEmail}
             onChange={(event) => setPrimaryEmail(event.target.value)}
@@ -113,17 +116,19 @@ export function CreatePersonPanel({
           emptyLabel="Select status…"
           testId="create-person-employment-status"
         />
-        <label className="block text-sm text-slate-300">
+        <label htmlFor="create-person-job-title" className="block text-sm text-slate-300">
           Job title
           <input
+            id="create-person-job-title"
             value={jobTitle}
             onChange={(event) => setJobTitle(event.target.value)}
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
           />
         </label>
-        <label className="block text-sm text-slate-300">
+        <label htmlFor="create-person-primary-org-unit" className="block text-sm text-slate-300">
           Primary org unit
           <select
+            id="create-person-primary-org-unit"
             value={primaryOrgUnitId}
             onChange={(event) => setPrimaryOrgUnitId(event.target.value)}
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -136,9 +141,10 @@ export function CreatePersonPanel({
             ))}
           </select>
         </label>
-        <label className="block text-sm text-slate-300">
+        <label htmlFor="create-person-manager" className="block text-sm text-slate-300">
           Manager
           <select
+            id="create-person-manager"
             value={managerPersonId}
             onChange={(event) => setManagerPersonId(event.target.value)}
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"

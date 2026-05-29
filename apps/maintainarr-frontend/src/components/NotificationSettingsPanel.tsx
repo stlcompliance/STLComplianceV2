@@ -84,57 +84,69 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
       )}
 
       <div className="mt-4 space-y-3">
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-sm" htmlFor="notification-settings-enabled">
           <input
+            id="notification-settings-enabled"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
+            data-testid="notification-settings-enabled"
           />
           Enable maintenance notifications
         </label>
 
-        <label className="block text-sm">
+        <label className="block text-sm" htmlFor="notification-settings-webhook">
           <span className="font-medium">Webhook URL</span>
           <input
+            id="notification-settings-webhook"
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             type="url"
             placeholder="https://hooks.example.com/maintainarr"
             value={webhookUrl}
             onChange={(event) => setWebhookUrl(event.target.value)}
+            data-testid="notification-settings-webhook"
           />
         </label>
 
         <fieldset className="space-y-2 text-sm">
           <legend className="font-medium">Notify on</legend>
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2" htmlFor="notification-notify-work-order-created">
             <input
+              id="notification-notify-work-order-created"
               type="checkbox"
               checked={notifyWorkOrderCreated}
               onChange={(event) => setNotifyWorkOrderCreated(event.target.checked)}
+              data-testid="notification-notify-work-order-created"
             />
             Work order created
           </label>
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2" htmlFor="notification-notify-pm-schedule-due">
             <input
+              id="notification-notify-pm-schedule-due"
               type="checkbox"
               checked={notifyPmScheduleDue}
               onChange={(event) => setNotifyPmScheduleDue(event.target.checked)}
+              data-testid="notification-notify-pm-schedule-due"
             />
             PM schedule due
           </label>
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2" htmlFor="notification-notify-pm-schedule-overdue">
             <input
+              id="notification-notify-pm-schedule-overdue"
               type="checkbox"
               checked={notifyPmScheduleOverdue}
               onChange={(event) => setNotifyPmScheduleOverdue(event.target.checked)}
+              data-testid="notification-notify-pm-schedule-overdue"
             />
             PM schedule overdue
           </label>
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2" htmlFor="notification-notify-defect-escalated">
             <input
+              id="notification-notify-defect-escalated"
               type="checkbox"
               checked={notifyDefectEscalated}
               onChange={(event) => setNotifyDefectEscalated(event.target.checked)}
+              data-testid="notification-notify-defect-escalated"
             />
             Defect escalated
           </label>

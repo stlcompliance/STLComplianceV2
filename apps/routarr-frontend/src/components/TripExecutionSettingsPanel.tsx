@@ -93,48 +93,54 @@ export function TripExecutionSettingsPanel({
       </p>
 
       <div className="mt-4 space-y-2 text-sm text-slate-200">
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2" htmlFor="trip-execution-require-pre-trip-dvir">
           <input
+            id="trip-execution-require-pre-trip-dvir"
             type="checkbox"
             checked={requirePreTripDvirBeforeStart}
             onChange={(e) => setRequirePreTripDvirBeforeStart(e.target.checked)}
           />
           Require pre-trip DVIR before start
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2" htmlFor="trip-execution-require-pickup-proof">
           <input
+            id="trip-execution-require-pickup-proof"
             type="checkbox"
             checked={requirePickupProofBeforeStart}
             onChange={(e) => setRequirePickupProofBeforeStart(e.target.checked)}
           />
           Require pickup proof before start
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2" htmlFor="trip-execution-block-start-on-dvir-fail">
           <input
+            id="trip-execution-block-start-on-dvir-fail"
             type="checkbox"
             checked={blockTripStartOnDvirFail}
             onChange={(e) => setBlockTripStartOnDvirFail(e.target.checked)}
           />
           Block start when pre-trip DVIR is fail
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2" htmlFor="trip-execution-require-post-trip-dvir">
           <input
+            id="trip-execution-require-post-trip-dvir"
             type="checkbox"
             checked={requirePostTripDvirBeforeComplete}
             onChange={(e) => setRequirePostTripDvirBeforeComplete(e.target.checked)}
           />
           Require post-trip DVIR before complete
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2" htmlFor="trip-execution-require-delivery-proof">
           <input
+            id="trip-execution-require-delivery-proof"
             type="checkbox"
             checked={requireDeliveryProofBeforeComplete}
             onChange={(e) => setRequireDeliveryProofBeforeComplete(e.target.checked)}
           />
           Require delivery proof before complete
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2" htmlFor="trip-execution-block-complete-on-dvir-fail">
           <input
+            id="trip-execution-block-complete-on-dvir-fail"
             type="checkbox"
             checked={blockTripCompleteOnDvirFail}
             onChange={(e) => setBlockTripCompleteOnDvirFail(e.target.checked)}
@@ -142,40 +148,45 @@ export function TripExecutionSettingsPanel({
           Block complete when post-trip DVIR is fail
         </label>
         <p className="pt-2 text-xs uppercase tracking-wide text-slate-500">Attachment requirements</p>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2" htmlFor="trip-execution-require-pickup-photo">
           <input
+            id="trip-execution-require-pickup-photo"
             type="checkbox"
             checked={requirePickupProofPhotoBeforeStart}
             onChange={(e) => setRequirePickupProofPhotoBeforeStart(e.target.checked)}
           />
           Require pickup proof photo before start
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2" htmlFor="trip-execution-require-pre-trip-dvir-photo">
           <input
+            id="trip-execution-require-pre-trip-dvir-photo"
             type="checkbox"
             checked={requirePreTripDvirPhotoBeforeStart}
             onChange={(e) => setRequirePreTripDvirPhotoBeforeStart(e.target.checked)}
           />
           Require pre-trip DVIR photo before start
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2" htmlFor="trip-execution-require-delivery-photo">
           <input
+            id="trip-execution-require-delivery-photo"
             type="checkbox"
             checked={requireDeliveryProofPhotoBeforeComplete}
             onChange={(e) => setRequireDeliveryProofPhotoBeforeComplete(e.target.checked)}
           />
           Require delivery proof photo before complete
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2" htmlFor="trip-execution-require-delivery-signature">
           <input
+            id="trip-execution-require-delivery-signature"
             type="checkbox"
             checked={requireDeliverySignatureBeforeComplete}
             onChange={(e) => setRequireDeliverySignatureBeforeComplete(e.target.checked)}
           />
           Require delivery signature before complete
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center gap-2" htmlFor="trip-execution-require-post-trip-dvir-photo">
           <input
+            id="trip-execution-require-post-trip-dvir-photo"
             type="checkbox"
             checked={requirePostTripDvirPhotoBeforeComplete}
             onChange={(e) => setRequirePostTripDvirPhotoBeforeComplete(e.target.checked)}

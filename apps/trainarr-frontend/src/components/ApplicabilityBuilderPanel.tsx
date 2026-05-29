@@ -135,18 +135,19 @@ export function ApplicabilityBuilderPanel({
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-violet-300">Step 1 — Applicability profile</h3>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <label className="block text-xs text-slate-400">
+              <label htmlFor="applicability-profile-label" className="block text-xs text-slate-400">
                 Label
                 <input
+                  id="applicability-profile-label"
                   className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
                   value={profileLabel}
                   onChange={(event) => onProfileLabelChange(event.target.value)}
-                  placeholder="Commercial driver"
                 />
               </label>
-              <label className="block text-xs text-slate-400">
+              <label htmlFor="applicability-profile-scope-type" className="block text-xs text-slate-400">
                 Scope type
                 <select
+                  id="applicability-profile-scope-type"
                   className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
                   value={profileScopeType}
                   onChange={(event) => onProfileScopeTypeChange(event.target.value)}
@@ -158,22 +159,22 @@ export function ApplicabilityBuilderPanel({
                   ))}
                 </select>
               </label>
-              <label className="block text-xs text-slate-400">
+              <label htmlFor="applicability-profile-scope-key" className="block text-xs text-slate-400">
                 Scope key
                 <input
+                  id="applicability-profile-scope-key"
                   className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
                   value={profileScopeKey}
                   onChange={(event) => onProfileScopeKeyChange(event.target.value)}
-                  placeholder="driver"
                 />
               </label>
-              <label className="block text-xs text-slate-400 sm:col-span-2">
+              <label htmlFor="applicability-profile-description" className="block text-xs text-slate-400 sm:col-span-2">
                 Description
                 <input
+                  id="applicability-profile-description"
                   className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
                   value={profileDescription}
                   onChange={(event) => onProfileDescriptionChange(event.target.value)}
-                  placeholder="Applies to CDL operators"
                 />
               </label>
               <div className="sm:col-span-2">
@@ -192,27 +193,28 @@ export function ApplicabilityBuilderPanel({
           <div className="border-t border-slate-700 pt-4">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-violet-300">Step 2 — Requirement mapping</h3>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <label className="block text-xs text-slate-400">
+              <label htmlFor="requirement-mapping-key" className="block text-xs text-slate-400">
                 Requirement key
                 <input
+                  id="requirement-mapping-key"
                   className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
                   value={requirementKey}
                   onChange={(event) => onRequirementKeyChange(event.target.value)}
-                  placeholder="cdl_renewal"
                 />
               </label>
-              <label className="block text-xs text-slate-400">
+              <label htmlFor="requirement-mapping-label" className="block text-xs text-slate-400">
                 Label
                 <input
+                  id="requirement-mapping-label"
                   className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
                   value={requirementLabel}
                   onChange={(event) => onRequirementLabelChange(event.target.value)}
-                  placeholder="CDL renewal program"
                 />
               </label>
-              <label className="block text-xs text-slate-400">
+              <label htmlFor="requirement-mapping-source" className="block text-xs text-slate-400">
                 Source
                 <select
+                  id="requirement-mapping-source"
                   className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
                   value={requirementSource}
                   onChange={(event) => onRequirementSourceChange(event.target.value)}
@@ -224,18 +226,19 @@ export function ApplicabilityBuilderPanel({
                   ))}
                 </select>
               </label>
-              <label className="block text-xs text-slate-400">
+              <label htmlFor="requirement-mapping-source-key" className="block text-xs text-slate-400">
                 Source key
                 <input
+                  id="requirement-mapping-source-key"
                   className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
                   value={requirementSourceKey}
                   onChange={(event) => onRequirementSourceKeyChange(event.target.value)}
-                  placeholder="driver_qualification"
                 />
               </label>
-              <label className="block text-xs text-slate-400">
+              <label htmlFor="requirement-mapping-profile" className="block text-xs text-slate-400">
                 Applicability profile
                 <select
+                  id="requirement-mapping-profile"
                   className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
                   value={requirementProfileId}
                   onChange={(event) => onRequirementProfileIdChange(event.target.value)}
@@ -248,9 +251,10 @@ export function ApplicabilityBuilderPanel({
                   ))}
                 </select>
               </label>
-              <label className="block text-xs text-slate-400">
+              <label htmlFor="requirement-mapping-level" className="block text-xs text-slate-400">
                 Requirement level
                 <select
+                  id="requirement-mapping-level"
                   className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
                   value={requirementLevel}
                   onChange={(event) => onRequirementLevelChange(event.target.value)}
@@ -259,9 +263,10 @@ export function ApplicabilityBuilderPanel({
                   <option value="recommended">Recommended</option>
                 </select>
               </label>
-              <label className="block text-xs text-slate-400">
+              <label htmlFor="requirement-mapping-target-type" className="block text-xs text-slate-400">
                 Target type
                 <select
+                  id="requirement-mapping-target-type"
                   className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
                   value={requirementTargetType}
                   onChange={(event) => onRequirementTargetTypeChange(event.target.value as 'program' | 'definition')}
@@ -270,9 +275,10 @@ export function ApplicabilityBuilderPanel({
                   <option value="definition">Definition</option>
                 </select>
               </label>
-              <label className="block text-xs text-slate-400">
+              <label htmlFor="requirement-mapping-target" className="block text-xs text-slate-400">
                 Target
                 <select
+                  id="requirement-mapping-target"
                   className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
                   value={requirementTargetId}
                   onChange={(event) => onRequirementTargetIdChange(event.target.value)}

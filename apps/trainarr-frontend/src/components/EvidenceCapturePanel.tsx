@@ -70,27 +70,29 @@ export function EvidenceCapturePanel({
 
       {canUpload && assignmentOpen && (
         <div className="mt-4 space-y-3 border-t border-slate-700 pt-4">
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="evidence-capture-type" className="block text-xs text-slate-400">
             Evidence type
             <input
+              id="evidence-capture-type"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
               value={evidenceTypeKey}
               onChange={(e) => onEvidenceTypeKeyChange(e.target.value)}
-              placeholder="completion_certificate"
             />
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="evidence-capture-file" className="block text-xs text-slate-400">
             File
             <input
+              id="evidence-capture-file"
               type="file"
               className="mt-1 block w-full text-sm text-slate-300"
               onChange={(e) => onSelectFile(e.target.files?.[0] ?? null)}
             />
             {selectedFileName && <p className="mt-1 text-xs text-slate-500">{selectedFileName}</p>}
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="evidence-capture-notes" className="block text-xs text-slate-400">
             Notes (optional)
             <input
+              id="evidence-capture-notes"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
               value={notes}
               onChange={(e) => onNotesChange(e.target.value)}

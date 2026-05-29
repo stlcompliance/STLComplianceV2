@@ -104,17 +104,23 @@ export function RuleEvaluationPanel({
         {rulePacks.length === 0 ? (
           <p className="mt-3 text-sm text-slate-400">Create a rule pack on the Regulatory tab first.</p>
         ) : (
-          <select
-            value={selectedRulePackId}
-            onChange={(event) => onSelectRulePack(event.target.value)}
-            className="mt-3 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-          >
-            {rulePacks.map((pack) => (
-              <option key={pack.rulePackId} value={pack.rulePackId}>
-                {pack.label} (v{pack.versionNumber}, {pack.status})
-              </option>
-            ))}
-          </select>
+          <>
+            <label htmlFor="rule-evaluation-pack-select" className="mt-3 block text-xs text-slate-400">
+              Rule pack to evaluate
+              <select
+                id="rule-evaluation-pack-select"
+                value={selectedRulePackId}
+                onChange={(event) => onSelectRulePack(event.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              >
+                {rulePacks.map((pack) => (
+                  <option key={pack.rulePackId} value={pack.rulePackId}>
+                    {pack.label} (v{pack.versionNumber}, {pack.status})
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
         )}
         {selectedPack && (
           <p className="mt-2 text-xs text-slate-500">
@@ -127,9 +133,10 @@ export function RuleEvaluationPanel({
         <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Rule content editor</h2>
           <div className="mt-3 space-y-3">
-            <label className="block text-xs text-slate-400">
-              Logic
+            <label htmlFor="rule-evaluation-content-logic" className="block text-xs text-slate-400">
+              Rule evaluation logic
               <select
+                id="rule-evaluation-content-logic"
                 value={logic}
                 onChange={(event) => setLogic(event.target.value)}
                 className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
@@ -138,9 +145,10 @@ export function RuleEvaluationPanel({
                 <option value="any">Any rule may pass</option>
               </select>
             </label>
-            <label className="block text-xs text-slate-400">
-              Rules JSON (fact_boolean rules)
+            <label htmlFor="rule-evaluation-content-rules-json" className="block text-xs text-slate-400">
+              Fact boolean rules JSON
               <textarea
+                id="rule-evaluation-content-rules-json"
                 value={rulesJson}
                 onChange={(event) => setRulesJson(event.target.value)}
                 rows={8}
@@ -175,9 +183,12 @@ export function RuleEvaluationPanel({
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Run evaluation</h2>
           <div className="mt-3 space-y-3">
             {(factKeysFromContent.length > 0 ? factKeysFromContent : factDefinitions.map((f) => f.factKey)).map(
-              (factKey) => (
-                <label key={factKey} className="flex items-center gap-2 text-sm text-slate-200">
+              (factKey) => {
+                const factInputId = `rule-evaluation-fact-${factKey.replace(/[^a-zA-Z0-9_-]/g, '-')}`
+                return (
+                <label key={factKey} htmlFor={factInputId} className="flex items-center gap-2 text-sm text-slate-200">
                   <input
+                    id={factInputId}
                     type="checkbox"
                     checked={factInputs[factKey] ?? false}
                     onChange={(event) =>
@@ -190,7 +201,8 @@ export function RuleEvaluationPanel({
                   />
                   <span className="font-mono text-xs text-sky-300">{factKey}</span>
                 </label>
-              ),
+                )
+              },
             )}
             <button
               type="button"

@@ -173,17 +173,17 @@ export function WorkOrderPartsDemandPanel({
               testId="work-order-parts-demand-supplyarr-part"
             />
           </div>
-          <label className="block text-xs text-slate-400">
-            Part number
-            <input
+          <label className="block text-xs text-slate-400" htmlFor="workorderpartsdemand-part-number">
+          Part number
+          <input id="workorderpartsdemand-part-number"
               className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
               value={partNumber}
               onChange={(event) => onPartNumberChange(event.target.value)}
             />
           </label>
-          <label className="block text-xs text-slate-400">
-            Quantity
-            <input
+          <label className="block text-xs text-slate-400" htmlFor="workorderpartsdemand-quantity">
+          Quantity
+          <input id="workorderpartsdemand-quantity"
               className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
               value={quantityRequested}
               onChange={(event) => onQuantityRequestedChange(event.target.value)}
@@ -198,9 +198,9 @@ export function WorkOrderPartsDemandPanel({
             testId="work-order-parts-demand-uom"
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
           />
-          <label className="md:col-span-2 block text-xs text-slate-400">
-            Notes
-            <input
+          <label className="md:col-span-2 block text-xs text-slate-400" htmlFor="workorderpartsdemand-notes">
+          Notes
+          <input id="workorderpartsdemand-notes"
               className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
               value={notes}
               onChange={(event) => onNotesChange(event.target.value)}
@@ -222,7 +222,7 @@ export function WorkOrderPartsDemandPanel({
       {canPerform && pendingCount > 0 ? (
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-xs text-slate-400">
-            <input
+            <input id="workorderpartsdemand"
               type="checkbox"
               checked={createPurchaseRequestDraft}
               onChange={(event) => onCreatePurchaseRequestDraftChange(event.target.checked)}

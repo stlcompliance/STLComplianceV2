@@ -1,4 +1,4 @@
-import type { PickerOption } from '@stl/shared-ui'
+import { AdvancedReferenceField, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import type {
   QualificationCheckHistoryItemResponse,
@@ -21,6 +21,7 @@ interface AuthorizationCheckOperationsPanelProps {
   rulePackKey: string
   onRulePackKeyChange: (value: string) => void
   rulePackOptions: PickerOption[]
+  personPickerOptions: PickerOption[]
   onRunCheck: () => void
 }
 
@@ -51,6 +52,7 @@ export function AuthorizationCheckOperationsPanel({
   rulePackKey,
   onRulePackKeyChange,
   rulePackOptions,
+  personPickerOptions,
   onRunCheck,
 }: AuthorizationCheckOperationsPanelProps) {
   return (
@@ -67,19 +69,26 @@ export function AuthorizationCheckOperationsPanel({
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label className="block text-xs text-slate-400">
-          StaffArr person ID
-          <input
-            type="text"
-            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 font-mono text-xs text-slate-100"
-            value={staffarrPersonId}
-            onChange={(e) => onStaffarrPersonIdChange(e.target.value)}
-            placeholder="00000000-0000-0000-0000-000000000001"
-          />
-        </label>
-        <label className="block text-xs text-slate-400">
+        <StaticSearchPicker
+          id="authorization-check-person-picker"
+          label="StaffArr person"
+          value={staffarrPersonId}
+          onChange={onStaffarrPersonIdChange}
+          options={personPickerOptions}
+          placeholder="Search people from assignments and qualifications…"
+          testId="authorization-check-person-picker"
+        />
+        <AdvancedReferenceField
+          id="authorization-check-person-advanced"
+          value={staffarrPersonId}
+          onChange={onStaffarrPersonIdChange}
+          label="StaffArr person (advanced)"
+          testId="authorization-check-person-advanced"
+        />
+        <label htmlFor="authorization-check-definition" className="block text-xs text-slate-400">
           Training definition
           <select
+            id="authorization-check-definition"
             className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm text-slate-100"
             value={selectedDefinitionId}
             onChange={(e) => onSelectDefinition(e.target.value)}

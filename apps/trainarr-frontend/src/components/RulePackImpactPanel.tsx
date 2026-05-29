@@ -55,13 +55,13 @@ export function RulePackImpactPanel({
 
       {canAssess ? (
         <div className="mt-4 flex flex-wrap items-end gap-3">
-          <label className="block min-w-[16rem] flex-1 text-xs text-slate-400">
+          <label htmlFor="rule-pack-impact-key" className="block min-w-[16rem] flex-1 text-xs text-slate-400">
             Rule pack key
             <input
+              id="rule-pack-impact-key"
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
               value={rulePackKeyInput}
               onChange={(e) => onRulePackKeyChange(e.target.value)}
-              placeholder="driver_qualification"
             />
           </label>
           <button

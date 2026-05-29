@@ -230,7 +230,7 @@ export function ActiveTripsPanel({ accessToken, scope }: Props) {
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <label className="flex items-center gap-2 text-xs text-slate-400">
-          <input
+          <input id="activetrips"
             type="checkbox"
             checked={attentionOnly}
             onChange={(e) => setAttentionOnly(e.target.checked)}
@@ -238,7 +238,7 @@ export function ActiveTripsPanel({ accessToken, scope }: Props) {
           />
           Needs attention only
         </label>
-        <select
+        <select id="active-trips-status-filter"
           className="rounded border border-slate-600 bg-slate-900 px-2 py-1 text-xs text-slate-200"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}

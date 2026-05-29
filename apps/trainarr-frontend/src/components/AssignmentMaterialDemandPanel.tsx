@@ -1,3 +1,6 @@
+import { ControlledSelect, normalizeUom } from '@stl/shared-ui'
+
+import { MATERIAL_DEMAND_UOM_OPTIONS } from './formOptions'
 import type {
   TrainingAssignmentDetailResponse,
   TrainingAssignmentMaterialDemandLineResponse,
@@ -161,41 +164,47 @@ export function AssignmentMaterialDemandPanel({
 
       {canManage && editable ? (
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="material-demand-supplyarr-part-id" className="block text-xs text-slate-400">
             SupplyArr part id (optional)
             <input
+              id="material-demand-supplyarr-part-id"
               className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
               value={supplyarrPartId}
               onChange={(event) => onSupplyarrPartIdChange(event.target.value)}
             />
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="material-demand-part-number" className="block text-xs text-slate-400">
             Part number
             <input
+              id="material-demand-part-number"
               className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
               value={partNumber}
               onChange={(event) => onPartNumberChange(event.target.value)}
             />
           </label>
-          <label className="block text-xs text-slate-400">
+          <label htmlFor="material-demand-quantity" className="block text-xs text-slate-400">
             Quantity
             <input
+              id="material-demand-quantity"
               className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
               value={quantityRequested}
               onChange={(event) => onQuantityRequestedChange(event.target.value)}
             />
           </label>
-          <label className="block text-xs text-slate-400">
-            Unit of measure
-            <input
-              className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
-              value={unitOfMeasure}
-              onChange={(event) => onUnitOfMeasureChange(event.target.value)}
-            />
-          </label>
-          <label className="md:col-span-2 block text-xs text-slate-400">
+          <ControlledSelect
+            id="material-demand-unit-of-measure"
+            label="Unit of measure"
+            value={unitOfMeasure}
+            onChange={(value) => onUnitOfMeasureChange(normalizeUom(value))}
+            options={MATERIAL_DEMAND_UOM_OPTIONS}
+            emptyLabel="Select UOM…"
+            testId="material-demand-unit-of-measure"
+            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
+          />
+          <label htmlFor="material-demand-notes" className="md:col-span-2 block text-xs text-slate-400">
             Notes
             <input
+              id="material-demand-notes"
               className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
               value={notes}
               onChange={(event) => onNotesChange(event.target.value)}
@@ -216,9 +225,11 @@ export function AssignmentMaterialDemandPanel({
 
       {canManage && pendingCount > 0 ? (
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-2 text-xs text-slate-400">
+          <label htmlFor="material-demand-create-purchase-request" className="flex items-center gap-2 text-xs text-slate-400">
             <input
+              id="material-demand-create-purchase-request"
               type="checkbox"
+              data-testid="material-demand-create-purchase-request"
               checked={createPurchaseRequestDraft}
               onChange={(event) => onCreatePurchaseRequestDraftChange(event.target.checked)}
             />

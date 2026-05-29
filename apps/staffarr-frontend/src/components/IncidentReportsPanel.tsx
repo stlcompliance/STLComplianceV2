@@ -83,9 +83,10 @@ export function IncidentReportsPanel({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-300">
-        <label className="flex items-center gap-2">
-          Status
+        <label htmlFor="incident-reports-status" className="flex items-center gap-2">
+          <span>Status</span>
           <select
+            id="incident-reports-status"
             className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-slate-100"
             value={status}
             onChange={(event) => setStatus(event.target.value)}
@@ -95,9 +96,11 @@ export function IncidentReportsPanel({
             <option value="closed">Closed</option>
           </select>
         </label>
-        <label className="flex items-center gap-2">
+        <label htmlFor="incident-reports-open-only" className="flex items-center gap-2">
           <input
+            id="incident-reports-open-only"
             type="checkbox"
+            data-testid="incident-reports-open-only"
             checked={openOnly}
             onChange={(event) => setOpenOnly(event.target.checked)}
           />

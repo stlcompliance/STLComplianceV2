@@ -88,8 +88,9 @@ export function ComplianceReportsPanel({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3 text-sm">
-        <label className="flex items-center gap-2 text-slate-300">
+        <label htmlFor="compliance-report-attention-only" className="flex items-center gap-2 text-slate-300">
           <input
+            id="compliance-report-attention-only"
             type="checkbox"
             checked={attentionOnly}
             onChange={(event) => setAttentionOnly(event.target.checked)}

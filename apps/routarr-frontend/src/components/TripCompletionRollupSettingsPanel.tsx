@@ -85,7 +85,7 @@ export function TripCompletionRollupSettingsPanel({
 
       <div className="mt-4 space-y-4">
         <label className="flex items-center gap-2 text-sm text-slate-200">
-          <input
+          <input id="tripcompletionrollupsettings"
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
@@ -94,9 +94,9 @@ export function TripCompletionRollupSettingsPanel({
           Enable scheduled trip completion rollups
         </label>
 
-        <label className="block text-sm text-slate-200">
+        <label className="block text-sm text-slate-200" htmlFor="tripcompletionrollupsettings-staleness-window-hours">
           Staleness window (hours)
-          <input
+          <input id="tripcompletionrollupsettings-staleness-window-hours"
             type="number"
             min={1}
             max={168}

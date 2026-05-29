@@ -107,7 +107,11 @@ export function FieldTaskDvirPanel({ accessToken, task, onSubmitComplete }: Fiel
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
+        <label className="sr-only" htmlFor="companion-dvir-result">
+          Field DVIR result
+        </label>
         <select
+          id="companion-dvir-result"
           className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
           value={result}
           onChange={(event) => setResult(event.target.value as 'pass' | 'fail' | 'conditional')}
@@ -117,7 +121,11 @@ export function FieldTaskDvirPanel({ accessToken, task, onSubmitComplete }: Fiel
           <option value="conditional">Conditional</option>
           <option value="fail">Fail</option>
         </select>
+        <label className="sr-only" htmlFor="companion-dvir-odometer">
+          Field DVIR odometer
+        </label>
         <input
+          id="companion-dvir-odometer"
           type="number"
           className="w-28 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
           placeholder="Odometer"
@@ -128,14 +136,18 @@ export function FieldTaskDvirPanel({ accessToken, task, onSubmitComplete }: Fiel
       </div>
 
       {requiresDefectNotes && (
-        <textarea
-          className="mt-3 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
-          placeholder="Defect notes (required for fail/conditional)"
-          rows={2}
-          value={defectNotes}
-          onChange={(event) => setDefectNotes(event.target.value)}
-          data-testid="companion-dvir-defect-notes"
-        />
+        <label className="mt-3 block text-sm text-slate-200" htmlFor="companion-dvir-defect-notes">
+          Defect notes (required for fail/conditional)
+          <textarea
+            id="companion-dvir-defect-notes"
+            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+            placeholder="Defect notes (required for fail/conditional)"
+            rows={2}
+            value={defectNotes}
+            onChange={(event) => setDefectNotes(event.target.value)}
+            data-testid="companion-dvir-defect-notes"
+          />
+        </label>
       )}
 
       <button
