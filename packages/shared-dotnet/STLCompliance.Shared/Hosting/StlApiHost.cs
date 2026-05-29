@@ -86,7 +86,9 @@ public static class StlApiHost
                 app.MapOpenApi();
             }
 
-            if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
+            if (app.Environment.IsDevelopment()
+                || app.Environment.IsProduction()
+                || app.Environment.IsEnvironment("Testing"))
             {
                 await ApplyMigrationsAsync<TContext>(app);
             }

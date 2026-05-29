@@ -5,7 +5,6 @@ import type {
   CreateTrainingDefinitionStepRequest,
   UpdateTrainingDefinitionStepRequest,
   CreateTrainingDefinitionCompletionRuleRequest,
-  UpdateTrainingDefinitionCompletionRuleRequest,
   TrainingCompletionRuleCatalogItemResponse,
   TrainingDefinitionCompletionRuleResponse,
   CreateTrainingDefinitionStepBranchRequest,

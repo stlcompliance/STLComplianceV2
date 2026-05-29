@@ -45,7 +45,11 @@ vi.mock('../api/client', () => ({
 
 const assets = [
   {
-    id: 'asset-1',
+    assetId: 'asset-1',
+    typeKey: 'truck',
+    typeName: 'Truck',
+    classKey: 'fleet',
+    className: 'Fleet',
     assetTag: 'TRK-001',
     name: 'Truck 1',
     description: '',

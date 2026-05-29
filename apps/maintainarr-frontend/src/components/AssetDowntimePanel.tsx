@@ -29,6 +29,8 @@ interface AssetDowntimePanelProps {
   assets: AssetResponse[]
 }
 
+type ManualDowntimeReason = (typeof MANUAL_DOWNTIME_REASONS)[number]['value']
+
 export function AssetDowntimePanel({
   accessToken,
   canRead,
@@ -39,7 +41,7 @@ export function AssetDowntimePanel({
   const [searchParams] = useSearchParams()
   const deepLinkContext = parseDowntimeDeepLink(searchParams.toString())
   const [selectedAssetId, setSelectedAssetId] = useState(deepLinkContext.assetId ?? '')
-  const [reason, setReason] = useState(MANUAL_DOWNTIME_REASONS[0].value)
+  const [reason, setReason] = useState<ManualDowntimeReason>(MANUAL_DOWNTIME_REASONS[0].value)
   const [isPlanned, setIsPlanned] = useState(false)
   const [notes, setNotes] = useState('')
 
@@ -161,7 +163,7 @@ export function AssetDowntimePanel({
             >
               <option value="">Select asset</option>
               {assets.map((asset) => (
-                <option key={asset.id} value={asset.id}>
+                <option key={asset.assetId} value={asset.assetId}>
                   {asset.assetTag} — {asset.name}
                 </option>
               ))}
@@ -172,7 +174,7 @@ export function AssetDowntimePanel({
             <select
               className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
               value={reason}
-              onChange={(event) => setReason(event.target.value)}
+              onChange={(event) => setReason(event.target.value as ManualDowntimeReason)}
             >
               {MANUAL_DOWNTIME_REASONS.map((option) => (
                 <option key={option.value} value={option.value}>

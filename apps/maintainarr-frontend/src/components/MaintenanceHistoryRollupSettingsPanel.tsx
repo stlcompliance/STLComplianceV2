@@ -102,7 +102,7 @@ export function MaintenanceHistoryRollupSettingsPanel({
 
         <label className="block text-sm" htmlFor="maintenancehistoryrollupsettings-staleness-window-hours">
           <span>Staleness window (hours)</span>
-          <input id="maintenancehistoryrollupsettings-staleness-window-hours" id="maintenancehistoryrollupsettings-staleness-window-hours"
+          <input id="maintenancehistoryrollupsettings-staleness-window-hours"
             className="mt-1 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2"
             type="number"
             min={1}

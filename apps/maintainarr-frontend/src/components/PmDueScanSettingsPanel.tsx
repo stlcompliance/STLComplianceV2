@@ -129,7 +129,7 @@ export function PmDueScanSettingsPanel({ accessToken, canManage }: PmDueScanSett
 
         <label className="block text-sm" htmlFor="pmduescansettings-scan-interval-minutes">
           <span>Scan interval (minutes)</span>
-          <input id="pmduescansettings-scan-interval-minutes" id="pmduescansettings-scan-interval-minutes"
+          <input id="pmduescansettings-scan-interval-minutes"
             className="mt-1 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2"
             type="number"
             min={1}
@@ -141,7 +141,7 @@ export function PmDueScanSettingsPanel({ accessToken, canManage }: PmDueScanSett
 
         <label className="block text-sm" htmlFor="pmduescansettings-batch-size">
           <span>Batch size</span>
-          <input id="pmduescansettings-batch-size" id="pmduescansettings-batch-size"
+          <input id="pmduescansettings-batch-size"
             className="mt-1 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2"
             type="number"
             min={1}
@@ -153,7 +153,7 @@ export function PmDueScanSettingsPanel({ accessToken, canManage }: PmDueScanSett
 
         <label className="block text-sm" htmlFor="pmduescansettings-overdue-grace-days">
           <span>Overdue grace (days)</span>
-          <input id="pmduescansettings-overdue-grace-days" id="pmduescansettings-overdue-grace-days"
+          <input id="pmduescansettings-overdue-grace-days"
             className="mt-1 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2"
             type="number"
             min={0}
