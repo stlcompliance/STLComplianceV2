@@ -1,7 +1,11 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen, within } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { PurchaseOrderPanel } from './PurchaseOrderPanel'
+
+afterEach(() => {
+  cleanup()
+})
 
 const baseProps = {
   purchaseOrders: [
@@ -44,6 +48,29 @@ const baseProps = {
       createdAt: '2026-05-27T00:00:00Z',
       updatedAt: '2026-05-27T00:00:00Z',
     },
+    {
+      purchaseOrderId: 'po-2',
+      orderKey: 'po-2026-002',
+      title: 'Cancelled PO',
+      notes: '',
+      status: 'cancelled',
+      purchaseRequestId: 'pr-2',
+      purchaseRequestKey: 'pr-2026-002',
+      vendorPartyId: 'vendor-1',
+      vendorPartyKey: 'vendor-a',
+      vendorDisplayName: 'Acme Supply',
+      createdByUserId: 'user-1',
+      approvedAt: null,
+      approvedByUserId: null,
+      issuedAt: null,
+      issuedByUserId: null,
+      cancelledAt: '2026-05-28T00:00:00Z',
+      cancelledByUserId: 'user-1',
+      cancellationReason: 'Vendor out of stock',
+      lines: [],
+      createdAt: '2026-05-27T00:00:00Z',
+      updatedAt: '2026-05-28T00:00:00Z',
+    },
   ],
   approvedPurchaseRequests: [
     {
@@ -77,27 +104,57 @@ const baseProps = {
   canCreate: true,
   canApprove: true,
   isLoading: false,
-  orderKey: 'po-2026-002',
+  orderKey: 'po-2026-003',
+  cancellationReason: '',
   selectedPurchaseRequestId: 'pr-1',
   selectedPurchaseOrderId: 'po-1',
   onOrderKeyChange: vi.fn(),
+  onCancellationReasonChange: vi.fn(),
   onSelectedPurchaseRequestIdChange: vi.fn(),
   onSelectedPurchaseOrderIdChange: vi.fn(),
   onCreateFromPurchaseRequest: vi.fn(),
   onApprove: vi.fn(),
   onIssue: vi.fn(),
+  onCancel: vi.fn(),
   isCreating: false,
   isApproving: false,
   isIssuing: false,
+  isCancelling: false,
 }
 
 describe('PurchaseOrderPanel', () => {
   it('renders purchase order list and workflow actions', () => {
     render(<PurchaseOrderPanel {...baseProps} />)
 
-    expect(screen.getByText('Purchase orders')).toBeInTheDocument()
+    expect(screen.getByTestId('supplyarr-purchasing-po-workspace')).toBeInTheDocument()
     expect(screen.getByText('po-2026-001')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Approve PO' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create purchase order' })).toBeInTheDocument()
+    expect(screen.getByTestId('purchase-order-line-line-1')).toHaveTextContent('6 each ordered')
+  })
+
+  it('shows cancel controls for draft purchase orders', () => {
+    render(<PurchaseOrderPanel {...baseProps} />)
+
+    const detail = screen.getByTestId('purchase-order-detail')
+    expect(within(detail).getByTestId('purchase-order-cancel-button')).toBeInTheDocument()
+    expect(within(detail).getByTestId('purchase-order-cancellation-reason-input')).toBeInTheDocument()
+  })
+
+  it('shows cancellation reason for cancelled purchase orders', () => {
+    render(
+      <PurchaseOrderPanel
+        {...baseProps}
+        purchaseOrders={[baseProps.purchaseOrders[1]!]}
+        selectedPurchaseOrderId="po-2"
+        canApprove={false}
+        canCreate={false}
+      />,
+    )
+
+    expect(screen.getByTestId('purchase-order-cancellation-reason-display')).toHaveTextContent(
+      'Vendor out of stock',
+    )
+    expect(screen.queryByTestId('purchase-order-cancel-button')).not.toBeInTheDocument()
   })
 })

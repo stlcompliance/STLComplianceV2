@@ -18,6 +18,7 @@ import type { AuditPackageExportResponse, AuditPackageScope } from '../api/types
 
 interface AuditPackageExportPanelProps {
   accessToken: string
+  canRead: boolean
   canExport: boolean
 }
 
@@ -34,7 +35,7 @@ function dateStamp() {
   return new Date().toISOString().slice(0, 10)
 }
 
-export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackageExportPanelProps) {
+export function AuditPackageExportPanel({ accessToken, canRead, canExport }: AuditPackageExportPanelProps) {
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
   const [action, setAction] = useState('')
@@ -57,21 +58,25 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
   const manifestQuery = useQuery({
     queryKey: ['staffarr-audit-package-manifest', accessToken],
     queryFn: () => getAuditPackageManifest(accessToken),
+    enabled: canRead,
   })
 
   const filterOptionsQuery = useQuery({
     queryKey: ['staffarr-audit-package-filter-options', accessToken],
     queryFn: () => getAuditPackageFilterOptions(accessToken),
+    enabled: canRead,
   })
 
   const summaryQuery = useQuery({
     queryKey: ['staffarr-audit-package-summary', accessToken, scope],
     queryFn: () => getAuditPackageExportSummary(accessToken, scope),
+    enabled: canRead,
   })
 
   const timelineQuery = useQuery({
     queryKey: ['staffarr-audit-package-timeline', accessToken, scope],
     queryFn: () => getAuditPackageTimeline(accessToken, { ...scope, page: 1, pageSize: 15 }),
+    enabled: canRead,
   })
 
   const jobStatusQuery = useQuery({
@@ -128,6 +133,10 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
       downloadBlob(blob, `staffarr-audit-package-${job.packageId ?? 'export'}.zip`)
     })
   }, [accessToken, activeJobId, jobStatusQuery.data])
+
+  if (!canRead) {
+    return null
+  }
 
   const filterOptions = filterOptionsQuery.data
   const actorUserOptions = useMemo(

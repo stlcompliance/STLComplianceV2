@@ -46,7 +46,7 @@ import {
   updateOrgUnit,
   updateOrgUnitStatus,
 } from '../api/client'
-import { clearSession, loadSession, canExportAuditPackage } from '../auth/sessionStorage'
+import { clearSession, loadSession, canExportAuditPackage, canReadReports } from '../auth/sessionStorage'
 import { CertificationPanel } from '../components/CertificationPanel'
 import { AuditPackageExportPanel } from '../components/AuditPackageExportPanel'
 import { PersonBulkImportPanel } from '../components/PersonBulkImportPanel'
@@ -573,6 +573,7 @@ export function HomePage() {
   const canManagePersonIncidents = canManageIncidents(me.tenantRoleKey, me.isPlatformAdmin)
   const canManagePeopleProfiles = canManagePeople(me.tenantRoleKey, me.isPlatformAdmin)
   const canExportAudit = canExportAuditPackage(me.tenantRoleKey, me.isPlatformAdmin)
+  const canReadAudit = canReadReports(me.tenantRoleKey, me.isPlatformAdmin)
   const personIncidents = personIncidentsQuery.data ?? []
   const orgMutationError =
     createOrgUnitMutation.error ?? updateOrgUnitMutation.error ?? updateOrgUnitStatusMutation.error ?? null
@@ -987,7 +988,11 @@ export function HomePage() {
 
       <PersonExportPanel accessToken={session!.accessToken} canExport={canManagePeopleProfiles} />
 
-      <AuditPackageExportPanel accessToken={session!.accessToken} canExport={canExportAudit} />
+      <AuditPackageExportPanel
+        accessToken={session!.accessToken}
+        canRead={canReadAudit}
+        canExport={canExportAudit}
+      />
 
       <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
         <h2 className="text-sm font-medium text-slate-300">Signed in</h2>

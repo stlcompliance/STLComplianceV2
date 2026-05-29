@@ -4,6 +4,7 @@ import { PersonProfileEditorPanel } from '../../components/PersonProfileEditorPa
 import { PersonLookupPanel } from '../../components/PersonLookupPanel'
 import { PersonTimelinePanel } from '../../components/PersonTimelinePanel'
 import { PersonTrainarrTrainingHistoryPanel } from '../../components/PersonTrainarrTrainingHistoryPanel'
+import { WorkforceOnboardingJourneyPanel } from '../../components/WorkforceOnboardingJourneyPanel'
 import { PersonHistorySummaryPanel } from '../../components/PersonHistorySummaryPanel'
 import { PersonnelNotesPanel } from '../../components/PersonnelNotesPanel'
 import { PersonnelDocumentsPanel } from '../../components/PersonnelDocumentsPanel'
@@ -195,6 +196,17 @@ export function PeopleSection({ state }: Props) {
           contentUrlFor={(documentId) =>
             s.personnelDocumentContentUrl(s.selectedPerson!.personId, documentId)
           }
+        />
+      ) : null}
+
+      {s.effectivePersonId && (s.selectedPerson ?? s.personProfileQuery.data) ? (
+        <WorkforceOnboardingJourneyPanel
+          personDisplayName={
+            s.selectedPerson?.displayName ?? s.personProfileQuery.data!.displayName
+          }
+          journey={s.workforceOnboardingJourneyQuery.data ?? null}
+          isLoading={s.workforceOnboardingJourneyQuery.isLoading}
+          isError={s.workforceOnboardingJourneyQuery.isError}
         />
       ) : null}
 

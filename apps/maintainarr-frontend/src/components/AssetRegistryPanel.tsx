@@ -13,6 +13,8 @@ interface AssetRegistryPanelProps {
   types: AssetTypeResponse[]
   assets: AssetResponse[]
   readinessByAssetId: Record<string, AssetReadinessSummaryResponse>
+  selectedAssetId: string | null
+  onSelectAsset: (assetId: string) => void
   isLoading: boolean
   isReadinessLoading: boolean
   className: string
@@ -65,6 +67,8 @@ export function AssetRegistryPanel({
   types,
   assets,
   readinessByAssetId,
+  selectedAssetId,
+  onSelectAsset,
   isLoading,
   isReadinessLoading,
   className,
@@ -223,16 +227,30 @@ export function AssetRegistryPanel({
         ) : null}
       </section>
 
-      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5 lg:col-span-2">
+      <section
+        className="rounded-xl border border-slate-700 bg-slate-900/60 p-5 lg:col-span-2"
+        data-testid="asset-registry-panel"
+      >
         <h2 className="text-lg font-medium text-white">Assets</h2>
-        <ul className="mt-4 space-y-2 text-sm">
+        <ul className="mt-4 space-y-2 text-sm" data-testid="asset-registry-list">
           {assets.length === 0 ? (
             <li className="text-slate-400">No assets registered yet.</li>
           ) : (
             assets.map((item) => {
               const readiness = readinessByAssetId[item.assetId]
+              const isSelected = selectedAssetId === item.assetId
               return (
-                <li key={item.assetId} className="rounded-lg border border-slate-800 p-3">
+                <li key={item.assetId}>
+                  <button
+                    type="button"
+                    data-testid={`asset-registry-row-${item.assetId}`}
+                    className={`w-full rounded-lg border p-3 text-left transition ${
+                      isSelected
+                        ? 'border-amber-500/60 bg-amber-500/10'
+                        : 'border-slate-800 hover:border-slate-600'
+                    }`}
+                    onClick={() => onSelectAsset(item.assetId)}
+                  >
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{item.assetTag}</span>
                     <span className="text-slate-300">{item.name}</span>
@@ -260,6 +278,7 @@ export function AssetRegistryPanel({
                   {readiness?.primaryBlockerMessage ? (
                     <p className="mt-2 text-xs text-amber-200/90">{readiness.primaryBlockerMessage}</p>
                   ) : null}
+                  </button>
                 </li>
               )
             })

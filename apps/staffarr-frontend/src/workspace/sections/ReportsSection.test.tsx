@@ -21,6 +21,11 @@ vi.mock('../../components/DataExportsPanel', () => ({
   DataExportsPanel: () => <div data-testid="data-exports-panel" />,
 }))
 
+vi.mock('../../components/AuditPackageExportPanel', () => ({
+  AuditPackageExportPanel: ({ canRead }: { canRead: boolean }) =>
+    canRead ? <div data-testid="staffarr-audit-export-panel" /> : null,
+}))
+
 function buildState(roleKey: string, isPlatformAdmin = false): StaffArrWorkspaceState {
   return {
     accessToken: 'token',
@@ -47,6 +52,20 @@ describe('ReportsSection', () => {
     expect(screen.getByTestId('readiness-reports-panel')).toBeTruthy()
     expect(screen.getByTestId('incident-reports-panel')).toBeTruthy()
     expect(screen.getByTestId('data-exports-panel')).toBeTruthy()
+    expect(screen.getByTestId('staffarr-audit-export-panel')).toBeTruthy()
+  })
+
+  it('renders audit export panel for supervisor read-only roles', () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ReportsSection state={buildState('supervisor')} />
+      </QueryClientProvider>,
+    )
+
+    expect(screen.getByTestId('staffarr-reports-workspace')).toBeTruthy()
+    expect(screen.getByTestId('staffarr-audit-export-panel')).toBeTruthy()
   })
 
   it('omits reports workspace for unauthorized roles', () => {
@@ -60,5 +79,6 @@ describe('ReportsSection', () => {
 
     expect(screen.queryByTestId('staffarr-reports-workspace')).toBeNull()
     expect(screen.queryByTestId('personnel-reports-panel')).toBeNull()
+    expect(screen.queryByTestId('staffarr-audit-export-panel')).toBeNull()
   })
 })

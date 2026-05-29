@@ -17,6 +17,20 @@ describe('App routing', () => {
     )
     expect(await screen.findByRole('heading', { name: 'TrainArr' })).toBeInTheDocument()
     expect(screen.getByText(/Owns/i)).toBeInTheDocument()
+    expect(screen.getByTestId('ownership-source-doc')).toHaveTextContent(/docs\/02/)
+  })
+
+  it('renders Compliance Core authority education block', async () => {
+    render(
+      <MemoryRouter initialEntries={['/products/compliancecore']}>
+        <App />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByRole('heading', { name: 'Compliance Core' })).toBeInTheDocument()
+    const education = screen.getByTestId('compliance-core-education')
+    expect(education).toBeInTheDocument()
+    expect(education).toHaveTextContent(/Authority layer/i)
+    expect(education).toHaveTextContent(/entitled product APIs/i)
   })
 
   it('renders maturity page with program snapshot', async () => {

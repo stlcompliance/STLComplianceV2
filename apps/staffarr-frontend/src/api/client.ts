@@ -70,6 +70,7 @@ import type {
   PersonLookupResponse,
   PersonnelHistorySummaryResponse,
   TrainarrPersonTrainingHistoryResponse,
+  WorkforceOnboardingJourneyResponse,
   TrainingAcknowledgementResponse,
   PersonnelReportSummaryResponse,
   ReadinessReportSummaryResponse,
@@ -691,6 +692,19 @@ export async function getPersonTrainarrTrainingHistory(
   return parseJsonResponse<TrainarrPersonTrainingHistoryResponse>(
     response,
     'Failed to load TrainArr training history',
+  )
+}
+
+export async function getWorkforceOnboardingJourney(
+  accessToken: string,
+  personId: string,
+): Promise<WorkforceOnboardingJourneyResponse> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/workforce-onboarding-journey`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<WorkforceOnboardingJourneyResponse>(
+    response,
+    'Failed to load workforce onboarding journey',
   )
 }
 

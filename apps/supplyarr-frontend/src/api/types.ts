@@ -60,6 +60,31 @@ export interface CreateTypedExternalPartyRequest {
   notes: string
 }
 
+export interface UpdateExternalPartyRequest {
+  displayName: string
+  legalName: string
+  taxIdentifier?: string | null
+  notes: string
+}
+
+export interface UpdateExternalPartyApprovalStatusRequest {
+  approvalStatus: string
+}
+
+export interface UpdateExternalPartyStatusRequest {
+  status: string
+}
+
+export interface CreatePartyContactRequest {
+  contactName: string
+  email: string
+  phone: string
+  roleLabel: string
+  isPrimary: boolean
+}
+
+export type PartyRegistryRoute = 'vendors' | 'suppliers' | 'dealers'
+
 export interface PartCatalogResponse {
   catalogId: string
   catalogKey: string

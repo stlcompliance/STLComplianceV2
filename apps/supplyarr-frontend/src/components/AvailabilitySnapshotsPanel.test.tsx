@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { AvailabilitySnapshotsPanel } from './AvailabilitySnapshotsPanel'
@@ -53,12 +53,12 @@ const baseProps = {
       vendorPartyKey: 'acme',
       vendorDisplayName: 'Acme Supply',
       vendorPartNumber: 'V-FLT-01',
-      quantityAvailable: 250,
+      quantityAvailable: 120,
       availabilityStatus: 'in_stock',
       effectiveFrom: '2026-05-01T00:00:00Z',
       effectiveTo: null,
-      source: 'vendor_feed',
-      notes: 'Vendor portal sync',
+      source: 'manual',
+      notes: '',
       isCurrent: true,
       createdByUserId: 'user-1',
       createdAt: '2026-05-27T00:00:00Z',
@@ -69,7 +69,7 @@ const baseProps = {
   isLoading: false,
   snapshotKey: '',
   selectedVendorLinkId: 'link-1',
-  quantityAvailable: '250',
+  quantityAvailable: '120',
   availabilityStatus: 'in_stock',
   snapshotNotes: '',
   currentOnlyFilter: true,
@@ -86,8 +86,10 @@ const baseProps = {
 describe('AvailabilitySnapshotsPanel', () => {
   it('renders current availability snapshots', () => {
     render(<AvailabilitySnapshotsPanel {...baseProps} />)
-    expect(screen.getByText('avail-2026-q2')).toBeInTheDocument()
-    expect(screen.getByText(/qty 250/)).toBeInTheDocument()
-    expect(screen.getByText('Vendor availability')).toBeInTheDocument()
+    const panel = screen.getByTestId('availability-snapshots-panel')
+    expect(panel).toBeInTheDocument()
+    expect(within(panel).getByText('avail-2026-q2')).toBeInTheDocument()
+    expect(within(panel).getByText(/qty 120/)).toBeInTheDocument()
+    expect(within(panel).getByRole('button', { name: 'Record availability' })).toBeInTheDocument()
   })
 })

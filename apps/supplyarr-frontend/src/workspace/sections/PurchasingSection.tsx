@@ -79,17 +79,21 @@ export function PurchasingSection({ state: s }: Props) {
         canApprove={s.canApprovePo}
         isLoading={s.purchaseOrdersQuery.isLoading}
         orderKey={s.poOrderKey}
+        cancellationReason={s.poCancellationReason}
         selectedPurchaseRequestId={s.poSourcePurchaseRequestId}
         selectedPurchaseOrderId={s.selectedPurchaseOrderId}
         onOrderKeyChange={s.setPoOrderKey}
+        onCancellationReasonChange={s.setPoCancellationReason}
         onSelectedPurchaseRequestIdChange={s.setPoSourcePurchaseRequestId}
         onSelectedPurchaseOrderIdChange={s.setSelectedPurchaseOrderId}
         onCreateFromPurchaseRequest={() => s.createPurchaseOrderMutation.mutate()}
         onApprove={() => s.approvePurchaseOrderMutation.mutate()}
         onIssue={() => s.issuePurchaseOrderMutation.mutate()}
+        onCancel={() => s.cancelPurchaseOrderMutation.mutate()}
         isCreating={s.createPurchaseOrderMutation.isPending}
         isApproving={s.approvePurchaseOrderMutation.isPending}
         isIssuing={s.issuePurchaseOrderMutation.isPending}
+        isCancelling={s.cancelPurchaseOrderMutation.isPending}
       />
       <ProcurementCoordinationPanel
         accessToken={s.accessToken}

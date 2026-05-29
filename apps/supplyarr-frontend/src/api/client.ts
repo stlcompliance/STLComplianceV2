@@ -4,8 +4,13 @@ import type {
   CreatePartCatalogRequest,
   CreatePartRequest,
   CreatePartVendorLinkRequest,
+  CreatePartyContactRequest,
   CreateTypedExternalPartyRequest,
   ExternalPartyResponse,
+  PartyRegistryRoute,
+  UpdateExternalPartyApprovalStatusRequest,
+  UpdateExternalPartyRequest,
+  UpdateExternalPartyStatusRequest,
   HandoffSessionResponse,
   InventoryBinResponse,
   InventoryLocationResponse,
@@ -22,6 +27,7 @@ import type {
   CreatePurchaseRequestRequest,
   BackorderResponse,
   CancelBackorderRequest,
+  CancelPurchaseOrderRequest,
   CancelVendorReturnRequest,
   CreateBackorderFromPurchaseOrderLineRequest,
   CreateVendorReturnFromPurchaseOrderLineRequest,
@@ -214,6 +220,93 @@ export async function createVendor(
     body: JSON.stringify(request),
   })
   return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to create vendor')
+}
+
+export async function createSupplier(
+  accessToken: string,
+  request: CreateTypedExternalPartyRequest,
+): Promise<ExternalPartyResponse> {
+  const response = await fetch(`${apiBase}/api/suppliers`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to create supplier')
+}
+
+export async function createDealer(
+  accessToken: string,
+  request: CreateTypedExternalPartyRequest,
+): Promise<ExternalPartyResponse> {
+  const response = await fetch(`${apiBase}/api/dealers`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to create dealer')
+}
+
+export async function updateParty(
+  accessToken: string,
+  route: PartyRegistryRoute,
+  partyId: string,
+  request: UpdateExternalPartyRequest,
+): Promise<ExternalPartyResponse> {
+  const response = await fetch(`${apiBase}/api/${route}/${partyId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to update party')
+}
+
+export async function updatePartyApprovalStatus(
+  accessToken: string,
+  route: PartyRegistryRoute,
+  partyId: string,
+  request: UpdateExternalPartyApprovalStatusRequest,
+): Promise<ExternalPartyResponse> {
+  const response = await fetch(`${apiBase}/api/${route}/${partyId}/approval-status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to update approval status')
+}
+
+export async function updatePartyStatus(
+  accessToken: string,
+  route: PartyRegistryRoute,
+  partyId: string,
+  request: UpdateExternalPartyStatusRequest,
+): Promise<ExternalPartyResponse> {
+  const response = await fetch(`${apiBase}/api/${route}/${partyId}/status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to update party status')
+}
+
+export async function createPartyContact(
+  accessToken: string,
+  route: PartyRegistryRoute,
+  partyId: string,
+  request: CreatePartyContactRequest,
+): Promise<ExternalPartyResponse> {
+  const response = await fetch(`${apiBase}/api/${route}/${partyId}/contacts`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to add party contact')
+  }
+
+  const listResponse = await fetch(`${apiBase}/api/${route}/${partyId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ExternalPartyResponse>(listResponse, 'Failed to reload party after contact add')
 }
 
 export async function getPartCatalogs(accessToken: string): Promise<PartCatalogResponse[]> {
@@ -644,6 +737,19 @@ export async function issuePurchaseOrder(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PurchaseOrderResponse>(response, 'Failed to issue purchase order')
+}
+
+export async function cancelPurchaseOrder(
+  accessToken: string,
+  purchaseOrderId: string,
+  request: CancelPurchaseOrderRequest,
+): Promise<PurchaseOrderResponse> {
+  const response = await fetch(`${apiBase}/api/purchase-orders/${purchaseOrderId}/cancel`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PurchaseOrderResponse>(response, 'Failed to cancel purchase order')
 }
 
 export async function getReceivingReceipt(

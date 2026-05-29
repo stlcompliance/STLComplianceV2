@@ -65,6 +65,7 @@ public static class StaffArrServiceRegistration
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
         builder.Services.AddScoped<TrainarrPersonTrainingHistoryService>();
+        builder.Services.AddScoped<WorkforceOnboardingJourneyService>();
         builder.Services.AddHttpClient<SupplyArrDemandClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<SupplyArrClientOptions>>().Value;

@@ -29,6 +29,9 @@ public static class StlE2ePlaywrightSpecCatalog
     public const string MaintainArrReportsWorkspaceSmokeSpec =
         "maintainarr-reports-workspace-smoke.spec.ts";
 
+    public const string MaintainArrAssetReadinessDetailSmokeSpec =
+        "maintainarr-asset-readiness-detail-smoke.spec.ts";
+
     public const string ComplianceCoreM12WorkerSettingsSmokeSpec =
         "compliancecore-m12-worker-settings-smoke.spec.ts";
 
@@ -193,6 +196,21 @@ public static class StlE2ePlaywrightSpecCatalog
     public const string SupplyArrReportsWorkspaceSmokeSpec =
         "supplyarr-reports-workspace-smoke.spec.ts";
 
+    public const string SupplyArrPricingSnapshotsSmokeSpec =
+        "supplyarr-pricing-snapshots-smoke.spec.ts";
+
+    public const string SupplyArrPurchasingPoWorkflowSmokeSpec =
+        "supplyarr-purchasing-po-workflow-smoke.spec.ts";
+
+    public const string SupplyArrPurchasingPrWorkflowSmokeSpec =
+        "supplyarr-purchasing-pr-workflow-smoke.spec.ts";
+
+    public const string SupplyArrReceivingExceptionsSmokeSpec =
+        "supplyarr-receiving-exceptions-smoke.spec.ts";
+
+    public const string SupplyArrPartyRegistryMaintenanceSmokeSpec =
+        "supplyarr-party-registry-maintenance-smoke.spec.ts";
+
     public const string SupplyArrPurchasingDemandProcessingSmokeSpec =
         "supplyarr-purchasing-demand-processing-smoke.spec.ts";
 
@@ -244,11 +262,20 @@ public static class StlE2ePlaywrightSpecCatalog
     public const string StaffArrAdminAuditExportSmokeSpec =
         "staffarr-admin-audit-export-smoke.spec.ts";
 
+    public const string StaffArrReportsAuditExportSmokeSpec =
+        "staffarr-reports-audit-export-smoke.spec.ts";
+
+    public const string StaffArrWorkforceOnboardingJourneySmokeSpec =
+        "staffarr-workforce-onboarding-journey-smoke.spec.ts";
+
     public const string TrainArrSettingsAuditExportSmokeSpec =
         "trainarr-settings-audit-export-smoke.spec.ts";
 
     public const string TrainArrSettingsAdminWorkspaceSmokeSpec =
         "trainarr-settings-admin-workspace-smoke.spec.ts";
+
+    public const string TrainArrAuthorizationCheckOperationsSmokeSpec =
+        "trainarr-authorization-check-operations-smoke.spec.ts";
 
     public const string TrainArrReportsWorkspaceSmokeSpec =
         "trainarr-reports-workspace-smoke.spec.ts";
@@ -352,6 +379,7 @@ public static class StlE2ePlaywrightSpecCatalog
         MaintainArrSettingsAuditExportSmokeSpec,
         MaintainArrSettingsAdminWorkspaceSmokeSpec,
         MaintainArrReportsWorkspaceSmokeSpec,
+        MaintainArrAssetReadinessDetailSmokeSpec,
         ComplianceCoreM12WorkerSettingsSmokeSpec,
         ComplianceCoreAuditDeliveryOrchestrationSmokeSpec,
         ComplianceCoreSettingsAdminWorkspaceSmokeSpec,
@@ -407,6 +435,11 @@ public static class StlE2ePlaywrightSpecCatalog
         SupplyArrSettingsIntegrationEventsSmokeSpec,
         SupplyArrSettingsAdminWorkspaceSmokeSpec,
         SupplyArrReportsWorkspaceSmokeSpec,
+        SupplyArrPricingSnapshotsSmokeSpec,
+        SupplyArrPurchasingPoWorkflowSmokeSpec,
+        SupplyArrPurchasingPrWorkflowSmokeSpec,
+        SupplyArrReceivingExceptionsSmokeSpec,
+        SupplyArrPartyRegistryMaintenanceSmokeSpec,
         SupplyArrPurchasingDemandProcessingSmokeSpec,
         SupplyArrPurchasingProcurementExceptionsSmokeSpec,
         SupplyArrSettingsProcurementExceptionEscalationSmokeSpec,
@@ -424,10 +457,13 @@ public static class StlE2ePlaywrightSpecCatalog
         SupplyArrPurchasingProcurementExceptionCloseAfterLinkPrResolveJourneySmokeSpec,
         SupplyArrPurchasingProcurementExceptionCloseAfterLinkPoResolveJourneySmokeSpec,
         StaffArrAdminAuditExportSmokeSpec,
+        StaffArrReportsAuditExportSmokeSpec,
+        StaffArrWorkforceOnboardingJourneySmokeSpec,
         StaffArrReportsWorkspaceSmokeSpec,
         StaffArrSettingsAdminWorkspaceSmokeSpec,
         TrainArrSettingsAuditExportSmokeSpec,
         TrainArrSettingsAdminWorkspaceSmokeSpec,
+        TrainArrAuthorizationCheckOperationsSmokeSpec,
         TrainArrReportsWorkspaceSmokeSpec,
         RoutArrReportsAuditExportSmokeSpec,
     ];

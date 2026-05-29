@@ -27,7 +27,9 @@ describe('implementationMaturity content', () => {
 
   it('states marketing-only transparency and tracks worker snapshot', () => {
     expect(MATURITY_DISCLAIMER.toLowerCase()).toMatch(/marketing|transparency/)
-    expect(PROGRAM_SNAPSHOT.completedWorkersThrough).toBeGreaterThanOrEqual(142)
+    expect(MATURITY_DISCLAIMER).toMatch(/docs\/11|FEATURESET/i)
+    expect(PROGRAM_SNAPSHOT.lastUpdatedLabel).toMatch(/Worker 4/)
+    expect(VERIFICATION_HIGHLIGHTS.join(' ')).toMatch(/900\+/)
     expect(VERIFICATION_HIGHLIGHTS.length).toBeGreaterThanOrEqual(3)
   })
 

@@ -54,6 +54,13 @@ function statusBadgeClass(status: string): string {
   }
 }
 
+function formatTimestamp(value: string | null | undefined): string | null {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleString()
+}
+
 export function PurchaseRequestPanel({
   purchaseRequests,
   parts,
@@ -92,17 +99,27 @@ export function PurchaseRequestPanel({
   const existingRequestKeys = purchaseRequests.map((pr) => pr.requestKey)
 
   return (
-    <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg">
+    <section
+      data-testid="supplyarr-purchasing-pr-workspace"
+      className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg"
+    >
       <h2 className="text-lg font-medium text-white">Purchase requests</h2>
-      <p className="mt-1 text-sm text-slate-400">Draft, submit, and approve procurement requests.</p>
+      <p className="mt-1 text-sm text-slate-400">
+        Draft, submit, approve, or reject procurement requests before PO creation.
+      </p>
 
-      {isLoading ? <p className="mt-4 text-sm text-slate-500">Loading purchase requests…</p> : null}
+      {isLoading ? (
+        <p className="mt-4 text-sm text-slate-500" data-testid="purchase-request-loading">
+          Loading purchase requests…
+        </p>
+      ) : null}
 
-      <ul className="mt-4 space-y-2">
+      <ul className="mt-4 space-y-2" data-testid="purchase-request-list">
         {purchaseRequests.map((pr) => (
           <li key={pr.purchaseRequestId}>
             <button
               type="button"
+              data-testid={`purchase-request-row-${pr.purchaseRequestId}`}
               className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
                 selectedPurchaseRequestId === pr.purchaseRequestId
                   ? 'border-sky-500/60 bg-sky-500/10'
@@ -132,38 +149,72 @@ export function PurchaseRequestPanel({
       </ul>
 
       {selected ? (
-        <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/50 p-3 text-sm">
-          <div className="font-medium text-slate-200">{selected.title}</div>
-          {selected.notes ? <p className="mt-1 text-slate-400">{selected.notes}</p> : null}
-          <ul className="mt-2 space-y-1 text-slate-400">
+        <div
+          className="mt-4 rounded-lg border border-slate-800 bg-slate-950/50 p-4"
+          data-testid="purchase-request-detail"
+        >
+          <h3 className="text-sm font-medium text-slate-200">Request detail</h3>
+          <div className="mt-1 text-sm text-slate-300">{selected.title}</div>
+          {selected.notes ? <p className="mt-1 text-sm text-slate-400">{selected.notes}</p> : null}
+          {selected.vendorDisplayName ? (
+            <p className="mt-1 text-xs text-slate-500">Vendor: {selected.vendorDisplayName}</p>
+          ) : null}
+          <ul className="mt-2 space-y-1 text-sm text-slate-400" data-testid="purchase-request-line-list">
             {selected.lines.map((line) => (
-              <li key={line.lineId}>
+              <li key={line.lineId} data-testid={`purchase-request-line-${line.lineId}`}>
                 #{line.lineNumber} {line.partDisplayName} ({line.partKey}) — {line.quantityRequested}{' '}
-                {line.unitOfMeasure}
+                {line.unitOfMeasure} requested
               </li>
             ))}
           </ul>
+          <dl className="mt-3 space-y-1 text-xs text-slate-500" data-testid="purchase-request-workflow-timeline">
+            {formatTimestamp(selected.submittedAt) ? (
+              <div>
+                <dt className="inline font-medium text-slate-400">Submitted: </dt>
+                <dd className="inline">{formatTimestamp(selected.submittedAt)}</dd>
+              </div>
+            ) : null}
+            {formatTimestamp(selected.approvedAt) ? (
+              <div>
+                <dt className="inline font-medium text-emerald-400/80">Approved: </dt>
+                <dd className="inline">{formatTimestamp(selected.approvedAt)}</dd>
+              </div>
+            ) : null}
+            {formatTimestamp(selected.rejectedAt) ? (
+              <div>
+                <dt className="inline font-medium text-rose-400/80">Rejected: </dt>
+                <dd className="inline">{formatTimestamp(selected.rejectedAt)}</dd>
+              </div>
+            ) : null}
+          </dl>
           {selected.status === 'rejected' && selected.rejectionReason ? (
-            <p className="mt-2 text-rose-300">Rejected: {selected.rejectionReason}</p>
+            <p
+              className="mt-2 text-sm text-rose-300"
+              data-testid="purchase-request-rejection-reason-display"
+            >
+              Rejected: {selected.rejectionReason}
+            </p>
           ) : null}
           <div className="mt-3 flex flex-wrap gap-2">
             {canCreate && selected.status === 'draft' ? (
               <button
                 type="button"
-                className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+                className="rounded-md bg-sky-600 px-3 py-1.5 text-sm text-white hover:bg-sky-500 disabled:opacity-50"
                 disabled={isSubmitting}
                 onClick={onSubmit}
+                data-testid="purchase-request-submit-button"
               >
-                {isSubmitting ? 'Submitting…' : 'Submit'}
+                {isSubmitting ? 'Submitting…' : 'Submit for approval'}
               </button>
             ) : null}
             {canApprove && selected.status === 'submitted' ? (
               <>
                 <button
                   type="button"
-                  className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+                  className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm text-white hover:bg-emerald-500 disabled:opacity-50"
                   disabled={isApproving}
                   onClick={onApprove}
+                  data-testid="purchase-request-approve-button"
                 >
                   {isApproving ? 'Approving…' : 'Approve'}
                 </button>
@@ -172,12 +223,14 @@ export function PurchaseRequestPanel({
                   placeholder="Rejection reason"
                   value={rejectionReason}
                   onChange={(e) => onRejectionReasonChange(e.target.value)}
+                  data-testid="purchase-request-rejection-reason-input"
                 />
                 <button
                   type="button"
-                  className="rounded-md bg-rose-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-rose-600 disabled:opacity-50"
+                  className="rounded-md bg-rose-700 px-3 py-1.5 text-sm text-white hover:bg-rose-600 disabled:opacity-50"
                   disabled={isRejecting || !rejectionReason.trim()}
                   onClick={onReject}
+                  data-testid="purchase-request-reject-button"
                 >
                   {isRejecting ? 'Rejecting…' : 'Reject'}
                 </button>
@@ -188,71 +241,74 @@ export function PurchaseRequestPanel({
       ) : null}
 
       {canCreate ? (
-        <div className="mt-6 space-y-3 border-t border-slate-800 pt-4">
-          <h3 className="text-sm font-medium text-slate-300">New purchase request</h3>
-          <label className="block text-sm text-slate-400">
-            Title
-            <input
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
-              placeholder="Title"
-              value={title}
-              onChange={(e) => onTitleChange(e.target.value)}
+        <div className="mt-6 border-t border-slate-800 pt-4" data-testid="purchase-request-create-form">
+          <h3 className="text-sm font-medium text-slate-200">New purchase request</h3>
+          <div className="mt-3 space-y-3">
+            <label className="block text-xs text-slate-500">
+              Title
+              <input
+                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
+                placeholder="Title"
+                value={title}
+                onChange={(e) => onTitleChange(e.target.value)}
+              />
+            </label>
+            <GeneratedKeyFieldGroup
+              sourceLabel={title}
+              existingKeys={existingRequestKeys}
+              onKeyChange={onRequestKeyChange}
+              label="Request key"
             />
-          </label>
-          <GeneratedKeyFieldGroup
-            sourceLabel={title}
-            existingKeys={existingRequestKeys}
-            onKeyChange={onRequestKeyChange}
-            label="Request key"
-          />
-          <textarea
-            className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
-            placeholder="Notes"
-            rows={2}
-            value={notes}
-            onChange={(e) => onNotesChange(e.target.value)}
-          />
-          <ControlledSelect
-            label="Vendor (optional)"
-            value={selectedVendorId}
-            onChange={onSelectedVendorIdChange}
-            options={toPartyPickerOptions(vendors)}
-            emptyLabel="Vendor (optional)"
-          />
-          <div className="grid gap-2 sm:grid-cols-3">
-            <div className="sm:col-span-2">
-              <ControlledSelect
-                label="Part for first line"
-                value={selectedPartId}
-                onChange={onSelectedPartIdChange}
-                options={toPartPickerOptions(parts)}
-                emptyLabel="Part for first line"
+            <textarea
+              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
+              placeholder="Notes"
+              rows={2}
+              value={notes}
+              onChange={(e) => onNotesChange(e.target.value)}
+            />
+            <ControlledSelect
+              label="Vendor (optional)"
+              value={selectedVendorId}
+              onChange={onSelectedVendorIdChange}
+              options={toPartyPickerOptions(vendors)}
+              emptyLabel="Vendor (optional)"
+            />
+            <div className="grid gap-2 sm:grid-cols-3">
+              <div className="sm:col-span-2">
+                <ControlledSelect
+                  label="Part for first line"
+                  value={selectedPartId}
+                  onChange={onSelectedPartIdChange}
+                  options={toPartPickerOptions(parts)}
+                  emptyLabel="Part for first line"
+                />
+              </div>
+              <input
+                className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
+                placeholder="Qty"
+                type="number"
+                min="0"
+                step="any"
+                value={lineQuantity}
+                onChange={(e) => onLineQuantityChange(e.target.value)}
               />
             </div>
             <input
-              className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
-              placeholder="Qty"
-              type="number"
-              min="0"
-              step="any"
-              value={lineQuantity}
-              onChange={(e) => onLineQuantityChange(e.target.value)}
+              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
+              placeholder="Line notes"
+              value={lineNotes}
+              onChange={(e) => onLineNotesChange(e.target.value)}
             />
+            <button
+              type="button"
+              className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+              disabled={isCreating || !requestKey.trim() || !title.trim() || !selectedPartId || !lineQuantity}
+              onClick={onCreate}
+              data-testid="purchase-request-create-button"
+            >
+              {isCreating ? 'Creating…' : 'Create draft'}
+            </button>
           </div>
-          <input
-            className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
-            placeholder="Line notes"
-            value={lineNotes}
-            onChange={(e) => onLineNotesChange(e.target.value)}
-          />
-          <button
-            type="button"
-            className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
-            disabled={isCreating || !requestKey.trim() || !title.trim() || !selectedPartId || !lineQuantity}
-            onClick={onCreate}
-          >
-            {isCreating ? 'Creating…' : 'Create draft'}
-          </button>
         </div>
       ) : null}
     </section>

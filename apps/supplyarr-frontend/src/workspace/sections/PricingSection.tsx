@@ -6,7 +6,7 @@ type Props = { state: SupplyArrWorkspaceState }
 
 export function PricingSection({ state: s }: Props) {
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2" data-testid="supplyarr-pricing-snapshots-workspace">
       <PricingLeadTimePanel
         parts={s.partsQuery.data ?? []}
         pricingSnapshots={s.pricingSnapshotsQuery.data ?? []}

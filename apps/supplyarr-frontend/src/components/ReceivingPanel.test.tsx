@@ -1,7 +1,11 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { ReceivingPanel } from './ReceivingPanel'
+
+afterEach(() => {
+  cleanup()
+})
 
 const baseProps = {
   receivingReceipts: [
@@ -39,7 +43,40 @@ const baseProps = {
           updatedAt: '2026-05-27T00:00:00Z',
         },
       ],
-      exceptions: [],
+      exceptions: [
+        {
+          receivingExceptionId: 'ex-1',
+          receivingReceiptId: 'rcpt-1',
+          receivingReceiptLineId: 'line-1',
+          lineNumber: 1,
+          partKey: 'filter-001',
+          exceptionType: 'short',
+          quantity: 2,
+          notes: 'Two units missing from carton',
+          status: 'open',
+          createdByUserId: 'user-1',
+          resolvedByUserId: null,
+          resolvedAt: null,
+          createdAt: '2026-05-27T10:00:00Z',
+          updatedAt: '2026-05-27T10:00:00Z',
+        },
+        {
+          receivingExceptionId: 'ex-2',
+          receivingReceiptId: 'rcpt-1',
+          receivingReceiptLineId: 'line-1',
+          lineNumber: 1,
+          partKey: 'filter-001',
+          exceptionType: 'damage',
+          quantity: 1,
+          notes: 'Carton crushed',
+          status: 'resolved',
+          createdByUserId: 'user-1',
+          resolvedByUserId: 'user-2',
+          resolvedAt: '2026-05-27T12:00:00Z',
+          createdAt: '2026-05-27T11:00:00Z',
+          updatedAt: '2026-05-27T12:00:00Z',
+        },
+      ],
       createdAt: '2026-05-27T00:00:00Z',
       updatedAt: '2026-05-27T00:00:00Z',
     },
@@ -126,17 +163,42 @@ const baseProps = {
   isCreating: false,
   isUpdatingLine: false,
   isCreatingException: false,
+  isResolvingException: false,
   isPosting: false,
 }
 
 describe('ReceivingPanel', () => {
-  it('renders receiving list and post action', () => {
+  it('renders receiving workspace with exception list and record controls', () => {
     render(<ReceivingPanel {...baseProps} />)
 
-    expect(screen.getByText('Receiving')).toBeInTheDocument()
+    expect(screen.getByTestId('supplyarr-receiving-workspace')).toBeInTheDocument()
     expect(screen.getByText('rcpt-2026-001')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Post receipt' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Create receiving receipt' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Record exception' })).toBeInTheDocument()
+    expect(screen.getByTestId('receiving-exception-list')).toBeInTheDocument()
+    expect(screen.getByTestId('receiving-exception-record-form')).toBeInTheDocument()
+    expect(screen.getByTestId('receiving-post-button')).toBeInTheDocument()
+    expect(screen.getByTestId('receiving-create-form')).toBeInTheDocument()
+  })
+
+  it('shows resolve controls for open receiving exceptions', () => {
+    render(<ReceivingPanel {...baseProps} />)
+
+    const openRow = screen.getByTestId('receiving-exception-row-ex-1')
+    expect(within(openRow).getByTestId('receiving-exception-resolve-button-ex-1')).toBeInTheDocument()
+    expect(within(openRow).getByTestId('receiving-exception-workflow-timeline')).toBeInTheDocument()
+    expect(within(openRow).getByTestId('receiving-exception-notes')).toHaveTextContent(
+      'Two units missing from carton',
+    )
+  })
+
+  it('filters exceptions by status', () => {
+    render(<ReceivingPanel {...baseProps} />)
+
+    expect(screen.getByTestId('receiving-exception-row-ex-1')).toBeInTheDocument()
+    expect(screen.getByTestId('receiving-exception-row-ex-2')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByTestId('receiving-exception-filter'), { target: { value: 'open' } })
+
+    expect(screen.getByTestId('receiving-exception-row-ex-1')).toBeInTheDocument()
+    expect(screen.queryByTestId('receiving-exception-row-ex-2')).not.toBeInTheDocument()
   })
 })

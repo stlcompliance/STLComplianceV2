@@ -49,6 +49,7 @@ import {
   getInspectionVoiceGuidance,
   getTechnicianRefs,
   normalizeInspectionVoiceNumeric,
+  getAssetReadiness,
   getAssetReadinessFleet,
   getMaintenanceHistory,
   getMaintenanceHistorySummary,
@@ -112,6 +113,7 @@ export function useMaintainArrWorkspaceState() {
   const [assetName, setAssetName] = useState('')
   const [assetDescription, setAssetDescription] = useState('')
   const [siteRef, setSiteRef] = useState('')
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null)
   const [templateKey, setTemplateKey] = useState('')
   const [templateName, setTemplateName] = useState('')
   const [templateDescription, setTemplateDescription] = useState('')
@@ -220,6 +222,12 @@ export function useMaintainArrWorkspaceState() {
     queryKey: ['maintainarr-asset-readiness-fleet'],
     queryFn: () => getAssetReadinessFleet(accessToken),
     enabled: meQuery.isSuccess,
+  })
+
+  const assetReadinessDetailQuery = useQuery({
+    queryKey: ['maintainarr-asset-readiness-detail', selectedAssetId],
+    queryFn: () => getAssetReadiness(accessToken, selectedAssetId!),
+    enabled: meQuery.isSuccess && Boolean(selectedAssetId),
   })
 
   const duePmQuery = useQuery({
@@ -1132,6 +1140,7 @@ export function useMaintainArrWorkspaceState() {
     setAssetName,
     setAssetDescription,
     setSiteRef,
+    setSelectedAssetId,
     setTemplateKey,
     setTemplateName,
     setTemplateDescription,
@@ -1197,7 +1206,9 @@ export function useMaintainArrWorkspaceState() {
     classesQuery,
     typesQuery,
     assetsQuery,
+    selectedAssetId,
     assetReadinessFleetQuery,
+    assetReadinessDetailQuery,
     duePmQuery,
     pmProgramsQuery,
     pmProgramDetailQuery,

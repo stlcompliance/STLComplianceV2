@@ -29,6 +29,8 @@ describe('AssetRegistryPanel', () => {
             primaryBlockerMessage: 'Critical defect open: Hydraulic leak',
           },
         }}
+        selectedAssetId={null}
+        onSelectAsset={() => {}}
         isReadinessLoading={false}
         assets={[
           {

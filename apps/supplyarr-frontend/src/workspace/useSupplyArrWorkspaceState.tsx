@@ -48,10 +48,18 @@ import {
   releaseStockReservation,
 
   createVendor,
+  createSupplier,
+  createDealer,
+  updateParty,
+  updatePartyApprovalStatus,
+  updatePartyStatus,
+  createPartyContact,
 
   approvePurchaseRequest,
 
   approvePurchaseOrder,
+
+  cancelPurchaseOrder,
 
   getDealers,
 
@@ -142,6 +150,18 @@ export function useSupplyArrWorkspaceState() {
 
   const [vendorNotes, setVendorNotes] = useState('')
 
+  const [supplierKey, setSupplierKey] = useState('')
+  const [supplierName, setSupplierName] = useState('')
+  const [supplierLegalName, setSupplierLegalName] = useState('')
+  const [supplierTaxId, setSupplierTaxId] = useState('')
+  const [supplierNotes, setSupplierNotes] = useState('')
+
+  const [dealerKey, setDealerKey] = useState('')
+  const [dealerName, setDealerName] = useState('')
+  const [dealerLegalName, setDealerLegalName] = useState('')
+  const [dealerTaxId, setDealerTaxId] = useState('')
+  const [dealerNotes, setDealerNotes] = useState('')
+
 
 
   const [catalogKey, setCatalogKey] = useState('')
@@ -229,6 +249,8 @@ export function useSupplyArrWorkspaceState() {
   const [poSourcePurchaseRequestId, setPoSourcePurchaseRequestId] = useState('')
 
   const [selectedPurchaseOrderId, setSelectedPurchaseOrderId] = useState('')
+
+  const [poCancellationReason, setPoCancellationReason] = useState('')
 
   const [receiptKey, setReceiptKey] = useState('')
 
@@ -639,6 +661,118 @@ export function useSupplyArrWorkspaceState() {
 
   })
 
+  const createSupplierMutation = useMutation({
+    mutationFn: () =>
+      createSupplier(session!.accessToken, {
+        partyKey: supplierKey,
+        displayName: supplierName,
+        legalName: supplierLegalName,
+        taxIdentifier: supplierTaxId || null,
+        notes: supplierNotes,
+      }),
+    onSuccess: async () => {
+      setSupplierKey('')
+      setSupplierName('')
+      setSupplierLegalName('')
+      setSupplierTaxId('')
+      setSupplierNotes('')
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-suppliers'] })
+    },
+  })
+
+  const createDealerMutation = useMutation({
+    mutationFn: () =>
+      createDealer(session!.accessToken, {
+        partyKey: dealerKey,
+        displayName: dealerName,
+        legalName: dealerLegalName,
+        taxIdentifier: dealerTaxId || null,
+        notes: dealerNotes,
+      }),
+    onSuccess: async () => {
+      setDealerKey('')
+      setDealerName('')
+      setDealerLegalName('')
+      setDealerTaxId('')
+      setDealerNotes('')
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-dealers'] })
+    },
+  })
+
+  const updatePartyMutation = useMutation({
+    mutationFn: ({
+      route,
+      partyId,
+      request,
+    }: {
+      route: 'vendors' | 'suppliers' | 'dealers'
+      partyId: string
+      request: {
+        displayName: string
+        legalName: string
+        taxIdentifier: string | null
+        notes: string
+      }
+    }) => updateParty(session!.accessToken, route, partyId, request),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({ queryKey: [`supplyarr-${variables.route}`] })
+    },
+  })
+
+  const updatePartyApprovalMutation = useMutation({
+    mutationFn: ({
+      route,
+      partyId,
+      approvalStatus,
+    }: {
+      route: 'vendors' | 'suppliers' | 'dealers'
+      partyId: string
+      approvalStatus: string
+    }) =>
+      updatePartyApprovalStatus(session!.accessToken, route, partyId, {
+        approvalStatus,
+      }),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({ queryKey: [`supplyarr-${variables.route}`] })
+    },
+  })
+
+  const updatePartyStatusMutation = useMutation({
+    mutationFn: ({
+      route,
+      partyId,
+      status,
+    }: {
+      route: 'vendors' | 'suppliers' | 'dealers'
+      partyId: string
+      status: string
+    }) => updatePartyStatus(session!.accessToken, route, partyId, { status }),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({ queryKey: [`supplyarr-${variables.route}`] })
+    },
+  })
+
+  const addPartyContactMutation = useMutation({
+    mutationFn: ({
+      route,
+      partyId,
+      request,
+    }: {
+      route: 'vendors' | 'suppliers' | 'dealers'
+      partyId: string
+      request: {
+        contactName: string
+        email: string
+        phone: string
+        roleLabel: string
+        isPrimary: boolean
+      }
+    }) => createPartyContact(session!.accessToken, route, partyId, request),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({ queryKey: [`supplyarr-${variables.route}`] })
+    },
+  })
+
 
 
   const createCatalogMutation = useMutation({
@@ -958,6 +1092,28 @@ export function useSupplyArrWorkspaceState() {
     mutationFn: () => issuePurchaseOrder(session!.accessToken, selectedPurchaseOrderId),
 
     onSuccess: async () => {
+
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-purchase-orders'] })
+
+    },
+
+  })
+
+
+
+  const cancelPurchaseOrderMutation = useMutation({
+
+    mutationFn: () =>
+
+      cancelPurchaseOrder(session!.accessToken, selectedPurchaseOrderId, {
+
+        reason: poCancellationReason,
+
+      }),
+
+    onSuccess: async () => {
+
+      setPoCancellationReason('')
 
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-purchase-orders'] })
 
@@ -1730,6 +1886,16 @@ export function useSupplyArrWorkspaceState() {
     vendorLegalName,
     vendorTaxId,
     vendorNotes,
+    supplierKey,
+    supplierName,
+    supplierLegalName,
+    supplierTaxId,
+    supplierNotes,
+    dealerKey,
+    dealerName,
+    dealerLegalName,
+    dealerTaxId,
+    dealerNotes,
     catalogKey,
     catalogName,
     catalogDescription,
@@ -1773,6 +1939,7 @@ export function useSupplyArrWorkspaceState() {
     poOrderKey,
     poSourcePurchaseRequestId,
     selectedPurchaseOrderId,
+    poCancellationReason,
     receiptKey,
     receiveSourcePurchaseOrderId,
     selectedReceivingReceiptId,
@@ -1848,6 +2015,12 @@ export function useSupplyArrWorkspaceState() {
     stockQuery,
     stockReservationsQuery,
     createVendorMutation,
+    createSupplierMutation,
+    createDealerMutation,
+    updatePartyMutation,
+    updatePartyApprovalMutation,
+    updatePartyStatusMutation,
+    addPartyContactMutation,
     createCatalogMutation,
     createPartMutation,
     linkVendorMutation,
@@ -1860,6 +2033,7 @@ export function useSupplyArrWorkspaceState() {
     createPurchaseOrderMutation,
     approvePurchaseOrderMutation,
     issuePurchaseOrderMutation,
+    cancelPurchaseOrderMutation,
     createReceivingReceiptMutation,
     postReceivingReceiptMutation,
     updateReceivingLineMutation,
@@ -1916,6 +2090,16 @@ export function useSupplyArrWorkspaceState() {
     setVendorLegalName,
     setVendorTaxId,
     setVendorNotes,
+    setSupplierKey,
+    setSupplierName,
+    setSupplierLegalName,
+    setSupplierTaxId,
+    setSupplierNotes,
+    setDealerKey,
+    setDealerName,
+    setDealerLegalName,
+    setDealerTaxId,
+    setDealerNotes,
     setCatalogKey,
     setCatalogName,
     setCatalogDescription,
@@ -1959,6 +2143,7 @@ export function useSupplyArrWorkspaceState() {
     setPoOrderKey,
     setPoSourcePurchaseRequestId,
     setSelectedPurchaseOrderId,
+    setPoCancellationReason,
     setReceiptKey,
     setReceiveSourcePurchaseOrderId,
     setSelectedReceivingReceiptId,

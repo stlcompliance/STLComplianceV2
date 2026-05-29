@@ -91,7 +91,7 @@ describe('AuditPackageExportPanel', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={queryClient}>
-        <AuditPackageExportPanel accessToken="token" canExport={true} />
+        <AuditPackageExportPanel accessToken="token" canRead={true} canExport={true} />
       </QueryClientProvider>,
     )
 
@@ -143,7 +143,7 @@ describe('AuditPackageExportPanel', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={queryClient}>
-        <AuditPackageExportPanel accessToken="token" canExport={false} />
+        <AuditPackageExportPanel accessToken="token" canRead={true} canExport={false} />
       </QueryClientProvider>,
     )
 
@@ -151,5 +151,16 @@ describe('AuditPackageExportPanel', () => {
       expect(screen.getByText(/requires tenant admin/i)).toBeTruthy()
     })
     expect(screen.queryByTestId('staffarr-audit-download-csv')).toBeNull()
+  })
+
+  it('renders nothing when user cannot read audit packages', () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const { container } = render(
+      <QueryClientProvider client={queryClient}>
+        <AuditPackageExportPanel accessToken="token" canRead={false} canExport={false} />
+      </QueryClientProvider>,
+    )
+
+    expect(container.firstChild).toBeNull()
   })
 })

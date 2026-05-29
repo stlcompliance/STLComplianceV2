@@ -7,17 +7,21 @@ interface PurchaseOrderPanelProps {
   canApprove: boolean
   isLoading: boolean
   orderKey: string
+  cancellationReason: string
   selectedPurchaseRequestId: string
   selectedPurchaseOrderId: string
   onOrderKeyChange: (value: string) => void
+  onCancellationReasonChange: (value: string) => void
   onSelectedPurchaseRequestIdChange: (value: string) => void
   onSelectedPurchaseOrderIdChange: (value: string) => void
   onCreateFromPurchaseRequest: () => void
   onApprove: () => void
   onIssue: () => void
+  onCancel: () => void
   isCreating: boolean
   isApproving: boolean
   isIssuing: boolean
+  isCancelling: boolean
 }
 
 function statusBadgeClass(status: string): string {
@@ -42,37 +46,52 @@ export function PurchaseOrderPanel({
   canApprove,
   isLoading,
   orderKey,
+  cancellationReason,
   selectedPurchaseRequestId,
   selectedPurchaseOrderId,
   onOrderKeyChange,
+  onCancellationReasonChange,
   onSelectedPurchaseRequestIdChange,
   onSelectedPurchaseOrderIdChange,
   onCreateFromPurchaseRequest,
   onApprove,
   onIssue,
+  onCancel,
   isCreating,
   isApproving,
   isIssuing,
+  isCancelling,
 }: PurchaseOrderPanelProps) {
   const selectedPo = purchaseOrders.find((po) => po.purchaseOrderId === selectedPurchaseOrderId)
   const selectedPr = approvedPurchaseRequests.find(
     (pr) => pr.purchaseRequestId === selectedPurchaseRequestId,
   )
+  const canCancelSelected =
+    canCreate && selectedPo != null && (selectedPo.status === 'draft' || selectedPo.status === 'approved')
 
   return (
-    <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg">
+    <section
+      data-testid="supplyarr-purchasing-po-workspace"
+      className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg"
+    >
       <h2 className="text-lg font-medium text-white">Purchase orders</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Create POs from approved purchase requests, approve, and issue to vendors.
+        Create POs from approved purchase requests, approve, issue to vendors, or cancel draft and
+        approved orders.
       </p>
 
-      {isLoading ? <p className="mt-4 text-sm text-slate-500">Loading purchase orders…</p> : null}
+      {isLoading ? (
+        <p className="mt-4 text-sm text-slate-500" data-testid="purchase-order-loading">
+          Loading purchase orders…
+        </p>
+      ) : null}
 
-      <ul className="mt-4 space-y-2">
+      <ul className="mt-4 space-y-2" data-testid="purchase-order-list">
         {purchaseOrders.map((po) => (
           <li key={po.purchaseOrderId}>
             <button
               type="button"
+              data-testid={`purchase-order-row-${po.purchaseOrderId}`}
               className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
                 selectedPurchaseOrderId === po.purchaseOrderId
                   ? 'border-violet-500/60 bg-violet-500/10'
@@ -102,15 +121,21 @@ export function PurchaseOrderPanel({
       </ul>
 
       {selectedPo ? (
-        <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+        <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/50 p-4" data-testid="purchase-order-detail">
           <h3 className="text-sm font-medium text-slate-200">Order detail</h3>
-          <ul className="mt-2 space-y-1 text-sm text-slate-400">
+          <ul className="mt-2 space-y-1 text-sm text-slate-400" data-testid="purchase-order-line-list">
             {selectedPo.lines.map((line) => (
-              <li key={line.lineId}>
-                {line.partKey} — {line.quantityOrdered} {line.unitOfMeasure}
+              <li key={line.lineId} data-testid={`purchase-order-line-${line.lineId}`}>
+                {line.partKey} — {line.quantityOrdered} {line.unitOfMeasure} ordered ·{' '}
+                {line.quantityReceived} received · {line.quantityRemaining} remaining
               </li>
             ))}
           </ul>
+          {selectedPo.status === 'cancelled' && selectedPo.cancellationReason ? (
+            <p className="mt-2 text-sm text-rose-300" data-testid="purchase-order-cancellation-reason-display">
+              Cancelled: {selectedPo.cancellationReason}
+            </p>
+          ) : null}
           <div className="mt-3 flex flex-wrap gap-2">
             {canApprove && selectedPo.status === 'draft' ? (
               <button
@@ -132,12 +157,32 @@ export function PurchaseOrderPanel({
                 {isIssuing ? 'Issuing…' : 'Issue to vendor'}
               </button>
             ) : null}
+            {canCancelSelected ? (
+              <>
+                <input
+                  className="min-w-[10rem] flex-1 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-xs text-slate-200"
+                  placeholder="Cancellation reason"
+                  value={cancellationReason}
+                  onChange={(e) => onCancellationReasonChange(e.target.value)}
+                  data-testid="purchase-order-cancellation-reason-input"
+                />
+                <button
+                  type="button"
+                  className="rounded-md bg-rose-700 px-3 py-1.5 text-sm text-white hover:bg-rose-600 disabled:opacity-50"
+                  onClick={onCancel}
+                  disabled={isCancelling || !cancellationReason.trim()}
+                  data-testid="purchase-order-cancel-button"
+                >
+                  {isCancelling ? 'Cancelling…' : 'Cancel PO'}
+                </button>
+              </>
+            ) : null}
           </div>
         </div>
       ) : null}
 
       {canCreate ? (
-        <div className="mt-6 border-t border-slate-800 pt-4">
+        <div className="mt-6 border-t border-slate-800 pt-4" data-testid="purchase-order-create-form">
           <h3 className="text-sm font-medium text-slate-200">Create from approved PR</h3>
           <div className="mt-3 space-y-3">
             <label className="block text-xs text-slate-500">

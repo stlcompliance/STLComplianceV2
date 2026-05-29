@@ -1,7 +1,11 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen, within } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { PurchaseRequestPanel } from './PurchaseRequestPanel'
+
+afterEach(() => {
+  cleanup()
+})
 
 const baseProps = {
   purchaseRequests: [
@@ -45,6 +49,33 @@ const baseProps = {
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-02T00:00:00Z',
     },
+    {
+      purchaseRequestId: 'pr-2',
+      requestKey: 'pr-2026-002',
+      title: 'Rejected request',
+      notes: '',
+      status: 'rejected',
+      vendorPartyId: 'vendor-1',
+      vendorPartyKey: 'acme',
+      vendorDisplayName: 'Acme Parts',
+      requestedByUserId: 'user-1',
+      submittedAt: '2026-01-01T00:00:00Z',
+      submittedByUserId: 'user-1',
+      approvedAt: null,
+      approvedByUserId: null,
+      rejectedAt: '2026-01-03T00:00:00Z',
+      rejectedByUserId: 'user-2',
+      rejectionReason: 'Budget exceeded',
+      isEmergency: false,
+      emergencyReason: '',
+      emergencyExpeditedAt: null,
+      managerOverrideApproved: false,
+      managerOverrideJustification: '',
+      managerOverrideApprovedAt: null,
+      lines: [],
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-03T00:00:00Z',
+    },
   ],
   parts: [],
   vendors: [],
@@ -82,9 +113,37 @@ const baseProps = {
 describe('PurchaseRequestPanel', () => {
   it('renders purchase request list and workflow actions', () => {
     render(<PurchaseRequestPanel {...baseProps} />)
+
+    expect(screen.getByTestId('supplyarr-purchasing-pr-workspace')).toBeInTheDocument()
     expect(screen.getByText('pr-2026-001')).toBeInTheDocument()
-    expect(screen.getAllByText('Shop restock').length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument()
-    expect(screen.getByText(/Oil Filter/)).toBeInTheDocument()
+    expect(screen.getByTestId('purchase-request-line-line-1')).toHaveTextContent('6 each requested')
+    expect(screen.getByTestId('purchase-request-create-form')).toBeInTheDocument()
+  })
+
+  it('shows reject controls for submitted purchase requests', () => {
+    render(<PurchaseRequestPanel {...baseProps} />)
+
+    const detail = screen.getByTestId('purchase-request-detail')
+    expect(within(detail).getByTestId('purchase-request-reject-button')).toBeInTheDocument()
+    expect(within(detail).getByTestId('purchase-request-rejection-reason-input')).toBeInTheDocument()
+    expect(within(detail).getByTestId('purchase-request-workflow-timeline')).toBeInTheDocument()
+  })
+
+  it('shows rejection reason for rejected purchase requests', () => {
+    render(
+      <PurchaseRequestPanel
+        {...baseProps}
+        purchaseRequests={[baseProps.purchaseRequests[1]!]}
+        selectedPurchaseRequestId="pr-2"
+        canApprove={false}
+        canCreate={false}
+      />,
+    )
+
+    expect(screen.getByTestId('purchase-request-rejection-reason-display')).toHaveTextContent(
+      'Budget exceeded',
+    )
+    expect(screen.queryByTestId('purchase-request-approve-button')).not.toBeInTheDocument()
   })
 })

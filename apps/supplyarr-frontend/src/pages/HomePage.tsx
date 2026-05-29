@@ -1676,6 +1676,8 @@ export function HomePage() {
 
           isCreatingException={createReceivingExceptionMutation.isPending}
 
+          isResolvingException={resolveReceivingExceptionMutation.isPending}
+
           isPosting={postReceivingReceiptMutation.isPending}
 
         />

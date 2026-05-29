@@ -17,6 +17,7 @@ import {
   getPersonTimeline,
   getPersonHistorySummary,
   getPersonTrainarrTrainingHistory,
+  getWorkforceOnboardingJourney,
   getPersonCertifications,
   clearPersonReadinessOverride,
   createPersonnelIncident,
@@ -56,7 +57,7 @@ import {
   updateOrgUnit,
   updateOrgUnitStatus,
 } from '../api/client'
-import { loadSession, canExportAuditPackage } from '../auth/sessionStorage'
+import { loadSession, canExportAuditPackage, canReadReports as userCanReadReports } from '../auth/sessionStorage'
 import { canManagePeople } from '../components/PersonProfileEditorPanel'
 import { canManageIncidents } from '../components/IncidentsPanel'
 import { canManagePersonnelNotes } from '../components/PersonnelNotesPanel'
@@ -193,6 +194,11 @@ export function useStaffArrWorkspaceState() {
   const trainarrTrainingHistoryQuery = useQuery({
     queryKey: ['staffarr-trainarr-training-history', session?.accessToken, effectivePersonId],
     queryFn: () => getPersonTrainarrTrainingHistory(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const workforceOnboardingJourneyQuery = useQuery({
+    queryKey: ['staffarr-workforce-onboarding-journey', session?.accessToken, effectivePersonId],
+    queryFn: () => getWorkforceOnboardingJourney(session!.accessToken, effectivePersonId!),
     enabled: Boolean(session?.accessToken && effectivePersonId),
   })
   const certificationDefinitionsQuery = useQuery({
@@ -526,6 +532,7 @@ export function useStaffArrWorkspaceState() {
         queryClient.invalidateQueries({ queryKey: ['staffarr-people', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-person', session?.accessToken, created.personId] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-workforce-onboarding-journey', session?.accessToken] }),
       ])
     },
   })
@@ -665,6 +672,7 @@ export function useStaffArrWorkspaceState() {
   const canManagePersonDocuments = me ? canManagePersonnelDocuments(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canManagePeopleProfiles = me ? canManagePeople(me.tenantRoleKey, me.isPlatformAdmin) : false
   const canExportAudit = me ? canExportAuditPackage(me.tenantRoleKey, me.isPlatformAdmin) : false
+  const canReadReports = me ? userCanReadReports(me.tenantRoleKey, me.isPlatformAdmin) : false
   const personIncidents = personIncidentsQuery.data ?? []
   const orgMutationError =
     createOrgUnitMutation.error ?? updateOrgUnitMutation.error ?? updateOrgUnitStatusMutation.error ?? null
@@ -730,6 +738,7 @@ export function useStaffArrWorkspaceState() {
     personTimelineQuery,
     personHistorySummaryQuery,
     trainarrTrainingHistoryQuery,
+    workforceOnboardingJourneyQuery,
     certificationDefinitionsQuery,
     personCertificationsQuery,
     personReadinessQuery,
@@ -805,6 +814,7 @@ export function useStaffArrWorkspaceState() {
     canManagePersonDocuments,
     canManagePeopleProfiles,
     canExportAudit,
+    canReadReports,
     personIncidents,
     personNotes: personNotesQuery.data ?? [],
     personDocuments: personDocumentsQuery.data ?? [],

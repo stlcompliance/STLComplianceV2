@@ -88,6 +88,34 @@ public static class PeopleEndpoints
         })
         .WithName("GetStaffPersonTrainarrTrainingHistory");
 
+        people.MapGet("/{personId:guid}/workforce-onboarding-journey", async (
+            Guid personId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            WorkforceOnboardingJourneyService journeyService,
+            IStaffArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePersonHistoryRead(context.User, personId);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var journey = await journeyService.GetForPersonAsync(
+                tenantId,
+                actorUserId,
+                personId,
+                cancellationToken);
+            await audit.WriteAsync(
+                WorkforceOnboardingJourneyService.ReadAction,
+                tenantId,
+                actorUserId,
+                "workforce_onboarding_journey",
+                personId.ToString(),
+                journey.OverallStatus,
+                cancellationToken: cancellationToken);
+            return Results.Ok(journey);
+        })
+        .WithName("GetWorkforceOnboardingJourney");
+
         people.MapPost("/", async (
             CreateStaffPersonRequest request,
             HttpContext context,

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 
 import { productPath } from '../lib/publicRoutes'
+import { PRODUCT_OWNERSHIP } from './ownershipBoundaries'
 
 
 
@@ -87,12 +88,13 @@ export const PRODUCT_CATEGORY_LABELS: Record<ProductCategoryKey, string> = {
 
 
 export const MATURITY_LABELS: Record<PublicCapabilityMaturity, string> = {
-
-  'v1-operational': 'V1 operational',
-
+  'v1-operational': 'V1 stack operational',
   'v1-partial': 'V1 partial',
-
 }
+
+/** Plain label on product cards — stack vs docs/11 featureset honesty. */
+export const MATURITY_STACK_LABEL =
+  'API, database, worker, and product UI provisioned (docs/11 featureset tracked in-repo)'
 
 
 
@@ -106,9 +108,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     tagline: 'Control plane for identity, tenants, entitlements, and launch',
 
-    owns: 'Login, tenants, platform identity, product entitlement, licensing, service clients, service tokens, and launch authority.',
-
-    doesNotOwn: 'Operational workforce, training, asset, dispatch, or supply workflows.',
+    owns: PRODUCT_OWNERSHIP.nexarr.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.nexarr.doesNotOwn,
 
     icon: ShieldCheck,
 
@@ -118,7 +119,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     maturity: 'v1-operational',
 
-    maturityLabel: 'API, database, worker, and suite UI',
+    maturityLabel: 'API, database, worker, and suite UI (NexArr control plane)',
 
   },
 
@@ -130,9 +131,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     tagline: 'Workforce backbone — who someone is and whether they are ready',
 
-    owns: 'People, org structure, permissions, certifications, readiness, incidents, and personnel history.',
-
-    doesNotOwn: 'Training proof, asset maintenance, dispatch execution, or procurement records.',
+    owns: PRODUCT_OWNERSHIP.staffarr.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.staffarr.doesNotOwn,
 
     icon: Users,
 
@@ -142,7 +142,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     maturity: 'v1-operational',
 
-    maturityLabel: 'API, database, worker, and product UI',
+    maturityLabel: MATURITY_STACK_LABEL,
 
   },
 
@@ -154,9 +154,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     tagline: 'Training workflow, evidence, and qualification proof',
 
-    owns: 'Training workflow, evidence, evaluations, signoffs, completions, retraining, recertification, and training-derived qualifications.',
-
-    doesNotOwn: 'Person identity, org hierarchy, or readiness calculation truth (publishes to StaffArr).',
+    owns: PRODUCT_OWNERSHIP.trainarr.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.trainarr.doesNotOwn,
 
     icon: GraduationCap,
 
@@ -166,7 +165,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     maturity: 'v1-operational',
 
-    maturityLabel: 'API, database, worker, and product UI',
+    maturityLabel: MATURITY_STACK_LABEL,
 
   },
 
@@ -178,9 +177,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     tagline: 'Assets, inspections, and maintenance execution',
 
-    owns: 'Assets, inspections, defects, work orders, preventive maintenance, maintenance history, and asset readiness.',
-
-    doesNotOwn: 'Procurement, vendor catalogs, or parts inventory (SupplyArr).',
+    owns: PRODUCT_OWNERSHIP.maintainarr.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.maintainarr.doesNotOwn,
 
     icon: Wrench,
 
@@ -190,7 +188,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     maturity: 'v1-operational',
 
-    maturityLabel: 'API, database, worker, and product UI',
+    maturityLabel: MATURITY_STACK_LABEL,
 
   },
 
@@ -202,9 +200,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     tagline: 'Routes, dispatch, and transportation execution',
 
-    owns: 'Routes, trips, dispatch, driver assignment, transportation execution, DVIR surfaces, proof, exceptions, and route history.',
-
-    doesNotOwn: 'Driver identity or qualification truth (StaffArr + TrainArr).',
+    owns: PRODUCT_OWNERSHIP.routarr.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.routarr.doesNotOwn,
 
     icon: Route,
 
@@ -214,7 +211,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     maturity: 'v1-operational',
 
-    maturityLabel: 'API, database, worker, and product UI',
+    maturityLabel: MATURITY_STACK_LABEL,
 
   },
 
@@ -226,9 +223,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     tagline: 'Vendors, purchasing, receiving, and inventory',
 
-    owns: 'Vendors, dealers, suppliers, parts catalogs, purchasing, receiving, inventory, pricing snapshots, and lead-time snapshots.',
-
-    doesNotOwn: 'Asset maintenance workflows or work orders (MaintainArr).',
+    owns: PRODUCT_OWNERSHIP.supplyarr.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.supplyarr.doesNotOwn,
 
     icon: PackageSearch,
 
@@ -238,7 +234,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     maturity: 'v1-operational',
 
-    maturityLabel: 'API, database, worker, and product UI',
+    maturityLabel: MATURITY_STACK_LABEL,
 
   },
 
@@ -250,9 +246,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     tagline: 'Controlled vocabulary, keys, mappings, and rule context',
 
-    owns: 'Controlled vocabulary, regulatory keys, material keys, mappings, rule packs, SDS/HazCom references, and evaluation patterns.',
-
-    doesNotOwn: 'Operational workflow actions or product-owned facts (products own facts and overrides).',
+    owns: PRODUCT_OWNERSHIP.compliancecore.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.compliancecore.doesNotOwn,
 
     icon: ClipboardCheck,
 
@@ -262,7 +257,7 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     maturity: 'v1-operational',
 
-    maturityLabel: 'API, database, worker, and product UI',
+    maturityLabel: MATURITY_STACK_LABEL,
 
   },
 
@@ -274,9 +269,8 @@ export const MARKETING_PRODUCTS: MarketingProduct[] = [
 
     tagline: 'Field inbox and mobile task surfaces',
 
-    owns: 'Aggregated field inbox presentation and mobile-oriented task navigation (links into entitled products).',
-
-    doesNotOwn: 'Business authority, tenant data, or product workflow state (each product API remains authoritative).',
+    owns: PRODUCT_OWNERSHIP.companion.owns,
+    doesNotOwn: PRODUCT_OWNERSHIP.companion.doesNotOwn,
 
     icon: Inbox,
 

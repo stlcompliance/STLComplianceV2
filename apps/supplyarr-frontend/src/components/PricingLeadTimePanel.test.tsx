@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import { PricingLeadTimePanel } from './PricingLeadTimePanel'
@@ -118,9 +118,13 @@ const baseProps = {
 describe('PricingLeadTimePanel', () => {
   it('renders current pricing and lead-time snapshots', () => {
     render(<PricingLeadTimePanel {...baseProps} />)
+    expect(screen.getByTestId('pricing-lead-time-panel')).toBeInTheDocument()
     expect(screen.getByText('price-2026-q2')).toBeInTheDocument()
     expect(screen.getByText(/12\.5 USD/)).toBeInTheDocument()
     expect(screen.getByText('lt-2026-q2')).toBeInTheDocument()
     expect(screen.getByText(/14 days/)).toBeInTheDocument()
+    const panel = screen.getByTestId('pricing-lead-time-panel')
+    expect(within(panel).getByRole('button', { name: 'Record pricing' })).toBeInTheDocument()
+    expect(within(panel).getByRole('button', { name: 'Record lead time' })).toBeInTheDocument()
   })
 })

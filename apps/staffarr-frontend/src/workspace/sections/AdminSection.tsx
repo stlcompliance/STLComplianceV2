@@ -27,7 +27,11 @@ export function AdminSection({ state }: Props) {
       ) : null}
 
       <div className={canManageWorkerSettings ? 'mt-8' : undefined}>
-        <AuditPackageExportPanel accessToken={s.accessToken} canExport={s.canExportAudit} />
+        <AuditPackageExportPanel
+          accessToken={s.accessToken}
+          canRead={s.canReadReports}
+          canExport={s.canExportAudit}
+        />
       </div>
     </>
   )

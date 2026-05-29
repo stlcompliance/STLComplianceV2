@@ -49,8 +49,9 @@ export function HomePage() {
 
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="rounded-2xl border border-amber-500/30 bg-amber-950/20 px-5 py-4 text-sm text-amber-100">
-          <strong className="font-semibold">V1 implementation maturity:</strong> the suite ships
-          real APIs, databases, workers, and authenticated product UIs.{' '}
+          <strong className="font-semibold">V1 implementation maturity:</strong> each Arr product
+          ships a real API, database, worker, and UI — docs/11 FEATURESET completion is tracked
+          in-repo, not implied here.{' '}
           <Link to="/maturity" className="font-semibold text-teal-300 underline hover:text-teal-200">
             View public maturity snapshot →
           </Link>{' '}

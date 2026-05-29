@@ -54,7 +54,10 @@ export function AuthorizationCheckOperationsPanel({
   onRunCheck,
 }: AuthorizationCheckOperationsPanelProps) {
   return (
-    <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+    <section
+      className="rounded-xl border border-slate-700 bg-slate-900/60 p-4"
+      data-testid="authorization-check-operations-panel"
+    >
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
         Authorization check operations
       </h2>
@@ -101,14 +104,18 @@ export function AuthorizationCheckOperationsPanel({
         rulePackOptions={rulePackOptions}
       />
 
-      <div className="mt-4">
+      <div className="mt-4" data-testid="authorization-check-history">
         <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Recent checks</p>
         {isLoadingHistory ? (
-          <p className="mt-2 text-sm text-slate-400">Loading check history…</p>
+          <p className="mt-2 text-sm text-slate-400" data-testid="authorization-check-history-loading">
+            Loading check history…
+          </p>
         ) : history.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-400">No authorization checks recorded yet.</p>
+          <p className="mt-2 text-sm text-slate-400" data-testid="authorization-check-history-empty">
+            No authorization checks recorded yet.
+          </p>
         ) : (
-          <ul className="mt-2 max-h-56 space-y-2 overflow-y-auto">
+          <ul className="mt-2 max-h-56 space-y-2 overflow-y-auto" data-testid="authorization-check-history-list">
             {history.map((item) => (
               <li
                 key={item.checkId}

@@ -822,6 +822,23 @@ export interface TrainarrPersonTrainingHistoryResponse {
   items: TrainarrPersonTrainingHistoryEntryItem[]
 }
 
+export interface WorkforceOnboardingJourneyStepResponse {
+  stepKey: string
+  title: string
+  detail: string
+  status: string
+  statusReason: string | null
+}
+
+export interface WorkforceOnboardingJourneyResponse {
+  personId: string
+  journeyKey: string
+  overallStatus: string
+  overallSummary: string
+  steps: WorkforceOnboardingJourneyStepResponse[]
+  trainarrIntegrationNote: string | null
+}
+
 export interface PersonnelHistorySummaryResponse {
   personId: string
   eventCount: number

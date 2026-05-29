@@ -87,7 +87,10 @@ export function PricingLeadTimePanel({
     : leadTimeSnapshots
 
   return (
-    <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg lg:col-span-2">
+    <section
+      data-testid="pricing-lead-time-panel"
+      className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg lg:col-span-2"
+    >
       <h2 className="text-lg font-medium text-white">Pricing &amp; lead time</h2>
       <p className="mt-1 text-sm text-slate-400">
         Record vendor part link unit price and lead-time history with effective dates.

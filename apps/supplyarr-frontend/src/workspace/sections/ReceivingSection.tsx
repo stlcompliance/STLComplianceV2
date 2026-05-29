@@ -41,6 +41,7 @@ export function ReceivingSection({ state: s }: Props) {
         isCreating={s.createReceivingReceiptMutation.isPending}
         isUpdatingLine={s.updateReceivingLineMutation.isPending}
         isCreatingException={s.createReceivingExceptionMutation.isPending}
+        isResolvingException={s.resolveReceivingExceptionMutation.isPending}
         isPosting={s.postReceivingReceiptMutation.isPending}
       />
       <BackordersPanel

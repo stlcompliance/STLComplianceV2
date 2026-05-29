@@ -1,20 +1,21 @@
 import type { PublicCapabilityMaturity } from './products'
+import { DOCS_11_ACCEPTANCE_NOTE } from './ownershipBoundaries'
 
 /** Mirrors `docs/implementation-status.md` and worker slice state — update each marketing slice. */
 export const PROGRAM_SNAPSHOT = {
-  lastUpdatedLabel: 'Worker 142 (2026-05-28)',
-  completedWorkersThrough: 142,
-  latestSliceSummary: 'STLComplianceSite implementation maturity status',
-  latestCommitShort: 'be0e623',
+  lastUpdatedLabel: 'Worker 4 (2026-05-29)',
+  completedWorkersThrough: 4,
+  latestSliceSummary: 'STLComplianceSite ownership copy + maturity honesty vs docs/02 and docs/11',
+  latestCommitShort: 'uncommitted',
   sliceStateDoc: 'docs/implementation/worker-slices/00_SLICE_STATE.md',
   statusDoc: 'docs/implementation-status.md',
 } as const
 
 export const MATURITY_DISCLAIMER =
-  'Public transparency only. Labels summarize implementation evidence in the private program docs — not a contractual SLA, not live production telemetry, and not an exhaustive feature checklist. Entitled customers validate scope in product UIs and agreements.'
+  'Public transparency only. Labels summarize implementation evidence in the private program docs — not a contractual SLA, not live production telemetry, and not proof that every docs/11 FEATURESET row is complete. Entitled customers validate scope in product UIs and agreements.'
 
 export const MATURITY_LEAD =
-  'V1 ships real APIs, PostgreSQL databases, workers, and authenticated product UIs per Arr product. Milestones below reflect program progress from the implementation masterplan; many matrix rows remain partial while foundations are operational.'
+  'V1 ships real APIs, PostgreSQL databases, workers, and authenticated product UIs per Arr product. Milestones below reflect program progress from the implementation masterplan; per-product gap canvases track remaining FEATURESET items until docs/11 sign-off.'
 
 export type MilestonePosture = 'substantial' | 'partial' | 'in-progress'
 
@@ -134,13 +135,14 @@ export const PROGRAM_MILESTONES: ProgramMilestoneRow[] = [
 ]
 
 export const VERIFICATION_HIGHLIGHTS = [
-  '580+ Release .NET tests (Category≠Live), including E2E Playwright spec catalog tests.',
+  '900+ Release .NET tests (Category≠Live), including cross-product integration and Playwright spec catalog tests.',
   'Five k6 scenarios: health probes plus authenticated login/me and handoff bootstrap.',
-  'Playwright: suite login and six product handoff smokes with per-frontend skip semantics.',
+  'Playwright: suite login, product handoff smokes, and docs/23 journey proofs with per-frontend skip semantics.',
   'DR: nightly live restore drill validates all seven product PostgreSQL databases.',
 ] as const
 
 export const OPEN_HONESTY_NOTES = [
+  DOCS_11_ACCEPTANCE_NOTE,
   '“Substantial” and “partial” describe program milestone posture — not every backlog row in the feature matrix is complete.',
   'Companion remains V1 partial: inbox and deep links exist; authority stays in owning product APIs.',
   'Marketing pages never grant entitlements or display tenant operational data.',
