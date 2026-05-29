@@ -57,6 +57,9 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<AuditPackageService>();
         builder.Services.AddScoped<AuditPackageGenerationService>();
         builder.Services.AddScoped<OperatorDashboardService>();
+        builder.Services.AddScoped<FindingsReportService>();
+        builder.Services.AddScoped<OperatorReportService>();
+        builder.Services.AddScoped<ComplianceCoreEntityBulkExportService>();
         builder.Services.AddScoped<IComplianceCoreAuditService, ComplianceCoreAuditService>();
 
         var frontendOrigin = builder.Configuration["Cors:ComplianceCoreFrontendOrigin"] ?? "http://localhost:5177";

@@ -249,6 +249,12 @@ public sealed class ProcurementNotificationDispatchService(
                 tenantId = item.TenantId,
                 demandRefId = item.RelatedEntityId,
             },
+            ProcurementNotificationEventKinds.ProcurementExceptionSlaEscalation => new
+            {
+                @event = "supplyarr.procurement_exception.sla_escalation",
+                tenantId = item.TenantId,
+                procurementExceptionId = item.RelatedEntityId,
+            },
             _ => new
             {
                 @event = "supplyarr.notification.unknown",

@@ -85,3 +85,14 @@ export function canEvaluateReadinessForecast(
 ): boolean {
   return canEvaluateRiskScores(tenantRoleKey, isPlatformAdmin)
 }
+
+export function canReadReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  if (isPlatformAdmin) return true
+  return ['tenant_admin', 'compliance_admin', 'compliance_reviewer', 'tenant_member'].includes(
+    tenantRoleKey.toLowerCase(),
+  )
+}
+
+export function canExportReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canExportAuditPackage(tenantRoleKey, isPlatformAdmin)
+}

@@ -537,7 +537,62 @@ public sealed class TripService(
             trip.DispatchedAt,
             trip.StartedAt,
             trip.CompletedAt,
+            trip.ClosedAt,
             trip.CancelledAt);
+
+    public async Task<TripDetailResponse> AcknowledgeDriverCloseAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid tripId,
+        string actorPersonId,
+        CancellationToken cancellationToken = default)
+    {
+        var trip = await db.Trips
+            .Include(x => x.Loads)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
+
+        if (trip is null)
+        {
+            throw new StlApiException("trip.not_found", "Trip was not found.", 404);
+        }
+
+        if (!string.Equals(trip.AssignedDriverPersonId?.Trim(), actorPersonId.Trim(), StringComparison.Ordinal))
+        {
+            throw new StlApiException(
+                "driver_portal.not_assigned",
+                "You can only execute trips assigned to you.",
+                403);
+        }
+
+        if (!string.Equals(trip.DispatchStatus, TripDispatchStatuses.Completed, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "driver_portal.close_requires_completed",
+                "Close is only available after the trip is completed.",
+                400);
+        }
+
+        if (trip.ClosedAt.HasValue)
+        {
+            return MapDetail(trip);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        trip.ClosedAt = now;
+        trip.UpdatedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "driver_portal.trip.close",
+            tenantId,
+            actorUserId,
+            "trip",
+            trip.Id.ToString(),
+            "acknowledged",
+            cancellationToken: cancellationToken);
+
+        return MapDetail(trip);
+    }
 
     private static TripDetailResponse MapDetail(Trip trip) =>
         new(
@@ -571,6 +626,7 @@ public sealed class TripService(
             trip.DispatchedAt,
             trip.StartedAt,
             trip.CompletedAt,
+            trip.ClosedAt,
             trip.CancelledAt);
 
     private static string BuildAssignDriverAuditResult(string driverPersonId, AssignTripDriverRequest request)

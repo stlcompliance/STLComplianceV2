@@ -173,7 +173,9 @@ public sealed class RoutArrDispatchReportTests : IAsyncLifetime
             "Highway delay",
             "Weather-related slowdown",
             DispatchExceptionCategories.Delay,
-            trip.TripId));
+            trip.TripId,
+            null,
+            null));
         var createExceptionResponse = await _routarrClient.SendAsync(createExceptionRequest);
         createExceptionResponse.EnsureSuccessStatusCode();
         var exception = (await createExceptionResponse.Content.ReadFromJsonAsync<DispatchExceptionSummaryResponse>())!;

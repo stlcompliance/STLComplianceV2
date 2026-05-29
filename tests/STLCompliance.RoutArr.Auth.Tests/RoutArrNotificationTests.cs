@@ -165,6 +165,75 @@ public sealed class RoutArrNotificationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Notification_settings_put_rejects_enabled_without_webhook()
+    {
+        var token = CreateRoutArrAccessToken(["routarr"], "routarr_admin");
+        var request = Authorized(HttpMethod.Put, "/api/notification-settings", token);
+        request.Content = JsonContent.Create(new UpsertDispatchNotificationSettingsRequest(
+            true,
+            null,
+            true,
+            true,
+            true,
+            true,
+            true));
+
+        var response = await _routarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Notification_settings_disable_preserves_webhook_url()
+    {
+        const string webhookUrl = "https://hooks.example.test/routarr-disable-preserve";
+        await UpsertNotificationSettingsAsync(webhookUrl);
+
+        var token = CreateRoutArrAccessToken(["routarr"], "routarr_admin");
+        var request = Authorized(HttpMethod.Put, "/api/notification-settings", token);
+        request.Content = JsonContent.Create(new UpsertDispatchNotificationSettingsRequest(
+            false,
+            null,
+            true,
+            true,
+            true,
+            true,
+            true));
+
+        var response = await _routarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var payload = (await response.Content.ReadFromJsonAsync<DispatchNotificationSettingsResponse>())!;
+
+        Assert.False(payload.IsEnabled);
+        Assert.Equal(webhookUrl, payload.NotificationWebhookUrl);
+    }
+
+    [Fact]
+    public async Task Notification_settings_disable_explicit_clear_webhook_url()
+    {
+        const string webhookUrl = "https://hooks.example.test/routarr-disable-explicit-clear";
+        await UpsertNotificationSettingsAsync(webhookUrl);
+
+        var token = CreateRoutArrAccessToken(["routarr"], "routarr_admin");
+        var request = Authorized(HttpMethod.Put, "/api/notification-settings", token);
+        request.Content = JsonContent.Create(new UpsertDispatchNotificationSettingsRequest(
+            false,
+            null,
+            true,
+            true,
+            true,
+            true,
+            true,
+            ClearNotificationWebhookOnDisable: true));
+
+        var response = await _routarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var payload = (await response.Content.ReadFromJsonAsync<DispatchNotificationSettingsResponse>())!;
+
+        Assert.False(payload.IsEnabled);
+        Assert.Null(payload.NotificationWebhookUrl);
+    }
+
+    [Fact]
     public async Task Notification_settings_requires_admin()
     {
         var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "routarr_dispatcher");

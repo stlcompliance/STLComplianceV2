@@ -60,7 +60,10 @@ export function ControlEffectivenessPanel({
   const summary = summaryQuery.data
 
   return (
-    <section className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5">
+    <section
+      data-testid="control-effectiveness-panel"
+      className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+    >
       <header>
         <h2 className="text-lg font-semibold text-slate-50">Control effectiveness</h2>
         <p className="mt-1 text-sm text-slate-400">
@@ -139,6 +142,7 @@ export function ControlEffectivenessPanel({
             type="button"
             onClick={() => evaluateMutation.mutate()}
             disabled={evaluateMutation.isPending}
+            data-testid="control-effectiveness-evaluate"
             className="rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
           >
             {evaluateMutation.isPending ? 'Evaluating…' : 'Evaluate control effectiveness'}
@@ -165,11 +169,17 @@ export function ControlEffectivenessPanel({
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Latest control records</h3>
         {(recordsQuery.data ?? []).length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">
+          <p
+            className="mt-2 text-sm text-slate-500"
+            data-testid="control-effectiveness-list-empty"
+          >
             No effectiveness records yet. Run an evaluation to track controls at scope.
           </p>
         ) : (
-          <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto">
+          <ul
+            className="mt-3 max-h-80 space-y-2 overflow-y-auto"
+            data-testid="control-effectiveness-list"
+          >
             {(recordsQuery.data ?? []).map((record) => (
               <li
                 key={record.recordId}

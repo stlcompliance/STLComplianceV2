@@ -103,7 +103,7 @@ public sealed class RoutArrUnassignedWorkQueueTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/dispatch/unassigned-work-queue?scope=daily", _dispatcherToken));
         queueResponse.EnsureSuccessStatusCode();
         var queue = (await queueResponse.Content.ReadFromJsonAsync<UnassignedWorkQueueResponse>())!;
-        Assert.True(queue.UnassignedCount >= 1);
+        Assert.True(queue.Summary.UnassignedCount >= 1);
         Assert.Contains(queue.Items, x => x.TripId == trip.TripId);
 
         var assignRequest = Authorized(HttpMethod.Patch, $"/api/trips/{trip.TripId}/assign-driver", _dispatcherToken);
@@ -117,6 +117,46 @@ public sealed class RoutArrUnassignedWorkQueueTests : IAsyncLifetime
         queueAfter.EnsureSuccessStatusCode();
         var after = (await queueAfter.Content.ReadFromJsonAsync<UnassignedWorkQueueResponse>())!;
         Assert.DoesNotContain(after.Items, x => x.TripId == trip.TripId);
+    }
+
+    [Fact]
+    public async Task Unassigned_queue_attention_filter_returns_only_urgent()
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        var onTrackRequest = Authorized(HttpMethod.Post, "/api/trips", _dispatcherToken);
+        onTrackRequest.Content = JsonContent.Create(new CreateTripRequest(
+            "Future unassigned",
+            "Not urgent",
+            null,
+            now.AddHours(4),
+            now.AddHours(8),
+            null));
+        var onTrackResponse = await _routarrClient.SendAsync(onTrackRequest);
+        onTrackResponse.EnsureSuccessStatusCode();
+        var onTrackTrip = (await onTrackResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        var lateRequest = Authorized(HttpMethod.Post, "/api/trips", _dispatcherToken);
+        lateRequest.Content = JsonContent.Create(new CreateTripRequest(
+            "Late unassigned",
+            "Urgent",
+            null,
+            now.AddHours(-2),
+            now.AddHours(2),
+            null));
+        var lateResponse = await _routarrClient.SendAsync(lateRequest);
+        lateResponse.EnsureSuccessStatusCode();
+        var lateTrip = (await lateResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        var filteredResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/dispatch/unassigned-work-queue?scope=daily&attentionOnly=true", _dispatcherToken));
+        filteredResponse.EnsureSuccessStatusCode();
+        var filtered = (await filteredResponse.Content.ReadFromJsonAsync<UnassignedWorkQueueResponse>())!;
+
+        Assert.Contains(filtered.Items, x => x.TripId == lateTrip.TripId);
+        Assert.DoesNotContain(filtered.Items, x => x.TripId == onTrackTrip.TripId);
+        Assert.True(filtered.Summary.UrgentCount >= 1);
+        Assert.True(filtered.Summary.LateCount >= 1);
     }
 
     [Fact]

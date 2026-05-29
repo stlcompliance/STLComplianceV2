@@ -20,7 +20,10 @@ public sealed class StlNexArrLaunchClient(HttpClient httpClient)
 
         if (jsonBody is not null)
         {
-            request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+            request.Content = new ByteArrayContent(Encoding.UTF8.GetBytes(jsonBody))
+            {
+                Headers = { ContentType = new MediaTypeHeaderValue("application/json") },
+            };
         }
 
         using var response = await httpClient.SendAsync(request, cancellationToken);

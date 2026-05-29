@@ -31,5 +31,7 @@ describe('TripCompletionRollupSettingsPanel', () => {
 
     expect(await screen.findByTestId('trip-completion-rollup-settings-panel')).toBeInTheDocument()
     expect(screen.getByText(/Trip completion rollup worker/i)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Recent worker runs' })).toBeInTheDocument()
+    expect(await screen.findByTestId('trip-completion-rollup-runs-empty')).toBeInTheDocument()
   })
 })

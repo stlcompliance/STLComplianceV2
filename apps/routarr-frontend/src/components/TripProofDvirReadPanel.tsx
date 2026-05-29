@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 
-import { getTripExecutionSummary } from '../api/client'
+import { getTripExecutionSummary, downloadTripCaptureAttachment } from '../api/client'
 
 type Props = {
   accessToken: string
@@ -67,9 +67,11 @@ export function TripProofDvirReadPanel({ accessToken }: Props) {
 
       {summaryQuery.data ? (
         <div className="mt-4 space-y-4 text-sm">
-          <p className="text-slate-300">
+          <p className="text-slate-300" data-testid="trip-execution-summary-header">
             {summaryQuery.data.tripNumber} · driver{' '}
-            {summaryQuery.data.assignedDriverPersonId ?? 'unassigned'} · pre DVIR{' '}
+            {summaryQuery.data.assignedDriverPersonId ?? 'unassigned'} · status{' '}
+            {summaryQuery.data.dispatchStatus.replace('_', ' ')} · driver closed{' '}
+            {summaryQuery.data.closedAt ? 'yes' : 'no'} · pre DVIR{' '}
             {summaryQuery.data.hasPreTripDvir ? 'yes' : 'no'} · post DVIR{' '}
             {summaryQuery.data.hasPostTripDvir ? 'yes' : 'no'}
           </p>
@@ -90,6 +92,31 @@ export function TripProofDvirReadPanel({ accessToken }: Props) {
                     {proof.referenceKey ? ` · ${proof.referenceKey}` : ''}
                     <p className="text-slate-500">{formatTimestamp(proof.capturedAt)}</p>
                     {proof.notes ? <p className="text-slate-400">{proof.notes}</p> : null}
+                    {proof.attachments.length > 0 ? (
+                      <ul className="mt-1 space-y-1">
+                        {proof.attachments.map((attachment) => (
+                          <li key={attachment.attachmentId}>
+                            <button
+                              type="button"
+                              className="text-sky-400 underline"
+                              data-testid={`proof-attachment-${attachment.attachmentId}`}
+                              onClick={() =>
+                                void downloadTripCaptureAttachment(
+                                  accessToken,
+                                  summaryQuery.data!.tripId,
+                                  'proof',
+                                  proof.proofId,
+                                  attachment.attachmentId,
+                                  attachment.fileName,
+                                )
+                              }
+                            >
+                              {attachment.attachmentKind}: {attachment.fileName}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -117,6 +144,31 @@ export function TripProofDvirReadPanel({ accessToken }: Props) {
                     {dvir.odometerReading != null ? ` · odo ${dvir.odometerReading}` : ''}
                     <p className="text-slate-500">{formatTimestamp(dvir.submittedAt)}</p>
                     {dvir.defectNotes ? <p className="text-slate-400">{dvir.defectNotes}</p> : null}
+                    {dvir.attachments.length > 0 ? (
+                      <ul className="mt-1 space-y-1">
+                        {dvir.attachments.map((attachment) => (
+                          <li key={attachment.attachmentId}>
+                            <button
+                              type="button"
+                              className="text-sky-400 underline"
+                              data-testid={`dvir-attachment-${attachment.attachmentId}`}
+                              onClick={() =>
+                                void downloadTripCaptureAttachment(
+                                  accessToken,
+                                  summaryQuery.data!.tripId,
+                                  'dvir',
+                                  dvir.dvirId,
+                                  attachment.attachmentId,
+                                  attachment.fileName,
+                                )
+                              }
+                            >
+                              {attachment.attachmentKind}: {attachment.fileName}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </li>
                 ))}
               </ul>

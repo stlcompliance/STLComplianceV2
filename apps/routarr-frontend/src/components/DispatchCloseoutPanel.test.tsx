@@ -145,8 +145,8 @@ describe('DispatchCloseoutPanel', () => {
     renderPanel()
 
     expect(await screen.findByTestId('dispatch-closeout-panel')).toBeInTheDocument()
-    expect(screen.getByText(/Trip closeout checklist/)).toBeInTheDocument()
-    expect(screen.getByText(/Recent closeout audit/)).toBeInTheDocument()
+    expect(await screen.findByText(/Trip closeout checklist/)).toBeInTheDocument()
+    expect(await screen.findByText(/Recent closeout audit/)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Preview closeout' }))
 

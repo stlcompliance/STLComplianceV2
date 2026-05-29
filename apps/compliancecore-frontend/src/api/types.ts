@@ -1035,3 +1035,73 @@ export interface TriggerM12AnalyticsBatchResponse {
   auditPackageJobId: string | null
   errorMessage: string | null
 }
+
+export interface FindingsReportSummaryItem {
+  findingId: string
+  findingKey: string
+  severity: string
+  status: string
+  title: string
+  packKey: string
+  createdAt: string
+}
+
+export interface FindingsReportSummaryResponse {
+  totalFindings: number
+  openCount: number
+  acknowledgedCount: number
+  resolvedCount: number
+  openBlockSeverityCount: number
+  openWarnSeverityCount: number
+  recentFindings: FindingsReportSummaryItem[]
+}
+
+export interface OperatorReportSummaryItem {
+  evaluationRunId: string
+  rulePackLabel: string
+  packKey: string
+  overallResult: string
+  createdAt: string
+}
+
+export interface OperatorReportSummaryResponse {
+  evaluationTotalCount: number
+  evaluationPassCount: number
+  evaluationFailCount: number
+  evaluationsLast24Hours: number
+  workflowGateDefinitionCount: number
+  workflowGateBlockCount: number
+  workflowGateWarnCount: number
+  rulePackPublishedCount: number
+  rulePackDraftCount: number
+  attentionItemCount: number
+  recentEvaluations: OperatorReportSummaryItem[]
+}
+
+export interface EntityExportFormatDescriptor {
+  formatKey: string
+  contentType: string
+  fileNameTemplate: string
+  description: string
+}
+
+export interface EntityExportManifestEntity {
+  entityKey: string
+  exportPath: string
+  displayName: string
+  csvHeader: string
+  description: string
+  formats: EntityExportFormatDescriptor[]
+}
+
+export interface EntityExportManifestResponse {
+  packageVersion: string
+  entities: EntityExportManifestEntity[]
+  reportExports: Array<{
+    reportKey: string
+    exportPath: string
+    displayName: string
+    description: string
+  }>
+  auditPackageFormats: string[]
+}

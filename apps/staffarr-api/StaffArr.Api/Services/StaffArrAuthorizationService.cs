@@ -93,6 +93,8 @@ public sealed class StaffArrAuthorizationService
         throw new StlApiException("auth.forbidden", "People write access requires a tenant role with people.write scope.", 403);
     }
 
+    public void RequireWorkerAdminSettingsManage(ClaimsPrincipal principal) => RequirePeopleWrite(principal);
+
     public bool CanReadByRole(string roleKey) =>
         MatchesRole(roleKey, "platform_admin", "tenant_admin", "staffarr_admin", "hr_admin", "supervisor");
 
@@ -369,6 +371,24 @@ public sealed class StaffArrAuthorizationService
             "Audit package export requires staffarr.audit.export scope.",
             403);
     }
+
+    public void RequirePersonnelReportRead(ClaimsPrincipal principal) =>
+        RequireAuditPackageRead(principal);
+
+    public void RequirePersonnelReportExport(ClaimsPrincipal principal) =>
+        RequireAuditPackageExport(principal);
+
+    public void RequireReadinessReportRead(ClaimsPrincipal principal) =>
+        RequireAuditPackageRead(principal);
+
+    public void RequireReadinessReportExport(ClaimsPrincipal principal) =>
+        RequireAuditPackageExport(principal);
+
+    public void RequireIncidentReportRead(ClaimsPrincipal principal) =>
+        RequireAuditPackageRead(principal);
+
+    public void RequireIncidentReportExport(ClaimsPrincipal principal) =>
+        RequireAuditPackageExport(principal);
 
     public void RequirePersonnelNotesRead(ClaimsPrincipal principal, Guid personId)
     {

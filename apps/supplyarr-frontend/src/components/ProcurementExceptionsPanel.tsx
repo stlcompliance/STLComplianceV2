@@ -50,6 +50,8 @@ function statusClass(status: string): string {
       return 'bg-emerald-500/20 text-emerald-200'
     case 'closed':
       return 'bg-slate-500/20 text-slate-300'
+    case 'cancelled':
+      return 'bg-rose-500/20 text-rose-200'
     default:
       return 'bg-rose-500/20 text-rose-200'
   }
@@ -88,6 +90,7 @@ export function ProcurementExceptionsPanel({
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('policy_violation')
   const [assignOnCreate, setAssignOnCreate] = useState(true)
   const [waiveJustification, setWaiveJustification] = useState('')
+  const [cancelReason, setCancelReason] = useState('')
   const [resolutionNotes, setResolutionNotes] = useState('')
   const [resolutionTemplateKey, setResolutionTemplateKey] = useState('')
   const [selectedExceptionId, setSelectedExceptionId] = useState('')
@@ -247,7 +250,7 @@ export function ProcurementExceptionsPanel({
         return closeProcurementException(accessToken, exceptionId)
       }
       return cancelProcurementException(accessToken, exceptionId, {
-        reason: 'Cancelled from purchasing workspace',
+        reason: cancelReason || 'Cancelled from purchasing workspace',
       })
     },
     onSuccess: invalidate,
@@ -303,6 +306,7 @@ export function ProcurementExceptionsPanel({
           Subject record
           <select
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+            data-testid="procurement-exception-subject-record"
             value={subjectId}
             onChange={(event) => setSubjectId(event.target.value)}
           >
@@ -372,6 +376,7 @@ export function ProcurementExceptionsPanel({
           Resolution template
           <select
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+            data-testid="procurement-exception-resolution-template"
             value={resolutionTemplateKey}
             onChange={(event) => setResolutionTemplateKey(event.target.value)}
           >
@@ -398,8 +403,20 @@ export function ProcurementExceptionsPanel({
           <textarea
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
             rows={2}
+            data-testid="procurement-exception-waive-justification"
             value={waiveJustification}
             onChange={(event) => setWaiveJustification(event.target.value)}
+          />
+        </label>
+
+        <label className="block text-sm text-slate-400 md:col-span-2">
+          Cancel reason (for cancel action)
+          <textarea
+            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+            rows={2}
+            data-testid="procurement-exception-cancel-reason"
+            value={cancelReason}
+            onChange={(event) => setCancelReason(event.target.value)}
           />
         </label>
       </div>
@@ -438,6 +455,7 @@ export function ProcurementExceptionsPanel({
               Link follow-up PR
               <select
                 className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+                data-testid="procurement-exception-link-pr"
                 value={linkedPrId}
                 onChange={(event) => setLinkedPrId(event.target.value)}
               >
@@ -453,6 +471,7 @@ export function ProcurementExceptionsPanel({
               Link follow-up PO
               <select
                 className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+                data-testid="procurement-exception-link-po"
                 value={linkedPoId}
                 onChange={(event) => setLinkedPoId(event.target.value)}
               >
@@ -470,6 +489,7 @@ export function ProcurementExceptionsPanel({
             <button
               type="button"
               className="rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-200"
+              data-testid={`procurement-exception-assign-${selectedException.exceptionId}`}
               disabled={assignMutation.isPending}
               onClick={() => assignMutation.mutate(selectedException.exceptionId)}
             >
@@ -478,6 +498,7 @@ export function ProcurementExceptionsPanel({
             <button
               type="button"
               className="rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-200"
+              data-testid={`procurement-exception-save-links-${selectedException.exceptionId}`}
               disabled={linkMutation.isPending}
               onClick={() => linkMutation.mutate(selectedException.exceptionId)}
             >
@@ -487,7 +508,10 @@ export function ProcurementExceptionsPanel({
 
           {(selectedException.linkedPurchaseRequestKey ||
             selectedException.linkedPurchaseOrderKey) && (
-            <p className="mt-2 text-xs text-emerald-300">
+            <p
+              className="mt-2 text-xs text-emerald-300"
+              data-testid="procurement-exception-linked-actions"
+            >
               Linked actions:{' '}
               {selectedException.linkedPurchaseRequestKey
                 ? `PR ${selectedException.linkedPurchaseRequestKey}`
@@ -517,11 +541,13 @@ export function ProcurementExceptionsPanel({
                 ? 'border-sky-600 bg-slate-950'
                 : 'border-slate-800 bg-slate-950/60'
             }`}
+            data-testid={`procurement-exception-row-${exception.exceptionId}`}
           >
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 className="font-mono text-sm text-slate-200 underline-offset-2 hover:underline"
+                data-testid={`procurement-exception-key-${exception.exceptionId}`}
                 onClick={() => {
                   setSelectedExceptionId(exception.exceptionId)
                   setLinkedPrId(exception.linkedPurchaseRequestId ?? '')
@@ -530,12 +556,18 @@ export function ProcurementExceptionsPanel({
               >
                 {exception.exceptionKey}
               </button>
-              <span className={`rounded px-2 py-0.5 text-xs ${statusClass(exception.status)}`}>
+              <span
+                className={`rounded px-2 py-0.5 text-xs ${statusClass(exception.status)}`}
+                data-testid={`procurement-exception-status-${exception.exceptionId}`}
+              >
                 {exception.status}
               </span>
               <span className="text-xs text-slate-500">{exception.exceptionCategory}</span>
               {exception.isSlaBreached ? (
-                <span className="rounded bg-rose-500/20 px-2 py-0.5 text-xs text-rose-200">
+                <span
+                  className="rounded bg-rose-500/20 px-2 py-0.5 text-xs text-rose-200"
+                  data-testid={`procurement-exception-sla-breached-${exception.exceptionId}`}
+                >
                   SLA breached
                 </span>
               ) : null}
@@ -550,6 +582,7 @@ export function ProcurementExceptionsPanel({
                 <button
                   type="button"
                   className="rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-200"
+                  data-testid={`procurement-exception-investigate-${exception.exceptionId}`}
                   onClick={() =>
                     workflowMutation.mutate({
                       type: 'investigate',
@@ -565,6 +598,7 @@ export function ProcurementExceptionsPanel({
                   <button
                     type="button"
                     className="rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-200"
+                    data-testid={`procurement-exception-resolve-${exception.exceptionId}`}
                     onClick={() =>
                       workflowMutation.mutate({
                         type: 'resolve',
@@ -577,6 +611,7 @@ export function ProcurementExceptionsPanel({
                   <button
                     type="button"
                     className="rounded border border-violet-600 px-2 py-0.5 text-xs text-violet-200"
+                    data-testid={`procurement-exception-request-waive-${exception.exceptionId}`}
                     onClick={() =>
                       workflowMutation.mutate({
                         type: 'request_waive',
@@ -589,6 +624,7 @@ export function ProcurementExceptionsPanel({
                   <button
                     type="button"
                     className="rounded border border-rose-700 px-2 py-0.5 text-xs text-rose-200"
+                    data-testid={`procurement-exception-cancel-${exception.exceptionId}`}
                     onClick={() =>
                       workflowMutation.mutate({
                         type: 'cancel',
@@ -605,6 +641,7 @@ export function ProcurementExceptionsPanel({
                   <button
                     type="button"
                     className="rounded border border-emerald-600 px-2 py-0.5 text-xs text-emerald-200"
+                    data-testid={`procurement-exception-approve-waive-${exception.exceptionId}`}
                     onClick={() =>
                       workflowMutation.mutate({
                         type: 'approve_waive',
@@ -617,6 +654,7 @@ export function ProcurementExceptionsPanel({
                   <button
                     type="button"
                     className="rounded border border-amber-600 px-2 py-0.5 text-xs text-amber-200"
+                    data-testid={`procurement-exception-reject-waive-${exception.exceptionId}`}
                     onClick={() =>
                       workflowMutation.mutate({
                         type: 'reject_waive',
@@ -632,6 +670,7 @@ export function ProcurementExceptionsPanel({
                 <button
                   type="button"
                   className="rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-200"
+                  data-testid={`procurement-exception-close-${exception.exceptionId}`}
                   onClick={() =>
                     workflowMutation.mutate({
                       type: 'close',

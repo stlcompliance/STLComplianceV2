@@ -53,6 +53,8 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrApprovalReminderSettingsEndpoints();
         app.MapSupplyArrInternalApprovalReminderEndpoints();
         app.MapSupplyArrApprovalReminderEndpoints();
+        app.MapSupplyArrProcurementExceptionEscalationSettingsEndpoints();
+        app.MapSupplyArrInternalProcurementExceptionEscalationEndpoints();
         app.MapSupplyArrDemandProcessingSettingsEndpoints();
         app.MapSupplyArrInternalDemandProcessingEndpoints();
         app.MapSupplyArrDemandProcessingEndpoints();
@@ -65,5 +67,6 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrForgivingSearchEndpoints();
         app.MapSupplyArrAuditHistoryEndpoints();
         app.MapSupplyArrSupplyReadinessEndpoints();
+        app.MapSupplyArrLoadTestJourneySeedEndpoints();
         await Task.CompletedTask;
     });

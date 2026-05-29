@@ -3,6 +3,11 @@ import { useMemo, useState } from 'react'
 
 import { applyBulkDispatch, getTrips, previewBulkDispatch } from '../api/client'
 import type { BulkDispatchItemPreview, TripSummaryResponse } from '../api/types'
+import {
+  buildBulkDispatchPreviewResponse,
+  confirmBulkDispatchPreview,
+  formatBulkDispatchItemSummary,
+} from '../lib/bulkDispatch'
 
 type BulkDispatchPanelProps = {
   accessToken: string
@@ -11,20 +16,6 @@ type BulkDispatchPanelProps = {
 
 const ACTIVE_STATUSES = new Set(['planned', 'assigned', 'dispatched', 'in_progress'])
 const STATUS_OPTIONS = ['', 'assigned', 'dispatched', 'in_progress', 'completed', 'cancelled']
-
-function formatItemSummary(item: BulkDispatchItemPreview) {
-  const parts: string[] = []
-  if (item.driverPreview?.hasBlockingConflicts) {
-    parts.push('driver conflict')
-  }
-  if (item.vehiclePreview?.hasBlockingConflicts) {
-    parts.push('vehicle conflict')
-  }
-  if (item.statusPreview && !item.statusPreview.canTransition) {
-    parts.push('status blocked')
-  }
-  return parts.length > 0 ? parts.join(', ') : 'ready'
-}
 
 export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelProps) {
   const queryClient = useQueryClient()
@@ -70,14 +61,19 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
   })
 
   const applyMutation = useMutation({
-    mutationFn: async (ignoreConflicts: boolean) => {
+    mutationFn: async (ignoreFlags: {
+      ignoreAvailabilityConflicts: boolean
+      ignoreEligibilityBlocks: boolean
+      ignoreDispatchabilityBlocks: boolean
+      ignoreWorkflowGateBlocks: boolean
+    }) => {
       const items = buildActionItems(
         selectedTripIds,
         driverPersonId,
         vehicleRefKey,
         dispatchStatus,
       )
-      return applyBulkDispatch(accessToken, { items, ignoreAvailabilityConflicts: ignoreConflicts })
+      return applyBulkDispatch(accessToken, { items, ...ignoreFlags })
     },
     onSuccess: async (response) => {
       await queryClient.invalidateQueries({ queryKey: ['routarr-trips'] })
@@ -132,20 +128,23 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
       return
     }
 
-    const blockedCount = previewItems?.filter((item) => !item.canApply).length ?? 0
-    let ignoreConflicts = false
-    if (blockedCount > 0) {
-      const confirmed = window.confirm(
-        `${blockedCount} trip(s) have blocking conflicts. Apply anyway (override availability conflicts)?`,
-      )
-      if (!confirmed) {
-        setStatusMessage('Bulk apply cancelled.')
-        return
-      }
-      ignoreConflicts = true
+    let previewResponse = previewItems
+      ? buildBulkDispatchPreviewResponse(previewItems)
+      : null
+
+    if (!previewResponse) {
+      previewResponse = await previewMutation.mutateAsync()
     }
 
-    await applyMutation.mutateAsync(ignoreConflicts)
+    const ignoreFlags = confirmBulkDispatchPreview(previewResponse, (message) =>
+      window.confirm(message),
+    )
+    if (!ignoreFlags) {
+      setStatusMessage('Bulk apply cancelled.')
+      return
+    }
+
+    await applyMutation.mutateAsync(ignoreFlags)
   }
 
   if (!canAssign) {
@@ -157,14 +156,19 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
   }
 
   return (
-    <section className="space-y-6" aria-label="Bulk dispatch">
+    <section className="space-y-6" aria-label="Bulk dispatch" data-testid="bulk-dispatch-panel">
       <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
         <h2 className="text-lg font-semibold text-slate-50">Bulk dispatch</h2>
         <p className="mt-1 text-sm text-slate-400">
           Select multiple trips and batch-assign drivers, vehicles, or dispatch status. Preview
-          conflicts before applying.
+          conflicts — including driver eligibility, asset dispatchability, and Compliance Core
+          workflow gates — before applying.
         </p>
-        {statusMessage ? <p className="mt-3 text-sm text-amber-200">{statusMessage}</p> : null}
+        {statusMessage ? (
+          <p className="mt-3 text-sm text-amber-200" data-testid="bulk-dispatch-status">
+            {statusMessage}
+          </p>
+        ) : null}
       </div>
 
       <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
@@ -251,6 +255,7 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
             className="rounded bg-slate-700 px-3 py-1.5 text-sm text-slate-100 hover:bg-slate-600 disabled:opacity-50"
             disabled={selectedTripIds.size === 0 || previewMutation.isPending}
             onClick={() => void handlePreview()}
+            data-testid="bulk-dispatch-preview"
           >
             {previewMutation.isPending ? 'Previewing…' : 'Preview conflicts'}
           </button>
@@ -283,7 +288,9 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
                 <p className="font-medium">
                   {item.title} ({item.tripNumber})
                 </p>
-                <p className="text-xs opacity-80">{formatItemSummary(item)}</p>
+                <p className="text-xs opacity-80" data-testid={`bulk-preview-summary-${item.tripId}`}>
+                  {formatBulkDispatchItemSummary(item)}
+                </p>
               </li>
             ))}
           </ul>

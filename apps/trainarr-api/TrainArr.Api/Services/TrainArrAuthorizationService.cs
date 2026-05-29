@@ -639,6 +639,36 @@ public sealed class TrainArrAuthorizationService
             403);
     }
 
+    public void RequireAssignmentReportRead(ClaimsPrincipal principal)
+    {
+        RequireAuditPackageRead(principal);
+    }
+
+    public void RequireAssignmentReportExport(ClaimsPrincipal principal)
+    {
+        RequireAuditPackageExport(principal);
+    }
+
+    public void RequireQualificationReportRead(ClaimsPrincipal principal)
+    {
+        RequireAuditPackageRead(principal);
+    }
+
+    public void RequireQualificationReportExport(ClaimsPrincipal principal)
+    {
+        RequireAuditPackageExport(principal);
+    }
+
+    public void RequireComplianceReportRead(ClaimsPrincipal principal)
+    {
+        RequireAuditPackageRead(principal);
+    }
+
+    public void RequireComplianceReportExport(ClaimsPrincipal principal)
+    {
+        RequireAuditPackageExport(principal);
+    }
+
     public void RequireSignoffSubmit(ClaimsPrincipal principal, Guid staffarrPersonId, string signoffRole)
     {
         RequireTrainArrEntitlement(principal);

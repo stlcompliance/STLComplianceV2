@@ -179,6 +179,31 @@ public sealed class PersonExportDeliveryService(
         return runId;
     }
 
+    public async Task<PersonExportDeliveryRunsResponse> ListRecentRunsAsync(
+        Guid tenantId,
+        int? limit,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedLimit = limit is null or < 1 or > 50 ? 5 : limit.Value;
+        var runs = await db.PersonExportDeliveryRuns
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .OrderByDescending(x => x.StartedAt)
+            .Take(normalizedLimit)
+            .Select(x => new PersonExportDeliveryRunItem(
+                x.Id,
+                x.Status,
+                x.ExportId,
+                x.PersonCount,
+                x.IntervalHours,
+                x.SkipReason,
+                x.StartedAt,
+                x.CompletedAt))
+            .ToListAsync(cancellationToken);
+
+        return new PersonExportDeliveryRunsResponse(runs);
+    }
+
     private async Task<List<TenantPersonExportSchedule>> LoadPendingCandidatesAsync(
         Guid? tenantId,
         DateTimeOffset asOfUtc,

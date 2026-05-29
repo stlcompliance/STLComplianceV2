@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProductWorkspaceLayout } from './layouts/ProductWorkspaceLayout'
 import { AdminPage } from './pages/admin/AdminPage'
+import { ReportsPage } from './pages/reports/ReportsPage'
 import { CertificationsPage } from './pages/certifications/CertificationsPage'
 import { IncidentsPage } from './pages/incidents/IncidentsPage'
 import { TrainingAcknowledgementsPage } from './pages/training-acknowledgements/TrainingAcknowledgementsPage'
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/incidents" element={<IncidentsPage />} />
             <Route path="/training-acknowledgements" element={<TrainingAcknowledgementsPage />} />
             <Route path="/certifications" element={<CertificationsPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

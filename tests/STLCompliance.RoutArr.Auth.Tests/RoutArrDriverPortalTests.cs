@@ -117,6 +117,21 @@ public sealed class RoutArrDriverPortalTests : IAsyncLifetime
         var dispatched = (await dispatchResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
         Assert.Equal("dispatched", dispatched.DispatchStatus);
 
+        var settingsRequest = Authorized(HttpMethod.Put, "/api/trip-execution-settings", _dispatcherToken);
+        settingsRequest.Content = JsonContent.Create(new UpsertTripExecutionSettingsRequest(
+            RequirePreTripDvirBeforeStart: false,
+            RequirePostTripDvirBeforeComplete: false,
+            RequireDeliveryProofBeforeComplete: false,
+            RequirePickupProofBeforeStart: false,
+            BlockTripStartOnDvirFail: true,
+            BlockTripCompleteOnDvirFail: true,
+            RequirePickupProofPhotoBeforeStart: false,
+            RequireDeliveryProofPhotoBeforeComplete: false,
+            RequireDeliverySignatureBeforeComplete: false,
+            RequirePreTripDvirPhotoBeforeStart: false,
+            RequirePostTripDvirPhotoBeforeComplete: false));
+        (await _routarrClient.SendAsync(settingsRequest)).EnsureSuccessStatusCode();
+
         var startResponse = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Post, $"/api/driver-portal/trips/{trip.TripId}/start", driverToken));
         startResponse.EnsureSuccessStatusCode();
@@ -128,13 +143,36 @@ public sealed class RoutArrDriverPortalTests : IAsyncLifetime
         completeResponse.EnsureSuccessStatusCode();
         var completed = (await completeResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
         Assert.Equal("completed", completed.DispatchStatus);
+        Assert.Null(completed.ClosedAt);
 
-        var scheduleAfter = await _routarrClient.SendAsync(
+        var scheduleAfterComplete = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/driver-portal/schedule", driverToken));
-        scheduleAfter.EnsureSuccessStatusCode();
-        var after = (await scheduleAfter.Content.ReadFromJsonAsync<DriverPortalScheduleResponse>())!;
-        Assert.DoesNotContain(after.TodayTrips, x => x.TripId == trip.TripId);
-        Assert.DoesNotContain(after.UpcomingTrips, x => x.TripId == trip.TripId);
+        scheduleAfterComplete.EnsureSuccessStatusCode();
+        var afterComplete = (await scheduleAfterComplete.Content.ReadFromJsonAsync<DriverPortalScheduleResponse>())!;
+        var pendingClose = afterComplete.TodayTrips.Single(x => x.TripId == trip.TripId);
+        Assert.True(pendingClose.CanClose);
+        Assert.False(pendingClose.CanComplete);
+
+        var closeResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/driver-portal/trips/{trip.TripId}/close", driverToken));
+        closeResponse.EnsureSuccessStatusCode();
+        var closed = (await closeResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+        Assert.Equal("completed", closed.DispatchStatus);
+        Assert.NotNull(closed.ClosedAt);
+
+        var scheduleAfterClose = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/driver-portal/schedule", driverToken));
+        scheduleAfterClose.EnsureSuccessStatusCode();
+        var afterClose = (await scheduleAfterClose.Content.ReadFromJsonAsync<DriverPortalScheduleResponse>())!;
+        Assert.DoesNotContain(afterClose.TodayTrips, x => x.TripId == trip.TripId);
+        Assert.DoesNotContain(afterClose.UpcomingTrips, x => x.TripId == trip.TripId);
+
+        var executionResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/trips/{trip.TripId}/execution", _dispatcherToken));
+        executionResponse.EnsureSuccessStatusCode();
+        var execution = (await executionResponse.Content.ReadFromJsonAsync<TripExecutionSummaryResponse>())!;
+        Assert.Equal("completed", execution.DispatchStatus);
+        Assert.NotNull(execution.ClosedAt);
     }
 
     [Fact]

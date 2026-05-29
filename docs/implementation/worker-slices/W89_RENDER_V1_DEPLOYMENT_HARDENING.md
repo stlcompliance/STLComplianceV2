@@ -27,7 +27,9 @@ M1/M13 deployment — full V1 `render.yaml`, env groups, static frontends, `shar
 
 **Public URLs:** onrender.com defaults for CORS, NexArr `Launch__Products__*`, and Vite `VITE_*` build args.
 
-**Secrets:** `sync: false` for `Handoff__ServiceToken`, cross-product `*__ServiceToken`, and each `shared-worker` job token — provision via NexArr after first deploy.
+**Secrets:** `sync: false` for `Handoff__ServiceToken`, cross-product `*__ServiceToken`, each `shared-worker` job token, and Companion Web Push keys — provision via NexArr auto-provision (`STL_INTEGRATION_TOKEN_AUTO_PROVISION`) or Dashboard per `ENV_VARS_V1.md`.
+
+**Follow-ups (Worker 350):** private-network internal URLs, evidence disks, static security headers, `StlRenderBlueprintCatalog` CI gate — see `W350_RENDER_V1_DEPLOYMENT_HARDENING.md`.
 
 ## Post-deploy checklist
 

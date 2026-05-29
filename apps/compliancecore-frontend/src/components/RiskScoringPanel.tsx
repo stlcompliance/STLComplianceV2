@@ -53,7 +53,10 @@ export function RiskScoringPanel({ accessToken, canEvaluate }: RiskScoringPanelP
   const summary = summaryQuery.data
 
   return (
-    <section className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5">
+    <section
+      data-testid="risk-scoring-panel"
+      className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+    >
       <header>
         <h2 className="text-lg font-semibold text-slate-50">Risk scoring</h2>
         <p className="mt-1 text-sm text-slate-400">
@@ -126,6 +129,7 @@ export function RiskScoringPanel({ accessToken, canEvaluate }: RiskScoringPanelP
             type="button"
             onClick={() => evaluateMutation.mutate()}
             disabled={evaluateMutation.isPending}
+            data-testid="risk-scoring-evaluate"
             className="rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
           >
             {evaluateMutation.isPending ? 'Scoring…' : 'Evaluate risk scores'}
@@ -151,9 +155,11 @@ export function RiskScoringPanel({ accessToken, canEvaluate }: RiskScoringPanelP
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Latest scores</h3>
         {(scoresQuery.data ?? []).length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No risk scores yet. Run an evaluation to populate scores.</p>
+          <p className="mt-2 text-sm text-slate-500" data-testid="risk-scoring-list-empty">
+            No risk scores yet. Run an evaluation to populate scores.
+          </p>
         ) : (
-          <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto">
+          <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto" data-testid="risk-scoring-list">
             {(scoresQuery.data ?? []).map((score) => (
               <li
                 key={score.riskScoreId}

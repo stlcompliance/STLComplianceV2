@@ -5,10 +5,13 @@ import { DispatchExceptionQueuePanel } from './DispatchExceptionQueuePanel'
 
 vi.mock('../api/client', () => ({
   listDispatchExceptions: vi.fn(),
+  listDispatchExceptionResolutionTemplates: vi.fn(),
   createDispatchException: vi.fn(),
   assignDispatchException: vi.fn(),
   resolveDispatchException: vi.fn(),
   linkDispatchExceptionTrip: vi.fn(),
+  bulkAssignDispatchExceptions: vi.fn(),
+  bulkResolveDispatchExceptions: vi.fn(),
 }))
 
 import * as client from '../api/client'
@@ -29,10 +32,11 @@ function renderPanel(canTriage: boolean) {
 describe('DispatchExceptionQueuePanel', () => {
   afterEach(() => cleanup())
 
-  it('renders open exceptions from queue API', async () => {
+  it('renders open exceptions with SLA and bulk controls', async () => {
     vi.mocked(client.listDispatchExceptions).mockResolvedValue({
       totalCount: 1,
       openCount: 2,
+      overdueCount: 1,
       items: [
         {
           exceptionId: 'ex-1',
@@ -45,6 +49,9 @@ describe('DispatchExceptionQueuePanel', () => {
           tripNumber: null,
           tripTitle: null,
           assignedToUserId: null,
+          slaDueAt: new Date(Date.now() - 60_000).toISOString(),
+          isSlaBreached: true,
+          resolutionTemplateKey: '',
           resolutionNotes: '',
           createdByUserId: 'u1',
           createdAt: new Date().toISOString(),
@@ -54,10 +61,20 @@ describe('DispatchExceptionQueuePanel', () => {
         },
       ],
     })
+    vi.mocked(client.listDispatchExceptionResolutionTemplates).mockResolvedValue([
+      {
+        templateKey: 'reassign_driver',
+        label: 'Reassign driver',
+        defaultResolutionNotes: 'Assign replacement driver.',
+      },
+    ])
 
     renderPanel(true)
     expect(await screen.findByText('Exception queue')).toBeTruthy()
     expect(screen.getByText('Late departure')).toBeTruthy()
     expect(screen.getByTestId('exception-row-ex-1')).toBeTruthy()
+    expect(screen.getByTestId('exception-sla-breached-ex-1')).toBeTruthy()
+    expect(screen.getByTestId('exception-bulk-actions')).toBeTruthy()
+    expect(screen.getByTestId('exception-resolution-template')).toBeTruthy()
   })
 })

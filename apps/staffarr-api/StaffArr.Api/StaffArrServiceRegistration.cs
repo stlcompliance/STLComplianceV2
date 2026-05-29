@@ -82,6 +82,11 @@ public static class StaffArrServiceRegistration
         builder.Services.AddSingleton<StaffArrDocumentStorageService>();
         builder.Services.AddScoped<AuditPackageService>();
         builder.Services.AddScoped<AuditPackageGenerationService>();
+        builder.Services.AddScoped<PersonnelReportService>();
+        builder.Services.AddScoped<ReadinessReportService>();
+        builder.Services.AddScoped<IncidentReportService>();
+        builder.Services.AddScoped<StaffArrEntityBulkExportService>();
+        builder.Services.AddScoped<StaffArrWorkerAdminService>();
         builder.Services.AddScoped<IStaffArrAuditService, StaffArrAuditService>();
 
         var frontendOrigin = builder.Configuration["Cors:StaffArrFrontendOrigin"] ?? "http://localhost:5175";

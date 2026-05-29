@@ -174,7 +174,9 @@ public sealed class RoutArrEntityBulkExportTests : IAsyncLifetime
             "Export delay",
             "Bulk export exception",
             DispatchExceptionCategories.Delay,
-            trip.TripId));
+            trip.TripId,
+            null,
+            null));
         (await _routarrClient.SendAsync(createExceptionRequest)).EnsureSuccessStatusCode();
     }
 

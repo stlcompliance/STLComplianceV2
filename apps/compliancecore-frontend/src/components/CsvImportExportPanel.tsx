@@ -39,7 +39,10 @@ export function CsvImportExportPanel({ accessToken, canManage }: CsvImportExport
   })
 
   return (
-    <section className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5">
+    <section
+      data-testid="csv-import-export-panel"
+      className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+    >
       <header>
         <h2 className="text-lg font-semibold text-slate-50">9-CSV import / export</h2>
         <p className="mt-1 text-sm text-slate-400">
@@ -48,7 +51,10 @@ export function CsvImportExportPanel({ accessToken, canManage }: CsvImportExport
         </p>
       </header>
 
-      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
+      <div
+        className="rounded-lg border border-slate-800 bg-slate-950/50 p-4"
+        data-testid="csv-import-export-manifest"
+      >
         <h3 className="text-sm font-medium text-slate-200">Bundle files</h3>
         <ul className="mt-2 list-inside list-disc text-sm text-slate-400">
           {(manifestQuery.data?.files ?? []).map((file) => (
@@ -65,6 +71,7 @@ export function CsvImportExportPanel({ accessToken, canManage }: CsvImportExport
           type="button"
           onClick={() => exportMutation.mutate()}
           disabled={exportMutation.isPending}
+          data-testid="csv-import-export-download"
           className="rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
         >
           {exportMutation.isPending ? 'Exporting…' : 'Download ZIP export'}

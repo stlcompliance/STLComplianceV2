@@ -18,16 +18,28 @@ public sealed class DispatchExceptionService(
     public const string AssignAction = "dispatch_exception.assign";
     public const string ResolveAction = "dispatch_exception.resolve";
     public const string LinkTripAction = "dispatch_exception.link_trip";
+    public const string BulkAssignAction = "dispatch_exception.bulk_assign";
+    public const string BulkResolveAction = "dispatch_exception.bulk_resolve";
+
+    public IReadOnlyList<DispatchExceptionResolutionTemplateResponse> ListResolutionTemplates() =>
+        DispatchExceptionResolutionTemplates.All
+            .Select(x => new DispatchExceptionResolutionTemplateResponse(
+                x.TemplateKey,
+                x.Label,
+                x.DefaultResolutionNotes))
+            .ToList();
 
     public async Task<DispatchExceptionListResponse> ListOpenAsync(
         ClaimsPrincipal principal,
         string? statusFilter,
+        bool overdueOnly,
         CancellationToken cancellationToken = default)
     {
         authorization.RequireDispatchExceptionRead(principal);
         var tenantId = principal.GetTenantId();
         var actorUserId = principal.GetUserId();
         var viewAll = authorization.CanViewAllTrips(principal);
+        var asOf = DateTimeOffset.UtcNow;
 
         var statuses = ResolveStatusFilter(statusFilter);
         var query = db.DispatchExceptions
@@ -41,8 +53,17 @@ public sealed class DispatchExceptionService(
                 || x.AssignedToUserId == actorUserId);
         }
 
-        var entities = await query
-            .OrderByDescending(x => x.UpdatedAt)
+        if (overdueOnly)
+        {
+            query = query.Where(x =>
+                x.SlaDueAt != null
+                && x.SlaDueAt < asOf
+                && DispatchExceptionStatuses.OpenQueue.Contains(x.Status));
+        }
+
+        var entities = await (overdueOnly
+                ? query.OrderBy(x => x.SlaDueAt).ThenByDescending(x => x.UpdatedAt)
+                : query.OrderByDescending(x => x.UpdatedAt))
             .Take(200)
             .ToListAsync(cancellationToken);
 
@@ -65,18 +86,28 @@ public sealed class DispatchExceptionService(
                 x => x.TenantId == tenantId && DispatchExceptionStatuses.OpenQueue.Contains(x.Status),
                 cancellationToken);
 
+        var overdueCount = await db.DispatchExceptions
+            .AsNoTracking()
+            .CountAsync(
+                x => x.TenantId == tenantId
+                     && x.SlaDueAt != null
+                     && x.SlaDueAt < asOf
+                     && DispatchExceptionStatuses.OpenQueue.Contains(x.Status),
+                cancellationToken);
+
         await audit.WriteAsync(
             ListAction,
             tenantId,
             actorUserId,
             "dispatch_exception_queue",
-            statusFilter ?? "open",
+            overdueOnly ? "overdue" : statusFilter ?? "open",
             entities.Count.ToString(),
             cancellationToken: cancellationToken);
 
         return new DispatchExceptionListResponse(
             entities.Count,
             openCount,
+            overdueCount,
             entities.Select(x =>
             {
                 Trip? trip = null;
@@ -85,7 +116,7 @@ public sealed class DispatchExceptionService(
                     trips.TryGetValue(x.TripId.Value, out trip);
                 }
 
-                return MapSummary(x, trip);
+                return MapSummary(x, trip, asOf);
             }).ToList());
     }
 
@@ -110,6 +141,11 @@ public sealed class DispatchExceptionService(
                 trip.AssignedDriverPersonId);
         }
 
+        if (request.AssignedToUserId is { } assignee)
+        {
+            DispatchExceptionRules.EnsureAssignee(assignee);
+        }
+
         var now = DateTimeOffset.UtcNow;
         var entity = new DispatchException
         {
@@ -119,8 +155,13 @@ public sealed class DispatchExceptionService(
             Title = request.Title.Trim(),
             Description = request.Description?.Trim() ?? string.Empty,
             Category = category,
-            Status = DispatchExceptionStatuses.Open,
+            Status = request.AssignedToUserId.HasValue
+                ? DispatchExceptionStatuses.Assigned
+                : DispatchExceptionStatuses.Open,
             TripId = trip?.Id,
+            AssignedToUserId = request.AssignedToUserId,
+            AssignedAt = request.AssignedToUserId.HasValue ? now : null,
+            SlaDueAt = DispatchExceptionRules.NormalizeSlaDueAt(request.SlaDueAt, category, now),
             CreatedByUserId = actorUserId,
             CreatedAt = now,
             UpdatedAt = now,
@@ -151,13 +192,7 @@ public sealed class DispatchExceptionService(
         var tenantId = principal.GetTenantId();
         var actorUserId = principal.GetUserId();
 
-        if (request.AssignedToUserId == Guid.Empty)
-        {
-            throw new StlApiException(
-                "dispatch_exception.assignee_required",
-                "Assignee user id is required.",
-                400);
-        }
+        DispatchExceptionRules.EnsureAssignee(request.AssignedToUserId);
 
         var entity = await RequireExceptionAsync(tenantId, exceptionId, cancellationToken);
         EnsureNotTerminal(entity);
@@ -165,6 +200,11 @@ public sealed class DispatchExceptionService(
         entity.Status = DispatchExceptionStatuses.Assigned;
         entity.AssignedToUserId = request.AssignedToUserId;
         entity.AssignedAt = DateTimeOffset.UtcNow;
+        if (request.SlaDueAt is not null)
+        {
+            entity.SlaDueAt = request.SlaDueAt;
+        }
+
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -194,8 +234,12 @@ public sealed class DispatchExceptionService(
         var entity = await RequireExceptionAsync(tenantId, exceptionId, cancellationToken);
         EnsureNotTerminal(entity);
 
+        var templateKey = DispatchExceptionRules.NormalizeResolutionTemplateKey(request.ResolutionTemplateKey);
         entity.Status = DispatchExceptionStatuses.Resolved;
-        entity.ResolutionNotes = request.ResolutionNotes?.Trim() ?? string.Empty;
+        entity.ResolutionTemplateKey = templateKey;
+        entity.ResolutionNotes = DispatchExceptionRules.BuildResolutionNotes(
+            string.IsNullOrWhiteSpace(templateKey) ? null : templateKey,
+            request.ResolutionNotes);
         entity.ResolvedByUserId = actorUserId;
         entity.ResolvedAt = DateTimeOffset.UtcNow;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
@@ -208,7 +252,7 @@ public sealed class DispatchExceptionService(
             actorUserId,
             "dispatch_exception",
             entity.Id.ToString(),
-            "resolved",
+            string.IsNullOrWhiteSpace(templateKey) ? "resolved" : templateKey,
             cancellationToken: cancellationToken);
 
         return await MapWithTripAsync(tenantId, entity, cancellationToken);
@@ -256,6 +300,120 @@ public sealed class DispatchExceptionService(
             cancellationToken: cancellationToken);
 
         return MapSummary(entity, trip);
+    }
+
+    public async Task<BulkDispatchExceptionActionResponse> BulkAssignAsync(
+        ClaimsPrincipal principal,
+        BulkAssignDispatchExceptionsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireDispatchExceptionTriage(principal);
+        var tenantId = principal.GetTenantId();
+        var actorUserId = principal.GetUserId();
+        DispatchExceptionRules.EnsureAssignee(request.AssignedToUserId);
+        var exceptionIds = DispatchExceptionRules.ValidateBulkExceptionIds(request.ExceptionIds);
+
+        var results = new List<BulkDispatchExceptionActionResult>();
+        foreach (var exceptionId in exceptionIds)
+        {
+            try
+            {
+                var mapped = await AssignAsync(
+                    principal,
+                    exceptionId,
+                    new AssignDispatchExceptionRequest(request.AssignedToUserId, request.SlaDueAt),
+                    cancellationToken);
+                results.Add(new BulkDispatchExceptionActionResult(
+                    exceptionId,
+                    true,
+                    null,
+                    null,
+                    mapped));
+            }
+            catch (StlApiException ex)
+            {
+                results.Add(new BulkDispatchExceptionActionResult(
+                    exceptionId,
+                    false,
+                    ex.Code,
+                    ex.Message,
+                    null));
+            }
+        }
+
+        var successCount = results.Count(x => x.Success);
+        await audit.WriteAsync(
+            BulkAssignAction,
+            tenantId,
+            actorUserId,
+            "dispatch_exception_bulk",
+            request.AssignedToUserId.ToString(),
+            $"{successCount}/{results.Count}",
+            cancellationToken: cancellationToken);
+
+        return new BulkDispatchExceptionActionResponse(
+            results.Count,
+            successCount,
+            results.Count - successCount,
+            results);
+    }
+
+    public async Task<BulkDispatchExceptionActionResponse> BulkResolveAsync(
+        ClaimsPrincipal principal,
+        BulkResolveDispatchExceptionsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireDispatchExceptionTriage(principal);
+        var tenantId = principal.GetTenantId();
+        var actorUserId = principal.GetUserId();
+        var exceptionIds = DispatchExceptionRules.ValidateBulkExceptionIds(request.ExceptionIds);
+        DispatchExceptionRules.NormalizeResolutionTemplateKey(request.ResolutionTemplateKey);
+
+        var results = new List<BulkDispatchExceptionActionResult>();
+        foreach (var exceptionId in exceptionIds)
+        {
+            try
+            {
+                var mapped = await ResolveAsync(
+                    principal,
+                    exceptionId,
+                    new ResolveDispatchExceptionRequest(
+                        request.ResolutionNotes,
+                        request.ResolutionTemplateKey),
+                    cancellationToken);
+                results.Add(new BulkDispatchExceptionActionResult(
+                    exceptionId,
+                    true,
+                    null,
+                    null,
+                    mapped));
+            }
+            catch (StlApiException ex)
+            {
+                results.Add(new BulkDispatchExceptionActionResult(
+                    exceptionId,
+                    false,
+                    ex.Code,
+                    ex.Message,
+                    null));
+            }
+        }
+
+        var successCount = results.Count(x => x.Success);
+        await audit.WriteAsync(
+            BulkResolveAction,
+            tenantId,
+            actorUserId,
+            "dispatch_exception_bulk",
+            request.ResolutionTemplateKey ?? "manual",
+            $"{successCount}/{results.Count}",
+            cancellationToken: cancellationToken);
+
+        return new BulkDispatchExceptionActionResponse(
+            results.Count,
+            successCount,
+            results.Count - successCount,
+            results);
     }
 
     private static IReadOnlySet<string> ResolveStatusFilter(string? statusFilter)
@@ -396,7 +554,10 @@ public sealed class DispatchExceptionService(
         return MapSummary(entity, trip);
     }
 
-    private static DispatchExceptionSummaryResponse MapSummary(DispatchException entity, Trip? trip) =>
+    private static DispatchExceptionSummaryResponse MapSummary(
+        DispatchException entity,
+        Trip? trip,
+        DateTimeOffset? asOfUtc = null) =>
         new(
             entity.Id,
             entity.ExceptionKey,
@@ -408,6 +569,9 @@ public sealed class DispatchExceptionService(
             trip?.TripNumber,
             trip?.Title,
             entity.AssignedToUserId,
+            entity.SlaDueAt,
+            DispatchExceptionRules.IsSlaBreached(entity, asOfUtc ?? DateTimeOffset.UtcNow),
+            entity.ResolutionTemplateKey,
             entity.ResolutionNotes,
             entity.CreatedByUserId,
             entity.CreatedAt,

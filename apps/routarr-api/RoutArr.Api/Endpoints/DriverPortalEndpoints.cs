@@ -1,5 +1,6 @@
 using RoutArr.Api.Contracts;
-using RoutArr.Api.Services;using STLCompliance.Shared.Auth;
+using RoutArr.Api.Services;
+using STLCompliance.Shared.Auth;
 
 namespace RoutArr.Api.Endpoints;
 
@@ -73,5 +74,16 @@ public static class DriverPortalEndpoints
             CancellationToken cancellationToken) =>
             Results.Ok(await proofDvirService.SubmitDvirAsync(context.User, tripId, request, cancellationToken)))
         .WithName("DriverPortalSubmitTripDvir");
+
+        group.MapGet("/trips/{tripId:guid}/capture-readiness", async (
+            Guid tripId,
+            HttpContext context,
+            TripExecutionCaptureService captureService,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await captureService.GetCaptureReadinessAsync(context.User, tripId, cancellationToken)))
+        .WithName("DriverPortalTripCaptureReadiness");
+
+        var tripGroup = group.MapGroup("/trips/{tripId:guid}");
+        tripGroup.MapRoutArrDriverPortalCaptureAttachmentEndpoints();
     }
 }

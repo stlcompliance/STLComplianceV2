@@ -22,6 +22,48 @@ namespace RoutArr.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("RoutArr.Api.Entities.AttachmentRetentionRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AttachmentsPurgedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("BytesReclaimed")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SkipReason")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<int>("SkippedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "ProcessedAt");
+
+                    b.ToTable("routarr_attachment_retention_runs", (string)null);
+                });
+
             modelBuilder.Entity("RoutArr.Api.Entities.AuditPackageGenerationJob", b =>
                 {
                     b.Property<Guid>("Id")
@@ -123,11 +165,19 @@ namespace RoutArr.Api.Migrations
                         .HasMaxLength(1024)
                         .HasColumnType("character varying(1024)");
 
+                    b.Property<string>("ResolutionTemplateKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<DateTimeOffset?>("ResolvedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("ResolvedByUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("SlaDueAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -156,6 +206,8 @@ namespace RoutArr.Api.Migrations
 
                     b.HasIndex("TenantId", "ExceptionKey")
                         .IsUnique();
+
+                    b.HasIndex("TenantId", "SlaDueAt");
 
                     b.HasIndex("TenantId", "TripId");
 
@@ -565,6 +617,38 @@ namespace RoutArr.Api.Migrations
                     b.ToTable("routarr_staffarr_person_refs", (string)null);
                 });
 
+            modelBuilder.Entity("RoutArr.Api.Entities.TenantAttachmentRetentionSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("RetentionDaysAfterTripClose")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("routarr_tenant_attachment_retention_settings", (string)null);
+                });
+
             modelBuilder.Entity("RoutArr.Api.Entities.TenantDispatchBoardState", b =>
                 {
                     b.Property<Guid>("Id")
@@ -673,6 +757,65 @@ namespace RoutArr.Api.Migrations
                     b.ToTable("routarr_tenant_trip_completion_rollup_settings", (string)null);
                 });
 
+            modelBuilder.Entity("RoutArr.Api.Entities.TenantTripExecutionSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("BlockTripCompleteOnDvirFail")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("BlockTripStartOnDvirFail")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("RequireDeliveryProofBeforeComplete")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireDeliveryProofPhotoBeforeComplete")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequireDeliverySignatureBeforeComplete")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequirePickupProofBeforeStart")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequirePickupProofPhotoBeforeStart")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequirePostTripDvirBeforeComplete")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequirePostTripDvirPhotoBeforeComplete")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequirePreTripDvirBeforeStart")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequirePreTripDvirPhotoBeforeStart")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("routarr_tenant_trip_execution_settings", (string)null);
+                });
+
             modelBuilder.Entity("RoutArr.Api.Entities.Trip", b =>
                 {
                     b.Property<Guid>("Id")
@@ -687,6 +830,9 @@ namespace RoutArr.Api.Migrations
                         .HasColumnType("character varying(128)");
 
                     b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ClosedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset?>("CompletedAt")
@@ -752,6 +898,76 @@ namespace RoutArr.Api.Migrations
                     b.HasIndex("TenantId", "DispatchStatus", "UpdatedAt");
 
                     b.ToTable("routarr_trips", (string)null);
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.TripCaptureAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AttachmentKind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("CapturedByPersonId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SubjectType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TripId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TripId");
+
+                    b.HasIndex("TenantId", "TripId");
+
+                    b.HasIndex("TenantId", "TripId", "AttachmentKind", "CreatedAt");
+
+                    b.HasIndex("TenantId", "TripId", "SubjectType", "SubjectId");
+
+                    b.ToTable("routarr_trip_capture_attachments", (string)null);
                 });
 
             modelBuilder.Entity("RoutArr.Api.Entities.TripCompletionEvent", b =>
@@ -1360,6 +1576,17 @@ namespace RoutArr.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Route");
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.TripCaptureAttachment", b =>
+                {
+                    b.HasOne("RoutArr.Api.Entities.Trip", "Trip")
+                        .WithMany()
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Trip");
                 });
 
             modelBuilder.Entity("RoutArr.Api.Entities.TripCompletionEvent", b =>

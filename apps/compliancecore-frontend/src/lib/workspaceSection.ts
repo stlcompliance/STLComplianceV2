@@ -5,6 +5,7 @@ export const WORKSPACE_SECTIONS = [
   'evaluation',
   'fact-sources',
   'operator',
+  'reports',
   'admin',
 ] as const
 
@@ -36,5 +37,6 @@ export const workspaceSectionHeaders: Record<
   evaluation: { title: 'Rule evaluation', subtitle: 'Evaluate rules against facts' },
   'fact-sources': { title: 'Fact sources', subtitle: 'Fact source configuration' },
   operator: { title: 'Operator dashboard', subtitle: 'Operational compliance overview' },
+  reports: { title: 'Reports', subtitle: 'Compliance and operator report rollups' },
   admin: { title: 'Admin', subtitle: 'Import, export, and audit packages' },
 }

@@ -17,7 +17,8 @@ public sealed record UpsertDispatchNotificationSettingsRequest(
     bool NotifyOnTripDispatched,
     bool NotifyOnTripInProgress,
     bool NotifyOnTripCompleted,
-    bool NotifyOnTripCancelled);
+    bool NotifyOnTripCancelled,
+    bool ClearNotificationWebhookOnDisable = false);
 
 public sealed record DispatchNotificationDispatchItem(
     Guid NotificationId,

@@ -147,6 +147,20 @@ public static class StlIntegrationTokenCatalog
         Profile("worker-staffarr-readiness", "shared-worker", "StaffArrReadinessRollup__ServiceToken", "shared-worker", ["staffarr"], "staffarr.readiness.rollup"),
         Profile("worker-staffarr-permissions", "shared-worker", "StaffArrPermissionProjection__ServiceToken", "shared-worker", ["staffarr"], "staffarr.permissions.project"),
         Profile(
+            "worker-staffarr-person-export",
+            "shared-worker",
+            "StaffArrPersonExportDelivery__ServiceToken",
+            "shared-worker",
+            ["staffarr"],
+            "staffarr.people.export.deliver"),
+        Profile(
+            "worker-staffarr-personnel-history",
+            "shared-worker",
+            "StaffArrPersonnelHistoryRollup__ServiceToken",
+            "shared-worker",
+            ["staffarr"],
+            "staffarr.personnel_history.rollup"),
+        Profile(
             "worker-staffarr-audit-packages",
             "shared-worker",
             "StaffArrAuditPackageGeneration__ServiceToken",
@@ -177,12 +191,33 @@ public static class StlIntegrationTokenCatalog
             ["supplyarr"],
             "supplyarr.pricing.snapshots.capture"),
         Profile(
+            "worker-supplyarr-lead-time-snapshot",
+            "shared-worker",
+            "SupplyArrLeadTimeSnapshot__ServiceToken",
+            "shared-worker",
+            ["supplyarr"],
+            "supplyarr.lead_time.snapshots.capture"),
+        Profile(
+            "worker-supplyarr-availability-snapshot",
+            "shared-worker",
+            "SupplyArrAvailabilitySnapshot__ServiceToken",
+            "shared-worker",
+            ["supplyarr"],
+            "supplyarr.availability.snapshots.capture"),
+        Profile(
             "worker-supplyarr-notifications",
             "shared-worker",
             "SupplyArrNotificationDispatch__ServiceToken",
             "shared-worker",
             ["supplyarr"],
             "supplyarr.notifications.dispatch"),
+        Profile(
+            "worker-supplyarr-procurement-exception-escalations",
+            "shared-worker",
+            "SupplyArrProcurementExceptionEscalations__ServiceToken",
+            "shared-worker",
+            ["supplyarr"],
+            "supplyarr.procurement_exceptions.escalate"),
         Profile(
             "worker-compliancecore-scheduled",
             "shared-worker",
@@ -295,6 +330,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["routarr"],
             "routarr.trips.completion.rollup"),
+        Profile(
+            "worker-routarr-attachment-retention",
+            "shared-worker",
+            "RoutArrAttachmentRetention__ServiceToken",
+            "shared-worker",
+            ["routarr"],
+            "routarr.attachments.retention.purge"),
         Profile(
             "worker-supplyarr-procurement-coordination",
             "shared-worker",

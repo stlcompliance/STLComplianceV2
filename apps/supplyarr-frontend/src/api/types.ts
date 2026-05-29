@@ -1083,6 +1083,69 @@ export interface ApprovalReminderRunsResponse {
   items: ApprovalReminderRunItem[]
 }
 
+export interface ProcurementExceptionEscalationSettingsResponse {
+  isEnabled: boolean
+  escalationCooldownHours: number
+  maxEscalationsPerException: number
+  notifyOnProcurementExceptionSlaEscalation: boolean
+  updatedAt: string | null
+}
+
+export interface UpsertProcurementExceptionEscalationSettingsRequest {
+  isEnabled: boolean
+  escalationCooldownHours: number
+  maxEscalationsPerException: number
+  notifyOnProcurementExceptionSlaEscalation: boolean
+}
+
+export interface PendingProcurementExceptionEscalationItem {
+  procurementExceptionId: string
+  exceptionKey: string
+  subjectType: string
+  subjectId: string
+  subjectKey: string
+  title: string
+  status: string
+  slaDueAt: string | null
+  escalationCount: number
+  lastEscalatedAt: string | null
+  hoursOverdue: number
+  hoursUntilNextEscalation: number
+}
+
+export interface PendingProcurementExceptionEscalationsResponse {
+  asOfUtc: string
+  batchSize: number
+  items: PendingProcurementExceptionEscalationItem[]
+}
+
+export interface ProcurementExceptionEscalationRunItem {
+  runId: string
+  asOfUtc: string
+  candidatesFound: number
+  escalatedCount: number
+  skippedCount: number
+  createdAt: string
+}
+
+export interface ProcurementExceptionEscalationRunsResponse {
+  items: ProcurementExceptionEscalationRunItem[]
+}
+
+export interface ProcurementExceptionEscalationEventItem {
+  eventId: string
+  procurementExceptionId: string
+  exceptionKey: string
+  escalationLevel: number
+  actionKind: string
+  notificationDispatchId: string | null
+  createdAt: string
+}
+
+export interface ProcurementExceptionEscalationEventsResponse {
+  items: ProcurementExceptionEscalationEventItem[]
+}
+
 export interface ApprovalReminderSummaryResponse {
   reminderStateId: string
   subjectType: string
@@ -1406,6 +1469,8 @@ export interface ProcurementExceptionResponse {
   waivedAt: string | null
   resolvedAt: string | null
   closedAt: string | null
+  cancelledAt: string | null
+  cancellationReason: string
   createdAt: string
   updatedAt: string
 }

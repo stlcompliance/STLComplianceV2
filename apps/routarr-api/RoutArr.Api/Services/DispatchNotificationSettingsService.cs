@@ -56,10 +56,21 @@ public sealed class DispatchNotificationSettingsService(
             db.TenantDispatchNotificationSettings.Add(entity);
         }
 
-        entity.IsEnabled = request.IsEnabled;
-        entity.NotificationWebhookUrl = DispatchNotificationRules.NormalizeWebhookUrl(
+        DispatchNotificationRules.ValidateUpsertRequest(request.IsEnabled, request.NotificationWebhookUrl);
+
+        var normalizedWebhook = DispatchNotificationRules.NormalizeWebhookUrl(
             request.NotificationWebhookUrl,
             allowInsecureHttp);
+        if (!request.IsEnabled
+            && normalizedWebhook is null
+            && !request.ClearNotificationWebhookOnDisable
+            && !string.IsNullOrWhiteSpace(entity.NotificationWebhookUrl))
+        {
+            normalizedWebhook = entity.NotificationWebhookUrl;
+        }
+
+        entity.IsEnabled = request.IsEnabled;
+        entity.NotificationWebhookUrl = normalizedWebhook;
         entity.NotifyOnTripAssigned = request.NotifyOnTripAssigned;
         entity.NotifyOnTripDispatched = request.NotifyOnTripDispatched;
         entity.NotifyOnTripInProgress = request.NotifyOnTripInProgress;

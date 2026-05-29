@@ -8,6 +8,7 @@ import { CitationsPage } from './pages/citations/CitationsPage'
 import { RulePacksPage } from './pages/rule-packs/RulePacksPage'
 import { QualificationsPage } from './pages/qualifications/QualificationsPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
+import { ReportsPage } from './pages/reports/ReportsPage'
 import { AssignmentWorkspacePage } from './pages/AssignmentWorkspacePage'
 import { LaunchPage } from './pages/LaunchPage'
 
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/citations" element={<CitationsPage />} />
             <Route path="/rule-packs" element={<RulePacksPage />} />
             <Route path="/qualifications" element={<QualificationsPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

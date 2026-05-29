@@ -1,0 +1,122 @@
+name: Ship Gate Staging Render
+
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: "Validation phase"
+        required: false
+        default: "api-health"
+        type: choice
+        options:
+          - api-health
+          - optional-live-e2e
+      skip_optional_live_e2e:
+        description: "Skip optional entitlement denial live probes"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      skip_static_sites:
+        description: "Skip optional static site probes"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    outputs:
+      run_ship_gate: ${{ steps.evaluate.outputs.run_ship_gate }}
+    steps:
+      - name: Evaluate staging ship gate secrets
+        id: evaluate
+        env:
+          RENDER_STAGING_NEXARR_API_URL: ${{ secrets.RENDER_STAGING_NEXARR_API_URL }}
+          RENDER_STAGING_STAFFARR_API_URL: ${{ secrets.RENDER_STAGING_STAFFARR_API_URL }}
+          RENDER_STAGING_TRAINARR_API_URL: ${{ secrets.RENDER_STAGING_TRAINARR_API_URL }}
+          RENDER_STAGING_MAINTAINARR_API_URL: ${{ secrets.RENDER_STAGING_MAINTAINARR_API_URL }}
+          RENDER_STAGING_ROUTARR_API_URL: ${{ secrets.RENDER_STAGING_ROUTARR_API_URL }}
+          RENDER_STAGING_SUPPLYARR_API_URL: ${{ secrets.RENDER_STAGING_SUPPLYARR_API_URL }}
+          RENDER_STAGING_COMPLIANCECORE_API_URL: ${{ secrets.RENDER_STAGING_COMPLIANCECORE_API_URL }}
+        run: |
+          missing=()
+          for var in \
+            RENDER_STAGING_NEXARR_API_URL \
+            RENDER_STAGING_STAFFARR_API_URL \
+            RENDER_STAGING_TRAINARR_API_URL \
+            RENDER_STAGING_MAINTAINARR_API_URL \
+            RENDER_STAGING_ROUTARR_API_URL \
+            RENDER_STAGING_SUPPLYARR_API_URL \
+            RENDER_STAGING_COMPLIANCECORE_API_URL
+          do
+            if [[ -z "${!var}" ]]; then
+              missing+=("$var")
+            fi
+          done
+
+          if ((${#missing[@]} > 0)); then
+            echo "Render staging ship gate skipped — missing secrets: ${missing[*]}"
+            echo "run_ship_gate=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Render staging ship gate secrets ready."
+            echo "run_ship_gate=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  staging-render-ship-gate:
+    needs: evaluate
+    if: needs.evaluate.outputs.run_ship_gate == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore STLCompliance.slnx
+
+      - name: Build
+        run: dotnet build STLCompliance.slnx --configuration Release --no-restore
+
+      - name: Run Render staging ship gate validation
+        env:
+          RENDER_STAGING_NEXARR_API_URL: ${{ secrets.RENDER_STAGING_NEXARR_API_URL }}
+          RENDER_STAGING_STAFFARR_API_URL: ${{ secrets.RENDER_STAGING_STAFFARR_API_URL }}
+          RENDER_STAGING_TRAINARR_API_URL: ${{ secrets.RENDER_STAGING_TRAINARR_API_URL }}
+          RENDER_STAGING_MAINTAINARR_API_URL: ${{ secrets.RENDER_STAGING_MAINTAINARR_API_URL }}
+          RENDER_STAGING_ROUTARR_API_URL: ${{ secrets.RENDER_STAGING_ROUTARR_API_URL }}
+          RENDER_STAGING_SUPPLYARR_API_URL: ${{ secrets.RENDER_STAGING_SUPPLYARR_API_URL }}
+          RENDER_STAGING_COMPLIANCECORE_API_URL: ${{ secrets.RENDER_STAGING_COMPLIANCECORE_API_URL }}
+          RENDER_STAGING_SUITE_FRONTEND_URL: ${{ secrets.RENDER_STAGING_SUITE_FRONTEND_URL }}
+          RENDER_STAGING_STLCOMPLIANCESITE_URL: ${{ secrets.RENDER_STAGING_STLCOMPLIANCESITE_URL }}
+          RENDER_STAGING_STAFFARR_FRONTEND_URL: ${{ secrets.RENDER_STAGING_STAFFARR_FRONTEND_URL }}
+          RENDER_STAGING_TRAINARR_FRONTEND_URL: ${{ secrets.RENDER_STAGING_TRAINARR_FRONTEND_URL }}
+          RENDER_STAGING_MAINTAINARR_FRONTEND_URL: ${{ secrets.RENDER_STAGING_MAINTAINARR_FRONTEND_URL }}
+          RENDER_STAGING_ROUTARR_FRONTEND_URL: ${{ secrets.RENDER_STAGING_ROUTARR_FRONTEND_URL }}
+          RENDER_STAGING_SUPPLYARR_FRONTEND_URL: ${{ secrets.RENDER_STAGING_SUPPLYARR_FRONTEND_URL }}
+          RENDER_STAGING_COMPLIANCECORE_FRONTEND_URL: ${{ secrets.RENDER_STAGING_COMPLIANCECORE_FRONTEND_URL }}
+          RENDER_STAGING_COMPANION_FRONTEND_URL: ${{ secrets.RENDER_STAGING_COMPANION_FRONTEND_URL }}
+          STL_LOAD_DEMO_EMAIL: ${{ secrets.RENDER_STAGING_LOAD_DEMO_EMAIL }}
+          STL_LOAD_DEMO_PASSWORD: ${{ secrets.RENDER_STAGING_LOAD_DEMO_PASSWORD }}
+          STL_LOAD_DEMO_TENANT_ID: ${{ secrets.RENDER_STAGING_LOAD_DEMO_TENANT_ID }}
+        run: |
+          args=("${{ github.event.inputs.phase || 'api-health' }}")
+          if [[ "${{ github.event.inputs.skip_optional_live_e2e || 'true' }}" == "true" ]]; then
+            args+=("--skip-optional-live-e2e")
+          fi
+          if [[ "${{ github.event.inputs.skip_static_sites || 'false' }}" == "true" ]]; then
+            args+=("--skip-static-sites")
+          fi
+          ./scripts/ops/render-staging-ship-gate-validate.sh "${args[@]}"

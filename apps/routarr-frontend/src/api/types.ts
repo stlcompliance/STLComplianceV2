@@ -57,6 +57,7 @@ export interface TripSummaryResponse {
   dispatchedAt: string | null
   startedAt: string | null
   completedAt: string | null
+  closedAt: string | null
   cancelledAt: string | null
 }
 
@@ -78,6 +79,7 @@ export interface TripDetailResponse {
   dispatchedAt: string | null
   startedAt: string | null
   completedAt: string | null
+  closedAt: string | null
   cancelledAt: string | null
 }
 
@@ -728,6 +730,9 @@ export interface DispatchExceptionSummaryResponse {
   tripNumber: string | null
   tripTitle: string | null
   assignedToUserId: string | null
+  slaDueAt: string | null
+  isSlaBreached: boolean
+  resolutionTemplateKey: string
   resolutionNotes: string
   createdByUserId: string
   createdAt: string
@@ -739,7 +744,14 @@ export interface DispatchExceptionSummaryResponse {
 export interface DispatchExceptionListResponse {
   totalCount: number
   openCount: number
+  overdueCount: number
   items: DispatchExceptionSummaryResponse[]
+}
+
+export interface DispatchExceptionResolutionTemplateResponse {
+  templateKey: string
+  label: string
+  defaultResolutionNotes: string
 }
 
 export interface CreateDispatchExceptionRequest {
@@ -747,18 +759,49 @@ export interface CreateDispatchExceptionRequest {
   description: string
   category?: string
   tripId?: string
+  assignedToUserId?: string
+  slaDueAt?: string
 }
 
 export interface AssignDispatchExceptionRequest {
   assignedToUserId: string
+  slaDueAt?: string
 }
 
 export interface ResolveDispatchExceptionRequest {
   resolutionNotes?: string
+  resolutionTemplateKey?: string
 }
 
 export interface LinkDispatchExceptionTripRequest {
   tripId: string
+}
+
+export interface BulkAssignDispatchExceptionsRequest {
+  exceptionIds: string[]
+  assignedToUserId: string
+  slaDueAt?: string
+}
+
+export interface BulkResolveDispatchExceptionsRequest {
+  exceptionIds: string[]
+  resolutionNotes?: string
+  resolutionTemplateKey?: string
+}
+
+export interface BulkDispatchExceptionActionResult {
+  exceptionId: string
+  success: boolean
+  errorCode: string | null
+  errorMessage: string | null
+  exception: DispatchExceptionSummaryResponse | null
+}
+
+export interface BulkDispatchExceptionActionResponse {
+  totalCount: number
+  successCount: number
+  failureCount: number
+  results: BulkDispatchExceptionActionResult[]
 }
 
 export interface ActiveTripsSummary {
@@ -767,6 +810,8 @@ export interface ActiveTripsSummary {
   atRiskCount: number
   dispatchedCount: number
   inProgressCount: number
+  unassignedCount: number
+  openExceptionCount: number
 }
 
 export interface ActiveTripRow {
@@ -775,6 +820,7 @@ export interface ActiveTripRow {
   title: string
   dispatchStatus: string
   assignedDriverPersonId: string | null
+  assignedDriverDisplayName: string | null
   vehicleRefKey: string | null
   scheduledStartAt: string | null
   scheduledEndAt: string | null
@@ -784,6 +830,10 @@ export interface ActiveTripRow {
   isAtRisk: boolean
   routeCount: number
   pendingStopCount: number
+  completedStopCount: number
+  totalStopCount: number
+  stopProgressPercent: number
+  openExceptionCount: number
   timelineOffsetPercent: number
   timelineWidthPercent: number
 }
@@ -797,6 +847,13 @@ export interface ActiveTripsResponse {
   generatedAt: string
 }
 
+export interface UnassignedWorkQueueSummary {
+  unassignedCount: number
+  lateCount: number
+  atRiskCount: number
+  urgentCount: number
+}
+
 export interface UnassignedWorkQueueTripRow {
   tripId: string
   tripNumber: string
@@ -808,6 +865,17 @@ export interface UnassignedWorkQueueTripRow {
   isAtRisk: boolean
   routeCount: number
   pendingStopCount: number
+  minutesUntilStart: number
+}
+
+export interface UnassignedWorkQueueResponse {
+  scope: string
+  windowStart: string
+  windowEnd: string
+  summary: UnassignedWorkQueueSummary
+  items: UnassignedWorkQueueTripRow[]
+  driverRefs: { items: StaffarrPersonRefResponse[] }
+  generatedAt: string
 }
 
 export interface DriverPortalTripRow {
@@ -821,6 +889,7 @@ export interface DriverPortalTripRow {
   dispatchedAt: string | null
   startedAt: string | null
   completedAt: string | null
+  closedAt: string | null
   canDispatch: boolean
   canStart: boolean
   canComplete: boolean
@@ -828,6 +897,82 @@ export interface DriverPortalTripRow {
   proofCount: number
   hasPreTripDvir: boolean
   hasPostTripDvir: boolean
+  captureStartReady: boolean
+  captureCompleteReady: boolean
+}
+
+export interface TripCaptureReadinessItem {
+  key: string
+  label: string
+  satisfied: boolean
+  required: boolean
+  message: string | null
+}
+
+export interface TripCaptureReadinessResponse {
+  tripId: string
+  dispatchStatus: string
+  canStartTrip: boolean
+  canCompleteTrip: boolean
+  items: TripCaptureReadinessItem[]
+}
+
+export interface TripExecutionSettingsResponse {
+  requirePreTripDvirBeforeStart: boolean
+  requirePostTripDvirBeforeComplete: boolean
+  requireDeliveryProofBeforeComplete: boolean
+  requirePickupProofBeforeStart: boolean
+  blockTripStartOnDvirFail: boolean
+  blockTripCompleteOnDvirFail: boolean
+  requirePickupProofPhotoBeforeStart: boolean
+  requireDeliveryProofPhotoBeforeComplete: boolean
+  requireDeliverySignatureBeforeComplete: boolean
+  requirePreTripDvirPhotoBeforeStart: boolean
+  requirePostTripDvirPhotoBeforeComplete: boolean
+  updatedAt: string | null
+}
+
+export interface UpsertTripExecutionSettingsRequest {
+  requirePreTripDvirBeforeStart: boolean
+  requirePostTripDvirBeforeComplete: boolean
+  requireDeliveryProofBeforeComplete: boolean
+  requirePickupProofBeforeStart: boolean
+  blockTripStartOnDvirFail: boolean
+  blockTripCompleteOnDvirFail: boolean
+  requirePickupProofPhotoBeforeStart: boolean
+  requireDeliveryProofPhotoBeforeComplete: boolean
+  requireDeliverySignatureBeforeComplete: boolean
+  requirePreTripDvirPhotoBeforeStart: boolean
+  requirePostTripDvirPhotoBeforeComplete: boolean
+}
+
+export interface TripCaptureAttachmentResponse {
+  attachmentId: string
+  tripId: string
+  subjectType: string
+  subjectId: string
+  attachmentKind: string
+  fileName: string
+  contentType: string
+  sizeBytes: number
+  notes: string | null
+  capturedByPersonId: string
+  createdAt: string
+}
+
+export interface UploadTripCaptureAttachmentRequest {
+  attachmentKind: string
+  fileName: string
+  contentType: string
+  contentBase64: string
+  notes?: string | null
+}
+
+export interface TripCaptureAttachmentListResponse {
+  tripId: string
+  subjectType: string
+  subjectId: string
+  items: TripCaptureAttachmentResponse[]
 }
 
 export interface TripProofRecordResponse {
@@ -840,6 +985,7 @@ export interface TripProofRecordResponse {
   notes: string
   capturedAt: string
   createdAt: string
+  attachments: TripCaptureAttachmentResponse[]
 }
 
 export interface CreateTripProofRequest {
@@ -860,6 +1006,7 @@ export interface TripDvirInspectionResponse {
   defectNotes: string
   submittedByPersonId: string
   submittedAt: string
+  attachments: TripCaptureAttachmentResponse[]
 }
 
 export interface SubmitTripDvirRequest {
@@ -873,7 +1020,9 @@ export interface SubmitTripDvirRequest {
 export interface TripExecutionSummaryResponse {
   tripId: string
   tripNumber: string
+  dispatchStatus: string
   assignedDriverPersonId: string | null
+  closedAt: string | null
   proofs: TripProofRecordResponse[]
   dvirInspections: TripDvirInspectionResponse[]
   hasPreTripDvir: boolean
@@ -886,16 +1035,6 @@ export interface DriverPortalScheduleResponse {
   upcomingEnd: string
   todayTrips: DriverPortalTripRow[]
   upcomingTrips: DriverPortalTripRow[]
-  generatedAt: string
-}
-
-export interface UnassignedWorkQueueResponse {
-  scope: string
-  windowStart: string
-  windowEnd: string
-  unassignedCount: number
-  items: UnassignedWorkQueueTripRow[]
-  driverRefs: { items: StaffarrPersonRefResponse[] }
   generatedAt: string
 }
 
@@ -1474,6 +1613,7 @@ export interface UpsertDispatchNotificationSettingsRequest {
   notifyOnTripInProgress: boolean
   notifyOnTripCompleted: boolean
   notifyOnTripCancelled: boolean
+  clearNotificationWebhookOnDisable?: boolean
 }
 
 export interface DispatchNotificationDispatchItem {
@@ -1533,4 +1673,29 @@ export interface TripCompletionRollupRunItem {
 
 export interface TripCompletionRollupRunsResponse {
   items: TripCompletionRollupRunItem[]
+}
+
+export interface AttachmentRetentionSettingsResponse {
+  isEnabled: boolean
+  retentionDaysAfterTripClose: number
+  updatedAt: string | null
+}
+
+export interface UpsertAttachmentRetentionSettingsRequest {
+  isEnabled: boolean
+  retentionDaysAfterTripClose: number
+}
+
+export interface AttachmentRetentionRunItem {
+  runId: string
+  outcome: string
+  attachmentsPurgedCount: number
+  bytesReclaimed: number
+  skippedCount: number
+  skipReason: string | null
+  processedAt: string
+}
+
+export interface AttachmentRetentionRunsResponse {
+  items: AttachmentRetentionRunItem[]
 }

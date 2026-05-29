@@ -31,6 +31,7 @@ describe('TripsPanel', () => {
             startedAt: null,
             completedAt: null,
             cancelledAt: null,
+            closedAt: null,
           },
         ]}
         selectedTrip={null}

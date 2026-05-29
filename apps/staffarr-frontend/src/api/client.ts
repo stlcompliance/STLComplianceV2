@@ -57,12 +57,22 @@ import type {
   PersonExportPresetResponse,
   UpsertPersonExportPresetRequest,
   PersonExportDeliveryNotificationsResponse,
+  PendingPersonExportDeliveriesResponse,
+  PersonExportDeliveryRunsResponse,
+  StaffArrWorkerSettingsResponse,
+  UpsertStaffArrWorkerSettingsRequest,
+  StaffArrWorkerPendingPreviewResponse,
+  StaffArrWorkerRunsResponse,
   PersonExportScheduleResponse,
   UpsertPersonExportScheduleRequest,
   PersonLookupResponse,
   PersonnelHistorySummaryResponse,
   TrainarrPersonTrainingHistoryResponse,
   TrainingAcknowledgementResponse,
+  PersonnelReportSummaryResponse,
+  ReadinessReportSummaryResponse,
+  IncidentReportSummaryResponse,
+  EntityExportManifestResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -276,6 +286,87 @@ export async function getPersonExportDeliveryNotifications(
     response,
     'Failed to load export delivery notifications',
   )
+}
+
+export async function getPersonExportDeliveryPending(
+  accessToken: string,
+): Promise<PendingPersonExportDeliveriesResponse> {
+  const response = await fetch(`${apiBase}/api/people/export/delivery-pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingPersonExportDeliveriesResponse>(
+    response,
+    'Failed to load export delivery pending preview',
+  )
+}
+
+export async function getPersonExportDeliveryRuns(
+  accessToken: string,
+  limit = 5,
+): Promise<PersonExportDeliveryRunsResponse> {
+  const response = await fetch(`${apiBase}/api/people/export/delivery-runs?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonExportDeliveryRunsResponse>(
+    response,
+    'Failed to load export delivery runs',
+  )
+}
+
+export async function getStaffArrWorkerSettings(
+  accessToken: string,
+  workerKey: string,
+): Promise<StaffArrWorkerSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/worker-admin/${encodeURIComponent(workerKey)}/settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffArrWorkerSettingsResponse>(
+    response,
+    `Failed to load ${workerKey} worker settings`,
+  )
+}
+
+export async function upsertStaffArrWorkerSettings(
+  accessToken: string,
+  workerKey: string,
+  request: UpsertStaffArrWorkerSettingsRequest,
+): Promise<StaffArrWorkerSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/worker-admin/${encodeURIComponent(workerKey)}/settings`, {
+    method: 'PUT',
+    headers: {
+      ...authHeaders(accessToken),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<StaffArrWorkerSettingsResponse>(
+    response,
+    `Failed to save ${workerKey} worker settings`,
+  )
+}
+
+export async function getStaffArrWorkerPendingPreview(
+  accessToken: string,
+  workerKey: string,
+): Promise<StaffArrWorkerPendingPreviewResponse> {
+  const response = await fetch(`${apiBase}/api/worker-admin/${encodeURIComponent(workerKey)}/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffArrWorkerPendingPreviewResponse>(
+    response,
+    `Failed to load ${workerKey} pending preview`,
+  )
+}
+
+export async function getStaffArrWorkerRuns(
+  accessToken: string,
+  workerKey: string,
+  limit = 5,
+): Promise<StaffArrWorkerRunsResponse> {
+  const response = await fetch(`${apiBase}/api/worker-admin/${encodeURIComponent(workerKey)}/runs?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StaffArrWorkerRunsResponse>(response, `Failed to load ${workerKey} worker runs`)
 }
 
 export async function getOrgUnits(accessToken: string): Promise<OrgUnitResponse[]> {
@@ -1040,6 +1131,210 @@ export async function downloadAuditPackageGenerationJob(
     const body = await response.text()
     throw new StaffArrApiError(
       body || `Audit package download failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+function buildReportQuery(params: Record<string, string | boolean | undefined>): string {
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === '') {
+      continue
+    }
+    search.set(key, String(value))
+  }
+  const query = search.toString()
+  return query ? `?${query}` : ''
+}
+
+export async function getPersonnelReportSummary(
+  accessToken: string,
+  options?: { employmentStatus?: string },
+): Promise<PersonnelReportSummaryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/personnel/summary${buildReportQuery({
+      employmentStatus: options?.employmentStatus,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<PersonnelReportSummaryResponse>(
+    response,
+    'Failed to load personnel report summary',
+  )
+}
+
+export async function exportPersonnelReportSummaryCsv(
+  accessToken: string,
+  options?: { employmentStatus?: string },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/reports/personnel/summary/export${buildReportQuery({
+      employmentStatus: options?.employmentStatus,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new StaffArrApiError(
+      body || `Personnel report export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function getReadinessReportSummary(
+  accessToken: string,
+  options?: { scopeType?: string; attentionOnly?: boolean },
+): Promise<ReadinessReportSummaryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/readiness/summary${buildReportQuery({
+      scopeType: options?.scopeType,
+      attentionOnly: options?.attentionOnly,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<ReadinessReportSummaryResponse>(
+    response,
+    'Failed to load readiness report summary',
+  )
+}
+
+export async function exportReadinessReportSummaryCsv(
+  accessToken: string,
+  options?: { scopeType?: string; attentionOnly?: boolean },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/reports/readiness/summary/export${buildReportQuery({
+      scopeType: options?.scopeType,
+      attentionOnly: options?.attentionOnly,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new StaffArrApiError(
+      body || `Readiness report export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function getIncidentReportSummary(
+  accessToken: string,
+  options?: { status?: string; severity?: string; openOnly?: boolean },
+): Promise<IncidentReportSummaryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/incidents/summary${buildReportQuery({
+      status: options?.status,
+      severity: options?.severity,
+      openOnly: options?.openOnly,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<IncidentReportSummaryResponse>(
+    response,
+    'Failed to load incident report summary',
+  )
+}
+
+export async function exportIncidentReportSummaryCsv(
+  accessToken: string,
+  options?: { status?: string; severity?: string; openOnly?: boolean },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/reports/incidents/summary/export${buildReportQuery({
+      status: options?.status,
+      severity: options?.severity,
+      openOnly: options?.openOnly,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new StaffArrApiError(
+      body || `Incident report export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function getEntityExportManifest(
+  accessToken: string,
+): Promise<EntityExportManifestResponse> {
+  const response = await fetch(`${apiBase}/api/exports/manifest`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<EntityExportManifestResponse>(
+    response,
+    'Failed to load export manifest',
+  )
+}
+
+export async function exportBulkPeopleCsv(
+  accessToken: string,
+  options?: { employmentStatus?: string },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/exports/people${buildReportQuery({
+      employmentStatus: options?.employmentStatus,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new StaffArrApiError(
+      body || `People bulk export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function exportBulkPersonnelIncidentsCsv(
+  accessToken: string,
+  options?: { status?: string },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/exports/personnel-incidents${buildReportQuery({
+      status: options?.status,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new StaffArrApiError(
+      body || `Personnel incidents bulk export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function exportBulkPersonCertificationsCsv(
+  accessToken: string,
+  options?: { status?: string },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/exports/person-certifications${buildReportQuery({
+      status: options?.status,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new StaffArrApiError(
+      body || `Person certifications export failed (${response.status})`,
       response.status,
       body,
     )

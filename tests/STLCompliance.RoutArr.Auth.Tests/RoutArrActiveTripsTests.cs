@@ -121,6 +121,109 @@ public sealed class RoutArrActiveTripsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Active_trips_attention_filter_excludes_on_track()
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        var onTrackRequest = Authorized(HttpMethod.Post, "/api/trips", _dispatcherToken);
+        onTrackRequest.Content = JsonContent.Create(new CreateTripRequest(
+            "On track active",
+            "Future dispatched",
+            "VEH-300",
+            now.AddHours(2),
+            now.AddHours(6),
+            null));
+        var onTrackResponse = await _routarrClient.SendAsync(onTrackRequest);
+        onTrackResponse.EnsureSuccessStatusCode();
+        var onTrackTrip = (await onTrackResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        var assignOnTrack = Authorized(HttpMethod.Patch, $"/api/trips/{onTrackTrip.TripId}/assign-driver", _dispatcherToken);
+        assignOnTrack.Content = JsonContent.Create(new AssignTripDriverRequest(
+            "11111111-1111-1111-1111-111111111111"));
+        (await _routarrClient.SendAsync(assignOnTrack)).EnsureSuccessStatusCode();
+
+        var dispatchOnTrack = Authorized(HttpMethod.Patch, $"/api/trips/{onTrackTrip.TripId}/status", _dispatcherToken);
+        dispatchOnTrack.Content = JsonContent.Create(new UpdateTripDispatchStatusRequest("dispatched"));
+        (await _routarrClient.SendAsync(dispatchOnTrack)).EnsureSuccessStatusCode();
+
+        var lateRequest = Authorized(HttpMethod.Post, "/api/trips", _dispatcherToken);
+        lateRequest.Content = JsonContent.Create(new CreateTripRequest(
+            "Late active",
+            "Late dispatched",
+            "VEH-301",
+            now.AddHours(-3),
+            now.AddMinutes(-30),
+            null));
+        var lateResponse = await _routarrClient.SendAsync(lateRequest);
+        lateResponse.EnsureSuccessStatusCode();
+        var lateTrip = (await lateResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        var assignLate = Authorized(HttpMethod.Patch, $"/api/trips/{lateTrip.TripId}/assign-driver", _dispatcherToken);
+        assignLate.Content = JsonContent.Create(new AssignTripDriverRequest(
+            "22222222-2222-2222-2222-222222222222",
+            DriverDisplayName: "Late Driver"));
+        (await _routarrClient.SendAsync(assignLate)).EnsureSuccessStatusCode();
+
+        var dispatchLate = Authorized(HttpMethod.Patch, $"/api/trips/{lateTrip.TripId}/status", _dispatcherToken);
+        dispatchLate.Content = JsonContent.Create(new UpdateTripDispatchStatusRequest("dispatched"));
+        (await _routarrClient.SendAsync(dispatchLate)).EnsureSuccessStatusCode();
+
+        var filteredResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/dispatch/active-trips?scope=daily&attentionOnly=true", _dispatcherToken));
+        filteredResponse.EnsureSuccessStatusCode();
+        var filtered = (await filteredResponse.Content.ReadFromJsonAsync<ActiveTripsResponse>())!;
+
+        Assert.Contains(filtered.Items, x => x.TripId == lateTrip.TripId);
+        Assert.DoesNotContain(filtered.Items, x => x.TripId == onTrackTrip.TripId);
+        Assert.Equal("Late Driver", Assert.Single(filtered.Items, x => x.TripId == lateTrip.TripId).AssignedDriverDisplayName);
+    }
+
+    [Fact]
+    public async Task Active_trips_includes_open_exception_count()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var createRequest = Authorized(HttpMethod.Post, "/api/trips", _dispatcherToken);
+        createRequest.Content = JsonContent.Create(new CreateTripRequest(
+            "Exception active trip",
+            "Has exception",
+            null,
+            now.AddHours(-2),
+            now.AddHours(2),
+            null));
+        var createResponse = await _routarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var trip = (await createResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        var assignRequest = Authorized(HttpMethod.Patch, $"/api/trips/{trip.TripId}/assign-driver", _dispatcherToken);
+        assignRequest.Content = JsonContent.Create(new AssignTripDriverRequest(
+            "11111111-1111-1111-1111-111111111111"));
+        (await _routarrClient.SendAsync(assignRequest)).EnsureSuccessStatusCode();
+
+        var dispatchRequest = Authorized(HttpMethod.Patch, $"/api/trips/{trip.TripId}/status", _dispatcherToken);
+        dispatchRequest.Content = JsonContent.Create(new UpdateTripDispatchStatusRequest("dispatched"));
+        (await _routarrClient.SendAsync(dispatchRequest)).EnsureSuccessStatusCode();
+
+        var exceptionRequest = Authorized(HttpMethod.Post, "/api/dispatch/exceptions", _dispatcherToken);
+        exceptionRequest.Content = JsonContent.Create(new CreateDispatchExceptionRequest(
+            "Delay on active trip",
+            "Traffic delay",
+            "delay",
+            trip.TripId,
+            null,
+            null));
+        (await _routarrClient.SendAsync(exceptionRequest)).EnsureSuccessStatusCode();
+
+        var activeResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/dispatch/active-trips?scope=daily", _dispatcherToken));
+        activeResponse.EnsureSuccessStatusCode();
+        var active = (await activeResponse.Content.ReadFromJsonAsync<ActiveTripsResponse>())!;
+
+        var row = Assert.Single(active.Items, x => x.TripId == trip.TripId);
+        Assert.Equal(1, row.OpenExceptionCount);
+        Assert.True(active.Summary.OpenExceptionCount >= 1);
+    }
+
+    [Fact]
     public async Task Active_trips_empty_when_no_dispatched_trips()
     {
         var response = await _routarrClient.SendAsync(

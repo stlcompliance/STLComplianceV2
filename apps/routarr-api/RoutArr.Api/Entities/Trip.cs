@@ -38,6 +38,9 @@ public sealed class Trip : IHasTenant
 
     public DateTimeOffset? CompletedAt { get; set; }
 
+    /// <summary>When the assigned driver acknowledged closure after trip completion (driver portal Close).</summary>
+    public DateTimeOffset? ClosedAt { get; set; }
+
     public DateTimeOffset? CancelledAt { get; set; }
 
     public ICollection<TripLoad> Loads { get; set; } = [];

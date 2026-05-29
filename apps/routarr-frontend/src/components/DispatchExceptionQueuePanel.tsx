@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import {
   assignDispatchException,
+  bulkAssignDispatchExceptions,
+  bulkResolveDispatchExceptions,
   createDispatchException,
   linkDispatchExceptionTrip,
+  listDispatchExceptionResolutionTemplates,
   listDispatchExceptions,
   resolveDispatchException,
 } from '../api/client'
@@ -16,22 +19,35 @@ type Props = {
   canTriage: boolean
 }
 
+function formatSlaDue(slaDueAt: string | null): string {
+  if (!slaDueAt) {
+    return 'No SLA'
+  }
+  return new Date(slaDueAt).toLocaleString()
+}
+
 function ExceptionRow({
   item,
   canTriage,
   userId,
+  selected,
+  onToggleSelect,
   onAssignSelf,
   onResolve,
   onLinkTrip,
   isPending,
+  resolutionTemplateKey,
 }: {
   item: DispatchExceptionSummaryResponse
   canTriage: boolean
   userId: string
+  selected: boolean
+  onToggleSelect: (id: string) => void
   onAssignSelf: (id: string) => void
-  onResolve: (id: string, notes: string) => void
+  onResolve: (id: string, notes: string, templateKey?: string) => void
   onLinkTrip: (id: string, tripId: string) => void
   isPending: boolean
+  resolutionTemplateKey: string
 }) {
   const [tripIdInput, setTripIdInput] = useState(item.tripId ?? '')
   const [resolveNotes, setResolveNotes] = useState('')
@@ -42,19 +58,41 @@ function ExceptionRow({
       data-testid={`exception-row-${item.exceptionId}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="font-medium text-slate-100">{item.title}</p>
-          <p className="text-xs text-slate-500">
-            {item.exceptionKey} · {item.category} · {item.status}
-          </p>
-          {item.description ? (
-            <p className="mt-1 text-slate-400">{item.description}</p>
+        <div className="flex items-start gap-2">
+          {canTriage ? (
+            <input
+              type="checkbox"
+              checked={selected}
+              aria-label={`Select ${item.exceptionKey}`}
+              data-testid={`exception-select-${item.exceptionId}`}
+              onChange={() => onToggleSelect(item.exceptionId)}
+            />
           ) : null}
-          {item.tripNumber ? (
-            <p className="mt-1 text-sky-300">
-              Trip: {item.tripNumber} — {item.tripTitle}
+          <div>
+            <p className="font-medium text-slate-100">{item.title}</p>
+            <p className="text-xs text-slate-500">
+              {item.exceptionKey} · {item.category} · {item.status}
             </p>
-          ) : null}
+            <p className="mt-1 text-xs text-slate-400">
+              SLA due: {formatSlaDue(item.slaDueAt)}
+              {item.isSlaBreached ? (
+                <span
+                  className="ml-2 rounded bg-rose-900/60 px-1.5 py-0.5 text-rose-200"
+                  data-testid={`exception-sla-breached-${item.exceptionId}`}
+                >
+                  SLA breached
+                </span>
+              ) : null}
+            </p>
+            {item.description ? (
+              <p className="mt-1 text-slate-400">{item.description}</p>
+            ) : null}
+            {item.tripNumber ? (
+              <p className="mt-1 text-sky-300">
+                Trip: {item.tripNumber} — {item.tripTitle}
+              </p>
+            ) : null}
+          </div>
         </div>
         {canTriage ? (
           <div className="flex flex-col gap-1">
@@ -95,7 +133,13 @@ function ExceptionRow({
             type="button"
             className="rounded bg-emerald-800 px-2 py-1 text-xs text-white disabled:opacity-50"
             disabled={isPending}
-            onClick={() => onResolve(item.exceptionId, resolveNotes)}
+            onClick={() =>
+              onResolve(
+                item.exceptionId,
+                resolveNotes,
+                resolutionTemplateKey || undefined,
+              )
+            }
           >
             Resolve
           </button>
@@ -116,11 +160,24 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('delay')
   const [createTripId, setCreateTripId] = useState('')
+  const [assignOnCreate, setAssignOnCreate] = useState(true)
+  const [overdueOnly, setOverdueOnly] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [bulkTemplateKey, setBulkTemplateKey] = useState('')
+  const [bulkResolveNotes, setBulkResolveNotes] = useState('')
 
   const listQuery = useQuery({
-    queryKey: ['routarr-dispatch-exceptions', accessToken],
-    queryFn: () => listDispatchExceptions(accessToken, 'open'),
+    queryKey: ['routarr-dispatch-exceptions', accessToken, overdueOnly],
+    queryFn: () => listDispatchExceptions(accessToken, 'open', overdueOnly),
   })
+
+  const templatesQuery = useQuery({
+    queryKey: ['routarr-dispatch-exception-templates', accessToken],
+    queryFn: () => listDispatchExceptionResolutionTemplates(accessToken),
+    enabled: canTriage,
+  })
+
+  const templates = templatesQuery.data ?? []
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['routarr-dispatch-exceptions'] })
@@ -133,6 +190,7 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
         description,
         category,
         tripId: createTripId.trim() || undefined,
+        assignedToUserId: assignOnCreate ? userId : undefined,
       }),
     onSuccess: () => {
       setTitle('')
@@ -148,6 +206,7 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
       exceptionId: string
       tripId?: string
       notes?: string
+      templateKey?: string
     }) => {
       if (action.type === 'assign') {
         await assignDispatchException(accessToken, action.exceptionId, {
@@ -157,6 +216,7 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
       if (action.type === 'resolve') {
         await resolveDispatchException(accessToken, action.exceptionId, {
           resolutionNotes: action.notes,
+          resolutionTemplateKey: action.templateKey,
         })
       }
       if (action.type === 'link' && action.tripId) {
@@ -165,8 +225,62 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
         })
       }
     },
-    onSuccess: invalidate,
+    onSuccess: () => {
+      setSelectedIds([])
+      invalidate()
+    },
   })
+
+  const bulkAssignMutation = useMutation({
+    mutationFn: () =>
+      bulkAssignDispatchExceptions(accessToken, {
+        exceptionIds: selectedIds,
+        assignedToUserId: userId,
+      }),
+    onSuccess: () => {
+      setSelectedIds([])
+      invalidate()
+    },
+  })
+
+  const bulkResolveMutation = useMutation({
+    mutationFn: () =>
+      bulkResolveDispatchExceptions(accessToken, {
+        exceptionIds: selectedIds,
+        resolutionNotes: bulkResolveNotes || undefined,
+        resolutionTemplateKey: bulkTemplateKey || undefined,
+      }),
+    onSuccess: () => {
+      setSelectedIds([])
+      setBulkResolveNotes('')
+      invalidate()
+    },
+  })
+
+  const toggleSelect = (exceptionId: string) => {
+    setSelectedIds((current) =>
+      current.includes(exceptionId)
+        ? current.filter((id) => id !== exceptionId)
+        : [...current, exceptionId],
+    )
+  }
+
+  const selectAllVisible = () => {
+    if (!listQuery.data) {
+      return
+    }
+    setSelectedIds(listQuery.data.items.map((item) => item.exceptionId))
+  }
+
+  const isPending =
+    triageMutation.isPending ||
+    bulkAssignMutation.isPending ||
+    bulkResolveMutation.isPending
+
+  const defaultTemplateKey = useMemo(
+    () => templates.find((t) => t.templateKey === 'reassign_driver')?.templateKey ?? '',
+    [templates],
+  )
 
   if (listQuery.isLoading) {
     return <p className="text-sm text-slate-400">Loading exception queue…</p>
@@ -183,11 +297,26 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
       className="rounded-xl border border-amber-800/40 bg-amber-950/15 p-5"
       data-testid="dispatch-exception-queue-panel"
     >
-      <header>
-        <h2 className="text-lg font-semibold text-slate-50">Exception queue</h2>
-        <p className="mt-1 text-sm text-slate-400">
-          {list.openCount} open · showing {list.totalCount} in queue
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-50">Exception queue</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            {list.openCount} open · {list.overdueCount} overdue SLA · showing {list.totalCount}{' '}
+            in queue
+          </p>
+        </div>
+        <label className="flex items-center gap-2 text-sm text-slate-300">
+          <input
+            type="checkbox"
+            checked={overdueOnly}
+            data-testid="exception-overdue-filter"
+            onChange={(e) => {
+              setOverdueOnly(e.target.checked)
+              setSelectedIds([])
+            }}
+          />
+          Overdue only
+        </label>
       </header>
 
       {canTriage ? (
@@ -228,6 +357,15 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
             value={createTripId}
             onChange={(e) => setCreateTripId(e.target.value)}
           />
+          <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
+            <input
+              type="checkbox"
+              checked={assignOnCreate}
+              data-testid="exception-assign-on-create"
+              onChange={(e) => setAssignOnCreate(e.target.checked)}
+            />
+            Assign to me on create (category SLA applies)
+          </label>
           <button
             type="submit"
             className="rounded bg-amber-700 px-3 py-1 text-sm text-white disabled:opacity-50 md:col-span-2"
@@ -238,9 +376,67 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
         </form>
       ) : null}
 
+      {canTriage && templates.length > 0 ? (
+        <div
+          className="mt-4 flex flex-wrap items-end gap-2 rounded-lg border border-slate-700 bg-slate-900/40 p-3"
+          data-testid="exception-bulk-actions"
+        >
+          <p className="w-full text-xs text-slate-400">
+            {selectedIds.length} selected · resolution template for row/bulk resolve
+          </p>
+          <select
+            className="rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200"
+            value={bulkTemplateKey || defaultTemplateKey}
+            data-testid="exception-resolution-template"
+            onChange={(e) => setBulkTemplateKey(e.target.value)}
+          >
+            <option value="">No template</option>
+            {templates.map((template) => (
+              <option key={template.templateKey} value={template.templateKey}>
+                {template.label}
+              </option>
+            ))}
+          </select>
+          <input
+            className="min-w-[12rem] flex-1 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200"
+            placeholder="Bulk resolve notes…"
+            value={bulkResolveNotes}
+            onChange={(e) => setBulkResolveNotes(e.target.value)}
+          />
+          <button
+            type="button"
+            className="rounded bg-slate-700 px-2 py-1 text-xs text-white disabled:opacity-50"
+            disabled={list.items.length === 0 || isPending}
+            onClick={selectAllVisible}
+          >
+            Select all
+          </button>
+          <button
+            type="button"
+            className="rounded bg-slate-700 px-2 py-1 text-xs text-white disabled:opacity-50"
+            disabled={selectedIds.length === 0 || isPending}
+            data-testid="exception-bulk-assign"
+            onClick={() => bulkAssignMutation.mutate()}
+          >
+            Bulk assign to me
+          </button>
+          <button
+            type="button"
+            className="rounded bg-emerald-800 px-2 py-1 text-xs text-white disabled:opacity-50"
+            disabled={selectedIds.length === 0 || isPending}
+            data-testid="exception-bulk-resolve"
+            onClick={() => bulkResolveMutation.mutate()}
+          >
+            Bulk resolve
+          </button>
+        </div>
+      ) : null}
+
       <ul className="mt-4 max-h-80 space-y-2 overflow-y-auto">
         {list.items.length === 0 ? (
-          <li className="text-sm text-slate-500">No open exceptions</li>
+          <li className="text-sm text-slate-500">
+            {overdueOnly ? 'No overdue exceptions' : 'No open exceptions'}
+          </li>
         ) : (
           list.items.map((item) => (
             <ExceptionRow
@@ -248,12 +444,15 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
               item={item}
               canTriage={canTriage}
               userId={userId}
-              isPending={triageMutation.isPending}
+              selected={selectedIds.includes(item.exceptionId)}
+              onToggleSelect={toggleSelect}
+              isPending={isPending}
+              resolutionTemplateKey={bulkTemplateKey || defaultTemplateKey}
               onAssignSelf={(exceptionId) =>
                 triageMutation.mutate({ type: 'assign', exceptionId })
               }
-              onResolve={(exceptionId, notes) =>
-                triageMutation.mutate({ type: 'resolve', exceptionId, notes })
+              onResolve={(exceptionId, notes, templateKey) =>
+                triageMutation.mutate({ type: 'resolve', exceptionId, notes, templateKey })
               }
               onLinkTrip={(exceptionId, tripId) =>
                 triageMutation.mutate({ type: 'link', exceptionId, tripId })

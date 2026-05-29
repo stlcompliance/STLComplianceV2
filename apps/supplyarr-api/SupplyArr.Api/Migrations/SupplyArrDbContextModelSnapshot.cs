@@ -2038,6 +2038,9 @@ namespace SupplyArr.Api.Migrations
                         .HasMaxLength(2048)
                         .HasColumnType("character varying(2048)");
 
+                    b.Property<int>("EscalationCount")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ExceptionCategory")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -2053,6 +2056,9 @@ namespace SupplyArr.Api.Migrations
 
                     b.Property<Guid?>("InvestigatedByUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("LastEscalatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("LinkedPurchaseOrderId")
                         .HasColumnType("uuid");
@@ -2140,6 +2146,8 @@ namespace SupplyArr.Api.Migrations
                     b.HasIndex("TenantId", "ExceptionKey")
                         .IsUnique();
 
+                    b.HasIndex("TenantId", "LastEscalatedAt");
+
                     b.HasIndex("TenantId", "SlaDueAt");
 
                     b.HasIndex("TenantId", "Status", "UpdatedAt");
@@ -2147,6 +2155,77 @@ namespace SupplyArr.Api.Migrations
                     b.HasIndex("TenantId", "SubjectType", "SubjectId");
 
                     b.ToTable("supplyarr_procurement_exceptions", (string)null);
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.ProcurementExceptionEscalationEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActionKind")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EscalationLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("NotificationDispatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProcurementExceptionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "ProcurementExceptionId")
+                        .HasDatabaseName("IX_supplyarr_procurement_exception_escalation_events_TenantId~1");
+
+                    b.ToTable("supplyarr_procurement_exception_escalation_events", (string)null);
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.ProcurementExceptionEscalationRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("AsOfUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CandidatesFound")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EscalatedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SkippedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "CreatedAt");
+
+                    b.ToTable("supplyarr_procurement_exception_escalation_runs", (string)null);
                 });
 
             modelBuilder.Entity("SupplyArr.Api.Entities.ProcurementNotificationDispatch", b =>
@@ -3643,6 +3722,44 @@ namespace SupplyArr.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("supplyarr_tenant_procurement_coordination_settings", (string)null);
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.TenantProcurementExceptionEscalationSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EscalationCooldownHours")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MaxEscalationsPerException")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("NotifyOnProcurementExceptionSlaEscalation")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("supplyarr_tenant_procurement_exception_escalation_settings", (string)null);
                 });
 
             modelBuilder.Entity("SupplyArr.Api.Entities.TenantProcurementNotificationSettings", b =>

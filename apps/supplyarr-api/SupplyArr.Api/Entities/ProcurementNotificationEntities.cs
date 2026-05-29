@@ -69,6 +69,8 @@ public static class ProcurementNotificationEventKinds
     public const string PurchaseOrderApprovalReminder = "purchase_order_approval_reminder";
 
     public const string MaintainArrDemandPrDrafted = "maintainarr_demand_pr_drafted";
+
+    public const string ProcurementExceptionSlaEscalation = "procurement_exception_sla_escalation";
 }
 
 public static class ProcurementNotificationDispatchStatuses

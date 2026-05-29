@@ -76,3 +76,66 @@ export function parseDragPayload(raw: string): DragAssignmentPayload | null {
     return null
   }
 }
+
+export type AssignmentIgnoreFlags = {
+  ignoreConflicts: boolean
+  ignoreEligibilityBlocks: boolean
+  ignoreDispatchabilityBlocks: boolean
+  ignoreWorkflowGateBlocks: boolean
+}
+
+/**
+ * Interprets a dispatch assignment preview and asks the user to confirm blocking or warning outcomes.
+ * Returns ignore flags when the caller should proceed, or null when the user cancelled.
+ */
+export function confirmDispatchAssignmentPreview(
+  preview: DispatchAssignmentPreviewResponse,
+  confirm: (message: string) => boolean,
+): AssignmentIgnoreFlags | null {
+  const flags = resolveAssignmentIgnoreFlags(preview)
+
+  if (preview.hasBlockingConflicts) {
+    const confirmed = confirm(
+      `Assignment blocked: ${formatAssignmentConflictMessage(preview)}. Assign anyway?`,
+    )
+    if (!confirmed) {
+      return null
+    }
+    return {
+      ignoreConflicts: flags.ignoreConflicts,
+      ignoreEligibilityBlocks: flags.ignoreEligibilityBlocks,
+      ignoreDispatchabilityBlocks: flags.ignoreDispatchabilityBlocks,
+      ignoreWorkflowGateBlocks: flags.ignoreWorkflowGateBlocks,
+    }
+  }
+
+  if (flags.hasEligibilityWarn) {
+    const confirmed = confirm(
+      `Driver eligibility warning: ${preview.driverEligibility!.message}. Continue assignment?`,
+    )
+    if (!confirmed) {
+      return null
+    }
+  } else if (flags.hasDispatchabilityWarn) {
+    const confirmed = confirm(
+      `Asset dispatchability warning: ${preview.assetDispatchability!.message}. Continue assignment?`,
+    )
+    if (!confirmed) {
+      return null
+    }
+  } else if (flags.hasWorkflowGateWarn) {
+    const confirmed = confirm(
+      `Compliance workflow gate warning: ${preview.workflowGates!.message}. Continue assignment?`,
+    )
+    if (!confirmed) {
+      return null
+    }
+  }
+
+  return {
+    ignoreConflicts: false,
+    ignoreEligibilityBlocks: false,
+    ignoreDispatchabilityBlocks: false,
+    ignoreWorkflowGateBlocks: false,
+  }
+}

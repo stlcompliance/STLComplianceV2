@@ -106,7 +106,10 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
     && (jobStatus.status === 'pending' || jobStatus.status === 'processing')
 
   return (
-    <section className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5">
+    <section
+      data-testid="compliancecore-audit-export-panel"
+      className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+    >
       <header>
         <h2 className="text-lg font-semibold text-slate-50">Audit package export</h2>
         <p className="mt-1 text-sm text-slate-400">

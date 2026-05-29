@@ -37,7 +37,10 @@ export function RuleChangeMonitoringPanel({ accessToken }: RuleChangeMonitoringP
   const summary = summaryQuery.data
 
   return (
-    <section className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5">
+    <section
+      data-testid="rule-change-monitoring-panel"
+      className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+    >
       <header>
         <h2 className="text-lg font-semibold text-slate-50">Rule change monitoring</h2>
         <p className="mt-1 text-sm text-slate-400">
@@ -97,9 +100,14 @@ export function RuleChangeMonitoringPanel({ accessToken }: RuleChangeMonitoringP
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Recent change events</h3>
         {(eventsQuery.data ?? []).length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No rule change events match the current filters.</p>
+          <p className="mt-2 text-sm text-slate-500" data-testid="rule-change-events-empty">
+            No rule change events match the current filters.
+          </p>
         ) : (
-          <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto">
+          <ul
+            className="mt-3 max-h-80 space-y-2 overflow-y-auto"
+            data-testid="rule-change-events-list"
+          >
             {(eventsQuery.data ?? []).map((event) => (
               <li
                 key={event.eventId}

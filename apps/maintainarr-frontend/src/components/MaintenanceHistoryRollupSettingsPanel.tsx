@@ -117,6 +117,7 @@ export function MaintenanceHistoryRollupSettingsPanel({
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
           disabled={saveMutation.isPending}
           onClick={() => saveMutation.mutate()}
+          data-testid="maintenance-history-rollup-save"
         >
           {saveMutation.isPending ? 'Saving…' : 'Save rollup settings'}
         </button>
@@ -132,10 +133,18 @@ export function MaintenanceHistoryRollupSettingsPanel({
           <p className="mt-2 text-sm text-muted-foreground">Loading pending preview…</p>
         )}
         {pendingQuery.data && pendingQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-muted-foreground">No assets currently due for history rollup refresh.</p>
+          <p
+            className="mt-2 text-sm text-muted-foreground"
+            data-testid="maintenance-history-rollup-pending-empty"
+          >
+            No assets currently due for history rollup refresh.
+          </p>
         )}
         {pendingQuery.data && pendingQuery.data.items.length > 0 && (
-          <ul className="mt-2 divide-y divide-border rounded-md border border-border text-sm">
+          <ul
+            className="mt-2 divide-y divide-border rounded-md border border-border text-sm"
+            data-testid="maintenance-history-rollup-pending-list"
+          >
             {pendingQuery.data.items.map((item) => (
               <li key={item.assetId} className="px-3 py-2">
                 <div className="font-medium">
@@ -149,11 +158,22 @@ export function MaintenanceHistoryRollupSettingsPanel({
 
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-foreground">Recent runs</h3>
+        {runsQuery.isLoading && (
+          <p className="mt-2 text-sm text-muted-foreground">Loading worker runs…</p>
+        )}
         {runsQuery.data && runsQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-muted-foreground">No worker runs yet.</p>
+          <p
+            className="mt-2 text-sm text-muted-foreground"
+            data-testid="maintenance-history-rollup-runs-empty"
+          >
+            No worker runs yet.
+          </p>
         )}
         {runsQuery.data && runsQuery.data.items.length > 0 && (
-          <ul className="mt-2 divide-y divide-border rounded-md border border-border text-sm">
+          <ul
+            className="mt-2 divide-y divide-border rounded-md border border-border text-sm"
+            data-testid="maintenance-history-rollup-runs-list"
+          >
             {runsQuery.data.items.map((run) => (
               <li key={run.runId} className="px-3 py-2">
                 {run.refreshedCount} refreshed / {run.candidatesFound} candidates

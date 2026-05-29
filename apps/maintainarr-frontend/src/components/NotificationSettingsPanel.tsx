@@ -69,7 +69,10 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
   }
 
   return (
-    <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
+    <section
+      className="rounded-lg border border-border bg-card p-4 shadow-sm"
+      data-testid="notification-settings-panel"
+    >
       <h2 className="text-lg font-semibold text-foreground">Maintenance notifications</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         Configure HTTPS webhooks for work order and PM schedule lifecycle events. Dispatch runs on a
@@ -142,6 +145,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
           disabled={saveMutation.isPending}
           onClick={() => saveMutation.mutate()}
+          data-testid="notification-settings-save"
         >
           {saveMutation.isPending ? 'Saving…' : 'Save notification settings'}
         </button>
@@ -157,10 +161,15 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
           <p className="mt-2 text-sm text-muted-foreground">Loading dispatch history…</p>
         )}
         {dispatchesQuery.data && dispatchesQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-muted-foreground">No notification dispatches yet.</p>
+          <p className="mt-2 text-sm text-muted-foreground" data-testid="notification-dispatches-empty">
+            No notification dispatches yet.
+          </p>
         )}
         {dispatchesQuery.data && dispatchesQuery.data.items.length > 0 && (
-          <ul className="mt-2 divide-y divide-border rounded-md border border-border text-sm">
+          <ul
+            className="mt-2 divide-y divide-border rounded-md border border-border text-sm"
+            data-testid="notification-dispatches-list"
+          >
             {dispatchesQuery.data.items.map((item) => (
               <li key={item.notificationId} className="px-3 py-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">

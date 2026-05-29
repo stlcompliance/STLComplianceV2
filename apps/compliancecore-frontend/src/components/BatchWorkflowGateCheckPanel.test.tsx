@@ -46,12 +46,14 @@ describe('BatchWorkflowGateCheckPanel', () => {
       />,
     )
 
-    expect(screen.getByText(/Batch workflow gate check/i)).toBeInTheDocument()
-    const runButton = screen.getByRole('button', { name: /Run batch check \(0 gates\)/i })
+    expect(screen.getByTestId('batch-workflow-gate-check-panel')).toBeInTheDocument()
+    const runButton = screen.getByTestId('batch-workflow-gate-run')
     expect(runButton).toBeDisabled()
+    expect(runButton).toHaveTextContent(/0 gates/i)
 
-    fireEvent.click(screen.getByLabelText(/Driver assignment/i))
-    expect(screen.getByRole('button', { name: /Run batch check \(1 gate\)/i })).not.toBeDisabled()
+    fireEvent.click(screen.getByTestId('batch-workflow-gate-gate-driver_assignment'))
+    expect(screen.getByTestId('batch-workflow-gate-run')).not.toBeDisabled()
+    expect(screen.getByTestId('batch-workflow-gate-run')).toHaveTextContent(/1 gate/i)
   })
 
   it('invokes onRunBatch with selected gates and facts', () => {
@@ -66,11 +68,11 @@ describe('BatchWorkflowGateCheckPanel', () => {
       />,
     )
 
-    fireEvent.click(screen.getByLabelText(/Driver assignment/i))
-    fireEvent.click(screen.getByLabelText(/Driver clearance/i))
+    fireEvent.click(screen.getByTestId('batch-workflow-gate-gate-driver_assignment'))
+    fireEvent.click(screen.getByTestId('batch-workflow-gate-gate-driver_clearance'))
     const licenseCheckbox = screen.getByLabelText('driver_license_valid')
     fireEvent.click(licenseCheckbox)
-    fireEvent.click(screen.getByRole('button', { name: /Run batch check \(2 gates\)/i }))
+    fireEvent.click(screen.getByTestId('batch-workflow-gate-run'))
 
     expect(onRunBatch).toHaveBeenCalledWith(
       ['driver_assignment', 'driver_clearance'],
@@ -109,6 +111,9 @@ describe('BatchWorkflowGateCheckPanel', () => {
       />,
     )
 
+    const result = screen.getByTestId('batch-workflow-gate-latest-result')
+    expect(result).toHaveAttribute('data-allow-count', '1')
+    expect(result).toHaveAttribute('data-block-count', '0')
     expect(screen.getByText(/1 allow/i)).toBeInTheDocument()
     expect(screen.getByText(/All rules passed/i)).toBeInTheDocument()
   })

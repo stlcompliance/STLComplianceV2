@@ -23,31 +23,11 @@ export function SettingsSection({ state }: Props) {
       />
 
       {canManageNotifications ? (
-        <div className="mt-8">
+        <div className="mt-8 grid gap-6" data-testid="maintainarr-settings-admin-workspace">
           <PmDueScanSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
-        </div>
-      ) : null}
-
-      {canManageNotifications ? (
-        <div className="mt-8">
           <MaintenanceHistoryRollupSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
-        </div>
-      ) : null}
-
-      {canManageNotifications ? (
-        <div className="mt-8">
           <AssetStatusRollupSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
-        </div>
-      ) : null}
-
-      {canManageNotifications ? (
-        <div className="mt-8">
           <DefectEscalationSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
-        </div>
-      ) : null}
-
-      {canManageNotifications ? (
-        <div className="mt-8">
           <NotificationSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
         </div>
       ) : null}

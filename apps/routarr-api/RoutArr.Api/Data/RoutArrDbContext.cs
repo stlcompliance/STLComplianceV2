@@ -27,6 +27,9 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
     public DbSet<TenantDispatchNotificationSettings> TenantDispatchNotificationSettings =>
         Set<TenantDispatchNotificationSettings>();
 
+    public DbSet<TenantTripExecutionSettings> TenantTripExecutionSettings =>
+        Set<TenantTripExecutionSettings>();
+
     public DbSet<DispatchNotificationDispatch> DispatchNotificationDispatches =>
         Set<DispatchNotificationDispatch>();
 
@@ -48,6 +51,13 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
     public DbSet<TripProofRecord> TripProofRecords => Set<TripProofRecord>();
 
     public DbSet<TripDvirInspection> TripDvirInspections => Set<TripDvirInspection>();
+
+    public DbSet<TripCaptureAttachment> TripCaptureAttachments => Set<TripCaptureAttachment>();
+
+    public DbSet<TenantAttachmentRetentionSettings> TenantAttachmentRetentionSettings =>
+        Set<TenantAttachmentRetentionSettings>();
+
+    public DbSet<AttachmentRetentionRun> AttachmentRetentionRuns => Set<AttachmentRetentionRun>();
 
     public DbSet<AuditPackageGenerationJob> AuditPackageGenerationJobs => Set<AuditPackageGenerationJob>();
 
@@ -210,6 +220,13 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.HasIndex(x => x.TenantId).IsUnique();
         });
 
+        modelBuilder.Entity<TenantTripExecutionSettings>(entity =>
+        {
+            entity.ToTable("routarr_tenant_trip_execution_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
         modelBuilder.Entity<DispatchNotificationDispatch>(entity =>
         {
             entity.ToTable("routarr_notification_dispatches");
@@ -326,6 +343,44 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        modelBuilder.Entity<TripCaptureAttachment>(entity =>
+        {
+            entity.ToTable("routarr_trip_capture_attachments");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SubjectType).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.AttachmentKind).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.FileName).HasMaxLength(255).IsRequired();
+            entity.Property(x => x.ContentType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.StorageKey).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.Property(x => x.CapturedByPersonId).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TripId });
+            entity.HasIndex(x => new { x.TenantId, x.TripId, x.SubjectType, x.SubjectId });
+            entity.HasIndex(x => new { x.TenantId, x.TripId, x.AttachmentKind, x.CreatedAt });
+            entity.HasOne(x => x.Trip)
+                .WithMany()
+                .HasForeignKey(x => x.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TenantAttachmentRetentionSettings>(entity =>
+        {
+            entity.ToTable("routarr_tenant_attachment_retention_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<AttachmentRetentionRun>(entity =>
+        {
+            entity.ToTable("routarr_attachment_retention_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SkipReason).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ProcessedAt });
+        });
+
         modelBuilder.Entity<DispatchException>(entity =>
         {
             entity.ToTable("routarr_dispatch_exceptions");
@@ -335,12 +390,14 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.Property(x => x.Description).HasMaxLength(1024).IsRequired();
             entity.Property(x => x.Category).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ResolutionTemplateKey).HasMaxLength(64).IsRequired();
             entity.Property(x => x.ResolutionNotes).HasMaxLength(1024).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.ExceptionKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.Status, x.UpdatedAt });
             entity.HasIndex(x => new { x.TenantId, x.TripId });
             entity.HasIndex(x => new { x.TenantId, x.AssignedToUserId });
+            entity.HasIndex(x => new { x.TenantId, x.SlaDueAt });
         });
 
         modelBuilder.Entity<AuditPackageGenerationJob>(entity =>

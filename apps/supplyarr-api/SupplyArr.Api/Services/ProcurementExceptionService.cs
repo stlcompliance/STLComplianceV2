@@ -687,6 +687,8 @@ public sealed class ProcurementExceptionService(
             entity.WaivedAt,
             entity.ResolvedAt,
             entity.ClosedAt,
+            entity.CancelledAt,
+            entity.CancellationReason,
             entity.CreatedAt,
             entity.UpdatedAt);
     }

@@ -5,7 +5,9 @@ public sealed record ActiveTripsSummary(
     int LateCount,
     int AtRiskCount,
     int DispatchedCount,
-    int InProgressCount);
+    int InProgressCount,
+    int UnassignedCount,
+    int OpenExceptionCount);
 
 public sealed record ActiveTripRow(
     Guid TripId,
@@ -13,6 +15,7 @@ public sealed record ActiveTripRow(
     string Title,
     string DispatchStatus,
     string? AssignedDriverPersonId,
+    string? AssignedDriverDisplayName,
     string? VehicleRefKey,
     DateTimeOffset? ScheduledStartAt,
     DateTimeOffset? ScheduledEndAt,
@@ -22,6 +25,10 @@ public sealed record ActiveTripRow(
     bool IsAtRisk,
     int RouteCount,
     int PendingStopCount,
+    int CompletedStopCount,
+    int TotalStopCount,
+    int StopProgressPercent,
+    int OpenExceptionCount,
     double TimelineOffsetPercent,
     double TimelineWidthPercent);
 

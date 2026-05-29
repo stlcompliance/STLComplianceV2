@@ -20,6 +20,7 @@ public sealed class UnassignedWorkQueueService(
     public async Task<UnassignedWorkQueueResponse> GetAsync(
         ClaimsPrincipal principal,
         string? scope,
+        bool attentionOnly,
         CancellationToken cancellationToken = default)
     {
         authorization.RequireDispatchBoardRead(principal);
@@ -37,7 +38,7 @@ public sealed class UnassignedWorkQueueService(
             cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
-        var items = await LoadUnassignedTripsAsync(
+        var allItems = await LoadUnassignedTripsAsync(
             tenantId,
             viewAll,
             actorUserId,
@@ -47,14 +48,28 @@ public sealed class UnassignedWorkQueueService(
             now,
             cancellationToken);
 
+        var items = UnassignedWorkQueueUrgencyRules.SortByUrgency(
+            allItems.Where(x => UnassignedWorkQueueUrgencyRules.MatchesAttentionFilter(
+                x.IsLate,
+                x.IsAtRisk,
+                attentionOnly)));
+
+        var summary = new UnassignedWorkQueueSummary(
+            board.WorkQueue.UnassignedDriverTripCount,
+            allItems.Count(x => x.IsLate),
+            allItems.Count(x => x.IsAtRisk),
+            allItems.Count(x => x.IsLate || x.IsAtRisk));
+
         var driverRefs = await personRefService.ListAsync(tenantId, cancellationToken);
+
+        var auditDetail = attentionOnly ? "attention" : board.Scope;
 
         await audit.WriteAsync(
             ReadAction,
             tenantId,
             actorUserId,
             "dispatch_unassigned_work_queue",
-            board.Scope,
+            auditDetail,
             items.Count.ToString(),
             cancellationToken: cancellationToken);
 
@@ -62,7 +77,7 @@ public sealed class UnassignedWorkQueueService(
             board.Scope,
             board.WindowStart,
             board.WindowEnd,
-            board.WorkQueue.UnassignedDriverTripCount,
+            summary,
             items,
             driverRefs,
             now);
@@ -133,10 +148,9 @@ public sealed class UnassignedWorkQueueService(
                     isLate,
                     isAtRisk,
                     routeCountByTrip.GetValueOrDefault(trip.Id),
-                    pendingStopCountByTrip.GetValueOrDefault(trip.Id));
+                    pendingStopCountByTrip.GetValueOrDefault(trip.Id),
+                    UnassignedWorkQueueUrgencyRules.ComputeMinutesUntilStart(trip.ScheduledStartAt, now));
             })
-            .OrderBy(x => x.ScheduledStartAt ?? DateTimeOffset.MaxValue)
-            .ThenBy(x => x.TripNumber)
             .ToList();
     }
 

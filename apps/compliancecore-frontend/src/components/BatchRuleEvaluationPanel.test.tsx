@@ -53,11 +53,12 @@ describe('BatchRuleEvaluationPanel', () => {
     )
 
     expect(screen.getByText(/Batch rule evaluation/i)).toBeInTheDocument()
-    const runButton = screen.getByRole('button', { name: /Run batch evaluation \(0 packs\)/i })
+    expect(screen.getByTestId('batch-rule-evaluation-panel')).toBeTruthy()
+    const runButton = screen.getByTestId('batch-rule-evaluation-run')
     expect(runButton).toBeDisabled()
 
     fireEvent.click(screen.getByLabelText(/Driver Qualification/i))
-    expect(screen.getByRole('button', { name: /Run batch evaluation \(1 pack\)/i })).not.toBeDisabled()
+    expect(screen.getByTestId('batch-rule-evaluation-run')).not.toBeDisabled()
   })
 
   it('invokes onRunBatch with selected packs and facts', () => {
@@ -75,7 +76,7 @@ describe('BatchRuleEvaluationPanel', () => {
     fireEvent.click(screen.getByLabelText(/Driver Qualification/i))
     fireEvent.click(screen.getByLabelText(/Vehicle Inspection/i))
     fireEvent.click(screen.getByLabelText('driver_license_valid'))
-    fireEvent.click(screen.getByRole('button', { name: /Run batch evaluation \(2 packs\)/i }))
+    fireEvent.click(screen.getByTestId('batch-rule-evaluation-run'))
 
     expect(onRunBatch).toHaveBeenCalledWith(
       ['driver_qualification', 'vehicle_inspection'],
@@ -112,6 +113,7 @@ describe('BatchRuleEvaluationPanel', () => {
       />,
     )
 
+    expect(screen.getByTestId('batch-rule-evaluation-latest-result')).toBeTruthy()
     expect(screen.getByText(/1 allow/i)).toBeInTheDocument()
     expect(screen.getByText(/All rule checks passed/i)).toBeInTheDocument()
   })

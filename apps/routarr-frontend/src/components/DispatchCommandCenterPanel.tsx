@@ -4,10 +4,16 @@ import { useState } from 'react'
 import {
   assignTripDriver,
   getDispatchCommandCenter,
+  previewDispatchAssignment,
   updateTripStatus,
   upsertDispatchBoardState,
 } from '../api/client'
 import type { TripSummaryResponse } from '../api/types'
+import {
+  confirmDispatchAssignmentPreview,
+  DRAG_MIME,
+  parseDragPayload,
+} from '../lib/dispatchAssignment'
 
 type Props = {
   accessToken: string
@@ -20,21 +26,44 @@ function TripCard({
   trip,
   canAssign,
   driverOptions,
+  isPending,
   onAssign,
   onDispatch,
-  isPending,
 }: {
   trip: TripSummaryResponse
   canAssign: boolean
   driverOptions: { personId: string; displayName: string }[]
+  isPending: boolean
   onAssign: (tripId: string, personId: string, displayName: string) => void
   onDispatch: (tripId: string) => void
-  isPending: boolean
 }) {
   const [selectedDriver, setSelectedDriver] = useState('')
+  const [dragOver, setDragOver] = useState(false)
 
   return (
-    <li className="rounded-md border border-slate-700 bg-slate-950/50 p-2 text-xs">
+    <li
+      className={[
+        'rounded-md border p-2 text-xs transition-colors',
+        dragOver ? 'border-sky-500 bg-sky-950/40' : 'border-slate-700 bg-slate-950/50',
+      ].join(' ')}
+      data-testid={`command-center-trip-${trip.tripId}`}
+      onDragOver={(event) => {
+        if (!canAssign) return
+        event.preventDefault()
+        setDragOver(true)
+      }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={(event) => {
+        event.preventDefault()
+        setDragOver(false)
+        if (!canAssign) return
+        const payload = parseDragPayload(event.dataTransfer.getData(DRAG_MIME))
+        if (payload?.kind === 'driver') {
+          const ref = driverOptions.find((d) => d.personId === payload.personId)
+          onAssign(trip.tripId, payload.personId, ref?.displayName ?? payload.personId)
+        }
+      }}
+    >
       <p className="font-medium text-slate-100">{trip.title}</p>
       <p className="text-slate-500">{trip.tripNumber}</p>
       {trip.assignedDriverPersonId ? (
@@ -46,6 +75,7 @@ function TripCard({
             className="min-w-0 flex-1 rounded border border-slate-600 bg-slate-900 px-1 py-0.5 text-slate-200"
             value={selectedDriver}
             onChange={(e) => setSelectedDriver(e.target.value)}
+            data-testid={`command-center-driver-select-${trip.tripId}`}
           >
             <option value="">Assign driver…</option>
             {driverOptions.map((d) => (
@@ -58,6 +88,7 @@ function TripCard({
             type="button"
             className="rounded bg-slate-700 px-2 py-0.5 text-white disabled:opacity-50"
             disabled={!selectedDriver || isPending}
+            data-testid={`command-center-assign-${trip.tripId}`}
             onClick={() => {
               const ref = driverOptions.find((d) => d.personId === selectedDriver)
               onAssign(trip.tripId, selectedDriver, ref?.displayName ?? selectedDriver)
@@ -70,6 +101,7 @@ function TripCard({
               type="button"
               className="rounded bg-sky-700 px-2 py-0.5 text-white disabled:opacity-50"
               disabled={isPending}
+              data-testid={`command-center-dispatch-${trip.tripId}`}
               onClick={() => onDispatch(trip.tripId)}
             >
               Dispatch
@@ -88,6 +120,7 @@ export function DispatchCommandCenterPanel({
   canAssign,
 }: Props) {
   const queryClient = useQueryClient()
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
   const centerQuery = useQuery({
     queryKey: ['routarr-command-center', accessToken, scope],
@@ -102,33 +135,64 @@ export function DispatchCommandCenterPanel({
     },
   })
 
-  const actionMutation = useMutation({
+  const assignMutation = useMutation({
     mutationFn: async ({
       tripId,
       personId,
       displayName,
-      action,
     }: {
       tripId: string
-      personId?: string
-      displayName?: string
-      action: 'assign' | 'dispatch'
+      personId: string
+      displayName: string
     }) => {
-      if (action === 'assign' && personId) {
-        await assignTripDriver(accessToken, tripId, {
-          driverPersonId: personId,
-          driverDisplayName: displayName,
-        })
+      const preview = await previewDispatchAssignment(accessToken, {
+        tripId,
+        assignmentKind: 'driver',
+        driverPersonId: personId,
+        vehicleRefKey: null,
+      })
+
+      const ignoreFlags = confirmDispatchAssignmentPreview(preview, (message) =>
+        window.confirm(message),
+      )
+      if (!ignoreFlags) {
+        throw new Error('Assignment cancelled')
       }
-      if (action === 'dispatch') {
-        await updateTripStatus(accessToken, tripId, { dispatchStatus: 'dispatched' })
-      }
+
+      return assignTripDriver(accessToken, tripId, {
+        driverPersonId: personId,
+        driverDisplayName: displayName,
+        ignoreAvailabilityConflicts: ignoreFlags.ignoreConflicts,
+        ignoreEligibilityBlocks: ignoreFlags.ignoreEligibilityBlocks,
+        ignoreWorkflowGateBlocks: ignoreFlags.ignoreWorkflowGateBlocks,
+      })
     },
     onSuccess: () => {
+      setStatusMessage('Driver assigned.')
+      void queryClient.invalidateQueries({ queryKey: ['routarr-command-center'] })
+      void queryClient.invalidateQueries({ queryKey: ['routarr-dispatch-board'] })
+      void queryClient.invalidateQueries({ queryKey: ['routarr-trips'] })
+      void queryClient.invalidateQueries({ queryKey: ['routarr-unassigned-work-queue'] })
+    },
+    onError: (error: Error) => {
+      if (error.message !== 'Assignment cancelled') {
+        setStatusMessage(error.message)
+      } else {
+        setStatusMessage('Assignment cancelled.')
+      }
+    },
+  })
+
+  const dispatchMutation = useMutation({
+    mutationFn: (tripId: string) =>
+      updateTripStatus(accessToken, tripId, { dispatchStatus: 'dispatched' }),
+    onSuccess: () => {
+      setStatusMessage('Trip dispatched.')
       void queryClient.invalidateQueries({ queryKey: ['routarr-command-center'] })
       void queryClient.invalidateQueries({ queryKey: ['routarr-dispatch-board'] })
       void queryClient.invalidateQueries({ queryKey: ['routarr-trips'] })
     },
+    onError: (error: Error) => setStatusMessage(error.message),
   })
 
   if (centerQuery.isLoading) {
@@ -146,12 +210,19 @@ export function DispatchCommandCenterPanel({
     personId: d.personId,
     displayName: d.displayName,
   }))
+  const isPending = assignMutation.isPending || dispatchMutation.isPending
 
   const handleScopeChange = (next: 'daily' | 'weekly') => {
     onScopeChange(next)
     if (canAssign) {
       scopeMutation.mutate(next)
     }
+  }
+
+  function startDriverDrag(event: React.DragEvent, personId: string) {
+    if (!canAssign) return
+    event.dataTransfer.setData(DRAG_MIME, JSON.stringify({ kind: 'driver', personId }))
+    event.dataTransfer.effectAllowed = 'move'
   }
 
   return (
@@ -186,6 +257,33 @@ export function DispatchCommandCenterPanel({
         </div>
       </header>
 
+      {statusMessage ? (
+        <p className="mt-3 text-sm text-slate-300" data-testid="command-center-status">
+          {statusMessage}
+        </p>
+      ) : null}
+
+      {canAssign && driverOptions.length > 0 ? (
+        <div
+          className="mt-4 flex flex-wrap gap-2"
+          data-testid="command-center-driver-chips"
+        >
+          <span className="w-full text-xs text-slate-500">Drag a driver onto a trip card</span>
+          {driverOptions.map((driver) => (
+            <button
+              key={driver.personId}
+              type="button"
+              draggable
+              className="cursor-grab rounded-full border border-slate-600 bg-slate-900 px-3 py-1 text-xs text-slate-200 active:cursor-grabbing"
+              data-testid={`command-center-driver-chip-${driver.personId}`}
+              onDragStart={(event) => startDriverDrag(event, driver.personId)}
+            >
+              {driver.displayName}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
       <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {center.tripColumns.map((column) => (
           <div
@@ -207,18 +305,11 @@ export function DispatchCommandCenterPanel({
                     trip={trip}
                     canAssign={canAssign}
                     driverOptions={driverOptions}
-                    isPending={actionMutation.isPending}
+                    isPending={isPending}
                     onAssign={(tripId, personId, displayName) =>
-                      actionMutation.mutate({
-                        tripId,
-                        personId,
-                        displayName,
-                        action: 'assign',
-                      })
+                      assignMutation.mutate({ tripId, personId, displayName })
                     }
-                    onDispatch={(tripId) =>
-                      actionMutation.mutate({ tripId, action: 'dispatch' })
-                    }
+                    onDispatch={(tripId) => dispatchMutation.mutate(tripId)}
                   />
                 ))
               )}

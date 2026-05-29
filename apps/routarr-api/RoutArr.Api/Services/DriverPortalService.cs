@@ -11,6 +11,8 @@ namespace RoutArr.Api.Services;
 public sealed class DriverPortalService(
     RoutArrDbContext db,
     TripService tripService,
+    TripExecutionCaptureService captureService,
+    TripCaptureAttachmentService attachmentService,
     RoutArrAuthorizationService authorization,
     IRoutArrAuditService audit)
 {
@@ -39,7 +41,8 @@ public sealed class DriverPortalService(
             .Where(x =>
                 x.TenantId == tenantId
                 && x.AssignedDriverPersonId == personId
-                && TripDispatchStatuses.Active.Contains(x.DispatchStatus))
+                && (TripDispatchStatuses.Active.Contains(x.DispatchStatus)
+                    || (x.DispatchStatus == TripDispatchStatuses.Completed && x.ClosedAt == null)))
             .OrderBy(x => x.ScheduledStartAt ?? DateTimeOffset.MaxValue)
             .ThenBy(x => x.TripNumber)
             .ToListAsync(cancellationToken);
@@ -72,14 +75,76 @@ public sealed class DriverPortalService(
             .Select(x => x.TripId)
             .ToHashSet();
 
+        var settingsEntity = await db.TenantTripExecutionSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId, cancellationToken);
+        var settings = TripExecutionCaptureRules.ResolveSettings(settingsEntity);
+
+        var proofTypeRows = tripIds.Count == 0
+            ? []
+            : await db.TripProofRecords
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && tripIds.Contains(x.TripId))
+                .Select(x => new { x.TripId, x.ProofType })
+                .ToListAsync(cancellationToken);
+
+        var proofTypesByTrip = proofTypeRows
+            .GroupBy(x => x.TripId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.ProofType).ToList());
+
+        var dvirRows = tripIds.Count == 0
+            ? []
+            : await db.TripDvirInspections
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && tripIds.Contains(x.TripId))
+                .Select(x => new { x.TripId, x.Phase, x.Result })
+                .ToListAsync(cancellationToken);
+
+        var dvirResultsByTrip = dvirRows
+            .GroupBy(x => x.TripId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(x => (x.Phase, x.Result)).ToList());
+
         foreach (var trip in trips)
         {
             proofCounts.TryGetValue(trip.Id, out var proofCount);
+            proofTypesByTrip.TryGetValue(trip.Id, out var proofTypes);
+            proofTypes ??= [];
+            dvirResultsByTrip.TryGetValue(trip.Id, out var tripDvirs);
+            tripDvirs ??= [];
+
+            var preTripResult = tripDvirs
+                .Where(x => string.Equals(x.Phase, DvirInspectionPhases.PreTrip, StringComparison.OrdinalIgnoreCase))
+                .Select(x => x.Result)
+                .FirstOrDefault();
+            var postTripResult = tripDvirs
+                .Where(x => string.Equals(x.Phase, DvirInspectionPhases.PostTrip, StringComparison.OrdinalIgnoreCase))
+                .Select(x => x.Result)
+                .FirstOrDefault();
+
+            var attachmentState = await attachmentService.BuildAttachmentStateAsync(tenantId, trip.Id, cancellationToken);
+
+            var readiness = TripExecutionCaptureRules.BuildReadiness(
+                trip.Id,
+                trip.DispatchStatus,
+                settings,
+                proofTypes.Any(x => string.Equals(x, TripProofTypes.Pickup, StringComparison.OrdinalIgnoreCase)),
+                proofTypes.Any(x => string.Equals(x, TripProofTypes.Delivery, StringComparison.OrdinalIgnoreCase)),
+                preTripDvir.Contains(trip.Id),
+                postTripDvir.Contains(trip.Id),
+                preTripResult,
+                postTripResult,
+                attachmentState);
+
             var row = MapTripRow(
                 trip,
                 proofCount,
                 preTripDvir.Contains(trip.Id),
-                postTripDvir.Contains(trip.Id));
+                postTripDvir.Contains(trip.Id),
+                readiness.CanStartTrip,
+                readiness.CanCompleteTrip,
+                trip.ClosedAt);
             if (IsTodayTrip(trip, todayStart, todayEnd))
             {
                 todayTrips.Add(row);
@@ -139,6 +204,24 @@ public sealed class DriverPortalService(
         Guid tripId,
         CancellationToken cancellationToken = default)
     {
+        authorization.RequireDriverPortalExecute(principal);
+        var tenantId = principal.GetTenantId();
+        var actorUserId = principal.GetUserId();
+        var actorPersonId = principal.GetPersonId().ToString();
+
+        var existing = await tripService.GetAsync(tenantId, tripId, cancellationToken);
+        EnsureAssignedDriver(existing.AssignedDriverPersonId, actorPersonId);
+
+        if (string.Equals(existing.DispatchStatus, TripDispatchStatuses.Completed, StringComparison.OrdinalIgnoreCase))
+        {
+            return await tripService.AcknowledgeDriverCloseAsync(
+                tenantId,
+                actorUserId,
+                tripId,
+                actorPersonId,
+                cancellationToken);
+        }
+
         return await ExecuteTransitionAsync(
             principal,
             tripId,
@@ -174,6 +257,16 @@ public sealed class DriverPortalService(
 
         var existing = await tripService.GetAsync(tenantId, tripId, cancellationToken);
         EnsureAssignedDriver(existing.AssignedDriverPersonId, actorPersonId);
+
+        if (string.Equals(targetStatus, TripDispatchStatuses.InProgress, StringComparison.OrdinalIgnoreCase))
+        {
+            await captureService.AssertCanStartAsync(tenantId, tripId, existing.DispatchStatus, cancellationToken);
+        }
+        else if (string.Equals(targetStatus, TripDispatchStatuses.Completed, StringComparison.OrdinalIgnoreCase)
+                 && string.Equals(auditAction, CompleteAction, StringComparison.Ordinal))
+        {
+            await captureService.AssertCanCompleteAsync(tenantId, tripId, existing.DispatchStatus, cancellationToken);
+        }
 
         var canManageAny = authorization.CanViewAllTrips(principal)
             && !string.Equals(
@@ -221,6 +314,26 @@ public sealed class DriverPortalService(
             return true;
         }
 
+        if (string.Equals(trip.DispatchStatus, TripDispatchStatuses.Completed, StringComparison.OrdinalIgnoreCase)
+            && !trip.ClosedAt.HasValue)
+        {
+            if (trip.CompletedAt.HasValue
+                && trip.CompletedAt.Value >= todayStart
+                && trip.CompletedAt.Value < todayEnd)
+            {
+                return true;
+            }
+
+            if (trip.ScheduledStartAt.HasValue
+                && trip.ScheduledStartAt.Value >= todayStart
+                && trip.ScheduledStartAt.Value < todayEnd)
+            {
+                return true;
+            }
+
+            return !trip.ScheduledStartAt.HasValue && trip.UpdatedAt >= todayStart;
+        }
+
         if (trip.ScheduledStartAt.HasValue
             && trip.ScheduledStartAt.Value >= todayStart
             && trip.ScheduledStartAt.Value < todayEnd)
@@ -245,9 +358,16 @@ public sealed class DriverPortalService(
         Trip trip,
         int proofCount,
         bool hasPreTripDvir,
-        bool hasPostTripDvir)
+        bool hasPostTripDvir,
+        bool captureStartReady,
+        bool captureCompleteReady,
+        DateTimeOffset? closedAt)
     {
         var status = trip.DispatchStatus;
+        var canStartStatus = string.Equals(status, TripDispatchStatuses.Dispatched, StringComparison.OrdinalIgnoreCase);
+        var canCompleteStatus = string.Equals(status, TripDispatchStatuses.InProgress, StringComparison.OrdinalIgnoreCase);
+        var isCompleted = string.Equals(status, TripDispatchStatuses.Completed, StringComparison.OrdinalIgnoreCase);
+        var pendingDriverClose = isCompleted && !closedAt.HasValue;
         return new DriverPortalTripRow(
             trip.Id,
             trip.TripNumber,
@@ -259,12 +379,15 @@ public sealed class DriverPortalService(
             trip.DispatchedAt,
             trip.StartedAt,
             trip.CompletedAt,
+            closedAt,
             CanDispatch: string.Equals(status, TripDispatchStatuses.Assigned, StringComparison.OrdinalIgnoreCase),
-            CanStart: string.Equals(status, TripDispatchStatuses.Dispatched, StringComparison.OrdinalIgnoreCase),
-            CanComplete: string.Equals(status, TripDispatchStatuses.InProgress, StringComparison.OrdinalIgnoreCase),
-            CanClose: string.Equals(status, TripDispatchStatuses.InProgress, StringComparison.OrdinalIgnoreCase),
+            CanStart: canStartStatus && captureStartReady,
+            CanComplete: canCompleteStatus && captureCompleteReady,
+            CanClose: canCompleteStatus || pendingDriverClose,
             proofCount,
             hasPreTripDvir,
-            hasPostTripDvir);
+            hasPostTripDvir,
+            captureStartReady,
+            captureCompleteReady);
     }
 }

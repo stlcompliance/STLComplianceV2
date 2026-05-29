@@ -22,7 +22,7 @@ export function SettingsSection({ state }: Props) {
   return (
     <div className="space-y-6">
       {s.canNotifications ? (
-        <>
+        <div className="grid gap-6" data-testid="trainarr-settings-admin-workspace">
           <IntegrationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
           <NotificationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
           <AssignmentReminderEscalationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
@@ -33,7 +33,7 @@ export function SettingsSection({ state }: Props) {
           <OrphanReferenceSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
           <StaffarrPublicationSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
           <EventProcessingSettingsPanel accessToken={s.accessToken} canManage={s.canNotifications} />
-        </>
+        </div>
       ) : null}
       {s.canReadAudit ? (
         <AuditPackageExportPanel accessToken={s.accessToken} canExport={s.canExportAudit} />

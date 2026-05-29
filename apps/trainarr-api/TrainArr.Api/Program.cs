@@ -84,6 +84,10 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
         app.MapTrainArrAuditPackageEndpoints();
         app.MapTrainArrInternalAuditPackageGenerationEndpoints();
         app.MapTrainArrIntegrationSettingsEndpoints();
+        app.MapTrainArrAssignmentReportEndpoints();
+        app.MapTrainArrQualificationReportEndpoints();
+        app.MapTrainArrComplianceReportEndpoints();
+        app.MapTrainArrEntityExportEndpoints();
 
         await Task.CompletedTask;
 

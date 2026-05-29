@@ -69,6 +69,7 @@ describe('OperatorDashboardPanel', () => {
     )
 
     expect(await screen.findByText(/Operator overview/)).toBeInTheDocument()
+    expect(screen.getByTestId('compliancecore-operator-dashboard-panel')).toBeTruthy()
     expect(screen.getByText('Total findings')).toBeInTheDocument()
     expect(screen.getByText('Open (block severity)')).toBeInTheDocument()
     expect(screen.getByText('Gate check failures')).toBeInTheDocument()

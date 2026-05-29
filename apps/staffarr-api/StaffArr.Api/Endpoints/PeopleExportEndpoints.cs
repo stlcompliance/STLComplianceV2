@@ -136,5 +136,31 @@ public static class PeopleExportEndpoints
             return Results.Ok(await service.ListRecentAsync(tenantId, limit, cancellationToken));
         })
         .WithName("ListStaffArrPeopleExportDeliveryNotifications");
+
+        exports.MapGet("/delivery-pending", async (
+            StaffArrAuthorizationService authorization,
+            PersonExportDeliveryService deliveryService,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkerAdminSettingsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var batchSize = PersonExportDeliveryRules.NormalizeBatchSize(null);
+            return Results.Ok(await deliveryService.ListPendingAsync(tenantId, null, batchSize, cancellationToken));
+        })
+        .WithName("ListStaffArrPeopleExportDeliveryPending");
+
+        exports.MapGet("/delivery-runs", async (
+            int? limit,
+            StaffArrAuthorizationService authorization,
+            PersonExportDeliveryService deliveryService,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkerAdminSettingsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await deliveryService.ListRecentRunsAsync(tenantId, limit, cancellationToken));
+        })
+        .WithName("ListStaffArrPeopleExportDeliveryRuns");
     }
 }

@@ -52,6 +52,15 @@ public sealed class StlRenderStagingLoadTestSupportTests
     }
 
     [Fact]
+    public void SupplyArr_journey_seed_catalog_matches_conventions()
+    {
+        Assert.Equal("/api/load-test-journey/seed", StlSupplyArrLoadTestJourneySeedCatalog.SeedEndpointPath);
+        Assert.Equal("Load Test Journey Demand Processing Ref", StlSupplyArrLoadTestJourneySeedCatalog.JourneyDemandRefTitle);
+        Assert.Equal("WO-LTJ-DP-100", StlSupplyArrLoadTestJourneySeedCatalog.JourneyWorkOrderNumber);
+        Assert.Equal("LTJ-DP-PART", StlSupplyArrLoadTestJourneySeedCatalog.JourneyPartKey);
+    }
+
+    [Fact]
     public void Schedule_catalog_lists_optional_journey_env_vars()
     {
         Assert.Contains(

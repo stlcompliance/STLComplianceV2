@@ -191,6 +191,7 @@ export function DefectEscalationSettingsPanel({
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
           disabled={saveMutation.isPending}
           onClick={() => saveMutation.mutate()}
+          data-testid="defect-escalation-save"
         >
           {saveMutation.isPending ? 'Saving…' : 'Save escalation settings'}
         </button>
@@ -206,10 +207,15 @@ export function DefectEscalationSettingsPanel({
           <p className="mt-2 text-sm text-muted-foreground">Loading pending preview…</p>
         )}
         {pendingQuery.data && pendingQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-muted-foreground">No defects currently due for escalation.</p>
+          <p className="mt-2 text-sm text-muted-foreground" data-testid="defect-escalation-pending-empty">
+            No defects currently due for escalation.
+          </p>
         )}
         {pendingQuery.data && pendingQuery.data.items.length > 0 && (
-          <ul className="mt-2 divide-y divide-border rounded-md border border-border text-sm">
+          <ul
+            className="mt-2 divide-y divide-border rounded-md border border-border text-sm"
+            data-testid="defect-escalation-pending-list"
+          >
             {pendingQuery.data.items.map((item) => (
               <li key={item.defectId} className="px-3 py-2">
                 <div className="font-medium">{item.title}</div>
@@ -225,11 +231,19 @@ export function DefectEscalationSettingsPanel({
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <div>
           <h3 className="text-sm font-semibold text-foreground">Recent runs</h3>
+          {runsQuery.isLoading && (
+            <p className="mt-2 text-sm text-muted-foreground">Loading worker runs…</p>
+          )}
           {runsQuery.data && runsQuery.data.items.length === 0 && (
-            <p className="mt-2 text-sm text-muted-foreground">No worker runs yet.</p>
+            <p className="mt-2 text-sm text-muted-foreground" data-testid="defect-escalation-runs-empty">
+              No worker runs yet.
+            </p>
           )}
           {runsQuery.data && runsQuery.data.items.length > 0 && (
-            <ul className="mt-2 divide-y divide-border rounded-md border border-border text-sm">
+            <ul
+              className="mt-2 divide-y divide-border rounded-md border border-border text-sm"
+              data-testid="defect-escalation-runs-list"
+            >
               {runsQuery.data.items.map((run) => (
                 <li key={run.runId} className="px-3 py-2">
                   {run.escalatedCount} escalated / {run.candidatesFound} candidates
@@ -241,11 +255,19 @@ export function DefectEscalationSettingsPanel({
         </div>
         <div>
           <h3 className="text-sm font-semibold text-foreground">Recent events</h3>
+          {eventsQuery.isLoading && (
+            <p className="mt-2 text-sm text-muted-foreground">Loading escalation events…</p>
+          )}
           {eventsQuery.data && eventsQuery.data.items.length === 0 && (
-            <p className="mt-2 text-sm text-muted-foreground">No escalation events yet.</p>
+            <p className="mt-2 text-sm text-muted-foreground" data-testid="defect-escalation-events-empty">
+              No escalation events yet.
+            </p>
           )}
           {eventsQuery.data && eventsQuery.data.items.length > 0 && (
-            <ul className="mt-2 divide-y divide-border rounded-md border border-border text-sm">
+            <ul
+              className="mt-2 divide-y divide-border rounded-md border border-border text-sm"
+              data-testid="defect-escalation-events-list"
+            >
               {eventsQuery.data.items.map((event) => (
                 <li key={event.eventId} className="px-3 py-2">
                   <span className="font-medium">{event.actionKind}</span>

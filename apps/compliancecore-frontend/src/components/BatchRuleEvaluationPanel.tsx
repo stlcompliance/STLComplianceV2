@@ -47,7 +47,10 @@ export function BatchRuleEvaluationPanel({
   }
 
   return (
-    <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+    <section
+      className="rounded-xl border border-slate-700 bg-slate-900/60 p-4"
+      data-testid="batch-rule-evaluation-panel"
+    >
       <h2 className="text-sm font-semibold text-slate-100">Batch rule evaluation</h2>
       <p className="mt-1 text-xs text-slate-400">
         Evaluate multiple rule packs in one request with shared fact inputs applied to each selected pack.
@@ -63,6 +66,7 @@ export function BatchRuleEvaluationPanel({
                 <input
                   type="checkbox"
                   className="mt-1 rounded border-slate-600"
+                  data-testid={`batch-rule-evaluation-pack-${pack.packKey}`}
                   checked={selectedPackKeys.includes(pack.packKey)}
                   onChange={() => togglePack(pack.packKey)}
                 />
@@ -104,6 +108,7 @@ export function BatchRuleEvaluationPanel({
       <label className="mt-4 flex items-center gap-2 text-xs text-slate-300">
         <input
           type="checkbox"
+          data-testid="batch-rule-evaluation-emit-findings"
           checked={emitFindings}
           onChange={(event) => setEmitFindings(event.target.checked)}
           className="rounded border-slate-600"
@@ -113,6 +118,7 @@ export function BatchRuleEvaluationPanel({
 
       <button
         type="button"
+        data-testid="batch-rule-evaluation-run"
         disabled={selectedPackKeys.length === 0 || isEvaluating}
         onClick={() => onRunBatch(selectedPackKeys, factInputs, emitFindings)}
         className="mt-4 rounded-md bg-violet-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
@@ -123,7 +129,13 @@ export function BatchRuleEvaluationPanel({
       </button>
 
       {batch && (
-        <div className="mt-4 space-y-3">
+        <div
+          className="mt-4 space-y-3"
+          data-testid="batch-rule-evaluation-latest-result"
+          data-allow-count={batch.summary.allowCount}
+          data-block-count={batch.summary.blockCount}
+          data-warn-count={batch.summary.warnCount}
+        >
           <div className="flex flex-wrap gap-2 text-xs text-slate-300">
             <span className="rounded bg-slate-800 px-2 py-1">{batch.summary.total} total</span>
             <span className="rounded bg-emerald-900/50 px-2 py-1 text-emerald-200">

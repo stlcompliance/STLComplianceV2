@@ -78,6 +78,10 @@ import type {
   IntegrationSettingsResponse,
   UpsertIntegrationSettingsRequest,
   IntegrationProbesResponse,
+  AssignmentReportSummaryResponse,
+  QualificationReportSummaryResponse,
+  ComplianceReportSummaryResponse,
+  EntityExportManifestResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_TRAINARR_API_BASE ?? ''
@@ -1307,6 +1311,200 @@ export async function downloadAuditPackageGenerationJob(
     const body = await response.text()
     throw new TrainArrApiError(
       body || `Audit package download failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+function buildReportQuery(params: Record<string, string | boolean | undefined>): string {
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === '') {
+      continue
+    }
+    search.set(key, String(value))
+  }
+  const query = search.toString()
+  return query ? `?${query}` : ''
+}
+
+export async function getAssignmentReportSummary(
+  accessToken: string,
+  options?: { status?: string; overdueOnly?: boolean },
+): Promise<AssignmentReportSummaryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/assignments/summary${buildReportQuery({
+      status: options?.status,
+      overdueOnly: options?.overdueOnly,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<AssignmentReportSummaryResponse>(
+    response,
+    'Failed to load assignment report summary',
+  )
+}
+
+export async function exportAssignmentReportSummaryCsv(
+  accessToken: string,
+  options?: { status?: string; overdueOnly?: boolean },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/reports/assignments/summary/export${buildReportQuery({
+      status: options?.status,
+      overdueOnly: options?.overdueOnly,
+    })}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new TrainArrApiError(
+      body || `Assignment report export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function getQualificationReportSummary(
+  accessToken: string,
+  options?: { status?: string },
+): Promise<QualificationReportSummaryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/qualifications/summary${buildReportQuery({
+      status: options?.status,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<QualificationReportSummaryResponse>(
+    response,
+    'Failed to load qualification report summary',
+  )
+}
+
+export async function exportQualificationReportSummaryCsv(
+  accessToken: string,
+  options?: { status?: string },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/reports/qualifications/summary/export${buildReportQuery({
+      status: options?.status,
+    })}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new TrainArrApiError(
+      body || `Qualification report export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function getComplianceReportSummary(
+  accessToken: string,
+  options?: { attentionOnly?: boolean },
+): Promise<ComplianceReportSummaryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/reports/compliance/summary${buildReportQuery({
+      attentionOnly: options?.attentionOnly,
+    })}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<ComplianceReportSummaryResponse>(
+    response,
+    'Failed to load compliance report summary',
+  )
+}
+
+export async function exportComplianceReportSummaryCsv(
+  accessToken: string,
+  options?: { attentionOnly?: boolean },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/reports/compliance/summary/export${buildReportQuery({
+      attentionOnly: options?.attentionOnly,
+    })}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new TrainArrApiError(
+      body || `Compliance report export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function getEntityExportManifest(
+  accessToken: string,
+): Promise<EntityExportManifestResponse> {
+  const response = await fetch(`${apiBase}/api/exports/manifest`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<EntityExportManifestResponse>(
+    response,
+    'Failed to load export manifest',
+  )
+}
+
+export async function exportTrainingAssignmentsCsv(
+  accessToken: string,
+  options?: { status?: string },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/exports/training-assignments${buildReportQuery({
+      status: options?.status,
+    })}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new TrainArrApiError(
+      body || `Training assignments export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function exportQualificationIssuesCsv(
+  accessToken: string,
+  options?: { status?: string },
+): Promise<Blob> {
+  const response = await fetch(
+    `${apiBase}/api/exports/qualification-issues${buildReportQuery({
+      status: options?.status,
+    })}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new TrainArrApiError(
+      body || `Qualification issues export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function exportTrainingDefinitionsCsv(accessToken: string): Promise<Blob> {
+  const response = await fetch(`${apiBase}/api/exports/training-definitions`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new TrainArrApiError(
+      body || `Training definitions export failed (${response.status})`,
       response.status,
       body,
     )

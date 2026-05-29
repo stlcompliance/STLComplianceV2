@@ -41,7 +41,10 @@ export function BatchWorkflowGateCheckPanel({
   }
 
   return (
-    <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+    <section
+      className="rounded-xl border border-slate-700 bg-slate-900/60 p-4"
+      data-testid="batch-workflow-gate-check-panel"
+    >
       <h2 className="text-sm font-semibold text-slate-100">Batch workflow gate check</h2>
       <p className="mt-1 text-xs text-slate-400">
         Evaluate multiple gates in one request with shared fact inputs applied to each selected gate.
@@ -57,6 +60,7 @@ export function BatchWorkflowGateCheckPanel({
                 <input
                   type="checkbox"
                   className="mt-1 rounded border-slate-600"
+                  data-testid={`batch-workflow-gate-gate-${gate.gateKey}`}
                   checked={selectedGateKeys.includes(gate.gateKey)}
                   onChange={() => toggleGate(gate.gateKey)}
                 />
@@ -94,6 +98,7 @@ export function BatchWorkflowGateCheckPanel({
       <label className="mt-4 flex items-center gap-2 text-xs text-slate-300">
         <input
           type="checkbox"
+          data-testid="batch-workflow-gate-emit-findings"
           checked={emitFindings}
           onChange={(event) => setEmitFindings(event.target.checked)}
           className="rounded border-slate-600"
@@ -103,6 +108,7 @@ export function BatchWorkflowGateCheckPanel({
 
       <button
         type="button"
+        data-testid="batch-workflow-gate-run"
         disabled={selectedGateKeys.length === 0 || isChecking}
         onClick={() => onRunBatch(selectedGateKeys, factInputs, emitFindings)}
         className="mt-4 rounded-md bg-violet-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
@@ -111,7 +117,13 @@ export function BatchWorkflowGateCheckPanel({
       </button>
 
       {batch && (
-        <div className="mt-4 space-y-3">
+        <div
+          className="mt-4 space-y-3"
+          data-testid="batch-workflow-gate-latest-result"
+          data-allow-count={batch.summary.allowCount}
+          data-block-count={batch.summary.blockCount}
+          data-warn-count={batch.summary.warnCount}
+        >
           <div className="flex flex-wrap gap-2 text-xs text-slate-300">
             <span className="rounded bg-slate-800 px-2 py-1">
               {batch.summary.total} total

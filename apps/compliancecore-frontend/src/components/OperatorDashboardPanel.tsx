@@ -46,7 +46,7 @@ export function OperatorDashboardPanel({ accessToken }: OperatorDashboardPanelPr
   const dashboard = dashboardQuery.data as OperatorDashboardResponse
 
   return (
-    <section className="space-y-6" aria-label="Operator dashboard">
+    <section className="space-y-6" aria-label="Operator dashboard" data-testid="compliancecore-operator-dashboard-panel">
       <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
         <h2 className="text-lg font-semibold text-slate-50">Operator overview</h2>
         <p className="mt-1 text-sm text-slate-400">

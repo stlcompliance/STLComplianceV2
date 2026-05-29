@@ -10,6 +10,7 @@ Reference for `render.yaml` groups and Dashboard secrets. .NET APIs use `Section
 | `stl-auth` | JWT + service-token signing (`AUTH_SIGNING_KEY`, `Auth__*`, `SERVICE_TOKEN_*`) |
 | `stl-internal-api-urls` | Private-network API base URLs (`http://{service}:10000`) for server-to-server calls |
 | `stl-public-frontend-urls` | Documented public static-site URLs (onrender.com defaults) |
+| `stl-vite-product-frontend-urls` | Vite build-time product frontend launch bases for ProductSwitcher |
 | `stl-public-api-urls` | Documented public API URLs for Vite build-time variables |
 
 ## Health checks
@@ -18,6 +19,19 @@ Reference for `render.yaml` groups and Dashboard secrets. .NET APIs use `Section
 |--------------|------|
 | All Docker APIs | `GET /health` (liveness), `GET /health/ready` (DB readiness — Blueprint `healthCheckPath`), `GET /health/observability` (OTEL wiring status) |
 | Workers | Process heartbeat only (no HTTP health endpoint) |
+
+## Static site security headers
+
+All static sites in `render.yaml` set:
+
+| Header | Value |
+|--------|-------|
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` |
+
+Sites: `stlcompliancesite`, `suite-frontend`, six Arr product frontends, `companion-frontend`.
 
 ## OpenTelemetry (`stl-shared`)
 
@@ -113,6 +127,17 @@ Issue tokens in NexArr (platform admin / service clients) with the scopes docume
 | `SupplyArrDemandProcessing__ServiceToken` | scope `supplyarr.demand.process` |
 | `ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl` | `http://compliancecore-api:10000` |
 | `ComplianceCoreScheduledEvaluation__ServiceToken` | scope `compliancecore.rules.evaluate.scheduled` |
+| `ComplianceCoreRuleChangeMonitor__ComplianceCoreBaseUrl` | `http://compliancecore-api:10000` |
+| `ComplianceCoreRuleChangeMonitor__ServiceToken` | scope `compliancecore.rule_changes.monitor` |
+| `ComplianceCoreM12AnalyticsBatch__ServiceToken` | scope `compliancecore.m12_analytics.process_batch` |
+| `ComplianceCoreAuditPackageGeneration__ServiceToken` | scope `compliancecore.audit_packages.generate` |
+| `StaffArrPersonExportDelivery__ServiceToken` | scope `staffarr.people.export.deliver` |
+| `StaffArrPersonnelHistoryRollup__ServiceToken` | scope `staffarr.personnel_history.rollup` |
+| `SupplyArrLeadTimeSnapshot__ServiceToken` | scope `supplyarr.lead_time.snapshots.capture` |
+| `SupplyArrAvailabilitySnapshot__ServiceToken` | scope `supplyarr.availability.snapshots.capture` |
+| `SupplyArrProcurementExceptionEscalations__ServiceToken` | scope `supplyarr.procurement_exceptions.escalate` |
+| `SupplyArrIntegrationEvents__SupplyArrBaseUrl` | `http://supplyarr-api:10000` |
+| `SupplyArrIntegrationEvents__ServiceToken` | scope `supplyarr.integration.events.process` |
 | `NexArrServiceTokenCleanup__NexArrBaseUrl` | `http://nexarr-api:10000` |
 | `NexArrServiceTokenCleanup__ServiceToken` | scope `nexarr.service_tokens.cleanup.purge` |
 | `NexArrEntitlementReconciliation__NexArrBaseUrl` | `http://nexarr-api:10000` |
@@ -165,8 +190,8 @@ Static sites cannot use private network hostnames; always use public HTTPS URLs 
 
 | API | Variable | Render note |
 |-----|----------|-------------|
-| `trainarr-api` | `EvidenceStorage__RootPath` | `/var/data/trainarr-evidence` — ephemeral unless a persistent disk is attached |
-| `maintainarr-api` | `EvidenceStorage__RootPath` | `/var/data/maintainarr-evidence` — same |
+| `trainarr-api` | `EvidenceStorage__RootPath` | `/var/data/trainarr-evidence` — **10 GB persistent disk** attached in Blueprint |
+| `maintainarr-api` | `EvidenceStorage__RootPath` | `/var/data/maintainarr-evidence` — **10 GB persistent disk** attached in Blueprint |
 
 ## Not in V1 Blueprint
 
@@ -176,7 +201,29 @@ Static sites cannot use private network hostnames; always use public HTTPS URLs 
 ## Blueprint validation
 
 ```bash
+./scripts/ops/render-blueprint-validate.sh
+```
+
+```powershell
+./scripts/ops/render-blueprint-validate.ps1
+```
+
+Automated catalog gate (CI): `dotnet test tests/STLCompliance.E2E/STLCompliance.E2E.csproj -c Release --filter "Category=Ci&Area=RenderBlueprint"`.
+
+Optional Render CLI (v2.7.0+):
+
+```bash
 render blueprints validate render.yaml
 ```
 
-Requires [Render CLI](https://render.com/docs/cli) v2.7.0+. JSON Schema: `https://render.com/schema/render.yaml.json`
+## Staging ship gate validation
+
+After deploying to Render staging, operators validate live URLs with:
+
+```powershell
+./scripts/ops/render-staging-ship-gate-validate.ps1 -Phase local-catalog
+# With RENDER_STAGING_*_API_URL exported:
+./scripts/ops/render-staging-ship-gate-validate.ps1 -Phase api-health
+```
+
+See `docs/operations/RENDER_STAGING_SHIP_GATE_V1.md` for required/optional environment variables, GitHub workflow **Ship Gate Staging Render**, and canonical test filters (`Category=Ci&Area=RenderStagingShipGate`, `Category=Live&Area=RenderStagingShipGate`).

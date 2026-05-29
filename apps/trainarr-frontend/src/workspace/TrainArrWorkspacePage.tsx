@@ -8,6 +8,7 @@ import { CitationsSection } from './sections/CitationsSection'
 import { RulePacksSection } from './sections/RulePacksSection'
 import { QualificationsSection } from './sections/QualificationsSection'
 import { SettingsSection } from './sections/SettingsSection'
+import { ReportsSection } from './sections/ReportsSection'
 
 export function TrainArrWorkspacePage({ section }: { section: WorkspaceSection }) {
   const state = useTrainArrWorkspaceState()
@@ -22,6 +23,7 @@ export function TrainArrWorkspacePage({ section }: { section: WorkspaceSection }
       {section === 'citations' ? <CitationsSection state={state} /> : null}
       {section === 'rule-packs' ? <RulePacksSection state={state} /> : null}
       {section === 'qualifications' ? <QualificationsSection state={state} /> : null}
+      {section === 'reports' ? <ReportsSection state={state} /> : null}
       {section === 'settings' ? <SettingsSection state={state} /> : null}
     </WorkspaceShell>
   )

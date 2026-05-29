@@ -29,6 +29,7 @@ public sealed record TripSummaryResponse(
     DateTimeOffset? DispatchedAt,
     DateTimeOffset? StartedAt,
     DateTimeOffset? CompletedAt,
+    DateTimeOffset? ClosedAt,
     DateTimeOffset? CancelledAt);
 
 public sealed record TripDetailResponse(
@@ -49,6 +50,7 @@ public sealed record TripDetailResponse(
     DateTimeOffset? DispatchedAt,
     DateTimeOffset? StartedAt,
     DateTimeOffset? CompletedAt,
+    DateTimeOffset? ClosedAt,
     DateTimeOffset? CancelledAt);
 
 public sealed record CreateTripLoadRequest(

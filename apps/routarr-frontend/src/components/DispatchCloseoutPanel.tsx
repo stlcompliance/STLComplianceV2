@@ -62,11 +62,11 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
     enabled: canAssign,
   })
 
-  const openTrips = summaryQuery.data?.openTrips ?? []
+  const openTrips = summaryQuery.data?.openTrips
 
   useEffect(() => {
     setSelectedTripIds((current) =>
-      current.filter((id) => openTrips.some((trip) => trip.tripId === id)),
+      current.filter((id) => (openTrips ?? []).some((trip) => trip.tripId === id)),
     )
   }, [openTrips])
 
@@ -132,6 +132,7 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
   }
 
   const summary = summaryQuery.data
+  const openTripRows = openTrips ?? []
   const notReadyCount = (checklistsQuery.data?.trips ?? []).filter((x) => !x.readyForCloseout).length
 
   const toggleTrip = (tripId: string) => {
@@ -142,7 +143,7 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
   }
 
   const selectAllOpen = () => {
-    setSelectedTripIds(openTrips.map((trip) => trip.tripId))
+    setSelectedTripIds(openTripRows.map((trip) => trip.tripId))
     setPreview(null)
   }
 
@@ -207,7 +208,7 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
         </label>
       </div>
 
-      {openTrips.length > 0 ? (
+      {openTripRows.length > 0 ? (
         <div className="mb-4 rounded border border-slate-700">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 bg-slate-900/60 px-3 py-2">
             <span className="text-sm font-medium text-slate-200">Trip closeout checklist</span>
@@ -230,7 +231,7 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
             </div>
           </div>
           <ul className="max-h-64 divide-y divide-slate-800 overflow-y-auto">
-            {openTrips.map((trip) => {
+            {openTripRows.map((trip) => {
               const checklist = checklistByTripId.get(trip.tripId)
               const isSelected = selectedTripIds.includes(trip.tripId)
               const isExpanded = expandedTripId === trip.tripId

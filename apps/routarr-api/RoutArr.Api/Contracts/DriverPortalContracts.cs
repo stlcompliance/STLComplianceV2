@@ -11,13 +11,16 @@ public sealed record DriverPortalTripRow(
     DateTimeOffset? DispatchedAt,
     DateTimeOffset? StartedAt,
     DateTimeOffset? CompletedAt,
+    DateTimeOffset? ClosedAt,
     bool CanDispatch,
     bool CanStart,
     bool CanComplete,
     bool CanClose,
     int ProofCount,
     bool HasPreTripDvir,
-    bool HasPostTripDvir);
+    bool HasPostTripDvir,
+    bool CaptureStartReady,
+    bool CaptureCompleteReady);
 
 public sealed record DriverPortalScheduleResponse(
     DateTimeOffset TodayStart,

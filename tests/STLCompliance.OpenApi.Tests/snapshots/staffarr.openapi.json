@@ -50,8 +50,50 @@
               "type": "string",
               "format": "date-time"
             }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/filter-options": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetStaffArrAuditPackageFilterOptions",
         "responses": {
           "200": {
             "description": "OK"
@@ -143,6 +185,66 @@
         }
       }
     },
+    "/api/audit-packages/summary": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetStaffArrAuditPackageExportSummary",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/audit-packages/timeline": {
       "get": {
         "tags": [
@@ -164,6 +266,35 @@
             "schema": {
               "type": "string",
               "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           },
           {
@@ -248,6 +379,85 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/manifest": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "GetStaffArrEntityExportManifest",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/people": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "ExportStaffArrPeopleCsv",
+        "parameters": [
+          {
+            "name": "employmentStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/person-certifications": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "ExportStaffArrPersonCertificationsCsv",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/personnel-incidents": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "ExportStaffArrPersonnelIncidentsCsv",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -370,6 +580,96 @@
         }
       }
     },
+    "/api/incidents/{incidentId}/supply-demand": {
+      "get": {
+        "tags": [
+          "IncidentSupplyDemand"
+        ],
+        "operationId": "ListIncidentSupplyDemand",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "IncidentSupplyDemand"
+        ],
+        "operationId": "CreateIncidentSupplyDemandLine",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIncidentSupplyDemandLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/incidents/{incidentId}/supply-demand/publish": {
+      "post": {
+        "tags": [
+          "IncidentSupplyDemand"
+        ],
+        "operationId": "PublishIncidentSupplyDemand",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishIncidentSupplyDemandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/certification-grants": {
       "post": {
         "tags": [
@@ -416,6 +716,96 @@
         }
       }
     },
+    "/api/integrations/person-history": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "TrainarrPersonHistory",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/person-history/summary": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "TrainarrPersonHistorySummary",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/person-lookup": {
       "get": {
         "tags": [
@@ -455,6 +845,46 @@
         }
       }
     },
+    "/api/integrations/procurement-approval-authority": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SupplyarrProcurementApprovalAuthority",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "externalUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/routarr-readiness": {
       "get": {
         "tags": [
@@ -481,6 +911,108 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/supplyarr-demand-status": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestSupplyarrDemandStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestSupplyarrDemandStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/training-acknowledgements": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestTrainingAcknowledgement",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestTrainingAcknowledgementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/training-acknowledgements/status": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetTrainingAcknowledgementStatus",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "trainarrAcknowledgementRequestId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/training-acknowledgements/supersede": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SupersedeTrainingAcknowledgement",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupersedeTrainingAcknowledgementRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -810,6 +1342,84 @@
         }
       }
     },
+    "/api/internal/personnel-history/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingPersonnelHistory",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "stalenessHours",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/personnel-history/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessPersonnelHistory",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessPersonnelHistoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/readiness-rollups/pending": {
       "get": {
         "tags": [
@@ -881,6 +1491,42 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContext",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoff",
         "responses": {
           "200": {
             "description": "OK"
@@ -1918,6 +2564,78 @@
         }
       }
     },
+    "/api/people/{personId}/person-history": {
+      "get": {
+        "tags": [
+          "PersonnelHistory"
+        ],
+        "operationId": "ListPersonHistoryNested",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/{personId}/person-history/summary": {
+      "get": {
+        "tags": [
+          "PersonnelHistory"
+        ],
+        "operationId": "GetPersonHistorySummaryNested",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/people/{personId}/readiness": {
       "get": {
         "tags": [
@@ -2221,6 +2939,42 @@
         }
       }
     },
+    "/api/people/{personId}/trainarr-training-history": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffPersonTrainarrTrainingHistory",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/permissions": {
       "get": {
         "tags": [
@@ -2248,6 +3002,78 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/person-history": {
+      "get": {
+        "tags": [
+          "PersonnelHistory"
+        ],
+        "operationId": "ListPersonHistoryByQuery",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/person-history/summary": {
+      "get": {
+        "tags": [
+          "PersonnelHistory"
+        ],
+        "operationId": "GetPersonHistorySummaryByQuery",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2393,6 +3219,180 @@
         }
       }
     },
+    "/api/reports/incidents/summary": {
+      "get": {
+        "tags": [
+          "IncidentReports"
+        ],
+        "operationId": "GetStaffArrIncidentReportSummary",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "openOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/incidents/summary/export": {
+      "get": {
+        "tags": [
+          "IncidentReports"
+        ],
+        "operationId": "ExportStaffArrIncidentReportSummary",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "openOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/personnel/summary": {
+      "get": {
+        "tags": [
+          "PersonnelReports"
+        ],
+        "operationId": "GetStaffArrPersonnelReportSummary",
+        "parameters": [
+          {
+            "name": "employmentStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/personnel/summary/export": {
+      "get": {
+        "tags": [
+          "PersonnelReports"
+        ],
+        "operationId": "ExportStaffArrPersonnelReportSummary",
+        "parameters": [
+          {
+            "name": "employmentStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/readiness/summary": {
+      "get": {
+        "tags": [
+          "ReadinessReports"
+        ],
+        "operationId": "GetStaffArrReadinessReportSummary",
+        "parameters": [
+          {
+            "name": "scopeType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/readiness/summary/export": {
+      "get": {
+        "tags": [
+          "ReadinessReports"
+        ],
+        "operationId": "ExportStaffArrReadinessReportSummary",
+        "parameters": [
+          {
+            "name": "scopeType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/roles": {
       "get": {
         "tags": [
@@ -2467,6 +3467,60 @@
           "Session"
         ],
         "operationId": "StaffArrGetSessionBootstrap",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-acknowledgements": {
+      "get": {
+        "tags": [
+          "TrainingAcknowledgements"
+        ],
+        "operationId": "ListTrainingAcknowledgements",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-acknowledgements/{acknowledgementId}/acknowledge": {
+      "post": {
+        "tags": [
+          "TrainingAcknowledgements"
+        ],
+        "operationId": "AcknowledgeTrainingAssignment",
+        "parameters": [
+          {
+            "name": "acknowledgementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2616,6 +3670,83 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "action": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "result": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "targetType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "actorUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateIncidentSupplyDemandLineRequest": {
+        "required": [
+          "supplyarrPartId",
+          "partNumber",
+          "description",
+          "quantityRequested",
+          "unitOfMeasure",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "supplyarrPartId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "partNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantityRequested": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3029,6 +4160,134 @@
           }
         }
       },
+      "IngestSupplyarrDemandStatusRequest": {
+        "required": [
+          "tenantId",
+          "staffarrPublicationId",
+          "supplyarrDemandRefId",
+          "supplyarrCallbackPublicationId",
+          "eventType",
+          "procurementStatus",
+          "supplyarrPurchaseRequestId",
+          "supplyarrPurchaseOrderId",
+          "supplyarrReceivingReceiptId",
+          "quantityReceivedDelta",
+          "message",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "staffarrPublicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrDemandRefId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrCallbackPublicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "procurementStatus": {
+            "type": "string"
+          },
+          "supplyarrPurchaseRequestId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "supplyarrPurchaseOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "supplyarrReceivingReceiptId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "quantityReceivedDelta": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IngestTrainingAcknowledgementRequest": {
+        "required": [
+          "tenantId",
+          "personId",
+          "trainarrAcknowledgementRequestId",
+          "trainarrAssignmentId",
+          "trainingTitle",
+          "assignmentReason",
+          "summary",
+          "dueAt"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "personId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trainarrAcknowledgementRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trainarrAssignmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trainingTitle": {
+            "type": "string"
+          },
+          "assignmentReason": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "IngestTrainingBlockerRequest": {
         "required": [
           "tenantId",
@@ -3216,6 +4475,49 @@
           }
         }
       },
+      "ProcessPersonnelHistoryRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ProcessReadinessRollupsRequest": {
         "required": [
           "tenantId",
@@ -3259,6 +4561,17 @@
           }
         }
       },
+      "PublishIncidentSupplyDemandRequest": {
+        "required": [
+          "createPurchaseRequestDraft"
+        ],
+        "type": "object",
+        "properties": {
+          "createPurchaseRequestDraft": {
+            "type": "boolean"
+          }
+        }
+      },
       "RedeemHandoffRequest": {
         "required": [
           "handoffCode"
@@ -3290,6 +4603,28 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "SupersedeTrainingAcknowledgementRequest": {
+        "required": [
+          "tenantId",
+          "personId",
+          "trainarrAcknowledgementRequestId"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "personId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trainarrAcknowledgementRequestId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -3647,6 +4982,9 @@
       "name": "Me"
     },
     {
+      "name": "Launch"
+    },
+    {
       "name": "People"
     },
     {
@@ -3686,7 +5024,13 @@
       "name": "ReadinessRollups"
     },
     {
+      "name": "PersonnelHistory"
+    },
+    {
       "name": "Incidents"
+    },
+    {
+      "name": "IncidentSupplyDemand"
     },
     {
       "name": "Personnel Notes"
@@ -3701,10 +5045,25 @@
       "name": "Internal"
     },
     {
+      "name": "TrainingAcknowledgements"
+    },
+    {
       "name": "FieldInbox"
     },
     {
       "name": "AuditPackages"
+    },
+    {
+      "name": "PersonnelReports"
+    },
+    {
+      "name": "ReadinessReports"
+    },
+    {
+      "name": "IncidentReports"
+    },
+    {
+      "name": "EntityExports"
     }
   ]
 }

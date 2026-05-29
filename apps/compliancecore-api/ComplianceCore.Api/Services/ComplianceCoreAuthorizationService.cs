@@ -422,6 +422,26 @@ public sealed class ComplianceCoreAuthorizationService
             403);
     }
 
+    public void RequireFindingsReportRead(ClaimsPrincipal principal)
+    {
+        RequireFindingsRead(principal);
+    }
+
+    public void RequireFindingsReportExport(ClaimsPrincipal principal)
+    {
+        RequireAuditPackageExport(principal);
+    }
+
+    public void RequireOperatorReportRead(ClaimsPrincipal principal)
+    {
+        RequireOperatorDashboardRead(principal);
+    }
+
+    public void RequireOperatorReportExport(ClaimsPrincipal principal)
+    {
+        RequireAuditPackageExport(principal);
+    }
+
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }

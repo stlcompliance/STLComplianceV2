@@ -10,6 +10,17 @@ public static class DispatchNotificationRules
     public static int NormalizeBatchSize(int? batchSize) =>
         Math.Clamp(batchSize ?? 25, 1, 200);
 
+    public static void ValidateUpsertRequest(bool isEnabled, string? notificationWebhookUrl)
+    {
+        if (isEnabled && string.IsNullOrWhiteSpace(notificationWebhookUrl))
+        {
+            throw new StlApiException(
+                "routarr.notification.webhook_required",
+                "Webhook URL is required when dispatch notifications are enabled.",
+                400);
+        }
+    }
+
     public static string? NormalizeWebhookUrl(string? raw, bool allowInsecureHttp)
     {
         if (string.IsNullOrWhiteSpace(raw))

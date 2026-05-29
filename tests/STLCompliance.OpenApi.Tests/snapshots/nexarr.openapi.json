@@ -558,6 +558,64 @@
         }
       }
     },
+    "/api/internal/entitlement-reconciliation/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingEntitlementReconciliation",
+        "parameters": [
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/entitlement-reconciliation/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessEntitlementReconciliation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessEntitlementReconciliationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/integration-tokens": {
       "get": {
         "tags": [
@@ -635,6 +693,122 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ProcessPlatformAuditPackageGenerationJobsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/service-token-cleanup/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingServiceTokenCleanup",
+        "parameters": [
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/service-token-cleanup/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessServiceTokenCleanup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessServiceTokenCleanupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/tenant-lifecycle/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingTenantLifecycle",
+        "parameters": [
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/tenant-lifecycle/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessTenantLifecycle",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessTenantLifecycleRequest"
               }
             }
           },
@@ -904,6 +1078,65 @@
               "type": "string",
               "format": "date-time"
             }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "productKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/audit-packages/filter-options": {
+      "get": {
+        "tags": [
+          "PlatformAuditPackages"
+        ],
+        "operationId": "GetPlatformAuditPackageFilterOptions",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -997,6 +1230,81 @@
         }
       }
     },
+    "/api/platform-admin/audit-packages/summary": {
+      "get": {
+        "tags": [
+          "PlatformAuditPackages"
+        ],
+        "operationId": "GetPlatformAuditPackageExportSummary",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "productKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/platform-admin/audit-packages/timeline": {
       "get": {
         "tags": [
@@ -1026,6 +1334,42 @@
             "schema": {
               "type": "string",
               "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "productKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -1066,6 +1410,146 @@
           "PlatformAdmin"
         ],
         "operationId": "PlatformAdminDashboard",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/entitlement-reconciliation/licenses": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "ListPlatformTenantProductLicenses",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "UpsertPlatformTenantProductLicense",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTenantProductLicenseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/entitlement-reconciliation/pending": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "ListPlatformEntitlementReconciliationPending",
+        "parameters": [
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/entitlement-reconciliation/runs": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "ListPlatformEntitlementReconciliationRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/entitlement-reconciliation/settings": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "GetPlatformEntitlementReconciliationSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "UpsertPlatformEntitlementReconciliationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertEntitlementReconciliationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1172,6 +1656,228 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/platform-lifecycle/overview": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "GetPlatformLifecycleOverview",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/service-token-cleanup/runs": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "ListPlatformServiceTokenCleanupRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/service-token-cleanup/settings": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "GetPlatformServiceTokenCleanupSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "UpsertPlatformServiceTokenCleanupSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertServiceTokenCleanupSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/tenant-lifecycle/pending": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "ListPlatformTenantLifecyclePending",
+        "parameters": [
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/tenant-lifecycle/runs": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "ListPlatformTenantLifecycleRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/tenant-lifecycle/settings": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "GetPlatformTenantLifecycleSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "UpsertPlatformTenantLifecycleSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTenantLifecycleSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/worker-health-orchestration": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "GetPlatformWorkerHealthOrchestration",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/worker-health-orchestration/trigger-entitlement-reconciliation": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "TriggerPlatformEntitlementReconciliationOrchestration",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/worker-health-orchestration/trigger-service-token-cleanup": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "TriggerPlatformServiceTokenCleanupOrchestration",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/worker-health-orchestration/trigger-tenant-lifecycle": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "TriggerPlatformTenantLifecycleOrchestration",
         "responses": {
           "200": {
             "description": "OK"
@@ -1816,6 +2522,37 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "action": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "result": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "targetType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "actorUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "productKey": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -1992,6 +2729,31 @@
           }
         }
       },
+      "ProcessEntitlementReconciliationRequest": {
+        "required": [
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ProcessPlatformAuditPackageGenerationJobsRequest": {
         "required": [
           "tenantId",
@@ -2007,6 +2769,56 @@
             ],
             "format": "uuid"
           },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessServiceTokenCleanupRequest": {
+        "required": [
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessTenantLifecycleRequest": {
+        "required": [
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
           "asOfUtc": {
             "type": [
               "null",
@@ -2226,6 +3038,126 @@
             "$ref": "#/components/schemas/CompanionPushSubscriptionKeysRequest"
           },
           "userAgent": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpsertEntitlementReconciliationSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "autoGrantFromLicense",
+          "autoRevokeStaleEntitlements"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "autoGrantFromLicense": {
+            "type": "boolean"
+          },
+          "autoRevokeStaleEntitlements": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpsertServiceTokenCleanupSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "retentionDaysAfterExpiry",
+          "retentionDaysAfterRevoke"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "retentionDaysAfterExpiry": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "retentionDaysAfterRevoke": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertTenantLifecycleSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "autoSuspendWhenNoValidLicense",
+          "suspendGraceDaysAfterLastLicenseExpiry",
+          "autoReactivateWhenValidLicense",
+          "revokeSessionsOnSuspend"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "autoSuspendWhenNoValidLicense": {
+            "type": "boolean"
+          },
+          "suspendGraceDaysAfterLastLicenseExpiry": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "autoReactivateWhenValidLicense": {
+            "type": "boolean"
+          },
+          "revokeSessionsOnSuspend": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpsertTenantProductLicenseRequest": {
+        "required": [
+          "tenantId",
+          "productKey",
+          "status",
+          "validFrom",
+          "validTo",
+          "externalReference"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productKey": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "validTo": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "externalReference": {
             "type": [
               "null",
               "string"

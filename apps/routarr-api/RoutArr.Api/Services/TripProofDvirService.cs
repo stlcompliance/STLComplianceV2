@@ -11,6 +11,7 @@ namespace RoutArr.Api.Services;
 public sealed class TripProofDvirService(
     RoutArrDbContext db,
     TripService tripService,
+    TripCaptureAttachmentService attachmentService,
     RoutArrAuthorizationService authorization,
     IRoutArrAuditService audit)
 {
@@ -65,7 +66,7 @@ public sealed class TripProofDvirService(
             proofType,
             cancellationToken: cancellationToken);
 
-        return MapProof(entity);
+        return MapProof(entity, []);
     }
 
     public async Task<TripProofListResponse> ListProofsAsync(
@@ -95,7 +96,7 @@ public sealed class TripProofDvirService(
             items.Count.ToString(),
             cancellationToken: cancellationToken);
 
-        return new TripProofListResponse(tripId, items.Select(MapProof).ToList());
+        return new TripProofListResponse(tripId, await MapProofsAsync(tenantId, tripId, items, cancellationToken));
     }
 
     public async Task<TripDvirInspectionResponse> SubmitDvirAsync(
@@ -114,6 +115,7 @@ public sealed class TripProofDvirService(
 
         var phase = NormalizeDvirPhase(request.Phase);
         var result = NormalizeDvirResult(request.Result);
+        TripExecutionCaptureRules.ValidateDvirSubmit(result, request.DefectNotes);
         var vehicleRef = string.IsNullOrWhiteSpace(request.VehicleRefKey)
             ? trip.VehicleRefKey ?? string.Empty
             : request.VehicleRefKey.Trim();
@@ -156,7 +158,7 @@ public sealed class TripProofDvirService(
             $"{phase}:{result}",
             cancellationToken: cancellationToken);
 
-        return MapDvir(existing);
+        return MapDvir(existing, []);
     }
 
     public async Task<TripDvirListResponse> ListDvirAsync(
@@ -186,7 +188,7 @@ public sealed class TripProofDvirService(
             items.Count.ToString(),
             cancellationToken: cancellationToken);
 
-        return new TripDvirListResponse(tripId, items.Select(MapDvir).ToList());
+        return new TripDvirListResponse(tripId, await MapDvirsAsync(tenantId, tripId, items, cancellationToken));
     }
 
     public async Task<TripExecutionSummaryResponse> GetExecutionSummaryAsync(
@@ -213,6 +215,9 @@ public sealed class TripProofDvirService(
             .OrderBy(x => x.Phase)
             .ToListAsync(cancellationToken);
 
+        var mappedProofs = await MapProofsAsync(tenantId, tripId, proofs, cancellationToken);
+        var mappedDvirs = await MapDvirsAsync(tenantId, tripId, dvirs, cancellationToken);
+
         await audit.WriteAsync(
             ExecutionReadAction,
             tenantId,
@@ -222,14 +227,57 @@ public sealed class TripProofDvirService(
             "success",
             cancellationToken: cancellationToken);
 
+        var tripEntity = await db.Trips
+            .AsNoTracking()
+            .FirstAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
+
         return new TripExecutionSummaryResponse(
             tripId,
             trip.TripNumber,
+            tripEntity.DispatchStatus,
             trip.AssignedDriverPersonId,
-            proofs.Select(MapProof).ToList(),
-            dvirs.Select(MapDvir).ToList(),
+            tripEntity.ClosedAt,
+            mappedProofs,
+            mappedDvirs,
             dvirs.Any(x => string.Equals(x.Phase, DvirInspectionPhases.PreTrip, StringComparison.OrdinalIgnoreCase)),
             dvirs.Any(x => string.Equals(x.Phase, DvirInspectionPhases.PostTrip, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private async Task<IReadOnlyList<TripProofRecordResponse>> MapProofsAsync(
+        Guid tenantId,
+        Guid tripId,
+        IReadOnlyList<TripProofRecord> items,
+        CancellationToken cancellationToken)
+    {
+        var attachments = await LoadAttachmentLookupAsync(tenantId, tripId, cancellationToken);
+        return items
+            .Select(proof => MapProof(
+                proof,
+                attachments.ForSubject(TripCaptureAttachmentSubjects.Proof, proof.Id)))
+            .ToList();
+    }
+
+    private async Task<IReadOnlyList<TripDvirInspectionResponse>> MapDvirsAsync(
+        Guid tenantId,
+        Guid tripId,
+        IReadOnlyList<TripDvirInspection> items,
+        CancellationToken cancellationToken)
+    {
+        var attachments = await LoadAttachmentLookupAsync(tenantId, tripId, cancellationToken);
+        return items
+            .Select(dvir => MapDvir(
+                dvir,
+                attachments.ForSubject(TripCaptureAttachmentSubjects.Dvir, dvir.Id)))
+            .ToList();
+    }
+
+    private async Task<TripCaptureAttachmentLookup> LoadAttachmentLookupAsync(
+        Guid tenantId,
+        Guid tripId,
+        CancellationToken cancellationToken)
+    {
+        var attachments = await attachmentService.ListForTripAsync(tenantId, tripId, cancellationToken);
+        return new TripCaptureAttachmentLookup(attachments);
     }
 
     private void EnsureTripProofAccess(ClaimsPrincipal principal, string? assignedPersonId, bool write)
@@ -296,7 +344,9 @@ public sealed class TripProofDvirService(
         return normalized;
     }
 
-    private static TripProofRecordResponse MapProof(TripProofRecord entity) =>
+    private static TripProofRecordResponse MapProof(
+        TripProofRecord entity,
+        IReadOnlyList<TripCaptureAttachmentResponse> attachments) =>
         new(
             entity.Id,
             entity.TripId,
@@ -306,9 +356,12 @@ public sealed class TripProofDvirService(
             entity.ReferenceKey,
             entity.Notes,
             entity.CapturedAt,
-            entity.CreatedAt);
+            entity.CreatedAt,
+            attachments);
 
-    private static TripDvirInspectionResponse MapDvir(TripDvirInspection entity) =>
+    private static TripDvirInspectionResponse MapDvir(
+        TripDvirInspection entity,
+        IReadOnlyList<TripCaptureAttachmentResponse> attachments) =>
         new(
             entity.Id,
             entity.TripId,
@@ -318,5 +371,16 @@ public sealed class TripProofDvirService(
             entity.OdometerReading,
             entity.DefectNotes,
             entity.SubmittedByPersonId,
-            entity.SubmittedAt);
+            entity.SubmittedAt,
+            attachments);
+
+    private sealed class TripCaptureAttachmentLookup(IReadOnlyList<TripCaptureAttachmentResponse> attachments)
+    {
+        public IReadOnlyList<TripCaptureAttachmentResponse> ForSubject(string subjectType, Guid subjectId) =>
+            attachments
+                .Where(x =>
+                    string.Equals(x.SubjectType, subjectType, StringComparison.OrdinalIgnoreCase)
+                    && x.SubjectId == subjectId)
+                .ToList();
+    }
 }

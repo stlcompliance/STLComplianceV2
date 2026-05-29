@@ -44,6 +44,375 @@
         }
       }
     },
+    "/api/attachment-retention-settings": {
+      "get": {
+        "tags": [
+          "AttachmentRetentionSettings"
+        ],
+        "operationId": "GetRoutArrAttachmentRetentionSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AttachmentRetentionSettings"
+        ],
+        "operationId": "UpsertRoutArrAttachmentRetentionSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertAttachmentRetentionSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/attachment-retention-settings/runs": {
+      "get": {
+        "tags": [
+          "AttachmentRetentionSettings"
+        ],
+        "operationId": "ListRoutArrAttachmentRetentionRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/export": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "ExportRoutArrAuditPackage",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/filter-options": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetRoutArrAuditPackageFilterOptions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/jobs": {
+      "post": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "CreateRoutArrAuditPackageGenerationJob",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditPackageGenerationJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/jobs/{jobId}": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetRoutArrAuditPackageGenerationJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/jobs/{jobId}/download": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "DownloadRoutArrAuditPackageGenerationJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/manifest": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetRoutArrAuditPackageManifest",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/summary": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetRoutArrAuditPackageExportSummary",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/timeline": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetRoutArrAuditPackageTimeline",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/auth/handoff/redeem": {
       "post": {
         "tags": [
@@ -78,6 +447,92 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/DispatchWorkflowGateCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/active-trips": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "GetActiveTrips",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "statusFilter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/assignments/audit": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "ListDispatchAssignmentAudit",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/assignments/bulk-preview": {
+      "post": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "PreviewDispatchBoardBulkAssignment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispatchBoardBulkAssignmentPreviewRequest"
               }
             }
           },
@@ -128,6 +583,40 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/board-state": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "GetDispatchBoardState",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "UpsertDispatchBoardState",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDispatchBoardStateRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -240,6 +729,62 @@
         }
       }
     },
+    "/api/dispatch/closeout/audit": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "ListDispatchCloseoutAudit",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/closeout/checklists": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "GetDispatchCloseoutChecklists",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "remainingTripDisposition",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/dispatch/closeout/preview": {
       "post": {
         "tags": [
@@ -269,6 +814,28 @@
           "Dispatch"
         ],
         "operationId": "GetDispatchCloseoutSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/command-center": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "GetDispatchCommandCenter",
         "parameters": [
           {
             "name": "scope",
@@ -321,6 +888,40 @@
         }
       }
     },
+    "/api/dispatch/driver-refs": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "ListStaffarrPersonRefs",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "UpsertStaffarrPersonRef",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertStaffarrPersonRefRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/dispatch/equipment-availability": {
       "get": {
         "tags": [
@@ -347,6 +948,246 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/exceptions": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "ListDispatchExceptions",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "overdueOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "CreateDispatchException",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDispatchExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/exceptions/bulk/assign": {
+      "post": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "BulkAssignDispatchExceptions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkAssignDispatchExceptionsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/exceptions/bulk/resolve": {
+      "post": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "BulkResolveDispatchExceptions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkResolveDispatchExceptionsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/exceptions/resolution-templates": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "ListDispatchExceptionResolutionTemplates",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/exceptions/{exceptionId}/assign": {
+      "patch": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "AssignDispatchException",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignDispatchExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/exceptions/{exceptionId}/link-trip": {
+      "patch": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "LinkDispatchExceptionTrip",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkDispatchExceptionTripRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/exceptions/{exceptionId}/resolve": {
+      "patch": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "ResolveDispatchException",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveDispatchExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dispatch/unassigned-work-queue": {
+      "get": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "GetUnassignedWorkQueue",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -522,6 +1363,463 @@
         }
       }
     },
+    "/api/driver-portal/schedule": {
+      "get": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "GetDriverPortalSchedule",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/trips/{tripId}/capture-readiness": {
+      "get": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalTripCaptureReadiness",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/trips/{tripId}/close": {
+      "post": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalCloseTrip",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/trips/{tripId}/complete": {
+      "post": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalCompleteTrip",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/trips/{tripId}/dispatch": {
+      "post": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalDispatchTrip",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/trips/{tripId}/dvir": {
+      "post": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalSubmitTripDvir",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitTripDvirRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/trips/{tripId}/dvir/{subjectId}/attachments": {
+      "get": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalListTrip/dvirAttachments",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalUploadTrip/dvirAttachment",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadTripCaptureAttachmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/trips/{tripId}/dvir/{subjectId}/attachments/{attachmentId}/content": {
+      "get": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalDownloadTrip/dvirAttachment",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/trips/{tripId}/execution": {
+      "get": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalTripExecution",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/trips/{tripId}/proofs": {
+      "post": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalCreateTripProof",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTripProofRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/trips/{tripId}/proofs/{subjectId}/attachments": {
+      "get": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalListTrip/proofsAttachments",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalUploadTrip/proofsAttachment",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadTripCaptureAttachmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/trips/{tripId}/proofs/{subjectId}/attachments/{attachmentId}/content": {
+      "get": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalDownloadTrip/proofsAttachment",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/trips/{tripId}/start": {
+      "post": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalStartTrip",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/equipment-availability": {
       "get": {
         "tags": [
@@ -664,12 +1962,246 @@
         }
       }
     },
+    "/api/exports/dispatch-exceptions": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportRoutArrDispatchExceptionsCsv",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/manifest": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "GetRoutArrEntityExportManifest",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/routes": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportRoutArrRoutesCsv",
+        "parameters": [
+          {
+            "name": "routeStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/trips": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportRoutArrTripsCsv",
+        "parameters": [
+          {
+            "name": "dispatchStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/field-inbox": {
       "get": {
         "tags": [
           "FieldInbox"
         ],
         "operationId": "GetRoutArrFieldInbox",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/supplyarr-demand-status": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestSupplyarrDemandStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestSupplyarrDemandStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/attachment-retention/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingAttachmentRetention",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/attachment-retention/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessAttachmentRetention",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessAttachmentRetentionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/audit-package-jobs/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingRoutArrAuditPackageGenerationJobs",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/audit-package-jobs/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessRoutArrAuditPackageGenerationJobs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessAuditPackageGenerationJobsRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -947,6 +2479,306 @@
                 "string"
               ],
               "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/dispatch/exceptions/{exceptionId}": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportExceptionDetail",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/dispatch/summary": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/dispatch/summary/export": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "ExportRoutArrDispatchReportSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/dispatch/trips/{tripId}": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportTripDetail",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/proof-dvir/dvir/{dvirId}": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportDvirDetail",
+        "parameters": [
+          {
+            "name": "dvirId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/proof-dvir/proofs/{proofId}": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportProofDetail",
+        "parameters": [
+          {
+            "name": "proofId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/proof-dvir/summary": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/proof-dvir/summary/export": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "ExportRoutArrProofDvirReportSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/proof-dvir/trips/{tripId}": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportTripDetail",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/routes/stops/{stopId}": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "GetRoutArrRouteReportStopDetail",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/routes/summary": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "GetRoutArrRouteReportSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/routes/summary/export": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "ExportRoutArrRouteReportSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/routes/{routeId}": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "GetRoutArrRouteReportRouteDetail",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -1338,6 +3170,40 @@
         }
       }
     },
+    "/api/trip-execution-settings": {
+      "get": {
+        "tags": [
+          "TripExecutionCapture"
+        ],
+        "operationId": "GetRoutArrTripExecutionSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TripExecutionCapture"
+        ],
+        "operationId": "UpsertRoutArrTripExecutionSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTripExecutionSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/trips": {
       "get": {
         "tags": [
@@ -1473,6 +3339,464 @@
         }
       }
     },
+    "/api/trips/{tripId}/dvir": {
+      "get": {
+        "tags": [
+          "TripProofDvir"
+        ],
+        "operationId": "ListTripDvirInspections",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TripProofDvir"
+        ],
+        "operationId": "SubmitTripDvir",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitTripDvirRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}/dvir/{subjectId}/attachments": {
+      "get": {
+        "tags": [
+          "TripCaptureAttachments"
+        ],
+        "operationId": "RoutArrListTrip/dvirAttachments",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TripCaptureAttachments"
+        ],
+        "operationId": "RoutArrUploadTrip/dvirAttachment",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadTripCaptureAttachmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}/dvir/{subjectId}/attachments/{attachmentId}/content": {
+      "get": {
+        "tags": [
+          "TripCaptureAttachments"
+        ],
+        "operationId": "RoutArrDownloadTrip/dvirAttachment",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}/execution": {
+      "get": {
+        "tags": [
+          "TripProofDvir"
+        ],
+        "operationId": "GetTripExecutionSummary",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}/parts-demand": {
+      "get": {
+        "tags": [
+          "TripPartsDemand"
+        ],
+        "operationId": "ListTripPartsDemand",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TripPartsDemand"
+        ],
+        "operationId": "CreateTripPartsDemandLine",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTripPartsDemandLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}/parts-demand/publish": {
+      "post": {
+        "tags": [
+          "TripPartsDemand"
+        ],
+        "operationId": "PublishTripPartsDemand",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishTripPartsDemandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}/proofs": {
+      "get": {
+        "tags": [
+          "TripProofDvir"
+        ],
+        "operationId": "ListTripProofs",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TripProofDvir"
+        ],
+        "operationId": "CreateTripProof",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTripProofRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}/proofs/{subjectId}/attachments": {
+      "get": {
+        "tags": [
+          "TripCaptureAttachments"
+        ],
+        "operationId": "RoutArrListTrip/proofsAttachments",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TripCaptureAttachments"
+        ],
+        "operationId": "RoutArrUploadTrip/proofsAttachment",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadTripCaptureAttachmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}/proofs/{subjectId}/attachments/{attachmentId}/content": {
+      "get": {
+        "tags": [
+          "TripCaptureAttachments"
+        ],
+        "operationId": "RoutArrDownloadTrip/proofsAttachment",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/trips/{tripId}/status": {
       "patch": {
         "tags": [
@@ -1593,6 +3917,26 @@
           }
         }
       },
+      "AssignDispatchExceptionRequest": {
+        "required": [
+          "assignedToUserId",
+          "slaDueAt"
+        ],
+        "type": "object",
+        "properties": {
+          "assignedToUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slaDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "AssignTripDriverRequest": {
         "required": [
           "driverPersonId"
@@ -1601,6 +3945,12 @@
         "properties": {
           "driverPersonId": {
             "type": "string"
+          },
+          "driverDisplayName": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "ignoreAvailabilityConflicts": {
             "type": "boolean",
@@ -1639,6 +3989,34 @@
           "ignoreWorkflowGateBlocks": {
             "type": "boolean",
             "default": false
+          }
+        }
+      },
+      "BulkAssignDispatchExceptionsRequest": {
+        "required": [
+          "exceptionIds",
+          "assignedToUserId",
+          "slaDueAt"
+        ],
+        "type": "object",
+        "properties": {
+          "exceptionIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "assignedToUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slaDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -1716,6 +4094,133 @@
             "items": {
               "$ref": "#/components/schemas/BulkDispatchActionItem"
             }
+          }
+        }
+      },
+      "BulkResolveDispatchExceptionsRequest": {
+        "required": [
+          "exceptionIds",
+          "resolutionNotes",
+          "resolutionTemplateKey"
+        ],
+        "type": "object",
+        "properties": {
+          "exceptionIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "resolutionNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "resolutionTemplateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateAuditPackageGenerationJobRequest": {
+        "required": [
+          "format",
+          "from",
+          "to"
+        ],
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string"
+          },
+          "from": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "to": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "action": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "result": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "targetType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "actorUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateDispatchExceptionRequest": {
+        "required": [
+          "title",
+          "description",
+          "category",
+          "tripId",
+          "assignedToUserId",
+          "slaDueAt"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "assignedToUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "slaDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -1906,6 +4411,98 @@
           }
         }
       },
+      "CreateTripPartsDemandLineRequest": {
+        "required": [
+          "supplyarrPartId",
+          "partNumber",
+          "description",
+          "quantityRequested",
+          "unitOfMeasure",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "supplyarrPartId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "partNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantityRequested": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateTripProofRequest": {
+        "required": [
+          "proofType",
+          "vehicleRefKey",
+          "referenceKey",
+          "notes",
+          "capturedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "proofType": {
+            "type": "string"
+          },
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "referenceKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "capturedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "CreateTripRequest": {
         "required": [
           "title",
@@ -1984,6 +4581,50 @@
           }
         }
       },
+      "DispatchBoardBulkAssignmentItem": {
+        "required": [
+          "tripId",
+          "assignmentKind",
+          "driverPersonId",
+          "vehicleRefKey"
+        ],
+        "type": "object",
+        "properties": {
+          "tripId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assignmentKind": {
+            "type": "string"
+          },
+          "driverPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "DispatchBoardBulkAssignmentPreviewRequest": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DispatchBoardBulkAssignmentItem"
+            }
+          }
+        }
+      },
       "DispatchCloseoutRequest": {
         "required": [
           "scope",
@@ -2003,6 +4644,16 @@
           },
           "openStopDisposition": {
             "type": "string"
+          },
+          "tripIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
@@ -2059,6 +4710,99 @@
           }
         }
       },
+      "IngestSupplyarrDemandStatusRequest": {
+        "required": [
+          "tenantId",
+          "routarrPublicationId",
+          "supplyarrDemandRefId",
+          "supplyarrCallbackPublicationId",
+          "eventType",
+          "procurementStatus",
+          "supplyarrPurchaseRequestId",
+          "supplyarrPurchaseOrderId",
+          "supplyarrReceivingReceiptId",
+          "quantityReceivedDelta",
+          "message",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "routarrPublicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrDemandRefId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrCallbackPublicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "procurementStatus": {
+            "type": "string"
+          },
+          "supplyarrPurchaseRequestId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "supplyarrPurchaseOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "supplyarrReceivingReceiptId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "quantityReceivedDelta": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "LinkDispatchExceptionTripRequest": {
+        "required": [
+          "tripId"
+        ],
+        "type": "object",
+        "properties": {
+          "tripId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "LinkRouteTripRequest": {
         "required": [
           "tripId"
@@ -2068,6 +4812,72 @@
           "tripId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "ProcessAttachmentRetentionRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessAuditPackageGenerationJobsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -2147,6 +4957,17 @@
           }
         }
       },
+      "PublishTripPartsDemandRequest": {
+        "required": [
+          "createPurchaseRequestDraft"
+        ],
+        "type": "object",
+        "properties": {
+          "createPurchaseRequestDraft": {
+            "type": "boolean"
+          }
+        }
+      },
       "RedeemHandoffRequest": {
         "required": [
           "handoffCode"
@@ -2170,6 +4991,66 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "ResolveDispatchExceptionRequest": {
+        "required": [
+          "resolutionNotes",
+          "resolutionTemplateKey"
+        ],
+        "type": "object",
+        "properties": {
+          "resolutionNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "resolutionTemplateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SubmitTripDvirRequest": {
+        "required": [
+          "phase",
+          "vehicleRefKey",
+          "result",
+          "odometerReading",
+          "defectNotes"
+        ],
+        "type": "object",
+        "properties": {
+          "phase": {
+            "type": "string"
+          },
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "result": {
+            "type": "string"
+          },
+          "odometerReading": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "defectNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2283,6 +5164,67 @@
           }
         }
       },
+      "UploadTripCaptureAttachmentRequest": {
+        "required": [
+          "attachmentKind",
+          "fileName",
+          "contentType",
+          "contentBase64",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "attachmentKind": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "contentBase64": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpsertAttachmentRetentionSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "retentionDaysAfterTripClose"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "retentionDaysAfterTripClose": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertDispatchBoardStateRequest": {
+        "required": [
+          "defaultScope"
+        ],
+        "type": "object",
+        "properties": {
+          "defaultScope": {
+            "type": "string"
+          }
+        }
+      },
       "UpsertDispatchNotificationSettingsRequest": {
         "required": [
           "isEnabled",
@@ -2318,6 +5260,33 @@
           },
           "notifyOnTripCancelled": {
             "type": "boolean"
+          },
+          "clearNotificationWebhookOnDisable": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "UpsertStaffarrPersonRefRequest": {
+        "required": [
+          "personId",
+          "displayName",
+          "sourceUpdatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "sourceUpdatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -2338,6 +5307,57 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "UpsertTripExecutionSettingsRequest": {
+        "required": [
+          "requirePreTripDvirBeforeStart",
+          "requirePostTripDvirBeforeComplete",
+          "requireDeliveryProofBeforeComplete",
+          "requirePickupProofBeforeStart",
+          "blockTripStartOnDvirFail",
+          "blockTripCompleteOnDvirFail",
+          "requirePickupProofPhotoBeforeStart",
+          "requireDeliveryProofPhotoBeforeComplete",
+          "requireDeliverySignatureBeforeComplete",
+          "requirePreTripDvirPhotoBeforeStart",
+          "requirePostTripDvirPhotoBeforeComplete"
+        ],
+        "type": "object",
+        "properties": {
+          "requirePreTripDvirBeforeStart": {
+            "type": "boolean"
+          },
+          "requirePostTripDvirBeforeComplete": {
+            "type": "boolean"
+          },
+          "requireDeliveryProofBeforeComplete": {
+            "type": "boolean"
+          },
+          "requirePickupProofBeforeStart": {
+            "type": "boolean"
+          },
+          "blockTripStartOnDvirFail": {
+            "type": "boolean"
+          },
+          "blockTripCompleteOnDvirFail": {
+            "type": "boolean"
+          },
+          "requirePickupProofPhotoBeforeStart": {
+            "type": "boolean"
+          },
+          "requireDeliveryProofPhotoBeforeComplete": {
+            "type": "boolean"
+          },
+          "requireDeliverySignatureBeforeComplete": {
+            "type": "boolean"
+          },
+          "requirePreTripDvirPhotoBeforeStart": {
+            "type": "boolean"
+          },
+          "requirePostTripDvirPhotoBeforeComplete": {
+            "type": "boolean"
           }
         }
       }
@@ -2369,6 +5389,18 @@
       "name": "Trips"
     },
     {
+      "name": "TripProofDvir"
+    },
+    {
+      "name": "TripCaptureAttachments"
+    },
+    {
+      "name": "TripPartsDemand"
+    },
+    {
+      "name": "Integrations"
+    },
+    {
       "name": "Routes"
     },
     {
@@ -2376,6 +5408,27 @@
     },
     {
       "name": "Dispatch"
+    },
+    {
+      "name": "DriverPortal"
+    },
+    {
+      "name": "DispatchReports"
+    },
+    {
+      "name": "RouteReports"
+    },
+    {
+      "name": "ProofDvirReports"
+    },
+    {
+      "name": "Exports"
+    },
+    {
+      "name": "AuditPackages"
+    },
+    {
+      "name": "Internal"
     },
     {
       "name": "DriverAvailability"
@@ -2399,7 +5452,7 @@
       "name": "NotificationSettings"
     },
     {
-      "name": "Internal"
+      "name": "TripExecutionCapture"
     },
     {
       "name": "TripCompletionRollupSettings"
@@ -2409,6 +5462,9 @@
     },
     {
       "name": "RouteCompletions"
+    },
+    {
+      "name": "AttachmentRetentionSettings"
     }
   ]
 }

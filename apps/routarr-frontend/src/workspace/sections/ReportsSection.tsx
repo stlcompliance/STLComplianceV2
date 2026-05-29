@@ -17,24 +17,30 @@ export function ReportsSection({ state }: Props) {
   const canRead = canReadDispatchReports(roleKey, isPlatformAdmin)
   const canExport = canExportDispatchReports(roleKey, isPlatformAdmin)
 
+  const showReportsWorkspace = canRead || canExport
+
   return (
     <>
-      <DispatchReportsPanel
-        accessToken={state.session.accessToken}
-        canRead={canRead}
-        canExport={canExport}
-      />
-      <RouteReportsPanel
-        accessToken={state.session.accessToken}
-        canRead={canRead}
-        canExport={canExport}
-      />
-      <ProofDvirReportsPanel
-        accessToken={state.session.accessToken}
-        canRead={canRead}
-        canExport={canExport}
-      />
-      <DataExportsPanel accessToken={state.session.accessToken} canExport={canExport} />
+      {showReportsWorkspace ? (
+        <div className="space-y-0" data-testid="routarr-reports-workspace">
+          <DispatchReportsPanel
+            accessToken={state.session.accessToken}
+            canRead={canRead}
+            canExport={canExport}
+          />
+          <RouteReportsPanel
+            accessToken={state.session.accessToken}
+            canRead={canRead}
+            canExport={canExport}
+          />
+          <ProofDvirReportsPanel
+            accessToken={state.session.accessToken}
+            canRead={canRead}
+            canExport={canExport}
+          />
+          <DataExportsPanel accessToken={state.session.accessToken} canExport={canExport} />
+        </div>
+      ) : null}
       <AuditPackageExportPanel
         accessToken={state.session.accessToken}
         canRead={canRead}

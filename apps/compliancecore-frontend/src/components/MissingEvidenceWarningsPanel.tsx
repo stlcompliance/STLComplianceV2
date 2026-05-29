@@ -60,7 +60,10 @@ export function MissingEvidenceWarningsPanel({
   const summary = summaryQuery.data
 
   return (
-    <section className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5">
+    <section
+      data-testid="missing-evidence-warnings-panel"
+      className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+    >
       <header>
         <h2 className="text-lg font-semibold text-slate-50">Missing evidence warnings</h2>
         <p className="mt-1 text-sm text-slate-400">
@@ -132,6 +135,7 @@ export function MissingEvidenceWarningsPanel({
             type="button"
             onClick={() => evaluateMutation.mutate()}
             disabled={evaluateMutation.isPending}
+            data-testid="missing-evidence-evaluate"
             className="rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
           >
             {evaluateMutation.isPending ? 'Analyzing…' : 'Evaluate missing evidence'}
@@ -156,11 +160,14 @@ export function MissingEvidenceWarningsPanel({
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Latest warnings</h3>
         {(warningsQuery.data ?? []).length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-2 text-sm text-slate-500" data-testid="missing-evidence-list-empty">
             No warnings yet. Run an evaluation to predict missing evidence at scope.
           </p>
         ) : (
-          <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto">
+          <ul
+            className="mt-3 max-h-80 space-y-2 overflow-y-auto"
+            data-testid="missing-evidence-list"
+          >
             {(warningsQuery.data ?? []).map((warning) => (
               <li
                 key={warning.warningId}

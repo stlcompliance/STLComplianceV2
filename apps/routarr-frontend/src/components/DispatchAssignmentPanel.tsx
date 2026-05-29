@@ -9,7 +9,12 @@ import {
   getTrips,
   previewDispatchAssignment,
 } from '../api/client'
-import type { DispatchAssignmentPreviewResponse, TripSummaryResponse } from '../api/types'
+import type { TripSummaryResponse } from '../api/types'
+import {
+  confirmDispatchAssignmentPreview,
+  DRAG_MIME,
+  type DragAssignmentPayload,
+} from '../lib/dispatchAssignment'
 
 type DispatchAssignmentPanelProps = {
   accessToken: string
@@ -17,43 +22,12 @@ type DispatchAssignmentPanelProps = {
   canAssign: boolean
 }
 
-type DragPayload =
-  | { kind: 'driver'; personId: string }
-  | { kind: 'vehicle'; vehicleRefKey: string }
+type DragPayload = DragAssignmentPayload
 
 const ACTIVE_STATUSES = new Set(['planned', 'assigned', 'dispatched', 'in_progress'])
 
 function formatShortId(value: string) {
   return value.length > 10 ? `${value.slice(0, 8)}…` : value
-}
-
-function formatConflictMessage(preview: DispatchAssignmentPreviewResponse) {
-  const parts: string[] = []
-  if (preview.blockingDriverAvailability.length > 0) {
-    parts.push(`${preview.blockingDriverAvailability.length} driver availability block(s)`)
-  }
-  if (preview.blockingEquipmentAvailability.length > 0) {
-    parts.push(`${preview.blockingEquipmentAvailability.length} equipment availability block(s)`)
-  }
-  if (preview.overlappingTrips.length > 0) {
-    parts.push(`${preview.overlappingTrips.length} overlapping trip(s)`)
-  }
-  if (preview.driverEligibility?.isBlocking) {
-    parts.push(`eligibility: ${preview.driverEligibility.message}`)
-  } else if (preview.driverEligibility?.outcome === 'warn') {
-    parts.push(`eligibility warning: ${preview.driverEligibility.message}`)
-  }
-  if (preview.assetDispatchability?.isBlocking) {
-    parts.push(`dispatchability: ${preview.assetDispatchability.message}`)
-  } else if (preview.assetDispatchability?.outcome === 'warn') {
-    parts.push(`dispatchability warning: ${preview.assetDispatchability.message}`)
-  }
-  if (preview.workflowGates?.isBlocking) {
-    parts.push(`workflow gate: ${preview.workflowGates.message}`)
-  } else if (preview.workflowGates?.outcome === 'warn') {
-    parts.push(`workflow gate warning: ${preview.workflowGates.message}`)
-  }
-  return parts.join(', ')
 }
 
 function TripDropTarget({
@@ -84,14 +58,10 @@ function TripDropTarget({
         event.preventDefault()
         setDragOver(false)
         if (!canAssign) return
-        const raw = event.dataTransfer.getData('application/routarr-assignment')
+        const raw = event.dataTransfer.getData(DRAG_MIME)
         if (!raw) return
-        try {
-          const payload = JSON.parse(raw) as DragPayload
-          onDropAssignment(trip.tripId, payload)
-        } catch {
-          // ignore malformed drag payload
-        }
+        const payload = JSON.parse(raw) as DragPayload
+        onDropAssignment(trip.tripId, payload)
       }}
       data-testid={`trip-drop-${trip.tripId}`}
     >
@@ -226,73 +196,22 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
         vehicleRefKey: payload.kind === 'vehicle' ? payload.vehicleRefKey : null,
       })
 
-      let ignoreConflicts = false
-      let ignoreEligibilityBlocks = false
-      let ignoreDispatchabilityBlocks = false
-      let ignoreWorkflowGateBlocks = false
-      const hasAvailabilityConflict =
-        preview.blockingDriverAvailability.length > 0
-        || preview.blockingEquipmentAvailability.length > 0
-        || preview.overlappingTrips.length > 0
-      const hasEligibilityBlock = preview.driverEligibility?.isBlocking === true
-      const hasEligibilityWarn =
-        preview.driverEligibility?.outcome === 'warn' && !preview.driverEligibility.isBlocking
-      const hasDispatchabilityBlock = preview.assetDispatchability?.isBlocking === true
-      const hasDispatchabilityWarn =
-        preview.assetDispatchability?.outcome === 'warn' && !preview.assetDispatchability.isBlocking
-      const hasWorkflowGateBlock = preview.workflowGates?.isBlocking === true
-      const hasWorkflowGateWarn =
-        preview.workflowGates?.outcome === 'warn' && !preview.workflowGates.isBlocking
-
-      if (preview.hasBlockingConflicts) {
-        const confirmed = window.confirm(
-          `Assignment blocked: ${formatConflictMessage(preview)}. Assign anyway?`,
-        )
-        if (!confirmed) {
-          setStatusMessage('Assignment cancelled due to conflicts.')
-          setAssigningTripId(null)
-          return
-        }
-        ignoreConflicts = hasAvailabilityConflict
-        ignoreEligibilityBlocks = hasEligibilityBlock
-        ignoreDispatchabilityBlocks = hasDispatchabilityBlock
-        ignoreWorkflowGateBlocks = hasWorkflowGateBlock
-      } else if (hasEligibilityWarn) {
-        const confirmed = window.confirm(
-          `Driver eligibility warning: ${preview.driverEligibility!.message}. Continue assignment?`,
-        )
-        if (!confirmed) {
-          setStatusMessage('Assignment cancelled due to eligibility warning.')
-          setAssigningTripId(null)
-          return
-        }
-      } else if (hasDispatchabilityWarn) {
-        const confirmed = window.confirm(
-          `Asset dispatchability warning: ${preview.assetDispatchability!.message}. Continue assignment?`,
-        )
-        if (!confirmed) {
-          setStatusMessage('Assignment cancelled due to dispatchability warning.')
-          setAssigningTripId(null)
-          return
-        }
-      } else if (hasWorkflowGateWarn) {
-        const confirmed = window.confirm(
-          `Compliance workflow gate warning: ${preview.workflowGates!.message}. Continue assignment?`,
-        )
-        if (!confirmed) {
-          setStatusMessage('Assignment cancelled due to workflow gate warning.')
-          setAssigningTripId(null)
-          return
-        }
+      const ignoreFlags = confirmDispatchAssignmentPreview(preview, (message) =>
+        window.confirm(message),
+      )
+      if (!ignoreFlags) {
+        setStatusMessage('Assignment cancelled due to conflicts.')
+        setAssigningTripId(null)
+        return
       }
 
       await assignMutation.mutateAsync({
         tripId,
         payload,
-        ignoreConflicts,
-        ignoreEligibilityBlocks,
-        ignoreDispatchabilityBlocks,
-        ignoreWorkflowGateBlocks,
+        ignoreConflicts: ignoreFlags.ignoreConflicts,
+        ignoreEligibilityBlocks: ignoreFlags.ignoreEligibilityBlocks,
+        ignoreDispatchabilityBlocks: ignoreFlags.ignoreDispatchabilityBlocks,
+        ignoreWorkflowGateBlocks: ignoreFlags.ignoreWorkflowGateBlocks,
       })
     } catch (error) {
       setStatusMessage((error as Error).message)
@@ -302,7 +221,7 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
 
   function startDrag(event: React.DragEvent, payload: DragPayload) {
     if (!canAssign) return
-    event.dataTransfer.setData('application/routarr-assignment', JSON.stringify(payload))
+    event.dataTransfer.setData(DRAG_MIME, JSON.stringify(payload))
     event.dataTransfer.effectAllowed = 'move'
   }
 

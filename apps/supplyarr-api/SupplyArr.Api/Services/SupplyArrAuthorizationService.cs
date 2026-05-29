@@ -341,6 +341,9 @@ public sealed class SupplyArrAuthorizationService
     public void RequireApprovalReminderRead(ClaimsPrincipal principal) =>
         RequirePurchaseRequestRead(principal);
 
+    public void RequireProcurementExceptionEscalationSettingsManage(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
     public void RequireDemandProcessingSettingsManage(ClaimsPrincipal principal) =>
         RequireNotificationSettingsManage(principal);
 

@@ -46,9 +46,12 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<ApprovalReminderSettingsService>();
         builder.Services.AddScoped<ApprovalReminderWorkerService>();
         builder.Services.AddScoped<ApprovalReminderService>();
+        builder.Services.AddScoped<ProcurementExceptionEscalationSettingsService>();
+        builder.Services.AddScoped<ProcurementExceptionEscalationWorkerService>();
         builder.Services.AddScoped<DemandProcessingSettingsService>();
         builder.Services.AddScoped<DemandProcessingWorkerService>();
         builder.Services.AddScoped<DemandProcessingService>();
+        builder.Services.AddScoped<LoadTestJourneySeedService>();
         builder.Services.AddScoped<IntegrationEventSettingsService>();
         builder.Services.AddScoped<IntegrationEventProcessingService>();
         builder.Services.AddScoped<IntegrationOutboxEnqueueService>();

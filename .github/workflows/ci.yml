@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main, master]
 
+permissions:
+  contents: read
+
 jobs:
   dotnet:
     runs-on: ubuntu-latest
@@ -37,6 +40,15 @@ jobs:
 
       - name: Load test harness checks
         run: dotnet test tests/STLCompliance.Load.Tests/STLCompliance.Load.Tests.csproj --configuration Release --no-build --verbosity normal --filter "Category=Load&Category!=Live"
+
+      - name: CI frontend catalog checks
+        run: dotnet test tests/STLCompliance.E2E/STLCompliance.E2E.csproj --configuration Release --no-build --verbosity normal --filter "Category=Ci&Area=Frontend"
+
+      - name: Render blueprint catalog checks
+        run: dotnet test tests/STLCompliance.E2E/STLCompliance.E2E.csproj --configuration Release --no-build --verbosity normal --filter "Category=Ci&Area=RenderBlueprint"
+
+      - name: Render staging ship gate catalog checks
+        run: dotnet test tests/STLCompliance.E2E/STLCompliance.E2E.csproj --configuration Release --no-build --verbosity normal --filter "Category=Ci&Area=RenderStagingShipGate"
 
       - name: EF migrations present
         run: |
@@ -90,4 +102,148 @@ jobs:
 
       - name: Test
         working-directory: apps/suite-frontend
+        run: npm test
+
+  routarr-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/routarr-frontend/package-lock.json
+
+      - name: Install
+        working-directory: apps/routarr-frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/routarr-frontend
+        run: npm run build
+
+      - name: Test
+        working-directory: apps/routarr-frontend
+        run: npm test
+
+  staffarr-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/staffarr-frontend/package-lock.json
+
+      - name: Install
+        working-directory: apps/staffarr-frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/staffarr-frontend
+        run: npm run build
+
+      - name: Test
+        working-directory: apps/staffarr-frontend
+        run: npm test
+
+  trainarr-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/trainarr-frontend/package-lock.json
+
+      - name: Install
+        working-directory: apps/trainarr-frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/trainarr-frontend
+        run: npm run build
+
+      - name: Test
+        working-directory: apps/trainarr-frontend
+        run: npm test
+
+  maintainarr-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/maintainarr-frontend/package-lock.json
+
+      - name: Install
+        working-directory: apps/maintainarr-frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/maintainarr-frontend
+        run: npm run build
+
+      - name: Test
+        working-directory: apps/maintainarr-frontend
+        run: npm test
+
+  supplyarr-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/supplyarr-frontend/package-lock.json
+
+      - name: Install
+        working-directory: apps/supplyarr-frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/supplyarr-frontend
+        run: npm run build
+
+      - name: Test
+        working-directory: apps/supplyarr-frontend
+        run: npm test
+
+  compliancecore-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/compliancecore-frontend/package-lock.json
+
+      - name: Install
+        working-directory: apps/compliancecore-frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: apps/compliancecore-frontend
+        run: npm run build
+
+      - name: Test
+        working-directory: apps/compliancecore-frontend
         run: npm test

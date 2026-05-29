@@ -67,6 +67,10 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<PersonnelHistoryEvent> PersonnelHistoryEvents => Set<PersonnelHistoryEvent>();
 
+    public DbSet<TenantStaffArrWorkerSettings> TenantStaffArrWorkerSettings => Set<TenantStaffArrWorkerSettings>();
+
+    public DbSet<StaffArrWorkerRun> StaffArrWorkerRuns => Set<StaffArrWorkerRun>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -516,6 +520,26 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.HasIndex(x => new { x.TenantId, x.PersonId, x.OccurredAt });
             entity.HasIndex(x => new { x.TenantId, x.PersonId, x.EntryId }).IsUnique();
             entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
+        });
+
+        modelBuilder.Entity<TenantStaffArrWorkerSettings>(entity =>
+        {
+            entity.ToTable("staffarr_tenant_worker_settings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.WorkerKey).HasMaxLength(64).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.WorkerKey }).IsUnique();
+            entity.HasIndex(x => x.TenantId);
+        });
+
+        modelBuilder.Entity<StaffArrWorkerRun>(entity =>
+        {
+            entity.ToTable("staffarr_worker_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.WorkerKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Summary).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.WorkerKey, x.StartedAt });
         });
     }
 }

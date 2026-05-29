@@ -14,31 +14,48 @@ type Props = { state: ComplianceCoreWorkspaceState }
 
 export function AdminSection({ state }: Props) {
   const s = state
+  const showAdminWorkspace =
+    s.canManage ||
+    s.canReadOrchestration ||
+    s.canEvaluateRisk ||
+    s.canEvaluateMissingEvidence ||
+    s.canEvaluateControlEffectiveness ||
+    s.canEvaluateReadinessForecast
+
   return (
     <>
-      <AuditDeliveryOrchestrationPanel
-        accessToken={s.accessToken}
-        canRead={s.canReadOrchestration}
-        canTrigger={s.canManage}
-      />
-      <M12AnalyticsWorkerSettingsPanel accessToken={s.accessToken} canManage={s.canManage} />
-      <ReadinessForecastPanel
-        accessToken={s.accessToken}
-        canEvaluate={s.canEvaluateReadinessForecast}
-      />
-      <ControlEffectivenessPanel
-        accessToken={s.accessToken}
-        canEvaluate={s.canEvaluateControlEffectiveness}
-      />
-      <MissingEvidenceWarningsPanel
-        accessToken={s.accessToken}
-        canEvaluate={s.canEvaluateMissingEvidence}
-      />
-      <RiskScoringPanel accessToken={s.accessToken} canEvaluate={s.canEvaluateRisk} />
-      <RuleChangeMonitoringPanel accessToken={s.accessToken} />
-      <SourceIngestionPanel accessToken={s.accessToken} canManage={s.canManage} />
-      <CsvImportExportPanel accessToken={s.accessToken} canManage={s.canManage} />
-      <AuditPackageExportPanel accessToken={s.accessToken} canExport={s.canExportAudit} />
+      {showAdminWorkspace ? (
+        <div className="grid gap-6" data-testid="compliancecore-settings-admin-workspace">
+          <AuditDeliveryOrchestrationPanel
+            accessToken={s.accessToken}
+            canRead={s.canReadOrchestration}
+            canTrigger={s.canManage}
+          />
+          <M12AnalyticsWorkerSettingsPanel accessToken={s.accessToken} canManage={s.canManage} />
+          <ReadinessForecastPanel
+            accessToken={s.accessToken}
+            canEvaluate={s.canEvaluateReadinessForecast}
+          />
+          <ControlEffectivenessPanel
+            accessToken={s.accessToken}
+            canEvaluate={s.canEvaluateControlEffectiveness}
+          />
+          <MissingEvidenceWarningsPanel
+            accessToken={s.accessToken}
+            canEvaluate={s.canEvaluateMissingEvidence}
+          />
+          <RiskScoringPanel accessToken={s.accessToken} canEvaluate={s.canEvaluateRisk} />
+          <RuleChangeMonitoringPanel accessToken={s.accessToken} />
+          <SourceIngestionPanel accessToken={s.accessToken} canManage={s.canManage} />
+          <CsvImportExportPanel accessToken={s.accessToken} canManage={s.canManage} />
+        </div>
+      ) : null}
+
+      {s.canExportAudit ? (
+        <div className={showAdminWorkspace ? 'mt-8' : undefined}>
+          <AuditPackageExportPanel accessToken={s.accessToken} canExport={s.canExportAudit} />
+        </div>
+      ) : null}
     </>
   )
 }

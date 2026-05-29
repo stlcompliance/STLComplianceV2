@@ -79,6 +79,11 @@ describe('FindingsWorkflowGatesPanel', () => {
       />,
     )
 
+    expect(screen.getByTestId('findings-workflow-gates-panel')).toBeTruthy()
+    expect(screen.getByTestId('findings-workflow-gate-seed')).toBeTruthy()
+    expect(screen.getByTestId('findings-workflow-gate-select')).toBeTruthy()
+    expect(screen.getByTestId('findings-workflow-gate-emit-findings')).toBeTruthy()
+    expect(screen.getByTestId('findings-workflow-gate-findings-section')).toBeTruthy()
     expect(screen.getByText(/No findings yet/i)).toBeInTheDocument()
     expect(screen.getByText(/Workflow gates \(1\)/i)).toBeInTheDocument()
   })
@@ -149,8 +154,10 @@ describe('FindingsWorkflowGatesPanel', () => {
     expect(screen.getByText(/License failed/i)).toBeInTheDocument()
     expect(screen.getByText(/Findings \(1\)/i)).toBeInTheDocument()
 
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'driver_assignment' } })
-    fireEvent.click(screen.getByRole('button', { name: /Run gate check/i }))
+    fireEvent.change(screen.getByTestId('findings-workflow-gate-select'), {
+      target: { value: 'driver_assignment' },
+    })
+    fireEvent.click(screen.getByTestId('findings-workflow-gate-check'))
     expect(onCheckGate).toHaveBeenCalledWith('driver_assignment', {}, true)
   })
 })

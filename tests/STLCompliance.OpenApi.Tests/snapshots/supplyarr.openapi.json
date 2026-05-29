@@ -21,6 +21,188 @@
         }
       }
     },
+    "/api/approval-reminder-settings": {
+      "get": {
+        "tags": [
+          "ApprovalReminderSettings"
+        ],
+        "operationId": "GetSupplyArrApprovalReminderSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ApprovalReminderSettings"
+        ],
+        "operationId": "UpsertSupplyArrApprovalReminderSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertApprovalReminderSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/approval-reminder-settings/pending": {
+      "get": {
+        "tags": [
+          "ApprovalReminderSettings"
+        ],
+        "operationId": "ListSupplyArrPendingApprovalReminders",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/approval-reminder-settings/runs": {
+      "get": {
+        "tags": [
+          "ApprovalReminderSettings"
+        ],
+        "operationId": "ListSupplyArrApprovalReminderRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/approval-reminders": {
+      "get": {
+        "tags": [
+          "ApprovalReminders"
+        ],
+        "operationId": "GetSupplyArrApprovalRemindersDashboard",
+        "parameters": [
+          {
+            "name": "includeUpcoming",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-history": {
+      "get": {
+        "tags": [
+          "AuditHistory"
+        ],
+        "operationId": "ListSupplyArrAuditHistory",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fromOccurredAt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "toOccurredAt",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/auth/handoff/redeem": {
       "post": {
         "tags": [
@@ -37,6 +219,80 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/availability-snapshot-settings": {
+      "get": {
+        "tags": [
+          "AvailabilitySnapshotSettings"
+        ],
+        "operationId": "GetSupplyArrAvailabilitySnapshotSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AvailabilitySnapshotSettings"
+        ],
+        "operationId": "UpsertSupplyArrAvailabilitySnapshotSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertAvailabilitySnapshotSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/availability-snapshot-settings/pending": {
+      "get": {
+        "tags": [
+          "AvailabilitySnapshotSettings"
+        ],
+        "operationId": "ListSupplyArrPendingAvailabilitySnapshotCaptures",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/availability-snapshot-settings/runs": {
+      "get": {
+        "tags": [
+          "AvailabilitySnapshotSettings"
+        ],
+        "operationId": "ListSupplyArrAvailabilitySnapshotRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -596,6 +852,165 @@
         }
       }
     },
+    "/api/demand-processing": {
+      "get": {
+        "tags": [
+          "DemandProcessing"
+        ],
+        "operationId": "GetSupplyArrDemandProcessingDashboard",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/demand-processing-settings": {
+      "get": {
+        "tags": [
+          "DemandProcessingSettings"
+        ],
+        "operationId": "GetSupplyArrDemandProcessingSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "DemandProcessingSettings"
+        ],
+        "operationId": "UpsertSupplyArrDemandProcessingSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDemandProcessingSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/demand-processing-settings/pending": {
+      "get": {
+        "tags": [
+          "DemandProcessingSettings"
+        ],
+        "operationId": "ListSupplyArrPendingDemandProcessing",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/demand-processing-settings/runs": {
+      "get": {
+        "tags": [
+          "DemandProcessingSettings"
+        ],
+        "operationId": "ListSupplyArrDemandProcessingRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/demand-processing/{demandRefId}": {
+      "get": {
+        "tags": [
+          "DemandProcessing"
+        ],
+        "operationId": "GetSupplyArrDemandProcessingDetail",
+        "parameters": [
+          {
+            "name": "demandRefId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/demand-processing/{demandRefId}/create-pr-draft": {
+      "post": {
+        "tags": [
+          "DemandProcessing"
+        ],
+        "operationId": "CreateSupplyArrDemandProcessingPrDraft",
+        "parameters": [
+          {
+            "name": "demandRefId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/demand-processing/{demandRefId}/retry-processing": {
+      "post": {
+        "tags": [
+          "DemandProcessing"
+        ],
+        "operationId": "RetrySupplyArrDemandProcessing",
+        "parameters": [
+          {
+            "name": "demandRefId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/demand-refs": {
       "get": {
         "tags": [
@@ -676,12 +1091,330 @@
         }
       }
     },
+    "/api/emergency-purchases": {
+      "get": {
+        "tags": [
+          "EmergencyPurchases"
+        ],
+        "operationId": "ListEmergencyPurchases",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "EmergencyPurchases"
+        ],
+        "operationId": "CreateEmergencyPurchase",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmergencyPurchaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/emergency-purchases/pending": {
+      "get": {
+        "tags": [
+          "EmergencyPurchases"
+        ],
+        "operationId": "ListPendingEmergencyPurchases",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/emergency-purchases/{purchaseRequestId}": {
+      "get": {
+        "tags": [
+          "EmergencyPurchases"
+        ],
+        "operationId": "GetEmergencyPurchase",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/emergency-purchases/{purchaseRequestId}/expedited-submit": {
+      "post": {
+        "tags": [
+          "EmergencyPurchases"
+        ],
+        "operationId": "ExpeditedSubmitEmergencyPurchase",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpeditedSubmitEmergencyPurchaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/emergency-purchases/{purchaseRequestId}/issue-purchase-order": {
+      "post": {
+        "tags": [
+          "EmergencyPurchases"
+        ],
+        "operationId": "IssueEmergencyPurchaseOrder",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueEmergencyPurchaseOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/emergency-purchases/{purchaseRequestId}/manager-override-approve": {
+      "post": {
+        "tags": [
+          "EmergencyPurchases"
+        ],
+        "operationId": "ManagerOverrideApproveEmergencyPurchase",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManagerOverrideApproveEmergencyPurchaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/field-inbox": {
       "get": {
         "tags": [
           "FieldInbox"
         ],
         "operationId": "GetSupplyArrFieldInbox",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integration-event-settings": {
+      "get": {
+        "tags": [
+          "IntegrationEventSettings"
+        ],
+        "operationId": "GetSupplyArrIntegrationEventSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "IntegrationEventSettings"
+        ],
+        "operationId": "UpsertSupplyArrIntegrationEventSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertIntegrationEventSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integration-event-settings/inbox": {
+      "get": {
+        "tags": [
+          "IntegrationEventSettings"
+        ],
+        "operationId": "ListSupplyArrIntegrationInboxEvents",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integration-event-settings/inbox/{eventId}/abandon": {
+      "post": {
+        "tags": [
+          "IntegrationEventSettings"
+        ],
+        "operationId": "AbandonSupplyArrIntegrationInboxEvent",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integration-event-settings/outbox": {
+      "get": {
+        "tags": [
+          "IntegrationEventSettings"
+        ],
+        "operationId": "ListSupplyArrIntegrationOutboxEvents",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integration-event-settings/outbox/{eventId}/abandon": {
+      "post": {
+        "tags": [
+          "IntegrationEventSettings"
+        ],
+        "operationId": "AbandonSupplyArrIntegrationOutboxEvent",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -700,6 +1433,686 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/IngestMaintainarrDemandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/routarr-demand": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestRoutarrDemand",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestRoutarrDemandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/staffarr-demand": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestStaffarrDemand",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestStaffarrDemandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/trainarr-demand": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestTrainarrDemand",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestTrainarrDemandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/approval-reminders/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingApprovalReminders",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/approval-reminders/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessApprovalReminders",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessApprovalRemindersRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/availability-snapshots/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingAvailabilitySnapshotCaptures",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "stalenessHours",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/availability-snapshots/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessAvailabilitySnapshotCaptures",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessAvailabilitySnapshotCapturesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/demand-processing/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingDemandProcessing",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "stalenessHours",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/demand-processing/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessDemandProcessing",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessDemandProcessingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/integration-events/inbox/enqueue": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalEnqueueIntegrationInboxEvent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnqueueIntegrationInboxRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/integration-events/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingIntegrationEvents",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/integration-events/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessIntegrationEvents",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessIntegrationEventsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/lead-time-snapshots/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingLeadTimeSnapshotCaptures",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "stalenessHours",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/lead-time-snapshots/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessLeadTimeSnapshotCaptures",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessLeadTimeSnapshotCapturesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/price-snapshots/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingPriceSnapshotCaptures",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "stalenessHours",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/price-snapshots/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessPriceSnapshotCaptures",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessPriceSnapshotCapturesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/procurement-coordination/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingProcurementCoordination",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "stalenessHours",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/procurement-coordination/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessProcurementCoordination",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessProcurementCoordinationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/procurement-exception-escalations/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingProcurementExceptionEscalations",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/procurement-exception-escalations/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessProcurementExceptionEscalations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessProcurementExceptionEscalationsRequest"
               }
             }
           },
@@ -1144,6 +2557,116 @@
         }
       }
     },
+    "/api/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContext",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoff",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lead-time-snapshot-settings": {
+      "get": {
+        "tags": [
+          "LeadTimeSnapshotSettings"
+        ],
+        "operationId": "GetSupplyArrLeadTimeSnapshotSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "LeadTimeSnapshotSettings"
+        ],
+        "operationId": "UpsertSupplyArrLeadTimeSnapshotSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertLeadTimeSnapshotSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lead-time-snapshot-settings/pending": {
+      "get": {
+        "tags": [
+          "LeadTimeSnapshotSettings"
+        ],
+        "operationId": "ListSupplyArrPendingLeadTimeSnapshotCaptures",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/lead-time-snapshot-settings/runs": {
+      "get": {
+        "tags": [
+          "LeadTimeSnapshotSettings"
+        ],
+        "operationId": "ListSupplyArrLeadTimeSnapshotRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/lead-time-snapshots": {
       "get": {
         "tags": [
@@ -1236,12 +2759,38 @@
         }
       }
     },
+    "/api/load-test-journey/seed": {
+      "post": {
+        "tags": [
+          "LoadTestJourney"
+        ],
+        "operationId": "SeedSupplyArrLoadTestJourney",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/me": {
       "get": {
         "tags": [
           "Me"
         ],
         "operationId": "SupplyArrGetMe",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me/procurement-approval-authority": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "SupplyArrGetProcurementApprovalAuthority",
         "responses": {
           "200": {
             "description": "OK"
@@ -1424,6 +2973,138 @@
         }
       }
     },
+    "/api/parties/{partyId}/compliance-documents": {
+      "get": {
+        "tags": [
+          "PartyComplianceDocuments"
+        ],
+        "operationId": "ListPartyComplianceDocuments",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PartyComplianceDocuments"
+        ],
+        "operationId": "RegisterPartyComplianceDocument",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPartyComplianceDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parties/{partyId}/compliance-documents/{documentId}/approve": {
+      "post": {
+        "tags": [
+          "PartyComplianceDocuments"
+        ],
+        "operationId": "ApprovePartyComplianceDocument",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parties/{partyId}/compliance-documents/{documentId}/reject": {
+      "post": {
+        "tags": [
+          "PartyComplianceDocuments"
+        ],
+        "operationId": "RejectPartyComplianceDocument",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectPartyComplianceDocumentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/parties/{partyId}/contacts": {
       "post": {
         "tags": [
@@ -1485,6 +3166,110 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parties/{partyId}/supplier-incidents": {
+      "get": {
+        "tags": [
+          "SupplierIncidents"
+        ],
+        "operationId": "ListSupplierIncidentsByParty",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parties/{partyId}/vendor-restrictions": {
+      "get": {
+        "tags": [
+          "VendorRestrictions"
+        ],
+        "operationId": "ListVendorRestrictionsByParty",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "VendorRestrictions"
+        ],
+        "operationId": "CreateVendorRestrictionForParty",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVendorRestrictionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parties/{partyId}/vendor-restrictions/enforcement": {
+      "get": {
+        "tags": [
+          "VendorRestrictions"
+        ],
+        "operationId": "GetVendorRestrictionEnforcement",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1694,6 +3479,209 @@
         }
       }
     },
+    "/api/parts/{partId}/vendor-links/{linkId}/catalog-availability": {
+      "put": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "UpsertPartVendorLinkCatalogAvailability",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "linkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPartVendorLinkCatalogAvailabilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parts/{partId}/vendor-links/{linkId}/catalog-lead-time": {
+      "put": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "UpsertPartVendorLinkCatalogLeadTime",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "linkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPartVendorLinkCatalogLeadTimeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/parts/{partId}/vendor-links/{linkId}/catalog-price": {
+      "put": {
+        "tags": [
+          "PartCatalog"
+        ],
+        "operationId": "UpsertPartVendorLinkCatalogPrice",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "linkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPartVendorLinkCatalogPriceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/price-snapshot-settings": {
+      "get": {
+        "tags": [
+          "PriceSnapshotSettings"
+        ],
+        "operationId": "GetSupplyArrPriceSnapshotSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PriceSnapshotSettings"
+        ],
+        "operationId": "UpsertSupplyArrPriceSnapshotSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPriceSnapshotSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/price-snapshot-settings/pending": {
+      "get": {
+        "tags": [
+          "PriceSnapshotSettings"
+        ],
+        "operationId": "ListSupplyArrPendingPriceSnapshotCaptures",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/price-snapshot-settings/runs": {
+      "get": {
+        "tags": [
+          "PriceSnapshotSettings"
+        ],
+        "operationId": "ListSupplyArrPriceSnapshotRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/pricing-snapshots": {
       "get": {
         "tags": [
@@ -1771,6 +3759,642 @@
         "parameters": [
           {
             "name": "pricingSnapshotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-coordination": {
+      "get": {
+        "tags": [
+          "ProcurementCoordination"
+        ],
+        "operationId": "GetSupplyArrProcurementCoordinationDashboard",
+        "parameters": [
+          {
+            "name": "coordinationStage",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-coordination-settings": {
+      "get": {
+        "tags": [
+          "ProcurementCoordinationSettings"
+        ],
+        "operationId": "GetSupplyArrProcurementCoordinationSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ProcurementCoordinationSettings"
+        ],
+        "operationId": "UpsertSupplyArrProcurementCoordinationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertProcurementCoordinationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-coordination-settings/pending": {
+      "get": {
+        "tags": [
+          "ProcurementCoordinationSettings"
+        ],
+        "operationId": "ListSupplyArrPendingProcurementCoordination",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-coordination-settings/runs": {
+      "get": {
+        "tags": [
+          "ProcurementCoordinationSettings"
+        ],
+        "operationId": "ListSupplyArrProcurementCoordinationRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-coordination/{subjectType}/{subjectId}": {
+      "get": {
+        "tags": [
+          "ProcurementCoordination"
+        ],
+        "operationId": "GetSupplyArrProcurementCoordinationDetail",
+        "parameters": [
+          {
+            "name": "subjectType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exception-escalation-settings": {
+      "get": {
+        "tags": [
+          "ProcurementExceptionEscalationSettings"
+        ],
+        "operationId": "GetSupplyArrProcurementExceptionEscalationSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ProcurementExceptionEscalationSettings"
+        ],
+        "operationId": "UpsertSupplyArrProcurementExceptionEscalationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertProcurementExceptionEscalationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exception-escalation-settings/events": {
+      "get": {
+        "tags": [
+          "ProcurementExceptionEscalationSettings"
+        ],
+        "operationId": "ListSupplyArrProcurementExceptionEscalationEvents",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exception-escalation-settings/pending": {
+      "get": {
+        "tags": [
+          "ProcurementExceptionEscalationSettings"
+        ],
+        "operationId": "ListSupplyArrPendingProcurementExceptionEscalations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exception-escalation-settings/runs": {
+      "get": {
+        "tags": [
+          "ProcurementExceptionEscalationSettings"
+        ],
+        "operationId": "ListSupplyArrProcurementExceptionEscalationRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exceptions": {
+      "get": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "operationId": "ListProcurementExceptions",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subjectType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "overdueOnly",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exceptions/resolution-templates": {
+      "get": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "operationId": "ListProcurementExceptionResolutionTemplates",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exceptions/{exceptionId}": {
+      "get": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "operationId": "GetProcurementException",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "operationId": "UpdateProcurementException",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProcurementExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exceptions/{exceptionId}/approve-waive": {
+      "post": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "operationId": "ApproveProcurementExceptionWaive",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exceptions/{exceptionId}/assign": {
+      "post": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "operationId": "AssignProcurementException",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignProcurementExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exceptions/{exceptionId}/cancel": {
+      "post": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "operationId": "CancelProcurementException",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelProcurementExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exceptions/{exceptionId}/close": {
+      "post": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "operationId": "CloseProcurementException",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseProcurementExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exceptions/{exceptionId}/link-actions": {
+      "put": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "operationId": "LinkProcurementExceptionActions",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkProcurementExceptionActionsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exceptions/{exceptionId}/reject-waive": {
+      "post": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "operationId": "RejectProcurementExceptionWaive",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectProcurementExceptionWaiveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exceptions/{exceptionId}/request-waive": {
+      "post": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "operationId": "RequestProcurementExceptionWaive",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestProcurementExceptionWaiveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exceptions/{exceptionId}/resolve": {
+      "post": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "operationId": "ResolveProcurementException",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveProcurementExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/procurement-exceptions/{exceptionId}/start-investigation": {
+      "post": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "operationId": "StartProcurementExceptionInvestigation",
+        "parameters": [
+          {
+            "name": "exceptionId",
             "in": "path",
             "required": true,
             "schema": {
@@ -2088,6 +4712,60 @@
         }
       }
     },
+    "/api/purchase-orders/{subjectId}/procurement-exceptions": {
+      "post": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "parameters": [
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProcurementExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "parameters": [
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/purchase-requests": {
       "get": {
         "tags": [
@@ -2362,6 +5040,60 @@
         "parameters": [
           {
             "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/purchase-requests/{subjectId}/procurement-exceptions": {
+      "post": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "parameters": [
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProcurementExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "parameters": [
+          {
+            "name": "subjectId",
             "in": "path",
             "required": true,
             "schema": {
@@ -2715,6 +5447,444 @@
         }
       }
     },
+    "/api/reports/compliance/parties/{externalPartyId}": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetSupplyArrCompliancePartyDetail",
+        "parameters": [
+          {
+            "name": "externalPartyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/summary": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetSupplyArrComplianceReportSummary",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "partyType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "reviewStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/summary/export": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ExportSupplyArrComplianceReportSummary",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "partyType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "reviewStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/parts-inventory/locations/{inventoryLocationId}": {
+      "get": {
+        "tags": [
+          "PartsInventoryReports"
+        ],
+        "operationId": "GetSupplyArrPartsInventoryLocationDetail",
+        "parameters": [
+          {
+            "name": "inventoryLocationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/parts-inventory/parts/{partId}": {
+      "get": {
+        "tags": [
+          "PartsInventoryReports"
+        ],
+        "operationId": "GetSupplyArrPartsInventoryPartDetail",
+        "parameters": [
+          {
+            "name": "partId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/parts-inventory/summary": {
+      "get": {
+        "tags": [
+          "PartsInventoryReports"
+        ],
+        "operationId": "GetSupplyArrPartsInventoryReportSummary",
+        "parameters": [
+          {
+            "name": "partStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activePartsOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "belowReorderOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "inventoryLocationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/parts-inventory/summary/export": {
+      "get": {
+        "tags": [
+          "PartsInventoryReports"
+        ],
+        "operationId": "ExportSupplyArrPartsInventoryReportSummary",
+        "parameters": [
+          {
+            "name": "partStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activePartsOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "belowReorderOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "inventoryLocationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/purchasing/purchase-orders/{purchaseOrderId}": {
+      "get": {
+        "tags": [
+          "PurchasingReports"
+        ],
+        "operationId": "GetSupplyArrPurchasingPurchaseOrderDetail",
+        "parameters": [
+          {
+            "name": "purchaseOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/purchasing/purchase-requests/{purchaseRequestId}": {
+      "get": {
+        "tags": [
+          "PurchasingReports"
+        ],
+        "operationId": "GetSupplyArrPurchasingPurchaseRequestDetail",
+        "parameters": [
+          {
+            "name": "purchaseRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/purchasing/summary": {
+      "get": {
+        "tags": [
+          "PurchasingReports"
+        ],
+        "operationId": "GetSupplyArrPurchasingReportSummary",
+        "parameters": [
+          {
+            "name": "openDocumentsOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "vendorPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/purchasing/summary/export": {
+      "get": {
+        "tags": [
+          "PurchasingReports"
+        ],
+        "operationId": "ExportSupplyArrPurchasingReportSummary",
+        "parameters": [
+          {
+            "name": "openDocumentsOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "vendorPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/vendors/summary": {
+      "get": {
+        "tags": [
+          "VendorReports"
+        ],
+        "operationId": "GetSupplyArrVendorReportSummary",
+        "parameters": [
+          {
+            "name": "approvalStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/vendors/summary/export": {
+      "get": {
+        "tags": [
+          "VendorReports"
+        ],
+        "operationId": "ExportSupplyArrVendorReportSummary",
+        "parameters": [
+          {
+            "name": "approvalStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/vendors/{vendorPartyId}": {
+      "get": {
+        "tags": [
+          "VendorReports"
+        ],
+        "operationId": "GetSupplyArrVendorReportDetail",
+        "parameters": [
+          {
+            "name": "vendorPartyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/returns": {
       "get": {
         "tags": [
@@ -2900,12 +6070,1191 @@
         }
       }
     },
+    "/api/rfqs": {
+      "get": {
+        "tags": [
+          "Rfqs"
+        ],
+        "operationId": "ListRfqs",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Rfqs"
+        ],
+        "operationId": "CreateRfq",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRfqRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rfqs/{rfqId}": {
+      "get": {
+        "tags": [
+          "Rfqs"
+        ],
+        "operationId": "GetRfq",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Rfqs"
+        ],
+        "operationId": "UpdateRfq",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRfqRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rfqs/{rfqId}/create-purchase-request": {
+      "post": {
+        "tags": [
+          "Rfqs"
+        ],
+        "operationId": "CreatePurchaseRequestFromRfq",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseRequestFromRfqRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rfqs/{rfqId}/invite-vendors": {
+      "post": {
+        "tags": [
+          "Rfqs"
+        ],
+        "operationId": "InviteRfqVendors",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteRfqVendorsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rfqs/{rfqId}/lines": {
+      "post": {
+        "tags": [
+          "Rfqs"
+        ],
+        "operationId": "AddRfqLine",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddRfqLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rfqs/{rfqId}/lines/{lineId}": {
+      "put": {
+        "tags": [
+          "Rfqs"
+        ],
+        "operationId": "UpdateRfqLine",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRfqLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rfqs/{rfqId}/quote-comparison": {
+      "get": {
+        "tags": [
+          "Rfqs"
+        ],
+        "operationId": "CompareRfqQuotes",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rfqs/{rfqId}/quotes": {
+      "post": {
+        "tags": [
+          "Rfqs"
+        ],
+        "operationId": "CreateVendorQuote",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVendorQuoteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rfqs/{rfqId}/quotes/{vendorQuoteId}/lines": {
+      "put": {
+        "tags": [
+          "Rfqs"
+        ],
+        "operationId": "UpsertVendorQuoteLine",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vendorQuoteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertVendorQuoteLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rfqs/{rfqId}/quotes/{vendorQuoteId}/submit": {
+      "post": {
+        "tags": [
+          "Rfqs"
+        ],
+        "operationId": "SubmitVendorQuote",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vendorQuoteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rfqs/{rfqId}/select-quote": {
+      "post": {
+        "tags": [
+          "Rfqs"
+        ],
+        "operationId": "SelectRfqVendorQuote",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectVendorQuoteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rfqs/{rfqId}/submit": {
+      "post": {
+        "tags": [
+          "Rfqs"
+        ],
+        "operationId": "SubmitRfq",
+        "parameters": [
+          {
+            "name": "rfqId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rfqs/{subjectId}/procurement-exceptions": {
+      "post": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "parameters": [
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProcurementExceptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ProcurementExceptions"
+        ],
+        "parameters": [
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/routarr-demand-refs": {
+      "get": {
+        "tags": [
+          "RoutArrDemandRefs"
+        ],
+        "operationId": "ListRoutArrDemandRefs",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/routarr-demand-refs/{demandRefId}": {
+      "get": {
+        "tags": [
+          "RoutArrDemandRefs"
+        ],
+        "operationId": "GetRoutArrDemandRef",
+        "parameters": [
+          {
+            "name": "demandRefId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/routarr-demand-refs/{demandRefId}/create-purchase-request": {
+      "post": {
+        "tags": [
+          "RoutArrDemandRefs"
+        ],
+        "operationId": "CreatePurchaseRequestFromRoutArrDemandRef",
+        "parameters": [
+          {
+            "name": "demandRefId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseRequestFromRoutarrDemandRefRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/search/forgiving": {
+      "get": {
+        "tags": [
+          "ForgivingSearch"
+        ],
+        "operationId": "GetSupplyArrForgivingSearch",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/session": {
       "get": {
         "tags": [
           "Session"
         ],
         "operationId": "SupplyArrGetSessionBootstrap",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/staffarr-demand-refs": {
+      "get": {
+        "tags": [
+          "StaffArrDemandRefs"
+        ],
+        "operationId": "ListStaffArrDemandRefs",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/staffarr-demand-refs/{demandRefId}": {
+      "get": {
+        "tags": [
+          "StaffArrDemandRefs"
+        ],
+        "operationId": "GetStaffArrDemandRef",
+        "parameters": [
+          {
+            "name": "demandRefId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/staffarr-demand-refs/{demandRefId}/create-purchase-request": {
+      "post": {
+        "tags": [
+          "StaffArrDemandRefs"
+        ],
+        "operationId": "CreatePurchaseRequestFromStaffArrDemandRef",
+        "parameters": [
+          {
+            "name": "demandRefId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseRequestFromStaffarrDemandRefRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-incidents": {
+      "get": {
+        "tags": [
+          "SupplierIncidents"
+        ],
+        "operationId": "ListSupplierIncidents",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "SupplierIncidents"
+        ],
+        "operationId": "CreateSupplierIncident",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupplierIncidentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-incidents/{incidentId}": {
+      "get": {
+        "tags": [
+          "SupplierIncidents"
+        ],
+        "operationId": "GetSupplierIncident",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "SupplierIncidents"
+        ],
+        "operationId": "UpdateSupplierIncident",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSupplierIncidentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-incidents/{incidentId}/apply-procurement-restriction": {
+      "post": {
+        "tags": [
+          "SupplierIncidents"
+        ],
+        "operationId": "ApplySupplierIncidentProcurementRestriction",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplySupplierIncidentProcurementRestrictionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-incidents/{incidentId}/cancel": {
+      "post": {
+        "tags": [
+          "SupplierIncidents"
+        ],
+        "operationId": "CancelSupplierIncident",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelSupplierIncidentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-incidents/{incidentId}/close": {
+      "post": {
+        "tags": [
+          "SupplierIncidents"
+        ],
+        "operationId": "CloseSupplierIncident",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseSupplierIncidentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-incidents/{incidentId}/resolve": {
+      "post": {
+        "tags": [
+          "SupplierIncidents"
+        ],
+        "operationId": "ResolveSupplierIncident",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveSupplierIncidentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-incidents/{incidentId}/start-investigation": {
+      "post": {
+        "tags": [
+          "SupplierIncidents"
+        ],
+        "operationId": "StartSupplierIncidentInvestigation",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-onboarding/document-requirements": {
+      "get": {
+        "tags": [
+          "SupplierOnboarding"
+        ],
+        "operationId": "GetSupplierOnboardingDocumentRequirements",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "SupplierOnboarding"
+        ],
+        "operationId": "UpsertSupplierOnboardingDocumentRequirements",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertSupplierOnboardingDocumentRequirementsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-onboarding/parties/{partyId}": {
+      "get": {
+        "tags": [
+          "SupplierOnboarding"
+        ],
+        "operationId": "GetSupplierOnboardingByParty",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-onboarding/parties/{partyId}/approve": {
+      "post": {
+        "tags": [
+          "SupplierOnboarding"
+        ],
+        "operationId": "ApproveSupplierOnboarding",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-onboarding/parties/{partyId}/reject": {
+      "post": {
+        "tags": [
+          "SupplierOnboarding"
+        ],
+        "operationId": "RejectSupplierOnboarding",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectSupplierOnboardingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-onboarding/parties/{partyId}/submit": {
+      "post": {
+        "tags": [
+          "SupplierOnboarding"
+        ],
+        "operationId": "SubmitSupplierOnboardingForReview",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitSupplierOnboardingForReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-onboarding/parties/{partyId}/suspend": {
+      "post": {
+        "tags": [
+          "SupplierOnboarding"
+        ],
+        "operationId": "SuspendSupplierOnboarding",
+        "parameters": [
+          {
+            "name": "partyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendSupplierOnboardingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-onboarding/pending": {
+      "get": {
+        "tags": [
+          "SupplierOnboarding"
+        ],
+        "operationId": "ListPendingSupplierOnboarding",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supplier-onboarding/start": {
+      "post": {
+        "tags": [
+          "SupplierOnboarding"
+        ],
+        "operationId": "StartSupplierOnboarding",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartSupplierOnboardingRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -3083,6 +7432,211 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateExternalPartyStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/supply-readiness/dashboard": {
+      "get": {
+        "tags": [
+          "SupplyReadiness"
+        ],
+        "operationId": "GetSupplyArrSupplyReadinessDashboard",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trainarr-demand-refs": {
+      "get": {
+        "tags": [
+          "TrainArrDemandRefs"
+        ],
+        "operationId": "ListTrainArrDemandRefs",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trainarr-demand-refs/{demandRefId}": {
+      "get": {
+        "tags": [
+          "TrainArrDemandRefs"
+        ],
+        "operationId": "GetTrainArrDemandRef",
+        "parameters": [
+          {
+            "name": "demandRefId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trainarr-demand-refs/{demandRefId}/create-purchase-request": {
+      "post": {
+        "tags": [
+          "TrainArrDemandRefs"
+        ],
+        "operationId": "CreatePurchaseRequestFromTrainArrDemandRef",
+        "parameters": [
+          {
+            "name": "demandRefId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseRequestFromTrainarrDemandRefRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-restrictions": {
+      "get": {
+        "tags": [
+          "VendorRestrictions"
+        ],
+        "operationId": "ListVendorRestrictions",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-restrictions/{restrictionId}": {
+      "get": {
+        "tags": [
+          "VendorRestrictions"
+        ],
+        "operationId": "GetVendorRestriction",
+        "parameters": [
+          {
+            "name": "restrictionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "VendorRestrictions"
+        ],
+        "operationId": "UpdateVendorRestriction",
+        "parameters": [
+          {
+            "name": "restrictionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVendorRestrictionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vendor-restrictions/{restrictionId}/lift": {
+      "post": {
+        "tags": [
+          "VendorRestrictions"
+        ],
+        "operationId": "LiftVendorRestriction",
+        "parameters": [
+          {
+            "name": "restrictionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiftVendorRestrictionRequest"
               }
             }
           },
@@ -3277,6 +7831,299 @@
         }
       }
     },
+    "/api/warranty-claims": {
+      "get": {
+        "tags": [
+          "WarrantyClaims"
+        ],
+        "operationId": "ListWarrantyClaims",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "vendorPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "partId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "purchaseOrderId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "WarrantyClaims"
+        ],
+        "operationId": "CreateWarrantyClaim",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWarrantyClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warranty-claims/{warrantyClaimId}": {
+      "get": {
+        "tags": [
+          "WarrantyClaims"
+        ],
+        "operationId": "GetWarrantyClaim",
+        "parameters": [
+          {
+            "name": "warrantyClaimId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "WarrantyClaims"
+        ],
+        "operationId": "UpdateWarrantyClaim",
+        "parameters": [
+          {
+            "name": "warrantyClaimId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWarrantyClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warranty-claims/{warrantyClaimId}/cancel": {
+      "post": {
+        "tags": [
+          "WarrantyClaims"
+        ],
+        "operationId": "CancelWarrantyClaim",
+        "parameters": [
+          {
+            "name": "warrantyClaimId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelWarrantyClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warranty-claims/{warrantyClaimId}/close": {
+      "post": {
+        "tags": [
+          "WarrantyClaims"
+        ],
+        "operationId": "CloseWarrantyClaim",
+        "parameters": [
+          {
+            "name": "warrantyClaimId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseWarrantyClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warranty-claims/{warrantyClaimId}/deny": {
+      "post": {
+        "tags": [
+          "WarrantyClaims"
+        ],
+        "operationId": "DenyWarrantyClaim",
+        "parameters": [
+          {
+            "name": "warrantyClaimId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DenyWarrantyClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warranty-claims/{warrantyClaimId}/record-vendor-response": {
+      "post": {
+        "tags": [
+          "WarrantyClaims"
+        ],
+        "operationId": "RecordWarrantyClaimVendorResponse",
+        "parameters": [
+          {
+            "name": "warrantyClaimId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordWarrantyClaimVendorResponseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/warranty-claims/{warrantyClaimId}/submit": {
+      "post": {
+        "tags": [
+          "WarrantyClaims"
+        ],
+        "operationId": "SubmitWarrantyClaim",
+        "parameters": [
+          {
+            "name": "warrantyClaimId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitWarrantyClaimRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -3356,7 +8203,88 @@
           }
         }
       },
+      "AddRfqLineRequest": {
+        "required": [
+          "partId",
+          "quantityRequested",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantityRequested": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "ApplySupplierIncidentProcurementRestrictionRequest": {
+        "required": [
+          "restrictionKey",
+          "scopes",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "restrictionKey": {
+            "type": "string"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "AssignProcurementExceptionRequest": {
+        "required": [
+          "assignedToUserId",
+          "slaDueAt"
+        ],
+        "type": "object",
+        "properties": {
+          "assignedToUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slaDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "CancelBackorderRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "CancelProcurementExceptionRequest": {
         "required": [
           "reason"
         ],
@@ -3378,6 +8306,17 @@
           }
         }
       },
+      "CancelSupplierIncidentRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
       "CancelVendorReturnRequest": {
         "required": [
           "reason"
@@ -3385,6 +8324,56 @@
         "type": "object",
         "properties": {
           "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "CancelWarrantyClaimRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "CloseProcurementExceptionRequest": {
+        "required": [
+          "resolutionNotes"
+        ],
+        "type": "object",
+        "properties": {
+          "resolutionNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CloseSupplierIncidentRequest": {
+        "required": [
+          "resolutionNotes"
+        ],
+        "type": "object",
+        "properties": {
+          "resolutionNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CloseWarrantyClaimRequest": {
+        "required": [
+          "closureNotes"
+        ],
+        "type": "object",
+        "properties": {
+          "closureNotes": {
             "type": "string"
           }
         }
@@ -3474,6 +8463,41 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CreateEmergencyPurchaseRequest": {
+        "required": [
+          "requestKey",
+          "title",
+          "emergencyReason",
+          "vendorPartyId",
+          "notes",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "requestKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "emergencyReason": {
+            "type": "string"
+          },
+          "vendorPartyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePurchaseRequestLineRequest"
+            }
           }
         }
       },
@@ -3754,6 +8778,44 @@
           }
         }
       },
+      "CreateProcurementExceptionRequest": {
+        "required": [
+          "exceptionKey",
+          "exceptionCategory",
+          "title",
+          "description",
+          "assignedToUserId"
+        ],
+        "type": "object",
+        "properties": {
+          "exceptionKey": {
+            "type": "string"
+          },
+          "exceptionCategory": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "assignedToUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "slaDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "CreatePurchaseOrderFromPurchaseRequestRequest": {
         "required": [
           "orderKey",
@@ -3825,6 +8887,97 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "CreatePurchaseRequestFromRfqRequest": {
+        "required": [
+          "requestKey",
+          "title",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "requestKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreatePurchaseRequestFromRoutarrDemandRefRequest": {
+        "required": [
+          "requestKey",
+          "title",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "requestKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreatePurchaseRequestFromStaffarrDemandRefRequest": {
+        "required": [
+          "requestKey",
+          "title",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "requestKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreatePurchaseRequestFromTrainarrDemandRefRequest": {
+        "required": [
+          "requestKey",
+          "title",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "requestKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3940,6 +9093,194 @@
           }
         }
       },
+      "CreateRfqLineRequest": {
+        "required": [
+          "partId",
+          "quantityRequested",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantityRequested": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateRfqRequest": {
+        "required": [
+          "rfqKey",
+          "title",
+          "notes",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "rfqKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "lines": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CreateRfqLineRequest"
+            }
+          }
+        }
+      },
+      "CreateSupplierIncidentRequest": {
+        "required": [
+          "externalPartyId",
+          "incidentKey",
+          "title",
+          "description",
+          "incidentType",
+          "severity",
+          "purchaseRequestId",
+          "purchaseOrderId",
+          "receivingReceiptId",
+          "receivingExceptionId",
+          "assignedToUserId"
+        ],
+        "type": "object",
+        "properties": {
+          "externalPartyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "incidentKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "incidentType": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "purchaseRequestId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "purchaseOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "receivingReceiptId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "receivingExceptionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "assignedToUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateVendorQuoteRequest": {
+        "required": [
+          "vendorPartyId",
+          "quoteKey",
+          "currencyCode",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "vendorPartyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quoteKey": {
+            "type": "string"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateVendorRestrictionRequest": {
+        "required": [
+          "restrictionKey",
+          "scopes",
+          "reason",
+          "effectiveFrom",
+          "effectiveUntil"
+        ],
+        "type": "object",
+        "properties": {
+          "restrictionKey": {
+            "type": "string"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reason": {
+            "type": "string"
+          },
+          "effectiveFrom": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "effectiveUntil": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "CreateVendorReturnFromPurchaseOrderLineRequest": {
         "required": [
           "returnKey",
@@ -4047,6 +9388,155 @@
             "items": {
               "$ref": "#/components/schemas/CreateVendorReturnFromStockLineRequest"
             }
+          }
+        }
+      },
+      "CreateWarrantyClaimRequest": {
+        "required": [
+          "claimKey",
+          "claimType",
+          "vendorPartyId",
+          "partId",
+          "quantityClaimed",
+          "problemDescription",
+          "purchaseOrderId",
+          "purchaseOrderLineId",
+          "receivingReceiptId",
+          "receivingReceiptLineId",
+          "vendorRmaNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "claimKey": {
+            "type": "string"
+          },
+          "claimType": {
+            "type": "string"
+          },
+          "vendorPartyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantityClaimed": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "problemDescription": {
+            "type": "string"
+          },
+          "purchaseOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "purchaseOrderLineId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "receivingReceiptId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "receivingReceiptLineId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "vendorRmaNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "DenyWarrantyClaimRequest": {
+        "required": [
+          "denialReason"
+        ],
+        "type": "object",
+        "properties": {
+          "denialReason": {
+            "type": "string"
+          }
+        }
+      },
+      "EnqueueIntegrationInboxRequest": {
+        "required": [
+          "tenantId",
+          "sourceProduct",
+          "eventKind",
+          "idempotencyKey",
+          "relatedEntityType",
+          "relatedEntityId",
+          "payloadJson",
+          "correlationId"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "eventKind": {
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          },
+          "relatedEntityType": {
+            "type": "string"
+          },
+          "relatedEntityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "payloadJson": {
+            "type": "string"
+          },
+          "correlationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "ExpeditedSubmitEmergencyPurchaseRequest": {
+        "required": [
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -4160,6 +9650,729 @@
           }
         }
       },
+      "IngestRoutarrDemandLineRequest": {
+        "required": [
+          "routarrDemandLineId",
+          "supplyarrPartId",
+          "partNumber",
+          "description",
+          "quantityRequested",
+          "unitOfMeasure",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "routarrDemandLineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrPartId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "partNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantityRequested": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "IngestRoutarrDemandRequest": {
+        "required": [
+          "tenantId",
+          "routarrPublicationId",
+          "routarrTripId",
+          "routarrTripNumber",
+          "routarrVehicleRefKey",
+          "title",
+          "notes",
+          "createPurchaseRequestDraft",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "routarrPublicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "routarrTripId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "routarrTripNumber": {
+            "type": "string"
+          },
+          "routarrVehicleRefKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createPurchaseRequestDraft": {
+            "type": "boolean"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngestRoutarrDemandLineRequest"
+            }
+          }
+        }
+      },
+      "IngestStaffarrDemandLineRequest": {
+        "required": [
+          "staffarrDemandLineId",
+          "supplyarrPartId",
+          "partNumber",
+          "description",
+          "quantityRequested",
+          "unitOfMeasure",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "staffarrDemandLineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrPartId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "partNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantityRequested": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "IngestStaffarrDemandRequest": {
+        "required": [
+          "tenantId",
+          "staffarrPublicationId",
+          "staffarrIncidentId",
+          "staffarrPersonId",
+          "staffarrIncidentTitle",
+          "title",
+          "notes",
+          "createPurchaseRequestDraft",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "staffarrPublicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "staffarrIncidentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "staffarrPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "staffarrIncidentTitle": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createPurchaseRequestDraft": {
+            "type": "boolean"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngestStaffarrDemandLineRequest"
+            }
+          }
+        }
+      },
+      "IngestTrainarrDemandLineRequest": {
+        "required": [
+          "trainarrDemandLineId",
+          "supplyarrPartId",
+          "partNumber",
+          "description",
+          "quantityRequested",
+          "unitOfMeasure",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "trainarrDemandLineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrPartId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "partNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantityRequested": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "IngestTrainarrDemandRequest": {
+        "required": [
+          "tenantId",
+          "trainarrPublicationId",
+          "trainarrAssignmentId",
+          "trainarrAssignmentRefKey",
+          "staffarrPersonId",
+          "title",
+          "notes",
+          "createPurchaseRequestDraft",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trainarrPublicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trainarrAssignmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trainarrAssignmentRefKey": {
+            "type": "string"
+          },
+          "staffarrPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createPurchaseRequestDraft": {
+            "type": "boolean"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngestTrainarrDemandLineRequest"
+            }
+          }
+        }
+      },
+      "InviteRfqVendorsRequest": {
+        "required": [
+          "vendorPartyIds"
+        ],
+        "type": "object",
+        "properties": {
+          "vendorPartyIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "IssueEmergencyPurchaseOrderRequest": {
+        "required": [
+          "orderKey",
+          "title",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "orderKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "LiftVendorRestrictionRequest": {
+        "required": [
+          "liftNotes"
+        ],
+        "type": "object",
+        "properties": {
+          "liftNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "LinkProcurementExceptionActionsRequest": {
+        "required": [
+          "linkedPurchaseRequestId",
+          "linkedPurchaseOrderId"
+        ],
+        "type": "object",
+        "properties": {
+          "linkedPurchaseRequestId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "linkedPurchaseOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "ManagerOverrideApproveEmergencyPurchaseRequest": {
+        "required": [
+          "justification"
+        ],
+        "type": "object",
+        "properties": {
+          "justification": {
+            "type": "string"
+          }
+        }
+      },
+      "ProcessApprovalRemindersRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessAvailabilitySnapshotCapturesRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessDemandProcessingRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessIntegrationEventsRequest": {
+        "required": [
+          "tenantId",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessLeadTimeSnapshotCapturesRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessPriceSnapshotCapturesRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessProcurementCoordinationRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessProcurementExceptionEscalationsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ProcessProcurementNotificationsRequest": {
         "required": [
           "tenantId",
@@ -4222,6 +10435,28 @@
           }
         }
       },
+      "RecordWarrantyClaimVendorResponseRequest": {
+        "required": [
+          "vendorDisposition",
+          "vendorResponseNotes",
+          "vendorRmaNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "vendorDisposition": {
+            "type": "string"
+          },
+          "vendorResponseNotes": {
+            "type": "string"
+          },
+          "vendorRmaNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RedeemHandoffRequest": {
         "required": [
           "handoffCode"
@@ -4229,6 +10464,84 @@
         "type": "object",
         "properties": {
           "handoffCode": {
+            "type": "string"
+          }
+        }
+      },
+      "RegisterPartyComplianceDocumentRequest": {
+        "required": [
+          "documentKey",
+          "documentTypeKey",
+          "title",
+          "expiresAt",
+          "effectiveAt",
+          "fileName",
+          "contentType",
+          "sizeBytes",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "documentKey": {
+            "type": "string"
+          },
+          "documentTypeKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "RejectPartyComplianceDocumentRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "RejectProcurementExceptionWaiveRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
             "type": "string"
           }
         }
@@ -4241,6 +10554,129 @@
         "properties": {
           "reason": {
             "type": "string"
+          }
+        }
+      },
+      "RejectSupplierOnboardingRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "RequestProcurementExceptionWaiveRequest": {
+        "required": [
+          "waiveJustification"
+        ],
+        "type": "object",
+        "properties": {
+          "waiveJustification": {
+            "type": "string"
+          }
+        }
+      },
+      "ResolveProcurementExceptionRequest": {
+        "required": [
+          "resolutionNotes"
+        ],
+        "type": "object",
+        "properties": {
+          "resolutionNotes": {
+            "type": "string"
+          },
+          "resolutionTemplateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ResolveSupplierIncidentRequest": {
+        "required": [
+          "resolutionNotes"
+        ],
+        "type": "object",
+        "properties": {
+          "resolutionNotes": {
+            "type": "string"
+          }
+        }
+      },
+      "SelectVendorQuoteRequest": {
+        "required": [
+          "vendorQuoteId"
+        ],
+        "type": "object",
+        "properties": {
+          "vendorQuoteId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "StartSupplierOnboardingRequest": {
+        "required": [
+          "externalPartyId",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "externalPartyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SubmitSupplierOnboardingForReviewRequest": {
+        "required": [
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SubmitWarrantyClaimRequest": {
+        "required": [
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SuspendSupplierOnboardingRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -4420,6 +10856,40 @@
           }
         }
       },
+      "UpdateProcurementExceptionRequest": {
+        "required": [
+          "title",
+          "description",
+          "exceptionCategory",
+          "assignedToUserId"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "exceptionCategory": {
+            "type": "string"
+          },
+          "assignedToUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "slaDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "UpdatePurchaseOrderLineRequest": {
         "required": [
           "quantityOrdered",
@@ -4514,6 +10984,338 @@
           }
         }
       },
+      "UpdateRfqLineRequest": {
+        "required": [
+          "quantityRequested",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "quantityRequested": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateRfqRequest": {
+        "required": [
+          "title",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateSupplierIncidentRequest": {
+        "required": [
+          "title",
+          "description",
+          "incidentType",
+          "severity",
+          "assignedToUserId"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "incidentType": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "assignedToUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "UpdateVendorRestrictionRequest": {
+        "required": [
+          "scopes",
+          "reason",
+          "effectiveUntil"
+        ],
+        "type": "object",
+        "properties": {
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reason": {
+            "type": "string"
+          },
+          "effectiveUntil": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "UpdateWarrantyClaimRequest": {
+        "required": [
+          "claimType",
+          "quantityClaimed",
+          "problemDescription",
+          "purchaseOrderId",
+          "purchaseOrderLineId",
+          "receivingReceiptId",
+          "receivingReceiptLineId",
+          "vendorRmaNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "claimType": {
+            "type": "string"
+          },
+          "quantityClaimed": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "problemDescription": {
+            "type": "string"
+          },
+          "purchaseOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "purchaseOrderLineId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "receivingReceiptId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "receivingReceiptLineId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "vendorRmaNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpsertApprovalReminderSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "prReminderAfterHours",
+          "poReminderAfterHours",
+          "reminderCooldownHours",
+          "maxRemindersPerSubject",
+          "notifyOnPrApprovalReminder",
+          "notifyOnPoApprovalReminder"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "prReminderAfterHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "poReminderAfterHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "reminderCooldownHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "maxRemindersPerSubject": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "notifyOnPrApprovalReminder": {
+            "type": "boolean"
+          },
+          "notifyOnPoApprovalReminder": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpsertAvailabilitySnapshotSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertDemandProcessingSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "autoCreatePrDraftWhenShort",
+          "minHoursBeforeProcessing",
+          "stalenessHours",
+          "notifyOnPrDraftCreated",
+          "processMaintainarrDemandRefs",
+          "processRoutarrDemandRefs",
+          "processTrainarrDemandRefs",
+          "processStaffarrDemandRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "autoCreatePrDraftWhenShort": {
+            "type": "boolean"
+          },
+          "minHoursBeforeProcessing": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "notifyOnPrDraftCreated": {
+            "type": "boolean"
+          },
+          "processMaintainarrDemandRefs": {
+            "type": "boolean"
+          },
+          "processRoutarrDemandRefs": {
+            "type": "boolean"
+          },
+          "processTrainarrDemandRefs": {
+            "type": "boolean"
+          },
+          "processStaffarrDemandRefs": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpsertIntegrationEventSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "maxAttempts",
+          "retryIntervalMinutes"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "maxAttempts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "retryIntervalMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertLeadTimeSnapshotSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "UpsertPartReorderPolicyRequest": {
         "required": [
           "reorderPoint",
@@ -4567,6 +11369,152 @@
           }
         }
       },
+      "UpsertPartVendorLinkCatalogAvailabilityRequest": {
+        "required": [
+          "catalogQuantityAvailable",
+          "catalogAvailabilityStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "catalogQuantityAvailable": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "catalogAvailabilityStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpsertPartVendorLinkCatalogLeadTimeRequest": {
+        "required": [
+          "catalogLeadTimeDays"
+        ],
+        "type": "object",
+        "properties": {
+          "catalogLeadTimeDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertPartVendorLinkCatalogPriceRequest": {
+        "required": [
+          "catalogUnitPrice",
+          "catalogCurrencyCode",
+          "catalogMinimumOrderQuantity"
+        ],
+        "type": "object",
+        "properties": {
+          "catalogUnitPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "catalogCurrencyCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "catalogMinimumOrderQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "UpsertPriceSnapshotSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertProcurementCoordinationSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertProcurementExceptionEscalationSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "escalationCooldownHours",
+          "maxEscalationsPerException",
+          "notifyOnProcurementExceptionSlaEscalation"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "escalationCooldownHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "maxEscalationsPerException": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "notifyOnProcurementExceptionSlaEscalation": {
+            "type": "boolean"
+          }
+        }
+      },
       "UpsertProcurementNotificationSettingsRequest": {
         "required": [
           "isEnabled",
@@ -4600,6 +11548,64 @@
             "type": "boolean"
           }
         }
+      },
+      "UpsertSupplierOnboardingDocumentRequirementsRequest": {
+        "required": [
+          "requiredDocumentTypeKeys"
+        ],
+        "type": "object",
+        "properties": {
+          "requiredDocumentTypeKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "UpsertVendorQuoteLineRequest": {
+        "required": [
+          "rfqLineId",
+          "unitPrice",
+          "quantityQuoted",
+          "leadTimeDays",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "rfqLineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "unitPrice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "quantityQuoted": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "leadTimeDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
       }
     }
   },
@@ -4611,6 +11617,12 @@
       "name": "SupplyArr.Api"
     },
     {
+      "name": "ProcurementExceptions"
+    },
+    {
+      "name": "LoadTestJourney"
+    },
+    {
       "name": "Auth"
     },
     {
@@ -4620,6 +11632,9 @@
       "name": "Me"
     },
     {
+      "name": "Launch"
+    },
+    {
       "name": "PartyRegistry"
     },
     {
@@ -4627,6 +11642,24 @@
     },
     {
       "name": "Inventory"
+    },
+    {
+      "name": "Rfqs"
+    },
+    {
+      "name": "SupplierOnboarding"
+    },
+    {
+      "name": "PartyComplianceDocuments"
+    },
+    {
+      "name": "VendorRestrictions"
+    },
+    {
+      "name": "SupplierIncidents"
+    },
+    {
+      "name": "EmergencyPurchases"
     },
     {
       "name": "PurchaseRequests"
@@ -4642,6 +11675,9 @@
     },
     {
       "name": "Returns"
+    },
+    {
+      "name": "WarrantyClaims"
     },
     {
       "name": "PricingSnapshots"
@@ -4665,10 +11701,73 @@
       "name": "DemandRefs"
     },
     {
+      "name": "RoutArrDemandRefs"
+    },
+    {
+      "name": "TrainArrDemandRefs"
+    },
+    {
+      "name": "StaffArrDemandRefs"
+    },
+    {
       "name": "FieldInbox"
     },
     {
       "name": "NotificationSettings"
+    },
+    {
+      "name": "PriceSnapshotSettings"
+    },
+    {
+      "name": "LeadTimeSnapshotSettings"
+    },
+    {
+      "name": "AvailabilitySnapshotSettings"
+    },
+    {
+      "name": "ProcurementCoordinationSettings"
+    },
+    {
+      "name": "ProcurementCoordination"
+    },
+    {
+      "name": "ApprovalReminderSettings"
+    },
+    {
+      "name": "ApprovalReminders"
+    },
+    {
+      "name": "ProcurementExceptionEscalationSettings"
+    },
+    {
+      "name": "DemandProcessingSettings"
+    },
+    {
+      "name": "DemandProcessing"
+    },
+    {
+      "name": "IntegrationEventSettings"
+    },
+    {
+      "name": "VendorReports"
+    },
+    {
+      "name": "PartsInventoryReports"
+    },
+    {
+      "name": "PurchasingReports"
+    },
+    {
+      "name": "ComplianceReports"
+    },
+    {
+      "name": "ForgivingSearch"
+    },
+    {
+      "name": "AuditHistory"
+    },
+    {
+      "name": "SupplyReadiness"
     }
   ]
 }

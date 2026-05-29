@@ -16,6 +16,7 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrPeopleEndpoints();
         app.MapStaffArrPersonLookupEndpoints();
         app.MapStaffArrPeopleExportEndpoints();
+        app.MapStaffArrWorkerAdminEndpoints();
         app.MapStaffArrManagerHierarchyEndpoints();
         app.MapStaffArrOrgUnitEndpoints();
         app.MapStaffArrOrgUnitAssignmentEndpoints();
@@ -38,5 +39,9 @@ await StlApiHost.RunAsync<StaffArrDbContext>(
         app.MapStaffArrTrainingAcknowledgementEndpoints();
         app.MapStaffArrFieldInboxEndpoints();
         app.MapStaffArrAuditPackageEndpoints();
+        app.MapStaffArrPersonnelReportEndpoints();
+        app.MapStaffArrReadinessReportEndpoints();
+        app.MapStaffArrIncidentReportEndpoints();
+        app.MapStaffArrEntityExportEndpoints();
         await Task.CompletedTask;
     });

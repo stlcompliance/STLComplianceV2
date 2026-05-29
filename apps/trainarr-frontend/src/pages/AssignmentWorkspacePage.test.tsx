@@ -50,6 +50,7 @@ vi.mock('../api/client', () => ({
 
 vi.mock('../auth/sessionStorage', () => ({
   canCompleteAssignment: () => false,
+  canManageAssignments: () => false,
   canSubmitEvaluation: () => false,
   canSubmitTraineeSignoff: () => true,
   canSubmitTrainerSignoff: () => false,

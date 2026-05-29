@@ -186,6 +186,37 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
         (await _routarrClient.SendAsync(assignRequest)).EnsureSuccessStatusCode();
     }
 
+    [Fact]
+    public async Task Bulk_apply_blocked_when_workflow_gate_blocks_and_override_succeeds()
+    {
+        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
+        var now = DateTimeOffset.UtcNow;
+        var trip = await CreateTripAsync(dispatcherToken, now.AddHours(2), now.AddHours(6));
+
+        var previewRequest = Authorized(HttpMethod.Post, "/api/dispatch/bulk/preview", dispatcherToken);
+        previewRequest.Content = JsonContent.Create(new BulkDispatchPreviewRequest([
+            new BulkDispatchActionItem(trip.TripId, driverPersonId, null, null),
+        ]));
+        var previewResponse = await _routarrClient.SendAsync(previewRequest);
+        previewResponse.EnsureSuccessStatusCode();
+        var preview = (await previewResponse.Content.ReadFromJsonAsync<BulkDispatchPreviewResponse>())!;
+        Assert.Equal(0, preview.Summary.CanApplyCount);
+        Assert.Equal(1, preview.Summary.BlockedCount);
+        Assert.NotNull(preview.Items[0].DriverPreview);
+        Assert.Equal(DispatchWorkflowGateOutcomes.Block, preview.Items[0].DriverPreview!.WorkflowGates!.Outcome);
+
+        var applyRequest = Authorized(HttpMethod.Post, "/api/dispatch/bulk/apply", dispatcherToken);
+        applyRequest.Content = JsonContent.Create(new BulkDispatchApplyRequest(
+            [new BulkDispatchActionItem(trip.TripId, driverPersonId, null, null)],
+            IgnoreWorkflowGateBlocks: true));
+        var applyResponse = await _routarrClient.SendAsync(applyRequest);
+        applyResponse.EnsureSuccessStatusCode();
+        var apply = (await applyResponse.Content.ReadFromJsonAsync<BulkDispatchApplyResponse>())!;
+        Assert.Equal(1, apply.Summary.SuccessCount);
+        Assert.True(apply.Results[0].Success);
+    }
+
     private async Task SeedDispatchWorkflowGatesAsync(string complianceAdminToken)
     {
         var request = Authorized(HttpMethod.Post, "/api/workflow-gates/seed/dispatch", complianceAdminToken);

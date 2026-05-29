@@ -1003,3 +1003,91 @@ export interface IntegrationProbesResponse {
   probedAt: string
   items: IntegrationProbeItem[]
 }
+
+export interface AssignmentReportSummaryItem {
+  assignmentId: string
+  staffarrPersonId: string
+  definitionKey: string
+  definitionName: string
+  status: string
+  dueAt: string | null
+  isOverdue: boolean
+  createdAt: string
+  completedAt: string | null
+}
+
+export interface AssignmentReportSummaryResponse {
+  totalAssignments: number
+  openAssignments: number
+  completedAssignments: number
+  overdueAssignments: number
+  completionRatePercent: number
+  recentAssignments: AssignmentReportSummaryItem[]
+}
+
+export interface QualificationReportSummaryItem {
+  qualificationIssueId: string
+  staffarrPersonId: string
+  qualificationKey: string
+  qualificationName: string
+  status: string
+  issuedAt: string
+  expiresAt: string | null
+  expiringSoon: boolean
+}
+
+export interface QualificationReportSummaryResponse {
+  totalQualifications: number
+  issuedCount: number
+  expiredCount: number
+  suspendedCount: number
+  revokedCount: number
+  expiringWithin30Days: number
+  recentQualifications: QualificationReportSummaryItem[]
+}
+
+export interface ComplianceReportRemediationItem {
+  remediationId: string
+  staffarrPersonId: string
+  reasonCategoryKey: string
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ComplianceReportSummaryResponse {
+  citationAttachmentCount: number
+  rulePackRequirementCount: number
+  openRemediationCount: number
+  totalRemediationCount: number
+  attentionItemCount: number
+  recentRemediations: ComplianceReportRemediationItem[]
+}
+
+export interface EntityExportFormatDescriptor {
+  formatKey: string
+  contentType: string
+  fileNameTemplate: string
+  description: string
+}
+
+export interface EntityExportManifestEntity {
+  entityKey: string
+  exportPath: string
+  displayName: string
+  csvHeader: string
+  description: string
+  formats: EntityExportFormatDescriptor[]
+}
+
+export interface EntityExportManifestResponse {
+  packageVersion: string
+  entities: EntityExportManifestEntity[]
+  reportExports: Array<{
+    reportKey: string
+    exportPath: string
+    displayName: string
+    description: string
+  }>
+  auditPackageFormats: string[]
+}

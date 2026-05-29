@@ -77,7 +77,8 @@ public static class ProcurementNotificationRules
                 settings.NotifyOnReceivingReceiptPosted,
             ProcurementNotificationEventKinds.PurchaseRequestApprovalReminder
             or ProcurementNotificationEventKinds.PurchaseOrderApprovalReminder
-            or ProcurementNotificationEventKinds.MaintainArrDemandPrDrafted =>
+            or ProcurementNotificationEventKinds.MaintainArrDemandPrDrafted
+            or ProcurementNotificationEventKinds.ProcurementExceptionSlaEscalation =>
                 settings.IsEnabled && !string.IsNullOrWhiteSpace(settings.NotificationWebhookUrl),
             _ => false,
         };

@@ -77,6 +77,11 @@ import type {
   PendingApprovalRemindersResponse,
   ApprovalReminderRunsResponse,
   ApprovalRemindersDashboardResponse,
+  ProcurementExceptionEscalationSettingsResponse,
+  UpsertProcurementExceptionEscalationSettingsRequest,
+  PendingProcurementExceptionEscalationsResponse,
+  ProcurementExceptionEscalationRunsResponse,
+  ProcurementExceptionEscalationEventsResponse,
   DemandProcessingSettingsResponse,
   UpsertDemandProcessingSettingsRequest,
   PendingDemandProcessingResponse,
@@ -1481,6 +1486,79 @@ export async function getApprovalReminderRuns(
   return parseJsonResponse<ApprovalReminderRunsResponse>(
     response,
     'Failed to load approval reminder runs',
+  )
+}
+
+export async function getProcurementExceptionEscalationSettings(
+  accessToken: string,
+): Promise<ProcurementExceptionEscalationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/procurement-exception-escalation-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProcurementExceptionEscalationSettingsResponse>(
+    response,
+    'Failed to load procurement exception escalation settings',
+  )
+}
+
+export async function upsertProcurementExceptionEscalationSettings(
+  accessToken: string,
+  payload: UpsertProcurementExceptionEscalationSettingsRequest,
+): Promise<ProcurementExceptionEscalationSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/procurement-exception-escalation-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<ProcurementExceptionEscalationSettingsResponse>(
+    response,
+    'Failed to save procurement exception escalation settings',
+  )
+}
+
+export async function getPendingProcurementExceptionEscalations(
+  accessToken: string,
+): Promise<PendingProcurementExceptionEscalationsResponse> {
+  const response = await fetch(`${apiBase}/api/procurement-exception-escalation-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingProcurementExceptionEscalationsResponse>(
+    response,
+    'Failed to load pending procurement exception escalations',
+  )
+}
+
+export async function getProcurementExceptionEscalationRuns(
+  accessToken: string,
+  limit = 5,
+): Promise<ProcurementExceptionEscalationRunsResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(
+    `${apiBase}/api/procurement-exception-escalation-settings/runs?${search}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<ProcurementExceptionEscalationRunsResponse>(
+    response,
+    'Failed to load procurement exception escalation runs',
+  )
+}
+
+export async function getProcurementExceptionEscalationEvents(
+  accessToken: string,
+  limit = 10,
+): Promise<ProcurementExceptionEscalationEventsResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(
+    `${apiBase}/api/procurement-exception-escalation-settings/events?${search}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<ProcurementExceptionEscalationEventsResponse>(
+    response,
+    'Failed to load procurement exception escalation events',
   )
 }
 

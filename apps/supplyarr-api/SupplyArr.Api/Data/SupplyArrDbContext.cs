@@ -140,6 +140,15 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
 
     public DbSet<ApprovalReminderRun> ApprovalReminderRuns => Set<ApprovalReminderRun>();
 
+    public DbSet<TenantProcurementExceptionEscalationSettings> TenantProcurementExceptionEscalationSettings =>
+        Set<TenantProcurementExceptionEscalationSettings>();
+
+    public DbSet<ProcurementExceptionEscalationEvent> ProcurementExceptionEscalationEvents =>
+        Set<ProcurementExceptionEscalationEvent>();
+
+    public DbSet<ProcurementExceptionEscalationRun> ProcurementExceptionEscalationRuns =>
+        Set<ProcurementExceptionEscalationRun>();
+
     public DbSet<TenantDemandProcessingSettings> TenantDemandProcessingSettings =>
         Set<TenantDemandProcessingSettings>();
 
@@ -294,6 +303,7 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.HasIndex(x => new { x.TenantId, x.SubjectType, x.SubjectId });
             entity.HasIndex(x => new { x.TenantId, x.Status, x.UpdatedAt });
             entity.HasIndex(x => new { x.TenantId, x.SlaDueAt });
+            entity.HasIndex(x => new { x.TenantId, x.LastEscalatedAt });
         });
 
         modelBuilder.Entity<SupplierIncident>(entity =>
@@ -1157,6 +1167,31 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
         modelBuilder.Entity<ApprovalReminderRun>(entity =>
         {
             entity.ToTable("supplyarr_approval_reminder_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<TenantProcurementExceptionEscalationSettings>(entity =>
+        {
+            entity.ToTable("supplyarr_tenant_procurement_exception_escalation_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<ProcurementExceptionEscalationEvent>(entity =>
+        {
+            entity.ToTable("supplyarr_procurement_exception_escalation_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ActionKind).HasMaxLength(64).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ProcurementExceptionId });
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<ProcurementExceptionEscalationRun>(entity =>
+        {
+            entity.ToTable("supplyarr_procurement_exception_escalation_runs");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.CreatedAt });

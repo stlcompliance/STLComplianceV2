@@ -229,6 +229,71 @@ export interface PersonExportDeliveryNotificationsResponse {
   items: PersonExportDeliveryNotificationItem[]
 }
 
+export interface PendingPersonExportDeliveriesResponse {
+  asOfUtc: string
+  batchSize: number
+  items: Array<{
+    tenantId: string
+    intervalHours: number
+    lastDeliveredAt: string | null
+  }>
+}
+
+export interface PersonExportDeliveryRunItem {
+  runId: string
+  status: string
+  exportId: string
+  personCount: number
+  intervalHours: number
+  skipReason: string | null
+  startedAt: string
+  completedAt: string
+}
+
+export interface PersonExportDeliveryRunsResponse {
+  items: PersonExportDeliveryRunItem[]
+}
+
+export interface StaffArrWorkerSettingsResponse {
+  workerKey: string
+  isEnabled: boolean
+  scanIntervalMinutes: number
+  batchSize: number
+  stalenessHours: number | null
+  lastRunAt: string | null
+  pendingCount: number
+}
+
+export interface UpsertStaffArrWorkerSettingsRequest {
+  isEnabled: boolean
+  scanIntervalMinutes: number
+  batchSize: number
+  stalenessHours?: number | null
+}
+
+export interface StaffArrWorkerPendingPreviewResponse {
+  workerKey: string
+  asOfUtc: string
+  batchSize: number
+  itemCount: number
+  previewLines: string[]
+}
+
+export interface StaffArrWorkerRunItem {
+  runId: string
+  status: string
+  candidatesFound: number
+  processedCount: number
+  skippedCount: number
+  summary: string | null
+  startedAt: string
+  completedAt: string
+}
+
+export interface StaffArrWorkerRunsResponse {
+  items: StaffArrWorkerRunItem[]
+}
+
 export interface OrgUnitResponse {
   orgUnitId: string
   unitType: string
@@ -840,4 +905,87 @@ export interface AuditPackageGenerationJobResponse {
   startedAt: string | null
   completedAt: string | null
   downloadReady: boolean
+}
+
+export interface PersonnelReportSummaryResponse {
+  totalPeople: number
+  activeCount: number
+  inactiveCount: number
+  onLeaveCount: number
+  activePercent: number
+  recentPeople: PersonnelReportSummaryItem[]
+}
+
+export interface PersonnelReportSummaryItem {
+  personId: string
+  displayName: string
+  primaryEmail: string
+  employmentStatus: string
+  primaryOrgUnitName: string | null
+  jobTitle: string | null
+  updatedAt: string
+}
+
+export interface ReadinessReportSummaryResponse {
+  totalRollups: number
+  totalMembers: number
+  readyCount: number
+  notReadyCount: number
+  overrideCount: number
+  readyPercent: number
+  recentRollups: ReadinessReportSummaryItem[]
+}
+
+export interface ReadinessReportSummaryItem {
+  rollupId: string
+  scopeType: string
+  orgUnitId: string
+  orgUnitName: string
+  totalMembers: number
+  readyCount: number
+  notReadyCount: number
+  readyPercent: number
+  computedAt: string
+}
+
+export interface IncidentReportSummaryResponse {
+  totalIncidents: number
+  openCount: number
+  closedCount: number
+  highSeverityOpenCount: number
+  recentIncidents: IncidentReportSummaryItem[]
+}
+
+export interface IncidentReportSummaryItem {
+  incidentId: string
+  personId: string
+  reasonCategoryKey: string
+  severity: string
+  status: string
+  title: string
+  occurredAt: string
+  reportedAt: string
+}
+
+export interface EntityExportFormatDescriptor {
+  formatKey: string
+  contentType: string
+  fileNameTemplate: string
+  description: string
+}
+
+export interface EntityExportManifestEntity {
+  entityKey: string
+  exportPath: string
+  displayName: string
+  csvHeader: string
+  description: string
+  formats: EntityExportFormatDescriptor[]
+}
+
+export interface EntityExportManifestResponse {
+  packageVersion: string
+  entities: EntityExportManifestEntity[]
+  reportExports: { reportKey: string; exportPath: string; displayName: string; description: string }[]
+  auditPackageFormats: string[]
 }

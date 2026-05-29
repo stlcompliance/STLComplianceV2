@@ -9,6 +9,7 @@ import { IncidentsSection } from './sections/IncidentsSection'
 import { TrainingAcknowledgementsSection } from './sections/TrainingAcknowledgementsSection'
 import { CertificationsSection } from './sections/CertificationsSection'
 import { AdminSection } from './sections/AdminSection'
+import { ReportsSection } from './sections/ReportsSection'
 
 export function StaffArrWorkspacePage({ section }: { section: WorkspaceSection }) {
   const state = useStaffArrWorkspaceState()
@@ -24,6 +25,7 @@ export function StaffArrWorkspacePage({ section }: { section: WorkspaceSection }
       {section === 'incidents' ? <IncidentsSection state={state} /> : null}
       {section === 'training-acknowledgements' ? <TrainingAcknowledgementsSection state={state} /> : null}
       {section === 'certifications' ? <CertificationsSection state={state} /> : null}
+      {section === 'reports' ? <ReportsSection state={state} /> : null}
       {section === 'admin' ? <AdminSection state={state} /> : null}
     </WorkspaceShell>
   )

@@ -113,7 +113,108 @@ describe('BulkDispatchPanel', () => {
     fireEvent.click(screen.getByTestId('bulk-dispatch-apply'))
 
     await vi.waitFor(() => {
-      expect(applyBulkDispatch).toHaveBeenCalled()
+      expect(applyBulkDispatch).toHaveBeenCalledWith('token', {
+        items: [
+          {
+            tripId: '11111111-1111-1111-1111-111111111111',
+            driverPersonId: 'driver-bulk-1',
+            vehicleRefKey: null,
+            dispatchStatus: null,
+          },
+        ],
+        ignoreAvailabilityConflicts: false,
+        ignoreEligibilityBlocks: false,
+        ignoreDispatchabilityBlocks: false,
+        ignoreWorkflowGateBlocks: false,
+      })
+    })
+  })
+
+  it('passes ignoreWorkflowGateBlocks when user confirms workflow gate override', async () => {
+    previewBulkDispatch.mockResolvedValue({
+      summary: { total: 1, canApplyCount: 0, blockedCount: 1 },
+      items: [
+        {
+          tripId: '11111111-1111-1111-1111-111111111111',
+          tripNumber: 'TR-1',
+          title: 'North run',
+          currentDispatchStatus: 'planned',
+          canApply: false,
+          hasBlockingConflicts: true,
+          driverPreview: {
+            tripId: '11111111-1111-1111-1111-111111111111',
+            assignmentKind: 'driver',
+            canAssign: false,
+            hasBlockingConflicts: true,
+            blockingDriverAvailability: [],
+            blockingEquipmentAvailability: [],
+            overlappingTrips: [],
+            driverEligibility: null,
+            assetDispatchability: null,
+            workflowGates: {
+              outcome: 'block',
+              reasonCode: 'license_invalid',
+              message: 'Driver license invalid',
+              isBlocking: true,
+              gates: [],
+            },
+          },
+          vehiclePreview: null,
+          statusPreview: null,
+        },
+      ],
+    })
+    applyBulkDispatch.mockResolvedValue({
+      summary: { total: 1, successCount: 1, failureCount: 0 },
+      results: [
+        {
+          tripId: '11111111-1111-1111-1111-111111111111',
+          success: true,
+          errorCode: null,
+          errorMessage: null,
+          trip: null,
+        },
+      ],
+    })
+
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <BulkDispatchPanel accessToken="token" canAssign />
+      </QueryClientProvider>,
+    )
+
+    fireEvent.click(await screen.findByTestId('bulk-trip-11111111-1111-1111-1111-111111111111'))
+    fireEvent.change(screen.getByLabelText(/Driver person id/i), {
+      target: { value: 'driver-bulk-1' },
+    })
+    fireEvent.click(screen.getByText('Preview conflicts'))
+
+    await vi.waitFor(() => {
+      expect(
+        screen.getByTestId('bulk-preview-summary-11111111-1111-1111-1111-111111111111'),
+      ).toHaveTextContent('workflow gate: Driver license invalid')
+    })
+
+    fireEvent.click(screen.getByTestId('bulk-dispatch-apply'))
+
+    await vi.waitFor(() => {
+      expect(applyBulkDispatch).toHaveBeenCalledWith('token', {
+        items: [
+          {
+            tripId: '11111111-1111-1111-1111-111111111111',
+            driverPersonId: 'driver-bulk-1',
+            vehicleRefKey: null,
+            dispatchStatus: null,
+          },
+        ],
+        ignoreAvailabilityConflicts: false,
+        ignoreEligibilityBlocks: false,
+        ignoreDispatchabilityBlocks: false,
+        ignoreWorkflowGateBlocks: true,
+      })
     })
   })
 })

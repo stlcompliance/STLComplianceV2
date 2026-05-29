@@ -9,7 +9,8 @@ public sealed record TripProofRecordResponse(
     string ReferenceKey,
     string Notes,
     DateTimeOffset CapturedAt,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    IReadOnlyList<TripCaptureAttachmentResponse> Attachments);
 
 public sealed record CreateTripProofRequest(
     string ProofType,
@@ -27,7 +28,8 @@ public sealed record TripDvirInspectionResponse(
     long? OdometerReading,
     string DefectNotes,
     string SubmittedByPersonId,
-    DateTimeOffset SubmittedAt);
+    DateTimeOffset SubmittedAt,
+    IReadOnlyList<TripCaptureAttachmentResponse> Attachments);
 
 public sealed record SubmitTripDvirRequest(
     string Phase,
@@ -47,7 +49,9 @@ public sealed record TripDvirListResponse(
 public sealed record TripExecutionSummaryResponse(
     Guid TripId,
     string TripNumber,
+    string DispatchStatus,
     string? AssignedDriverPersonId,
+    DateTimeOffset? ClosedAt,
     IReadOnlyList<TripProofRecordResponse> Proofs,
     IReadOnlyList<TripDvirInspectionResponse> DvirInspections,
     bool HasPreTripDvir,

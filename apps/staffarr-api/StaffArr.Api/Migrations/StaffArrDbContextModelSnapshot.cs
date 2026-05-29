@@ -1672,6 +1672,56 @@ namespace StaffArr.Api.Migrations
                     b.ToTable("staffarr_audit_events", (string)null);
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.StaffArrWorkerRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CandidatesFound")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ProcessedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SkippedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("WorkerKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "WorkerKey", "StartedAt");
+
+                    b.ToTable("staffarr_worker_runs", (string)null);
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.StaffPerson", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1827,6 +1877,51 @@ namespace StaffArr.Api.Migrations
                     b.HasIndex("TenantId", "IsEnabled", "LastDeliveredAt");
 
                     b.ToTable("staffarr_tenant_person_export_schedules", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.TenantStaffArrWorkerSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("BatchSize")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastRunAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ScanIntervalMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("StalenessHours")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("WorkerKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "WorkerKey")
+                        .IsUnique();
+
+                    b.ToTable("staffarr_tenant_worker_settings", (string)null);
                 });
 
             modelBuilder.Entity("StaffArr.Api.Entities.IncidentSupplyDemandLine", b =>

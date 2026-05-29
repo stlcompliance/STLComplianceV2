@@ -135,18 +135,29 @@ export function TripCompletionRollupSettingsPanel({
         </div>
       )}
 
-      {runsQuery.data && runsQuery.data.items.length > 0 && (
-        <div className="mt-4 rounded border border-slate-700 bg-slate-950/60 p-3" data-testid="trip-completion-rollup-runs">
-          <p className="text-sm font-medium text-slate-200">Recent worker runs</p>
-          <ul className="mt-2 space-y-1 text-xs text-slate-400">
+      <div className="mt-6">
+        <h3 className="text-sm font-semibold text-slate-200">Recent worker runs</h3>
+        {runsQuery.isLoading && (
+          <p className="mt-2 text-sm text-slate-400">Loading worker runs…</p>
+        )}
+        {runsQuery.data && runsQuery.data.items.length === 0 && (
+          <p className="mt-2 text-sm text-slate-400" data-testid="trip-completion-rollup-runs-empty">
+            No worker runs yet.
+          </p>
+        )}
+        {runsQuery.data && runsQuery.data.items.length > 0 && (
+          <ul
+            className="mt-2 divide-y divide-slate-700 rounded border border-slate-700 text-sm"
+            data-testid="trip-completion-rollup-runs-list"
+          >
             {runsQuery.data.items.map((run) => (
-              <li key={run.runId}>
+              <li key={run.runId} className="px-3 py-2 text-xs text-slate-400">
                 {run.refreshedCount}/{run.candidatesFound} refreshed, {run.skippedCount} skipped
               </li>
             ))}
           </ul>
-        </div>
-      )}
+        )}
+      </div>
     </section>
   )
 }

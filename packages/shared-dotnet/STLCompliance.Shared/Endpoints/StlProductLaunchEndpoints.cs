@@ -17,14 +17,14 @@ public static class StlProductLaunchEndpoints
             StlNexArrLaunchClient client,
             CancellationToken cancellationToken) =>
         {
-            var (statusCode, body, contentType) = await client.ForwardAsync(
+            var (statusCode, body, _) = await client.ForwardAsync(
                 HttpMethod.Get,
                 $"/api/launch/context?productKey={Uri.EscapeDataString(productKey)}",
                 context.Request.Headers.Authorization.ToString(),
                 null,
                 cancellationToken);
 
-            return Results.Content(body, contentType, statusCode: statusCode);
+            return Results.Content(body, "application/json", statusCode: statusCode);
         })
         .WithName("GetProductLaunchContext");
 
@@ -36,14 +36,14 @@ public static class StlProductLaunchEndpoints
             using var reader = new StreamReader(context.Request.Body);
             var jsonBody = await reader.ReadToEndAsync(cancellationToken);
 
-            var (statusCode, body, contentType) = await client.ForwardAsync(
+            var (statusCode, body, _) = await client.ForwardAsync(
                 HttpMethod.Post,
                 "/api/launch/handoff",
                 context.Request.Headers.Authorization.ToString(),
                 jsonBody,
                 cancellationToken);
 
-            return Results.Content(body, contentType, statusCode: statusCode);
+            return Results.Content(body, "application/json", statusCode: statusCode);
         })
         .WithName("CreateProductLaunchHandoff");
     }

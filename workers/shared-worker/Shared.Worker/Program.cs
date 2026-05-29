@@ -311,6 +311,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<RoutArrTripCompletionRollupJob>();
 
+        builder.Services.Configure<RoutArrAttachmentRetentionOptions>(
+            builder.Configuration.GetSection(RoutArrAttachmentRetentionOptions.SectionName));
+
+        builder.Services.AddHttpClient<RoutArrAttachmentRetentionClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<RoutArrAttachmentRetentionOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.RoutArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(5);
+        });
+
+        builder.Services.AddHostedService<RoutArrAttachmentRetentionJob>();
+
         builder.Services.Configure<SupplyArrReorderEvaluationOptions>(
             builder.Configuration.GetSection(SupplyArrReorderEvaluationOptions.SectionName));
 
@@ -382,6 +394,18 @@ await StlWorkerHost.RunAsync(
         });
 
         builder.Services.AddHostedService<SupplyArrApprovalRemindersJob>();
+
+        builder.Services.Configure<SupplyArrProcurementExceptionEscalationsOptions>(
+            builder.Configuration.GetSection(SupplyArrProcurementExceptionEscalationsOptions.SectionName));
+
+        builder.Services.AddHttpClient<SupplyArrProcurementExceptionEscalationsClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<SupplyArrProcurementExceptionEscalationsOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.SupplyArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<SupplyArrProcurementExceptionEscalationsJob>();
 
         builder.Services.Configure<SupplyArrDemandProcessingOptions>(
             builder.Configuration.GetSection(SupplyArrDemandProcessingOptions.SectionName));

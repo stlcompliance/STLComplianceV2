@@ -90,7 +90,10 @@ export function SourceIngestionPanel({ accessToken, canManage }: SourceIngestion
   const pending = validateMutation.isPending || commitMutation.isPending
 
   return (
-    <section className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5">
+    <section
+      data-testid="source-ingestion-panel"
+      className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+    >
       <header>
         <h2 className="text-lg font-semibold text-slate-50">Source ingestion</h2>
         <p className="mt-1 text-sm text-slate-400">
@@ -117,6 +120,7 @@ export function SourceIngestionPanel({ accessToken, canManage }: SourceIngestion
               type="button"
               onClick={runValidate}
               disabled={pending}
+              data-testid="source-ingestion-validate"
               className="rounded-md bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600 disabled:opacity-50"
             >
               {validateMutation.isPending ? 'Validating…' : 'Validate batch'}
@@ -125,6 +129,7 @@ export function SourceIngestionPanel({ accessToken, canManage }: SourceIngestion
               type="button"
               onClick={runCommit}
               disabled={pending}
+              data-testid="source-ingestion-commit"
               className="rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
             >
               {commitMutation.isPending ? 'Committing…' : 'Commit batch'}
@@ -155,9 +160,11 @@ export function SourceIngestionPanel({ accessToken, canManage }: SourceIngestion
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Recent batches</h3>
         {(batchesQuery.data ?? []).length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No ingestion batches yet.</p>
+          <p className="mt-2 text-sm text-slate-500" data-testid="source-ingestion-batches-empty">
+            No ingestion batches yet.
+          </p>
         ) : (
-          <ul className="mt-2 space-y-2">
+          <ul className="mt-2 space-y-2" data-testid="source-ingestion-batches-list">
             {(batchesQuery.data ?? []).map((batch) => (
               <li key={batch.batchId} className="rounded border border-slate-800 px-3 py-2 text-xs text-slate-400">
                 <span className="font-mono text-slate-300">{batch.batchId.slice(0, 8)}…</span> — {batch.phase} /{' '}

@@ -188,7 +188,10 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
 
   return (
 
-    <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
+    <section
+      className="rounded-lg border border-border bg-card p-4 shadow-sm"
+      data-testid="notification-settings-panel"
+    >
 
       <h2 className="text-lg font-semibold text-foreground">Training notifications</h2>
 
@@ -486,6 +489,8 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
 
           onClick={() => saveMutation.mutate()}
 
+          data-testid="notification-settings-save"
+
         >
 
           {saveMutation.isPending ? 'Saving…' : 'Save notification settings'}
@@ -516,13 +521,18 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
 
         {dispatchesQuery.data && dispatchesQuery.data.items.length === 0 && (
 
-          <p className="mt-2 text-sm text-muted-foreground">No notification dispatches yet.</p>
+          <p className="mt-2 text-sm text-muted-foreground" data-testid="notification-dispatches-empty">
+            No notification dispatches yet.
+          </p>
 
         )}
 
         {dispatchesQuery.data && dispatchesQuery.data.items.length > 0 && (
 
-          <ul className="mt-2 divide-y divide-border rounded-md border border-border text-sm">
+          <ul
+            className="mt-2 divide-y divide-border rounded-md border border-border text-sm"
+            data-testid="notification-dispatches-list"
+          >
 
             {dispatchesQuery.data.items.map((item) => (
 

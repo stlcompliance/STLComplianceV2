@@ -46,4 +46,30 @@ public sealed class DispatchNotificationRulesTests
             settings,
             DispatchNotificationEventKinds.TripDispatched));
     }
+
+    [Fact]
+    public void ValidateUpsertRequest_requires_webhook_when_enabled()
+    {
+        var exception = Assert.Throws<StlApiException>(() =>
+            DispatchNotificationRules.ValidateUpsertRequest(true, null));
+        Assert.Equal("routarr.notification.webhook_required", exception.Code);
+
+        Assert.Throws<StlApiException>(() =>
+            DispatchNotificationRules.ValidateUpsertRequest(true, "   "));
+    }
+
+    [Fact]
+    public void ValidateUpsertRequest_allows_empty_webhook_when_disabled()
+    {
+        DispatchNotificationRules.ValidateUpsertRequest(false, null);
+        DispatchNotificationRules.ValidateUpsertRequest(false, "   ");
+    }
+
+    [Fact]
+    public void NormalizeWebhookUrl_rejects_invalid_url()
+    {
+        var exception = Assert.Throws<StlApiException>(() =>
+            DispatchNotificationRules.NormalizeWebhookUrl("not-a-url", allowInsecureHttp: true));
+        Assert.Equal("routarr.notification.webhook_invalid", exception.Code);
+    }
 }

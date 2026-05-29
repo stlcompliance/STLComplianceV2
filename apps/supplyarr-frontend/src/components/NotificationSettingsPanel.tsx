@@ -69,7 +69,10 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
   }
 
   return (
-    <section className="rounded-xl border border-slate-700 bg-slate-900/80 p-5">
+    <section
+      className="rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+      data-testid="notification-settings-panel"
+    >
       <h2 className="text-lg font-semibold text-slate-50">Procurement notifications</h2>
       <p className="mt-1 text-sm text-slate-400">
         Configure HTTPS webhooks for purchase request, purchase order, and receiving lifecycle events.
@@ -86,6 +89,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
             type="checkbox"
             checked={isEnabled}
             onChange={(event) => setIsEnabled(event.target.checked)}
+            data-testid="notification-settings-enabled"
           />
           Enable procurement notifications
         </label>
@@ -98,6 +102,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
             placeholder="https://hooks.example.com/supplyarr"
             value={webhookUrl}
             onChange={(event) => setWebhookUrl(event.target.value)}
+            data-testid="notification-settings-webhook"
           />
         </label>
 
@@ -142,6 +147,7 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
           className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
           disabled={saveMutation.isPending}
           onClick={() => saveMutation.mutate()}
+          data-testid="notification-settings-save"
         >
           {saveMutation.isPending ? 'Saving…' : 'Save notification settings'}
         </button>
@@ -157,18 +163,28 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
           <p className="mt-2 text-sm text-slate-500">Loading dispatch history…</p>
         )}
         {dispatchesQuery.data && dispatchesQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-500">No notification dispatches yet.</p>
+          <p className="mt-2 text-sm text-slate-500" data-testid="notification-dispatches-empty">
+            No notification dispatches yet.
+          </p>
         )}
         {dispatchesQuery.data && dispatchesQuery.data.items.length > 0 && (
-          <ul className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
+          <ul
+            className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm"
+            data-testid="notification-dispatches-list"
+          >
             {dispatchesQuery.data.items.map((item) => (
-              <li key={item.notificationId} className="px-3 py-2 text-slate-300">
+              <li
+                key={item.notificationId}
+                className="px-3 py-2 text-slate-300"
+                data-testid={`notification-dispatch-row-${item.relatedEntityId}`}
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-medium text-slate-100">{item.eventKind}</span>
                   <span className="text-slate-500">{item.dispatchStatus}</span>
                 </div>
                 <div className="text-xs text-slate-500">
-                  {item.webhookHost ?? '—'}
+                  {item.relatedEntityType} {item.relatedEntityId}
+                  {item.webhookHost ? ` · ${item.webhookHost}` : ''}
                   {item.httpStatusCode != null ? ` · HTTP ${item.httpStatusCode}` : ''}
                   {item.errorMessage ? ` · ${item.errorMessage}` : ''}
                 </div>

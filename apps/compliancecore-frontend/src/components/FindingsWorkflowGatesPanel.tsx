@@ -73,7 +73,7 @@ export function FindingsWorkflowGatesPanel({
       : factDefinitions.map((fact) => fact.factKey)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="findings-workflow-gates-panel">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-slate-400">
           Review compliance findings from evaluations and run workflow gate checks tied to rule pack outcomes.
@@ -81,6 +81,7 @@ export function FindingsWorkflowGatesPanel({
         {canManage && (
           <button
             type="button"
+            data-testid="findings-workflow-gate-seed"
             onClick={onSeedGate}
             disabled={isSeedingGate || rulePacks.length === 0}
             className="rounded-md bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-500 disabled:opacity-50"
@@ -99,6 +100,7 @@ export function FindingsWorkflowGatesPanel({
           <label className="block text-xs text-slate-400">
             Gate
             <select
+              data-testid="findings-workflow-gate-select"
               value={selectedGateKey}
               onChange={(event) => setSelectedGateKey(event.target.value)}
               className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
@@ -114,6 +116,7 @@ export function FindingsWorkflowGatesPanel({
           <label className="flex items-end gap-2 text-xs text-slate-300">
             <input
               type="checkbox"
+              data-testid="findings-workflow-gate-emit-findings"
               checked={emitFindings}
               onChange={(event) => setEmitFindings(event.target.checked)}
               className="rounded border-slate-600"
@@ -144,6 +147,7 @@ export function FindingsWorkflowGatesPanel({
         </div>
         <button
           type="button"
+          data-testid="findings-workflow-gate-check"
           disabled={!selectedGateKey || isCheckingGate}
           onClick={() => onCheckGate(selectedGateKey, factInputs, emitFindings)}
           className="mt-4 rounded-md bg-violet-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
@@ -151,7 +155,11 @@ export function FindingsWorkflowGatesPanel({
           {isCheckingGate ? 'Checking…' : 'Run gate check'}
         </button>
         {lastGateCheck && (
-          <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/80 p-3">
+          <div
+            className="mt-4 rounded-lg border border-slate-700 bg-slate-950/80 p-3"
+            data-testid="findings-workflow-gate-latest-result"
+            data-outcome={lastGateCheck.outcome}
+          >
             <div className="flex flex-wrap items-center gap-2">
               <span className={`rounded px-2 py-0.5 text-xs font-medium uppercase ${outcomeBadgeClass(lastGateCheck.outcome)}`}>
                 {lastGateCheck.outcome}
@@ -167,7 +175,10 @@ export function FindingsWorkflowGatesPanel({
               </ul>
             )}
             {lastGateCheck.findingsEmitted.length > 0 && (
-              <p className="mt-2 text-xs text-amber-300">
+              <p
+                className="mt-2 text-xs text-amber-300"
+                data-testid="findings-workflow-gate-emitted-notice"
+              >
                 {lastGateCheck.findingsEmitted.length} finding(s) emitted from this check.
               </p>
             )}
@@ -183,7 +194,10 @@ export function FindingsWorkflowGatesPanel({
         onRunBatch={onCheckGateBatch}
       />
 
-      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
+      <section
+        className="rounded-xl border border-slate-700 bg-slate-900/60 p-4"
+        data-testid="findings-workflow-gate-findings-section"
+      >
         <h2 className="text-sm font-semibold text-slate-100">Findings ({findings.length})</h2>
         {findings.length === 0 ? (
           <p className="mt-2 text-sm text-slate-500">No findings yet. Run an evaluation or gate check with emit findings enabled.</p>

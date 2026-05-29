@@ -19,6 +19,7 @@ public static class RoutArrServiceRegistration
         builder.Services.Configure<SupplyArrClientOptions>(builder.Configuration.GetSection(SupplyArrClientOptions.SectionName));
         builder.Services.Configure<ComplianceCoreClientOptions>(builder.Configuration.GetSection(ComplianceCoreClientOptions.SectionName));
         builder.Services.Configure<DispatchWorkflowGateOptions>(builder.Configuration.GetSection(DispatchWorkflowGateOptions.SectionName));
+        builder.Services.Configure<CaptureAttachmentStorageOptions>(builder.Configuration.GetSection(CaptureAttachmentStorageOptions.SectionName));
 
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
@@ -82,6 +83,9 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<AuditPackageService>();
         builder.Services.AddScoped<AuditPackageGenerationService>();
         builder.Services.AddScoped<TripProofDvirService>();
+        builder.Services.AddScoped<TripCaptureAttachmentService>();
+        builder.Services.AddSingleton<RoutArrCaptureAttachmentStorageService>();
+        builder.Services.AddScoped<TripExecutionCaptureService>();
         builder.Services.AddScoped<RouteCalendarService>();
         builder.Services.AddScoped<DriverAvailabilityService>();
         builder.Services.AddScoped<EquipmentAvailabilityService>();
@@ -95,6 +99,8 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<TripCompletionRollupSettingsService>();
         builder.Services.AddScoped<TripCompletionRollupWorkerService>();
         builder.Services.AddScoped<TripCompletionService>();
+        builder.Services.AddScoped<AttachmentRetentionSettingsService>();
+        builder.Services.AddScoped<AttachmentRetentionWorkerService>();
         builder.Services.AddHttpClient(DispatchNotificationDispatchService.WebhookHttpClientName, client =>
         {
             client.Timeout = TimeSpan.FromSeconds(30);

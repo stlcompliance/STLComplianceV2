@@ -15,6 +15,7 @@ import { ServiceTokenCleanupPage } from '../pages/platform-admin/ServiceTokenCle
 import { EntitlementReconciliationPage } from '../pages/platform-admin/EntitlementReconciliationPage'
 import { TenantLifecyclePage } from '../pages/platform-admin/TenantLifecyclePage'
 import { PlatformLifecyclePage } from '../pages/platform-admin/PlatformLifecyclePage'
+import { PlatformWorkerHealthPage } from '../pages/platform-admin/PlatformWorkerHealthPage'
 import { TenantOverviewPage } from '../pages/platform-admin/TenantOverviewPage'
 
 export function AppRoutes() {
@@ -34,6 +35,7 @@ export function AppRoutes() {
                 <Route path="products" element={<ProductOverviewPage />} />
                 <Route path="audit-export" element={<PlatformAuditExportPage />} />
                 <Route path="lifecycle" element={<PlatformLifecyclePage />} />
+                <Route path="orchestration" element={<PlatformWorkerHealthPage />} />
                 <Route path="service-tokens" element={<ServiceTokenCleanupPage />} />
                 <Route path="entitlements" element={<EntitlementReconciliationPage />} />
                 <Route path="tenant-lifecycle" element={<TenantLifecyclePage />} />

@@ -42,6 +42,9 @@ import type {
   WorkflowGateCheckResponse,
   WorkflowGateDefinitionResponse,
   OperatorDashboardResponse,
+  FindingsReportSummaryResponse,
+  OperatorReportSummaryResponse,
+  EntityExportManifestResponse,
   FactSourceBulkIngestionRequest,
   SourceIngestionBatchDetailResponse,
   SourceIngestionBatchResponse,
@@ -1118,4 +1121,136 @@ export async function triggerM12AnalyticsBatch(
     response,
     'Failed to trigger M12 analytics batch',
   )
+}
+
+export async function getFindingsReportSummary(
+  accessToken: string,
+  params: { status?: string; severity?: string; openOnly?: boolean } = {},
+): Promise<FindingsReportSummaryResponse> {
+  const search = new URLSearchParams()
+  if (params.status) search.set('status', params.status)
+  if (params.severity) search.set('severity', params.severity)
+  if (params.openOnly) search.set('openOnly', 'true')
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/findings/summary${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<FindingsReportSummaryResponse>(
+    response,
+    'Failed to load findings report summary',
+  )
+}
+
+export async function exportFindingsReportSummaryCsv(
+  accessToken: string,
+  params: { status?: string; severity?: string; openOnly?: boolean } = {},
+): Promise<Blob> {
+  const search = new URLSearchParams()
+  if (params.status) search.set('status', params.status)
+  if (params.severity) search.set('severity', params.severity)
+  if (params.openOnly) search.set('openOnly', 'true')
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/findings/summary/export${query ? `?${query}` : ''}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new ComplianceCoreApiError(body || 'Failed to export findings report', response.status, body)
+  }
+  return response.blob()
+}
+
+export async function getOperatorReportSummary(
+  accessToken: string,
+  params: { attentionOnly?: boolean } = {},
+): Promise<OperatorReportSummaryResponse> {
+  const search = new URLSearchParams()
+  if (params.attentionOnly) search.set('attentionOnly', 'true')
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/operator/summary${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<OperatorReportSummaryResponse>(
+    response,
+    'Failed to load operator report summary',
+  )
+}
+
+export async function exportOperatorReportSummaryCsv(
+  accessToken: string,
+  params: { attentionOnly?: boolean } = {},
+): Promise<Blob> {
+  const search = new URLSearchParams()
+  if (params.attentionOnly) search.set('attentionOnly', 'true')
+  const query = search.toString()
+  const response = await fetch(
+    `${apiBase}/api/reports/operator/summary/export${query ? `?${query}` : ''}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  )
+  if (!response.ok) {
+    const body = await response.text()
+    throw new ComplianceCoreApiError(body || 'Failed to export operator report', response.status, body)
+  }
+  return response.blob()
+}
+
+export async function getEntityExportManifest(
+  accessToken: string,
+): Promise<EntityExportManifestResponse> {
+  const response = await fetch(`${apiBase}/api/exports/manifest`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<EntityExportManifestResponse>(
+    response,
+    'Failed to load export manifest',
+  )
+}
+
+export async function exportBulkFindingsCsv(
+  accessToken: string,
+  params: { status?: string; openOnly?: boolean } = {},
+): Promise<Blob> {
+  const search = new URLSearchParams()
+  if (params.status) search.set('status', params.status)
+  if (params.openOnly) search.set('openOnly', 'true')
+  const query = search.toString()
+  const response = await fetch(`${apiBase}/api/exports/findings${query ? `?${query}` : ''}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new ComplianceCoreApiError(body || 'Failed to export findings CSV', response.status, body)
+  }
+  return response.blob()
+}
+
+export async function exportBulkEvaluationsCsv(accessToken: string): Promise<Blob> {
+  const response = await fetch(`${apiBase}/api/exports/evaluations`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new ComplianceCoreApiError(body || 'Failed to export evaluations CSV', response.status, body)
+  }
+  return response.blob()
+}
+
+export async function exportBulkRulePacksCsv(
+  accessToken: string,
+  params: { status?: string } = {},
+): Promise<Blob> {
+  const search = new URLSearchParams()
+  if (params.status) search.set('status', params.status)
+  const query = search.toString()
+  const response = await fetch(`${apiBase}/api/exports/rule-packs${query ? `?${query}` : ''}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new ComplianceCoreApiError(body || 'Failed to export rule packs CSV', response.status, body)
+  }
+  return response.blob()
 }

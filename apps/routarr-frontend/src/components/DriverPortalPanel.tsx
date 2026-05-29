@@ -6,12 +6,14 @@ import {
   closeDriverPortalTrip,
   createDriverPortalTripProof,
   dispatchDriverPortalTrip,
+  getDriverPortalCaptureReadiness,
   getDriverPortalSchedule,
   getDriverPortalTripExecution,
   startDriverPortalTrip,
   submitDriverPortalTripDvir,
 } from '../api/client'
 import type { DriverPortalTripRow } from '../api/types'
+import { TripCaptureAttachmentPanel } from './TripCaptureAttachmentPanel'
 
 type Props = {
   accessToken: string
@@ -24,6 +26,81 @@ function formatTimestamp(iso: string | null) {
   } catch {
     return iso
   }
+}
+
+function DvirSubmitForm({
+  phase,
+  label,
+  vehicleRefKey,
+  disabled,
+  onSubmit,
+  pending,
+}: {
+  phase: 'pre_trip' | 'post_trip'
+  label: string
+  vehicleRefKey: string | null
+  disabled: boolean
+  onSubmit: (payload: {
+    phase: 'pre_trip' | 'post_trip'
+    result: string
+    odometerReading?: number
+    defectNotes?: string
+    vehicleRefKey?: string
+  }) => void
+  pending: boolean
+}) {
+  const [result, setResult] = useState<'pass' | 'fail' | 'conditional'>('pass')
+  const [odometer, setOdometer] = useState('')
+  const [defectNotes, setDefectNotes] = useState('')
+
+  return (
+    <div className="rounded border border-slate-700 bg-slate-950/40 p-2" data-testid={`dvir-form-${phase}`}>
+      <p className="text-xs font-medium text-slate-300">{label}</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <select
+          className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs text-slate-100"
+          value={result}
+          onChange={(e) => setResult(e.target.value as 'pass' | 'fail' | 'conditional')}
+        >
+          <option value="pass">Pass</option>
+          <option value="conditional">Conditional</option>
+          <option value="fail">Fail</option>
+        </select>
+        <input
+          type="number"
+          className="w-28 rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs text-slate-100"
+          placeholder="Odometer"
+          value={odometer}
+          onChange={(e) => setOdometer(e.target.value)}
+        />
+      </div>
+      {(result === 'fail' || result === 'conditional') && (
+        <textarea
+          className="mt-2 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs text-slate-100"
+          placeholder="Defect notes (required)"
+          rows={2}
+          value={defectNotes}
+          onChange={(e) => setDefectNotes(e.target.value)}
+        />
+      )}
+      <button
+        type="button"
+        className="mt-2 rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 disabled:opacity-50"
+        disabled={disabled || pending}
+        onClick={() =>
+          onSubmit({
+            phase,
+            result,
+            odometerReading: odometer ? Number(odometer) : undefined,
+            defectNotes: defectNotes || undefined,
+            vehicleRefKey: vehicleRefKey ?? undefined,
+          })
+        }
+      >
+        Submit {phase === 'pre_trip' ? 'pre-trip' : 'post-trip'} DVIR
+      </button>
+    </div>
+  )
 }
 
 function TripProofDvirSection({
@@ -51,10 +128,17 @@ function TripProofDvirSection({
       || trip.hasPostTripDvir,
   })
 
+  const readinessQuery = useQuery({
+    queryKey: ['driver-portal-capture-readiness', trip.tripId],
+    queryFn: () => getDriverPortalCaptureReadiness(accessToken, trip.tripId),
+    enabled:
+      trip.dispatchStatus === 'in_progress' || trip.dispatchStatus === 'dispatched',
+  })
+
   const proofMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (type: 'pickup' | 'delivery') =>
       createDriverPortalTripProof(accessToken, trip.tripId, {
-        proofType,
+        proofType: type,
         referenceKey: referenceKey || undefined,
         notes: notes || undefined,
         vehicleRefKey: trip.vehicleRefKey,
@@ -67,11 +151,19 @@ function TripProofDvirSection({
   })
 
   const dvirMutation = useMutation({
-    mutationFn: (phase: 'pre_trip' | 'post_trip') =>
+    mutationFn: (payload: {
+      phase: 'pre_trip' | 'post_trip'
+      result: string
+      odometerReading?: number
+      defectNotes?: string
+      vehicleRefKey?: string
+    }) =>
       submitDriverPortalTripDvir(accessToken, trip.tripId, {
-        phase,
-        result: 'pass',
-        vehicleRefKey: trip.vehicleRefKey ?? undefined,
+        phase: payload.phase,
+        result: payload.result,
+        vehicleRefKey: payload.vehicleRefKey ?? trip.vehicleRefKey ?? undefined,
+        odometerReading: payload.odometerReading,
+        defectNotes: payload.defectNotes,
       }),
     onSuccess: () => {
       setDvirError(null)
@@ -83,6 +175,9 @@ function TripProofDvirSection({
   const showCapture =
     trip.dispatchStatus === 'in_progress' || trip.dispatchStatus === 'dispatched'
 
+  const blockedItems =
+    readinessQuery.data?.items.filter((item) => item.required && !item.satisfied) ?? []
+
   return (
     <div
       className="mt-3 border-t border-slate-700 pt-3"
@@ -92,21 +187,80 @@ function TripProofDvirSection({
         Proof {trip.proofCount}
         {trip.hasPreTripDvir ? ' · pre DVIR' : ''}
         {trip.hasPostTripDvir ? ' · post DVIR' : ''}
+        {!trip.captureStartReady && trip.dispatchStatus === 'dispatched'
+          ? ' · start blocked'
+          : ''}
       </p>
 
-      {executionQuery.data && executionQuery.data.proofs.length > 0 ? (
-        <ul className="mt-2 space-y-1 text-xs text-slate-400">
-          {executionQuery.data.proofs.slice(0, 3).map((p) => (
-            <li key={p.proofId}>
-              {p.proofType}
-              {p.referenceKey ? ` · ${p.referenceKey}` : ''}
+      {readinessQuery.data && blockedItems.length > 0 ? (
+        <ul className="mt-2 space-y-1" data-testid="capture-readiness-blockers">
+          {blockedItems.map((item) => (
+            <li key={item.key} className="text-xs text-amber-400">
+              {item.message ?? item.label}
             </li>
           ))}
         </ul>
       ) : null}
 
+      {executionQuery.data && executionQuery.data.proofs.length > 0 ? (
+        <ul className="mt-2 space-y-1 text-xs text-slate-400">
+          {executionQuery.data.proofs.slice(0, 5).map((p) => (
+            <li key={p.proofId}>
+              {p.proofType}
+              {p.referenceKey ? ` · ${p.referenceKey}` : ''}
+              {p.attachments.length > 0 ? ` · ${p.attachments.length} attachment(s)` : ''}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {executionQuery.data?.proofs.map((proof) => (
+        <TripCaptureAttachmentPanel
+          key={proof.proofId}
+          accessToken={accessToken}
+          tripId={trip.tripId}
+          subjectType="proof"
+          subjectId={proof.proofId}
+          subjectLabel={`${proof.proofType} proof`}
+          attachments={proof.attachments}
+          onUploaded={onUpdated}
+        />
+      ))}
+
+      {executionQuery.data?.dvirInspections.map((dvir) => (
+        <TripCaptureAttachmentPanel
+          key={dvir.dvirId}
+          accessToken={accessToken}
+          tripId={trip.tripId}
+          subjectType="dvir"
+          subjectId={dvir.dvirId}
+          subjectLabel={`${dvir.phase.replace('_', ' ')} DVIR`}
+          attachments={dvir.attachments}
+          onUploaded={onUpdated}
+        />
+      ))}
+
       {showCapture ? (
-        <div className="mt-2 space-y-2">
+        <div className="mt-2 space-y-3">
+          <div className="flex flex-wrap gap-1">
+            <button
+              type="button"
+              className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-200 disabled:opacity-50"
+              disabled={proofMutation.isPending}
+              onClick={() => proofMutation.mutate('pickup')}
+            >
+              Quick pickup proof
+            </button>
+            <button
+              type="button"
+              className="rounded bg-slate-800 px-2 py-1 text-xs text-slate-200 disabled:opacity-50"
+              disabled={proofMutation.isPending}
+              onClick={() => proofMutation.mutate('delivery')}
+            >
+              Quick delivery proof
+            </button>
+          </div>
+
           <div className="flex flex-wrap gap-2">
             <select
               className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs text-slate-100"
@@ -135,29 +289,33 @@ function TripProofDvirSection({
             type="button"
             className="rounded bg-indigo-700 px-2 py-1 text-xs text-white disabled:opacity-50"
             disabled={proofMutation.isPending}
-            onClick={() => proofMutation.mutate()}
+            onClick={() => proofMutation.mutate(proofType)}
           >
             Capture proof
           </button>
 
-          <div className="flex flex-wrap gap-1">
-            <button
-              type="button"
-              className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 disabled:opacity-50"
-              disabled={dvirMutation.isPending || trip.hasPreTripDvir}
-              onClick={() => dvirMutation.mutate('pre_trip')}
-            >
-              Submit pre-trip DVIR
-            </button>
-            <button
-              type="button"
-              className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 disabled:opacity-50"
-              disabled={dvirMutation.isPending || trip.hasPostTripDvir}
-              onClick={() => dvirMutation.mutate('post_trip')}
-            >
-              Submit post-trip DVIR
-            </button>
-          </div>
+          {!trip.hasPreTripDvir ? (
+            <DvirSubmitForm
+              phase="pre_trip"
+              label="Pre-trip DVIR"
+              vehicleRefKey={trip.vehicleRefKey}
+              disabled={dvirMutation.isPending}
+              pending={dvirMutation.isPending}
+              onSubmit={(payload) => dvirMutation.mutate(payload)}
+            />
+          ) : null}
+
+          {!trip.hasPostTripDvir ? (
+            <DvirSubmitForm
+              phase="post_trip"
+              label="Post-trip DVIR"
+              vehicleRefKey={trip.vehicleRefKey}
+              disabled={dvirMutation.isPending}
+              pending={dvirMutation.isPending}
+              onSubmit={(payload) => dvirMutation.mutate(payload)}
+            />
+          ) : null}
+
           {dvirError ? (
             <p className="text-xs text-red-400" role="alert">
               {dvirError}
@@ -183,6 +341,10 @@ function TripCard({
   pendingTripId: string | null
 }) {
   const busy = pendingTripId === trip.tripId
+  const startTitle =
+    trip.dispatchStatus === 'dispatched' && !trip.captureStartReady
+      ? 'Complete capture requirements before starting'
+      : undefined
 
   return (
     <li
@@ -208,21 +370,27 @@ function TripCard({
             Dispatch
           </button>
         ) : null}
-        {trip.canStart ? (
+        {trip.dispatchStatus === 'dispatched' ? (
           <button
             type="button"
             className="rounded bg-emerald-700 px-2 py-1 text-xs text-white disabled:opacity-50"
-            disabled={busy}
+            disabled={busy || !trip.canStart}
+            title={startTitle}
             onClick={() => onAction(trip.tripId, 'start')}
           >
             Start trip
           </button>
         ) : null}
-        {trip.canComplete ? (
+        {trip.dispatchStatus === 'in_progress' ? (
           <button
             type="button"
             className="rounded bg-sky-700 px-2 py-1 text-xs text-white disabled:opacity-50"
-            disabled={busy}
+            disabled={busy || !trip.canComplete}
+            title={
+              !trip.captureCompleteReady
+                ? 'Complete capture requirements before completing the trip'
+                : undefined
+            }
             onClick={() => onAction(trip.tripId, 'complete')}
           >
             Complete
@@ -302,6 +470,7 @@ export function DriverPortalPanel({ accessToken }: Props) {
   const invalidateProofQueries = async () => {
     await queryClient.invalidateQueries({ queryKey: ['driver-portal-schedule'] })
     await queryClient.invalidateQueries({ queryKey: ['driver-portal-execution'] })
+    await queryClient.invalidateQueries({ queryKey: ['driver-portal-capture-readiness'] })
   }
 
   const mutation = useMutation({
@@ -349,7 +518,7 @@ export function DriverPortalPanel({ accessToken }: Props) {
         <p className="mt-1 text-sm text-slate-400">
           Today&apos;s assignments and upcoming trips for your person record. Execute dispatch,
           start, complete, and close only on trips assigned to you. Capture pickup/delivery proof and
-          pre/post-trip DVIR on active trips.
+          pre/post-trip DVIR on active trips; tenant policy may require DVIR before start.
         </p>
       </header>
 

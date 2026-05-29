@@ -57,7 +57,10 @@ export function ReadinessForecastPanel({ accessToken, canEvaluate }: ReadinessFo
   const summary = summaryQuery.data
 
   return (
-    <section className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5">
+    <section
+      data-testid="readiness-forecast-panel"
+      className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
+    >
       <header>
         <h2 className="text-lg font-semibold text-slate-50">Readiness forecasting</h2>
         <p className="mt-1 text-sm text-slate-400">
@@ -132,6 +135,7 @@ export function ReadinessForecastPanel({ accessToken, canEvaluate }: ReadinessFo
             type="button"
             onClick={() => evaluateMutation.mutate()}
             disabled={evaluateMutation.isPending}
+            data-testid="readiness-forecast-evaluate"
             className="rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
           >
             {evaluateMutation.isPending ? 'Forecasting…' : 'Forecast readiness'}
@@ -157,11 +161,17 @@ export function ReadinessForecastPanel({ accessToken, canEvaluate }: ReadinessFo
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Latest forecasts</h3>
         {(forecastsQuery.data ?? []).length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">
+          <p
+            className="mt-2 text-sm text-slate-500"
+            data-testid="readiness-forecast-list-empty"
+          >
             No forecasts yet. Run a forecast to combine risk, evidence, and control signals.
           </p>
         ) : (
-          <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto">
+          <ul
+            className="mt-3 max-h-80 space-y-2 overflow-y-auto"
+            data-testid="readiness-forecast-list"
+          >
             {(forecastsQuery.data ?? []).map((forecast) => (
               <li
                 key={forecast.forecastId}

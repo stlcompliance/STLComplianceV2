@@ -11,6 +11,9 @@ envVarGroups:
         value: Information
       - key: OTEL_ENABLED
         value: "false"
+      # Set OTEL_EXPORTER_OTLP_ENDPOINT in Dashboard when exporting to a collector.
+      - key: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: ""
 
   - name: stl-auth
     envVars:
@@ -29,24 +32,23 @@ envVarGroups:
       - key: STL_INTEGRATION_BOOTSTRAP_SECRET
         generateValue: true
 
-  # Server-to-server API URLs. Use Render-assigned public hostnames (private DNS
-  # uses suffixed hostnames like nexarr-api-jdyi, not blueprint service names).
+  # Server-to-server API URLs on Render private network (port 10000).
   - name: stl-internal-api-urls
     envVars:
       - key: NexArr__BaseUrl
-        value: https://nexarr-api-jdyi.onrender.com
+        value: http://nexarr-api:10000
       - key: StaffArr__BaseUrl
-        value: https://staffarr-api-srdo.onrender.com
+        value: http://staffarr-api:10000
       - key: TrainArr__BaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: http://trainarr-api:10000
       - key: MaintainArr__BaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
+        value: http://maintainarr-api:10000
       - key: RoutArr__BaseUrl
-        value: https://routarr-api-ut1u.onrender.com
+        value: http://routarr-api:10000
       - key: SupplyArr__BaseUrl
-        value: https://supplyarr-api-r963.onrender.com
+        value: http://supplyarr-api:10000
       - key: ComplianceCore__BaseUrl
-        value: https://compliancecore-api-qfu7.onrender.com
+        value: http://compliancecore-api:10000
 
   # Public onrender.com URLs for browser builds and CORS (Render-assigned hostnames).
   - name: stl-public-frontend-urls
@@ -225,6 +227,12 @@ services:
           property: connectionString
       - key: Cors__StaffArrFrontendOrigin
         value: https://staffarr-frontend.onrender.com
+      - key: Handoff__ServiceToken
+        sync: false
+      - key: TrainArr__ServiceToken
+        sync: false
+      - key: SupplyArr__ServiceToken
+        sync: false
 
   - type: web
     name: trainarr-api
@@ -233,6 +241,10 @@ services:
     dockerfilePath: ./apps/trainarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    disk:
+      name: trainarr-evidence
+      mountPath: /var/data/trainarr-evidence
+      sizeGB: 10
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
@@ -251,6 +263,14 @@ services:
         value: https://trainarr-frontend.onrender.com
       - key: EvidenceStorage__RootPath
         value: /var/data/trainarr-evidence
+      - key: Handoff__ServiceToken
+        sync: false
+      - key: StaffArr__ServiceToken
+        sync: false
+      - key: ComplianceCore__ServiceToken
+        sync: false
+      - key: SupplyArr__ServiceToken
+        sync: false
 
   - type: web
     name: maintainarr-api
@@ -259,6 +279,10 @@ services:
     dockerfilePath: ./apps/maintainarr-api/Dockerfile
     dockerContext: .
     healthCheckPath: /health/ready
+    disk:
+      name: maintainarr-evidence
+      mountPath: /var/data/maintainarr-evidence
+      sizeGB: 10
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
@@ -277,6 +301,10 @@ services:
         value: https://maintainarr-frontend.onrender.com
       - key: EvidenceStorage__RootPath
         value: /var/data/maintainarr-evidence
+      - key: Handoff__ServiceToken
+        sync: false
+      - key: SupplyArr__ServiceToken
+        sync: false
 
   - type: web
     name: routarr-api
@@ -301,6 +329,18 @@ services:
         value: https://routarr-frontend.onrender.com
       - key: RoutArr__FrontendBaseUrl
         value: https://routarr-frontend.onrender.com
+      - key: Handoff__ServiceToken
+        sync: false
+      - key: TrainArr__ServiceToken
+        sync: false
+      - key: StaffArr__ServiceToken
+        sync: false
+      - key: MaintainArr__ServiceToken
+        sync: false
+      - key: ComplianceCore__ServiceToken
+        sync: false
+      - key: SupplyArr__ServiceToken
+        sync: false
 
   - type: web
     name: supplyarr-api
@@ -325,6 +365,18 @@ services:
         value: https://supplyarr-frontend.onrender.com
       - key: SupplyArr__FrontendBaseUrl
         value: https://supplyarr-frontend.onrender.com
+      - key: Handoff__ServiceToken
+        sync: false
+      - key: MaintainArr__ServiceToken
+        sync: false
+      - key: RoutArr__ServiceToken
+        sync: false
+      - key: TrainArr__ServiceToken
+        sync: false
+      - key: StaffArr__ServiceToken
+        sync: false
+      - key: ComplianceCore__ServiceToken
+        sync: false
 
   - type: web
     name: compliancecore-api
@@ -347,6 +399,8 @@ services:
           property: connectionString
       - key: Cors__ComplianceCoreFrontendOrigin
         value: https://compliancecore-frontend.onrender.com
+      - key: Handoff__ServiceToken
+        sync: false
 
   # --- Cross-product scheduled jobs ---
   - type: worker
@@ -358,96 +412,199 @@ services:
     envVars:
       - fromGroup: stl-shared
       - fromGroup: stl-auth
-      - key: NexArr__BaseUrl
-        value: https://nexarr-api-jdyi.onrender.com
+      - fromGroup: stl-internal-api-urls
       - key: STL_INTEGRATION_TOKEN_AUTO_PROVISION
         value: "true"
       - key: STL_SERVICE_NAME
         value: shared-worker
       - key: TrainArrQualificationExpiration__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: http://trainarr-api:10000
+      - key: TrainArrQualificationExpiration__ServiceToken
+        sync: false
       - key: TrainArrRecertificationAssignment__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: http://trainarr-api:10000
+      - key: TrainArrRecertificationAssignment__ServiceToken
+        sync: false
       - key: TrainArrQualificationRecalculation__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: http://trainarr-api:10000
+      - key: TrainArrQualificationRecalculation__ServiceToken
+        sync: false
       - key: TrainArrStaffarrPublicationRetry__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: http://trainarr-api:10000
+      - key: TrainArrStaffarrPublicationRetry__ServiceToken
+        sync: false
       - key: TrainArrEventProcessing__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: http://trainarr-api:10000
+      - key: TrainArrEventProcessing__ServiceToken
+        sync: false
       - key: TrainArrRulePackImpact__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: http://trainarr-api:10000
+      - key: TrainArrRulePackImpact__ServiceToken
+        sync: false
       - key: TrainArrEvidenceRetention__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: http://trainarr-api:10000
+      - key: TrainArrEvidenceRetention__ServiceToken
+        sync: false
       - key: TrainArrOrphanReference__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: http://trainarr-api:10000
+      - key: TrainArrOrphanReference__ServiceToken
+        sync: false
       - key: TrainArrNotificationDispatch__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: http://trainarr-api:10000
+      - key: TrainArrNotificationDispatch__ServiceToken
+        sync: false
       - key: TrainArrAssignmentDueReminders__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: http://trainarr-api:10000
+      - key: TrainArrAssignmentDueReminders__ServiceToken
+        sync: false
       - key: TrainArrAssignmentEscalation__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
-      - key: StaffArrCertificationExpiration__StaffArrBaseUrl
-        value: https://staffarr-api-srdo.onrender.com
-      - key: StaffArrReadinessRollup__StaffArrBaseUrl
-        value: https://staffarr-api-srdo.onrender.com
-      - key: StaffArrPermissionProjection__StaffArrBaseUrl
-        value: https://staffarr-api-srdo.onrender.com
-      - key: StaffArrPersonExportDelivery__StaffArrBaseUrl
-        value: https://staffarr-api-srdo.onrender.com
-      - key: StaffArrAuditPackageGeneration__StaffArrBaseUrl
-        value: https://staffarr-api-srdo.onrender.com
-      - key: MaintainArrPmDueScan__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
-      - key: MaintainArrNotificationDispatch__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
-      - key: MaintainArrDefectEscalation__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
-      - key: MaintainArrAssetStatusRollup__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
-      - key: MaintainArrMaintenanceHistoryRollup__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
-      - key: RoutArrNotificationDispatch__RoutArrBaseUrl
-        value: https://routarr-api-ut1u.onrender.com
-      - key: RoutArrTripCompletionRollup__RoutArrBaseUrl
-        value: https://routarr-api-ut1u.onrender.com
-      - key: SupplyArrReorderEvaluation__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
-      - key: SupplyArrPriceSnapshot__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
-      - key: SupplyArrLeadTimeSnapshot__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
-      - key: SupplyArrAvailabilitySnapshot__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
-      - key: SupplyArrProcurementCoordination__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
-      - key: SupplyArrApprovalReminders__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
-      - key: SupplyArrDemandProcessing__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
-      - key: SupplyArrNotificationDispatch__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
-      - key: ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-qfu7.onrender.com
-      - key: ComplianceCoreAuditPackageGeneration__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-qfu7.onrender.com
-      - key: ComplianceCoreM12AnalyticsBatch__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-qfu7.onrender.com
-      - key: NexArrCompanionNotificationDispatch__NexArrBaseUrl
-        value: https://nexarr-api-jdyi.onrender.com
-      - key: NexArrPlatformAuditPackageGeneration__NexArrBaseUrl
-        value: https://nexarr-api-jdyi.onrender.com
-      - key: MaintainArrAuditPackageGeneration__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
-      - key: RoutArrAuditPackageGeneration__RoutArrBaseUrl
-        value: https://routarr-api-ut1u.onrender.com
+        value: http://trainarr-api:10000
+      - key: TrainArrAssignmentEscalation__ServiceToken
+        sync: false
       - key: TrainArrAuditPackageGeneration__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: http://trainarr-api:10000
+      - key: TrainArrAuditPackageGeneration__ServiceToken
+        sync: false
+      - key: StaffArrCertificationExpiration__StaffArrBaseUrl
+        value: http://staffarr-api:10000
+      - key: StaffArrCertificationExpiration__ServiceToken
+        sync: false
+      - key: StaffArrReadinessRollup__StaffArrBaseUrl
+        value: http://staffarr-api:10000
+      - key: StaffArrReadinessRollup__ServiceToken
+        sync: false
+      - key: StaffArrPermissionProjection__StaffArrBaseUrl
+        value: http://staffarr-api:10000
+      - key: StaffArrPermissionProjection__ServiceToken
+        sync: false
+      - key: StaffArrPersonExportDelivery__StaffArrBaseUrl
+        value: http://staffarr-api:10000
+      - key: StaffArrPersonExportDelivery__ServiceToken
+        sync: false
+      - key: StaffArrPersonnelHistoryRollup__StaffArrBaseUrl
+        value: http://staffarr-api:10000
+      - key: StaffArrPersonnelHistoryRollup__ServiceToken
+        sync: false
+      - key: StaffArrAuditPackageGeneration__StaffArrBaseUrl
+        value: http://staffarr-api:10000
+      - key: StaffArrAuditPackageGeneration__ServiceToken
+        sync: false
+      - key: MaintainArrPmDueScan__MaintainArrBaseUrl
+        value: http://maintainarr-api:10000
+      - key: MaintainArrPmDueScan__ServiceToken
+        sync: false
+      - key: MaintainArrNotificationDispatch__MaintainArrBaseUrl
+        value: http://maintainarr-api:10000
+      - key: MaintainArrNotificationDispatch__ServiceToken
+        sync: false
+      - key: MaintainArrDefectEscalation__MaintainArrBaseUrl
+        value: http://maintainarr-api:10000
+      - key: MaintainArrDefectEscalation__ServiceToken
+        sync: false
+      - key: MaintainArrAssetStatusRollup__MaintainArrBaseUrl
+        value: http://maintainarr-api:10000
+      - key: MaintainArrAssetStatusRollup__ServiceToken
+        sync: false
+      - key: MaintainArrMaintenanceHistoryRollup__MaintainArrBaseUrl
+        value: http://maintainarr-api:10000
+      - key: MaintainArrMaintenanceHistoryRollup__ServiceToken
+        sync: false
+      - key: MaintainArrAuditPackageGeneration__MaintainArrBaseUrl
+        value: http://maintainarr-api:10000
+      - key: MaintainArrAuditPackageGeneration__ServiceToken
+        sync: false
+      - key: RoutArrNotificationDispatch__RoutArrBaseUrl
+        value: http://routarr-api:10000
+      - key: RoutArrNotificationDispatch__ServiceToken
+        sync: false
+      - key: RoutArrTripCompletionRollup__RoutArrBaseUrl
+        value: http://routarr-api:10000
+      - key: RoutArrTripCompletionRollup__ServiceToken
+        sync: false
+      - key: RoutArrAttachmentRetention__RoutArrBaseUrl
+        value: http://routarr-api:10000
+      - key: RoutArrAttachmentRetention__ServiceToken
+        sync: false
+      - key: RoutArrAuditPackageGeneration__RoutArrBaseUrl
+        value: http://routarr-api:10000
+      - key: RoutArrAuditPackageGeneration__ServiceToken
+        sync: false
+      - key: SupplyArrReorderEvaluation__SupplyArrBaseUrl
+        value: http://supplyarr-api:10000
+      - key: SupplyArrReorderEvaluation__ServiceToken
+        sync: false
+      - key: SupplyArrPriceSnapshot__SupplyArrBaseUrl
+        value: http://supplyarr-api:10000
+      - key: SupplyArrPriceSnapshot__ServiceToken
+        sync: false
+      - key: SupplyArrLeadTimeSnapshot__SupplyArrBaseUrl
+        value: http://supplyarr-api:10000
+      - key: SupplyArrLeadTimeSnapshot__ServiceToken
+        sync: false
+      - key: SupplyArrAvailabilitySnapshot__SupplyArrBaseUrl
+        value: http://supplyarr-api:10000
+      - key: SupplyArrAvailabilitySnapshot__ServiceToken
+        sync: false
+      - key: SupplyArrProcurementCoordination__SupplyArrBaseUrl
+        value: http://supplyarr-api:10000
+      - key: SupplyArrProcurementCoordination__ServiceToken
+        sync: false
+      - key: SupplyArrApprovalReminders__SupplyArrBaseUrl
+        value: http://supplyarr-api:10000
+      - key: SupplyArrApprovalReminders__ServiceToken
+        sync: false
+      - key: SupplyArrProcurementExceptionEscalations__SupplyArrBaseUrl
+        value: http://supplyarr-api:10000
+      - key: SupplyArrProcurementExceptionEscalations__ServiceToken
+        sync: false
+      - key: SupplyArrDemandProcessing__SupplyArrBaseUrl
+        value: http://supplyarr-api:10000
+      - key: SupplyArrDemandProcessing__ServiceToken
+        sync: false
+      - key: SupplyArrNotificationDispatch__SupplyArrBaseUrl
+        value: http://supplyarr-api:10000
+      - key: SupplyArrNotificationDispatch__ServiceToken
+        sync: false
+      - key: SupplyArrIntegrationEvents__SupplyArrBaseUrl
+        value: http://supplyarr-api:10000
+      - key: SupplyArrIntegrationEvents__ServiceToken
+        sync: false
+      - key: ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl
+        value: http://compliancecore-api:10000
+      - key: ComplianceCoreScheduledEvaluation__ServiceToken
+        sync: false
+      - key: ComplianceCoreRuleChangeMonitor__ComplianceCoreBaseUrl
+        value: http://compliancecore-api:10000
+      - key: ComplianceCoreRuleChangeMonitor__ServiceToken
+        sync: false
+      - key: ComplianceCoreAuditPackageGeneration__ComplianceCoreBaseUrl
+        value: http://compliancecore-api:10000
+      - key: ComplianceCoreAuditPackageGeneration__ServiceToken
+        sync: false
+      - key: ComplianceCoreM12AnalyticsBatch__ComplianceCoreBaseUrl
+        value: http://compliancecore-api:10000
+      - key: ComplianceCoreM12AnalyticsBatch__ServiceToken
+        sync: false
+      - key: NexArrCompanionNotificationDispatch__NexArrBaseUrl
+        value: http://nexarr-api:10000
+      - key: NexArrCompanionNotificationDispatch__ServiceToken
+        sync: false
+      - key: NexArrPlatformAuditPackageGeneration__NexArrBaseUrl
+        value: http://nexarr-api:10000
+      - key: NexArrPlatformAuditPackageGeneration__ServiceToken
+        sync: false
       - key: NexArrServiceTokenCleanup__NexArrBaseUrl
-        value: https://nexarr-api-jdyi.onrender.com
+        value: http://nexarr-api:10000
+      - key: NexArrServiceTokenCleanup__ServiceToken
+        sync: false
       - key: NexArrEntitlementReconciliation__NexArrBaseUrl
-        value: https://nexarr-api-jdyi.onrender.com
+        value: http://nexarr-api:10000
+      - key: NexArrEntitlementReconciliation__ServiceToken
+        sync: false
       - key: NexArrTenantLifecycle__NexArrBaseUrl
-        value: https://nexarr-api-jdyi.onrender.com
+        value: http://nexarr-api:10000
+      - key: NexArrTenantLifecycle__ServiceToken
+        sync: false
 
   # --- Product heartbeat workers (reserved for product-local jobs) ---
   - type: worker
@@ -586,6 +743,19 @@ services:
     envVars:
       - key: VITE_NEXARR_API_URL
         value: https://nexarr-api-jdyi.onrender.com
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
 
   - type: web
     name: staffarr-frontend
@@ -603,6 +773,19 @@ services:
         value: https://staffarr-api-srdo.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
 
   - type: web
     name: trainarr-frontend
@@ -620,6 +803,19 @@ services:
         value: https://trainarr-api-ae2t.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
 
   - type: web
     name: maintainarr-frontend
@@ -637,6 +833,19 @@ services:
         value: https://maintainarr-api-82rg.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
 
   - type: web
     name: routarr-frontend
@@ -654,6 +863,19 @@ services:
         value: https://routarr-api-ut1u.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
 
   - type: web
     name: supplyarr-frontend
@@ -671,6 +893,19 @@ services:
         value: https://supplyarr-api-r963.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
 
   - type: web
     name: compliancecore-frontend
@@ -688,6 +923,19 @@ services:
         value: https://compliancecore-api-qfu7.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
 
   - type: web
     name: companion-frontend
@@ -705,3 +953,16 @@ services:
         value: https://nexarr-api-jdyi.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()

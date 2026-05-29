@@ -23,18 +23,28 @@ import type {
   DispatchCommandCenterResponse,
   DispatchExceptionListResponse,
   DispatchExceptionSummaryResponse,
+  DispatchExceptionResolutionTemplateResponse,
   CreateDispatchExceptionRequest,
   AssignDispatchExceptionRequest,
   ResolveDispatchExceptionRequest,
   LinkDispatchExceptionTripRequest,
+  BulkAssignDispatchExceptionsRequest,
+  BulkResolveDispatchExceptionsRequest,
+  BulkDispatchExceptionActionResponse,
   ActiveTripsResponse,
   UnassignedWorkQueueResponse,
   CreateTripProofRequest,
   DriverPortalScheduleResponse,
   SubmitTripDvirRequest,
   TripExecutionSummaryResponse,
+  TripCaptureReadinessResponse,
+  TripExecutionSettingsResponse,
+  UpsertTripExecutionSettingsRequest,
   TripProofRecordResponse,
   TripDvirInspectionResponse,
+  TripCaptureAttachmentResponse,
+  TripCaptureAttachmentListResponse,
+  UploadTripCaptureAttachmentRequest,
   DispatchReportSummaryResponse,
   DispatchReportTripDetailResponse,
   DispatchReportExceptionDetailResponse,
@@ -78,6 +88,9 @@ import type {
   UpsertTripCompletionRollupSettingsRequest,
   PendingTripCompletionRollupsResponse,
   TripCompletionRollupRunsResponse,
+  AttachmentRetentionSettingsResponse,
+  UpsertAttachmentRetentionSettingsRequest,
+  AttachmentRetentionRunsResponse,
   TripSummaryResponse,
   UpdateRouteStopStatusRequest,
   UpdateTripDispatchStatusRequest,
@@ -373,9 +386,14 @@ export async function updateRouteStopStatus(
 export async function getUnassignedWorkQueue(
   accessToken: string,
   scope: 'daily' | 'weekly' = 'daily',
+  options?: { attentionOnly?: boolean },
 ): Promise<UnassignedWorkQueueResponse> {
+  const params = new URLSearchParams({ scope })
+  if (options?.attentionOnly) {
+    params.set('attentionOnly', 'true')
+  }
   const response = await fetch(
-    `${apiBase}/api/dispatch/unassigned-work-queue?scope=${encodeURIComponent(scope)}`,
+    `${apiBase}/api/dispatch/unassigned-work-queue?${params.toString()}`,
     { headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<UnassignedWorkQueueResponse>(
@@ -475,6 +493,116 @@ export async function submitDriverPortalTripDvir(
   return parseJsonResponse<TripDvirInspectionResponse>(response, 'Failed to submit DVIR')
 }
 
+export async function getDriverPortalCaptureReadiness(
+  accessToken: string,
+  tripId: string,
+): Promise<TripCaptureReadinessResponse> {
+  const response = await fetch(`${apiBase}/api/driver-portal/trips/${tripId}/capture-readiness`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TripCaptureReadinessResponse>(
+    response,
+    'Failed to load trip capture readiness',
+  )
+}
+
+function captureAttachmentBasePath(
+  accessToken: string,
+  tripId: string,
+  subjectType: 'proof' | 'dvir',
+  subjectId: string,
+) {
+  const segment = subjectType === 'proof' ? 'proofs' : 'dvir'
+  return {
+    listUrl: `${apiBase}/api/driver-portal/trips/${tripId}/${segment}/${subjectId}/attachments`,
+    uploadUrl: `${apiBase}/api/driver-portal/trips/${tripId}/${segment}/${subjectId}/attachments`,
+    contentUrl: (attachmentId: string) =>
+      `${apiBase}/api/driver-portal/trips/${tripId}/${segment}/${subjectId}/attachments/${attachmentId}/content`,
+    headers: authHeaders(accessToken),
+  }
+}
+
+export async function listDriverPortalCaptureAttachments(
+  accessToken: string,
+  tripId: string,
+  subjectType: 'proof' | 'dvir',
+  subjectId: string,
+): Promise<TripCaptureAttachmentListResponse> {
+  const paths = captureAttachmentBasePath(accessToken, tripId, subjectType, subjectId)
+  const response = await fetch(paths.listUrl, { headers: paths.headers })
+  return parseJsonResponse<TripCaptureAttachmentListResponse>(
+    response,
+    'Failed to list capture attachments',
+  )
+}
+
+export async function uploadDriverPortalCaptureAttachment(
+  accessToken: string,
+  tripId: string,
+  subjectType: 'proof' | 'dvir',
+  subjectId: string,
+  payload: UploadTripCaptureAttachmentRequest,
+): Promise<TripCaptureAttachmentResponse> {
+  const paths = captureAttachmentBasePath(accessToken, tripId, subjectType, subjectId)
+  const response = await fetch(paths.uploadUrl, {
+    method: 'POST',
+    headers: paths.headers,
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TripCaptureAttachmentResponse>(
+    response,
+    'Failed to upload capture attachment',
+  )
+}
+
+export function getDriverPortalCaptureAttachmentContentUrl(
+  accessToken: string,
+  tripId: string,
+  subjectType: 'proof' | 'dvir',
+  subjectId: string,
+  attachmentId: string,
+): string {
+  return captureAttachmentBasePath(accessToken, tripId, subjectType, subjectId).contentUrl(
+    attachmentId,
+  )
+}
+
+export async function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result ?? ''))
+    reader.onerror = () => reject(reader.error ?? new Error('Failed to read file'))
+    reader.readAsDataURL(file)
+  })
+}
+
+export async function getTripExecutionSettings(
+  accessToken: string,
+): Promise<TripExecutionSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/trip-execution-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TripExecutionSettingsResponse>(
+    response,
+    'Failed to load trip execution settings',
+  )
+}
+
+export async function upsertTripExecutionSettings(
+  accessToken: string,
+  payload: UpsertTripExecutionSettingsRequest,
+): Promise<TripExecutionSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/trip-execution-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TripExecutionSettingsResponse>(
+    response,
+    'Failed to save trip execution settings',
+  )
+}
+
 export async function getTripExecutionSummary(
   accessToken: string,
   tripId: string,
@@ -488,12 +616,52 @@ export async function getTripExecutionSummary(
   )
 }
 
+export function getTripCaptureAttachmentContentUrl(
+  tripId: string,
+  subjectType: 'proof' | 'dvir',
+  subjectId: string,
+  attachmentId: string,
+): string {
+  const segment = subjectType === 'proof' ? 'proofs' : 'dvir'
+  return `${apiBase}/api/trips/${tripId}/${segment}/${subjectId}/attachments/${attachmentId}/content`
+}
+
+export async function downloadTripCaptureAttachment(
+  accessToken: string,
+  tripId: string,
+  subjectType: 'proof' | 'dvir',
+  subjectId: string,
+  attachmentId: string,
+  fileName: string,
+): Promise<void> {
+  const url = getTripCaptureAttachmentContentUrl(tripId, subjectType, subjectId, attachmentId)
+  const response = await fetch(url, { headers: authHeaders(accessToken) })
+  if (!response.ok) {
+    throw new Error(`Failed to download attachment (${response.status})`)
+  }
+  const blob = await response.blob()
+  const objectUrl = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = objectUrl
+  anchor.download = fileName
+  anchor.click()
+  URL.revokeObjectURL(objectUrl)
+}
+
 export async function getActiveTrips(
   accessToken: string,
   scope: 'daily' | 'weekly' = 'daily',
+  options?: { attentionOnly?: boolean; statusFilter?: 'all' | 'dispatched' | 'in_progress' },
 ): Promise<ActiveTripsResponse> {
+  const params = new URLSearchParams({ scope })
+  if (options?.attentionOnly) {
+    params.set('attentionOnly', 'true')
+  }
+  if (options?.statusFilter && options.statusFilter !== 'all') {
+    params.set('statusFilter', options.statusFilter)
+  }
   const response = await fetch(
-    `${apiBase}/api/dispatch/active-trips?scope=${encodeURIComponent(scope)}`,
+    `${apiBase}/api/dispatch/active-trips?${params.toString()}`,
     { headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<ActiveTripsResponse>(response, 'Failed to load active trips')
@@ -547,12 +715,28 @@ export async function upsertDispatchBoardState(
 export async function listDispatchExceptions(
   accessToken: string,
   status: string = 'open',
+  overdueOnly = false,
 ): Promise<DispatchExceptionListResponse> {
   const params = new URLSearchParams({ status })
+  if (overdueOnly) {
+    params.set('overdueOnly', 'true')
+  }
   const response = await fetch(`${apiBase}/api/dispatch/exceptions?${params.toString()}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<DispatchExceptionListResponse>(response, 'Failed to load dispatch exceptions')
+}
+
+export async function listDispatchExceptionResolutionTemplates(
+  accessToken: string,
+): Promise<DispatchExceptionResolutionTemplateResponse[]> {
+  const response = await fetch(`${apiBase}/api/dispatch/exceptions/resolution-templates`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DispatchExceptionResolutionTemplateResponse[]>(
+    response,
+    'Failed to load dispatch exception resolution templates',
+  )
 }
 
 export async function createDispatchException(
@@ -606,6 +790,36 @@ export async function linkDispatchExceptionTrip(
   return parseJsonResponse<DispatchExceptionSummaryResponse>(
     response,
     'Failed to link trip to dispatch exception',
+  )
+}
+
+export async function bulkAssignDispatchExceptions(
+  accessToken: string,
+  payload: BulkAssignDispatchExceptionsRequest,
+): Promise<BulkDispatchExceptionActionResponse> {
+  const response = await fetch(`${apiBase}/api/dispatch/exceptions/bulk/assign`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<BulkDispatchExceptionActionResponse>(
+    response,
+    'Failed to bulk assign dispatch exceptions',
+  )
+}
+
+export async function bulkResolveDispatchExceptions(
+  accessToken: string,
+  payload: BulkResolveDispatchExceptionsRequest,
+): Promise<BulkDispatchExceptionActionResponse> {
+  const response = await fetch(`${apiBase}/api/dispatch/exceptions/bulk/resolve`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<BulkDispatchExceptionActionResponse>(
+    response,
+    'Failed to bulk resolve dispatch exceptions',
   )
 }
 
@@ -849,6 +1063,47 @@ export async function getTripCompletionRollupRuns(
   return parseJsonResponse<TripCompletionRollupRunsResponse>(
     response,
     'Failed to load trip completion rollup runs',
+  )
+}
+
+export async function getAttachmentRetentionSettings(
+  accessToken: string,
+): Promise<AttachmentRetentionSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/attachment-retention-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AttachmentRetentionSettingsResponse>(
+    response,
+    'Failed to load attachment retention settings',
+  )
+}
+
+export async function upsertAttachmentRetentionSettings(
+  accessToken: string,
+  payload: UpsertAttachmentRetentionSettingsRequest,
+): Promise<AttachmentRetentionSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/attachment-retention-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<AttachmentRetentionSettingsResponse>(
+    response,
+    'Failed to save attachment retention settings',
+  )
+}
+
+export async function getAttachmentRetentionRuns(
+  accessToken: string,
+  limit = 10,
+): Promise<AttachmentRetentionRunsResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/attachment-retention-settings/runs?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AttachmentRetentionRunsResponse>(
+    response,
+    'Failed to load attachment retention runs',
   )
 }
 

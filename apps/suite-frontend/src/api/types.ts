@@ -389,6 +389,63 @@ export interface PlatformLifecycleOverviewResponse {
   workers: PlatformLifecycleWorkerStatus[]
 }
 
+export interface ProductHealthProbeResult {
+  productKey: string
+  status: string
+  readyUrl: string | null
+  latencyMs: number | null
+  errorCode: string | null
+  errorMessage: string | null
+}
+
+export interface PlatformServiceTokenInventorySummary {
+  activeCount: number
+  expiringWithin24HoursCount: number
+  expiredRetainedCount: number
+  revokedRetainedCount: number
+  pendingCleanupCount: number
+}
+
+export interface PlatformWorkerOrchestrationWorkerStatus {
+  workerKey: string
+  label: string
+  description: string
+  isEnabled: boolean
+  pendingCount: number
+  latestRun: PlatformLifecycleLatestRunSummary | null
+  serviceTokenScope: string
+  suiteAdminPath: string
+}
+
+export interface PlatformWorkerHealthOrchestrationStatusResponse {
+  generatedAt: string
+  platformHealthStatus: string
+  productHealth: ProductHealthProbeResult[]
+  serviceTokens: PlatformServiceTokenInventorySummary
+  activeServiceClientCount: number
+  workers: PlatformWorkerOrchestrationWorkerStatus[]
+}
+
+export interface TriggerServiceTokenCleanupOrchestrationResponse {
+  asOfUtc: string
+  purgedCount: number
+  skippedCount: number
+}
+
+export interface TriggerEntitlementReconciliationOrchestrationResponse {
+  asOfUtc: string
+  grantedCount: number
+  revokedCount: number
+  skippedCount: number
+}
+
+export interface TriggerTenantLifecycleOrchestrationResponse {
+  asOfUtc: string
+  suspendedCount: number
+  reactivatedCount: number
+  skippedCount: number
+}
+
 export class NexarrApiError extends Error {
   readonly status: number
   readonly code?: string

@@ -114,6 +114,7 @@ function DemandRefRow({
           <button
             type="button"
             className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-200 disabled:opacity-50"
+            data-testid={`demand-processing-retry-${item.demandRefId}`}
             disabled={retryMutation.isPending}
             onClick={() => retryMutation.mutate()}
           >
@@ -123,6 +124,7 @@ function DemandRefRow({
             <button
               type="button"
               className="rounded bg-violet-700 px-2 py-1 text-xs text-white disabled:opacity-50"
+              data-testid={`demand-processing-create-pr-${item.demandRefId}`}
               disabled={createPrMutation.isPending}
               onClick={() => createPrMutation.mutate()}
             >
@@ -132,6 +134,7 @@ function DemandRefRow({
           <button
             type="button"
             className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-400"
+            data-testid={`demand-processing-view-status-${item.demandRefId}`}
             onClick={onSelect}
           >
             {isSelected ? 'Hide status' : 'View status'}
@@ -208,8 +211,11 @@ export function DemandProcessingPanel({
 
       {dashboardQuery.data && (
         <>
-          <div className="mt-4 flex flex-wrap gap-3 text-sm">
-            <span className="rounded-md bg-slate-800 px-3 py-1 text-slate-200">
+          <div className="mt-4 flex flex-wrap gap-3 text-sm" data-testid="demand-processing-summary">
+            <span
+              className="rounded-md bg-slate-800 px-3 py-1 text-slate-200"
+              data-testid="demand-processing-pending-count"
+            >
               Pending: {dashboardQuery.data.pendingCount}
             </span>
             <span className="rounded-md bg-amber-950 px-3 py-1 text-amber-200">
@@ -226,7 +232,10 @@ export function DemandProcessingPanel({
           {dashboardQuery.data.pendingItems.length > 0 ? (
             <div className="mt-4">
               <h3 className="text-sm font-medium text-slate-200">Pending queue</h3>
-              <ul className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
+              <ul
+                className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm"
+                data-testid="demand-processing-pending-queue"
+              >
                 {dashboardQuery.data.pendingItems.map((item) => (
                   <DemandRefRow
                     key={`pending-${item.demandRefId}`}

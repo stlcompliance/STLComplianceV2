@@ -38,6 +38,10 @@ public sealed class ProcurementException : IHasTenant
 
     public DateTimeOffset? SlaDueAt { get; set; }
 
+    public DateTimeOffset? LastEscalatedAt { get; set; }
+
+    public int EscalationCount { get; set; }
+
     public string ResolutionTemplateKey { get; set; } = string.Empty;
 
     public Guid? LinkedPurchaseRequestId { get; set; }

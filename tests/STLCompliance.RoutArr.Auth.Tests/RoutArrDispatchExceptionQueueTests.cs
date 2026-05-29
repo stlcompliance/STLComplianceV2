@@ -11,6 +11,7 @@ using NexArr.Api.Data;
 using NexArr.Api.Services;
 using RoutArr.Api.Contracts;
 using RoutArr.Api.Data;
+using RoutArr.Api.Entities;
 using RoutArr.Api.Services;
 using RoutArrRedeemRequest = RoutArr.Api.Contracts.RedeemHandoffRequest;
 using RoutArrHandoffSessionResponse = RoutArr.Api.Contracts.HandoffSessionResponse;
@@ -102,6 +103,8 @@ public sealed class RoutArrDispatchExceptionQueueTests : IAsyncLifetime
             "Late departure",
             "Driver delayed at yard",
             "delay",
+            null,
+            null,
             null));
         var createExResponse = await _routarrClient.SendAsync(createExRequest);
         createExResponse.EnsureSuccessStatusCode();
@@ -120,7 +123,7 @@ public sealed class RoutArrDispatchExceptionQueueTests : IAsyncLifetime
             HttpMethod.Patch,
             $"/api/dispatch/exceptions/{created.ExceptionId}/assign",
             _dispatcherToken);
-        assignRequest.Content = JsonContent.Create(new AssignDispatchExceptionRequest(_dispatcherUserId));
+        assignRequest.Content = JsonContent.Create(new AssignDispatchExceptionRequest(_dispatcherUserId, null));
         (await _routarrClient.SendAsync(assignRequest)).EnsureSuccessStatusCode();
 
         var linkRequest = Authorized(
@@ -138,7 +141,7 @@ public sealed class RoutArrDispatchExceptionQueueTests : IAsyncLifetime
             HttpMethod.Patch,
             $"/api/dispatch/exceptions/{created.ExceptionId}/resolve",
             _dispatcherToken);
-        resolveRequest.Content = JsonContent.Create(new ResolveDispatchExceptionRequest("Departed after delay"));
+        resolveRequest.Content = JsonContent.Create(new ResolveDispatchExceptionRequest("Departed after delay", null));
         var resolveResponse = await _routarrClient.SendAsync(resolveRequest);
         resolveResponse.EnsureSuccessStatusCode();
         var resolved = (await resolveResponse.Content.ReadFromJsonAsync<DispatchExceptionSummaryResponse>())!;
@@ -150,6 +153,74 @@ public sealed class RoutArrDispatchExceptionQueueTests : IAsyncLifetime
         openListResponse.EnsureSuccessStatusCode();
         var openList = (await openListResponse.Content.ReadFromJsonAsync<DispatchExceptionListResponse>())!;
         Assert.DoesNotContain(openList.Items, x => x.ExceptionId == created.ExceptionId);
+    }
+
+    [Fact]
+    public async Task Dispatch_exception_resolution_depth_sla_templates_and_bulk_actions()
+    {
+        var createExRequest = Authorized(HttpMethod.Post, "/api/dispatch/exceptions", _dispatcherToken);
+        createExRequest.Content = JsonContent.Create(new CreateDispatchExceptionRequest(
+            "Driver no-show",
+            "Assigned driver unavailable",
+            "driver",
+            null,
+            _dispatcherUserId,
+            null));
+        var created = (await (await _routarrClient.SendAsync(createExRequest))
+            .Content.ReadFromJsonAsync<DispatchExceptionSummaryResponse>())!;
+        Assert.NotNull(created.SlaDueAt);
+        Assert.Equal("assigned", created.Status);
+        Assert.Equal(_dispatcherUserId, created.AssignedToUserId);
+
+        var createEx2Request = Authorized(HttpMethod.Post, "/api/dispatch/exceptions", _dispatcherToken);
+        createEx2Request.Content = JsonContent.Create(new CreateDispatchExceptionRequest(
+            "Route blockage",
+            "Stop blocked by construction",
+            "route",
+            null,
+            null,
+            null));
+        var created2 = (await (await _routarrClient.SendAsync(createEx2Request))
+            .Content.ReadFromJsonAsync<DispatchExceptionSummaryResponse>())!;
+
+        var templatesResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/dispatch/exceptions/resolution-templates", _dispatcherToken));
+        templatesResponse.EnsureSuccessStatusCode();
+        var templates = (await templatesResponse.Content.ReadFromJsonAsync<List<DispatchExceptionResolutionTemplateResponse>>())!;
+        Assert.Contains(templates, x => x.TemplateKey == DispatchExceptionResolutionTemplates.RouteReplan);
+
+        var bulkAssignRequest = Authorized(HttpMethod.Post, "/api/dispatch/exceptions/bulk/assign", _dispatcherToken);
+        bulkAssignRequest.Content = JsonContent.Create(new BulkAssignDispatchExceptionsRequest(
+            [created2.ExceptionId],
+            _dispatcherUserId,
+            DateTimeOffset.UtcNow.AddHours(1)));
+        var bulkAssignResponse = await _routarrClient.SendAsync(bulkAssignRequest);
+        bulkAssignResponse.EnsureSuccessStatusCode();
+        var bulkAssign = (await bulkAssignResponse.Content.ReadFromJsonAsync<BulkDispatchExceptionActionResponse>())!;
+        Assert.Equal(1, bulkAssign.SuccessCount);
+
+        var bulkResolveRequest = Authorized(HttpMethod.Post, "/api/dispatch/exceptions/bulk/resolve", _dispatcherToken);
+        bulkResolveRequest.Content = JsonContent.Create(new BulkResolveDispatchExceptionsRequest(
+            [created.ExceptionId, created2.ExceptionId],
+            "Recovered service level.",
+            DispatchExceptionResolutionTemplates.RouteReplan));
+        var bulkResolveResponse = await _routarrClient.SendAsync(bulkResolveRequest);
+        bulkResolveResponse.EnsureSuccessStatusCode();
+        var bulkResolve = (await bulkResolveResponse.Content.ReadFromJsonAsync<BulkDispatchExceptionActionResponse>())!;
+        Assert.Equal(2, bulkResolve.SuccessCount);
+        Assert.All(bulkResolve.Results.Where(x => x.Success), x =>
+        {
+            Assert.NotNull(x.Exception);
+            Assert.Equal("resolved", x.Exception!.Status);
+            Assert.Equal(DispatchExceptionResolutionTemplates.RouteReplan, x.Exception.ResolutionTemplateKey);
+        });
+
+        var overdueResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/dispatch/exceptions?status=open&overdueOnly=true", _dispatcherToken));
+        overdueResponse.EnsureSuccessStatusCode();
+        var overdueList = (await overdueResponse.Content.ReadFromJsonAsync<DispatchExceptionListResponse>())!;
+        Assert.DoesNotContain(overdueList.Items, x => x.ExceptionId == created.ExceptionId);
+        Assert.DoesNotContain(overdueList.Items, x => x.ExceptionId == created2.ExceptionId);
     }
 
     private async Task<string> RedeemRoutArrTokenAsync()

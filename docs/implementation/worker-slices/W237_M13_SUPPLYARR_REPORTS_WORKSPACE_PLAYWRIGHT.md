@@ -38,10 +38,10 @@ dotnet test tests/STLCompliance.E2E/STLCompliance.E2E.csproj -c Release --filter
 ## Out of scope
 
 - CSV download assertion (export button presence only)
-- Parts inventory / compliance report panels
+- ~~Parts inventory / compliance report panels~~ (covered by W319)
 
 ## Next slice
 
-- **Suite M13** — StaffArr audit export or settings Playwright smoke
+- **M13 Playwright** — SupplyArr reports workspace consolidation (W319)
 - **Compliance Core M12** — audit delivery orchestration UI
 - **RoutArr** — dispatch exception queue Playwright (W210)

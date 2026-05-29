@@ -376,6 +376,9 @@ public sealed class RoutArrAuthorizationService
     public void RequireTripCompletionRollupSettingsManage(ClaimsPrincipal principal) =>
         RequireNotificationSettingsManage(principal);
 
+    public void RequireAttachmentRetentionSettingsManage(ClaimsPrincipal principal) =>
+        RequireNotificationSettingsManage(principal);
+
     private static bool MatchesRole(string roleKey, params string[] candidates) =>
         candidates.Any(candidate => string.Equals(roleKey, candidate, StringComparison.OrdinalIgnoreCase));
 }

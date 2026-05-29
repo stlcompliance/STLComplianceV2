@@ -119,7 +119,7 @@ npm run build
 
 - Materialized dispatch gate decision snapshots on trip assign
 - Compliance Core dedicated rule packs for hazmat and hours-of-service (seed currently links all dispatch gates to `driver_qualification`)
-- Bulk dispatch UI surfacing `ignoreWorkflowGateBlocks` explicitly
+- Bulk dispatch UI surfacing `ignoreWorkflowGateBlocks` explicitly — **closed by W333**
 
 ## Next slice (Worker 88)
 

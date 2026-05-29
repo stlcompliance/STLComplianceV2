@@ -92,25 +92,37 @@ public static class DispatchEndpoints
 
         group.MapGet("/active-trips", async (
             string? scope,
+            bool? attentionOnly,
+            string? statusFilter,
             HttpContext context,
             RoutArrAuthorizationService authorization,
             ActiveTripsService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequireDispatchBoardRead(context.User);
-            return Results.Ok(await service.GetAsync(context.User, scope, cancellationToken));
+            return Results.Ok(await service.GetAsync(
+                context.User,
+                scope,
+                attentionOnly == true,
+                statusFilter,
+                cancellationToken));
         })
         .WithName("GetActiveTrips");
 
         group.MapGet("/unassigned-work-queue", async (
             string? scope,
+            bool? attentionOnly,
             HttpContext context,
             RoutArrAuthorizationService authorization,
             UnassignedWorkQueueService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequireDispatchBoardRead(context.User);
-            return Results.Ok(await service.GetAsync(context.User, scope, cancellationToken));
+            return Results.Ok(await service.GetAsync(
+                context.User,
+                scope,
+                attentionOnly == true,
+                cancellationToken));
         })
         .WithName("GetUnassignedWorkQueue");
 
@@ -477,15 +489,54 @@ public static class DispatchEndpoints
 
         group.MapGet("/exceptions", async (
             string? status,
+            bool? overdueOnly,
             HttpContext context,
             RoutArrAuthorizationService authorization,
             DispatchExceptionService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequireDispatchExceptionRead(context.User);
-            return Results.Ok(await service.ListOpenAsync(context.User, status, cancellationToken));
+            return Results.Ok(await service.ListOpenAsync(
+                context.User,
+                status,
+                overdueOnly == true,
+                cancellationToken));
         })
         .WithName("ListDispatchExceptions");
+
+        group.MapGet("/exceptions/resolution-templates", (
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            DispatchExceptionService service) =>
+        {
+            authorization.RequireDispatchExceptionRead(context.User);
+            return Results.Ok(service.ListResolutionTemplates());
+        })
+        .WithName("ListDispatchExceptionResolutionTemplates");
+
+        group.MapPost("/exceptions/bulk/assign", async (
+            BulkAssignDispatchExceptionsRequest request,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            DispatchExceptionService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireDispatchExceptionTriage(context.User);
+            return Results.Ok(await service.BulkAssignAsync(context.User, request, cancellationToken));
+        })
+        .WithName("BulkAssignDispatchExceptions");
+
+        group.MapPost("/exceptions/bulk/resolve", async (
+            BulkResolveDispatchExceptionsRequest request,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            DispatchExceptionService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireDispatchExceptionTriage(context.User);
+            return Results.Ok(await service.BulkResolveAsync(context.User, request, cancellationToken));
+        })
+        .WithName("BulkResolveDispatchExceptions");
 
         group.MapPost("/exceptions", async (
             CreateDispatchExceptionRequest request,

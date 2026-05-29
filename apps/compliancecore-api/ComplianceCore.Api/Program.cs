@@ -43,6 +43,9 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
         app.MapComplianceCoreAuditPackageEndpoints();
         app.MapComplianceCoreInternalAuditPackageGenerationEndpoints();
         app.MapComplianceCoreOperatorDashboardEndpoints();
+        app.MapComplianceCoreFindingsReportEndpoints();
+        app.MapComplianceCoreOperatorReportEndpoints();
+        app.MapComplianceCoreEntityExportEndpoints();
         app.MapComplianceCoreLoadTestJourneySeedEndpoints();
 
         await SeedVocabularyTypesAsync(app);

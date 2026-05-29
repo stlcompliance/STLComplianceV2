@@ -37,6 +37,10 @@ import type {
   TenantLifecycleRunsResponse,
   PendingTenantLifecycleResponse,
   PlatformLifecycleOverviewResponse,
+  PlatformWorkerHealthOrchestrationStatusResponse,
+  TriggerEntitlementReconciliationOrchestrationResponse,
+  TriggerServiceTokenCleanupOrchestrationResponse,
+  TriggerTenantLifecycleOrchestrationResponse,
   TenantOverviewRow,
 } from './types'
 import { NexarrApiError } from './types'
@@ -248,6 +252,51 @@ export async function getPlatformLifecycleOverview(): Promise<PlatformLifecycleO
     throw await parseError(response)
   }
   return (await response.json()) as PlatformLifecycleOverviewResponse
+}
+
+export async function getPlatformWorkerHealthOrchestration(): Promise<PlatformWorkerHealthOrchestrationStatusResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/worker-health-orchestration')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformWorkerHealthOrchestrationStatusResponse
+}
+
+export async function triggerPlatformServiceTokenCleanup(): Promise<TriggerServiceTokenCleanupOrchestrationResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    '/api/platform-admin/worker-health-orchestration/trigger-service-token-cleanup',
+    { method: 'POST' },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TriggerServiceTokenCleanupOrchestrationResponse
+}
+
+export async function triggerPlatformEntitlementReconciliation(): Promise<TriggerEntitlementReconciliationOrchestrationResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    '/api/platform-admin/worker-health-orchestration/trigger-entitlement-reconciliation',
+    { method: 'POST' },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TriggerEntitlementReconciliationOrchestrationResponse
+}
+
+export async function triggerPlatformTenantLifecycle(): Promise<TriggerTenantLifecycleOrchestrationResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    '/api/platform-admin/worker-health-orchestration/trigger-tenant-lifecycle',
+    { method: 'POST' },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TriggerTenantLifecycleOrchestrationResponse
 }
 
 export async function getPlatformAdminLaunchDiagnostics(

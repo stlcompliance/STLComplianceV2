@@ -31,6 +31,8 @@ public sealed record ProcurementExceptionResponse(
     DateTimeOffset? WaivedAt,
     DateTimeOffset? ResolvedAt,
     DateTimeOffset? ClosedAt,
+    DateTimeOffset? CancelledAt,
+    string CancellationReason,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 

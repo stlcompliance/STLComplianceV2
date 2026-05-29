@@ -16,6 +16,9 @@ on:
           - "false"
           - "true"
 
+permissions:
+  contents: read
+
 jobs:
   staging-render-drill:
     runs-on: ubuntu-latest
