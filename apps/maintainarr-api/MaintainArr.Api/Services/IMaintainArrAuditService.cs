@@ -2,7 +2,7 @@ namespace MaintainArr.Api.Services;
 
 public interface IMaintainArrAuditService
 {
-    Task WriteAsync(
+    Task<Guid> WriteAsync(
         string action,
         Guid tenantId,
         Guid? actorUserId,

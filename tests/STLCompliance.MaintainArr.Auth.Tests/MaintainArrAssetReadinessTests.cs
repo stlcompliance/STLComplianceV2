@@ -106,6 +106,20 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
         Assert.Equal("ready", readiness.ReadinessStatus);
         Assert.Equal("maintenance_clear", readiness.ReadinessBasis);
         Assert.Empty(readiness.Blockers);
+        Assert.NotNull(readiness.Dispatchability);
+        Assert.True(readiness.Dispatchability.IsDispatchable);
+        Assert.Equal("allow", readiness.Dispatchability.Outcome);
+        Assert.NotNull(readiness.Confidence);
+        Assert.Equal("live_query", readiness.Confidence.DataSource);
+        Assert.NotNull(readiness.AuditSnapshot);
+        Assert.NotEqual(Guid.Empty, readiness.AuditSnapshot.AuditEventId);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        Assert.True(await db.AuditEvents.AnyAsync(x =>
+            x.Id == readiness.AuditSnapshot.AuditEventId
+            && x.Action == "asset_readiness.read"
+            && x.TargetId == assetId.ToString()));
     }
 
     [Fact]
@@ -130,6 +144,10 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
         Assert.Equal("not_ready", readiness.ReadinessStatus);
         Assert.Contains(readiness.Blockers, blocker => blocker.BlockerType == "critical_defect");
         Assert.Equal(1, readiness.Signals.OpenCriticalDefectCount);
+        Assert.NotNull(readiness.Dispatchability);
+        Assert.False(readiness.Dispatchability.IsDispatchable);
+        Assert.Equal("block", readiness.Dispatchability.Outcome);
+        Assert.Equal("critical_defect", readiness.Dispatchability.PrimaryBlockerType);
     }
 
     [Fact]

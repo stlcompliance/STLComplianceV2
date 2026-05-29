@@ -67,8 +67,18 @@ public sealed class ProductCatalogService(
         {
             ProductKey = productKey,
             DisplayName = request.DisplayName.Trim(),
+            ProductCategory = "operations",
+            ProductOwner = "STL Compliance",
+            ProductStatus = request.IsActive ? "available" : "disabled",
             SortOrder = request.SortOrder,
-            IsActive = request.IsActive
+            IsActive = request.IsActive,
+            CanonicalCallbackPath = "/auth/nexarr/callback",
+            ServiceAudience = $"stl:{productKey}:api",
+            MarketingUrl = $"https://stlcompliance.com/products/{productKey}",
+            DocumentationUrl = $"https://stlcompliance.com/docs/{productKey}",
+            SupportUrl = "https://stlcompliance.com/support",
+            EnvironmentKey = "local",
+            EntitlementDependencyRules = "tenant-product-entitlement-required"
         };
 
         db.ProductCatalog.Add(product);
@@ -99,6 +109,7 @@ public sealed class ProductCatalogService(
         product.DisplayName = request.DisplayName.Trim();
         product.SortOrder = request.SortOrder;
         product.IsActive = request.IsActive;
+        product.ProductStatus = request.IsActive ? "available" : "disabled";
         await db.SaveChangesAsync(cancellationToken);
 
         await audit.WriteAsync(

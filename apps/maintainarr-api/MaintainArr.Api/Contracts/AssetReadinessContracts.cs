@@ -9,7 +9,11 @@ public sealed record AssetReadinessResponse(
     string ReadinessBasis,
     DateTimeOffset CalculatedAt,
     IReadOnlyList<AssetReadinessBlockerResponse> Blockers,
-    AssetReadinessSignalCountsResponse Signals);
+    AssetReadinessSignalCountsResponse Signals,
+    AssetReadinessDispatchabilitySummaryResponse? Dispatchability = null,
+    AssetReadinessConfidenceResponse? Confidence = null,
+    AssetReadinessAuditSnapshotResponse? AuditSnapshot = null,
+    IReadOnlyList<AssetReadinessComplianceCoreReferenceResponse>? ComplianceCoreReferences = null);
 
 public sealed record AssetReadinessSummaryResponse(
     Guid AssetId,
@@ -34,3 +38,29 @@ public sealed record AssetReadinessSignalCountsResponse(
     int PmDueCount,
     int PmOverdueCount,
     int FailedInspectionCount);
+
+public sealed record AssetReadinessDispatchabilitySummaryResponse(
+    bool IsDispatchable,
+    string Outcome,
+    string ReasonCode,
+    string Message,
+    int BlockerCount,
+    string? PrimaryBlockerType,
+    string? PrimaryBlockerMessage);
+
+public sealed record AssetReadinessConfidenceResponse(
+    string DataSource,
+    string FreshnessStatus,
+    int? StalenessThresholdHours,
+    DateTimeOffset CalculatedAt);
+
+public sealed record AssetReadinessAuditSnapshotResponse(
+    Guid AuditEventId,
+    string SnapshotKind,
+    DateTimeOffset CapturedAt);
+
+public sealed record AssetReadinessComplianceCoreReferenceResponse(
+    string ReferenceType,
+    string ReferenceId,
+    string Outcome,
+    string? DeepLinkPath);

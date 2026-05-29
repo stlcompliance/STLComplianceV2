@@ -11,6 +11,7 @@ import type {
   ApiErrorBody,
   AuthTokenResponse,
   HandoffCreatedResponse,
+  LaunchAttemptTimelineItem,
   LaunchContextResponse,
   LaunchDiagnosticsResponse,
   ForgotPasswordResponse,
@@ -22,6 +23,7 @@ import type {
   PagedResult,
   PlatformAdminDashboardResponse,
   ProductOverviewRow,
+  ProductManifestResponse,
   PlatformAuditPackageExportPreview,
   PlatformAuditPackageExportSummary,
   PlatformAuditPackageFilterOptions,
@@ -233,9 +235,10 @@ export async function getMe(): Promise<MeResponse> {
   return (await response.json()) as MeResponse
 }
 
-export async function getNavigation(): Promise<NavigationResponse> {
+export async function getNavigation(currentProductKey?: string): Promise<NavigationResponse> {
   await ensureValidAccessToken()
-  const response = await fetchWithAuth('/api/me/navigation')
+  const qs = currentProductKey ? `?currentProductKey=${encodeURIComponent(currentProductKey)}` : ''
+  const response = await fetchWithAuth(`/api/me/navigation${qs}`)
   if (!response.ok) {
     throw await parseError(response)
   }
@@ -458,6 +461,58 @@ export async function getPlatformAdminLaunchDiagnostics(
   return (await response.json()) as LaunchDiagnosticsResponse
 }
 
+export async function getPlatformAdminLaunchAttempts(
+  params: {
+    tenantId?: string
+    userId?: string
+    productKey?: string
+    correlationId?: string
+    fromUtc?: string
+    toUtc?: string
+    result?: string
+    page?: number
+    pageSize?: number
+  } = {},
+): Promise<PagedResult<LaunchAttemptTimelineItem>> {
+  await ensureValidAccessToken()
+  const search = new URLSearchParams()
+  if (params.tenantId) {
+    search.set('tenantId', params.tenantId)
+  }
+  if (params.userId) {
+    search.set('userId', params.userId)
+  }
+  if (params.productKey) {
+    search.set('productKey', params.productKey)
+  }
+  if (params.correlationId) {
+    search.set('correlationId', params.correlationId)
+  }
+  if (params.fromUtc) {
+    search.set('fromUtc', params.fromUtc)
+  }
+  if (params.toUtc) {
+    search.set('toUtc', params.toUtc)
+  }
+  if (params.result) {
+    search.set('result', params.result)
+  }
+  if (params.page) {
+    search.set('page', String(params.page))
+  }
+  if (params.pageSize) {
+    search.set('pageSize', String(params.pageSize))
+  }
+  const qs = search.toString()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/launch-attempts${qs ? `?${qs}` : ''}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<LaunchAttemptTimelineItem>
+}
+
 export async function getPlatformAdminTenantOverview(
   page = 1,
   pageSize = 50,
@@ -533,6 +588,30 @@ export async function getPlatformAdminProductOverview(): Promise<ProductOverview
     throw await parseError(response)
   }
   return (await response.json()) as ProductOverviewRow[]
+}
+
+export async function getPlatformAdminProductManifests(options?: {
+  tenantId?: string
+  productKey?: string
+  page?: number
+  pageSize?: number
+}): Promise<PagedResult<ProductManifestResponse>> {
+  await ensureValidAccessToken()
+  const params = new URLSearchParams()
+  if (options?.tenantId) {
+    params.set('tenantId', options.tenantId)
+  }
+  if (options?.productKey) {
+    params.set('productKey', options.productKey)
+  }
+  params.set('page', String(options?.page ?? 1))
+  params.set('pageSize', String(options?.pageSize ?? 50))
+
+  const response = await fetchWithAuth(`/api/platform-admin/product-manifests?${params.toString()}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<ProductManifestResponse>
 }
 
 export async function listProducts(page = 1, pageSize = 50): Promise<PagedResult<ProductDetailResponse>> {

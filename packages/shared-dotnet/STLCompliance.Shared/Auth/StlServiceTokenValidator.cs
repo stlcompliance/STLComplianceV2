@@ -158,37 +158,7 @@ public sealed class StlServiceTokenValidator(
     private TokenValidationParameters BuildValidationParameters()
     {
         var options = serviceTokenOptions.Value;
-        var signingKey = configuration["SERVICE_TOKEN_SIGNING_KEY"]
-            ?? configuration[$"{StlServiceTokenOptions.SectionName}:SigningKey"]
-            ?? configuration["AUTH_SIGNING_KEY"]
-            ?? options.SigningKey;
-
-        if (string.IsNullOrWhiteSpace(signingKey) || signingKey.Length < 32)
-        {
-            throw new StlApiException(
-                "service_token.signing_key_missing",
-                "Service token signing key is not configured.",
-                500);
-        }
-
-        var issuer = configuration["SERVICE_TOKEN_ISSUER"]
-            ?? configuration[$"{StlServiceTokenOptions.SectionName}:Issuer"]
-            ?? options.Issuer;
-        var audience = configuration["SERVICE_TOKEN_AUDIENCE"]
-            ?? configuration[$"{StlServiceTokenOptions.SectionName}:Audience"]
-            ?? options.Audience;
-
-        return new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidIssuer = issuer,
-            ValidateAudience = true,
-            ValidAudience = audience,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(signingKey)),
-            ClockSkew = TimeSpan.FromMinutes(1)
-        };
+        return StlServiceTokenKeyMaterial.BuildValidationParameters(configuration, options);
     }
 }
 

@@ -23,6 +23,7 @@ public class ComplianceCoreFindingsWorkflowGateTests : IAsyncLifetime
     private HttpClient _complianceCoreClient = null!;
     private HttpClient _nexarrClient = null!;
     private string _trainarrGateToken = null!;
+    private string _trainarrProductGateToken = null!;
 
     public async Task InitializeAsync()
     {
@@ -74,6 +75,11 @@ public class ComplianceCoreFindingsWorkflowGateTests : IAsyncLifetime
             sourceProduct: "trainarr",
             allowedProducts: ["compliancecore"],
             WorkflowGateService.CheckActionScope);
+        _trainarrProductGateToken = await IssueServiceTokenAsync(
+            adminToken,
+            sourceProduct: "trainarr",
+            allowedProducts: ["compliancecore"],
+            ProductGateEvaluationService.EvaluateActionScope);
 
         var complianceAdminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
         await SeedDriverQualificationRulePackAsync(complianceAdminToken);
@@ -303,6 +309,96 @@ public class ComplianceCoreFindingsWorkflowGateTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Product_gate_evaluate_returns_audit_ready_trace_metadata()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePack = await GetDriverQualificationRulePackAsync(adminToken);
+        await CreateWorkflowGateAsync(adminToken, rulePack.RulePackId, "can_assign_person_to_task");
+        var citation = await CreateCitationAsync(adminToken, rulePack, "driver_gate_citation");
+        var medicalFactId = await GetFactDefinitionIdAsync(adminToken, "medical_cert_on_file");
+        await CreateFactRequirementAsync(
+            adminToken,
+            medicalFactId,
+            rulePack.RulePackId,
+            citation.CitationId,
+            "medical_cert_gate_evidence");
+
+        var now = DateTimeOffset.UtcNow;
+        var personId = Guid.NewGuid();
+        var request = ServiceAuthorized(HttpMethod.Post, "/api/v1/gates/evaluate", _trainarrProductGateToken);
+        request.Content = JsonContent.Create(new ProductGateEvaluationRequest(
+            PlatformSeeder.DemoTenantId,
+            "CAN_ASSIGN_PERSON_TO_TASK",
+            "can_assign_person_to_task",
+            "driver_assignment",
+            [new ProductGateSubjectReference("person", personId.ToString(), "staffarr", "Driver")],
+            new Dictionary<string, string>
+            {
+                ["medical_cert_on_file"] = "false",
+            },
+            [new ProductGateFactSnapshotReference(
+                "medical_cert_on_file",
+                "staffarr:cert:expired",
+                now.AddHours(-3),
+                now.AddHours(-1))],
+            EmitFindings: true));
+
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<ProductGateEvaluationResponse>())!;
+
+        Assert.Equal(ComplianceEvaluationOutcomes.Block, result.Outcome);
+        Assert.Equal("can_assign_person_to_task", result.WorkflowKey);
+        Assert.Equal("can_assign_person_to_task", result.ActionKey);
+        Assert.Equal("driver_assignment", result.ActivityContextKey);
+        Assert.Equal(result.CheckResultId, result.TraceId);
+        Assert.NotEqual(Guid.Empty, result.TraceId);
+        Assert.NotNull(result.RuleEvaluationRunId);
+        Assert.NotNull(result.AuditExportPath);
+        Assert.Contains(result.SubjectReferences, subject =>
+            subject.SubjectType == "person" && subject.SubjectReference == personId.ToString());
+        Assert.Contains(result.AppliedRuleVersions, rule =>
+            rule.RuleKey == "med_cert"
+            && rule.Result == "fail"
+            && rule.RulePackVersion == rulePack.VersionNumber);
+        Assert.Contains(result.CitationReferences, citationReference =>
+            citationReference.CitationKey == "driver_gate_citation");
+        Assert.Contains(result.EvidenceRequirements, requirement =>
+            requirement.RequirementKey == "medical_cert_gate_evidence"
+            && requirement.FactKey == "medical_cert_on_file"
+            && requirement.CitationKey == "driver_gate_citation");
+        Assert.Contains(result.StaleFacts, stale =>
+            stale.FactKey == "medical_cert_on_file"
+            && stale.SnapshotReference == "staffarr:cert:expired");
+        Assert.Empty(result.MissingFacts);
+        Assert.Contains(result.RemediationHints, hint =>
+            hint.RuleKey == "med_cert" && hint.Code == "rule_failed");
+
+        var exportResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, result.AuditExportPath!, adminToken));
+        exportResponse.EnsureSuccessStatusCode();
+        var export = (await exportResponse.Content.ReadFromJsonAsync<RuleEvaluationAuditExportResponse>())!;
+        Assert.Equal(result.RuleEvaluationRunId, export.EvaluationRun.EvaluationRunId);
+        Assert.Contains(export.WorkflowGateChecks, check => check.CheckResultId == result.CheckResultId);
+        Assert.NotEmpty(export.Findings);
+    }
+
+    [Fact]
+    public async Task Product_gate_evaluate_requires_product_gate_scope()
+    {
+        var request = ServiceAuthorized(HttpMethod.Post, "/api/v1/gates/evaluate", _trainarrGateToken);
+        request.Content = JsonContent.Create(new ProductGateEvaluationRequest(
+            PlatformSeeder.DemoTenantId,
+            "driver_assignment",
+            "driver_assignment",
+            "driver_assignment",
+            [new ProductGateSubjectReference("person", Guid.NewGuid().ToString(), "staffarr")]));
+
+        var response = await _complianceCoreClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Findings_manage_denies_tenant_member_create()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
@@ -338,12 +434,65 @@ public class ComplianceCoreFindingsWorkflowGateTests : IAsyncLifetime
 
     private async Task<Guid> GetDriverQualificationRulePackIdAsync(string adminToken)
     {
+        var pack = await GetDriverQualificationRulePackAsync(adminToken);
+        return pack.RulePackId;
+    }
+
+    private async Task<RulePackResponse> GetDriverQualificationRulePackAsync(string adminToken)
+    {
         var response = await _complianceCoreClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/rule-packs", adminToken));
         response.EnsureSuccessStatusCode();
         var packs = (await response.Content.ReadFromJsonAsync<IReadOnlyList<RulePackResponse>>())!;
-        var pack = packs.First(p => p.PackKey == "driver_qualification");
-        return pack.RulePackId;
+        return packs.First(p => p.PackKey == "driver_qualification");
+    }
+
+    private async Task<RegulatoryCitationResponse> CreateCitationAsync(
+        string adminToken,
+        RulePackResponse rulePack,
+        string citationKey)
+    {
+        var request = Authorized(HttpMethod.Post, "/api/citations", adminToken);
+        request.Content = JsonContent.Create(new CreateRegulatoryCitationRequest(
+            rulePack.RegulatoryProgramId,
+            rulePack.RulePackId,
+            citationKey,
+            "Driver gate citation",
+            "49 CFR 391",
+            "Driver qualification citation for product gate tests.",
+            null));
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<RegulatoryCitationResponse>())!;
+    }
+
+    private async Task<Guid> GetFactDefinitionIdAsync(string adminToken, string factKey)
+    {
+        var response = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/fact-definitions", adminToken));
+        response.EnsureSuccessStatusCode();
+        var facts = (await response.Content.ReadFromJsonAsync<IReadOnlyList<FactDefinitionResponse>>())!;
+        return facts.First(fact => fact.FactKey == factKey).FactDefinitionId;
+    }
+
+    private async Task CreateFactRequirementAsync(
+        string adminToken,
+        Guid factDefinitionId,
+        Guid rulePackId,
+        Guid citationId,
+        string requirementKey)
+    {
+        var request = Authorized(HttpMethod.Post, "/api/fact-requirements", adminToken);
+        request.Content = JsonContent.Create(new CreateFactRequirementRequest(
+            factDefinitionId,
+            rulePackId,
+            citationId,
+            requirementKey,
+            "Medical certificate evidence",
+            "Product gate must surface the medical certificate evidence requirement.",
+            true));
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
     }
 
     private async Task SeedDriverQualificationRulePackAsync(string adminToken)

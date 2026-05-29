@@ -8,7 +8,7 @@ public sealed class MaintainArrAuditService(
     MaintainArrDbContext db,
     ICorrelationIdAccessor correlationIdAccessor) : IMaintainArrAuditService
 {
-    public async Task WriteAsync(
+    public async Task<Guid> WriteAsync(
         string action,
         Guid tenantId,
         Guid? actorUserId,
@@ -18,9 +18,10 @@ public sealed class MaintainArrAuditService(
         string? reasonCode = null,
         CancellationToken cancellationToken = default)
     {
+        var auditEventId = Guid.NewGuid();
         db.AuditEvents.Add(new MaintainArrAuditEvent
         {
-            Id = Guid.NewGuid(),
+            Id = auditEventId,
             TenantId = tenantId,
             ActorUserId = actorUserId,
             Action = action,
@@ -33,5 +34,6 @@ public sealed class MaintainArrAuditService(
         });
 
         await db.SaveChangesAsync(cancellationToken);
+        return auditEventId;
     }
 }

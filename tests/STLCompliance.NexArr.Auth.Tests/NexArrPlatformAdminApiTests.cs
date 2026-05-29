@@ -108,6 +108,51 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
     }
 
     [Fact]
+    public async Task Platform_admin_can_lookup_launch_attempts_by_product_and_result()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest(
+            "staffarr",
+            "https://evil.example/callback"));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, handoffResponse.StatusCode);
+
+        var response = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/platform-admin/launch-attempts?productKey=staffarr&result=Denied",
+                token));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var attempts = await response.Content.ReadFromJsonAsync<PagedResult<LaunchAttemptTimelineItemResponse>>();
+        Assert.NotNull(attempts);
+        var attempt = Assert.Single(attempts.Items);
+        Assert.Equal("launch.handoff.create", attempt.Action);
+        Assert.Equal("Denied", attempt.Result);
+        Assert.Equal("callback_not_allowed", attempt.ReasonCode);
+        Assert.Equal("staffarr", attempt.ProductKey);
+        Assert.Equal("StaffArr", attempt.ProductDisplayName);
+        Assert.Equal(PlatformSeeder.DemoTenantId, attempt.TenantId);
+        Assert.Equal(PlatformSeeder.DemoAdminEmail, attempt.ActorEmail);
+        Assert.Contains("callback allowlist", attempt.RemediationHint);
+    }
+
+    [Fact]
+    public async Task Tenant_admin_cannot_read_launch_attempts()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/platform-admin/launch-attempts", token));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Platform_admin_can_read_tenant_overview()
     {
         await SeedDatabaseAsync();

@@ -27,7 +27,8 @@ public sealed record InternalWorkflowGateCheckRequest(
     Guid TenantId,
     string GateKey,
     IReadOnlyDictionary<string, string>? Context,
-    bool EmitFindings = false);
+    bool EmitFindings = false,
+    bool PersistSnapshot = false);
 
 public sealed record WorkflowGateReasonResponse(
     string Code,

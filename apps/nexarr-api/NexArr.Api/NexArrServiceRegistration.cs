@@ -23,8 +23,10 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<TenantMembershipAdminService>();
         builder.Services.AddScoped<PlatformUserAdminService>();
         builder.Services.AddScoped<ProductCatalogService>();
+        builder.Services.AddScoped<ProductManifestService>();
         builder.Services.AddScoped<EntitlementAdminService>();
         builder.Services.AddScoped<ServiceTokenAdminService>();
+        builder.Services.AddScoped<ServiceTokenDiscoveryService>();
         builder.Services.AddScoped<IntegrationTokenBootstrapService>();
         builder.Services.AddScoped<LaunchService>();
         builder.Services.AddScoped<CallbackAllowlistAdminService>();

@@ -10,5 +10,11 @@ public sealed class StlServiceTokenOptions
 
     public string SigningKey { get; set; } = string.Empty;
 
+    public string SigningKeyId { get; set; } = "stl-service-token-current";
+
+    public string RsaPrivateKeyPem { get; set; } = string.Empty;
+
+    public string RsaPublicKeyPem { get; set; } = string.Empty;
+
     public int DefaultLifetimeMinutes { get; set; } = 60;
 }

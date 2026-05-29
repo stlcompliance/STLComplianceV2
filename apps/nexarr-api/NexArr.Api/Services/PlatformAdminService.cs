@@ -175,6 +175,173 @@ public sealed class PlatformAdminService(
         return new LaunchDiagnosticsResponse(pagedRows, issues, now);
     }
 
+    public async Task<PagedResult<LaunchAttemptTimelineItemResponse>> GetLaunchAttemptsAsync(
+        ClaimsPrincipal principal,
+        Guid? tenantId,
+        Guid? userId,
+        string? productKey,
+        Guid? correlationId,
+        DateTimeOffset? fromUtc,
+        DateTimeOffset? toUtc,
+        string? result,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        var actorUserId = principal.GetUserId();
+
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = db.AuditEvents.AsNoTracking()
+            .Where(e => e.Action.StartsWith("launch."));
+
+        if (tenantId is Guid tid)
+        {
+            query = query.Where(e => e.TenantId == tid);
+        }
+
+        if (userId is Guid uid)
+        {
+            query = query.Where(e => e.ActorUserId == uid);
+        }
+
+        if (correlationId is Guid cid)
+        {
+            query = query.Where(e => e.CorrelationId == cid);
+        }
+
+        if (fromUtc is DateTimeOffset from)
+        {
+            query = query.Where(e => e.OccurredAt >= from);
+        }
+
+        if (toUtc is DateTimeOffset to)
+        {
+            query = query.Where(e => e.OccurredAt <= to);
+        }
+
+        if (!string.IsNullOrWhiteSpace(result))
+        {
+            var normalizedResult = result.Trim().ToLowerInvariant();
+            query = query.Where(e => e.Result.ToLower() == normalizedResult);
+        }
+
+        if (!string.IsNullOrWhiteSpace(productKey))
+        {
+            var normalizedKey = productKey.Trim().ToLowerInvariant();
+            var handoffIds = await db.HandoffCodes.AsNoTracking()
+                .Where(h => h.TargetProductKey == normalizedKey)
+                .Select(h => h.Id.ToString())
+                .ToListAsync(cancellationToken);
+            query = query.Where(e => e.TargetId == normalizedKey
+                || (e.TargetType == "handoff_code" && e.TargetId != null && handoffIds.Contains(e.TargetId)));
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var events = await query
+            .OrderByDescending(e => e.OccurredAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var handoffIdsOnPage = events
+            .Where(e => string.Equals(e.TargetType, "handoff_code", StringComparison.OrdinalIgnoreCase)
+                && Guid.TryParse(e.TargetId, out _))
+            .Select(e => Guid.Parse(e.TargetId!))
+            .Distinct()
+            .ToList();
+        var handoffs = handoffIdsOnPage.Count == 0
+            ? new List<HandoffCodeRecord>()
+            : await db.HandoffCodes.AsNoTracking()
+                .Where(h => handoffIdsOnPage.Contains(h.Id))
+                .ToListAsync(cancellationToken);
+
+        var tenantIds = events
+            .Select(e => e.TenantId)
+            .Concat(handoffs.Select(h => (Guid?)h.TenantId))
+            .OfType<Guid>()
+            .Distinct()
+            .ToList();
+        var tenants = tenantIds.Count == 0
+            ? new List<Tenant>()
+            : await db.Tenants.AsNoTracking()
+                .Where(t => tenantIds.Contains(t.Id))
+                .ToListAsync(cancellationToken);
+
+        var userIds = events
+            .Select(e => e.ActorUserId)
+            .Concat(handoffs.Select(h => (Guid?)h.UserId))
+            .OfType<Guid>()
+            .Distinct()
+            .ToList();
+        var users = userIds.Count == 0
+            ? new List<PlatformUser>()
+            : await db.Users.AsNoTracking()
+                .Where(u => userIds.Contains(u.Id))
+                .ToListAsync(cancellationToken);
+
+        var productKeys = events
+            .Where(e => !Guid.TryParse(e.TargetId, out _))
+            .Select(e => e.TargetId?.Trim().ToLowerInvariant())
+            .Concat(handoffs.Select(h => h.TargetProductKey))
+            .Where(k => !string.IsNullOrWhiteSpace(k))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var products = productKeys.Count == 0
+            ? new List<ProductCatalogItem>()
+            : await db.ProductCatalog.AsNoTracking()
+                .Where(p => productKeys.Contains(p.ProductKey))
+                .ToListAsync(cancellationToken);
+
+        var items = events.Select(e =>
+        {
+            var handoff = handoffs.FirstOrDefault(h => string.Equals(h.Id.ToString(), e.TargetId, StringComparison.OrdinalIgnoreCase));
+            var resolvedTenantId = e.TenantId ?? handoff?.TenantId;
+            var tenant = resolvedTenantId is Guid resolvedTid
+                ? tenants.FirstOrDefault(t => t.Id == resolvedTid)
+                : null;
+            var resolvedUserId = e.ActorUserId ?? handoff?.UserId;
+            var user = resolvedUserId is Guid resolvedUid
+                ? users.FirstOrDefault(u => u.Id == resolvedUid)
+                : null;
+            var resolvedProductKey = handoff?.TargetProductKey ?? ResolveProductKeyFromAuditEvent(e);
+            var product = string.IsNullOrWhiteSpace(resolvedProductKey)
+                ? null
+                : products.FirstOrDefault(p => string.Equals(p.ProductKey, resolvedProductKey, StringComparison.OrdinalIgnoreCase));
+
+            return new LaunchAttemptTimelineItemResponse(
+                e.Id,
+                resolvedTenantId,
+                tenant?.Slug,
+                tenant?.DisplayName,
+                resolvedUserId,
+                user?.Email,
+                user?.DisplayName,
+                resolvedProductKey,
+                product?.DisplayName,
+                e.Action,
+                e.Result,
+                e.ReasonCode,
+                e.TargetType,
+                e.TargetId,
+                e.CorrelationId,
+                e.OccurredAt,
+                ResolveLaunchRemediationHint(e.ReasonCode));
+        }).ToList();
+
+        await audit.WriteAsync(
+            "platform_admin.launch_attempts.read",
+            "platform_admin",
+            "launch_attempts",
+            "Success",
+            actorUserId: actorUserId,
+            cancellationToken: cancellationToken);
+
+        return new PagedResult<LaunchAttemptTimelineItemResponse>(items, page, pageSize, total, page * pageSize < total);
+    }
+
     public async Task<PagedResult<TenantOverviewRowResponse>> GetTenantOverviewAsync(
         ClaimsPrincipal principal,
         int page,
@@ -282,6 +449,30 @@ public sealed class PlatformAdminService(
 
         return items;
     }
+
+    private static string? ResolveProductKeyFromAuditEvent(PlatformAuditEvent auditEvent)
+    {
+        if (!Guid.TryParse(auditEvent.TargetId, out _))
+        {
+            return auditEvent.TargetId?.Trim().ToLowerInvariant();
+        }
+
+        return null;
+    }
+
+    private static string? ResolveLaunchRemediationHint(string? reasonCode) =>
+        reasonCode switch
+        {
+            "callback_not_allowed" => "Add or correct the product callback allowlist entry for this tenant and environment.",
+            "not_entitled" or "entitlement_inactive" or "entitlement_revoked" => "Grant or reactivate the tenant entitlement for the requested product.",
+            "tenant_suspended" => "Reactivate the tenant before retrying product launch.",
+            "profile_missing" => "Configure an active launch profile with a base URL for the product.",
+            "already_redeemed" => "Start a new launch; handoff codes are one-time use.",
+            "expired" => "Start a new launch; the previous handoff code expired.",
+            "service_token_invalid" or "auth.service_token_invalid" => "Rotate or reissue the product service token.",
+            "auth.service_token_scope" => "Update the service client audience or allowed product scope.",
+            _ => null
+        };
 
     private static string ResolveLaunchReadiness(Tenant tenant, bool entitled, bool profileActive)
     {

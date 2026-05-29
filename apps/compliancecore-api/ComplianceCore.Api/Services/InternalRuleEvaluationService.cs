@@ -117,9 +117,12 @@ public sealed class InternalRuleEvaluationService(
         Guid? evaluationRunId = null;
         IReadOnlyList<ComplianceFindingResponse> findingsEmitted = [];
 
-        if (request.EmitFindings &&
-            !string.Equals(outcome, ComplianceEvaluationOutcomes.Allow, StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(outcome, ComplianceEvaluationOutcomes.Waived, StringComparison.OrdinalIgnoreCase))
+        var shouldPersistSnapshot = request.PersistSnapshot
+            || (request.EmitFindings
+                && !string.Equals(outcome, ComplianceEvaluationOutcomes.Allow, StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(outcome, ComplianceEvaluationOutcomes.Waived, StringComparison.OrdinalIgnoreCase));
+
+        if (shouldPersistSnapshot)
         {
             var run = await ruleEvaluationService.PersistInternalEvaluationSnapshotAsync(
                 request.TenantId,
@@ -130,15 +133,20 @@ public sealed class InternalRuleEvaluationService(
                 cancellationToken);
 
             evaluationRunId = run.EvaluationRunId;
-            findingsEmitted = await findingService.EmitFromEvaluationAsync(
-                request.TenantId,
-                rulePack.Id,
-                rulePack.PackKey,
-                run.EvaluationRunId,
-                evaluationResult,
-                unresolved,
-                ruleResults,
-                cancellationToken);
+            if (request.EmitFindings
+                && !string.Equals(outcome, ComplianceEvaluationOutcomes.Allow, StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(outcome, ComplianceEvaluationOutcomes.Waived, StringComparison.OrdinalIgnoreCase))
+            {
+                findingsEmitted = await findingService.EmitFromEvaluationAsync(
+                    request.TenantId,
+                    rulePack.Id,
+                    rulePack.PackKey,
+                    run.EvaluationRunId,
+                    evaluationResult,
+                    unresolved,
+                    ruleResults,
+                    cancellationToken);
+            }
         }
 
         await auditService.WriteAsync(

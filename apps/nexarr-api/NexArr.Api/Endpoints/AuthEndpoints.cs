@@ -99,9 +99,13 @@ public static class AuthEndpoints
         })
         .WithName("GetMyEntitlements");
 
-        me.MapGet("/navigation", async (AuthService auth, HttpContext context, CancellationToken cancellationToken) =>
+        me.MapGet("/navigation", async (
+            string? currentProductKey,
+            AuthService auth,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
         {
-            return Results.Ok(await auth.GetNavigationAsync(context.User, cancellationToken));
+            return Results.Ok(await auth.GetNavigationAsync(context.User, currentProductKey, cancellationToken));
         })
         .WithName("GetMyNavigation");
 

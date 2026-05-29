@@ -79,15 +79,16 @@ public sealed class ComplianceCoreReportTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Entity_export_manifest_lists_three_entities()
+    public async Task Entity_export_manifest_lists_current_entities()
     {
         var response = await _complianceCoreClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/exports/manifest", _adminToken));
         response.EnsureSuccessStatusCode();
 
         var manifest = (await response.Content.ReadFromJsonAsync<EntityExportManifestResponse>())!;
-        Assert.Equal(3, manifest.Entities.Count);
+        Assert.Equal(4, manifest.Entities.Count);
         Assert.Contains(manifest.Entities, entity => entity.EntityKey == "findings");
+        Assert.Contains(manifest.Entities, entity => entity.EntityKey == "rule_packs");
     }
 
     [Fact]

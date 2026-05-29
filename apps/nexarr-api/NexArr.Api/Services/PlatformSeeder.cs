@@ -17,18 +17,18 @@ public static class PlatformSeeder
     public const string DemoTenantAdminEmail = "tenant-admin@demo.stl";
     public const string DemoAdminPassword = "ChangeMe!Demo2026";
 
-    private static readonly (string Key, string Name, int Order)[] Products =
+    private static readonly ProductSeed[] Products =
     [
-        ("shared-worker", "STL Shared Worker", 5),
-        ("nexarr-worker", "NexArr Worker", 8),
-        ("nexarr", "NexArr", 10),
-        ("staffarr", "StaffArr", 20),
-        ("trainarr", "TrainArr", 30),
-        ("maintainarr", "MaintainArr", 40),
-        ("routarr", "RoutArr", 50),
-        ("supplyarr", "SupplyArr", 60),
-        ("compliancecore", "Compliance Core", 70),
-        ("companion", "Companion App", 80)
+        new("shared-worker", "STL Shared Worker", 5, "platform", "Platform Engineering", "worker", "", "", "stl:shared-worker:worker"),
+        new("nexarr-worker", "NexArr Worker", 8, "platform", "Platform Engineering", "worker", "", "", "stl:nexarr-worker:worker"),
+        new("nexarr", "NexArr", 10, "platform", "Platform Engineering", "available", "http://localhost:5101", "http://localhost:5101/health/ready", "stl:nexarr:api"),
+        new("staffarr", "StaffArr", 20, "workforce", "People Operations", "available", "http://localhost:5102", "http://localhost:5102/health/ready", "stl:staffarr:api"),
+        new("trainarr", "TrainArr", 30, "training", "Learning and Qualification", "available", "http://localhost:5103", "http://localhost:5103/health/ready", "stl:trainarr:api"),
+        new("maintainarr", "MaintainArr", 40, "maintenance", "Maintenance Operations", "available", "http://localhost:5104", "http://localhost:5104/health/ready", "stl:maintainarr:api"),
+        new("routarr", "RoutArr", 50, "transportation", "Transportation Operations", "available", "http://localhost:5105", "http://localhost:5105/health/ready", "stl:routarr:api"),
+        new("supplyarr", "SupplyArr", 60, "supply-chain", "Procurement Operations", "available", "http://localhost:5106", "http://localhost:5106/health/ready", "stl:supplyarr:api"),
+        new("compliancecore", "Compliance Core", 70, "compliance", "Compliance Platform", "available", "http://localhost:5107", "http://localhost:5107/health/ready", "stl:compliancecore:api"),
+        new("companion", "Companion App", 80, "field-execution", "Platform Engineering", "available", "", "", "stl:companion:frontend")
     ];
 
     private static readonly (string ProductKey, string BaseUrl, string LaunchPath)[] DefaultLaunchProfiles =
@@ -49,27 +49,13 @@ public static class PlatformSeeder
         StlLaunchOptions? launchOptions = null,
         CancellationToken cancellationToken = default)
     {
+        var now = DateTimeOffset.UtcNow;
+        await EnsureProductCatalogAsync(db, cancellationToken);
+
         if (await db.Users.AnyAsync(u => u.Email == DemoAdminEmail, cancellationToken))
         {
+            await db.SaveChangesAsync(cancellationToken);
             return;
-        }
-
-        var now = DateTimeOffset.UtcNow;
-
-        foreach (var product in Products)
-        {
-            if (await db.ProductCatalog.AnyAsync(p => p.ProductKey == product.Key, cancellationToken))
-            {
-                continue;
-            }
-
-            db.ProductCatalog.Add(new ProductCatalogItem
-            {
-                ProductKey = product.Key,
-                DisplayName = product.Name,
-                SortOrder = product.Order,
-                IsActive = true
-            });
         }
 
         if (!await db.Tenants.AnyAsync(t => t.Id == DemoTenantId, cancellationToken))
@@ -185,6 +171,132 @@ public static class PlatformSeeder
 
         await db.SaveChangesAsync(cancellationToken);
     }
+
+    private static async Task EnsureProductCatalogAsync(
+        NexArrDbContext db,
+        CancellationToken cancellationToken)
+    {
+        foreach (var seed in Products)
+        {
+            var product = await db.ProductCatalog
+                .FirstOrDefaultAsync(p => p.ProductKey == seed.Key, cancellationToken);
+            if (product is null)
+            {
+                db.ProductCatalog.Add(CreateProduct(seed));
+                continue;
+            }
+
+            ApplyMissingManifestMetadata(product, seed);
+        }
+
+        static ProductCatalogItem CreateProduct(ProductSeed seed) =>
+            new()
+            {
+                ProductKey = seed.Key,
+                DisplayName = seed.Name,
+                ProductCategory = seed.Category,
+                ProductOwner = seed.Owner,
+                ProductStatus = seed.Status,
+                SortOrder = seed.Order,
+                IsActive = true,
+                CanonicalCallbackPath = "/auth/nexarr/callback",
+                ApiBaseUrl = seed.ApiBaseUrl,
+                HealthUrl = seed.HealthUrl,
+                ServiceAudience = seed.ServiceAudience,
+                MarketingUrl = $"https://stlcompliance.com/products/{seed.Key}",
+                DocumentationUrl = $"https://stlcompliance.com/docs/{seed.Key}",
+                SupportUrl = "https://stlcompliance.com/support",
+                EnvironmentKey = "local",
+                EntitlementDependencyRules = seed.Key is "shared-worker" or "nexarr-worker"
+                    ? "internal-platform-worker"
+                    : "tenant-product-entitlement-required",
+                ProductDependencyMetadata = ResolveDependencyMetadata(seed.Key),
+            };
+
+        static void ApplyMissingManifestMetadata(ProductCatalogItem product, ProductSeed seed)
+        {
+            if (string.IsNullOrWhiteSpace(product.ProductCategory))
+            {
+                product.ProductCategory = seed.Category;
+            }
+
+            if (string.IsNullOrWhiteSpace(product.ProductOwner))
+            {
+                product.ProductOwner = seed.Owner;
+            }
+
+            if (string.IsNullOrWhiteSpace(product.ProductStatus))
+            {
+                product.ProductStatus = seed.Status;
+            }
+
+            if (string.IsNullOrWhiteSpace(product.CanonicalCallbackPath))
+            {
+                product.CanonicalCallbackPath = "/auth/nexarr/callback";
+            }
+
+            if (string.IsNullOrWhiteSpace(product.ApiBaseUrl))
+            {
+                product.ApiBaseUrl = seed.ApiBaseUrl;
+            }
+
+            if (string.IsNullOrWhiteSpace(product.HealthUrl))
+            {
+                product.HealthUrl = seed.HealthUrl;
+            }
+
+            if (string.IsNullOrWhiteSpace(product.ServiceAudience))
+            {
+                product.ServiceAudience = seed.ServiceAudience;
+            }
+
+            if (string.IsNullOrWhiteSpace(product.MarketingUrl))
+            {
+                product.MarketingUrl = $"https://stlcompliance.com/products/{seed.Key}";
+            }
+
+            if (string.IsNullOrWhiteSpace(product.DocumentationUrl))
+            {
+                product.DocumentationUrl = $"https://stlcompliance.com/docs/{seed.Key}";
+            }
+
+            if (string.IsNullOrWhiteSpace(product.SupportUrl))
+            {
+                product.SupportUrl = "https://stlcompliance.com/support";
+            }
+
+            if (string.IsNullOrWhiteSpace(product.EnvironmentKey))
+            {
+                product.EnvironmentKey = "local";
+            }
+
+            if (string.IsNullOrWhiteSpace(product.EntitlementDependencyRules))
+            {
+                product.EntitlementDependencyRules = seed.Key is "shared-worker" or "nexarr-worker"
+                    ? "internal-platform-worker"
+                    : "tenant-product-entitlement-required";
+            }
+
+            if (string.IsNullOrWhiteSpace(product.ProductDependencyMetadata))
+            {
+                product.ProductDependencyMetadata = ResolveDependencyMetadata(seed.Key);
+            }
+        }
+    }
+
+    private static string ResolveDependencyMetadata(string productKey) =>
+        productKey switch
+        {
+            "nexarr" => "identity,tenant,entitlement,launch,service-token",
+            "staffarr" => "nexarr,trainarr,compliancecore",
+            "trainarr" => "nexarr,staffarr,compliancecore",
+            "maintainarr" => "nexarr,staffarr,trainarr,supplyarr,compliancecore",
+            "routarr" => "nexarr,staffarr,trainarr,maintainarr,supplyarr,compliancecore",
+            "supplyarr" => "nexarr,staffarr,maintainarr,routarr,trainarr,compliancecore",
+            "compliancecore" => "nexarr,staffarr,trainarr,maintainarr,routarr,supplyarr",
+            "companion" => "nexarr,staffarr,trainarr,maintainarr,routarr,supplyarr",
+            _ => "nexarr"
+        };
 
     private static async Task SeedLaunchProfilesAsync(
         NexArrDbContext db,
@@ -302,4 +414,15 @@ public static class PlatformSeeder
             });
         }
     }
+
+    private sealed record ProductSeed(
+        string Key,
+        string Name,
+        int Order,
+        string Category,
+        string Owner,
+        string Status,
+        string ApiBaseUrl,
+        string HealthUrl,
+        string ServiceAudience);
 }

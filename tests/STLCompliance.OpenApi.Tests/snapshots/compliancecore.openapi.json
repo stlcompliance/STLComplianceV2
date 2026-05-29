@@ -545,6 +545,19 @@
         }
       }
     },
+    "/api/exports/workflow-gate-checks": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "ExportComplianceCoreWorkflowGateChecksCsv",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/fact-definitions": {
       "get": {
         "tags": [
@@ -619,6 +632,53 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateFactRequirementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/fact-source-sync-health": {
+      "get": {
+        "tags": [
+          "FactSourceSyncHealth"
+        ],
+        "operationId": "GetComplianceCoreFactSourceSyncHealth",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/fact-source-sync-worker-settings": {
+      "get": {
+        "tags": [
+          "FactSourceSyncWorkerSettings"
+        ],
+        "operationId": "GetComplianceCoreFactSourceSyncWorkerSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "FactSourceSyncWorkerSettings"
+        ],
+        "operationId": "UpsertComplianceCoreFactSourceSyncWorkerSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertFactSourceSyncWorkerSettingsRequest"
               }
             }
           },
@@ -1093,6 +1153,84 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/InternalEvaluateRulePackBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/fact-source-sync/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingFactSourceSyncs",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "intervalMinutes",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/fact-source-sync/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessFactSourceSyncs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessFactSourceSyncsRequest"
               }
             }
           },
@@ -2277,6 +2415,30 @@
         }
       }
     },
+    "/api/rule-evaluations/{evaluationRunId}/audit-export": {
+      "get": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "ExportRuleEvaluationAuditPackage",
+        "parameters": [
+          {
+            "name": "evaluationRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/rule-packs": {
       "get": {
         "tags": [
@@ -2758,6 +2920,29 @@
               }
             }
           }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/evaluate": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateEvaluationRequest"
+              }
+            }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -4203,6 +4388,10 @@
           "emitFindings": {
             "type": "boolean",
             "default": false
+          },
+          "persistSnapshot": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -4352,6 +4541,10 @@
           "emitFindings": {
             "type": "boolean",
             "default": false
+          },
+          "persistSnapshot": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -4404,6 +4597,49 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessFactSourceSyncsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "intervalMinutes",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "intervalMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           },
           "batchSize": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
@@ -4636,6 +4872,113 @@
           }
         }
       },
+      "ProductGateEvaluationRequest": {
+        "required": [
+          "tenantId",
+          "workflowKey",
+          "actionKey",
+          "activityContextKey",
+          "subjectReferences"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "workflowKey": {
+            "type": "string"
+          },
+          "actionKey": {
+            "type": "string"
+          },
+          "activityContextKey": {
+            "type": "string"
+          },
+          "subjectReferences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductGateSubjectReference"
+            }
+          },
+          "ruleContext": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "factSnapshotReferences": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ProductGateFactSnapshotReference"
+            }
+          },
+          "emitFindings": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ProductGateFactSnapshotReference": {
+        "required": [
+          "factKey",
+          "snapshotReference",
+          "capturedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "factKey": {
+            "type": "string"
+          },
+          "snapshotReference": {
+            "type": "string"
+          },
+          "capturedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "ProductGateSubjectReference": {
+        "required": [
+          "subjectType",
+          "subjectReference"
+        ],
+        "type": "object",
+        "properties": {
+          "subjectType": {
+            "type": "string"
+          },
+          "subjectReference": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "displayLabel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RedeemHandoffRequest": {
         "required": [
           "handoffCode"
@@ -4857,6 +5200,30 @@
               "null",
               "boolean"
             ]
+          }
+        }
+      },
+      "UpsertFactSourceSyncWorkerSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "defaultScopeKey",
+          "intervalMinutes"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "defaultScopeKey": {
+            "type": "string"
+          },
+          "intervalMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -5087,6 +5454,12 @@
       "name": "FactSources"
     },
     {
+      "name": "FactSourceSyncWorkerSettings"
+    },
+    {
+      "name": "FactSourceSyncHealth"
+    },
+    {
       "name": "Internal"
     },
     {
@@ -5124,6 +5497,9 @@
     },
     {
       "name": "WorkflowGates"
+    },
+    {
+      "name": "ProductGates"
     },
     {
       "name": "CsvBundle"

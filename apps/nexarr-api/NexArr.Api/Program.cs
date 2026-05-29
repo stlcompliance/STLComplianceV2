@@ -16,6 +16,7 @@ await StlApiHost.RunAsync<NexArrDbContext>(
         app.MapProductEndpoints();
         app.MapEntitlementEndpoints();
         app.MapServiceTokenEndpoints();
+        app.MapServiceTokenDiscoveryEndpoints();
         app.MapInternalIntegrationTokenEndpoints();
         app.MapLaunchEndpoints();
         app.MapPlatformAdminEndpoints();

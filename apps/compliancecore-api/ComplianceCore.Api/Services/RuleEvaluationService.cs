@@ -183,6 +183,142 @@ public sealed class RuleEvaluationService(
             []);
     }
 
+    public async Task<RuleEvaluationAuditExportResponse> BuildAuditExportAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        Guid evaluationRunId,
+        CancellationToken cancellationToken = default)
+    {
+        var evaluation = await db.RuleEvaluationRuns
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Id == evaluationRunId)
+            .Join(
+                db.RulePacks.AsNoTracking(),
+                run => run.RulePackId,
+                pack => pack.Id,
+                (run, pack) => new AuditPackageEvaluationRunItem(
+                    run.Id,
+                    run.RulePackId,
+                    pack.PackKey,
+                    run.ActorUserId,
+                    run.Status,
+                    run.OverallResult,
+                    run.FactInputsJson,
+                    run.RuleResultsJson,
+                    run.AppliedWaiverId,
+                    run.AppliedWaiverKey,
+                    run.CreatedAt))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (evaluation is null)
+        {
+            throw new StlApiException("rule_evaluation.not_found", "Rule evaluation run was not found.", 404);
+        }
+
+        var findings = await db.ComplianceFindings
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.RuleEvaluationRunId == evaluationRunId)
+            .Join(
+                db.RulePacks.AsNoTracking(),
+                finding => finding.RulePackId,
+                pack => pack.Id,
+                (finding, pack) => new AuditPackageFindingItem(
+                    finding.Id,
+                    finding.RulePackId,
+                    pack.PackKey,
+                    finding.RuleEvaluationRunId,
+                    finding.FindingKey,
+                    finding.Severity,
+                    finding.Status,
+                    finding.RuleKey,
+                    finding.FactKey,
+                    finding.Title,
+                    finding.Message,
+                    finding.ReasonCode,
+                    finding.CreatedAt))
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        var workflowGateChecks = await db.WorkflowGateCheckResults
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.RuleEvaluationRunId == evaluationRunId)
+            .Join(
+                db.WorkflowGateDefinitions.AsNoTracking(),
+                check => check.WorkflowGateDefinitionId,
+                gate => gate.Id,
+                (check, gate) => new { check, gate })
+            .Join(
+                db.RulePacks.AsNoTracking(),
+                item => item.gate.RulePackId,
+                pack => pack.Id,
+                (item, pack) => new AuditPackageWorkflowGateCheckItem(
+                    item.check.Id,
+                    item.check.GateKey,
+                    pack.Id,
+                    pack.PackKey,
+                    item.check.RuleEvaluationRunId,
+                    item.check.Outcome,
+                    item.check.ReasonCode,
+                    item.check.Message,
+                    item.check.AppliedWaiverId,
+                    item.check.AppliedWaiverKey,
+                    item.check.CreatedAt))
+            .OrderBy(x => x.CheckedAt)
+            .ToListAsync(cancellationToken);
+
+        var waiverIds = workflowGateChecks
+            .Select(x => x.AppliedWaiverId)
+            .Append(evaluation.AppliedWaiverId)
+            .Where(id => id is not null)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToList();
+
+        IReadOnlyList<AuditPackageWaiverItem> waivers = waiverIds.Count == 0
+            ? []
+            : await db.ComplianceWaivers
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && waiverIds.Contains(x.Id))
+                .Select(x => new AuditPackageWaiverItem(
+                    x.Id,
+                    x.WaiverKey,
+                    x.RulePackId,
+                    x.PackKey,
+                    x.RuleKey,
+                    x.GateKey,
+                    x.SubjectScopeKey,
+                    x.ReasonCode,
+                    x.Explanation,
+                    x.Status,
+                    x.EffectiveAt,
+                    x.ExpiresAt,
+                    x.ApprovedByUserId,
+                    x.ApprovedAt,
+                    x.CreatedAt))
+                .OrderBy(x => x.CreatedAt)
+                .ToListAsync(cancellationToken);
+
+        var export = new RuleEvaluationAuditExportResponse(
+            Guid.NewGuid(),
+            tenantId,
+            DateTimeOffset.UtcNow,
+            evaluation,
+            workflowGateChecks,
+            findings,
+            waivers);
+
+        await auditService.WriteAsync(
+            "rule_evaluation.audit_export",
+            tenantId,
+            actorUserId,
+            "rule_evaluation_run",
+            evaluationRunId.ToString(),
+            "success",
+            cancellationToken: cancellationToken);
+
+        return export;
+    }
+
     private static RuleEvaluationRunResponse MapResponse(
         RuleEvaluationRun run,
         RulePack pack,

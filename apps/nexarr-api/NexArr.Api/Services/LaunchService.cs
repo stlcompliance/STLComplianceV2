@@ -76,6 +76,15 @@ public sealed class LaunchService(
         var denial = await ResolveLaunchDenialAsync(principal, tenant, normalizedKey, cancellationToken);
         if (denial is not null)
         {
+            await audit.WriteAsync(
+                "launch.denied",
+                "product",
+                normalizedKey,
+                "Denied",
+                tenantId: tenantId,
+                actorUserId: userId,
+                reasonCode: denial,
+                cancellationToken: cancellationToken);
             throw new StlApiException("launch.denied", "Product launch is not permitted.", 403, denial);
         }
 
@@ -98,8 +107,20 @@ public sealed class LaunchService(
         }
 
         var profile = await db.LaunchProfiles.AsNoTracking()
-            .FirstOrDefaultAsync(p => p.ProductKey == normalizedKey && p.IsActive, cancellationToken)
-            ?? throw new StlApiException("launch.profile_missing", "Launch profile is not configured for this product.", 404);
+            .FirstOrDefaultAsync(p => p.ProductKey == normalizedKey && p.IsActive, cancellationToken);
+        if (profile is null)
+        {
+            await audit.WriteAsync(
+                "launch.handoff.create",
+                "product",
+                normalizedKey,
+                "Denied",
+                tenantId: tenantId,
+                actorUserId: userId,
+                reasonCode: "profile_missing",
+                cancellationToken: cancellationToken);
+            throw new StlApiException("launch.profile_missing", "Launch profile is not configured for this product.", 404);
+        }
 
         var plaintextCode = GenerateHandoffCode();
         var expiresAt = DateTimeOffset.UtcNow.AddMinutes(launchOptions.Value.HandoffLifetimeMinutes);

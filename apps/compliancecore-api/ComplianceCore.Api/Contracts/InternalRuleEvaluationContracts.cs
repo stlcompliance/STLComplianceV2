@@ -4,7 +4,8 @@ public sealed record InternalEvaluateRulePackRequest(
     Guid TenantId,
     string RulePackKey,
     IReadOnlyDictionary<string, string>? Context,
-    bool EmitFindings = false);
+    bool EmitFindings = false,
+    bool PersistSnapshot = false);
 
 public sealed record InternalEvaluateRulePackResponse(
     Guid TenantId,

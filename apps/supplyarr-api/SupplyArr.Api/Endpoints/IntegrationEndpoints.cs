@@ -153,9 +153,47 @@ public static class IntegrationEndpoints
                 cancellationToken));
         })
         .WithName("IntegrationGetProcurementPathReadiness");
+
+        integrations.MapGet("/references/{referenceType}/{referenceId:guid}", async (
+            Guid tenantId,
+            string referenceType,
+            Guid referenceId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            SupplyReferenceResolutionService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateReferenceReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.ResolveByIdAsync(
+                tenantId,
+                referenceType,
+                referenceId,
+                cancellationToken));
+        })
+        .WithName("IntegrationResolveSupplyReferenceById");
+
+        integrations.MapGet("/references/by-key", async (
+            Guid tenantId,
+            string referenceType,
+            string referenceKey,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            SupplyReferenceResolutionService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateReferenceReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.ResolveByKeyAsync(
+                tenantId,
+                referenceType,
+                referenceKey,
+                cancellationToken));
+        })
+        .WithName("IntegrationResolveSupplyReferenceByKey");
     }
 
     public const string SupplyReadinessReadActionScope = "supplyarr.readiness.read";
+
+    public const string SupplyReferenceReadActionScope = "supplyarr.references.read";
 
     private static void ValidateReadinessServiceToken(
         StlServiceTokenValidator tokenValidator,
@@ -193,6 +231,48 @@ public static class IntegrationEndpoints
                 RequiredTargetProduct = "supplyarr",
                 TenantId = tenantId,
                 RequiredActionScope = SupplyReadinessReadActionScope,
+            });
+    }
+
+    private static void ValidateReferenceReadServiceToken(
+        StlServiceTokenValidator tokenValidator,
+        HttpContext context,
+        Guid tenantId)
+    {
+        var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+            context.Request.Headers.Authorization.ToString());
+
+        var preview = tokenValidator.TryValidate(bearer);
+        if (preview is null)
+        {
+            throw new StlApiException("auth.service_token_invalid", "Service token is invalid.", 401);
+        }
+
+        var allowedSources = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "maintainarr",
+            "routarr",
+            "staffarr",
+            "trainarr",
+            "compliancecore",
+        };
+
+        if (!allowedSources.Contains(preview.SourceProductKey))
+        {
+            throw new StlApiException(
+                "auth.service_token_scope",
+                "Service token source product is not authorized for SupplyArr reference resolution.",
+                403);
+        }
+
+        tokenValidator.ValidateOrThrow(
+            bearer,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = preview.SourceProductKey,
+                RequiredTargetProduct = "supplyarr",
+                TenantId = tenantId,
+                RequiredActionScope = SupplyReferenceReadActionScope,
             });
     }
 }

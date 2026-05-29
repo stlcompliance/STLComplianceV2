@@ -111,5 +111,22 @@ public static class RuleEvaluationEndpoints
             return Results.Ok(await service.GetAsync(tenantId, evaluationRunId, cancellationToken));
         })
         .WithName("GetRuleEvaluation");
+
+        evaluations.MapGet("/{evaluationRunId:guid}/audit-export", async (
+            Guid evaluationRunId,
+            ComplianceCoreAuthorizationService authorization,
+            RuleEvaluationService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAuditPackageExport(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.BuildAuditExportAsync(
+                tenantId,
+                context.User.GetUserId(),
+                evaluationRunId,
+                cancellationToken));
+        })
+        .WithName("ExportRuleEvaluationAuditPackage");
     }
 }

@@ -224,11 +224,13 @@ public sealed class AuthService(
 
     public async Task<NavigationResponse> GetNavigationAsync(
         ClaimsPrincipal principal,
+        string? currentProductKey = null,
         CancellationToken cancellationToken = default)
     {
         var tenantId = principal.GetTenantId();
         var entitlements = principal.GetEntitlements();
         var isPlatformAdmin = principal.IsPlatformAdmin();
+        var normalizedCurrentProductKey = currentProductKey?.Trim().ToLowerInvariant();
 
         var catalogProducts = await db.Entitlements
             .AsNoTracking()
@@ -245,7 +247,11 @@ public sealed class AuthService(
                 return new NavigationItem(
                     p.ProductKey,
                     p.DisplayName,
+                    p.ProductCategory,
+                    p.ProductStatus,
                     $"/app/{p.ProductKey}",
+                    $"/app/{p.ProductKey}/launch",
+                    string.Equals(p.ProductKey, normalizedCurrentProductKey, StringComparison.OrdinalIgnoreCase),
                     p.SortOrder,
                     surfaces);
             })

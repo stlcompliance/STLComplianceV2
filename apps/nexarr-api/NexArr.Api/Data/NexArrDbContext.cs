@@ -120,6 +120,19 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasKey(x => x.ProductKey);
             entity.Property(x => x.ProductKey).HasMaxLength(64);
             entity.Property(x => x.DisplayName).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ProductCategory).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ProductOwner).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ProductStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CanonicalCallbackPath).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ApiBaseUrl).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.HealthUrl).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.ServiceAudience).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.MarketingUrl).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.DocumentationUrl).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.SupportUrl).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.EnvironmentKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EntitlementDependencyRules).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.ProductDependencyMetadata).HasMaxLength(2048).IsRequired();
         });
 
         modelBuilder.Entity<TenantProductEntitlement>(entity =>

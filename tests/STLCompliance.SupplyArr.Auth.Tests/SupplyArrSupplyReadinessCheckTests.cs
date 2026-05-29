@@ -24,9 +24,13 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
     private HttpClient _nexarrClient = null!;
     private HttpClient _supplyarrClient = null!;
     private string _maintainarrServiceToken = null!;
+    private string _referenceServiceToken = null!;
 
     private Guid _partId;
     private Guid _vendorId;
+    private Guid _purchaseOrderId;
+    private Guid _receivingReceiptId;
+    private Guid _warrantyClaimId;
 
     public async Task InitializeAsync()
     {
@@ -57,6 +61,11 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
             "maintainarr",
             ["supplyarr"],
             IntegrationEndpoints.SupplyReadinessReadActionScope);
+        _referenceServiceToken = await IssueServiceTokenAsync(
+            adminToken,
+            "routarr",
+            ["supplyarr"],
+            IntegrationEndpoints.SupplyReferenceReadActionScope);
 
         _supplyarrFactory = new WebApplicationFactory<global::SupplyArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -73,7 +82,8 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
         });
 
         _supplyarrClient = _supplyarrFactory.CreateClient();
-        (_partId, _vendorId) = await SeedReadinessCheckScenarioAsync();
+        (_partId, _vendorId, _purchaseOrderId, _receivingReceiptId, _warrantyClaimId) =
+            await SeedReadinessCheckScenarioAsync();
     }
 
     public async Task DisposeAsync()
@@ -150,7 +160,76 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    private async Task<(Guid PartId, Guid VendorId)> SeedReadinessCheckScenarioAsync()
+    [Fact]
+    public async Task Integration_reference_resolution_resolves_stable_part_and_vendor_references()
+    {
+        var part = await ResolveReferenceAsync(
+            $"/api/integrations/references/by-key?tenantId={PlatformSeeder.DemoTenantId}&referenceType=item&referenceKey=CHECK-PART");
+
+        Assert.Equal(SupplyReferenceTypes.Part, part.ReferenceType);
+        Assert.Equal(_partId, part.SupplyArrReferenceId);
+        Assert.Equal("check-part", part.DisplayCode);
+        Assert.Equal("/api/parts/" + _partId, part.ApiPath);
+
+        var vendor = await ResolveReferenceAsync(
+            $"/api/integrations/references/vendor/{_vendorId}?tenantId={PlatformSeeder.DemoTenantId}");
+
+        Assert.Equal(SupplyReferenceTypes.ExternalParty, vendor.ReferenceType);
+        Assert.Equal(_vendorId, vendor.SupplyArrReferenceId);
+        Assert.Equal("vendor-check", vendor.DisplayCode);
+        Assert.Equal("vendor", vendor.Metadata["partyType"]);
+    }
+
+    [Fact]
+    public async Task Integration_reference_resolution_resolves_procurement_receiving_and_warranty_references()
+    {
+        var purchaseOrder = await ResolveReferenceAsync(
+            $"/api/integrations/references/purchase-order/{_purchaseOrderId}?tenantId={PlatformSeeder.DemoTenantId}");
+
+        Assert.Equal(SupplyReferenceTypes.PurchaseOrder, purchaseOrder.ReferenceType);
+        Assert.Equal("po-check", purchaseOrder.DisplayCode);
+        Assert.Equal(_vendorId.ToString(), purchaseOrder.Metadata["vendorPartyId"]);
+
+        var receipt = await ResolveReferenceAsync(
+            $"/api/integrations/references/by-key?tenantId={PlatformSeeder.DemoTenantId}&referenceType=receipt&referenceKey=RCV-CHECK");
+
+        Assert.Equal(SupplyReferenceTypes.ReceivingReceipt, receipt.ReferenceType);
+        Assert.Equal(_receivingReceiptId, receipt.SupplyArrReferenceId);
+        Assert.Equal(_purchaseOrderId.ToString(), receipt.Metadata["purchaseOrderId"]);
+
+        var warranty = await ResolveReferenceAsync(
+            $"/api/integrations/references/by-key?tenantId={PlatformSeeder.DemoTenantId}&referenceType=warranty&referenceKey=WCL-CHECK");
+
+        Assert.Equal(SupplyReferenceTypes.WarrantyClaim, warranty.ReferenceType);
+        Assert.Equal(_warrantyClaimId, warranty.SupplyArrReferenceId);
+        Assert.Equal(_partId.ToString(), warranty.Metadata["partId"]);
+    }
+
+    [Fact]
+    public async Task Integration_reference_resolution_rejects_missing_service_token()
+    {
+        var response = await _supplyarrClient.GetAsync(
+            $"/api/integrations/references/part/{_partId}?tenantId={PlatformSeeder.DemoTenantId}");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    private async Task<SupplyReferenceResolutionResponse> ResolveReferenceAsync(string path)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, path);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _referenceServiceToken);
+
+        var response = await _supplyarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<SupplyReferenceResolutionResponse>())!;
+    }
+
+    private async Task<(
+        Guid PartId,
+        Guid VendorId,
+        Guid PurchaseOrderId,
+        Guid ReceivingReceiptId,
+        Guid WarrantyClaimId)> SeedReadinessCheckScenarioAsync()
     {
         using var scope = _supplyarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
@@ -159,12 +238,16 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
 
         var partId = Guid.NewGuid();
         var vendorId = Guid.NewGuid();
+        var purchaseRequestId = Guid.NewGuid();
+        var purchaseOrderId = Guid.NewGuid();
+        var receivingReceiptId = Guid.NewGuid();
+        var warrantyClaimId = Guid.NewGuid();
 
         db.Parts.Add(new Part
         {
             Id = partId,
             TenantId = tenantId,
-            PartKey = "CHECK-PART",
+            PartKey = "check-part",
             DisplayName = "Readiness check part",
             Status = "active",
             ReorderPoint = 10m,
@@ -188,7 +271,7 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
         {
             Id = vendorId,
             TenantId = tenantId,
-            PartyKey = "VENDOR-CHECK",
+            PartyKey = "vendor-check",
             PartyType = "vendor",
             DisplayName = "Restricted vendor",
             LegalName = "Restricted vendor LLC",
@@ -198,8 +281,72 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
             UpdatedAt = now,
         });
 
+        db.PurchaseRequests.Add(new PurchaseRequest
+        {
+            Id = purchaseRequestId,
+            TenantId = tenantId,
+            RequestKey = "pr-check",
+            Title = "Readiness check purchase request",
+            Status = PurchaseRequestStatuses.Submitted,
+            VendorPartyId = vendorId,
+            RequestedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.PurchaseOrders.Add(new PurchaseOrder
+        {
+            Id = purchaseOrderId,
+            TenantId = tenantId,
+            OrderKey = "po-check",
+            Title = "Readiness check purchase order",
+            Status = PurchaseOrderStatuses.Issued,
+            PurchaseRequestId = purchaseRequestId,
+            VendorPartyId = vendorId,
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            IssuedAt = now,
+            IssuedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.ReceivingReceipts.Add(new ReceivingReceipt
+        {
+            Id = receivingReceiptId,
+            TenantId = tenantId,
+            ReceiptKey = "rcv-check",
+            PurchaseOrderId = purchaseOrderId,
+            InventoryBinId = Guid.NewGuid(),
+            Status = ReceivingReceiptStatuses.Posted,
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            PostedAt = now,
+            PostedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.WarrantyClaims.Add(new WarrantyClaim
+        {
+            Id = warrantyClaimId,
+            TenantId = tenantId,
+            ClaimKey = "WCL-CHECK",
+            Status = WarrantyClaimStatuses.Submitted,
+            ClaimType = WarrantyClaimTypes.Defective,
+            VendorPartyId = vendorId,
+            PartId = partId,
+            PurchaseOrderId = purchaseOrderId,
+            ReceivingReceiptId = receivingReceiptId,
+            QuantityClaimed = 1m,
+            ProblemDescription = "Reference resolution warranty claim",
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            SubmittedAt = now,
+            SubmittedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
         await db.SaveChangesAsync();
-        return (partId, vendorId);
+        return (partId, vendorId, purchaseOrderId, receivingReceiptId, warrantyClaimId);
     }
 
     private string CreateSupplyArrAccessToken(

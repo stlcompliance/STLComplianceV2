@@ -212,7 +212,8 @@ public sealed class WorkflowGateService(
                 request.TenantId,
                 rulePack.PackKey,
                 request.Context,
-                request.EmitFindings),
+                request.EmitFindings,
+                request.PersistSnapshot),
             sourceProductKey,
             cancellationToken);
 

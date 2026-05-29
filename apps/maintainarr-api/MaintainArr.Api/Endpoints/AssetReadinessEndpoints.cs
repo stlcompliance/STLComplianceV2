@@ -26,7 +26,11 @@ public static class AssetReadinessEndpoints
                     return Results.BadRequest(new { error = "assetId must be a non-empty GUID when provided." });
                 }
 
-                return Results.Ok(await service.GetAsync(tenantId, id, cancellationToken));
+                return Results.Ok(await service.GetAsync(
+                    tenantId,
+                    id,
+                    cancellationToken,
+                    context.User.GetUserId()));
             }
 
             return Results.Ok(await service.ListFleetAsync(tenantId, cancellationToken));

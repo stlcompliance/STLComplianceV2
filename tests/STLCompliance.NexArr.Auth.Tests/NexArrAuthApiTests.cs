@@ -98,7 +98,7 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
     {
         await SeedDatabaseAsync();
         var tokens = await LoginAsync();
-        var request = new HttpRequestMessage(HttpMethod.Get, "/api/me/navigation");
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/me/navigation?currentProductKey=staffarr");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
         var response = await _client.SendAsync(request);
 
@@ -107,6 +107,10 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         Assert.NotNull(navigation);
         Assert.True(navigation.Products.Count >= 7);
         var staffarr = navigation.Products.First(p => p.ProductKey.Equals("staffarr", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("workforce", staffarr.ProductCategory);
+        Assert.Equal("available", staffarr.ProductStatus);
+        Assert.Equal("/app/staffarr/launch", staffarr.LaunchUrl);
+        Assert.True(staffarr.IsCurrent);
         Assert.NotEmpty(staffarr.Surfaces);
         Assert.Contains(staffarr.Surfaces, s => s.SurfaceKey == "overview" && s.IsEnabled);
     }

@@ -43,6 +43,25 @@ public sealed record LaunchDiagnosticsResponse(
     IReadOnlyList<LaunchDiagnosticIssueResponse> Issues,
     DateTimeOffset GeneratedAt);
 
+public sealed record LaunchAttemptTimelineItemResponse(
+    Guid AuditEventId,
+    Guid? TenantId,
+    string? TenantSlug,
+    string? TenantDisplayName,
+    Guid? ActorUserId,
+    string? ActorEmail,
+    string? ActorDisplayName,
+    string? ProductKey,
+    string? ProductDisplayName,
+    string Action,
+    string Result,
+    string? ReasonCode,
+    string TargetType,
+    string? TargetId,
+    Guid CorrelationId,
+    DateTimeOffset OccurredAt,
+    string? RemediationHint);
+
 public sealed record TenantOverviewRowResponse(
     Guid TenantId,
     string Slug,

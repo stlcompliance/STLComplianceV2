@@ -81,3 +81,12 @@ public sealed record EvaluateRulePackBatchResponse(
     Guid BatchId,
     IReadOnlyList<EvaluateRulePackBatchResultItem> Results,
     EvaluateRulePackBatchSummary Summary);
+
+public sealed record RuleEvaluationAuditExportResponse(
+    Guid ExportId,
+    Guid TenantId,
+    DateTimeOffset GeneratedAt,
+    AuditPackageEvaluationRunItem EvaluationRun,
+    IReadOnlyList<AuditPackageWorkflowGateCheckItem> WorkflowGateChecks,
+    IReadOnlyList<AuditPackageFindingItem> Findings,
+    IReadOnlyList<AuditPackageWaiverItem> Waivers);

@@ -122,6 +122,54 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
     }
 
     [Fact]
+    public async Task Platform_admin_can_read_product_manifest_contract()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/platform-admin/product-manifests?tenantId={PlatformSeeder.DemoTenantId}&productKey=staffarr",
+                token));
+
+        response.EnsureSuccessStatusCode();
+        var payload = await response.Content.ReadFromJsonAsync<PagedResult<ProductManifestResponse>>();
+
+        Assert.NotNull(payload);
+        var manifest = Assert.Single(payload.Items);
+        Assert.Equal("staffarr", manifest.ProductKey);
+        Assert.Equal("StaffArr", manifest.DisplayName);
+        Assert.Equal("workforce", manifest.ProductCategory);
+        Assert.Equal("People Operations", manifest.ProductOwner);
+        Assert.Equal("available", manifest.ProductStatus);
+        Assert.True(manifest.IsActive);
+        Assert.Equal("local", manifest.EnvironmentKey);
+        Assert.Equal("/auth/nexarr/callback", manifest.CanonicalCallbackPath);
+        Assert.Equal("http://localhost:5102", manifest.ApiBaseUrl);
+        Assert.Equal("http://localhost:5102/health/ready", manifest.HealthUrl);
+        Assert.Equal("stl:staffarr:api", manifest.ServiceAudience);
+        Assert.Equal("tenant-product-entitlement-required", manifest.EntitlementDependencyRules);
+        Assert.Contains("nexarr", manifest.ProductDependencyMetadata);
+        Assert.Equal("http://localhost:5175", manifest.LaunchBaseUrl);
+        Assert.Equal("/launch", manifest.LaunchPath);
+        Assert.Equal("http://localhost:5175/launch", manifest.LaunchUrl);
+        Assert.NotEmpty(manifest.CallbackAllowlist);
+    }
+
+    [Fact]
+    public async Task Tenant_admin_cannot_read_product_manifest_contract()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/platform-admin/product-manifests", token));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Platform_admin_can_grant_entitlement()
     {
         await SeedDatabaseAsync();

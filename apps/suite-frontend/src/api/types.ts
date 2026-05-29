@@ -43,7 +43,11 @@ export interface NavigationSurfaceItem {
 export interface NavigationItem {
   productKey: string
   displayName: string
+  productCategory?: string
+  productStatus?: string
   routePath: string
+  launchUrl?: string
+  isCurrent?: boolean
   sortOrder: number
   surfaces: NavigationSurfaceItem[]
 }
@@ -151,6 +155,26 @@ export interface LaunchDiagnosticsResponse {
   generatedAt: string
 }
 
+export interface LaunchAttemptTimelineItem {
+  auditEventId: string
+  tenantId: string | null
+  tenantSlug: string | null
+  tenantDisplayName: string | null
+  actorUserId: string | null
+  actorEmail: string | null
+  actorDisplayName: string | null
+  productKey: string | null
+  productDisplayName: string | null
+  action: string
+  result: string
+  reasonCode: string | null
+  targetType: string
+  targetId: string | null
+  correlationId: string
+  occurredAt: string
+  remediationHint: string | null
+}
+
 export interface TenantOverviewRow {
   tenantId: string
   slug: string
@@ -206,6 +230,47 @@ export interface ProductDetailResponse {
   displayName: string
   sortOrder: number
   isActive: boolean
+}
+
+export interface ProductManifestCallbackAllowlistResponse {
+  entryId: string
+  tenantId: string | null
+  urlPattern: string
+  patternType: string
+  isActive: boolean
+}
+
+export interface ProductManifestDataPlaneProfileResponse {
+  profileId: string
+  tenantId: string
+  deploymentMode: string
+  trustStatus: string
+  dataEndpointUrl: string | null
+}
+
+export interface ProductManifestResponse {
+  productKey: string
+  displayName: string
+  productCategory: string
+  productOwner: string
+  productStatus: string
+  isActive: boolean
+  environmentKey: string
+  canonicalCallbackPath: string
+  launchBaseUrl: string | null
+  launchPath: string | null
+  launchUrl: string | null
+  apiBaseUrl: string
+  healthUrl: string
+  serviceAudience: string
+  marketingUrl: string
+  documentationUrl: string
+  supportUrl: string
+  entitlementDependencyRules: string
+  productDependencyMetadata: string
+  launchProfileModifiedAt: string | null
+  callbackAllowlist: ProductManifestCallbackAllowlistResponse[]
+  dataPlaneProfiles: ProductManifestDataPlaneProfileResponse[]
 }
 
 export interface CreateProductRequest {

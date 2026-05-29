@@ -49,7 +49,11 @@ public sealed record NavigationSurfaceItem(
 public sealed record NavigationItem(
     string ProductKey,
     string DisplayName,
+    string ProductCategory,
+    string ProductStatus,
     string RoutePath,
+    string LaunchUrl,
+    bool IsCurrent,
     int SortOrder,
     IReadOnlyList<NavigationSurfaceItem> Surfaces);
 

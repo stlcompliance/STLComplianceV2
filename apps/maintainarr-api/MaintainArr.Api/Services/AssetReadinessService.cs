@@ -6,14 +6,17 @@ using STLCompliance.Shared.Contracts;
 
 namespace MaintainArr.Api.Services;
 
-public sealed class AssetReadinessService(MaintainArrDbContext db)
+public sealed class AssetReadinessService(
+    MaintainArrDbContext db,
+    IMaintainArrAuditService audit)
 {
     public const int DefaultMaterializedReadStalenessHours = AssetStatusRollupDefaults.StalenessHours;
 
     public async Task<AssetReadinessResponse> GetAsync(
         Guid tenantId,
         Guid assetId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? actorUserId = null)
     {
         var asOf = DateTimeOffset.UtcNow;
         var materialized = await TryGetMaterializedDetailAsync(
@@ -24,7 +27,14 @@ public sealed class AssetReadinessService(MaintainArrDbContext db)
             cancellationToken);
         if (materialized is not null)
         {
-            return materialized;
+            return await AttachDecisionMetadataAsync(
+                tenantId,
+                actorUserId,
+                materialized,
+                "asset_status_rollup",
+                "asset_readiness.read",
+                DefaultMaterializedReadStalenessHours,
+                cancellationToken);
         }
 
         var asset = await db.Assets
@@ -36,18 +46,35 @@ public sealed class AssetReadinessService(MaintainArrDbContext db)
         }
 
         var context = await LoadReadinessContextAsync(tenantId, [assetId], cancellationToken);
-        return BuildDetailResponse(asset, context);
+        var response = BuildDetailResponse(asset, context);
+        return await AttachDecisionMetadataAsync(
+            tenantId,
+            actorUserId,
+            response,
+            "live_query",
+            "asset_readiness.read",
+            null,
+            cancellationToken);
     }
 
     public async Task<AssetReadinessResponse> GetByDispatchRefAsync(
         Guid tenantId,
         string? vehicleRefKey,
         string? assetTag,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? actorUserId = null)
     {
         var asset = await ResolveAssetForDispatchAsync(tenantId, vehicleRefKey, assetTag, cancellationToken);
         var context = await LoadReadinessContextAsync(tenantId, [asset.Id], cancellationToken);
-        return BuildDetailResponse(asset, context);
+        var response = BuildDetailResponse(asset, context);
+        return await AttachDecisionMetadataAsync(
+            tenantId,
+            actorUserId,
+            response,
+            "live_query",
+            "asset_readiness.dispatch_gate",
+            null,
+            cancellationToken);
     }
 
     public async Task<Asset> ResolveAssetForDispatchAsync(
@@ -247,6 +274,64 @@ public sealed class AssetReadinessService(MaintainArrDbContext db)
             DateTimeOffset.UtcNow,
             blockers,
             signals);
+    }
+
+    private async Task<AssetReadinessResponse> AttachDecisionMetadataAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        AssetReadinessResponse response,
+        string dataSource,
+        string auditAction,
+        int? stalenessThresholdHours,
+        CancellationToken cancellationToken)
+    {
+        var auditEventId = await audit.WriteAsync(
+            auditAction,
+            tenantId,
+            actorUserId,
+            "asset",
+            response.AssetId.ToString(),
+            response.ReadinessStatus,
+            reasonCode: response.ReadinessBasis,
+            cancellationToken: cancellationToken);
+
+        return response with
+        {
+            Dispatchability = BuildDispatchabilitySummary(response),
+            Confidence = new AssetReadinessConfidenceResponse(
+                dataSource,
+                "fresh",
+                stalenessThresholdHours,
+                response.CalculatedAt),
+            AuditSnapshot = new AssetReadinessAuditSnapshotResponse(
+                auditEventId,
+                "asset_readiness_decision",
+                DateTimeOffset.UtcNow),
+            ComplianceCoreReferences = [],
+        };
+    }
+
+    private static AssetReadinessDispatchabilitySummaryResponse BuildDispatchabilitySummary(
+        AssetReadinessResponse response)
+    {
+        var primaryBlocker = response.Blockers.FirstOrDefault();
+        var isDispatchable = string.Equals(
+            response.ReadinessStatus,
+            "ready",
+            StringComparison.OrdinalIgnoreCase);
+
+        return new AssetReadinessDispatchabilitySummaryResponse(
+            isDispatchable,
+            isDispatchable ? "allow" : "block",
+            isDispatchable
+                ? "asset_maintenance_clear"
+                : primaryBlocker?.BlockerType ?? response.ReadinessBasis,
+            isDispatchable
+                ? "Asset is dispatchable from MaintainArr maintenance readiness."
+                : primaryBlocker?.Message ?? "Asset is not dispatchable from MaintainArr maintenance readiness.",
+            response.Blockers.Count,
+            primaryBlocker?.BlockerType,
+            primaryBlocker?.Message);
     }
 
     private static AssetReadinessSignalCountsResponse BuildSignalCounts(Guid assetId, AssetReadinessContext context)
