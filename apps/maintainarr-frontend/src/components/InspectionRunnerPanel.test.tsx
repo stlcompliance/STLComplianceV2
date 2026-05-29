@@ -113,6 +113,18 @@ describe('InspectionRunnerPanel', () => {
     onSubmitAnswers: vi.fn(),
     onCompleteRun: vi.fn(),
     onCreateDefectsFromRun: vi.fn(),
+    runEvidence: [],
+    evidenceChecklistItemId: '',
+    evidenceTypeKey: 'inspection_photo',
+    evidenceNotes: '',
+    selectedEvidenceFileName: null,
+    isEvidenceLoading: false,
+    isUploadingEvidence: false,
+    onEvidenceChecklistItemIdChange: vi.fn(),
+    onEvidenceTypeKeyChange: vi.fn(),
+    onEvidenceNotesChange: vi.fn(),
+    onSelectEvidenceFile: vi.fn(),
+    onUploadEvidence: vi.fn(),
   }
 
   it('renders run list and active checklist', () => {
@@ -120,8 +132,9 @@ describe('InspectionRunnerPanel', () => {
 
     expect(screen.getByText('Run inspection')).toBeInTheDocument()
     expect(screen.getByText('FL-001')).toBeInTheDocument()
-    expect(screen.getByText('Brakes operate correctly')).toBeInTheDocument()
+    expect(screen.getAllByText('Brakes operate correctly').length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: 'Complete run' })).toBeInTheDocument()
+    expect(screen.getByTestId('inspection-run-evidence-panel')).toBeInTheDocument()
   })
 
   it('shows empty runs message when no history', () => {

@@ -6,7 +6,7 @@ type Props = { state: MaintainArrWorkspaceState }
 export function WorkOrdersSection({ state }: Props) {
   const s = state
   return (
-    <div className="mb-8">
+    <div className="mb-8" data-testid="maintainarr-work-orders-workspace">
       <WorkOrdersPanel
         canCreate={s.canCreateWorkOrder}
         canPerform={s.canExecuteInspections}

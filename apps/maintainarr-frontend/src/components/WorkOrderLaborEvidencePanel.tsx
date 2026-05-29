@@ -93,7 +93,10 @@ export function WorkOrderLaborEvidencePanel({
   const editable = workOrderEditable(workOrder.status)
 
   return (
-    <div className="mt-4 space-y-6 border-t border-slate-800 pt-4">
+    <div
+      className="mt-4 space-y-6 border-t border-slate-800 pt-4"
+      data-testid="work-order-labor-evidence-panel"
+    >
       <div>
         <h4 className="text-sm font-semibold text-white">Task lines</h4>
         {tasks.length === 0 ? (

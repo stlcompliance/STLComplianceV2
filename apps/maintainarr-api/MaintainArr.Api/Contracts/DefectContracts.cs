@@ -32,7 +32,9 @@ public sealed record DefectSummaryResponse(
 
     DateTimeOffset UpdatedAt,
 
-    DateTimeOffset? ResolvedAt);
+    DateTimeOffset? ResolvedAt,
+
+    int EvidenceCount);
 
 
 
@@ -70,7 +72,9 @@ public sealed record DefectDetailResponse(
 
     DateTimeOffset UpdatedAt,
 
-    DateTimeOffset? ResolvedAt);
+    DateTimeOffset? ResolvedAt,
+
+    int EvidenceCount);
 
 
 

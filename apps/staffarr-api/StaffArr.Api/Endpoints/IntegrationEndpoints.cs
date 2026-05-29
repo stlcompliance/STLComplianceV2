@@ -1,6 +1,7 @@
 using StaffArr.Api.Contracts;
 using StaffArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Contracts;
 
 namespace StaffArr.Api.Endpoints;
 
@@ -15,6 +16,8 @@ public static class IntegrationEndpoints
     public const string RoutarrReadinessDispatchActionScope = "staffarr.readiness.dispatch_gate";
 
     public const string TrainarrPersonLookupActionScope = "staffarr.person.lookup";
+
+    public const string MaintainarrPersonLookupActionScope = "staffarr.person.lookup";
 
     public const string TrainarrPersonHistoryReadActionScope = PersonnelHistoryService.IntegrationReadActionScope;
 
@@ -151,15 +154,7 @@ public static class IntegrationEndpoints
             PersonLookupService service,
             CancellationToken cancellationToken) =>
         {
-            tokenValidator.ValidateOrThrow(
-                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
-                new ServiceTokenRequirements
-                {
-                    ExpectedSourceProduct = "trainarr",
-                    RequiredTargetProduct = "staffarr",
-                    TenantId = tenantId,
-                    RequiredActionScope = TrainarrPersonLookupActionScope
-                });
+            ValidatePersonLookupServiceToken(tokenValidator, context, tenantId);
 
             if (personId is null && string.IsNullOrWhiteSpace(email))
             {
@@ -380,5 +375,38 @@ public static class IntegrationEndpoints
             return Results.Ok(await service.GetByExternalUserIdAsync(tenantId, externalUserId!.Value, cancellationToken));
         })
         .WithName("SupplyarrProcurementApprovalAuthority");
+    }
+
+    private static void ValidatePersonLookupServiceToken(
+        StlServiceTokenValidator tokenValidator,
+        HttpContext context,
+        Guid tenantId)
+    {
+        var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+            context.Request.Headers.Authorization.ToString());
+        var preview = tokenValidator.TryValidate(bearer)
+            ?? throw new StlApiException(
+                "auth.service_token_invalid",
+                "Service token is invalid.",
+                401);
+
+        var source = preview.SourceProductKey?.Trim().ToLowerInvariant();
+        if (source is not "trainarr" and not "maintainarr")
+        {
+            throw new StlApiException(
+                "auth.service_token_scope",
+                "Service token source product is not authorized for person lookup.",
+                403);
+        }
+
+        tokenValidator.ValidateOrThrow(
+            bearer,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = source,
+                RequiredTargetProduct = "staffarr",
+                TenantId = tenantId,
+                RequiredActionScope = TrainarrPersonLookupActionScope
+            });
     }
 }

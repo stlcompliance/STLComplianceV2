@@ -10,6 +10,8 @@ public static class IntegrationEndpoints
 
     public const string RoutarrAssetReadinessDispatchActionScope = "maintainarr.asset_readiness.dispatch_gate";
 
+    public const string StaffarrPersonSyncActionScope = "maintainarr.technician_refs.sync";
+
     public static void MapMaintainArrIntegrationEndpoints(this WebApplication app)
     {
         var integrations = app.MapGroup("/api/integrations").WithTags("Integrations");
@@ -63,5 +65,27 @@ public static class IntegrationEndpoints
             return Results.Ok(result);
         })
         .WithName("IngestSupplyarrDemandStatus");
+
+        integrations.MapPost("/staffarr-person-sync", async (
+            IngestStaffarrPersonSyncRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            StaffarrPersonSyncIngestionService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "staffarr",
+                    RequiredTargetProduct = "maintainarr",
+                    TenantId = request.TenantId,
+                    RequiredActionScope = StaffarrPersonSyncActionScope
+                });
+
+            var result = await service.IngestAsync(request, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("IngestStaffarrPersonSync");
     }
 }

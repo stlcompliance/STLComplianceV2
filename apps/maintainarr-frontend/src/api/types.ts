@@ -299,6 +299,7 @@ export interface DefectSummaryResponse {
   createdAt: string
   updatedAt: string
   resolvedAt: string | null
+  evidenceCount: number
 }
 
 export interface DefectDetailResponse {
@@ -319,6 +320,7 @@ export interface DefectDetailResponse {
   createdAt: string
   updatedAt: string
   resolvedAt: string | null
+  evidenceCount: number
 }
 
 export interface CreateDefectRequest {
@@ -340,6 +342,40 @@ export interface CreateDefectsFromInspectionRunResponse {
 
 export interface UpdateDefectStatusRequest {
   status: string
+}
+
+export interface CreateMaintainArrEvidenceRequest {
+  evidenceTypeKey: string
+  fileName: string
+  contentType: string
+  contentBase64: string
+  notes?: string | null
+  checklistItemId?: string | null
+}
+
+export interface DefectEvidenceResponse {
+  evidenceId: string
+  defectId: string
+  evidenceTypeKey: string
+  fileName: string
+  contentType: string
+  sizeBytes: number
+  notes: string | null
+  uploadedByUserId: string
+  createdAt: string
+}
+
+export interface InspectionRunEvidenceResponse {
+  evidenceId: string
+  inspectionRunId: string
+  checklistItemId: string | null
+  evidenceTypeKey: string
+  fileName: string
+  contentType: string
+  sizeBytes: number
+  notes: string | null
+  uploadedByUserId: string
+  createdAt: string
 }
 
 export interface WorkOrderSummaryResponse {

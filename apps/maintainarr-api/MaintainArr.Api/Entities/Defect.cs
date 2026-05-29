@@ -84,6 +84,8 @@ public sealed class Defect : IHasTenant
 
     public InspectionChecklistItem? ChecklistItem { get; set; }
 
+    public ICollection<DefectEvidence> Evidence { get; set; } = [];
+
 }
 
 

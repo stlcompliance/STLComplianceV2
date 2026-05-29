@@ -94,8 +94,12 @@ describe('TripExecutionWorkspacePanel', () => {
         routeStatus: 'active',
         tripId: 'trip-1',
         stopCount: 2,
+        createdByUserId: 'user-1',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        activatedAt: null,
+        completedAt: null,
+        cancelledAt: null,
       },
     ])
     vi.mocked(client.getRoute).mockResolvedValue({
@@ -108,7 +112,6 @@ describe('TripExecutionWorkspacePanel', () => {
       stops: [
         {
           stopId: 'stop-1',
-          routeId: 'route-1',
           stopKey: 'pickup',
           label: 'Pickup',
           addressLabel: '123 Main',
@@ -118,7 +121,6 @@ describe('TripExecutionWorkspacePanel', () => {
           scheduledArrivalAt: null,
           arrivedAt: null,
           completedAt: null,
-          skippedAt: null,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },

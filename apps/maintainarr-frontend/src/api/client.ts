@@ -10,12 +10,15 @@ import type {
   CreateInspectionTemplateRequest,
   HandoffSessionResponse,
   InspectionRunDetailResponse,
+  InspectionRunEvidenceResponse,
   AssetMeterResponse,
   CreateAssetMeterRequest,
   CreateDefectRequest,
   CreateDefectsFromInspectionRunRequest,
   CreateDefectsFromInspectionRunResponse,
+  CreateMaintainArrEvidenceRequest,
   DefectDetailResponse,
+  DefectEvidenceResponse,
   DefectSummaryResponse,
   MeterPmForecastResponse,
   MeterReadingResponse,
@@ -513,6 +516,58 @@ export async function updateDefectStatus(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<DefectDetailResponse>(response, 'Failed to update defect status')
+}
+
+export async function getDefectEvidence(
+  accessToken: string,
+  defectId: string,
+): Promise<DefectEvidenceResponse[]> {
+  const response = await fetch(`${apiBase}/api/defects/${defectId}/evidence`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DefectEvidenceResponse[]>(response, 'Failed to load defect evidence')
+}
+
+export async function uploadDefectEvidence(
+  accessToken: string,
+  defectId: string,
+  payload: CreateMaintainArrEvidenceRequest,
+): Promise<DefectEvidenceResponse> {
+  const response = await fetch(`${apiBase}/api/defects/${defectId}/evidence`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<DefectEvidenceResponse>(response, 'Failed to upload defect evidence')
+}
+
+export async function getInspectionRunEvidence(
+  accessToken: string,
+  inspectionRunId: string,
+): Promise<InspectionRunEvidenceResponse[]> {
+  const response = await fetch(`${apiBase}/api/inspections/${inspectionRunId}/evidence`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<InspectionRunEvidenceResponse[]>(
+    response,
+    'Failed to load inspection run evidence',
+  )
+}
+
+export async function uploadInspectionRunEvidence(
+  accessToken: string,
+  inspectionRunId: string,
+  payload: CreateMaintainArrEvidenceRequest,
+): Promise<InspectionRunEvidenceResponse> {
+  const response = await fetch(`${apiBase}/api/inspections/${inspectionRunId}/evidence`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<InspectionRunEvidenceResponse>(
+    response,
+    'Failed to upload inspection run evidence',
+  )
 }
 
 export async function getAssetMeters(accessToken: string, assetId: string): Promise<AssetMeterResponse[]> {

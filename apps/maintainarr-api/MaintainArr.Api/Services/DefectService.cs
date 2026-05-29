@@ -846,6 +846,26 @@ public sealed class DefectService(
 
 
 
+        var defectIds = defects.Select(x => x.Id).ToList();
+
+        var evidenceCounts = defectIds.Count == 0
+
+            ? new Dictionary<Guid, int>()
+
+            : await db.DefectEvidence
+
+                .AsNoTracking()
+
+                .Where(x => x.TenantId == tenantId && defectIds.Contains(x.DefectId))
+
+                .GroupBy(x => x.DefectId)
+
+                .Select(g => new { DefectId = g.Key, Count = g.Count() })
+
+                .ToDictionaryAsync(x => x.DefectId, x => x.Count, cancellationToken);
+
+
+
         return defects
 
             .Select(defect =>
@@ -898,7 +918,9 @@ public sealed class DefectService(
 
                     defect.UpdatedAt,
 
-                    defect.ResolvedAt);
+                    defect.ResolvedAt,
+
+                    evidenceCounts.GetValueOrDefault(defect.Id, 0));
 
             })
 
@@ -978,7 +1000,9 @@ public sealed class DefectService(
 
             defect.UpdatedAt,
 
-            defect.ResolvedAt);
+            defect.ResolvedAt,
+
+            summary.EvidenceCount);
 
     }
 

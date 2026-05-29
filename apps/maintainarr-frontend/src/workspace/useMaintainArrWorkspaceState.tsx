@@ -35,6 +35,10 @@ import {
   getMeterPmForecast,
   getMeterReadings,
   getDefects,
+  getDefectEvidence,
+  uploadDefectEvidence,
+  getInspectionRunEvidence,
+  uploadInspectionRunEvidence,
   getDuePmSchedules,
   getPmPrograms,
   getPmProgram,
@@ -136,6 +140,14 @@ export function useMaintainArrWorkspaceState() {
   const [defectDescription, setDefectDescription] = useState('')
   const [defectSeverity, setDefectSeverity] = useState('medium')
   const [defectStatusFilter, setDefectStatusFilter] = useState('')
+  const [selectedDefectId, setSelectedDefectId] = useState('')
+  const [defectEvidenceTypeKey, setDefectEvidenceTypeKey] = useState('defect_photo')
+  const [defectEvidenceNotes, setDefectEvidenceNotes] = useState('')
+  const [defectEvidenceFile, setDefectEvidenceFile] = useState<File | null>(null)
+  const [inspectionEvidenceTypeKey, setInspectionEvidenceTypeKey] = useState('inspection_photo')
+  const [inspectionEvidenceNotes, setInspectionEvidenceNotes] = useState('')
+  const [inspectionEvidenceFile, setInspectionEvidenceFile] = useState<File | null>(null)
+  const [inspectionEvidenceChecklistItemId, setInspectionEvidenceChecklistItemId] = useState('')
   const [workOrderAssetId, setWorkOrderAssetId] = useState('')
   const [workOrderTitle, setWorkOrderTitle] = useState('')
   const [workOrderDescription, setWorkOrderDescription] = useState('')
@@ -303,6 +315,18 @@ export function useMaintainArrWorkspaceState() {
     enabled: meQuery.isSuccess,
   })
 
+  const defectEvidenceQuery = useQuery({
+    queryKey: ['maintainarr-defect-evidence', selectedDefectId],
+    queryFn: () => getDefectEvidence(accessToken, selectedDefectId),
+    enabled: meQuery.isSuccess && Boolean(selectedDefectId),
+  })
+
+  const inspectionRunEvidenceQuery = useQuery({
+    queryKey: ['maintainarr-inspection-run-evidence', selectedRunId],
+    queryFn: () => getInspectionRunEvidence(accessToken, selectedRunId),
+    enabled: meQuery.isSuccess && Boolean(selectedRunId),
+  })
+
   const workOrdersQuery = useQuery({
     queryKey: ['maintainarr-work-orders', workOrderStatusFilter],
     queryFn: () =>
@@ -468,6 +492,17 @@ export function useMaintainArrWorkspaceState() {
 
   const invalidateDefects = async () => {
     await queryClient.invalidateQueries({ queryKey: ['maintainarr-defects'] })
+  }
+
+  const invalidateDefectEvidence = async (defectId: string) => {
+    await queryClient.invalidateQueries({ queryKey: ['maintainarr-defect-evidence', defectId] })
+    await invalidateDefects()
+  }
+
+  const invalidateInspectionRunEvidence = async (inspectionRunId: string) => {
+    await queryClient.invalidateQueries({
+      queryKey: ['maintainarr-inspection-run-evidence', inspectionRunId],
+    })
   }
 
   const invalidateWorkOrders = async (workOrderId?: string) => {
@@ -873,6 +908,55 @@ export function useMaintainArrWorkspaceState() {
     onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to upload evidence'),
   })
 
+  const uploadDefectEvidenceMutation = useMutation({
+    mutationFn: async () => {
+      if (!defectEvidenceFile || !selectedDefectId) {
+        throw new Error('Select a defect and file to upload')
+      }
+      const contentBase64 = await fileToBase64(defectEvidenceFile)
+      return uploadDefectEvidence(accessToken, selectedDefectId, {
+        evidenceTypeKey: defectEvidenceTypeKey,
+        fileName: defectEvidenceFile.name,
+        contentType: defectEvidenceFile.type || 'application/octet-stream',
+        contentBase64,
+        notes: defectEvidenceNotes || null,
+      })
+    },
+    onSuccess: async () => {
+      setDefectEvidenceFile(null)
+      setDefectEvidenceNotes('')
+      setApiError(null)
+      await invalidateDefectEvidence(selectedDefectId)
+    },
+    onError: (error) =>
+      setApiError(error instanceof Error ? error.message : 'Failed to upload defect evidence'),
+  })
+
+  const uploadInspectionRunEvidenceMutation = useMutation({
+    mutationFn: async () => {
+      if (!inspectionEvidenceFile || !selectedRunId) {
+        throw new Error('Select an inspection run and file to upload')
+      }
+      const contentBase64 = await fileToBase64(inspectionEvidenceFile)
+      return uploadInspectionRunEvidence(accessToken, selectedRunId, {
+        evidenceTypeKey: inspectionEvidenceTypeKey,
+        fileName: inspectionEvidenceFile.name,
+        contentType: inspectionEvidenceFile.type || 'application/octet-stream',
+        contentBase64,
+        notes: inspectionEvidenceNotes || null,
+        checklistItemId: inspectionEvidenceChecklistItemId || null,
+      })
+    },
+    onSuccess: async () => {
+      setInspectionEvidenceFile(null)
+      setInspectionEvidenceNotes('')
+      setApiError(null)
+      await invalidateInspectionRunEvidence(selectedRunId)
+    },
+    onError: (error) =>
+      setApiError(error instanceof Error ? error.message : 'Failed to upload inspection evidence'),
+  })
+
   const addWorkOrderPartsDemandMutation = useMutation({
     mutationFn: () =>
       createWorkOrderPartsDemandLine(accessToken, selectedWorkOrderId, {
@@ -1086,6 +1170,14 @@ export function useMaintainArrWorkspaceState() {
     defectDescription,
     defectSeverity,
     defectStatusFilter,
+    selectedDefectId,
+    defectEvidenceTypeKey,
+    defectEvidenceNotes,
+    defectEvidenceFile,
+    inspectionEvidenceTypeKey,
+    inspectionEvidenceNotes,
+    inspectionEvidenceFile,
+    inspectionEvidenceChecklistItemId,
     workOrderAssetId,
     workOrderTitle,
     workOrderDescription,
@@ -1161,6 +1253,14 @@ export function useMaintainArrWorkspaceState() {
     setDefectDescription,
     setDefectSeverity,
     setDefectStatusFilter,
+    setSelectedDefectId,
+    setDefectEvidenceTypeKey,
+    setDefectEvidenceNotes,
+    setDefectEvidenceFile,
+    setInspectionEvidenceTypeKey,
+    setInspectionEvidenceNotes,
+    setInspectionEvidenceFile,
+    setInspectionEvidenceChecklistItemId,
     setWorkOrderAssetId,
     setWorkOrderTitle,
     setWorkOrderDescription,
@@ -1220,6 +1320,8 @@ export function useMaintainArrWorkspaceState() {
     voiceGuidanceQuery,
     technicianRefsQuery,
     defectsQuery,
+    defectEvidenceQuery,
+    inspectionRunEvidenceQuery,
     workOrdersQuery,
     maintenanceHistoryQuery,
     maintenanceHistorySummaryQuery,
@@ -1272,6 +1374,8 @@ export function useMaintainArrWorkspaceState() {
     addWorkOrderTaskMutation,
     logWorkOrderLaborMutation,
     uploadWorkOrderEvidenceMutation,
+    uploadDefectEvidenceMutation,
+    uploadInspectionRunEvidenceMutation,
     addWorkOrderPartsDemandMutation,
     publishWorkOrderPartsDemandMutation,
     createAssetMutation,

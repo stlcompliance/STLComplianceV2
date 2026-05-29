@@ -34,6 +34,10 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
 
     public DbSet<Defect> Defects => Set<Defect>();
 
+    public DbSet<DefectEvidence> DefectEvidence => Set<DefectEvidence>();
+
+    public DbSet<InspectionRunEvidence> InspectionRunEvidence => Set<InspectionRunEvidence>();
+
     public DbSet<AssetMeter> AssetMeters => Set<AssetMeter>();
 
     public DbSet<MeterReading> MeterReadings => Set<MeterReading>();
@@ -479,6 +483,44 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
                 .WithMany(x => x.Evidence)
                 .HasForeignKey(x => x.WorkOrderId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<DefectEvidence>(entity =>
+        {
+            entity.ToTable("maintainarr_defect_evidence");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EvidenceTypeKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.FileName).HasMaxLength(255).IsRequired();
+            entity.Property(x => x.ContentType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.StorageKey).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.DefectId, x.CreatedAt });
+            entity.HasOne(x => x.Defect)
+                .WithMany(x => x.Evidence)
+                .HasForeignKey(x => x.DefectId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<InspectionRunEvidence>(entity =>
+        {
+            entity.ToTable("maintainarr_inspection_run_evidence");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EvidenceTypeKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.FileName).HasMaxLength(255).IsRequired();
+            entity.Property(x => x.ContentType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.StorageKey).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.InspectionRunId, x.CreatedAt });
+            entity.HasOne(x => x.InspectionRun)
+                .WithMany(x => x.Evidence)
+                .HasForeignKey(x => x.InspectionRunId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.ChecklistItem)
+                .WithMany()
+                .HasForeignKey(x => x.ChecklistItemId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<WorkOrderPartsDemandLine>(entity =>

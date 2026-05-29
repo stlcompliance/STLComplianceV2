@@ -9,6 +9,7 @@ describe('DefectsPanel', () => {
         canCreate
         canCreateWorkOrder
         canManageStatus
+        canUploadEvidence
         viewAllDefects
         assets={[
           {
@@ -44,21 +45,35 @@ describe('DefectsPanel', () => {
             createdAt: '2026-05-27T12:00:00Z',
             updatedAt: '2026-05-27T12:00:00Z',
             resolvedAt: null,
+            evidenceCount: 0,
           },
         ]}
+        selectedDefectId=""
+        selectedDefect={null}
+        defectEvidence={[]}
         selectedAssetId=""
         defectTitle=""
         defectDescription=""
         defectSeverity="medium"
         statusFilter=""
+        evidenceTypeKey="defect_photo"
+        evidenceNotes=""
+        selectedEvidenceFileName={null}
         isLoading={false}
+        isEvidenceLoading={false}
         isCreating={false}
         isUpdatingStatus={false}
+        isUploadingEvidence={false}
+        onSelectedDefectIdChange={vi.fn()}
         onSelectedAssetIdChange={vi.fn()}
         onDefectTitleChange={vi.fn()}
         onDefectDescriptionChange={vi.fn()}
         onDefectSeverityChange={vi.fn()}
         onStatusFilterChange={vi.fn()}
+        onEvidenceTypeKeyChange={vi.fn()}
+        onEvidenceNotesChange={vi.fn()}
+        onSelectEvidenceFile={vi.fn()}
+        onUploadEvidence={vi.fn()}
         onCreateDefect={vi.fn()}
         onCreateWorkOrderFromDefect={vi.fn()}
         onUpdateStatus={vi.fn()}
@@ -69,6 +84,7 @@ describe('DefectsPanel', () => {
     expect(screen.getByText('Failed: Brakes operate correctly')).toBeInTheDocument()
     expect(screen.getByText('Inspection (auto)')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Report defect' })).toBeInTheDocument()
+    expect(screen.getByTestId('defect-evidence-panel')).toBeInTheDocument()
   })
 
   it('shows empty state when no defects', () => {
@@ -77,22 +93,36 @@ describe('DefectsPanel', () => {
         canCreate={false}
         canCreateWorkOrder={false}
         canManageStatus={false}
+        canUploadEvidence={false}
         viewAllDefects={false}
         assets={[]}
         defects={[]}
+        selectedDefectId=""
+        selectedDefect={null}
+        defectEvidence={[]}
         selectedAssetId=""
         defectTitle=""
         defectDescription=""
         defectSeverity="medium"
         statusFilter="open"
+        evidenceTypeKey="defect_photo"
+        evidenceNotes=""
+        selectedEvidenceFileName={null}
         isLoading={false}
+        isEvidenceLoading={false}
         isCreating={false}
         isUpdatingStatus={false}
+        isUploadingEvidence={false}
+        onSelectedDefectIdChange={vi.fn()}
         onSelectedAssetIdChange={vi.fn()}
         onDefectTitleChange={vi.fn()}
         onDefectDescriptionChange={vi.fn()}
         onDefectSeverityChange={vi.fn()}
         onStatusFilterChange={vi.fn()}
+        onEvidenceTypeKeyChange={vi.fn()}
+        onEvidenceNotesChange={vi.fn()}
+        onSelectEvidenceFile={vi.fn()}
+        onUploadEvidence={vi.fn()}
         onCreateDefect={vi.fn()}
         onCreateWorkOrderFromDefect={vi.fn()}
         onUpdateStatus={vi.fn()}

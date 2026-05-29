@@ -707,6 +707,62 @@ namespace MaintainArr.Api.Migrations
                     b.ToTable("maintainarr_defect_escalation_runs", (string)null);
                 });
 
+            modelBuilder.Entity("MaintainArr.Api.Entities.DefectEvidence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DefectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EvidenceTypeKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UploadedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DefectId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "DefectId", "CreatedAt");
+
+                    b.ToTable("maintainarr_defect_evidence", (string)null);
+                });
+
             modelBuilder.Entity("MaintainArr.Api.Entities.InspectionChecklistItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -867,6 +923,67 @@ namespace MaintainArr.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("maintainarr_inspection_run_answers", (string)null);
+                });
+
+            modelBuilder.Entity("MaintainArr.Api.Entities.InspectionRunEvidence", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ChecklistItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EvidenceTypeKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Guid>("InspectionRunId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UploadedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChecklistItemId");
+
+                    b.HasIndex("InspectionRunId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "InspectionRunId", "CreatedAt");
+
+                    b.ToTable("maintainarr_inspection_run_evidence", (string)null);
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.InspectionTemplate", b =>
@@ -2364,6 +2481,17 @@ namespace MaintainArr.Api.Migrations
                     b.Navigation("InspectionRun");
                 });
 
+            modelBuilder.Entity("MaintainArr.Api.Entities.DefectEvidence", b =>
+                {
+                    b.HasOne("MaintainArr.Api.Entities.Defect", "Defect")
+                        .WithMany("Evidence")
+                        .HasForeignKey("DefectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Defect");
+                });
+
             modelBuilder.Entity("MaintainArr.Api.Entities.InspectionChecklistItem", b =>
                 {
                     b.HasOne("MaintainArr.Api.Entities.InspectionTemplateCategory", "Category")
@@ -2415,6 +2543,25 @@ namespace MaintainArr.Api.Migrations
                         .HasForeignKey("InspectionRunId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ChecklistItem");
+
+                    b.Navigation("InspectionRun");
+                });
+
+            modelBuilder.Entity("MaintainArr.Api.Entities.InspectionRunEvidence", b =>
+                {
+                    b.HasOne("MaintainArr.Api.Entities.InspectionChecklistItem", "ChecklistItem")
+                        .WithMany()
+                        .HasForeignKey("ChecklistItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("MaintainArr.Api.Entities.InspectionRun", "InspectionRun")
+                        .WithMany("Evidence")
+                        .HasForeignKey("InspectionRunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_maintainarr_inspection_run_evidence_maintainarr_inspection~1");
 
                     b.Navigation("ChecklistItem");
 
@@ -2617,9 +2764,16 @@ namespace MaintainArr.Api.Migrations
                     b.Navigation("Readings");
                 });
 
+            modelBuilder.Entity("MaintainArr.Api.Entities.Defect", b =>
+                {
+                    b.Navigation("Evidence");
+                });
+
             modelBuilder.Entity("MaintainArr.Api.Entities.InspectionRun", b =>
                 {
                     b.Navigation("Answers");
+
+                    b.Navigation("Evidence");
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.InspectionTemplate", b =>

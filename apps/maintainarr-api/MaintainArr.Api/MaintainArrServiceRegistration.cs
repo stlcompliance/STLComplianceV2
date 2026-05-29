@@ -29,11 +29,20 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<InspectionRunService>();
         builder.Services.AddScoped<InspectionVoiceGuidanceService>();
         builder.Services.AddScoped<DefectService>();
+        builder.Services.AddScoped<DefectEvidenceService>();
         builder.Services.AddScoped<AssetMeterService>();
         builder.Services.AddScoped<MeterReadingService>();
         builder.Services.AddScoped<MeterPmForecastService>();
         builder.Services.AddScoped<WorkOrderService>();
         builder.Services.AddScoped<TechnicianRefService>();
+        builder.Services.AddScoped<StaffarrPersonSyncIngestionService>();
+        builder.Services.AddScoped<TechnicianRefSyncService>();
+        builder.Services.Configure<StaffArrClientOptions>(builder.Configuration.GetSection(StaffArrClientOptions.SectionName));
+        builder.Services.AddHttpClient<StaffArrPersonLookupClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
         builder.Services.AddScoped<WorkOrderLaborEvidenceService>();
         builder.Services.AddScoped<WorkOrderPartsDemandService>();
         builder.Services.AddScoped<WorkOrderPartsDemandStatusIngestionService>();

@@ -18,13 +18,18 @@ Live tests probe real `/health` endpoints and optional NexArr demo login. They *
 
 1. **NexArrHandoffFlowTests** — login, `/api/me`, handoff redeem into StaffArr/RoutArr
 2. **StaffArrReadinessFlowTests** — baseline certification blockers → ready
-3. **TrainArrAssignmentCompleteFlowTests** — incident route → assignment → complete → StaffArr certification/unblock
-4. **MaintainArrWorkOrderFlowTests** — handoff → work order create → in_progress → completed
-5. **RoutArrDispatchAssignFlowTests** — trip → workflow gate block → preview → override assign
-6. **TenantIsolationFlowTests** — multi-tenant JWT/service-token denial across NexArr, StaffArr, MaintainArr, RoutArr, TrainArr, Compliance Core, SupplyArr (`Area=TenantIsolation`)
-7. **EntitlementDenialFlowTests** — JWT without product entitlement denied on `/api/me`; NexArr launch context denied for unknown product (`Area=EntitlementDenial`)
-8. **StlM13ShipGateCatalogTests** — ship-gate minimums aligned with `StlM13ShipGateCatalog` (`Area=ShipGate`)
-9. **StlE2eFrontendCatalogTests** / **StlE2ePlaywrightSpecCatalogTests** — canonical Vite preview ports (5174–5181) and Playwright spec filenames including platform-admin audit export (`Category=E2e`)
+3. **StaffArrWorkforceOnboardingFlowTests** — docs/23 new employee → qualified worker with TrainArr history (W16)
+4. **TrainArrAssignmentCompleteFlowTests** — incident route → assignment → complete → StaffArr certification/unblock
+5. **MaintainArrWorkOrderFlowTests** — handoff → work order create → in_progress → completed
+6. **MaintainArrInspectionToWorkOrderFlowTests** — failed inspection → defect → work order → readiness blocked (docs/23)
+7. **MaintainArrSupplyArrPartsDemandFlowTests** — work order parts demand → SupplyArr mirror (docs/23)
+8. **RoutArrAssetDispatchReadyFlowTests** — MaintainArr ready asset → RoutArr dispatch assign (docs/23)
+9. **StaffArrMaintainArrTechnicianSyncFlowTests** — StaffArr person sync → MaintainArr technician ref mirror (docs/23)
+10. **RoutArrDispatchAssignFlowTests** — trip → workflow gate block → preview → override assign
+11. **TenantIsolationFlowTests** — multi-tenant JWT/service-token denial across NexArr, StaffArr, MaintainArr, RoutArr, TrainArr, Compliance Core, SupplyArr (`Area=TenantIsolation`)
+12. **EntitlementDenialFlowTests** — JWT without product entitlement denied on `/api/me`; NexArr launch context denied for unknown product (`Area=EntitlementDenial`)
+13. **StlM13ShipGateCatalogTests** / **StlDocs23CrossProductFlowCatalogTests** — ship-gate minimums aligned with shared catalogs (`Area=ShipGate`)
+14. **StlE2eFrontendCatalogTests** / **StlE2ePlaywrightSpecCatalogTests** — canonical Vite preview ports (5174–5181) and Playwright spec filenames including platform-admin audit export (`Category=E2e`)
 
 ## Playwright browser smokes (`tests/e2e-playwright`)
 

@@ -202,7 +202,7 @@ public sealed class WorkOrderLaborEvidenceService(
 
         var evidenceId = Guid.NewGuid();
         await using var contentStream = new MemoryStream(contentBytes);
-        var storageKey = await storage.SaveAsync(
+        var storageKey = await storage.SaveWorkOrderEvidenceAsync(
             tenantId,
             workOrderId,
             evidenceId,

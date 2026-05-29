@@ -32,6 +32,12 @@ public static class StlE2ePlaywrightSpecCatalog
     public const string MaintainArrAssetReadinessDetailSmokeSpec =
         "maintainarr-asset-readiness-detail-smoke.spec.ts";
 
+    public const string MaintainArrWorkOrderLifecycleSmokeSpec =
+        "maintainarr-work-order-lifecycle-smoke.spec.ts";
+
+    public const string MaintainArrDefectInspectionEvidenceSmokeSpec =
+        "maintainarr-defect-inspection-evidence-smoke.spec.ts";
+
     public const string ComplianceCoreM12WorkerSettingsSmokeSpec =
         "compliancecore-m12-worker-settings-smoke.spec.ts";
 
@@ -380,6 +386,8 @@ public static class StlE2ePlaywrightSpecCatalog
         MaintainArrSettingsAdminWorkspaceSmokeSpec,
         MaintainArrReportsWorkspaceSmokeSpec,
         MaintainArrAssetReadinessDetailSmokeSpec,
+        MaintainArrWorkOrderLifecycleSmokeSpec,
+        MaintainArrDefectInspectionEvidenceSmokeSpec,
         ComplianceCoreM12WorkerSettingsSmokeSpec,
         ComplianceCoreAuditDeliveryOrchestrationSmokeSpec,
         ComplianceCoreSettingsAdminWorkspaceSmokeSpec,

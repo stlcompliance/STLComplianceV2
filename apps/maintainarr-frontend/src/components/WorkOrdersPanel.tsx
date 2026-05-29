@@ -10,6 +10,7 @@ import type {
   WorkOrderTaskLineResponse,
 } from '../api/types'
 import { WorkOrderLaborEvidencePanel } from './WorkOrderLaborEvidencePanel'
+import { WorkOrderLifecyclePanel } from './WorkOrderLifecyclePanel'
 import { WorkOrderPartsDemandPanel } from './WorkOrderPartsDemandPanel'
 
 interface WorkOrdersPanelProps {
@@ -190,7 +191,10 @@ export function WorkOrdersPanel({
   isPublishingPartsDemand,
 }: WorkOrdersPanelProps) {
   return (
-    <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
+    <section
+      className="rounded-xl border border-slate-700 bg-slate-900/60 p-6"
+      data-testid="work-orders-panel"
+    >
       <header className="mb-4">
         <h2 className="text-lg font-semibold text-white">Work orders</h2>
         <p className="mt-1 text-sm text-slate-400">
@@ -280,11 +284,17 @@ export function WorkOrdersPanel({
               <option value={sessionPersonId}>Me ({sessionPersonId})</option>
               {technicianRefs
                 .filter((ref) => ref.personId !== sessionPersonId)
-                .map((ref) => (
-                  <option key={ref.personId} value={ref.personId}>
-                    {ref.displayName} ({ref.personId})
-                  </option>
-                ))}
+                .map((ref) => {
+                  const statusLabel = ref.activeStatus ? ` · ${ref.activeStatus}` : ''
+                  const siteLabel = ref.primarySite ? ` · ${ref.primarySite}` : ''
+                  return (
+                    <option key={ref.personId} value={ref.personId}>
+                      {ref.displayName}
+                      {statusLabel}
+                      {siteLabel}
+                    </option>
+                  )
+                })}
             </select>
           </label>
 
@@ -306,7 +316,7 @@ export function WorkOrdersPanel({
       ) : workOrders.length === 0 ? (
         <p className="text-sm text-slate-400">No work orders match the current filter.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" data-testid="work-order-list">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-slate-700 text-slate-400">
               <tr>
@@ -336,6 +346,7 @@ export function WorkOrdersPanel({
                     <button
                       type="button"
                       className="text-sky-400 hover:text-sky-300"
+                      data-testid={`work-order-select-${workOrder.workOrderId}`}
                       onClick={() => onSelectedWorkOrderIdChange(workOrder.workOrderId)}
                     >
                       {selectedWorkOrderId === workOrder.workOrderId ? 'Selected' : 'View'}
@@ -411,6 +422,13 @@ export function WorkOrdersPanel({
                 <dd>{new Date(selectedWorkOrder.updatedAt).toLocaleString()}</dd>
               </div>
             </dl>
+            <WorkOrderLifecyclePanel
+              workOrder={selectedWorkOrder}
+              tasks={tasks}
+              labor={labor}
+              evidence={evidence}
+              isDetailLoading={isDetailLoading}
+            />
             <WorkOrderLaborEvidencePanel
               workOrder={selectedWorkOrder}
               tasks={tasks}

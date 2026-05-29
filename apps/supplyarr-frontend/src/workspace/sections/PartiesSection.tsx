@@ -2,6 +2,7 @@ import { PartyRegistryPanel } from '../../components/PartyRegistryPanel'
 import { SupplierOnboardingPanel } from '../../components/SupplierOnboardingPanel'
 import { VendorRestrictionsPanel } from '../../components/VendorRestrictionsPanel'
 import { SupplierIncidentsPanel } from '../../components/SupplierIncidentsPanel'
+import type { CreatePartyContactRequest, UpdateExternalPartyRequest } from '../../api/types'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
@@ -11,29 +12,14 @@ function partyRegistryHandlers(
   route: 'vendors' | 'suppliers' | 'dealers',
 ) {
   return {
-    onUpdateParty: (
-      partyId: string,
-      request: {
-        displayName: string
-        legalName: string
-        taxIdentifier: string | null
-        notes: string
-      },
-    ) => s.updatePartyMutation.mutate({ route, partyId, request }),
+    onUpdateParty: (partyId: string, request: UpdateExternalPartyRequest) =>
+      s.updatePartyMutation.mutate({ route, partyId, request }),
     onUpdateApprovalStatus: (partyId: string, approvalStatus: string) =>
       s.updatePartyApprovalMutation.mutate({ route, partyId, approvalStatus }),
     onUpdateStatus: (partyId: string, status: string) =>
       s.updatePartyStatusMutation.mutate({ route, partyId, status }),
-    onAddContact: (
-      partyId: string,
-      request: {
-        contactName: string
-        email: string
-        phone: string
-        roleLabel: string
-        isPrimary: boolean
-      },
-    ) => s.addPartyContactMutation.mutate({ route, partyId, request }),
+    onAddContact: (partyId: string, request: CreatePartyContactRequest) =>
+      s.addPartyContactMutation.mutate({ route, partyId, request }),
     isUpdating: s.updatePartyMutation.isPending,
     isUpdatingApproval: s.updatePartyApprovalMutation.isPending,
     isUpdatingStatus: s.updatePartyStatusMutation.isPending,

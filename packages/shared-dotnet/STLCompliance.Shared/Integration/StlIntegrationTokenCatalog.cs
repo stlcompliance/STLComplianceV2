@@ -38,7 +38,21 @@ public static class StlIntegrationTokenCatalog
             "compliancecore.rules.evaluate,compliancecore.citations.read,compliancecore.rulepacks.read"),
 
         Profile("handoff-maintainarr", "maintainarr-api", "Handoff__ServiceToken", "maintainarr", ["maintainarr"], "launch.redeem"),
+        Profile(
+            "maintainarr-staffarr",
+            "maintainarr-api",
+            "StaffArr__ServiceToken",
+            "maintainarr",
+            ["staffarr"],
+            "staffarr.person.lookup"),
         Profile("maintainarr-supplyarr", "maintainarr-api", "SupplyArr__ServiceToken", "maintainarr", ["supplyarr"], "supplyarr.demand_intake.write"),
+        Profile(
+            "staffarr-maintainarr",
+            "staffarr-api",
+            "MaintainArr__ServiceToken",
+            "staffarr",
+            ["maintainarr"],
+            "maintainarr.technician_refs.sync"),
 
         Profile("handoff-supplyarr", "supplyarr-api", "Handoff__ServiceToken", "supplyarr", ["supplyarr"], "launch.redeem"),
         Profile("supplyarr-maintainarr", "supplyarr-api", "MaintainArr__ServiceToken", "supplyarr", ["maintainarr"], "maintainarr.demand_status.write"),
@@ -175,6 +189,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["maintainarr"],
             "maintainarr.notifications.dispatch"),
+        Profile(
+            "worker-maintainarr-technician-ref-refresh",
+            "shared-worker",
+            "MaintainArrTechnicianRefRefresh__ServiceToken",
+            "shared-worker",
+            ["maintainarr"],
+            "maintainarr.technician_refs.refresh"),
         Profile(
             "worker-routarr-notifications",
             "shared-worker",

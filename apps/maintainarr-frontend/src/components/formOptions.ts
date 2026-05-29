@@ -11,6 +11,22 @@ export const WORK_ORDER_EVIDENCE_TYPE_OPTIONS: PickerOption[] = [
   { value: 'work_order_note', label: 'Work order note' },
 ]
 
+export const DEFECT_EVIDENCE_TYPE_OPTIONS: PickerOption[] = [
+  { value: 'defect_photo', label: 'Defect photo' },
+  { value: 'damage_photo', label: 'Damage photo' },
+  { value: 'inspection_photo', label: 'Inspection photo' },
+  { value: 'document', label: 'Document' },
+  { value: 'signature', label: 'Signature' },
+]
+
+export const INSPECTION_EVIDENCE_TYPE_OPTIONS: PickerOption[] = [
+  { value: 'inspection_photo', label: 'Inspection photo' },
+  { value: 'failed_item_photo', label: 'Failed item photo' },
+  { value: 'measurement_photo', label: 'Measurement photo' },
+  { value: 'document', label: 'Document' },
+  { value: 'signature', label: 'Signature' },
+]
+
 export const PARTS_DEMAND_UOM_OPTIONS: PickerOption[] = [
   { value: 'each', label: 'Each' },
   { value: 'box', label: 'Box' },

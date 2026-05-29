@@ -21,6 +21,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrInspectionTemplateEndpoints();
         app.MapMaintainArrInspectionEndpoints();
         app.MapMaintainArrDefectEndpoints();
+        app.MapMaintainArrDefectEvidenceEndpoints();
         app.MapMaintainArrWorkOrderEndpoints();
         app.MapMaintainArrTechnicianRefEndpoints();
         app.MapMaintainArrWorkOrderLaborEvidenceEndpoints();
@@ -31,6 +32,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrAssetReadinessEndpoints();
         app.MapMaintainArrFieldInboxEndpoints();
         app.MapMaintainArrInternalPmDueScanEndpoints();
+        app.MapMaintainArrInternalTechnicianRefSyncEndpoints();
         app.MapMaintainArrPmDueScanSettingsEndpoints();
         app.MapMaintainArrNotificationSettingsEndpoints();
         app.MapMaintainArrInternalMaintenanceNotificationEndpoints();

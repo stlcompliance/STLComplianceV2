@@ -1,10 +1,12 @@
 import type {
   AssetResponse,
   InspectionRunDetailResponse,
+  InspectionRunEvidenceResponse,
   InspectionRunSummaryResponse,
   InspectionTemplateSummaryResponse,
   InspectionVoicePromptResponse,
 } from '../api/types'
+import { InspectionRunEvidencePanel } from './InspectionRunEvidencePanel'
 
 interface InspectionRunnerPanelProps {
   canExecute: boolean
@@ -44,6 +46,18 @@ interface InspectionRunnerPanelProps {
   onSubmitAnswers: () => void
   onCompleteRun: () => void
   onCreateDefectsFromRun: () => void
+  runEvidence: InspectionRunEvidenceResponse[]
+  evidenceChecklistItemId: string
+  evidenceTypeKey: string
+  evidenceNotes: string
+  selectedEvidenceFileName: string | null
+  isEvidenceLoading: boolean
+  isUploadingEvidence: boolean
+  onEvidenceChecklistItemIdChange: (value: string) => void
+  onEvidenceTypeKeyChange: (value: string) => void
+  onEvidenceNotesChange: (value: string) => void
+  onSelectEvidenceFile: (file: File | null) => void
+  onUploadEvidence: () => void
 }
 
 function formatResult(result: string | null): string {
@@ -93,9 +107,26 @@ export function InspectionRunnerPanel({
   onSubmitAnswers,
   onCompleteRun,
   onCreateDefectsFromRun,
+  runEvidence,
+  evidenceChecklistItemId,
+  evidenceTypeKey,
+  evidenceNotes,
+  selectedEvidenceFileName,
+  isEvidenceLoading,
+  isUploadingEvidence,
+  onEvidenceChecklistItemIdChange,
+  onEvidenceTypeKeyChange,
+  onEvidenceNotesChange,
+  onSelectEvidenceFile,
+  onUploadEvidence,
 }: InspectionRunnerPanelProps) {
   const inProgressRun = activeRun?.status === 'in_progress'
   const failedCompletedRun = activeRun?.status === 'completed' && activeRun?.result === 'failed'
+  const checklistOptions =
+    activeRun?.checklistItems.map((item) => ({
+      value: item.checklistItemId,
+      label: item.prompt,
+    })) ?? []
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
@@ -328,6 +359,25 @@ export function InspectionRunnerPanel({
               </ul>
             </div>
           ) : null}
+
+          <InspectionRunEvidencePanel
+            inspectionRunId={selectedRunId || null}
+            runStatus={activeRun?.status ?? null}
+            evidence={runEvidence}
+            checklistItemId={evidenceChecklistItemId}
+            checklistOptions={checklistOptions}
+            canUpload={canExecute}
+            evidenceTypeKey={evidenceTypeKey}
+            evidenceNotes={evidenceNotes}
+            selectedFileName={selectedEvidenceFileName}
+            onChecklistItemIdChange={onEvidenceChecklistItemIdChange}
+            onEvidenceTypeKeyChange={onEvidenceTypeKeyChange}
+            onEvidenceNotesChange={onEvidenceNotesChange}
+            onSelectFile={onSelectEvidenceFile}
+            onUploadEvidence={onUploadEvidence}
+            isUploadingEvidence={isUploadingEvidence}
+            isLoading={isEvidenceLoading}
+          />
 
           <div>
             <h3 className="mb-2 text-sm font-medium text-slate-300">Inspection runs</h3>

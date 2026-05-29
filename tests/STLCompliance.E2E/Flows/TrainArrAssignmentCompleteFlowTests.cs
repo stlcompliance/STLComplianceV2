@@ -38,7 +38,7 @@ public sealed class TrainArrAssignmentCompleteFlowTests : IAsyncLifetime
         _trainarrToStaffarrToken = await _nexarr.IssueServiceTokenAsync(
             adminToken,
             "trainarr",
-            $"{StaffArrIntegration.TrainingBlockerIngestActionScope},{StaffArrIntegration.CertificationGrantIngestActionScope}",
+            $"{StaffArrIntegration.TrainingBlockerIngestActionScope},{StaffArrIntegration.TrainingAcknowledgementIngestActionScope},{StaffArrIntegration.TrainingAcknowledgementReadActionScope},{StaffArrIntegration.CertificationGrantIngestActionScope}",
             ["staffarr"]);
 
         var staffArrDbName = $"E2E-StaffArr-Train-{Guid.NewGuid():N}";
@@ -77,6 +77,8 @@ public sealed class TrainArrAssignmentCompleteFlowTests : IAsyncLifetime
                 services.AddHttpClient<StaffArrTrainingBlockerClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
                 services.AddHttpClient<StaffArrCertificationGrantClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
+                services.AddHttpClient<StaffArrTrainingAcknowledgementClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _staffarrFactory.Server.CreateHandler());
             });
         });
@@ -120,16 +122,14 @@ public sealed class TrainArrAssignmentCompleteFlowTests : IAsyncLifetime
         var trainarrAdminToken = CreateTrainArrAccessToken(["trainarr"], "trainarr_admin");
         var definitionId = await CreateTrainingDefinitionAsync(trainarrAdminToken);
 
-        var createRequest = HttpTestClient.Authorized(HttpMethod.Post, "/api/training-assignments", trainarrAdminToken);
-        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+        var assignment = await TrainArrQualificationCheckHelper.CreateRemediationAssignmentAsync(
+            _trainarrClient,
+            trainarrAdminToken,
             personId,
             definitionId,
+            "annual_compliance",
             remediationId,
-            "incident_remediation",
-            DateTimeOffset.UtcNow.AddDays(14)));
-        var createResponse = await _trainarrClient.SendAsync(createRequest);
-        createResponse.EnsureSuccessStatusCode();
-        var assignment = (await createResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+            DateTimeOffset.UtcNow.AddDays(14));
         Assert.Equal("assigned", assignment.Status);
 
         var staffarrAdminToken = CreateStaffArrAccessToken(["staffarr"], "tenant_admin");

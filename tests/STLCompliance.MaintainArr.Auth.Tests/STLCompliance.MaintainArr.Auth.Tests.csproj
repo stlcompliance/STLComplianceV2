@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj" />
+    <ProjectReference Include="..\..\apps\staffarr-api\StaffArr.Api\StaffArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj" />
     <ProjectReference Include="..\..\apps\nexarr-api\NexArr.Api\NexArr.Api.csproj" />
   </ItemGroup>

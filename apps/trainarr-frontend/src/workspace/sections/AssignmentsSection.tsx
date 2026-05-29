@@ -256,5 +256,6 @@ export function AssignmentsSection({ state }: Props) {
         />
       </div>
     </div>
+    </div>
   )
 }

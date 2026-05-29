@@ -9,7 +9,8 @@ namespace StaffArr.Api.Services;
 
 public sealed class PeopleBulkImportService(
     StaffArrDbContext db,
-    IStaffArrAuditService audit)
+    IStaffArrAuditService audit,
+    StaffArrMaintainArrTechnicianRefSyncService maintainarrTechnicianRefSync)
 {
     public const int MaxBatchSize = 100;
 
@@ -129,6 +130,12 @@ public sealed class PeopleBulkImportService(
                     "success",
                     reasonCode: "bulk_import",
                     cancellationToken: cancellationToken);
+
+                await maintainarrTechnicianRefSync.TryPublishPersonChangedAsync(
+                    tenantId,
+                    personId,
+                    "staffarr.person.created",
+                    cancellationToken);
             }
             catch (StlApiException ex)
             {

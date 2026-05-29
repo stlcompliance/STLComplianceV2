@@ -319,6 +319,18 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
             StlE2ePlaywrightSpecCatalog.MaintainArrAssetReadinessDetailSmokeSpec,
             StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.MaintainArrWorkOrderLifecycleSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.MaintainArrWorkOrderLifecycleSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.MaintainArrDefectInspectionEvidenceSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.MaintainArrDefectInspectionEvidenceSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
             StlE2ePlaywrightSpecCatalog.ComplianceCoreM12WorkerSettingsSmokeSpec,
             StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(

@@ -1,0 +1,117 @@
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
+import { WorkOrderLifecyclePanel } from './WorkOrderLifecyclePanel'
+
+const baseWorkOrder = {
+  workOrderId: '33333333-3333-3333-3333-333333333333',
+  workOrderNumber: 'WO-20260527-AB12CD34',
+  assetId: '11111111-1111-1111-1111-111111111111',
+  assetTag: 'FL-100',
+  assetName: 'Forklift 100',
+  defectId: null,
+  defectTitle: null,
+  pmScheduleId: null,
+  pmScheduleName: null,
+  title: 'Hydraulic repair',
+  description: 'Leak at cylinder',
+  priority: 'high',
+  status: 'in_progress',
+  source: 'manual',
+  assignedTechnicianPersonId: 'person-tech-001',
+  createdByUserId: 'user-001',
+  createdAt: '2026-05-27T10:00:00Z',
+  updatedAt: '2026-05-27T12:00:00Z',
+  startedAt: '2026-05-27T11:00:00Z',
+  completedAt: null,
+  cancelledAt: null,
+}
+
+describe('WorkOrderLifecyclePanel', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('shows empty state when no work order selected', () => {
+    render(
+      <WorkOrderLifecyclePanel
+        workOrder={null}
+        tasks={[]}
+        labor={[]}
+        evidence={[]}
+        isDetailLoading={false}
+      />,
+    )
+    expect(screen.getByTestId('work-order-lifecycle-empty')).toBeInTheDocument()
+  })
+
+  it('renders stepper, timestamps, and completion signals', () => {
+    render(
+      <WorkOrderLifecyclePanel
+        workOrder={baseWorkOrder}
+        tasks={[
+          {
+            taskLineId: 'task-1',
+            workOrderId: baseWorkOrder.workOrderId,
+            title: 'Inspect cylinder',
+            description: '',
+            sortOrder: 0,
+            status: 'open',
+            createdByUserId: 'user-001',
+            createdAt: '2026-05-27T11:00:00Z',
+            completedAt: null,
+          },
+        ]}
+        labor={[
+          {
+            laborEntryId: 'labor-1',
+            workOrderId: baseWorkOrder.workOrderId,
+            personId: 'person-tech-001',
+            hoursWorked: 2,
+            laborTypeKey: 'regular',
+            taskLineId: null,
+            notes: null,
+            loggedAt: '2026-05-27T12:00:00Z',
+          },
+        ]}
+        evidence={[
+          {
+            evidenceId: 'ev-1',
+            workOrderId: baseWorkOrder.workOrderId,
+            evidenceTypeKey: 'before_photo',
+            fileName: 'before.jpg',
+            contentType: 'image/jpeg',
+            sizeBytes: 1024,
+            notes: null,
+            createdAt: '2026-05-27T12:30:00Z',
+          },
+        ]}
+        isDetailLoading={false}
+      />,
+    )
+
+    expect(screen.getByTestId('work-order-lifecycle-stepper')).toBeInTheDocument()
+    expect(screen.getByTestId('work-order-lifecycle-step-in_progress')).toBeInTheDocument()
+    expect(screen.getByTestId('work-order-completion-signals')).toBeInTheDocument()
+    expect(screen.getByTestId('work-order-signal-tasks')).toHaveTextContent('1')
+    expect(screen.getByTestId('work-order-signal-labor')).toHaveTextContent('2.00')
+    expect(screen.getByTestId('work-order-signal-evidence')).toHaveTextContent('1')
+    expect(screen.getByTestId('work-order-lifecycle-completion-hint')).toHaveTextContent(
+      /ready to mark completed/i,
+    )
+  })
+
+  it('shows capture hint when in progress without full signals', () => {
+    render(
+      <WorkOrderLifecyclePanel
+        workOrder={baseWorkOrder}
+        tasks={[]}
+        labor={[]}
+        evidence={[]}
+        isDetailLoading={false}
+      />,
+    )
+    expect(screen.getByTestId('work-order-lifecycle-completion-hint')).toHaveTextContent(
+      /Add at least one task/i,
+    )
+  })
+})

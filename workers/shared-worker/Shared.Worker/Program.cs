@@ -287,6 +287,18 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<MaintainArrNotificationDispatchJob>();
 
+        builder.Services.Configure<MaintainArrTechnicianRefRefreshOptions>(
+            builder.Configuration.GetSection(MaintainArrTechnicianRefRefreshOptions.SectionName));
+
+        builder.Services.AddHttpClient<MaintainArrTechnicianRefRefreshClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<MaintainArrTechnicianRefRefreshOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.MaintainArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<MaintainArrTechnicianRefRefreshJob>();
+
         builder.Services.Configure<RoutArrNotificationDispatchOptions>(
             builder.Configuration.GetSection(RoutArrNotificationDispatchOptions.SectionName));
 

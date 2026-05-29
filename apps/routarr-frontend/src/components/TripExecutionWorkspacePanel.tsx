@@ -326,7 +326,8 @@ export function TripExecutionWorkspacePanel({
   })
 
   const statusMutation = useMutation({
-    mutationFn: (status: string) => updateTripStatus(accessToken, tripId, status),
+    mutationFn: (status: string) =>
+      updateTripStatus(accessToken, tripId, { dispatchStatus: status }),
     onSuccess: async () => {
       setStatusMessage(null)
       await queryClient.invalidateQueries({ queryKey: ['routarr-trip', accessToken, tripId] })

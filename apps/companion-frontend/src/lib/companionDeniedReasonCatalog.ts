@@ -52,7 +52,6 @@ const PLAIN_MESSAGES: Record<string, string> = {
     'This product entitlement is inactive for your tenant.',
   [CompanionLaunchDenialCodes.ProfileMissing]:
     'Launch is not configured for this product yet.',
-  not_entitled: 'Your account is not entitled to open this product.',
   product_url_missing: 'This product API is not configured for field inbox aggregation.',
   upstream_unreachable:
     'Could not reach the product inbox. Try again when connectivity improves.',

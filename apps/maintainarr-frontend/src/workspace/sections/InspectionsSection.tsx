@@ -6,7 +6,7 @@ type Props = { state: MaintainArrWorkspaceState }
 export function InspectionsSection({ state }: Props) {
   const s = state
   return (
-    <div className="mb-8">
+    <div className="mb-8" data-testid="maintainarr-inspections-workspace">
       <InspectionRunnerPanel
         canExecute={s.canExecuteInspections}
         viewAllRuns={s.viewAllRuns}
@@ -37,6 +37,18 @@ export function InspectionsSection({ state }: Props) {
         onSubmitAnswers={() => s.submitAnswersMutation.mutate()}
         onCompleteRun={() => s.completeRunMutation.mutate()}
         onCreateDefectsFromRun={() => s.createDefectsFromRunMutation.mutate()}
+        runEvidence={s.inspectionRunEvidenceQuery.data ?? []}
+        evidenceChecklistItemId={s.inspectionEvidenceChecklistItemId}
+        evidenceTypeKey={s.inspectionEvidenceTypeKey}
+        evidenceNotes={s.inspectionEvidenceNotes}
+        selectedEvidenceFileName={s.inspectionEvidenceFile?.name ?? null}
+        isEvidenceLoading={s.inspectionRunEvidenceQuery.isLoading}
+        isUploadingEvidence={s.uploadInspectionRunEvidenceMutation.isPending}
+        onEvidenceChecklistItemIdChange={s.setInspectionEvidenceChecklistItemId}
+        onEvidenceTypeKeyChange={s.setInspectionEvidenceTypeKey}
+        onEvidenceNotesChange={s.setInspectionEvidenceNotes}
+        onSelectEvidenceFile={s.setInspectionEvidenceFile}
+        onUploadEvidence={() => s.uploadInspectionRunEvidenceMutation.mutate()}
         voiceGuidanceEnabled={s.voiceGuidanceEnabled}
         voiceGuidanceSupported={s.voiceGuidanceSupported}
         voiceGuidanceLoading={s.voiceGuidanceLoading}

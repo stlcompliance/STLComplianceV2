@@ -99,6 +99,8 @@ import {
 
 } from '../api/client'
 
+import type { UpdateExternalPartyRequest } from '../api/types'
+
 import {
   canApprovePurchaseOrders,
   canApprovePurchaseRequests,
@@ -707,12 +709,7 @@ export function useSupplyArrWorkspaceState() {
     }: {
       route: 'vendors' | 'suppliers' | 'dealers'
       partyId: string
-      request: {
-        displayName: string
-        legalName: string
-        taxIdentifier: string | null
-        notes: string
-      }
+      request: UpdateExternalPartyRequest
     }) => updateParty(session!.accessToken, route, partyId, request),
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: [`supplyarr-${variables.route}`] })

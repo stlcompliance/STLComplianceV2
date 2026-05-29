@@ -9,7 +9,8 @@ namespace StaffArr.Api.Services;
 
 public sealed class PeopleService(
     StaffArrDbContext db,
-    IStaffArrAuditService audit)
+    IStaffArrAuditService audit,
+    StaffArrMaintainArrTechnicianRefSyncService maintainarrTechnicianRefSync)
 {
     private static readonly HashSet<string> AllowedEmploymentStatuses =
         new(StringComparer.OrdinalIgnoreCase) { "active", "inactive", "terminated" };
@@ -126,6 +127,11 @@ public sealed class PeopleService(
             "success",
             cancellationToken: cancellationToken);
 
+        await maintainarrTechnicianRefSync.TryPublishPersonChangedAsync(
+            person,
+            "staffarr.person.created",
+            cancellationToken);
+
         return await GetByIdAsync(tenantId, person.Id, cancellationToken);
     }
 
@@ -171,6 +177,11 @@ public sealed class PeopleService(
             "success",
             cancellationToken: cancellationToken);
 
+        await maintainarrTechnicianRefSync.TryPublishPersonChangedAsync(
+            person,
+            "staffarr.person.updated",
+            cancellationToken);
+
         return await GetByIdAsync(tenantId, person.Id, cancellationToken);
     }
 
@@ -211,6 +222,11 @@ public sealed class PeopleService(
             "success",
             reasonCode: string.IsNullOrWhiteSpace(request.Reason) ? normalizedStatus : request.Reason.Trim(),
             cancellationToken: cancellationToken);
+
+        await maintainarrTechnicianRefSync.TryPublishPersonChangedAsync(
+            person,
+            "staffarr.person.employment_status_updated",
+            cancellationToken);
 
         return await GetByIdAsync(tenantId, person.Id, cancellationToken);
     }

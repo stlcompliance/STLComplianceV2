@@ -12,6 +12,7 @@ type Props = { state: RoutArrWorkspaceState }
 
 export function TripsSection({ state }: Props) {
   const {
+    accessToken,
     session,
     roleKey,
     isPlatformAdmin,

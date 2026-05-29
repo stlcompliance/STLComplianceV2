@@ -31,6 +31,8 @@ public sealed class InspectionRun : IHasTenant
     public InspectionTemplate InspectionTemplate { get; set; } = null!;
 
     public ICollection<InspectionRunAnswer> Answers { get; set; } = [];
+
+    public ICollection<InspectionRunEvidence> Evidence { get; set; } = [];
 }
 
 public sealed class InspectionRunAnswer : IHasTenant

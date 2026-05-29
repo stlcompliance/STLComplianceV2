@@ -233,6 +233,8 @@ services:
         sync: false
       - key: SupplyArr__ServiceToken
         sync: false
+      - key: MaintainArr__ServiceToken
+        sync: false
 
   - type: web
     name: trainarr-api
@@ -304,6 +306,8 @@ services:
       - key: Handoff__ServiceToken
         sync: false
       - key: SupplyArr__ServiceToken
+        sync: false
+      - key: StaffArr__ServiceToken
         sync: false
 
   - type: web
@@ -512,6 +516,10 @@ services:
       - key: MaintainArrAuditPackageGeneration__MaintainArrBaseUrl
         value: http://maintainarr-api:10000
       - key: MaintainArrAuditPackageGeneration__ServiceToken
+        sync: false
+      - key: MaintainArrTechnicianRefRefresh__MaintainArrBaseUrl
+        value: http://maintainarr-api:10000
+      - key: MaintainArrTechnicianRefRefresh__ServiceToken
         sync: false
       - key: RoutArrNotificationDispatch__RoutArrBaseUrl
         value: http://routarr-api:10000
@@ -734,7 +742,7 @@ services:
     name: suite-frontend
     runtime: static
     rootDir: apps/suite-frontend
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci --prefix ../../packages/shared-ui && npm ci && npm run build
     staticPublishPath: dist
     routes:
       - type: rewrite

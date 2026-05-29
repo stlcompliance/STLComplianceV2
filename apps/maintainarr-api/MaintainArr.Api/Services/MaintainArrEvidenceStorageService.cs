@@ -7,9 +7,37 @@ public sealed class MaintainArrEvidenceStorageService(IHostEnvironment environme
 {
     private readonly string _rootPath = ResolveRootPath(environment.ContentRootPath, options.Value.RootPath);
 
-    public async Task<string> SaveAsync(
+    public Task<string> SaveWorkOrderEvidenceAsync(
         Guid tenantId,
         Guid workOrderId,
+        Guid evidenceId,
+        string fileName,
+        Stream content,
+        CancellationToken cancellationToken = default) =>
+        SaveAsync(tenantId, "work-orders", workOrderId, evidenceId, fileName, content, cancellationToken);
+
+    public Task<string> SaveDefectEvidenceAsync(
+        Guid tenantId,
+        Guid defectId,
+        Guid evidenceId,
+        string fileName,
+        Stream content,
+        CancellationToken cancellationToken = default) =>
+        SaveAsync(tenantId, "defects", defectId, evidenceId, fileName, content, cancellationToken);
+
+    public Task<string> SaveInspectionRunEvidenceAsync(
+        Guid tenantId,
+        Guid inspectionRunId,
+        Guid evidenceId,
+        string fileName,
+        Stream content,
+        CancellationToken cancellationToken = default) =>
+        SaveAsync(tenantId, "inspection-runs", inspectionRunId, evidenceId, fileName, content, cancellationToken);
+
+    public async Task<string> SaveAsync(
+        Guid tenantId,
+        string scope,
+        Guid scopeId,
         Guid evidenceId,
         string fileName,
         Stream content,
@@ -18,7 +46,8 @@ public sealed class MaintainArrEvidenceStorageService(IHostEnvironment environme
         var safeFileName = SanitizeFileName(fileName);
         var relativeKey = Path.Combine(
             tenantId.ToString("N"),
-            workOrderId.ToString("N"),
+            scope,
+            scopeId.ToString("N"),
             $"{evidenceId:N}_{safeFileName}");
         var absolutePath = Path.Combine(_rootPath, relativeKey);
         Directory.CreateDirectory(Path.GetDirectoryName(absolutePath)!);
