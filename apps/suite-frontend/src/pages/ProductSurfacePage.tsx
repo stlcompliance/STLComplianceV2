@@ -3,6 +3,10 @@ import { useQuery } from '@tanstack/react-query'
 import * as nexarr from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
 import { PermissionGate } from '../components/PermissionGate'
+import { IdentityAccessPanel } from '../components/nexarr/IdentityAccessPanel'
+import { LaunchFailurePanel } from '../components/nexarr/LaunchFailurePanel'
+import { NexArrOverviewPanel } from '../components/nexarr/NexArrOverviewPanel'
+import { NexArrTenantsPanel } from '../components/nexarr/NexArrTenantsPanel'
 import { useLaunchContextGate } from '../hooks/useLaunchContextGate'
 import { useProductLaunch } from '../hooks/useProductLaunch'
 import {
@@ -47,31 +51,59 @@ export function ProductSurfacePage() {
     )
   }
 
+  if (normalized === 'nexarr' && surface.surfaceKey === 'overview') {
+    return <NexArrOverviewPanel />
+  }
+
+  if (normalized === 'nexarr' && surface.surfaceKey === 'identity') {
+    return <IdentityAccessPanel />
+  }
+
+  if (normalized === 'nexarr' && surface.surfaceKey === 'tenants') {
+    return <NexArrTenantsPanel />
+  }
+
   if (isLaunchSurface(surface)) {
+    const launchContext = contextQuery.data
+    const launchDenied = launchContext?.canLaunch === false
+
     return (
       <div className="max-w-2xl space-y-4">
         <h3 className="text-xl font-semibold text-white">{surface.label}</h3>
         {surface.permissionHint && (
           <p className="text-sm text-slate-400">{surface.permissionHint}</p>
         )}
-        {contextQuery.data && (
+
+        {launchDenied && launchContext && (
+          <LaunchFailurePanel
+            productDisplayName={launchContext.productDisplayName}
+            productKey={normalized}
+            context={launchContext}
+          />
+        )}
+
+        {launchContext?.canLaunch && (
           <div className="rounded-lg border border-slate-700 bg-slate-900/60 p-4 text-sm text-slate-300">
             <p>
-              <span className="font-medium">Launch URL:</span> {contextQuery.data.launchUrl || '—'}
+              <span className="font-medium">Launch URL:</span> {launchContext.launchUrl || '—'}
             </p>
-            <p className="mt-2">
-              <span className="font-medium">Can launch:</span>{' '}
-              {contextQuery.data.canLaunch ? 'Yes' : 'No'}
-              {contextQuery.data.denialReasonCode
-                ? ` (${contextQuery.data.denialReasonCode})`
-                : ''}
+            <p className="mt-2 text-emerald-300">
+              <span className="font-medium text-slate-300">Status:</span> Ready to launch via NexArr
+              handoff
             </p>
           </div>
         )}
-        <PermissionGate allowed={launchAllowedQuery.data === true}>
+
+        {launch.isError && (
+          <p className="rounded-lg border border-red-800/60 bg-red-950/30 p-4 text-sm text-red-200" role="alert">
+            {(launch.error as Error).message}
+          </p>
+        )}
+
+        <PermissionGate allowed={launchAllowedQuery.data === true && !launchDenied}>
           <button
             type="button"
-            disabled={launch.isPending}
+            disabled={launch.isPending || launchDenied}
             onClick={() => launch.mutate(normalized)}
             className="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-60"
           >

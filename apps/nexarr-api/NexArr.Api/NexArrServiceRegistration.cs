@@ -17,8 +17,11 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IPlatformAuditService, PlatformAuditService>();
         builder.Services.AddScoped<AuthService>();
+        builder.Services.AddScoped<PasswordResetService>();
         builder.Services.AddScoped<PlatformAuthorizationService>();
         builder.Services.AddScoped<TenantAdminService>();
+        builder.Services.AddScoped<TenantMembershipAdminService>();
+        builder.Services.AddScoped<PlatformUserAdminService>();
         builder.Services.AddScoped<ProductCatalogService>();
         builder.Services.AddScoped<EntitlementAdminService>();
         builder.Services.AddScoped<ServiceTokenAdminService>();
@@ -30,11 +33,16 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<PlatformAuditPackageGenerationService>();
         builder.Services.AddScoped<ServiceTokenCleanupSettingsService>();
         builder.Services.AddScoped<ServiceTokenCleanupWorkerService>();
+        builder.Services.AddScoped<PlatformOutboxEnqueueService>();
+        builder.Services.AddScoped<PlatformOutboxPublisherSettingsService>();
+        builder.Services.AddScoped<PlatformOutboxPublisherWorkerService>();
         builder.Services.AddScoped<TenantProductLicenseAdminService>();
         builder.Services.AddScoped<EntitlementReconciliationSettingsService>();
         builder.Services.AddScoped<EntitlementReconciliationWorkerService>();
         builder.Services.AddScoped<TenantLifecycleSettingsService>();
         builder.Services.AddScoped<TenantLifecycleWorkerService>();
+        builder.Services.AddScoped<PersonLoginDisableService>();
+        builder.Services.AddScoped<PersonLoginEnableService>();
         builder.Services.AddScoped<PlatformLifecycleOverviewService>();
         builder.Services.AddScoped<PlatformWorkerHealthOrchestrationService>();
         builder.Services.AddScoped<HybridDataPlaneService>();

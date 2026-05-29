@@ -150,16 +150,13 @@ public sealed class TrainArrAssignmentReminderEscalationWorkerTests : IAsyncLife
         await SeedStaffPersonAsync(personId);
 
         var dueAt = DateTimeOffset.UtcNow.AddDays(3);
-        var createRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
-        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+        var assignment = await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            adminToken,
             personId,
             definitionId,
-            null,
-            "manual",
-            dueAt));
-        var createResponse = await _trainarrClient.SendAsync(createRequest);
-        createResponse.EnsureSuccessStatusCode();
-        var assignment = (await createResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+            "reminder_test",
+            dueAt);
 
         var processRequest = Authorized(
             HttpMethod.Post,
@@ -198,16 +195,13 @@ public sealed class TrainArrAssignmentReminderEscalationWorkerTests : IAsyncLife
         var personId = Guid.NewGuid();
         await SeedStaffPersonAsync(personId);
 
-        var createRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
-        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+        var assignment = await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            adminToken,
             personId,
             definitionId,
-            null,
-            "manual",
-            DateTimeOffset.UtcNow.AddDays(7)));
-        var createResponse = await _trainarrClient.SendAsync(createRequest);
-        createResponse.EnsureSuccessStatusCode();
-        var assignment = (await createResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+            "reminder_test",
+            DateTimeOffset.UtcNow.AddDays(7));
 
         using (var scope = _trainarrFactory.Services.CreateScope())
         {

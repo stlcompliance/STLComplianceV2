@@ -235,6 +235,73 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Procurement_exception_cancel_then_reopen_resumes_investigation()
+    {
+        var vendor = await CreateVendorAsync();
+        var part = await CreatePartAsync();
+
+        var createPrRequest = Authorized(HttpMethod.Post, "/api/purchase-requests", _userToken);
+        createPrRequest.Content = JsonContent.Create(new CreatePurchaseRequestRequest(
+            $"pex-reopen-{Guid.NewGuid():N}"[..20],
+            "Reopen path PR",
+            string.Empty,
+            vendor.PartyId,
+            [new CreatePurchaseRequestLineRequest(part.PartId, 1m, string.Empty)]));
+        var pr = (await (await _supplyarrClient.SendAsync(createPrRequest)).Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+
+        var createExceptionRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/purchase-requests/{pr.PurchaseRequestId}/procurement-exceptions",
+            _userToken);
+        createExceptionRequest.Content = JsonContent.Create(new CreateProcurementExceptionRequest(
+            "PEX-REOPEN-001",
+            ProcurementExceptionCategories.Other,
+            "Cancelled then reopened",
+            "Exception cancelled in error.",
+            null));
+        var created = (await (await _supplyarrClient.SendAsync(createExceptionRequest))
+            .Content.ReadFromJsonAsync<ProcurementExceptionResponse>())!;
+
+        (await _supplyarrClient.SendAsync(
+            Authorized(
+                HttpMethod.Post,
+                $"/api/procurement-exceptions/{created.ExceptionId}/start-investigation",
+                _userToken))).EnsureSuccessStatusCode();
+
+        var cancelRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/procurement-exceptions/{created.ExceptionId}/cancel",
+            _userToken);
+        cancelRequest.Content = JsonContent.Create(new CancelProcurementExceptionRequest("Opened against wrong subject."));
+        (await _supplyarrClient.SendAsync(cancelRequest)).EnsureSuccessStatusCode();
+
+        var reopenRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/procurement-exceptions/{created.ExceptionId}/reopen",
+            _userToken);
+        reopenRequest.Content = JsonContent.Create(new ReopenProcurementExceptionRequest(
+            "Corrected subject linkage; resume investigation."));
+        var reopenResponse = await _supplyarrClient.SendAsync(reopenRequest);
+        reopenResponse.EnsureSuccessStatusCode();
+        var reopened = (await reopenResponse.Content.ReadFromJsonAsync<ProcurementExceptionResponse>())!;
+        Assert.Equal(ProcurementExceptionStatuses.Investigating, reopened.Status);
+        Assert.Equal(1, reopened.ReopenCount);
+        Assert.Contains("Corrected subject", reopened.LastReopenReason, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(reopened.ReopenedAt);
+        Assert.NotNull(reopened.SlaDueAt);
+        Assert.Equal("Opened against wrong subject.", reopened.CancellationReason);
+
+        var invalidReopen = Authorized(
+            HttpMethod.Post,
+            $"/api/procurement-exceptions/{created.ExceptionId}/reopen",
+            _userToken);
+        invalidReopen.Content = JsonContent.Create(new ReopenProcurementExceptionRequest(
+            "Second reopen should fail while investigating."));
+        var invalidResponse = await _supplyarrClient.SendAsync(invalidReopen);
+        Assert.Equal(HttpStatusCode.Conflict, invalidResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Procurement_exception_resolution_depth_assign_sla_template_and_links()
     {
         var vendor = await CreateVendorAsync();

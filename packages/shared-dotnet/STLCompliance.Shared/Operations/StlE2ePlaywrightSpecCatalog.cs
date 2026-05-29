@@ -244,6 +244,9 @@ public static class StlE2ePlaywrightSpecCatalog
     public const string SupplyArrPurchasingProcurementExceptionCancelJourneySmokeSpec =
         "supplyarr-purchasing-procurement-exception-cancel-journey-smoke.spec.ts";
 
+    public const string SupplyArrPurchasingProcurementExceptionPostCancelReopenJourneySmokeSpec =
+        "supplyarr-purchasing-procurement-exception-post-cancel-reopen-journey-smoke.spec.ts";
+
     public const string SupplyArrPurchasingProcurementExceptionPostRejectResolveJourneySmokeSpec =
         "supplyarr-purchasing-procurement-exception-post-reject-resolve-journey-smoke.spec.ts";
 
@@ -308,6 +311,9 @@ public static class StlE2ePlaywrightSpecCatalog
 
     public const string ComplianceCoreRoutArrDispatchGateAssignJourneySmokeSpec =
         "compliancecore-routarr-dispatch-gate-assign-journey-smoke.spec.ts";
+
+    public const string TrainArrRoutArrQualificationGateAssignJourneySmokeSpec =
+        "trainarr-routarr-qualification-gate-assign-journey-smoke.spec.ts";
 
     public const string ComplianceCoreRoutArrDispatchGateCommandCenterDndJourneySmokeSpec =
         "compliancecore-routarr-dispatch-gate-command-center-dnd-journey-smoke.spec.ts";
@@ -457,6 +463,7 @@ public static class StlE2ePlaywrightSpecCatalog
         SupplyArrPurchasingProcurementExceptionWaiveCloseJourneySmokeSpec,
         SupplyArrPurchasingProcurementExceptionRejectWaiveJourneySmokeSpec,
         SupplyArrPurchasingProcurementExceptionCancelJourneySmokeSpec,
+        SupplyArrPurchasingProcurementExceptionPostCancelReopenJourneySmokeSpec,
         SupplyArrPurchasingProcurementExceptionPostRejectResolveJourneySmokeSpec,
         SupplyArrPurchasingProcurementExceptionAssignLinkJourneySmokeSpec,
         SupplyArrPurchasingProcurementExceptionInvestigateLinkResolveJourneySmokeSpec,
@@ -483,6 +490,7 @@ public static class StlE2ePlaywrightSpecCatalog
         ComplianceCoreOperatorBatchEvaluateFindingsEmitJourneySmokeSpec,
         ComplianceCoreOperatorBatchWorkflowGateCheckJourneySmokeSpec,
         ComplianceCoreRoutArrDispatchGateAssignJourneySmokeSpec,
+        TrainArrRoutArrQualificationGateAssignJourneySmokeSpec,
         ComplianceCoreRoutArrDispatchGateCommandCenterDndJourneySmokeSpec,
         ComplianceCoreRoutArrDispatchGateBulkDispatchJourneySmokeSpec,
         ComplianceCoreRoutArrDispatchGateUnassignedBulkAssignJourneySmokeSpec,

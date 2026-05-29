@@ -200,7 +200,9 @@ public sealed class RuleEvaluationService(
             facts,
             ruleResults,
             run.CreatedAt,
-            findingsEmitted);
+            findingsEmitted,
+            run.AppliedWaiverId,
+            run.AppliedWaiverKey);
 
     private static IReadOnlyDictionary<string, bool> DeserializeFacts(string json)
     {

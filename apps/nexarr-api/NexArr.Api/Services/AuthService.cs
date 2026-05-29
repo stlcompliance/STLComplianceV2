@@ -163,6 +163,65 @@ public sealed class AuthService(
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<UserSessionsResponse> GetMySessionsAsync(
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = principal.GetUserId();
+        var currentSessionId = principal.GetSessionId();
+        var now = DateTimeOffset.UtcNow;
+
+        var sessions = await db.UserSessions
+            .AsNoTracking()
+            .Where(s => s.UserId == userId)
+            .OrderByDescending(s => s.CreatedAt)
+            .Select(s => new UserSessionSummary(
+                s.Id,
+                s.CreatedAt,
+                s.ExpiresAt,
+                s.RevokedAt,
+                s.UserAgent,
+                s.IpAddress,
+                s.ActiveTenantId,
+                s.Id == currentSessionId,
+                s.RevokedAt == null && s.ExpiresAt > now))
+            .ToListAsync(cancellationToken);
+
+        return new UserSessionsResponse(sessions);
+    }
+
+    public async Task RevokeMySessionAsync(
+        ClaimsPrincipal principal,
+        Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = principal.GetUserId();
+        var session = await db.UserSessions
+            .FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == userId, cancellationToken);
+
+        if (session is null)
+        {
+            throw new StlApiException("auth.session_not_found", "Session was not found.", 404);
+        }
+
+        if (session.RevokedAt is not null)
+        {
+            return;
+        }
+
+        session.RevokedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "auth.session_revoked",
+            "session",
+            session.Id.ToString(),
+            "Success",
+            tenantId: session.ActiveTenantId,
+            actorUserId: userId,
+            cancellationToken: cancellationToken);
+    }
+
     public async Task<NavigationResponse> GetNavigationAsync(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)

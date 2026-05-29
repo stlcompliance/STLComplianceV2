@@ -63,5 +63,15 @@ public static class PlatformAdminEndpoints
             return Results.Ok(await service.GetProductOverviewAsync(context.User, cancellationToken));
         })
         .WithName("PlatformAdminProductOverview");
+
+        group.MapPost("/users/{userId:guid}/enable", async (
+            Guid userId,
+            HttpContext context,
+            PlatformUserAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.EnableUserAsync(context.User, userId, cancellationToken));
+        })
+        .WithName("PlatformAdminEnableUser");
     }
 }

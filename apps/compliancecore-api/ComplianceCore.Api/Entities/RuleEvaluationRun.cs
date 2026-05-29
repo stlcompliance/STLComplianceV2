@@ -20,6 +20,10 @@ public sealed class RuleEvaluationRun : IHasTenant
 
     public string RuleResultsJson { get; set; } = "[]";
 
+    public Guid? AppliedWaiverId { get; set; }
+
+    public string? AppliedWaiverKey { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public RulePack? RulePack { get; set; }

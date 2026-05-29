@@ -171,6 +171,8 @@ public static class IntegrationOutboxEventKinds
 
     public const string SupplierIncidentCancelled = "supplier_incident.cancelled";
 
+    public const string SupplierIncidentReopened = "supplier_incident.reopened";
+
     public const string SupplierIncidentRestrictionApplied = "supplier_incident.restriction_applied";
 
     public const string ProcurementExceptionCreated = "procurement_exception.created";
@@ -190,6 +192,8 @@ public static class IntegrationOutboxEventKinds
     public const string ProcurementExceptionClosed = "procurement_exception.closed";
 
     public const string ProcurementExceptionCancelled = "procurement_exception.cancelled";
+
+    public const string ProcurementExceptionReopened = "procurement_exception.reopened";
 
     public const string WarrantyClaimCreated = "warranty_claim.created";
 

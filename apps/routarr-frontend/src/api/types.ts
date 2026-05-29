@@ -1055,6 +1055,12 @@ export interface DriverPortalScheduleResponse {
   generatedAt: string
 }
 
+export interface DriverPortalReportExceptionRequest {
+  title: string
+  description: string
+  exceptionType?: string
+}
+
 export interface DispatchReportCountItem {
   key: string
   count: number
@@ -1147,6 +1153,34 @@ export interface DispatchReportExceptionDetailResponse {
   assignedAt: string | null
   resolvedByUserId: string | null
   resolvedAt: string | null
+}
+
+export interface DispatchOverrideReportCountItem {
+  key: string
+  count: number
+}
+
+export interface DispatchOverrideReportEntry {
+  auditEventId: string
+  actorUserId: string | null
+  action: string
+  targetType: string
+  targetId: string | null
+  result: string
+  overrideKinds: string[]
+  occurredAt: string
+}
+
+export interface DispatchOverrideReportSummaryResponse {
+  generatedAt: string
+  scope: string
+  windowStart: string
+  windowEnd: string
+  totalOverrideCount: number
+  driverAssignmentOverrideCount: number
+  vehicleAssignmentOverrideCount: number
+  overrideKindCounts: DispatchOverrideReportCountItem[]
+  recentOverrides: DispatchOverrideReportEntry[]
 }
 
 export interface RouteReportCountItem {
@@ -1691,6 +1725,35 @@ export interface DispatchNotificationDispatchesResponse {
   items: DispatchNotificationDispatchItem[]
 }
 
+export interface IntegrationEventSettingsResponse {
+  isEnabled: boolean
+  maxAttempts: number
+  retryIntervalMinutes: number
+  updatedAt: string | null
+}
+
+export interface UpsertIntegrationEventSettingsRequest {
+  isEnabled: boolean
+  maxAttempts?: number | null
+  retryIntervalMinutes?: number | null
+}
+
+export interface IntegrationOutboxEventListItem {
+  outboxEventId: string
+  eventKind: string
+  processingStatus: string
+  relatedEntityType: string
+  relatedEntityId: string
+  attemptCount: number
+  errorMessage: string | null
+  createdAt: string
+  processedAt: string | null
+}
+
+export interface IntegrationOutboxEventListResponse {
+  items: IntegrationOutboxEventListItem[]
+}
+
 export interface TripCompletionRollupSettingsResponse {
   isEnabled: boolean
   stalenessHours: number
@@ -1729,6 +1792,72 @@ export interface TripCompletionRollupRunItem {
 
 export interface TripCompletionRollupRunsResponse {
   items: TripCompletionRollupRunItem[]
+}
+
+export interface TripCompletionSummaryResponse {
+  tripId: string
+  tripNumber: string
+  title: string
+  dispatchStatus: string
+  assignedDriverPersonId: string | null
+  vehicleRefKey: string | null
+  scheduledStartAt: string | null
+  scheduledEndAt: string | null
+  startedAt: string | null
+  completedAt: string | null
+  cancelledAt: string | null
+  durationMinutes: number | null
+  routeCount: number
+  completedRouteCount: number
+  stopCount: number
+  completedStopCount: number
+  skippedStopCount: number
+  pendingStopCount: number
+  loadCount: number
+  deliveredLoadCount: number
+  pendingLoadCount: number
+  sourceUpdatedAt: string
+  computedAt: string
+  isMaterialized: boolean
+}
+
+export interface TripCompletionEventResponse {
+  eventKind: string
+  title: string
+  detail: string | null
+  occurredAt: string
+  sequenceNumber: number
+  sourceEntityType: string
+  sourceEntityId: string
+}
+
+export interface TripCompletionDetailResponse {
+  summary: TripCompletionSummaryResponse
+  events: TripCompletionEventResponse[]
+}
+
+export interface TripCompletionsListResponse {
+  items: TripCompletionSummaryResponse[]
+}
+
+export interface RouteCompletionSummaryResponse {
+  routeId: string
+  routeNumber: string
+  title: string
+  routeStatus: string
+  tripId: string | null
+  tripNumber: string | null
+  tripDispatchStatus: string | null
+  stopCount: number
+  completedStopCount: number
+  skippedStopCount: number
+  completedAt: string | null
+  computedAt: string | null
+  isMaterialized: boolean
+}
+
+export interface RouteCompletionsListResponse {
+  items: RouteCompletionSummaryResponse[]
 }
 
 export interface AttachmentRetentionSettingsResponse {

@@ -56,7 +56,7 @@ export function QuickLaunchWidget({
       </ul>
       {launch.isError && (
         <p className="mt-2 text-xs text-red-300" role="alert">
-          Launch failed: {(launch.error as Error).message}
+          {(launch.error as Error).message}
         </p>
       )}
     </DashboardCard>

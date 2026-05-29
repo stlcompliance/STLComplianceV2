@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
+using MaintainArr.Api.Entities;
 using MaintainArr.Api.Services;
 using MaintainArrRedeemRequest = MaintainArr.Api.Contracts.RedeemHandoffRequest;
 using MaintainArrHandoffSessionResponse = MaintainArr.Api.Contracts.HandoffSessionResponse;
@@ -114,6 +115,18 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         var inProgress = (await startResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
         Assert.Equal("in_progress", inProgress.Status);
         Assert.NotNull(inProgress.StartedAt);
+        Assert.NotNull(inProgress.DowntimeFollowUp);
+        Assert.Equal("work_order_started", inProgress.DowntimeFollowUp!.Trigger);
+        Assert.Contains($"/downtime?assetId={assetId:D}", inProgress.DowntimeFollowUp.DeepLinkPath, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains($"workOrderId={created.WorkOrderId:D}", inProgress.DowntimeFollowUp.DeepLinkPath, StringComparison.OrdinalIgnoreCase);
+
+        using (var scope = _maintainarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+            var downtimeEvent = await db.AssetDowntimeEvents.SingleAsync(
+                x => x.WorkOrderId == created.WorkOrderId && x.EndedAt == null);
+            Assert.Equal(AssetDowntimeReasons.InRepair, downtimeEvent.Reason);
+        }
 
         var completeRequest = Authorized(HttpMethod.Patch, $"/api/work-orders/{created.WorkOrderId}/status", managerToken);
         completeRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest("completed"));

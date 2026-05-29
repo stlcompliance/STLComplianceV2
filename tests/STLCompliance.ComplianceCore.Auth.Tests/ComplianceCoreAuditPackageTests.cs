@@ -61,8 +61,10 @@ public class ComplianceCoreAuditPackageTests : IAsyncLifetime
         response.EnsureSuccessStatusCode();
         var manifest = (await response.Content.ReadFromJsonAsync<AuditPackageManifestResponse>())!;
         Assert.Equal("1", manifest.PackageVersion);
-        Assert.Equal(4, manifest.Sections.Count);
+        Assert.Equal(6, manifest.Sections.Count);
         Assert.Contains(manifest.Sections, section => section.Key == "audit_events");
+        Assert.Contains(manifest.Sections, section => section.Key == "workflow_gate_checks");
+        Assert.Contains(manifest.Sections, section => section.Key == "waivers");
         Assert.Contains(manifest.Sections, section => section.FileName == "rule_packs.json");
     }
 
@@ -79,10 +81,12 @@ public class ComplianceCoreAuditPackageTests : IAsyncLifetime
 
         var zipBytes = await response.Content.ReadAsByteArrayAsync();
         using var archive = new ZipArchive(new MemoryStream(zipBytes), ZipArchiveMode.Read);
-        Assert.Equal(5, archive.Entries.Count);
+        Assert.Equal(7, archive.Entries.Count);
         Assert.Contains(archive.Entries, entry => entry.Name == "manifest.json");
         Assert.Contains(archive.Entries, entry => entry.Name == "findings.json");
         Assert.Contains(archive.Entries, entry => entry.Name == "evaluation_runs.json");
+        Assert.Contains(archive.Entries, entry => entry.Name == "workflow_gate_checks.json");
+        Assert.Contains(archive.Entries, entry => entry.Name == "waivers.json");
         Assert.Contains(archive.Entries, entry => entry.Name == "rule_packs.json");
     }
 

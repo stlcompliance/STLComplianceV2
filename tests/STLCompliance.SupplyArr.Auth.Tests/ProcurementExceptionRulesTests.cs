@@ -36,4 +36,12 @@ public sealed class ProcurementExceptionRulesTests
         };
         Assert.True(ProcurementExceptionRules.IsSlaBreached(entity, DateTimeOffset.UtcNow));
     }
+
+    [Fact]
+    public void CanTransition_allows_cancelled_to_investigating_for_reopen()
+    {
+        Assert.True(ProcurementExceptionRules.CanTransition(
+            ProcurementExceptionStatuses.Cancelled,
+            ProcurementExceptionStatuses.Investigating));
+    }
 }

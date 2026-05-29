@@ -20,6 +20,9 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<StaffArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();
         builder.Services.AddScoped<MeService>();
+        builder.Services.AddScoped<MePortalService>();
+        builder.Services.AddScoped<MyTeamService>();
+        builder.Services.AddScoped<PersonnelUpdateRequestService>();
         builder.Services.AddScoped<StaffArrAuthorizationService>();
         builder.Services.AddScoped<PersonProvisioningService>();
         builder.Services.AddScoped<PeopleService>();
@@ -66,6 +69,12 @@ public static class StaffArrServiceRegistration
         });
         builder.Services.AddScoped<TrainarrPersonTrainingHistoryService>();
         builder.Services.AddScoped<WorkforceOnboardingJourneyService>();
+        builder.Services.AddScoped<PersonOffboardingService>();
+        builder.Services.AddHttpClient<NexArrLoginDisableClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<NexArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
         builder.Services.AddHttpClient<SupplyArrDemandClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<SupplyArrClientOptions>>().Value;

@@ -75,6 +75,15 @@ public static class DriverPortalEndpoints
             Results.Ok(await proofDvirService.SubmitDvirAsync(context.User, tripId, request, cancellationToken)))
         .WithName("DriverPortalSubmitTripDvir");
 
+        group.MapPost("/trips/{tripId:guid}/exceptions", async (
+            Guid tripId,
+            DriverPortalReportExceptionRequest request,
+            HttpContext context,
+            DriverPortalService service,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await service.ReportExceptionAsync(context.User, tripId, request, cancellationToken)))
+        .WithName("DriverPortalReportTripException");
+
         group.MapGet("/trips/{tripId:guid}/capture-readiness", async (
             Guid tripId,
             HttpContext context,

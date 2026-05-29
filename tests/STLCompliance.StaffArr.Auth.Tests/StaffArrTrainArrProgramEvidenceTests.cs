@@ -171,16 +171,13 @@ public class StaffArrTrainArrProgramEvidenceTests : IAsyncLifetime
         var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
         var definitionId = await CreateTrainingDefinitionAsync(adminToken);
 
-        var createAssignmentRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
-        createAssignmentRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+        var assignment = await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            adminToken,
             personId,
             definitionId,
-            null,
-            "manual",
-            null));
-        var createAssignmentResponse = await _trainarrClient.SendAsync(createAssignmentRequest);
-        createAssignmentResponse.EnsureSuccessStatusCode();
-        var assignment = (await createAssignmentResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+            "program_qualification",
+            null);
         Assert.Equal("assigned", assignment.Status);
         Assert.Equal(0, assignment.EvidenceCount);
 
@@ -251,16 +248,13 @@ public class StaffArrTrainArrProgramEvidenceTests : IAsyncLifetime
         var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
         var definitionId = await CreateTrainingDefinitionAsync(adminToken);
 
-        var createAssignmentRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
-        createAssignmentRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+        var assignment = await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            adminToken,
             personId,
             definitionId,
-            null,
-            "manual",
-            null));
-        var createAssignmentResponse = await _trainarrClient.SendAsync(createAssignmentRequest);
-        createAssignmentResponse.EnsureSuccessStatusCode();
-        var assignment = (await createAssignmentResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+            "program_qualification",
+            null);
 
         var memberToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_member", personId: personId);
         var memberStaffarrToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_member", personId: personId);

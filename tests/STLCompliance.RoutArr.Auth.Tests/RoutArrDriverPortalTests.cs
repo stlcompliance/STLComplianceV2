@@ -12,6 +12,7 @@ using NexArr.Api.Data;
 using NexArr.Api.Services;
 using RoutArr.Api.Contracts;
 using RoutArr.Api.Data;
+using RoutArr.Api.Entities;
 using RoutArr.Api.Services;
 using RoutArrRedeemRequest = RoutArr.Api.Contracts.RedeemHandoffRequest;
 using RoutArrHandoffSessionResponse = RoutArr.Api.Contracts.HandoffSessionResponse;
@@ -173,6 +174,62 @@ public sealed class RoutArrDriverPortalTests : IAsyncLifetime
         var execution = (await executionResponse.Content.ReadFromJsonAsync<TripExecutionSummaryResponse>())!;
         Assert.Equal("completed", execution.DispatchStatus);
         Assert.NotNull(execution.ClosedAt);
+    }
+
+    [Fact]
+    public async Task Driver_portal_reports_exception_on_assigned_trip()
+    {
+        var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
+        var driverToken = CreateRoutArrAccessToken(["routarr"], "routarr_driver", PlatformSeeder.DemoAdminUserId);
+        var now = DateTimeOffset.UtcNow;
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/trips", _dispatcherToken);
+        createRequest.Content = JsonContent.Create(new CreateTripRequest(
+            "Exception report trip",
+            "Driver exception slice",
+            "VEH-EX-1",
+            now.AddHours(1),
+            now.AddHours(4),
+            null));
+        var createResponse = await _routarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var trip = (await createResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        var assignRequest = Authorized(HttpMethod.Patch, $"/api/trips/{trip.TripId}/assign-driver", _dispatcherToken);
+        assignRequest.Content = JsonContent.Create(new AssignTripDriverRequest(driverPersonId));
+        (await _routarrClient.SendAsync(assignRequest)).EnsureSuccessStatusCode();
+
+        var reportRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/driver-portal/trips/{trip.TripId}/exceptions",
+            driverToken);
+        reportRequest.Content = JsonContent.Create(new DriverPortalReportExceptionRequest(
+            "Traffic on I-40",
+            "Heavy congestion past mile 12",
+            DriverPortalExceptionRules.TrafficDelay));
+        var reportResponse = await _routarrClient.SendAsync(reportRequest);
+        reportResponse.EnsureSuccessStatusCode();
+        var reported = (await reportResponse.Content.ReadFromJsonAsync<DispatchExceptionSummaryResponse>())!;
+        Assert.Equal(trip.TripId, reported.TripId);
+        Assert.Equal(DispatchExceptionCategories.Delay, reported.Category);
+        Assert.Equal(DispatchExceptionStatuses.Open, reported.Status);
+        Assert.StartsWith("[Driver-reported]", reported.Description, StringComparison.Ordinal);
+
+        var queueResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/dispatch/exceptions?status=open", _dispatcherToken));
+        queueResponse.EnsureSuccessStatusCode();
+        var queue = (await queueResponse.Content.ReadFromJsonAsync<DispatchExceptionListResponse>())!;
+        Assert.Contains(queue.Items, x => x.ExceptionId == reported.ExceptionId);
+
+        using var scope = _routarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+        var outbox = await db.IntegrationOutboxEvents
+            .AsNoTracking()
+            .SingleAsync(x =>
+                x.TenantId == PlatformSeeder.DemoTenantId
+                && x.EventKind == RoutArrIntegrationOutboxEventKinds.ExceptionCreated
+                && x.RelatedEntityId == reported.ExceptionId);
+        Assert.Equal("dispatch_exception", outbox.RelatedEntityType);
     }
 
     [Fact]

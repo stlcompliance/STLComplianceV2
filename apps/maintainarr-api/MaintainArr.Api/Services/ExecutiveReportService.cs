@@ -5,7 +5,10 @@ using MaintainArr.Api.Data;
 using MaintainArr.Api.Entities;
 namespace MaintainArr.Api.Services;
 
-public sealed class ExecutiveReportService(MaintainArrDbContext db)
+public sealed class ExecutiveReportService(
+    MaintainArrDbContext db,
+    AssetDowntimeService downtimeService,
+    DowntimeTrackingSettingsService downtimeSettingsService)
 {
     private static readonly IReadOnlySet<string> OpenDefectStatuses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
@@ -32,6 +35,7 @@ public sealed class ExecutiveReportService(MaintainArrDbContext db)
         var generatedAt = DateTimeOffset.UtcNow;
         var fleetReadiness = await BuildFleetReadinessAsync(tenantId, cancellationToken);
         var operationalTotals = await BuildOperationalTotalsAsync(tenantId, generatedAt, cancellationToken);
+        var downtimeTrend = await BuildDowntimeTrendAsync(tenantId, generatedAt, cancellationToken);
         var supplyDemand = await BuildSupplyDemandSummaryAsync(tenantId, cancellationToken);
         var scopeReadiness = await BuildScopeReadinessAsync(tenantId, cancellationToken);
 
@@ -53,6 +57,7 @@ public sealed class ExecutiveReportService(MaintainArrDbContext db)
             generatedAt,
             fleetReadiness,
             operationalTotals,
+            downtimeTrend,
             supplyDemand,
             scopeReadiness,
             workOrderStatusCounts
@@ -81,6 +86,12 @@ public sealed class ExecutiveReportService(MaintainArrDbContext db)
         builder.AppendLine($"operations,open_high_defects,{summary.OperationalTotals.OpenHighDefectCount}");
         builder.AppendLine($"operations,overdue_pm,{summary.OperationalTotals.OverduePmScheduleCount}");
         builder.AppendLine($"operations,labor_hours_30d,{summary.OperationalTotals.LaborHoursLast30Days:F2}");
+        builder.AppendLine($"downtime,period_days,{summary.DowntimeTrend.PeriodDays}");
+        builder.AppendLine($"downtime,current_hours,{summary.DowntimeTrend.CurrentPeriod.DowntimeHours:F2}");
+        builder.AppendLine($"downtime,previous_hours,{summary.DowntimeTrend.PreviousPeriod.DowntimeHours:F2}");
+        builder.AppendLine($"downtime,hours_delta,{summary.DowntimeTrend.DowntimeHoursDelta:F2}");
+        builder.AppendLine($"downtime,current_availability_percent,{summary.DowntimeTrend.CurrentPeriod.AvailabilityPercent:F2}");
+        builder.AppendLine($"downtime,availability_percent_delta,{summary.DowntimeTrend.AvailabilityPercentDelta:F2}");
         builder.AppendLine($"supplyarr,published_demand_lines,{summary.SupplyDemand.PublishedDemandLines}");
         builder.AppendLine($"supplyarr,open_procurement_lines,{summary.SupplyDemand.OpenProcurementLines}");
 
@@ -215,6 +226,54 @@ public sealed class ExecutiveReportService(MaintainArrDbContext db)
             completedWorkOrders,
             activeTechnicians);
     }
+
+    private async Task<ExecutiveReportDowntimeTrend> BuildDowntimeTrendAsync(
+        Guid tenantId,
+        DateTimeOffset generatedAt,
+        CancellationToken cancellationToken)
+    {
+        var settings = await downtimeSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        var periodDays = AssetDowntimeRules.NormalizeAvailabilityPeriodDays(settings?.AvailabilityPeriodDays);
+        var currentEnd = generatedAt;
+        var currentStart = currentEnd.AddDays(-periodDays);
+        var previousEnd = currentStart;
+        var previousStart = previousEnd.AddDays(-periodDays);
+
+        var currentFleet = await downtimeService.GetFleetAvailabilityAsync(
+            tenantId,
+            currentStart,
+            currentEnd,
+            cancellationToken);
+        DateTimeOffset? snapshotComputedAt = currentFleet.IsMaterialized ? currentFleet.ComputedAt : null;
+
+        var previousFleet = await downtimeService.ComputeFleetAvailabilityAsync(
+            tenantId,
+            previousStart,
+            previousEnd,
+            cancellationToken);
+
+        var currentPeriod = MapDowntimePeriod(currentFleet);
+        var previousPeriod = MapDowntimePeriod(previousFleet);
+
+        return new ExecutiveReportDowntimeTrend(
+            periodDays,
+            currentPeriod,
+            previousPeriod,
+            Math.Round(currentPeriod.DowntimeHours - previousPeriod.DowntimeHours, 2),
+            Math.Round(currentPeriod.AvailabilityPercent - previousPeriod.AvailabilityPercent, 1),
+            snapshotComputedAt);
+    }
+
+    private static ExecutiveReportDowntimePeriodMetrics MapDowntimePeriod(FleetAvailabilityResponse fleet) =>
+        new(
+            fleet.PeriodStart,
+            fleet.PeriodEnd,
+            fleet.DowntimeHours,
+            fleet.AvailabilityPercent,
+            fleet.PlannedDowntimeHours,
+            fleet.UnplannedDowntimeHours,
+            fleet.ActiveDowntimeEventCount,
+            fleet.IsMaterialized);
 
     private async Task<ExecutiveReportSupplyDemandSummary> BuildSupplyDemandSummaryAsync(
         Guid tenantId,

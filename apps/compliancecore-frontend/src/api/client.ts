@@ -60,6 +60,9 @@ import type {
   RuleChangeMonitoringSummaryResponse,
   M12AnalyticsWorkerSettingsResponse,
   UpsertM12AnalyticsWorkerSettingsRequest,
+  FactSourceSyncWorkerSettingsResponse,
+  UpsertFactSourceSyncWorkerSettingsRequest,
+  FactSourceSyncHealthResponse,
   AuditDeliveryOrchestrationStatusResponse,
   TriggerM12AnalyticsBatchResponse,
   TriggerScheduledRuleEvaluationResponse,
@@ -83,6 +86,8 @@ import type {
   UpdateRulePackStatusRequest,
   VocabularyTermResponse,
   VocabularyTypeResponse,
+  ComplianceWaiverResponse,
+  CreateComplianceWaiverRequest,
 } from './types'
 
 const apiBase = import.meta.env.VITE_COMPLIANCECORE_API_BASE ?? ''
@@ -1062,6 +1067,45 @@ export async function commitFactSourceIngestion(
   )
 }
 
+export async function getFactSourceSyncWorkerSettings(
+  accessToken: string,
+): Promise<FactSourceSyncWorkerSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/fact-source-sync-worker-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FactSourceSyncWorkerSettingsResponse>(
+    response,
+    'Failed to load fact source sync worker settings',
+  )
+}
+
+export async function upsertFactSourceSyncWorkerSettings(
+  accessToken: string,
+  payload: UpsertFactSourceSyncWorkerSettingsRequest,
+): Promise<FactSourceSyncWorkerSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/fact-source-sync-worker-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<FactSourceSyncWorkerSettingsResponse>(
+    response,
+    'Failed to save fact source sync worker settings',
+  )
+}
+
+export async function getFactSourceSyncHealth(
+  accessToken: string,
+): Promise<FactSourceSyncHealthResponse> {
+  const response = await fetch(`${apiBase}/api/fact-source-sync-health`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FactSourceSyncHealthResponse>(
+    response,
+    'Failed to load fact source sync health',
+  )
+}
+
 export async function getM12AnalyticsWorkerSettings(
   accessToken: string,
 ): Promise<M12AnalyticsWorkerSettingsResponse> {
@@ -1245,6 +1289,21 @@ export async function exportBulkEvaluationsCsv(accessToken: string): Promise<Blo
   return response.blob()
 }
 
+export async function exportBulkWorkflowGateChecksCsv(accessToken: string): Promise<Blob> {
+  const response = await fetch(`${apiBase}/api/exports/workflow-gate-checks`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new ComplianceCoreApiError(
+      body || 'Failed to export workflow gate checks CSV',
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
 export async function exportBulkRulePacksCsv(
   accessToken: string,
   params: { status?: string } = {},
@@ -1335,4 +1394,52 @@ export async function rollbackRuleVersion(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<RuleVersionRollbackResponse>(response, 'Failed to roll back rule version')
+}
+
+export async function listComplianceWaivers(
+  accessToken: string,
+  params?: { status?: string; packKey?: string; scopeKey?: string; limit?: number },
+): Promise<ComplianceWaiverResponse[]> {
+  const search = new URLSearchParams()
+  if (params?.status) search.set('status', params.status)
+  if (params?.packKey) search.set('packKey', params.packKey)
+  if (params?.scopeKey) search.set('scopeKey', params.scopeKey)
+  if (params?.limit) search.set('limit', String(params.limit))
+  const query = search.toString() ? `?${search.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/waivers${query}`, { headers: authHeaders(accessToken) })
+  return parseJsonResponse<ComplianceWaiverResponse[]>(response, 'Failed to load compliance waivers')
+}
+
+export async function createComplianceWaiver(
+  accessToken: string,
+  request: CreateComplianceWaiverRequest,
+): Promise<ComplianceWaiverResponse> {
+  const response = await fetch(`${apiBase}/api/waivers`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<ComplianceWaiverResponse>(response, 'Failed to create compliance waiver')
+}
+
+export async function approveComplianceWaiver(
+  accessToken: string,
+  waiverId: string,
+): Promise<ComplianceWaiverResponse> {
+  const response = await fetch(`${apiBase}/api/waivers/${waiverId}/approve`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ComplianceWaiverResponse>(response, 'Failed to approve compliance waiver')
+}
+
+export async function revokeComplianceWaiver(
+  accessToken: string,
+  waiverId: string,
+): Promise<ComplianceWaiverResponse> {
+  const response = await fetch(`${apiBase}/api/waivers/${waiverId}/revoke`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ComplianceWaiverResponse>(response, 'Failed to revoke compliance waiver')
 }

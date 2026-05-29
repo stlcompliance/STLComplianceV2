@@ -299,6 +299,7 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.Property(x => x.WaiveJustification).HasMaxLength(2048).IsRequired();
             entity.Property(x => x.WaiveRejectionReason).HasMaxLength(512).IsRequired();
             entity.Property(x => x.CancellationReason).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.LastReopenReason).HasMaxLength(512).IsRequired();
             entity.Property(x => x.ResolutionTemplateKey).HasMaxLength(64).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.ExceptionKey }).IsUnique();
@@ -320,6 +321,7 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.ResolutionNotes).HasMaxLength(2048).IsRequired();
             entity.Property(x => x.CancellationReason).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.LastReopenReason).HasMaxLength(512).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.IncidentKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.ExternalPartyId });

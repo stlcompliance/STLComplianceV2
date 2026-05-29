@@ -157,6 +157,26 @@ public static class SupplierIncidentEndpoints
         })
         .WithName("CancelSupplierIncident");
 
+        group.MapPost("/{incidentId:guid}/reopen", async (
+            Guid incidentId,
+            ReopenSupplierIncidentRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplierIncidentService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartiesManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.ReopenAsync(
+                tenantId,
+                actorUserId,
+                incidentId,
+                request,
+                cancellationToken));
+        })
+        .WithName("ReopenSupplierIncident");
+
         group.MapPost("/{incidentId:guid}/apply-procurement-restriction", async (
             Guid incidentId,
             ApplySupplierIncidentProcurementRestrictionRequest request,

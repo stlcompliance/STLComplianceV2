@@ -25,6 +25,12 @@ public sealed record SupplierIncidentResponse(
     Guid? ClosedByUserId,
     DateTimeOffset? ClosedAt,
     string CancellationReason,
+    Guid? CancelledByUserId,
+    DateTimeOffset? CancelledAt,
+    Guid? ReopenedByUserId,
+    DateTimeOffset? ReopenedAt,
+    string LastReopenReason,
+    int ReopenCount,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
@@ -53,6 +59,8 @@ public sealed record ResolveSupplierIncidentRequest(string ResolutionNotes);
 public sealed record CloseSupplierIncidentRequest(string? ResolutionNotes);
 
 public sealed record CancelSupplierIncidentRequest(string Reason);
+
+public sealed record ReopenSupplierIncidentRequest(string Reason);
 
 public sealed record ApplySupplierIncidentProcurementRestrictionRequest(
     string RestrictionKey,

@@ -118,7 +118,7 @@ public static class FactResolver
         if (string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal))
         {
             var product = string.IsNullOrWhiteSpace(source.ProductKey) ? "product" : source.ProductKey;
-            return $"Product API source ({product}) requires caller context or a future product fetch extension.";
+            return $"Product API source ({product}) requires caller context, a successful background sync cache, or sync configuration.";
         }
 
         if (string.Equals(source.SourceType, FactSourceTypes.ProductMirror, StringComparison.Ordinal))

@@ -14,6 +14,11 @@ export interface LoginRequest {
   tenantId: string | null
 }
 
+export interface ForgotPasswordResponse {
+  message: string
+  devResetToken: string | null
+}
+
 export interface MeResponse {
   userId: string
   email: string
@@ -46,6 +51,22 @@ export interface NavigationItem {
 export interface NavigationResponse {
   tenantId: string
   products: NavigationItem[]
+}
+
+export interface UserSessionSummary {
+  sessionId: string
+  createdAt: string
+  expiresAt: string
+  revokedAt: string | null
+  userAgent: string | null
+  ipAddress: string | null
+  activeTenantId: string | null
+  isCurrent: boolean
+  isActive: boolean
+}
+
+export interface UserSessionsResponse {
+  sessions: UserSessionSummary[]
 }
 
 export interface TenantSummary {
@@ -486,6 +507,59 @@ export interface TriggerTenantLifecycleOrchestrationResponse {
   asOfUtc: string
   suspendedCount: number
   reactivatedCount: number
+  skippedCount: number
+}
+
+export interface PlatformOutboxPublisherSettings {
+  isEnabled: boolean
+  maxRetryAttempts: number
+  retryIntervalMinutes: number
+  updatedAt: string | null
+}
+
+export interface PlatformOutboxPublisherRunItem {
+  runId: string
+  outcome: string
+  publishedCount: number
+  failedCount: number
+  deadLetterCount: number
+  skippedCount: number
+  skipReason: string | null
+  processedAt: string
+}
+
+export interface PlatformOutboxPublisherRunsResponse {
+  items: PlatformOutboxPublisherRunItem[]
+}
+
+export interface PlatformOutboxPublisherStatusResponse {
+  asOfUtc: string
+  isEnabled: boolean
+  pendingCount: number
+  deadLetterCount: number
+  latestRun: PlatformOutboxPublisherRunItem | null
+}
+
+export interface PlatformOutboxEventItem {
+  eventId: string
+  eventType: string
+  tenantId: string | null
+  processingStatus: string
+  attemptCount: number
+  errorMessage: string | null
+  occurredAt: string
+  publishedAt: string | null
+}
+
+export interface PlatformOutboxEventsListResponse {
+  items: PlatformOutboxEventItem[]
+}
+
+export interface TriggerPlatformOutboxPublisherOrchestrationResponse {
+  asOfUtc: string
+  publishedCount: number
+  failedCount: number
+  deadLetterCount: number
   skippedCount: number
 }
 

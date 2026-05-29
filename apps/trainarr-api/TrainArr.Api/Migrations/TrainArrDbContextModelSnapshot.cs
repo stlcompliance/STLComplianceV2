@@ -1976,6 +1976,58 @@ namespace TrainArr.Api.Migrations
                     b.ToTable("trainarr_training_definitions", (string)null);
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingDefinitionCompletionRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConfigJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RuleKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("RuleType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainingDefinitionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TrainingDefinitionId");
+
+                    b.HasIndex("TenantId", "TrainingDefinitionId", "RuleKey")
+                        .IsUnique();
+
+                    b.ToTable("trainarr_training_definition_completion_rules", (string)null);
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingDefinitionStep", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2031,6 +2083,58 @@ namespace TrainArr.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("trainarr_training_definition_steps", (string)null);
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingDefinitionStepBranch", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BranchKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("BranchType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ConfigJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainingDefinitionStepId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TrainingDefinitionStepId");
+
+                    b.HasIndex("TenantId", "TrainingDefinitionStepId", "BranchKey")
+                        .IsUnique();
+
+                    b.ToTable("trainarr_training_definition_step_branches", (string)null);
                 });
 
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingDomainEvent", b =>
@@ -2745,6 +2849,17 @@ namespace TrainArr.Api.Migrations
                     b.Navigation("TrainingDefinitionStep");
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingDefinitionCompletionRule", b =>
+                {
+                    b.HasOne("TrainArr.Api.Entities.TrainingDefinition", "TrainingDefinition")
+                        .WithMany()
+                        .HasForeignKey("TrainingDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TrainingDefinition");
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingDefinitionStep", b =>
                 {
                     b.HasOne("TrainArr.Api.Entities.TrainingDefinition", "TrainingDefinition")
@@ -2754,6 +2869,17 @@ namespace TrainArr.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("TrainingDefinition");
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingDefinitionStepBranch", b =>
+                {
+                    b.HasOne("TrainArr.Api.Entities.TrainingDefinitionStep", "TrainingDefinitionStep")
+                        .WithMany()
+                        .HasForeignKey("TrainingDefinitionStepId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TrainingDefinitionStep");
                 });
 
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingEvaluation", b =>

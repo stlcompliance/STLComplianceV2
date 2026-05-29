@@ -1829,6 +1829,350 @@ export async function ensureComplianceCoreRoutArrDispatchGateAllowFixture(): Pro
   }
 }
 
+const e2eDriverQualificationKey = 'driver_qualification'
+const e2eDriverQualificationRulePackKey = 'driver_qualification'
+const e2eDriverQualificationDefinitionKey = 'e2e_playwright_driver_qualification'
+const e2eDriverQualificationAssignmentReason = 'e2e_playwright_driver_qualification_gate'
+
+export type TrainArrRoutarrQualificationGateJourneyFixture = {
+  tripId: string
+  driverPersonId: string
+  qualificationKey: string
+  trainingDefinitionId: string
+}
+
+type TrainArrQualificationCheckApiResponse = {
+  checkId: string
+  outcome: string
+  reasonCode: string
+  message: string
+  qualificationKey: string
+}
+
+type TrainArrQualificationIssueSummary = {
+  qualificationIssueId: string
+  staffarrPersonId: string
+  qualificationKey: string
+  status: string
+}
+
+type TrainArrTrainingDefinitionSummary = {
+  trainingDefinitionId: string
+  definitionKey: string
+  qualificationKey: string
+}
+
+async function listTrainArrTrainingDefinitions(
+  trainarrToken: string,
+): Promise<TrainArrTrainingDefinitionSummary[]> {
+  const response = await fetch(`${trainarrApiUrl()}/api/training-definitions`, {
+    headers: { Authorization: `Bearer ${trainarrToken}` },
+  })
+  return readJson(response)
+}
+
+async function ensureTrainArrE2eDriverQualificationDefinition(
+  trainarrToken: string,
+): Promise<TrainArrTrainingDefinitionSummary> {
+  const definitions = await listTrainArrTrainingDefinitions(trainarrToken)
+  const existing = definitions.find(
+    (entry) => entry.definitionKey === e2eDriverQualificationDefinitionKey,
+  )
+  if (existing) {
+    return existing
+  }
+
+  const created = await readJson<TrainArrTrainingDefinitionSummary>(
+    await fetch(`${trainarrApiUrl()}/api/training-definitions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${trainarrToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        definitionKey: e2eDriverQualificationDefinitionKey,
+        name: 'E2E Playwright driver qualification',
+        description:
+          'Cross-product TrainArr qualification gate → RoutArr driver eligibility Playwright fixture.',
+        qualificationKey: e2eDriverQualificationKey,
+        qualificationName: 'Driver qualification',
+      }),
+    }),
+  )
+  return created
+}
+
+async function runTrainArrQualificationCheckApi(
+  trainarrToken: string,
+  staffarrPersonId: string,
+  trainingDefinitionId: string,
+): Promise<TrainArrQualificationCheckApiResponse> {
+  const response = await fetch(`${trainarrApiUrl()}/api/qualification-checks`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${trainarrToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      staffarrPersonId,
+      qualificationKey: e2eDriverQualificationKey,
+      rulePackKey: e2eDriverQualificationRulePackKey,
+      trainingDefinitionId,
+      context: null,
+    }),
+  })
+  return readJson(response)
+}
+
+async function listTrainArrQualificationIssues(
+  trainarrToken: string,
+  status?: string,
+): Promise<TrainArrQualificationIssueSummary[]> {
+  const url = new URL(`${trainarrApiUrl()}/api/qualification-issues`)
+  if (status) {
+    url.searchParams.set('status', status)
+  }
+  const response = await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${trainarrToken}` },
+  })
+  return readJson(response)
+}
+
+async function ensureTrainArrDriverQualificationIssued(
+  trainarrToken: string,
+): Promise<{ trainingDefinitionId: string; qualificationIssueId: string }> {
+  const definition = await ensureTrainArrE2eDriverQualificationDefinition(trainarrToken)
+
+  const issued = await listTrainArrQualificationIssues(trainarrToken, 'issued')
+  const existingIssue = issued.find(
+    (entry) =>
+      entry.staffarrPersonId === journeySubjectPersonId
+      && entry.qualificationKey === e2eDriverQualificationKey,
+  )
+  if (existingIssue) {
+    return {
+      trainingDefinitionId: definition.trainingDefinitionId,
+      qualificationIssueId: existingIssue.qualificationIssueId,
+    }
+  }
+
+  const check = await runTrainArrQualificationCheckApi(
+    trainarrToken,
+    journeySubjectPersonId,
+    definition.trainingDefinitionId,
+  )
+
+  const createdAssignment = await readJson<{ assignmentId: string }>(
+    await fetch(`${trainarrApiUrl()}/api/training-assignments`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${trainarrToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        staffarrPersonId: journeySubjectPersonId,
+        trainingDefinitionId: definition.trainingDefinitionId,
+        staffarrIncidentRemediationId: null,
+        assignmentReason: e2eDriverQualificationAssignmentReason,
+        dueAt: null,
+        authorizationQualificationCheckId: check.checkId,
+      }),
+    }),
+  )
+
+  await readJson(
+    await fetch(
+      `${trainarrApiUrl()}/api/training-assignments/${createdAssignment.assignmentId}/complete`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${trainarrToken}` },
+      },
+    ),
+  )
+
+  const issuesAfterComplete = await listTrainArrQualificationIssues(trainarrToken, 'issued')
+  const issue = issuesAfterComplete.find(
+    (entry) =>
+      entry.staffarrPersonId === journeySubjectPersonId
+      && entry.qualificationKey === e2eDriverQualificationKey,
+  )
+  if (!issue) {
+    throw new Error(
+      `Expected issued ${e2eDriverQualificationKey} qualification for ${journeySubjectPersonId}.`,
+    )
+  }
+
+  return {
+    trainingDefinitionId: definition.trainingDefinitionId,
+    qualificationIssueId: issue.qualificationIssueId,
+  }
+}
+
+async function suspendTrainArrDriverQualificationIssue(
+  trainarrToken: string,
+  qualificationIssueId: string,
+): Promise<void> {
+  await readJson(
+    await fetch(
+      `${trainarrApiUrl()}/api/qualification-issues/${qualificationIssueId}/suspend`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${trainarrToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reason: 'E2E Playwright TrainArr→RoutArr qualification gate block fixture.',
+        }),
+      },
+    ),
+  )
+}
+
+export async function checkRoutarrDriverEligibility(
+  routarrToken: string,
+  driverPersonId: string,
+): Promise<{
+  outcome: string
+  isBlocking: boolean
+  trainarrOutcome: string | null
+  message: string
+}> {
+  const response = await fetch(`${routarrApiUrl()}/api/driver-eligibility/check`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${routarrToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ personId: driverPersonId }),
+  })
+  const payload = await readJson<{
+    outcome: string
+    isBlocking: boolean
+    message: string
+    trainArr: { outcome: string } | null
+  }>(response)
+  return {
+    outcome: payload.outcome,
+    isBlocking: payload.isBlocking,
+    trainarrOutcome: payload.trainArr?.outcome ?? null,
+    message: payload.message,
+  }
+}
+
+async function ensureTrainArrRoutarrQualificationGateTrip(
+  routarrToken: string,
+): Promise<{ tripId: string }> {
+  await ensureRoutArrJourneyDriverPersonRef(routarrToken)
+  const suffix = Date.now()
+  const now = Date.now()
+  return createUnassignedTrip(routarrToken, {
+    title: `E2E TrainArr qualification gate ${suffix}`,
+    scheduledStartAt: new Date(now + 2 * 60 * 60 * 1000).toISOString(),
+    scheduledEndAt: new Date(now + 6 * 60 * 60 * 1000).toISOString(),
+  })
+}
+
+/**
+ * Compliance Core workflow gate allow + suspended TrainArr driver qualification + unassigned trip.
+ * RoutArr driver eligibility consumes POST /api/integrations/routarr-qualification-check.
+ */
+export async function ensureTrainArrRoutarrQualificationGateBlockFixture(): Promise<TrainArrRoutarrQualificationGateJourneyFixture> {
+  await ensureComplianceCoreRoutArrDispatchGateAllowFixture()
+
+  const trainarrToken = await redeemHandoffForProduct('trainarr')
+  const issued = await ensureTrainArrDriverQualificationIssued(trainarrToken)
+  await suspendTrainArrDriverQualificationIssue(trainarrToken, issued.qualificationIssueId)
+
+  const trainarrCheck = await runTrainArrQualificationCheckApi(
+    trainarrToken,
+    journeySubjectPersonId,
+    issued.trainingDefinitionId,
+  )
+  if (trainarrCheck.outcome !== 'block') {
+    throw new Error(
+      `Expected TrainArr qualification check block after suspend; got ${trainarrCheck.outcome}.`,
+    )
+  }
+
+  const routarrToken = await redeemHandoffForProduct('routarr')
+  const trip = await ensureTrainArrRoutarrQualificationGateTrip(routarrToken)
+
+  const gateCheck = await checkRoutArrDispatchWorkflowGates(
+    routarrToken,
+    trip.tripId,
+    journeySubjectPersonId,
+  )
+  if (gateCheck.outcome !== 'allow') {
+    throw new Error(
+      `Expected Compliance Core workflow gate allow for qualification gate block fixture; got ${gateCheck.outcome}.`,
+    )
+  }
+
+  const eligibility = await checkRoutarrDriverEligibility(routarrToken, journeySubjectPersonId)
+  if (eligibility.outcome !== 'block' || !eligibility.isBlocking) {
+    throw new Error(
+      `Expected RoutArr driver eligibility block from TrainArr; got ${eligibility.outcome}.`,
+    )
+  }
+
+  return {
+    tripId: trip.tripId,
+    driverPersonId: journeySubjectPersonId,
+    qualificationKey: e2eDriverQualificationKey,
+    trainingDefinitionId: issued.trainingDefinitionId,
+  }
+}
+
+/**
+ * Compliance Core workflow gate allow + issued TrainArr driver qualification + unassigned trip.
+ */
+export async function ensureTrainArrRoutarrQualificationGateAllowFixture(): Promise<TrainArrRoutarrQualificationGateJourneyFixture> {
+  await ensureComplianceCoreRoutArrDispatchGateAllowFixture()
+
+  const trainarrToken = await redeemHandoffForProduct('trainarr')
+  const issued = await ensureTrainArrDriverQualificationIssued(trainarrToken)
+
+  const trainarrCheck = await runTrainArrQualificationCheckApi(
+    trainarrToken,
+    journeySubjectPersonId,
+    issued.trainingDefinitionId,
+  )
+  if (trainarrCheck.outcome !== 'allow') {
+    throw new Error(
+      `Expected TrainArr qualification check allow after issuance; got ${trainarrCheck.outcome}.`,
+    )
+  }
+
+  const routarrToken = await redeemHandoffForProduct('routarr')
+  const trip = await ensureTrainArrRoutarrQualificationGateTrip(routarrToken)
+
+  const gateCheck = await checkRoutArrDispatchWorkflowGates(
+    routarrToken,
+    trip.tripId,
+    journeySubjectPersonId,
+  )
+  if (gateCheck.outcome !== 'allow') {
+    throw new Error(
+      `Expected Compliance Core workflow gate allow for qualification gate allow fixture; got ${gateCheck.outcome}.`,
+    )
+  }
+
+  const eligibility = await checkRoutarrDriverEligibility(routarrToken, journeySubjectPersonId)
+  if (eligibility.outcome !== 'allow' || eligibility.isBlocking) {
+    throw new Error(
+      `Expected RoutArr driver eligibility allow from TrainArr; got ${eligibility.outcome}.`,
+    )
+  }
+
+  return {
+    tripId: trip.tripId,
+    driverPersonId: journeySubjectPersonId,
+    qualificationKey: e2eDriverQualificationKey,
+    trainingDefinitionId: issued.trainingDefinitionId,
+  }
+}
+
 /**
  * Seeds Compliance Core dispatch gates with a required but unresolved fact (warn), creates an
  * unassigned RoutArr trip, and asserts RoutArr dispatch workflow gate check returns warn.
@@ -2920,6 +3264,9 @@ export type SupplyArrProcurementExceptionDetail = {
   closedAt: string | null
   cancelledAt: string | null
   cancellationReason: string
+  reopenedAt: string | null
+  lastReopenReason: string
+  reopenCount: number
 }
 
 export type SupplyArrMeProfile = {
@@ -3238,6 +3585,65 @@ export async function assertSupplyArrProcurementExceptionCancelledWithReasonFrom
   }
   if (!detail.cancelledAt) {
     throw new Error(`Expected exception ${exceptionId} cancelledAt to be set`)
+  }
+}
+
+export const supplyArrProcurementExceptionPostCancelReopenJourneyReason =
+  'E2E Playwright post-cancel reopen journey — resume investigation after mistaken cancel.'
+
+export type SupplyArrProcurementExceptionPostCancelReopenJourneyFixture = {
+  purchaseRequestId: string
+  requestKey: string
+  openExceptionId: string
+  openExceptionKey: string
+}
+
+/**
+ * Single open procurement exception on a PR for W311 investigate→cancel→reopen journey.
+ */
+export async function ensureSupplyArrProcurementExceptionPostCancelReopenJourneyFixture(): Promise<SupplyArrProcurementExceptionPostCancelReopenJourneyFixture> {
+  const token = await redeemHandoffForProduct('supplyarr')
+  const suffix = Date.now()
+  const { purchaseRequestId, requestKey } = await createMinimalPurchaseRequestForExceptions(
+    token,
+    suffix,
+  )
+
+  const openExceptionKey = `PEX-PCR-${suffix}`
+  const open = await createProcurementExceptionForPurchaseRequest(token, purchaseRequestId, {
+    exceptionKey: openExceptionKey,
+    title: `E2E post-cancel reopen journey ${suffix}`,
+    category: 'approval_delay',
+  })
+
+  return {
+    purchaseRequestId,
+    requestKey,
+    openExceptionId: open.exceptionId,
+    openExceptionKey,
+  }
+}
+
+export async function assertSupplyArrProcurementExceptionReopenedFromHandoff(
+  exceptionId: string,
+  expectedReopenReason: string,
+): Promise<void> {
+  const detail = await getSupplyArrProcurementExceptionFromHandoff(exceptionId)
+  if (detail.status !== 'investigating') {
+    throw new Error(
+      `Expected exception ${exceptionId} status investigating after reopen, got ${detail.status}`,
+    )
+  }
+  if (detail.lastReopenReason !== expectedReopenReason) {
+    throw new Error(
+      `Expected exception ${exceptionId} reopen reason "${expectedReopenReason}", got "${detail.lastReopenReason}"`,
+    )
+  }
+  if (!detail.reopenedAt) {
+    throw new Error(`Expected exception ${exceptionId} reopenedAt to be set`)
+  }
+  if (detail.reopenCount < 1) {
+    throw new Error(`Expected exception ${exceptionId} reopenCount >= 1, got ${detail.reopenCount}`)
   }
 }
 

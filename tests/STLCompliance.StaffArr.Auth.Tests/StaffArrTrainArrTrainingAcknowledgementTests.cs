@@ -117,16 +117,13 @@ public class StaffArrTrainArrTrainingAcknowledgementTests : IAsyncLifetime
         var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
         var definitionId = await CreateTrainingDefinitionAsync(adminToken);
 
-        var createRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
-        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+        var assignment = await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            adminToken,
             personId,
             definitionId,
-            null,
-            "manual",
-            DateTimeOffset.UtcNow.AddDays(7)));
-        var createResponse = await _trainarrClient.SendAsync(createRequest);
-        createResponse.EnsureSuccessStatusCode();
-        var assignment = (await createResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+            "ack_training",
+            DateTimeOffset.UtcNow.AddDays(7));
 
         Assert.Equal(assignment.AssignmentId, assignment.StaffarrAcknowledgementRequestId);
         Assert.Equal("pending", assignment.StaffarrAcknowledgementStatus);

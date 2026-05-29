@@ -182,7 +182,7 @@ export function ProductSwitcher() {
 
       {launch.isError ? (
         <p className="absolute right-0 mt-1 w-72 text-xs text-red-300" role="alert">
-          Launch failed: {(launch.error as Error).message}
+          {(launch.error as Error).message}
         </p>
       ) : null}
     </div>

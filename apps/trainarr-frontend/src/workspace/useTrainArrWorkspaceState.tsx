@@ -12,6 +12,14 @@ import {
   createTrainingDefinitionStep,
   deleteTrainingDefinitionStep,
   getTrainingDefinitionSteps,
+  createTrainingDefinitionCompletionRule,
+  deleteTrainingDefinitionCompletionRule,
+  getTrainingDefinitionCompletionRules,
+  getTrainingCompletionRuleCatalog,
+  createTrainingDefinitionStepBranch,
+  deleteTrainingDefinitionStepBranch,
+  getTrainingDefinitionStepBranches,
+  getTrainingStepBranchCatalog,
   createTrainingMatrixEntry,
   deleteTrainingMatrixEntry,
   getTrainingMatrix,
@@ -96,6 +104,7 @@ export function useTrainArrWorkspaceState() {
   const [selectedProgramDefinitionIds, setSelectedProgramDefinitionIds] = useState<string[]>([])
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null)
   const [selectedDefinitionIdForCitations, setSelectedDefinitionIdForCitations] = useState<string | null>(null)
+  const [selectedStepIdForBranches, setSelectedStepIdForBranches] = useState<string | null>(null)
   const [citationIdInput, setCitationIdInput] = useState('')
   const [citationKeyInput, setCitationKeyInput] = useState('')
   const [validateCitationWithComplianceCore, setValidateCitationWithComplianceCore] = useState(true)
@@ -271,6 +280,41 @@ export function useTrainArrWorkspaceState() {
     queryKey: ['trainarr-definition-steps', session?.accessToken, selectedDefinitionIdForCitations],
     queryFn: () => getTrainingDefinitionSteps(session!.accessToken, selectedDefinitionIdForCitations!),
     enabled: Boolean(session?.accessToken && selectedDefinitionIdForCitations),
+  })
+
+  const completionRuleCatalogQuery = useQuery({
+    queryKey: ['trainarr-completion-rule-catalog', session?.accessToken],
+    queryFn: () => getTrainingCompletionRuleCatalog(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
+  })
+
+  const definitionCompletionRulesQuery = useQuery({
+    queryKey: ['trainarr-definition-completion-rules', session?.accessToken, selectedDefinitionIdForCitations],
+    queryFn: () =>
+      getTrainingDefinitionCompletionRules(session!.accessToken, selectedDefinitionIdForCitations!),
+    enabled: Boolean(session?.accessToken && selectedDefinitionIdForCitations),
+  })
+
+  const stepBranchCatalogQuery = useQuery({
+    queryKey: ['trainarr-step-branch-catalog', session?.accessToken],
+    queryFn: () => getTrainingStepBranchCatalog(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
+  })
+
+  const definitionStepBranchesQuery = useQuery({
+    queryKey: [
+      'trainarr-definition-step-branches',
+      session?.accessToken,
+      selectedDefinitionIdForCitations,
+      selectedStepIdForBranches,
+    ],
+    queryFn: () =>
+      getTrainingDefinitionStepBranches(
+        session!.accessToken,
+        selectedDefinitionIdForCitations!,
+        selectedStepIdForBranches!,
+      ),
+    enabled: Boolean(session?.accessToken && selectedDefinitionIdForCitations && selectedStepIdForBranches),
   })
 
   const programCitationsQuery = useQuery({
@@ -567,6 +611,102 @@ export function useTrainArrWorkspaceState() {
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: ['trainarr-definition-steps', session?.accessToken, selectedDefinitionIdForCitations],
+      })
+    },
+  })
+
+  const createCompletionRuleMutation = useMutation({
+    mutationFn: async (payload: {
+      ruleKey: string
+      ruleType: string
+      label: string
+      configJson: string
+      sortOrder: number
+    }) => {
+      if (!selectedDefinitionIdForCitations) {
+        throw new Error('Select a training definition first.')
+      }
+      return createTrainingDefinitionCompletionRule(
+        session!.accessToken,
+        selectedDefinitionIdForCitations,
+        payload,
+      )
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['trainarr-definition-completion-rules', session?.accessToken, selectedDefinitionIdForCitations],
+      })
+    },
+  })
+
+  const deleteCompletionRuleMutation = useMutation({
+    mutationFn: async (completionRuleId: string) => {
+      if (!selectedDefinitionIdForCitations) {
+        throw new Error('Select a training definition first.')
+      }
+      await deleteTrainingDefinitionCompletionRule(
+        session!.accessToken,
+        selectedDefinitionIdForCitations,
+        completionRuleId,
+      )
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['trainarr-definition-completion-rules', session?.accessToken, selectedDefinitionIdForCitations],
+      })
+    },
+  })
+
+  const createStepBranchMutation = useMutation({
+    mutationFn: async (payload: {
+      branchKey: string
+      branchType: string
+      label: string
+      configJson: string
+      sortOrder: number
+    }) => {
+      if (!selectedDefinitionIdForCitations || !selectedStepIdForBranches) {
+        throw new Error('Select a training definition and step first.')
+      }
+      return createTrainingDefinitionStepBranch(
+        session!.accessToken,
+        selectedDefinitionIdForCitations,
+        selectedStepIdForBranches,
+        payload,
+      )
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: [
+          'trainarr-definition-step-branches',
+          session?.accessToken,
+          selectedDefinitionIdForCitations,
+          selectedStepIdForBranches,
+        ],
+      })
+    },
+  })
+
+  const deleteStepBranchMutation = useMutation({
+    mutationFn: async (branchId: string) => {
+      if (!selectedDefinitionIdForCitations || !selectedStepIdForBranches) {
+        throw new Error('Select a training definition and step first.')
+      }
+      await deleteTrainingDefinitionStepBranch(
+        session!.accessToken,
+        selectedDefinitionIdForCitations,
+        selectedStepIdForBranches,
+        branchId,
+      )
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: [
+          'trainarr-definition-step-branches',
+          session?.accessToken,
+          selectedDefinitionIdForCitations,
+          selectedStepIdForBranches,
+        ],
       })
     },
   })
@@ -1003,6 +1143,12 @@ const me = meQuery.data
     evaluationHistoryQuery,
     definitionCitationsQuery,
     definitionStepsQuery,
+    completionRuleCatalogQuery,
+    definitionCompletionRulesQuery,
+    stepBranchCatalogQuery,
+    definitionStepBranchesQuery,
+    selectedStepIdForBranches,
+    setSelectedStepIdForBranches,
     programCitationsQuery,
     definitionRulePackRequirementsQuery,
     programRulePackRequirementsQuery,
@@ -1030,6 +1176,10 @@ const me = meQuery.data
     syncRequirementToMatrixMutation,
     createDefinitionStepMutation,
     deleteDefinitionStepMutation,
+    createCompletionRuleMutation,
+    deleteCompletionRuleMutation,
+    createStepBranchMutation,
+    deleteStepBranchMutation,
     rulePackImpactMutation,
     uploadEvidenceMutation,
     submitEvaluationMutation,

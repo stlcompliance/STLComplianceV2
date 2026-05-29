@@ -15,6 +15,7 @@ vi.mock('../api/client', () => ({
   startDriverPortalTrip: vi.fn(),
   completeDriverPortalTrip: vi.fn(),
   closeDriverPortalTrip: vi.fn(),
+  reportDriverPortalTripException: vi.fn(),
 }))
 
 import * as client from '../api/client'
@@ -94,5 +95,80 @@ describe('DriverPortalPanel', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Start trip' }))
     await waitFor(() => expect(client.startDriverPortalTrip).toHaveBeenCalledWith('token', 'trip-1'))
+  })
+
+  it('submits driver-reported exception via driver portal API', async () => {
+    vi.mocked(client.getDriverPortalSchedule).mockResolvedValue({
+      todayStart: new Date().toISOString(),
+      todayEnd: new Date(Date.now() + 86400000).toISOString(),
+      upcomingEnd: new Date(Date.now() + 7 * 86400000).toISOString(),
+      generatedAt: new Date().toISOString(),
+      todayTrips: [
+        {
+          tripId: 'trip-2',
+          tripNumber: 'TR-EX',
+          title: 'Afternoon run',
+          dispatchStatus: 'in_progress',
+          vehicleRefKey: null,
+          scheduledStartAt: new Date().toISOString(),
+          scheduledEndAt: null,
+          dispatchedAt: new Date().toISOString(),
+          startedAt: new Date().toISOString(),
+          completedAt: null,
+          closedAt: null,
+          canDispatch: false,
+          canStart: false,
+          canComplete: true,
+          canClose: false,
+          proofCount: 0,
+          hasPreTripDvir: true,
+          hasPostTripDvir: false,
+          captureStartReady: true,
+          captureCompleteReady: true,
+        },
+      ],
+      upcomingTrips: [],
+    })
+    vi.mocked(client.reportDriverPortalTripException).mockResolvedValue({
+      exceptionId: 'ex-1',
+      exceptionKey: 'DEX-TEST',
+      title: 'Delay',
+      description: '[Driver-reported] jam',
+      category: 'delay',
+      status: 'open',
+      tripId: 'trip-2',
+      tripNumber: 'TR-EX',
+      tripTitle: 'Afternoon run',
+      assignedToUserId: null,
+      slaDueAt: new Date().toISOString(),
+      isSlaBreached: false,
+      resolutionTemplateKey: '',
+      resolutionNotes: '',
+      createdByUserId: 'user-1',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      assignedAt: null,
+      resolvedAt: null,
+    })
+
+    renderPanel()
+    expect(await screen.findByText('Afternoon run')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Report exception' }))
+    fireEvent.change(screen.getByPlaceholderText('Short title (required)'), {
+      target: { value: 'Traffic delay' },
+    })
+    fireEvent.change(screen.getByPlaceholderText('What happened?'), {
+      target: { value: 'Stopped on highway' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Submit to dispatch' }))
+
+    await waitFor(() =>
+      expect(client.reportDriverPortalTripException).toHaveBeenCalledWith('token', 'trip-2', {
+        title: 'Traffic delay',
+        description: 'Stopped on highway',
+        exceptionType: 'traffic_delay',
+      }),
+    )
+    expect(await screen.findByText(/Exception DEX-TEST reported/)).toBeTruthy()
   })
 })

@@ -29,5 +29,6 @@ public sealed record PersonLookupResponse(
     string PrimaryEmail,
     string EmploymentStatus,
     string? JobTitle,
+    string? WorkPhone,
     PersonLookupPlacementResponse Placement,
     DateTimeOffset LookedUpAt);

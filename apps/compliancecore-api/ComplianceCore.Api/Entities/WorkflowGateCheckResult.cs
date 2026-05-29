@@ -24,6 +24,10 @@ public sealed class WorkflowGateCheckResult : IHasTenant
 
     public string ContextJson { get; set; } = "{}";
 
+    public Guid? AppliedWaiverId { get; set; }
+
+    public string? AppliedWaiverKey { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public WorkflowGateDefinition? WorkflowGateDefinition { get; set; }

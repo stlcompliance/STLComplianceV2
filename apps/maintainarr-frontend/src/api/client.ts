@@ -44,6 +44,19 @@ import type {
   PendingAssetStatusRollupsResponse,
   AssetStatusRollupRunsResponse,
   AssetStatusScopeRollupSummaryResponse,
+  DowntimeTrackingSettingsResponse,
+  UpsertDowntimeTrackingSettingsRequest,
+  PendingAssetDowntimeSyncResponse,
+  AssetDowntimeSyncRunsResponse,
+  AssetDowntimeEventResponse,
+  CreateManualDowntimeEventRequest,
+  CloseDowntimeEventRequest,
+  AssetAvailabilityResponse,
+  FleetAvailabilityResponse,
+  MaintenancePlatformEventSettingsResponse,
+  UpsertMaintenancePlatformEventSettingsRequest,
+  MaintenancePlatformOutboxEventsResponse,
+  MaintenancePlatformEventProcessingRunsResponse,
   MaintenanceHistorySummaryResponse,
   MaintenanceHistoryRollupSettingsResponse,
   UpsertMaintenanceHistoryRollupSettingsRequest,
@@ -86,6 +99,7 @@ import type {
   PublishWorkOrderPartsDemandRequest,
   PublishWorkOrderPartsDemandResponse,
   WorkOrderPartsDemandStatusEventResponse,
+  WorkOrderSupplyReadinessResponse,
   MaintenanceReportSummaryResponse,
   MaintenanceReportAssetDetailResponse,
   MaintenanceReportWorkOrderDetailResponse,
@@ -806,6 +820,19 @@ export async function getWorkOrderPartsDemandStatusEvents(
   return parseJsonResponse<WorkOrderPartsDemandStatusEventResponse[]>(
     response,
     'Failed to load work order parts demand status events',
+  )
+}
+
+export async function getWorkOrderSupplyReadiness(
+  accessToken: string,
+  workOrderId: string,
+): Promise<WorkOrderSupplyReadinessResponse> {
+  const response = await fetch(`${apiBase}/api/work-orders/${workOrderId}/supply-readiness`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<WorkOrderSupplyReadinessResponse>(
+    response,
+    'Failed to load work order supply readiness',
   )
 }
 
@@ -1576,5 +1603,188 @@ export async function getMaintenanceNotificationDispatches(
   return parseJsonResponse<MaintenanceNotificationDispatchesResponse>(
     response,
     'Failed to load notification dispatches',
+  )
+}
+
+export async function getDowntimeTrackingSettings(
+  accessToken: string,
+): Promise<DowntimeTrackingSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/downtime-tracking-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DowntimeTrackingSettingsResponse>(
+    response,
+    'Failed to load downtime tracking settings',
+  )
+}
+
+export async function upsertDowntimeTrackingSettings(
+  accessToken: string,
+  payload: UpsertDowntimeTrackingSettingsRequest,
+): Promise<DowntimeTrackingSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/downtime-tracking-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<DowntimeTrackingSettingsResponse>(
+    response,
+    'Failed to save downtime tracking settings',
+  )
+}
+
+export async function getPendingDowntimeSync(
+  accessToken: string,
+): Promise<PendingAssetDowntimeSyncResponse> {
+  const response = await fetch(`${apiBase}/api/downtime-tracking-settings/pending`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PendingAssetDowntimeSyncResponse>(
+    response,
+    'Failed to load pending downtime sync',
+  )
+}
+
+export async function getDowntimeSyncRuns(
+  accessToken: string,
+  limit = 5,
+): Promise<AssetDowntimeSyncRunsResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/downtime-tracking-settings/runs?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetDowntimeSyncRunsResponse>(
+    response,
+    'Failed to load downtime sync runs',
+  )
+}
+
+export async function listDowntimeEvents(
+  accessToken: string,
+  options?: { assetId?: string; activeOnly?: boolean; limit?: number },
+): Promise<AssetDowntimeEventResponse[]> {
+  const params = new URLSearchParams()
+  if (options?.assetId) {
+    params.set('assetId', options.assetId)
+  }
+  if (options?.activeOnly) {
+    params.set('activeOnly', 'true')
+  }
+  if (options?.limit) {
+    params.set('limit', String(options.limit))
+  }
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/downtime/events${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetDowntimeEventResponse[]>(response, 'Failed to load downtime events')
+}
+
+export async function createManualDowntimeEvent(
+  accessToken: string,
+  payload: CreateManualDowntimeEventRequest,
+): Promise<AssetDowntimeEventResponse> {
+  const response = await fetch(`${apiBase}/api/downtime/events`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<AssetDowntimeEventResponse>(
+    response,
+    'Failed to create downtime event',
+  )
+}
+
+export async function closeDowntimeEvent(
+  accessToken: string,
+  eventId: string,
+  payload: CloseDowntimeEventRequest = {},
+): Promise<AssetDowntimeEventResponse> {
+  const response = await fetch(`${apiBase}/api/downtime/events/${eventId}/close`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<AssetDowntimeEventResponse>(
+    response,
+    'Failed to close downtime event',
+  )
+}
+
+export async function getFleetAvailability(
+  accessToken: string,
+): Promise<FleetAvailabilityResponse> {
+  const response = await fetch(`${apiBase}/api/downtime/availability/fleet`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FleetAvailabilityResponse>(
+    response,
+    'Failed to load fleet availability',
+  )
+}
+
+export async function getAssetAvailability(
+  accessToken: string,
+  assetId: string,
+): Promise<AssetAvailabilityResponse> {
+  const response = await fetch(`${apiBase}/api/downtime/availability/assets/${assetId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetAvailabilityResponse>(
+    response,
+    'Failed to load asset availability',
+  )
+}
+
+export async function getMaintenancePlatformEventSettings(
+  accessToken: string,
+): Promise<MaintenancePlatformEventSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/platform-event-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenancePlatformEventSettingsResponse>(
+    response,
+    'Failed to load platform event settings',
+  )
+}
+
+export async function upsertMaintenancePlatformEventSettings(
+  accessToken: string,
+  payload: UpsertMaintenancePlatformEventSettingsRequest,
+): Promise<MaintenancePlatformEventSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/platform-event-settings`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<MaintenancePlatformEventSettingsResponse>(
+    response,
+    'Failed to save platform event settings',
+  )
+}
+
+export async function getMaintenancePlatformOutboxEvents(
+  accessToken: string,
+  limit = 10,
+): Promise<MaintenancePlatformOutboxEventsResponse> {
+  const response = await fetch(`${apiBase}/api/platform-event-settings/outbox?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenancePlatformOutboxEventsResponse>(
+    response,
+    'Failed to load platform outbox events',
+  )
+}
+
+export async function getMaintenancePlatformEventProcessingRuns(
+  accessToken: string,
+  limit = 5,
+): Promise<MaintenancePlatformEventProcessingRunsResponse> {
+  const response = await fetch(`${apiBase}/api/platform-event-settings/runs?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintenancePlatformEventProcessingRunsResponse>(
+    response,
+    'Failed to load platform event processing runs',
   )
 }

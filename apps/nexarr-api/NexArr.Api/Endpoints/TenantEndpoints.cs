@@ -63,5 +63,37 @@ public static class TenantEndpoints
             return Results.Ok(await service.UpdateStatusAsync(context.User, tenantId, request, cancellationToken));
         })
         .WithName("UpdateTenantStatus");
+
+        group.MapGet("/{tenantId:guid}/members", async (
+            Guid tenantId,
+            HttpContext context,
+            TenantMembershipAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.ListMembersAsync(context.User, tenantId, cancellationToken));
+        })
+        .WithName("ListTenantMembers");
+
+        group.MapPost("/{tenantId:guid}/members", async (
+            Guid tenantId,
+            AddTenantMemberRequest request,
+            HttpContext context,
+            TenantMembershipAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.AddMemberAsync(context.User, tenantId, request, cancellationToken));
+        })
+        .WithName("AddTenantMember");
+
+        group.MapDelete("/{tenantId:guid}/members/{userId:guid}", async (
+            Guid tenantId,
+            Guid userId,
+            HttpContext context,
+            TenantMembershipAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.RemoveMemberAsync(context.User, tenantId, userId, cancellationToken));
+        })
+        .WithName("RemoveTenantMember");
     }
 }

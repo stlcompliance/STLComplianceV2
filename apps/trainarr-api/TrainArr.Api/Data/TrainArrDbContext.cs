@@ -26,6 +26,12 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
     public DbSet<TrainingDefinitionStep> TrainingDefinitionSteps => Set<TrainingDefinitionStep>();
 
+    public DbSet<TrainingDefinitionCompletionRule> TrainingDefinitionCompletionRules =>
+        Set<TrainingDefinitionCompletionRule>();
+
+    public DbSet<TrainingDefinitionStepBranch> TrainingDefinitionStepBranches =>
+        Set<TrainingDefinitionStepBranch>();
+
     public DbSet<TrainingAssignmentStepProgress> TrainingAssignmentStepProgress =>
         Set<TrainingAssignmentStepProgress>();
 
@@ -263,6 +269,38 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
             entity.HasOne(x => x.TrainingDefinition)
                 .WithMany()
                 .HasForeignKey(x => x.TrainingDefinitionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TrainingDefinitionCompletionRule>(entity =>
+        {
+            entity.ToTable("trainarr_training_definition_completion_rules");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RuleKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.RuleType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Label).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ConfigJson).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TrainingDefinitionId, x.RuleKey }).IsUnique();
+            entity.HasOne(x => x.TrainingDefinition)
+                .WithMany()
+                .HasForeignKey(x => x.TrainingDefinitionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TrainingDefinitionStepBranch>(entity =>
+        {
+            entity.ToTable("trainarr_training_definition_step_branches");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.BranchKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.BranchType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Label).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ConfigJson).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TrainingDefinitionStepId, x.BranchKey }).IsUnique();
+            entity.HasOne(x => x.TrainingDefinitionStep)
+                .WithMany()
+                .HasForeignKey(x => x.TrainingDefinitionStepId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

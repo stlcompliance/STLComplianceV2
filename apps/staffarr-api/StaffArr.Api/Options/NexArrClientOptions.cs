@@ -5,6 +5,8 @@ public sealed class NexArrClientOptions
     public const string SectionName = "NexArr";
 
     public string BaseUrl { get; set; } = "http://localhost:5101";
+
+    public string ServiceToken { get; set; } = string.Empty;
 }
 
 public sealed class HandoffOptions

@@ -513,6 +513,14 @@ services:
         value: http://maintainarr-api:10000
       - key: MaintainArrMaintenanceHistoryRollup__ServiceToken
         sync: false
+      - key: MaintainArrDowntimeSync__MaintainArrBaseUrl
+        value: http://maintainarr-api:10000
+      - key: MaintainArrDowntimeSync__ServiceToken
+        sync: false
+      - key: MaintainArrPlatformEventProcessing__MaintainArrBaseUrl
+        value: http://maintainarr-api:10000
+      - key: MaintainArrPlatformEventProcessing__ServiceToken
+        sync: false
       - key: MaintainArrAuditPackageGeneration__MaintainArrBaseUrl
         value: http://maintainarr-api:10000
       - key: MaintainArrAuditPackageGeneration__ServiceToken
@@ -532,6 +540,10 @@ services:
       - key: RoutArrAttachmentRetention__RoutArrBaseUrl
         value: http://routarr-api:10000
       - key: RoutArrAttachmentRetention__ServiceToken
+        sync: false
+      - key: RoutArrIntegrationEvents__RoutArrBaseUrl
+        value: http://routarr-api:10000
+      - key: RoutArrIntegrationEvents__ServiceToken
         sync: false
       - key: RoutArrAuditPackageGeneration__RoutArrBaseUrl
         value: http://routarr-api:10000
@@ -584,6 +596,14 @@ services:
       - key: ComplianceCoreRuleChangeMonitor__ComplianceCoreBaseUrl
         value: http://compliancecore-api:10000
       - key: ComplianceCoreRuleChangeMonitor__ServiceToken
+        sync: false
+      - key: ComplianceCoreWaiverExpiration__ComplianceCoreBaseUrl
+        value: http://compliancecore-api:10000
+      - key: ComplianceCoreWaiverExpiration__ServiceToken
+        sync: false
+      - key: ComplianceCoreFactSourceSync__ComplianceCoreBaseUrl
+        value: http://compliancecore-api:10000
+      - key: ComplianceCoreFactSourceSync__ServiceToken
         sync: false
       - key: ComplianceCoreAuditPackageGeneration__ComplianceCoreBaseUrl
         value: http://compliancecore-api:10000

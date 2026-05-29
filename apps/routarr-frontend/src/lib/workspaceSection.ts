@@ -44,5 +44,5 @@ export const workspaceSectionHeaders: Record<
     title: 'Dispatch reports',
     subtitle: 'Trip, exception, and delay rollups with CSV export',
   },
-  settings: { title: 'Settings', subtitle: 'Notification preferences' },
+  settings: { title: 'Settings', subtitle: 'Notifications, integration events, and capture policy' },
 }

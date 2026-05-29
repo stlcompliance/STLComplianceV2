@@ -808,6 +808,135 @@ namespace StaffArr.Api.Migrations
                     b.ToTable("staffarr_person_export_delivery_runs", (string)null);
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonOffboardingRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CompletedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("DisableLoginRequested")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("NewManagerPersonIdForReports")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("SeparationDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SeparationReason")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("StartedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("TargetEmploymentStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "PersonId", "StartedAt");
+
+                    b.HasIndex("TenantId", "PersonId", "Status");
+
+                    b.ToTable("staffarr_person_offboarding_records", (string)null);
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonOffboardingStep", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BlockerDetail")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CompletedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Detail")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<Guid>("OffboardingRecordId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("StepKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OffboardingRecordId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "OffboardingRecordId", "StepKey")
+                        .IsUnique();
+
+                    b.ToTable("staffarr_person_offboarding_steps", (string)null);
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.PersonPermissionProjection", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1473,6 +1602,81 @@ namespace StaffArr.Api.Migrations
                     b.ToTable("staffarr_personnel_notes", (string)null);
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonnelUpdateRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CurrentValue")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("FieldKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("PersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RequestType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("RequestedValue")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("ReviewNotes")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReviewedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SubmittedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PersonId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "PersonId", "SubmittedAt");
+
+                    b.HasIndex("TenantId", "Status", "SubmittedAt");
+
+                    b.ToTable("staffarr_personnel_update_requests", (string)null);
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.ReadinessRollup", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1775,6 +1979,10 @@ namespace StaffArr.Api.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("WorkPhone")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ManagerPersonId");
@@ -2028,6 +2236,28 @@ namespace StaffArr.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonOffboardingRecord", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", "Person")
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Person");
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonOffboardingStep", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.PersonOffboardingRecord", "OffboardingRecord")
+                        .WithMany("Steps")
+                        .HasForeignKey("OffboardingRecordId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OffboardingRecord");
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.PersonPermissionProjection", b =>
                 {
                     b.HasOne("StaffArr.Api.Entities.StaffPerson", null)
@@ -2149,6 +2379,17 @@ namespace StaffArr.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonnelUpdateRequest", b =>
+                {
+                    b.HasOne("StaffArr.Api.Entities.StaffPerson", "Person")
+                        .WithMany()
+                        .HasForeignKey("PersonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Person");
+                });
+
             modelBuilder.Entity("StaffArr.Api.Entities.ReadinessRollup", b =>
                 {
                     b.HasOne("StaffArr.Api.Entities.OrgUnit", null)
@@ -2195,6 +2436,11 @@ namespace StaffArr.Api.Migrations
                         .HasForeignKey("OrgUnitId");
 
                     b.Navigation("OrgUnit");
+                });
+
+            modelBuilder.Entity("StaffArr.Api.Entities.PersonOffboardingRecord", b =>
+                {
+                    b.Navigation("Steps");
                 });
 
             modelBuilder.Entity("StaffArr.Api.Entities.PersonPermissionProjection", b =>

@@ -98,6 +98,50 @@ test.describe('RoutArr reports workspace @requires-live', () => {
       (await proofDvirPanel.getByText(/No proof or DVIR activity in this window/i).count()) > 0
     expect(proofDvirHasData).toBeTruthy()
 
+    const tripCompletionPanel = workspace.getByTestId('trip-completion-reports-panel')
+    await tripCompletionPanel.scrollIntoViewIfNeeded()
+    await expect(tripCompletionPanel).toBeVisible()
+    await expect(
+      tripCompletionPanel.getByRole('heading', { name: 'Trip completion reports' }),
+    ).toBeVisible()
+
+    const tripCompletionExport = tripCompletionPanel.getByRole('button', { name: 'Export CSV' })
+    await expect(tripCompletionExport).toBeVisible()
+    await expect(tripCompletionExport).toBeEnabled()
+
+    await expect(
+      tripCompletionPanel.getByText('Loading trip completion summaries'),
+    ).not.toBeVisible({
+      timeout: 15_000,
+    })
+
+    const tripCompletionHasData =
+      (await tripCompletionPanel.getByText('Terminal trips').count()) > 0 ||
+      (await tripCompletionPanel.getByTestId('trip-completion-reports-empty').count()) > 0
+    expect(tripCompletionHasData).toBeTruthy()
+
+    const dispatchOverridePanel = workspace.getByTestId('dispatch-override-reports-panel')
+    await dispatchOverridePanel.scrollIntoViewIfNeeded()
+    await expect(dispatchOverridePanel).toBeVisible()
+    await expect(
+      dispatchOverridePanel.getByRole('heading', { name: 'Dispatch gate override audit' }),
+    ).toBeVisible()
+
+    const dispatchOverrideExport = dispatchOverridePanel.getByRole('button', { name: 'Export CSV' })
+    await expect(dispatchOverrideExport).toBeVisible()
+    await expect(dispatchOverrideExport).toBeEnabled()
+
+    await expect(
+      dispatchOverridePanel.getByText('Loading dispatch override audit summary'),
+    ).not.toBeVisible({
+      timeout: 15_000,
+    })
+
+    const dispatchOverrideHasData =
+      (await dispatchOverridePanel.getByText('Overrides in scope').count()) > 0 ||
+      (await dispatchOverridePanel.getByTestId('dispatch-override-reports-empty').count()) > 0
+    expect(dispatchOverrideHasData).toBeTruthy()
+
     const dataExportsPanel = workspace.getByTestId('data-exports-panel')
     await dataExportsPanel.scrollIntoViewIfNeeded()
     await expect(dataExportsPanel).toBeVisible()

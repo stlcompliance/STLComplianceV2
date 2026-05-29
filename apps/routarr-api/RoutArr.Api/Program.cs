@@ -26,6 +26,7 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
         app.MapRoutArrDispatchReportEndpoints();
         app.MapRoutArrRouteReportEndpoints();
         app.MapRoutArrProofDvirReportEndpoints();
+        app.MapRoutArrDispatchOverrideReportEndpoints();
         app.MapRoutArrEntityExportEndpoints();
         app.MapRoutArrAuditPackageEndpoints();
         app.MapRoutArrInternalAuditPackageGenerationEndpoints();
@@ -37,8 +38,10 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
         app.MapRoutArrLoadTestJourneySeedEndpoints();
         app.MapRoutArrFieldInboxEndpoints();
         app.MapRoutArrNotificationSettingsEndpoints();
+        app.MapRoutArrIntegrationEventSettingsEndpoints();
         app.MapRoutArrTripExecutionCaptureEndpoints();
         app.MapRoutArrInternalDispatchNotificationEndpoints();
+        app.MapRoutArrInternalIntegrationEventEndpoints();
         app.MapRoutArrTripCompletionRollupSettingsEndpoints();
         app.MapRoutArrInternalTripCompletionRollupEndpoints();
         app.MapRoutArrTripCompletionEndpoints();

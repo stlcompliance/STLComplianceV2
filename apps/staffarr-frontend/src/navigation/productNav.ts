@@ -1,5 +1,7 @@
 import {
+  UserCircle,
   Users,
+  UsersRound,
   Network,
   Shield,
   Activity,
@@ -12,6 +14,8 @@ import {
 import type { ProductNavItem } from '@stl/shared-ui'
 
 export const staffarrNavItems: ProductNavItem[] = [
+  { label: 'My profile', to: '/me', icon: UserCircle },
+  { label: 'My team', to: '/my-team', icon: UsersRound },
   { label: 'People', to: '/people' , icon: Users },
   { label: 'Org structure', to: '/org', icon: Network },
   { label: 'Permissions', to: '/permissions' , icon: Shield },

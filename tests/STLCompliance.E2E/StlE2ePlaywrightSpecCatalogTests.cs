@@ -556,6 +556,12 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
             StlE2ePlaywrightSpecCatalog.SupplyArrPurchasingProcurementExceptionCancelJourneySmokeSpec,
             StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.SupplyArrPurchasingProcurementExceptionPostCancelReopenJourneySmokeSpec,
+            StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.SupplyArrPurchasingProcurementExceptionPostCancelReopenJourneySmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
+        Assert.Contains(
             StlE2ePlaywrightSpecCatalog.SupplyArrPurchasingProcurementExceptionPostRejectResolveJourneySmokeSpec,
             StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
         Assert.Contains(
@@ -638,6 +644,12 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
         Assert.Contains(
             StlE2ePlaywrightSpecCatalog.ComplianceCoreRoutArrDispatchGateAssignJourneySmokeSpec,
             StlE2ePlaywrightSpecCatalog.OperatorJourneySmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.TrainArrRoutArrQualificationGateAssignJourneySmokeSpec,
+            StlE2ePlaywrightSpecCatalog.OperatorJourneySmokeSpecs);
+        Assert.Contains(
+            StlE2ePlaywrightSpecCatalog.TrainArrRoutArrQualificationGateAssignJourneySmokeSpec,
+            StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(
             StlE2ePlaywrightSpecCatalog.ComplianceCoreRoutArrDispatchGateCommandCenterDndJourneySmokeSpec,
             StlE2ePlaywrightSpecCatalog.OperatorJourneySmokeSpecs);

@@ -8,6 +8,13 @@ public sealed record CreatePersonnelIncidentRequest(
     string Description,
     DateTimeOffset OccurredAt);
 
+public sealed record SubmitSelfReportedPersonnelIncidentRequest(
+    string ReasonCategoryKey,
+    string Severity,
+    string Title,
+    string Description,
+    DateTimeOffset OccurredAt);
+
 public sealed record IncidentTrainarrRoutingResponse(
     string RoutingStatus,
     Guid TrainarrRemediationId,

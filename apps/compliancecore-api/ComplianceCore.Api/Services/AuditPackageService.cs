@@ -23,6 +23,8 @@ public sealed class AuditPackageService(
                 new("audit_events", "audit_events.json", "Audit events", "Tenant-scoped Compliance Core audit trail."),
                 new("findings", "findings.json", "Findings", "Compliance findings from evaluations and workflow gates."),
                 new("evaluation_runs", "evaluation_runs.json", "Evaluation runs", "Deterministic rule evaluation run history."),
+                new("workflow_gate_checks", "workflow_gate_checks.json", "Workflow gate checks", "Workflow gate outcomes with applied waiver audit trail."),
+                new("waivers", "waivers.json", "Waivers", "Compliance waivers and exception approvals."),
                 new("rule_packs", "rule_packs.json", "Rule packs", "Rule pack metadata and publication status."),
             ]);
 
@@ -103,6 +105,8 @@ public sealed class AuditPackageService(
             await WriteJsonEntryAsync(archive, "audit_events.json", package.AuditEvents, cancellationToken);
             await WriteJsonEntryAsync(archive, "findings.json", package.Findings, cancellationToken);
             await WriteJsonEntryAsync(archive, "evaluation_runs.json", package.EvaluationRuns, cancellationToken);
+            await WriteJsonEntryAsync(archive, "workflow_gate_checks.json", package.WorkflowGateChecks, cancellationToken);
+            await WriteJsonEntryAsync(archive, "waivers.json", package.Waivers, cancellationToken);
             await WriteJsonEntryAsync(archive, "rule_packs.json", package.RulePacks, cancellationToken);
         }
 
@@ -144,6 +148,32 @@ public sealed class AuditPackageService(
         if (to is not null)
         {
             evaluationsQuery = evaluationsQuery.Where(x => x.CreatedAt <= to);
+        }
+
+        var gateChecksQuery = db.WorkflowGateCheckResults
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId);
+        if (from is not null)
+        {
+            gateChecksQuery = gateChecksQuery.Where(x => x.CreatedAt >= from);
+        }
+
+        if (to is not null)
+        {
+            gateChecksQuery = gateChecksQuery.Where(x => x.CreatedAt <= to);
+        }
+
+        var waiversQuery = db.ComplianceWaivers
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId);
+        if (from is not null)
+        {
+            waiversQuery = waiversQuery.Where(x => x.CreatedAt >= from);
+        }
+
+        if (to is not null)
+        {
+            waiversQuery = waiversQuery.Where(x => x.CreatedAt <= to);
         }
 
         var auditEvents = await auditEventsQuery
@@ -197,7 +227,54 @@ public sealed class AuditPackageService(
                     run.OverallResult,
                     run.FactInputsJson,
                     run.RuleResultsJson,
+                    run.AppliedWaiverId,
+                    run.AppliedWaiverKey,
                     run.CreatedAt))
+            .ToListAsync(cancellationToken);
+
+        var workflowGateChecks = await gateChecksQuery
+            .OrderBy(x => x.CreatedAt)
+            .Join(
+                db.WorkflowGateDefinitions.AsNoTracking(),
+                check => check.WorkflowGateDefinitionId,
+                gate => gate.Id,
+                (check, gate) => new { check, gate })
+            .Join(
+                db.RulePacks.AsNoTracking(),
+                item => item.gate.RulePackId,
+                pack => pack.Id,
+                (item, pack) => new AuditPackageWorkflowGateCheckItem(
+                    item.check.Id,
+                    item.check.GateKey,
+                    pack.Id,
+                    pack.PackKey,
+                    item.check.RuleEvaluationRunId,
+                    item.check.Outcome,
+                    item.check.ReasonCode,
+                    item.check.Message,
+                    item.check.AppliedWaiverId,
+                    item.check.AppliedWaiverKey,
+                    item.check.CreatedAt))
+            .ToListAsync(cancellationToken);
+
+        var waivers = await waiversQuery
+            .OrderBy(x => x.CreatedAt)
+            .Select(x => new AuditPackageWaiverItem(
+                x.Id,
+                x.WaiverKey,
+                x.RulePackId,
+                x.PackKey,
+                x.RuleKey,
+                x.GateKey,
+                x.SubjectScopeKey,
+                x.ReasonCode,
+                x.Explanation,
+                x.Status,
+                x.EffectiveAt,
+                x.ExpiresAt,
+                x.ApprovedByUserId,
+                x.ApprovedAt,
+                x.CreatedAt))
             .ToListAsync(cancellationToken);
 
         var rulePacks = await db.RulePacks
@@ -235,10 +312,14 @@ public sealed class AuditPackageService(
                 auditEvents.Count,
                 findings.Count,
                 evaluationRuns.Count,
+                workflowGateChecks.Count,
+                waivers.Count,
                 rulePacks.Count),
             AuditEvents: auditEvents,
             Findings: findings,
             EvaluationRuns: evaluationRuns,
+            WorkflowGateChecks: workflowGateChecks,
+            Waivers: waivers,
             RulePacks: rulePacks);
     }
 

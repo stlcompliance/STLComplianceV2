@@ -82,6 +82,8 @@ export function WorkOrdersSection({ state }: Props) {
         onPublishPartsDemand={() => s.publishWorkOrderPartsDemandMutation.mutate()}
         isAddingPartsDemand={s.addWorkOrderPartsDemandMutation.isPending}
         isPublishingPartsDemand={s.publishWorkOrderPartsDemandMutation.isPending}
+        supplyReadiness={s.workOrderSupplyReadinessQuery.data ?? null}
+        isSupplyReadinessLoading={s.workOrderSupplyReadinessQuery.isLoading}
       />
     </div>
   )

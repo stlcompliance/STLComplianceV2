@@ -13,7 +13,14 @@ import type {
   PersonRoleAssignmentResponse,
   PersonManagerResponse,
   RoleTemplateResponse,
+  MePortalSummaryResponse,
+  MyTeamDashboardResponse,
+  PersonnelUpdateRequestResponse,
+  PersonnelUpdateRequestReviewResponse,
   StaffArrMeResponse,
+  SubmitPersonnelUpdateRequest,
+  ReviewPersonnelUpdateRequest,
+  SubmitSelfReportedPersonnelIncidentRequest,
   CreateStaffPersonRequest,
   StaffPersonDetailResponse,
   StaffPersonSummaryResponse,
@@ -71,6 +78,9 @@ import type {
   PersonnelHistorySummaryResponse,
   TrainarrPersonTrainingHistoryResponse,
   WorkforceOnboardingJourneyResponse,
+  PersonOffboardingResponse,
+  StartPersonOffboardingRequest,
+  ExecutePersonOffboardingRequest,
   TrainingAcknowledgementResponse,
   PersonnelReportSummaryResponse,
   ReadinessReportSummaryResponse,
@@ -121,6 +131,111 @@ export async function getMe(accessToken: string): Promise<StaffArrMeResponse> {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<StaffArrMeResponse>(response, 'Failed to load profile')
+}
+
+export async function getMePortalSummary(accessToken: string): Promise<MePortalSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/me/portal`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MePortalSummaryResponse>(response, 'Failed to load self-service portal')
+}
+
+export async function listMyPersonnelUpdateRequests(
+  accessToken: string,
+  limit = 25,
+): Promise<PersonnelUpdateRequestResponse[]> {
+  const response = await fetch(`${apiBase}/api/me/update-requests?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonnelUpdateRequestResponse[]>(
+    response,
+    'Failed to load personnel update requests',
+  )
+}
+
+export async function submitPersonnelUpdateRequest(
+  accessToken: string,
+  request: SubmitPersonnelUpdateRequest,
+): Promise<PersonnelUpdateRequestResponse> {
+  const response = await fetch(`${apiBase}/api/me/update-requests`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonnelUpdateRequestResponse>(
+    response,
+    'Failed to submit personnel update request',
+  )
+}
+
+export async function listMyPersonnelIncidents(
+  accessToken: string,
+  limit = 25,
+): Promise<PersonnelIncidentSummaryResponse[]> {
+  const response = await fetch(`${apiBase}/api/me/incidents?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<PersonnelIncidentSummaryResponse[]>(
+    response,
+    'Failed to load your incident reports',
+  )
+}
+
+export async function submitSelfReportedPersonnelIncident(
+  accessToken: string,
+  request: SubmitSelfReportedPersonnelIncidentRequest,
+): Promise<PersonnelIncidentDetailResponse> {
+  const response = await fetch(`${apiBase}/api/me/incidents`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonnelIncidentDetailResponse>(
+    response,
+    'Failed to submit incident report',
+  )
+}
+
+export async function getMyTeamDashboard(
+  accessToken: string,
+  limit = 50,
+): Promise<MyTeamDashboardResponse> {
+  const response = await fetch(`${apiBase}/api/me/team?limit=${limit}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MyTeamDashboardResponse>(response, 'Failed to load my team dashboard')
+}
+
+export async function reviewMyTeamPersonnelUpdateRequest(
+  accessToken: string,
+  requestId: string,
+  request: ReviewPersonnelUpdateRequest,
+): Promise<PersonnelUpdateRequestReviewResponse> {
+  const response = await fetch(`${apiBase}/api/me/team/update-requests/${requestId}/review`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonnelUpdateRequestReviewResponse>(
+    response,
+    'Failed to review personnel update request',
+  )
+}
+
+export async function reviewPersonnelUpdateRequest(
+  accessToken: string,
+  requestId: string,
+  request: ReviewPersonnelUpdateRequest,
+): Promise<PersonnelUpdateRequestReviewResponse> {
+  const response = await fetch(`${apiBase}/api/personnel-update-requests/${requestId}/review`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonnelUpdateRequestReviewResponse>(
+    response,
+    'Failed to review personnel update request',
+  )
 }
 
 export async function getPeople(accessToken: string): Promise<StaffPersonSummaryResponse[]> {
@@ -706,6 +821,45 @@ export async function getWorkforceOnboardingJourney(
     response,
     'Failed to load workforce onboarding journey',
   )
+}
+
+export async function getPersonOffboarding(
+  accessToken: string,
+  personId: string,
+): Promise<PersonOffboardingResponse | null> {
+  const response = await fetch(`${apiBase}/api/people/${personId}/offboarding`, {
+    headers: authHeaders(accessToken),
+  })
+  if (response.status === 404) {
+    return null
+  }
+
+  return parseJsonResponse<PersonOffboardingResponse>(response, 'Failed to load person offboarding')
+}
+
+export async function startPersonOffboarding(
+  accessToken: string,
+  request: StartPersonOffboardingRequest,
+): Promise<PersonOffboardingResponse> {
+  const response = await fetch(`${apiBase}/api/offboarding`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonOffboardingResponse>(response, 'Failed to start offboarding')
+}
+
+export async function executePersonOffboarding(
+  accessToken: string,
+  offboardingId: string,
+  request: ExecutePersonOffboardingRequest,
+): Promise<PersonOffboardingResponse> {
+  const response = await fetch(`${apiBase}/api/offboarding/${offboardingId}/execute`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<PersonOffboardingResponse>(response, 'Failed to execute offboarding')
 }
 
 export async function getCertificationDefinitions(

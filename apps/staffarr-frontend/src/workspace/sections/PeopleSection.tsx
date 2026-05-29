@@ -5,6 +5,7 @@ import { PersonLookupPanel } from '../../components/PersonLookupPanel'
 import { PersonTimelinePanel } from '../../components/PersonTimelinePanel'
 import { PersonTrainarrTrainingHistoryPanel } from '../../components/PersonTrainarrTrainingHistoryPanel'
 import { WorkforceOnboardingJourneyPanel } from '../../components/WorkforceOnboardingJourneyPanel'
+import { PersonOffboardingPanel } from '../../components/PersonOffboardingPanel'
 import { PersonHistorySummaryPanel } from '../../components/PersonHistorySummaryPanel'
 import { PersonnelNotesPanel } from '../../components/PersonnelNotesPanel'
 import { PersonnelDocumentsPanel } from '../../components/PersonnelDocumentsPanel'
@@ -207,6 +208,44 @@ export function PeopleSection({ state }: Props) {
           journey={s.workforceOnboardingJourneyQuery.data ?? null}
           isLoading={s.workforceOnboardingJourneyQuery.isLoading}
           isError={s.workforceOnboardingJourneyQuery.isError}
+        />
+      ) : null}
+
+      {s.selectedPerson ? (
+        <PersonOffboardingPanel
+          personId={s.selectedPerson.personId}
+          personDisplayName={s.selectedPerson.displayName}
+          peopleOptions={s.people.map((person) => ({
+            personId: person.personId,
+            displayName: person.displayName,
+          }))}
+          offboarding={s.personOffboardingQuery.data ?? null}
+          isLoading={s.personOffboardingQuery.isLoading}
+          canManage={s.canManagePeopleProfiles}
+          isSubmitting={s.startOffboardingMutation.isPending || s.executeOffboardingMutation.isPending}
+          errorMessage={
+            s.offboardingMutationError instanceof StaffArrApiError
+              ? s.offboardingMutationError.body || s.offboardingMutationError.message
+              : null
+          }
+          onStart={async (request) => {
+            await s.startOffboardingMutation.mutateAsync({
+              personId: s.selectedPerson!.personId,
+              ...request,
+            })
+          }}
+          onExecute={async (request) => {
+            const offboarding = s.personOffboardingQuery.data
+            if (!offboarding) {
+              return
+            }
+
+            await s.executeOffboardingMutation.mutateAsync({
+              personId: s.selectedPerson!.personId,
+              offboardingId: offboarding.offboardingId,
+              ...request,
+            })
+          }}
         />
       ) : null}
 

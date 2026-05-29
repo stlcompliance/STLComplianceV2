@@ -2,10 +2,13 @@ using Microsoft.EntityFrameworkCore;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
+using STLCompliance.Shared.Contracts;
 
 namespace SupplyArr.Api.Services;
 
-public sealed class SupplyReadinessService(SupplyArrDbContext db)
+public sealed class SupplyReadinessService(
+    SupplyArrDbContext db,
+    VendorProcurementGuardService vendorProcurementGuard)
 {
     private const int AttentionItemLimit = 25;
     private static readonly TimeSpan ComplianceExpiringSoonWindow = TimeSpan.FromDays(30);
@@ -212,6 +215,297 @@ public sealed class SupplyReadinessService(SupplyArrDbContext db)
                 new(DemandRefSources.StaffArr, staffarrOpen),
             ],
             attentionItems);
+    }
+
+    public async Task<PartSupplyReadinessResponse> GetPartReadinessAsync(
+        Guid tenantId,
+        Guid partId,
+        decimal? requestedQuantity = null,
+        CancellationToken cancellationToken = default)
+    {
+        var part = await db.Parts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == partId, cancellationToken)
+            ?? throw new StlApiException("supply_readiness.part_not_found", "Part was not found.", 404);
+
+        var asOf = DateTimeOffset.UtcNow;
+        var availability = await LoadPartAvailabilityAsync(tenantId, partId, part.ReorderPoint, cancellationToken);
+        var blockers = BuildPartBlockers(part, availability, requestedQuantity);
+
+        var isReady = SupplyReadinessRules.IsReady(blockers.Count);
+        return new PartSupplyReadinessResponse(
+            part.Id,
+            part.PartKey,
+            part.DisplayName,
+            part.Status,
+            SupplyReadinessRules.ResolveReadinessStatus(isReady),
+            SupplyReadinessRules.ResolveReadinessBasis(isReady),
+            asOf,
+            blockers,
+            availability);
+    }
+
+    public async Task<VendorSupplyReadinessResponse> GetVendorReadinessAsync(
+        Guid tenantId,
+        Guid externalPartyId,
+        CancellationToken cancellationToken = default)
+    {
+        var party = await db.ExternalParties
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == externalPartyId, cancellationToken)
+            ?? throw new StlApiException("supply_readiness.vendor_not_found", "Vendor or supplier party was not found.", 404);
+
+        if (!VendorRestrictionPartyTypes.Allowed.Contains(party.PartyType))
+        {
+            throw new StlApiException(
+                "supply_readiness.party_type_not_allowed",
+                "Supply readiness checks apply only to vendor or supplier parties.",
+                400);
+        }
+
+        var asOf = DateTimeOffset.UtcNow;
+        var blockers = await BuildVendorBlockersAsync(tenantId, party, asOf, cancellationToken);
+        var isReady = SupplyReadinessRules.IsReady(blockers.Count);
+
+        return new VendorSupplyReadinessResponse(
+            party.Id,
+            party.PartyKey,
+            party.DisplayName,
+            party.PartyType,
+            party.ApprovalStatus,
+            party.Status,
+            SupplyReadinessRules.ResolveReadinessStatus(isReady),
+            SupplyReadinessRules.ResolveReadinessBasis(isReady),
+            asOf,
+            blockers);
+    }
+
+    public async Task<ProcurementPathReadinessResponse> GetProcurementPathReadinessAsync(
+        Guid tenantId,
+        Guid partId,
+        Guid externalPartyId,
+        decimal? requestedQuantity = null,
+        CancellationToken cancellationToken = default)
+    {
+        var partReadiness = await GetPartReadinessAsync(tenantId, partId, requestedQuantity, cancellationToken);
+        var vendorReadiness = await GetVendorReadinessAsync(tenantId, externalPartyId, cancellationToken);
+
+        var blockers = new List<SupplyReadinessBlockerResponse>();
+        blockers.AddRange(partReadiness.Blockers);
+        blockers.AddRange(vendorReadiness.Blockers);
+
+        var hasVendorLink = await db.PartVendorLinks.AnyAsync(
+            x => x.TenantId == tenantId && x.PartId == partId && x.ExternalPartyId == externalPartyId,
+            cancellationToken);
+        if (!hasVendorLink)
+        {
+            blockers.Add(new SupplyReadinessBlockerResponse(
+                SupplyReadinessReasonCodes.NoVendorPartLink,
+                "No vendor part link exists for this part and vendor.",
+                "part_vendor_link",
+                $"{partId}:{externalPartyId}",
+                partId.ToString()));
+        }
+
+        var isReady = SupplyReadinessRules.IsReady(blockers.Count);
+        var asOf = DateTimeOffset.UtcNow;
+
+        return new ProcurementPathReadinessResponse(
+            partId,
+            partReadiness.PartKey,
+            externalPartyId,
+            vendorReadiness.PartyKey,
+            requestedQuantity,
+            SupplyReadinessRules.ResolveReadinessStatus(isReady),
+            SupplyReadinessRules.ResolveReadinessBasis(isReady),
+            asOf,
+            blockers);
+    }
+
+    private async Task<SupplyReadinessAvailabilitySnapshotResponse> LoadPartAvailabilityAsync(
+        Guid tenantId,
+        Guid partId,
+        decimal? reorderPoint,
+        CancellationToken cancellationToken)
+    {
+        var stockRows = await db.PartStockLevels
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.PartId == partId)
+            .Select(x => new { x.QuantityOnHand, x.QuantityReserved })
+            .ToListAsync(cancellationToken);
+
+        var onHand = stockRows.Sum(x => x.QuantityOnHand);
+        var reserved = stockRows.Sum(x => x.QuantityReserved);
+        var available = onHand - reserved;
+
+        var activeReservationCount = await db.PartStockReservations.CountAsync(
+            x => x.TenantId == tenantId
+                && x.PartId == partId
+                && x.Status == StockReservationStatuses.Active,
+            cancellationToken);
+
+        var openBackorderCount = await db.Backorders.CountAsync(
+            x => x.TenantId == tenantId && x.PartId == partId && x.Status == BackorderStatuses.Open,
+            cancellationToken);
+
+        return new SupplyReadinessAvailabilitySnapshotResponse(
+            onHand,
+            reserved,
+            available,
+            reorderPoint,
+            activeReservationCount,
+            openBackorderCount);
+    }
+
+    private static List<SupplyReadinessBlockerResponse> BuildPartBlockers(
+        Part part,
+        SupplyReadinessAvailabilitySnapshotResponse availability,
+        decimal? requestedQuantity)
+    {
+        var blockers = new List<SupplyReadinessBlockerResponse>();
+
+        if (!SupplyReadinessRules.IsActivePartStatus(part.Status))
+        {
+            blockers.Add(new SupplyReadinessBlockerResponse(
+                SupplyReadinessReasonCodes.PartInactive,
+                $"Part status is {part.Status}.",
+                "part",
+                part.Id.ToString(),
+                null));
+        }
+
+        if (availability.QuantityAvailable <= 0)
+        {
+            blockers.Add(new SupplyReadinessBlockerResponse(
+                SupplyReadinessReasonCodes.PartStockout,
+                "No available stock for this part.",
+                "part",
+                part.Id.ToString(),
+                null));
+        }
+        else if (availability.ReorderPoint is { } reorderPoint
+            && availability.QuantityAvailable < reorderPoint)
+        {
+            blockers.Add(new SupplyReadinessBlockerResponse(
+                SupplyReadinessReasonCodes.PartBelowReorder,
+                $"Available {availability.QuantityAvailable} is below reorder point {reorderPoint}.",
+                "part",
+                part.Id.ToString(),
+                null));
+        }
+
+        if (requestedQuantity is { } qty && qty > availability.QuantityAvailable)
+        {
+            blockers.Add(new SupplyReadinessBlockerResponse(
+                SupplyReadinessReasonCodes.InsufficientAvailableQuantity,
+                $"Requested quantity {qty} exceeds available {availability.QuantityAvailable}.",
+                "part",
+                part.Id.ToString(),
+                null));
+        }
+
+        if (availability.OpenBackorderCount > 0)
+        {
+            blockers.Add(new SupplyReadinessBlockerResponse(
+                SupplyReadinessReasonCodes.OpenBackorder,
+                $"{availability.OpenBackorderCount} open backorder(s) exist for this part.",
+                "part",
+                part.Id.ToString(),
+                null));
+        }
+
+        return blockers;
+    }
+
+    private async Task<List<SupplyReadinessBlockerResponse>> BuildVendorBlockersAsync(
+        Guid tenantId,
+        ExternalParty party,
+        DateTimeOffset asOf,
+        CancellationToken cancellationToken)
+    {
+        var blockers = new List<SupplyReadinessBlockerResponse>();
+
+        if (!SupplyReadinessRules.IsActivePartyStatus(party.Status))
+        {
+            blockers.Add(new SupplyReadinessBlockerResponse(
+                SupplyReadinessReasonCodes.VendorInactive,
+                $"Party status is {party.Status}.",
+                "external_party",
+                party.Id.ToString(),
+                null));
+        }
+
+        var approvalReasonCode = SupplyReadinessRules.ResolveApprovalBlockerReasonCode(party.ApprovalStatus);
+        if (approvalReasonCode is not null)
+        {
+            blockers.Add(new SupplyReadinessBlockerResponse(
+                approvalReasonCode,
+                $"Party approval status is {party.ApprovalStatus}.",
+                "external_party",
+                party.Id.ToString(),
+                null));
+        }
+
+        var enforcement = await vendorProcurementGuard.GetEnforcementAsync(tenantId, party.Id, cancellationToken);
+        if (enforcement.IsBlocked)
+        {
+            blockers.Add(new SupplyReadinessBlockerResponse(
+                SupplyReadinessReasonCodes.VendorProcurementRestriction,
+                enforcement.BlockReason ?? "Active procurement restriction blocks this vendor.",
+                "vendor_restriction",
+                party.Id.ToString(),
+                null));
+        }
+
+        var complianceDocs = await db.PartyComplianceDocuments
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.ExternalPartyId == party.Id)
+            .Select(x => new { x.Id, x.DocumentKey, x.ReviewStatus, x.ExpiresAt })
+            .ToListAsync(cancellationToken);
+
+        foreach (var doc in complianceDocs)
+        {
+            if (string.Equals(doc.ReviewStatus, PartyComplianceDocumentReviewStatuses.Pending, StringComparison.OrdinalIgnoreCase))
+            {
+                blockers.Add(new SupplyReadinessBlockerResponse(
+                    SupplyReadinessReasonCodes.ComplianceDocumentPending,
+                    $"Compliance document {doc.DocumentKey} is pending review.",
+                    "party_compliance_document",
+                    doc.Id.ToString(),
+                    party.Id.ToString()));
+            }
+            else if (string.Equals(doc.ReviewStatus, PartyComplianceDocumentReviewStatuses.Expired, StringComparison.OrdinalIgnoreCase)
+                || (doc.ExpiresAt is not null && doc.ExpiresAt <= asOf))
+            {
+                blockers.Add(new SupplyReadinessBlockerResponse(
+                    SupplyReadinessReasonCodes.ComplianceDocumentExpired,
+                    $"Compliance document {doc.DocumentKey} is expired.",
+                    "party_compliance_document",
+                    doc.Id.ToString(),
+                    party.Id.ToString()));
+            }
+        }
+
+        var openIncidents = await db.SupplierIncidents
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.ExternalPartyId == party.Id
+                && SupplierIncidentStatuses.Active.Contains(x.Status)
+                && (x.Severity == SupplierIncidentSeverities.High || x.Severity == SupplierIncidentSeverities.Critical))
+            .Select(x => new { x.Id, x.IncidentKey, x.Title, x.Severity })
+            .ToListAsync(cancellationToken);
+
+        foreach (var incident in openIncidents)
+        {
+            blockers.Add(new SupplyReadinessBlockerResponse(
+                SupplyReadinessReasonCodes.OpenSupplierIncident,
+                $"{incident.Severity} supplier incident {incident.IncidentKey}: {incident.Title}",
+                "supplier_incident",
+                incident.Id.ToString(),
+                party.Id.ToString()));
+        }
+
+        return blockers;
     }
 
     private static bool IsComplianceAttention(string reviewStatus, DateTimeOffset? expiresAt, DateTimeOffset now)

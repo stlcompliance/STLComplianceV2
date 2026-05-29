@@ -18,6 +18,8 @@ public sealed class PlatformWorkerHealthOrchestrationService(
     EntitlementReconciliationWorkerService entitlementReconciliationWorker,
     TenantLifecycleSettingsService tenantLifecycleSettings,
     TenantLifecycleWorkerService tenantLifecycleWorker,
+    PlatformOutboxPublisherSettingsService platformOutboxPublisherSettings,
+    PlatformOutboxPublisherWorkerService platformOutboxPublisherWorker,
     IPlatformAuditService audit)
 {
     public async Task<PlatformWorkerHealthOrchestrationStatusResponse> GetStatusAsync(
@@ -187,6 +189,42 @@ public sealed class PlatformWorkerHealthOrchestrationService(
             result.AsOfUtc,
             result.SuspendedCount,
             result.ReactivatedCount,
+            result.SkippedCount);
+    }
+
+    public async Task<TriggerPlatformOutboxPublisherOrchestrationResponse> TriggerPlatformOutboxPublisherAsync(
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        var actorUserId = principal.GetUserId();
+        var settings = await platformOutboxPublisherSettings.GetAsync(principal, cancellationToken);
+        if (!settings.IsEnabled)
+        {
+            throw new StlApiException(
+                "platform_outbox.disabled",
+                "Enable platform outbox publishing before running a manual batch.",
+                409);
+        }
+
+        var result = await platformOutboxPublisherWorker.ProcessBatchAsync(
+            new ProcessPlatformOutboxPublisherRequest(null, null),
+            cancellationToken);
+
+        await audit.WriteAsync(
+            "platform_worker_health.trigger_platform_outbox",
+            "platform_outbox_publisher",
+            null,
+            "Success",
+            actorUserId: actorUserId,
+            reasonCode: result.PublishedCount.ToString(),
+            cancellationToken: cancellationToken);
+
+        return new TriggerPlatformOutboxPublisherOrchestrationResponse(
+            result.AsOfUtc,
+            result.PublishedCount,
+            result.FailedCount,
+            result.DeadLetterCount,
             result.SkippedCount);
     }
 }

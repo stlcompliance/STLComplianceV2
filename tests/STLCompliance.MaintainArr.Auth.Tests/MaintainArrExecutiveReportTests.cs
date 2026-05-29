@@ -92,6 +92,9 @@ public sealed class MaintainArrExecutiveReportTests : IAsyncLifetime
         Assert.Equal("supplyarr", summary.SupplyDemand.SourceProduct);
         Assert.True(summary.FleetReadiness.TotalAssets >= 0);
         Assert.NotNull(summary.OperationalTotals);
+        Assert.True(summary.DowntimeTrend.PeriodDays >= 1);
+        Assert.NotNull(summary.DowntimeTrend.CurrentPeriod);
+        Assert.NotNull(summary.DowntimeTrend.PreviousPeriod);
     }
 
     [Fact]
@@ -104,6 +107,7 @@ public sealed class MaintainArrExecutiveReportTests : IAsyncLifetime
 
         var csv = await response.Content.ReadAsStringAsync();
         Assert.Contains("fleet,total_assets", csv, StringComparison.Ordinal);
+        Assert.Contains("downtime,current_hours", csv, StringComparison.Ordinal);
         Assert.Contains("supplyarr,published_demand_lines", csv, StringComparison.Ordinal);
     }
 

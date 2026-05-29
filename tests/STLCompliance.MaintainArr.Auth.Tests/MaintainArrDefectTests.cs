@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
+using MaintainArr.Api.Entities;
 using MaintainArr.Api.Services;
 using MaintainArrRedeemRequest = MaintainArr.Api.Contracts.RedeemHandoffRequest;
 using MaintainArrHandoffSessionResponse = MaintainArr.Api.Contracts.HandoffSessionResponse;
@@ -129,6 +130,35 @@ public sealed class MaintainArrDefectTests : IAsyncLifetime
         statusResponse.EnsureSuccessStatusCode();
         var updated = (await statusResponse.Content.ReadFromJsonAsync<DefectDetailResponse>())!;
         Assert.Equal("acknowledged", updated.Status);
+    }
+
+    [Fact]
+    public async Task Critical_manual_defect_marks_asset_oos_and_returns_downtime_follow_up()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/defects", managerToken);
+        createRequest.Content = JsonContent.Create(new CreateDefectRequest(
+            assetId,
+            "Brake failure",
+            "Complete loss of service brakes",
+            "critical"));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<DefectDetailResponse>())!;
+        Assert.NotNull(created.DowntimeFollowUp);
+        Assert.Equal("critical_defect_oos", created.DowntimeFollowUp!.Trigger);
+        Assert.Contains($"/downtime?assetId={assetId:D}", created.DowntimeFollowUp.DeepLinkPath, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains($"defectId={created.DefectId:D}", created.DowntimeFollowUp.DeepLinkPath, StringComparison.OrdinalIgnoreCase);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var asset = await db.Assets.SingleAsync(x => x.Id == assetId);
+        Assert.Equal("out_of_service", asset.LifecycleStatus);
+        var downtimeEvent = await db.AssetDowntimeEvents.SingleAsync(
+            x => x.DefectId == created.DefectId && x.EndedAt == null);
+        Assert.Equal(AssetDowntimeReasons.OutOfService, downtimeEvent.Reason);
     }
 
     [Fact]

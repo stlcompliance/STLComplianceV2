@@ -11,6 +11,8 @@ public sealed class PlatformLifecycleOverviewService(
     EntitlementReconciliationWorkerService entitlementReconciliationWorker,
     TenantLifecycleSettingsService tenantLifecycleSettings,
     TenantLifecycleWorkerService tenantLifecycleWorker,
+    PlatformOutboxPublisherSettingsService platformOutboxPublisherSettings,
+    PlatformOutboxPublisherWorkerService platformOutboxPublisherWorker,
     PlatformAuthorizationService authorization,
     IPlatformAuditService audit)
 {
@@ -34,11 +36,16 @@ public sealed class PlatformLifecycleOverviewService(
         var tenantPending = await tenantLifecycleWorker.ListPendingAsync(null, 50, cancellationToken);
         var tenantRuns = await tenantLifecycleWorker.ListRecentRunsAsync(1, cancellationToken);
 
+        var outboxSettings = await platformOutboxPublisherSettings.GetAsync(principal, cancellationToken);
+        var outboxPending = await platformOutboxPublisherWorker.ListPendingAsync(null, 50, cancellationToken);
+        var outboxRuns = await platformOutboxPublisherWorker.ListRecentRunsAsync(1, cancellationToken);
+
         var workers = new[]
         {
             BuildServiceTokenCleanupStatus(tokenSettings, tokenPending, tokenRuns),
             BuildEntitlementReconciliationStatus(entitlementSettings, entitlementPending, entitlementRuns),
             BuildTenantLifecycleStatus(tenantSettings, tenantPending, tenantRuns),
+            BuildPlatformOutboxPublisherStatus(outboxSettings, outboxPending, outboxRuns),
         };
 
         await audit.WriteAsync(
@@ -126,5 +133,30 @@ public sealed class PlatformLifecycleOverviewService(
             ServiceTokenScope: TenantLifecycleWorkerService.ProcessLifecycleActionScope,
             PlatformSettingsPath: "/api/platform-admin/tenant-lifecycle/settings",
             SuiteAdminPath: "/app/platform-admin/tenant-lifecycle");
+    }
+
+    private static PlatformLifecycleWorkerStatus BuildPlatformOutboxPublisherStatus(
+        PlatformOutboxPublisherSettingsResponse settings,
+        PendingPlatformOutboxPublisherResponse pending,
+        PlatformOutboxPublisherRunsResponse runs)
+    {
+        var latest = runs.Items.FirstOrDefault();
+        return new PlatformLifecycleWorkerStatus(
+            WorkerKey: "platform_outbox_publisher",
+            Label: "Platform event outbox",
+            Description: "Publishes tenant and entitlement integration events for downstream product mirrors.",
+            IsEnabled: settings.IsEnabled,
+            PendingCount: pending.Items.Count,
+            LatestRun: latest is null
+                ? null
+                : new PlatformLifecycleLatestRunSummary(
+                    latest.RunId,
+                    latest.Outcome,
+                    latest.ProcessedAt,
+                    latest.PublishedCount,
+                    "published"),
+            ServiceTokenScope: PlatformOutboxPublisherWorkerService.ProcessPublishActionScope,
+            PlatformSettingsPath: "/api/platform-admin/platform-outbox/settings",
+            SuiteAdminPath: "/app/platform-admin/platform-outbox");
     }
 }

@@ -29,6 +29,8 @@ public sealed class ComplianceCoreFactPublisherService(
         IntegrationOutboxEventKinds.ProcurementExceptionWaiveRejected,
         IntegrationOutboxEventKinds.ProcurementExceptionClosed,
         IntegrationOutboxEventKinds.ProcurementExceptionCancelled,
+        IntegrationOutboxEventKinds.ProcurementExceptionReopened,
+        IntegrationOutboxEventKinds.SupplierIncidentReopened,
         IntegrationOutboxEventKinds.SupplierIncidentRestrictionApplied,
     };
 
@@ -85,6 +87,8 @@ public sealed class ComplianceCoreFactPublisherService(
                 => await BuildVendorRestrictionFactsAsync(outboxEvent, cancellationToken),
             _ when outboxEvent.EventKind.StartsWith("procurement_exception.", StringComparison.OrdinalIgnoreCase)
                 => await BuildProcurementExceptionFactsAsync(outboxEvent, cancellationToken),
+            IntegrationOutboxEventKinds.SupplierIncidentReopened
+                => await BuildSupplierIncidentLifecycleFactsAsync(outboxEvent, cancellationToken),
             IntegrationOutboxEventKinds.SupplierIncidentRestrictionApplied
                 => await BuildSupplierIncidentRestrictionFactsAsync(outboxEvent, cancellationToken),
             _ => Array.Empty<ComplianceCoreFactPublicationItem>(),
@@ -231,6 +235,40 @@ public sealed class ComplianceCoreFactPublisherService(
         ];
     }
 
+    private async Task<IReadOnlyList<ComplianceCoreFactPublicationItem>> BuildSupplierIncidentLifecycleFactsAsync(
+        IntegrationOutboxEvent outboxEvent,
+        CancellationToken cancellationToken)
+    {
+        var entity = await db.SupplierIncidents.AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.TenantId == outboxEvent.TenantId && x.Id == outboxEvent.RelatedEntityId,
+                cancellationToken);
+        if (entity is null)
+        {
+            return Array.Empty<ComplianceCoreFactPublicationItem>();
+        }
+
+        var scopeKey = ScopeForSupplierIncident(entity.Id);
+        var isActive = SupplierIncidentStatuses.Active.Contains(entity.Status);
+        return
+        [
+            StringFact(
+                outboxEvent,
+                SupplyArrComplianceCoreFactKeys.SupplierIncidentStatus,
+                scopeKey,
+                entity.Status,
+                "supplier_incident",
+                entity.Id),
+            BooleanFact(
+                outboxEvent,
+                SupplyArrComplianceCoreFactKeys.SupplierIncidentIsActive,
+                scopeKey,
+                isActive,
+                "supplier_incident",
+                entity.Id),
+        ];
+    }
+
     private async Task<IReadOnlyList<ComplianceCoreFactPublicationItem>> BuildSupplierIncidentRestrictionFactsAsync(
         IntegrationOutboxEvent outboxEvent,
         CancellationToken cancellationToken)
@@ -316,4 +354,6 @@ public sealed class ComplianceCoreFactPublisherService(
     private static string ScopeForVendor(Guid partyId) => $"vendor:{partyId:D}".ToLowerInvariant();
 
     private static string ScopeForProcurementException(Guid id) => $"procurement_exception:{id:D}".ToLowerInvariant();
+
+    private static string ScopeForSupplierIncident(Guid id) => $"supplier_incident:{id:D}".ToLowerInvariant();
 }

@@ -145,6 +145,10 @@ export function RuleEvaluationPanel({
                 <option value="any">Any rule may pass</option>
               </select>
             </label>
+            <p className="text-xs text-slate-500">
+              Set <span className="font-mono text-amber-300">nonWaivable: true</span> on a rule to block compliance
+              waivers from overriding that failure (hard-block rules).
+            </p>
             <label htmlFor="rule-evaluation-content-rules-json" className="block text-xs text-slate-400">
               Fact boolean rules JSON
               <textarea
@@ -230,7 +234,11 @@ export function RuleEvaluationPanel({
               <ul className="mt-2 space-y-1">
                 {lastEvaluation.ruleResults.map((item) => (
                   <li key={item.ruleKey} className="text-xs text-slate-400">
-                    <span className="font-mono text-slate-300">{item.ruleKey}</span> — {item.result}: {item.message}
+                    <span className="font-mono text-slate-300">{item.ruleKey}</span>
+                    {item.nonWaivable ? (
+                      <span className="ml-1 rounded bg-amber-900/50 px-1 text-amber-200">non-waivable</span>
+                    ) : null}{' '}
+                    — {item.result}: {item.message}
                   </li>
                 ))}
               </ul>

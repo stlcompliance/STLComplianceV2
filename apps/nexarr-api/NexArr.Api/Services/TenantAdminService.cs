@@ -11,7 +11,8 @@ namespace NexArr.Api.Services;
 public sealed class TenantAdminService(
     NexArrDbContext db,
     PlatformAuthorizationService authorization,
-    IPlatformAuditService audit)
+    IPlatformAuditService audit,
+    PlatformOutboxEnqueueService outboxEnqueue)
 {
     public async Task<PagedResult<TenantDetailResponse>> ListAsync(
         ClaimsPrincipal principal,
@@ -93,6 +94,25 @@ public sealed class TenantAdminService(
             actorUserId: principal.GetUserId(),
             cancellationToken: cancellationToken);
 
+        await outboxEnqueue.TryEnqueueAsync(
+            PlatformOutboxEventKinds.TenantCreated,
+            "tenant",
+            tenant.Id.ToString(),
+            tenant.CreatedAt.ToUnixTimeMilliseconds().ToString(),
+            new PlatformOutboxPayload(
+                PlatformOutboxRules.DefaultSchemaVersion,
+                tenant.Id,
+                principal.GetUserId(),
+                "tenant",
+                tenant.Id.ToString(),
+                $"Tenant created: {tenant.DisplayName}",
+                new Dictionary<string, string>
+                {
+                    ["slug"] = tenant.Slug,
+                    ["status"] = tenant.Status,
+                }),
+            cancellationToken: cancellationToken);
+
         return new TenantDetailResponse(tenant.Id, tenant.Slug, tenant.DisplayName, tenant.Status, tenant.CreatedAt, tenant.ModifiedAt);
     }
 
@@ -118,6 +138,25 @@ public sealed class TenantAdminService(
             "Success",
             tenantId: tenant.Id,
             actorUserId: principal.GetUserId(),
+            cancellationToken: cancellationToken);
+
+        await outboxEnqueue.TryEnqueueAsync(
+            PlatformOutboxEventKinds.TenantUpdated,
+            "tenant",
+            tenant.Id.ToString(),
+            tenant.ModifiedAt.ToUnixTimeMilliseconds().ToString(),
+            new PlatformOutboxPayload(
+                PlatformOutboxRules.DefaultSchemaVersion,
+                tenant.Id,
+                principal.GetUserId(),
+                "tenant",
+                tenant.Id.ToString(),
+                $"Tenant updated: {tenant.DisplayName}",
+                new Dictionary<string, string>
+                {
+                    ["slug"] = tenant.Slug,
+                    ["status"] = tenant.Status,
+                }),
             cancellationToken: cancellationToken);
 
         return new TenantDetailResponse(tenant.Id, tenant.Slug, tenant.DisplayName, tenant.Status, tenant.CreatedAt, tenant.ModifiedAt);
@@ -150,6 +189,29 @@ public sealed class TenantAdminService(
             "Success",
             tenantId: tenant.Id,
             actorUserId: principal.GetUserId(),
+            cancellationToken: cancellationToken);
+
+        var eventType = request.Status == TenantStatuses.Active
+            ? PlatformOutboxEventKinds.TenantEnabled
+            : PlatformOutboxEventKinds.TenantDisabled;
+
+        await outboxEnqueue.TryEnqueueAsync(
+            eventType,
+            "tenant",
+            tenant.Id.ToString(),
+            tenant.ModifiedAt.ToUnixTimeMilliseconds().ToString(),
+            new PlatformOutboxPayload(
+                PlatformOutboxRules.DefaultSchemaVersion,
+                tenant.Id,
+                principal.GetUserId(),
+                "tenant",
+                tenant.Id.ToString(),
+                $"Tenant status changed to {tenant.Status}",
+                new Dictionary<string, string>
+                {
+                    ["slug"] = tenant.Slug,
+                    ["status"] = tenant.Status,
+                }),
             cancellationToken: cancellationToken);
 
         return new TenantDetailResponse(tenant.Id, tenant.Slug, tenant.DisplayName, tenant.Status, tenant.CreatedAt, tenant.ModifiedAt);

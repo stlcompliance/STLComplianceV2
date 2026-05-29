@@ -3,14 +3,14 @@ Generated: 2026-05-29
 
 SUMMARY
 -------
-Total input elements: 656
-Total component files: 161
+Total input elements: 662
+Total component files: 162
 
 By app:
   stlcompliancesite: 4 fields in 1 files
   suite-frontend: 36 fields in 10 files
   compliancecore-frontend: 34 fields in 13 files
-  staffarr-frontend: 91 fields in 21 files
+  staffarr-frontend: 97 fields in 22 files
   maintainarr-frontend: 99 fields in 21 files
   routarr-frontend: 85 fields in 22 files
   supplyarr-frontend: 172 fields in 34 files
@@ -289,6 +289,15 @@ Fields (5):
   3. Description -> textarea (id=personnel-document-description)
   4. Expires at (optional) -> datetime-local (id=personnel-document-expires-at)
   5. File -> file (id=personnel-document-file)
+
+File: apps/staffarr-frontend/src/components/MeSelfServicePortalPanel.tsx
+Fields (6):
+  1. Request type -> select (id=me-update-request-type)
+  2. Field -> text (id=me-update-field-key)
+  3. Current value (optional) -> text (id=me-update-current-value)
+  4. Requested value -> text (id=me-update-requested-value)
+  5. Details (optional) -> textarea (id=me-update-details)
+  6. Submit request -> button (id=me-update-submit)
 
 File: apps/staffarr-frontend/src/components/PersonnelNotesPanel.tsx
 Fields (4):
@@ -617,6 +626,10 @@ Fields (2):
   1. tripcompletionrollupsettings -> checkbox
   2. Staleness window (hours) -> number (id=tripcompletionrollupsettings-staleness-window-hours)
 
+File: apps/routarr-frontend/src/components/TripCompletionReportsPanel.tsx
+Fields (1):
+  1. Dispatch status -> select (id=tripcompletionreports-status)
+
 File: apps/routarr-frontend/src/components/TripDvirSubmitForm.tsx
 Fields (3):
   1. Trip DVIR result ({phase === 'pre_trip' ? 'pre-trip' : 'post-trip'}) -> select
@@ -818,8 +831,9 @@ Fields (8):
   4. Resolution notes -> textarea (id=procurement-exception-resolution-notes)
   5. Waive justification (for waive request) -> textarea (id=procurement-exception-waive-justification, data-testid=procurement-exception-waive-justification)
   6. Cancel reason (for cancel action) -> textarea (id=procurement-exception-cancel-reason, data-testid=procurement-exception-cancel-reason)
-  7. Link follow-up PR -> select (id=procurement-exception-link-pr, data-testid=procurement-exception-link-pr)
-  8. Link follow-up PO -> select (id=procurement-exception-link-po, data-testid=procurement-exception-link-po)
+  7. Reopen reason (for reopen after cancel) -> textarea (id=procurement-exception-reopen-reason, data-testid=procurement-exception-reopen-reason)
+  8. Link follow-up PR -> select (id=procurement-exception-link-pr, data-testid=procurement-exception-link-pr)
+  9. Link follow-up PO -> select (id=procurement-exception-link-po, data-testid=procurement-exception-link-po)
 
 File: apps/supplyarr-frontend/src/components/PurchaseOrderPanel.tsx
 Fields (3):

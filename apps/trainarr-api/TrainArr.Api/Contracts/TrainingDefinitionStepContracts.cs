@@ -45,6 +45,7 @@ public sealed record TrainingAssignmentStepProgressResponse(
     string ConfigJson,
     int SortOrder,
     string Status,
+    bool IsVisible,
     int? QuizScorePercent,
     string? ResponseJson,
     DateTimeOffset? CompletedAt);

@@ -82,6 +82,59 @@ public sealed class IncidentService(
         return MapDetail(entity, null);
     }
 
+    public async Task<PersonnelIncidentDetailResponse> CreateSelfReportAsync(
+        Guid tenantId,
+        Guid personId,
+        Guid actorUserId,
+        SubmitSelfReportedPersonnelIncidentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var personExists = await db.People.AnyAsync(
+            x => x.TenantId == tenantId && x.Id == personId,
+            cancellationToken);
+        if (!personExists)
+        {
+            throw new StlApiException("people.not_found", "Person was not found.", 404);
+        }
+
+        var reasonCategoryKey = NormalizeReasonCategoryKey(request.ReasonCategoryKey);
+        var severity = NormalizeSeverity(request.Severity);
+        var title = NormalizeTitle(request.Title);
+        var description = NormalizeDescription(request.Description);
+        ValidateOccurredAt(request.OccurredAt);
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new PersonnelIncident
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PersonId = personId,
+            ReasonCategoryKey = reasonCategoryKey,
+            Severity = severity,
+            Status = "submitted",
+            Title = title,
+            Description = description,
+            OccurredAt = request.OccurredAt,
+            ReportedAt = now,
+            ReportedByUserId = actorUserId,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.PersonnelIncidents.Add(entity);
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "incident.self_report.submitted",
+            tenantId,
+            actorUserId,
+            "personnel_incident",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return MapDetail(entity, null);
+    }
+
     public async Task<IReadOnlyList<PersonnelIncidentSummaryResponse>> ListIncidentsAsync(
         Guid tenantId,
         Guid? personId,

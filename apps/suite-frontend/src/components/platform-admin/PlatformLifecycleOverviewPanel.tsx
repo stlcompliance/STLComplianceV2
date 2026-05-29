@@ -25,8 +25,8 @@ export function PlatformLifecycleOverviewPanel() {
   return (
     <div className="space-y-4" data-testid="platform-lifecycle-overview">
       <p className="text-xs text-slate-500">
-        Generated {new Date(overview.generatedAt).toLocaleString()} · shared-worker jobs call NexArr
-        internal batch APIs with dedicated service-token scopes.
+        Generated {new Date(overview.generatedAt).toLocaleString()} · shared-worker and nexarr-worker
+        jobs call NexArr internal batch APIs with dedicated service-token scopes.
       </p>
 
       <div className="grid gap-4 lg:grid-cols-3">

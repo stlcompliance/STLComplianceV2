@@ -7,6 +7,7 @@ import {
   approveProcurementExceptionWaive,
   assignProcurementException,
   cancelProcurementException,
+  reopenProcurementException,
   closeProcurementException,
   createSubjectProcurementException,
   getRfqs,
@@ -99,6 +100,7 @@ export function ProcurementExceptionsPanel({
   const [assignOnCreate, setAssignOnCreate] = useState(true)
   const [waiveJustification, setWaiveJustification] = useState('')
   const [cancelReason, setCancelReason] = useState('')
+  const [reopenReason, setReopenReason] = useState('')
   const [resolutionNotes, setResolutionNotes] = useState('')
   const [resolutionTemplateKey, setResolutionTemplateKey] = useState('')
   const [selectedExceptionId, setSelectedExceptionId] = useState('')
@@ -245,6 +247,7 @@ export function ProcurementExceptionsPanel({
         | 'reject_waive'
         | 'close'
         | 'cancel'
+        | 'reopen'
       exceptionId: string
     }) => {
       const { type, exceptionId } = action
@@ -273,6 +276,13 @@ export function ProcurementExceptionsPanel({
       }
       if (type === 'close') {
         return closeProcurementException(accessToken, exceptionId)
+      }
+      if (type === 'reopen') {
+        return reopenProcurementException(accessToken, exceptionId, {
+          reason:
+            reopenReason ||
+            'Reopened from purchasing workspace after mistaken cancellation.',
+        })
       }
       return cancelProcurementException(accessToken, exceptionId, {
         reason: cancelReason || 'Cancelled from purchasing workspace',
@@ -422,6 +432,18 @@ export function ProcurementExceptionsPanel({
             data-testid="procurement-exception-cancel-reason"
             value={cancelReason}
             onChange={(event) => setCancelReason(event.target.value)}
+          />
+        </label>
+
+        <label htmlFor="procurement-exception-reopen-reason" className="block text-sm text-slate-400 md:col-span-2">
+          Reopen reason (for reopen after cancel)
+          <textarea
+            id="procurement-exception-reopen-reason"
+            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+            rows={2}
+            data-testid="procurement-exception-reopen-reason"
+            value={reopenReason}
+            onChange={(event) => setReopenReason(event.target.value)}
           />
         </label>
       </div>
@@ -686,6 +708,21 @@ export function ProcurementExceptionsPanel({
                   }
                 >
                   Close
+                </button>
+              )}
+              {exception.status === 'cancelled' && (
+                <button
+                  type="button"
+                  className="rounded border border-sky-600 px-2 py-0.5 text-xs text-sky-200"
+                  data-testid={`procurement-exception-reopen-${exception.exceptionId}`}
+                  onClick={() =>
+                    workflowMutation.mutate({
+                      type: 'reopen',
+                      exceptionId: exception.exceptionId,
+                    })
+                  }
+                >
+                  Reopen
                 </button>
               )}
             </div>

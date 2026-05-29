@@ -9,6 +9,7 @@ import { AssetsPage } from './pages/assets/AssetsPage'
 import { DefectsPage } from './pages/defects/DefectsPage'
 
 import { HistoryPage } from './pages/history/HistoryPage'
+import { DowntimePage } from './pages/downtime/DowntimePage'
 import { ReportsPage } from './pages/reports/ReportsPage'
 
 import { InspectionTemplatesPage } from './pages/inspection-templates/InspectionTemplatesPage'
@@ -84,6 +85,8 @@ export default function App() {
             <Route path="/inspection-templates" element={<InspectionTemplatesPage />} />
 
             <Route path="/history" element={<HistoryPage />} />
+
+            <Route path="/downtime" element={<DowntimePage />} />
 
             <Route path="/reports" element={<ReportsPage />} />
 

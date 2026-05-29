@@ -18,6 +18,9 @@ import {
   getPersonHistorySummary,
   getPersonTrainarrTrainingHistory,
   getWorkforceOnboardingJourney,
+  getPersonOffboarding,
+  startPersonOffboarding,
+  executePersonOffboarding,
   getPersonCertifications,
   clearPersonReadinessOverride,
   createPersonnelIncident,
@@ -199,6 +202,11 @@ export function useStaffArrWorkspaceState() {
   const workforceOnboardingJourneyQuery = useQuery({
     queryKey: ['staffarr-workforce-onboarding-journey', session?.accessToken, effectivePersonId],
     queryFn: () => getWorkforceOnboardingJourney(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId),
+  })
+  const personOffboardingQuery = useQuery({
+    queryKey: ['staffarr-person-offboarding', session?.accessToken, effectivePersonId],
+    queryFn: () => getPersonOffboarding(session!.accessToken, effectivePersonId!),
     enabled: Boolean(session?.accessToken && effectivePersonId),
   })
   const certificationDefinitionsQuery = useQuery({
@@ -578,6 +586,53 @@ export function useStaffArrWorkspaceState() {
       ])
     },
   })
+  const startOffboardingMutation = useMutation({
+    mutationFn: (payload: {
+      personId: string
+      separationDate: string
+      separationReason: string | null
+      targetEmploymentStatus: string
+      disableLoginRequested: boolean
+      newManagerPersonIdForReports: string | null
+    }) =>
+      startPersonOffboarding(session!.accessToken, {
+        personId: payload.personId,
+        separationDate: payload.separationDate,
+        separationReason: payload.separationReason,
+        targetEmploymentStatus: payload.targetEmploymentStatus,
+        disableLoginRequested: payload.disableLoginRequested,
+        newManagerPersonIdForReports: payload.newManagerPersonIdForReports,
+      }),
+    onSuccess: async (_, payload) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-offboarding', session?.accessToken, payload.personId] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+      ])
+    },
+  })
+  const executeOffboardingMutation = useMutation({
+    mutationFn: (payload: {
+      personId: string
+      offboardingId: string
+      newManagerPersonIdForReports: string | null
+    }) =>
+      executePersonOffboarding(session!.accessToken, payload.offboardingId, {
+        newManagerPersonIdForReports: payload.newManagerPersonIdForReports,
+      }),
+    onSuccess: async (_, payload) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-offboarding', session?.accessToken, payload.personId] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-people', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person', session?.accessToken, payload.personId] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-org-assignments', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-role-assignments', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-readiness', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-subordinates', session?.accessToken] }),
+      ])
+    },
+  })
   const grantReadinessOverrideMutation = useMutation({
     mutationFn: (payload: { personId: string; reason: string; expiresAt: string | null }) =>
       grantPersonReadinessOverride(session!.accessToken, payload.personId, {
@@ -699,6 +754,8 @@ export function useStaffArrWorkspaceState() {
     updatePersonMutation.error ??
     updateEmploymentStatusMutation.error ??
     null
+  const offboardingMutationError =
+    startOffboardingMutation.error ?? executeOffboardingMutation.error ?? null
 
   return {
     handoffRedirect,
@@ -739,6 +796,7 @@ export function useStaffArrWorkspaceState() {
     personHistorySummaryQuery,
     trainarrTrainingHistoryQuery,
     workforceOnboardingJourneyQuery,
+    personOffboardingQuery,
     certificationDefinitionsQuery,
     personCertificationsQuery,
     personReadinessQuery,
@@ -772,6 +830,8 @@ export function useStaffArrWorkspaceState() {
     createPersonMutation,
     updatePersonMutation,
     updateEmploymentStatusMutation,
+    startOffboardingMutation,
+    executeOffboardingMutation,
     grantReadinessOverrideMutation,
     clearReadinessOverrideMutation,
     createIncidentMutation,
@@ -828,6 +888,7 @@ export function useStaffArrWorkspaceState() {
     noteMutationError,
     documentMutationError,
     personProfileMutationError,
+    offboardingMutationError,
     personnelDocumentContentUrl,
   }
 }

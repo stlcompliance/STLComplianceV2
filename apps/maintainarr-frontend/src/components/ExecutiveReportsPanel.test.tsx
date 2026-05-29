@@ -27,6 +27,32 @@ vi.mock('../api/client', () => ({
       workOrdersCompletedLast30Days: 5,
       activeTechnicianAssignments: 2,
     },
+    downtimeTrend: {
+      periodDays: 30,
+      currentPeriod: {
+        periodStart: new Date(Date.now() - 30 * 86400000).toISOString(),
+        periodEnd: new Date().toISOString(),
+        downtimeHours: 48,
+        availabilityPercent: 92.5,
+        plannedDowntimeHours: 12,
+        unplannedDowntimeHours: 36,
+        activeDowntimeEventCount: 2,
+        fromMaterializedSnapshot: true,
+      },
+      previousPeriod: {
+        periodStart: new Date(Date.now() - 60 * 86400000).toISOString(),
+        periodEnd: new Date(Date.now() - 30 * 86400000).toISOString(),
+        downtimeHours: 32,
+        availabilityPercent: 95,
+        plannedDowntimeHours: 8,
+        unplannedDowntimeHours: 24,
+        activeDowntimeEventCount: 0,
+        fromMaterializedSnapshot: false,
+      },
+      downtimeHoursDelta: 16,
+      availabilityPercentDelta: -2.5,
+      fleetSnapshotComputedAt: new Date().toISOString(),
+    },
     supplyDemand: {
       sourceProduct: 'supplyarr',
       totalDemandLines: 4,
@@ -65,6 +91,9 @@ describe('ExecutiveReportsPanel', () => {
     expect(await screen.findByTestId('executive-reports-panel')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /Executive summary/i })).toBeInTheDocument()
     expect(await screen.findByText(/Main yard/i)).toBeInTheDocument()
+    expect(await screen.findByTestId('executive-downtime-trend')).toBeInTheDocument()
+    expect(await screen.findByText(/Downtime trend/i)).toBeInTheDocument()
+    expect(await screen.findByText(/\+16\.0h/i)).toBeInTheDocument()
     expect(await screen.findByText(/SupplyArr demand lines:/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Export CSV/i })).toBeInTheDocument()
   })

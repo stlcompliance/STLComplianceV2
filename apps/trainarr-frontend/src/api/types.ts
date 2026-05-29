@@ -76,6 +76,67 @@ export interface UpdateTrainingDefinitionStepRequest {
   sortOrder: number
 }
 
+export interface TrainingCompletionRuleCatalogItemResponse {
+  ruleType: string
+  label: string
+  description: string
+  defaultConfigJson: string
+}
+
+export interface TrainingDefinitionCompletionRuleResponse {
+  completionRuleId: string
+  trainingDefinitionId: string
+  ruleKey: string
+  ruleType: string
+  label: string
+  configJson: string
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateTrainingDefinitionCompletionRuleRequest {
+  ruleKey: string
+  ruleType: string
+  label: string
+  configJson: string
+  sortOrder: number
+}
+
+export interface UpdateTrainingDefinitionCompletionRuleRequest {
+  ruleType: string
+  label: string
+  configJson: string
+  sortOrder: number
+}
+
+export interface TrainingStepBranchCatalogItemResponse {
+  branchType: string
+  label: string
+  description: string
+  defaultConfigJson: string
+}
+
+export interface TrainingDefinitionStepBranchResponse {
+  branchId: string
+  trainingDefinitionStepId: string
+  branchKey: string
+  branchType: string
+  label: string
+  configJson: string
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateTrainingDefinitionStepBranchRequest {
+  branchKey: string
+  branchType: string
+  label: string
+  configJson: string
+  sortOrder: number
+}
+
 export interface TrainingAssignmentStepProgressResponse {
   progressId: string
   trainingAssignmentId: string
@@ -87,6 +148,7 @@ export interface TrainingAssignmentStepProgressResponse {
   configJson: string
   sortOrder: number
   status: string
+  isVisible: boolean
   quizScorePercent: number | null
   responseJson: string | null
   completedAt: string | null

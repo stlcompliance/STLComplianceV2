@@ -1,6 +1,8 @@
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 import { AssetBulkImportPanel } from '../../components/AssetBulkImportPanel'
 import { AssetStatusRollupSettingsPanel } from '../../components/AssetStatusRollupSettingsPanel'
+import { DowntimeTrackingSettingsPanel } from '../../components/DowntimeTrackingSettingsPanel'
+import { MaintenancePlatformEventSettingsPanel } from '../../components/MaintenancePlatformEventSettingsPanel'
 import { MaintenanceHistoryRollupSettingsPanel } from '../../components/MaintenanceHistoryRollupSettingsPanel'
 import { AuditPackageExportPanel } from '../../components/AuditPackageExportPanel'
 import { DefectEscalationSettingsPanel } from '../../components/DefectEscalationSettingsPanel'
@@ -27,6 +29,8 @@ export function SettingsSection({ state }: Props) {
           <PmDueScanSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
           <MaintenanceHistoryRollupSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
           <AssetStatusRollupSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
+          <MaintenancePlatformEventSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
+          <DowntimeTrackingSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
           <DefectEscalationSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
           <NotificationSettingsPanel accessToken={accessToken} canManage={canManageNotifications} />
         </div>

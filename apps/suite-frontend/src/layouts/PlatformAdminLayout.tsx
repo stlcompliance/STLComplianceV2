@@ -9,6 +9,7 @@ import {
   Package,
   RefreshCw,
   Scale,
+  Send,
   ServerCog,
 } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
@@ -21,6 +22,7 @@ const navItems = [
   { to: '/app/platform-admin/data-plane', label: 'Data plane', icon: Cloud, end: false },
   { to: '/app/platform-admin/audit-export', label: 'Audit search & export', icon: Archive, end: false },
   { to: '/app/platform-admin/lifecycle', label: 'Lifecycle workers', icon: ServerCog, end: false },
+  { to: '/app/platform-admin/platform-outbox', label: 'Event outbox', icon: Send, end: false },
   { to: '/app/platform-admin/orchestration', label: 'Worker health', icon: HeartPulse, end: false },
   { to: '/app/platform-admin/service-tokens', label: 'Service tokens', icon: KeyRound, end: false },
   { to: '/app/platform-admin/entitlements', label: 'Entitlements', icon: Scale, end: false },

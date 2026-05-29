@@ -189,6 +189,23 @@ public static class ComplianceCoreReportEndpoints
         })
         .WithName("ExportComplianceCoreEvaluationsCsv");
 
+        group.MapGet("/workflow-gate-checks", async (
+            ComplianceCoreAuthorizationService authorization,
+            ComplianceCoreEntityBulkExportService exportService,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireFindingsReportExport(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var export = await exportService.ExportWorkflowGateChecksCsvAsync(
+                tenantId,
+                actorUserId,
+                cancellationToken);
+            return Results.File(export.Content, export.ContentType, export.FileName);
+        })
+        .WithName("ExportComplianceCoreWorkflowGateChecksCsv");
+
         group.MapGet("/rule-packs", async (
             string? status,
             ComplianceCoreAuthorizationService authorization,

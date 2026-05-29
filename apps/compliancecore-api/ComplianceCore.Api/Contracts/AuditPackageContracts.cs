@@ -19,6 +19,8 @@ public sealed record AuditPackageExportResponse(
     IReadOnlyList<AuditEventExportItem> AuditEvents,
     IReadOnlyList<AuditPackageFindingItem> Findings,
     IReadOnlyList<AuditPackageEvaluationRunItem> EvaluationRuns,
+    IReadOnlyList<AuditPackageWorkflowGateCheckItem> WorkflowGateChecks,
+    IReadOnlyList<AuditPackageWaiverItem> Waivers,
     IReadOnlyList<AuditPackageRulePackItem> RulePacks);
 
 public sealed record AuditPackageDateRangeResponse(
@@ -29,6 +31,8 @@ public sealed record AuditPackageCountsResponse(
     int AuditEvents,
     int Findings,
     int EvaluationRuns,
+    int WorkflowGateChecks,
+    int Waivers,
     int RulePacks);
 
 public sealed record AuditEventExportItem(
@@ -66,6 +70,38 @@ public sealed record AuditPackageEvaluationRunItem(
     string OverallResult,
     string FactInputsJson,
     string RuleResultsJson,
+    Guid? AppliedWaiverId,
+    string? AppliedWaiverKey,
+    DateTimeOffset CreatedAt);
+
+public sealed record AuditPackageWorkflowGateCheckItem(
+    Guid CheckResultId,
+    string GateKey,
+    Guid RulePackId,
+    string PackKey,
+    Guid? RuleEvaluationRunId,
+    string Outcome,
+    string ReasonCode,
+    string Message,
+    Guid? AppliedWaiverId,
+    string? AppliedWaiverKey,
+    DateTimeOffset CheckedAt);
+
+public sealed record AuditPackageWaiverItem(
+    Guid WaiverId,
+    string WaiverKey,
+    Guid RulePackId,
+    string PackKey,
+    string? RuleKey,
+    string? GateKey,
+    string SubjectScopeKey,
+    string ReasonCode,
+    string Explanation,
+    string Status,
+    DateTimeOffset EffectiveAt,
+    DateTimeOffset? ExpiresAt,
+    Guid? ApprovedByUserId,
+    DateTimeOffset? ApprovedAt,
     DateTimeOffset CreatedAt);
 
 public sealed record AuditPackageRulePackItem(

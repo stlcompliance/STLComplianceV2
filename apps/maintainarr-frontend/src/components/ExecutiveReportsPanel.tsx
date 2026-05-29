@@ -36,6 +36,7 @@ export function ExecutiveReportsPanel({
 
   const fleet = summaryQuery.data?.fleetReadiness
   const ops = summaryQuery.data?.operationalTotals
+  const downtime = summaryQuery.data?.downtimeTrend
   const supply = summaryQuery.data?.supplyDemand
 
   return (
@@ -71,7 +72,7 @@ export function ExecutiveReportsPanel({
         <p className="mt-3 text-sm text-rose-400">Failed to load executive summary.</p>
       )}
 
-      {summaryQuery.data && fleet && ops && supply && (
+      {summaryQuery.data && fleet && ops && downtime && supply && (
         <>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
             <MetricCard label="Fleet ready %" value={`${fleet.readyPercent.toFixed(1)}%`} />
@@ -94,6 +95,45 @@ export function ExecutiveReportsPanel({
               label="SupplyArr open procurement"
               value={String(supply.openProcurementLines)}
             />
+          </div>
+
+          <div
+            className="mt-4 rounded-lg border border-amber-800/40 bg-amber-950/20 p-4"
+            data-testid="executive-downtime-trend"
+          >
+            <h3 className="text-sm font-semibold text-amber-100">Downtime trend</h3>
+            <p className="mt-1 text-xs text-slate-400">
+              Fleet availability over the last {downtime.periodDays} days vs the prior{' '}
+              {downtime.periodDays}-day window (Pass 2 fleet snapshots when aligned).
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+              <MetricCard
+                label={`Downtime hours (${downtime.periodDays}d)`}
+                value={downtime.currentPeriod.downtimeHours.toFixed(1)}
+              />
+              <MetricCard
+                label="Availability %"
+                value={`${downtime.currentPeriod.availabilityPercent.toFixed(1)}%`}
+              />
+              <MetricCard
+                label="Δ downtime vs prior period"
+                value={formatDeltaHours(downtime.downtimeHoursDelta)}
+              />
+              <MetricCard
+                label="Active downtime events"
+                value={String(downtime.currentPeriod.activeDowntimeEventCount)}
+              />
+            </div>
+            <p className="mt-3 text-xs text-slate-500">
+              Prior period: {downtime.previousPeriod.downtimeHours.toFixed(1)}h downtime ·{' '}
+              {downtime.previousPeriod.availabilityPercent.toFixed(1)}% availability ·{' '}
+              {downtime.currentPeriod.plannedDowntimeHours.toFixed(1)}h planned /{' '}
+              {downtime.currentPeriod.unplannedDowntimeHours.toFixed(1)}h unplanned (current)
+              {downtime.currentPeriod.fromMaterializedSnapshot ? ' · materialized fleet snapshot' : ''}
+              {downtime.fleetSnapshotComputedAt
+                ? ` · snapshot ${new Date(downtime.fleetSnapshotComputedAt).toLocaleString()}`
+                : ''}
+            </p>
           </div>
 
           <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/50 p-3 text-sm text-slate-300">
@@ -147,4 +187,9 @@ function MetricCard({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-lg font-semibold text-slate-100">{value}</p>
     </div>
   )
+}
+
+function formatDeltaHours(delta: number): string {
+  const sign = delta > 0 ? '+' : ''
+  return `${sign}${delta.toFixed(1)}h`
 }

@@ -53,6 +53,15 @@ export function PlatformWorkerHealthOrchestrationPanel() {
     },
   })
 
+  const outboxMutation = useMutation({
+    mutationFn: () => nexarr.triggerPlatformOutboxPublisher(),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['platform-worker-health-orchestration'] })
+      void queryClient.invalidateQueries({ queryKey: ['platform-outbox-publisher-runs'] })
+      void queryClient.invalidateQueries({ queryKey: ['platform-outbox-events'] })
+    },
+  })
+
   const status = statusQuery.data
   const tokens = status?.serviceTokens
   const workers = status?.workers ?? []
@@ -247,6 +256,17 @@ export function PlatformWorkerHealthOrchestrationPanel() {
                       className="rounded-md bg-stl-teal px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
                     >
                       {lifecycleMutation.isPending ? 'Running…' : 'Run lifecycle now'}
+                    </button>
+                  )}
+                  {worker.workerKey === 'platform_outbox_publisher' && (
+                    <button
+                      type="button"
+                      onClick={() => outboxMutation.mutate()}
+                      disabled={outboxMutation.isPending || !worker.isEnabled}
+                      data-testid="platform-orchestration-trigger-platform-outbox"
+                      className="rounded-md bg-stl-teal px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+                    >
+                      {outboxMutation.isPending ? 'Running…' : 'Run publish now'}
                     </button>
                   )}
                 </div>

@@ -49,6 +49,28 @@ public static class AuthEndpoints
         .AllowAnonymous()
         .WithName("AuthLogout");
 
+        group.MapPost("/password/forgot", async (
+            ForgotPasswordRequest request,
+            PasswordResetService passwordReset,
+            CancellationToken cancellationToken) =>
+        {
+            var response = await passwordReset.RequestForgotAsync(request, cancellationToken);
+            return Results.Ok(response);
+        })
+        .AllowAnonymous()
+        .WithName("AuthPasswordForgot");
+
+        group.MapPost("/password/reset", async (
+            ResetPasswordRequest request,
+            PasswordResetService passwordReset,
+            CancellationToken cancellationToken) =>
+        {
+            await passwordReset.ResetPasswordAsync(request, cancellationToken);
+            return Results.NoContent();
+        })
+        .AllowAnonymous()
+        .WithName("AuthPasswordReset");
+
         var me = app.MapGroup("/api/me").WithTags("Me").RequireAuthorization();
 
         me.MapGet("/", async (AuthService auth, HttpContext context, CancellationToken cancellationToken) =>
@@ -82,5 +104,22 @@ public static class AuthEndpoints
             return Results.Ok(await auth.GetNavigationAsync(context.User, cancellationToken));
         })
         .WithName("GetMyNavigation");
+
+        me.MapGet("/sessions", async (AuthService auth, HttpContext context, CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await auth.GetMySessionsAsync(context.User, cancellationToken));
+        })
+        .WithName("GetMySessions");
+
+        me.MapDelete("/sessions/{sessionId:guid}", async (
+            Guid sessionId,
+            AuthService auth,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            await auth.RevokeMySessionAsync(context.User, sessionId, cancellationToken);
+            return Results.NoContent();
+        })
+        .WithName("RevokeMySession");
     }
 }

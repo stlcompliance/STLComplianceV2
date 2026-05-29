@@ -26,6 +26,8 @@ public sealed class StaffPerson : IHasTenant
 
     public string? JobTitle { get; set; }
 
+    public string? WorkPhone { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

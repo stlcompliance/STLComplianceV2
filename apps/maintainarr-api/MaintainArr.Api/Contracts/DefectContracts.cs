@@ -74,7 +74,9 @@ public sealed record DefectDetailResponse(
 
     DateTimeOffset? ResolvedAt,
 
-    int EvidenceCount);
+    int EvidenceCount,
+
+    DowntimeFollowUpResponse? DowntimeFollowUp = null);
 
 
 

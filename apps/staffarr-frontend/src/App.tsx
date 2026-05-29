@@ -10,6 +10,8 @@ import { OrgPage } from './pages/org/OrgPage'
 import { PeoplePage } from './pages/people/PeoplePage'
 import { PermissionsPage } from './pages/permissions/PermissionsPage'
 import { ReadinessPage } from './pages/readiness/ReadinessPage'
+import { MePage } from './pages/me/MePage'
+import { MyTeamPage } from './pages/my-team/MyTeamPage'
 import { LaunchPage } from './pages/LaunchPage'
 
 const queryClient = new QueryClient({
@@ -29,6 +31,8 @@ export default function App() {
           <Route path="/launch" element={<LaunchPage />} />
           <Route element={<ProductWorkspaceLayout />}>
             <Route index element={<Navigate to="/people" replace />} />
+            <Route path="/me" element={<MePage />} />
+            <Route path="/my-team" element={<MyTeamPage />} />
             <Route path="/people" element={<PeoplePage />} />
             <Route path="/org" element={<OrgPage />} />
             <Route path="/permissions" element={<PermissionsPage />} />

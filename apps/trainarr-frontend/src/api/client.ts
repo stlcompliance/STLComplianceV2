@@ -4,6 +4,13 @@ import type {
   CreateTrainingDefinitionRequest,
   CreateTrainingDefinitionStepRequest,
   UpdateTrainingDefinitionStepRequest,
+  CreateTrainingDefinitionCompletionRuleRequest,
+  UpdateTrainingDefinitionCompletionRuleRequest,
+  TrainingCompletionRuleCatalogItemResponse,
+  TrainingDefinitionCompletionRuleResponse,
+  CreateTrainingDefinitionStepBranchRequest,
+  TrainingStepBranchCatalogItemResponse,
+  TrainingDefinitionStepBranchResponse,
   CreateTrainingEvidenceRequest,
   CreateTrainingProgramRequest,
   HandoffSessionResponse,
@@ -215,6 +222,133 @@ export async function deleteTrainingDefinitionStep(
   })
   if (!response.ok) {
     await parseJsonResponse(response, 'Failed to delete training definition step')
+  }
+}
+
+export async function getTrainingCompletionRuleCatalog(
+  accessToken: string,
+): Promise<TrainingCompletionRuleCatalogItemResponse[]> {
+  const response = await fetch(`${apiBase}/api/training-completion-rules/catalog`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TrainingCompletionRuleCatalogItemResponse[]>(
+    response,
+    'Failed to load completion rule catalog',
+  )
+}
+
+export async function getTrainingDefinitionCompletionRules(
+  accessToken: string,
+  trainingDefinitionId: string,
+): Promise<TrainingDefinitionCompletionRuleResponse[]> {
+  const response = await fetch(
+    `${apiBase}/api/training-definitions/${trainingDefinitionId}/completion-rules`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<TrainingDefinitionCompletionRuleResponse[]>(
+    response,
+    'Failed to load completion rules',
+  )
+}
+
+export async function createTrainingDefinitionCompletionRule(
+  accessToken: string,
+  trainingDefinitionId: string,
+  payload: CreateTrainingDefinitionCompletionRuleRequest,
+): Promise<TrainingDefinitionCompletionRuleResponse> {
+  const response = await fetch(
+    `${apiBase}/api/training-definitions/${trainingDefinitionId}/completion-rules`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(payload),
+    },
+  )
+  return parseJsonResponse<TrainingDefinitionCompletionRuleResponse>(
+    response,
+    'Failed to create completion rule',
+  )
+}
+
+export async function deleteTrainingDefinitionCompletionRule(
+  accessToken: string,
+  trainingDefinitionId: string,
+  completionRuleId: string,
+): Promise<void> {
+  const response = await fetch(
+    `${apiBase}/api/training-definitions/${trainingDefinitionId}/completion-rules/${completionRuleId}`,
+    {
+      method: 'DELETE',
+      headers: authHeaders(accessToken),
+    },
+  )
+  if (!response.ok) {
+    await parseJsonResponse(response, 'Failed to delete completion rule')
+  }
+}
+
+export async function getTrainingStepBranchCatalog(
+  accessToken: string,
+): Promise<TrainingStepBranchCatalogItemResponse[]> {
+  const response = await fetch(`${apiBase}/api/training-step-branches/catalog`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TrainingStepBranchCatalogItemResponse[]>(
+    response,
+    'Failed to load step branch catalog',
+  )
+}
+
+export async function getTrainingDefinitionStepBranches(
+  accessToken: string,
+  trainingDefinitionId: string,
+  stepId: string,
+): Promise<TrainingDefinitionStepBranchResponse[]> {
+  const response = await fetch(
+    `${apiBase}/api/training-definitions/${trainingDefinitionId}/steps/${stepId}/branches`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<TrainingDefinitionStepBranchResponse[]>(
+    response,
+    'Failed to load step branches',
+  )
+}
+
+export async function createTrainingDefinitionStepBranch(
+  accessToken: string,
+  trainingDefinitionId: string,
+  stepId: string,
+  payload: CreateTrainingDefinitionStepBranchRequest,
+): Promise<TrainingDefinitionStepBranchResponse> {
+  const response = await fetch(
+    `${apiBase}/api/training-definitions/${trainingDefinitionId}/steps/${stepId}/branches`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(payload),
+    },
+  )
+  return parseJsonResponse<TrainingDefinitionStepBranchResponse>(
+    response,
+    'Failed to create step branch',
+  )
+}
+
+export async function deleteTrainingDefinitionStepBranch(
+  accessToken: string,
+  trainingDefinitionId: string,
+  stepId: string,
+  branchId: string,
+): Promise<void> {
+  const response = await fetch(
+    `${apiBase}/api/training-definitions/${trainingDefinitionId}/steps/${stepId}/branches/${branchId}`,
+    {
+      method: 'DELETE',
+      headers: authHeaders(accessToken),
+    },
+  )
+  if (!response.ok) {
+    await parseJsonResponse(response, 'Failed to delete step branch')
   }
 }
 

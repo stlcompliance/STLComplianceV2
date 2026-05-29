@@ -1,0 +1,97 @@
+using STLCompliance.Shared.Data;
+
+namespace MaintainArr.Api.Entities;
+
+public sealed class TenantMaintenancePlatformEventSettings : IHasTenant
+{
+    public Guid Id { get; set; }
+
+    public Guid TenantId { get; set; }
+
+    public bool IsEnabled { get; set; } = true;
+
+    public int MaxAttempts { get; set; } = 5;
+
+    public int RetryIntervalMinutes { get; set; } = 15;
+
+    public Guid? UpdatedByUserId { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset UpdatedAt { get; set; }
+}
+
+public sealed class MaintenancePlatformOutboxEvent : IHasTenant
+{
+    public Guid Id { get; set; }
+
+    public Guid TenantId { get; set; }
+
+    public string EventKind { get; set; } = string.Empty;
+
+    public string IdempotencyKey { get; set; } = string.Empty;
+
+    public string RelatedEntityType { get; set; } = string.Empty;
+
+    public Guid RelatedEntityId { get; set; }
+
+    public string PayloadJson { get; set; } = string.Empty;
+
+    public string ProcessingStatus { get; set; } = MaintenancePlatformEventStatuses.Pending;
+
+    public int AttemptCount { get; set; }
+
+    public DateTimeOffset? NextRetryAt { get; set; }
+
+    public string? ErrorMessage { get; set; }
+
+    public Guid CorrelationId { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset UpdatedAt { get; set; }
+
+    public DateTimeOffset? ProcessedAt { get; set; }
+}
+
+public sealed class MaintenancePlatformEventProcessingRun : IHasTenant
+{
+    public Guid Id { get; set; }
+
+    public Guid TenantId { get; set; }
+
+    public int PendingFound { get; set; }
+
+    public int ProcessedCount { get; set; }
+
+    public int RetriedCount { get; set; }
+
+    public int AbandonedCount { get; set; }
+
+    public int SkippedCount { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+public static class MaintenancePlatformEventStatuses
+{
+    public const string Pending = "pending";
+
+    public const string Processed = "processed";
+
+    public const string Abandoned = "abandoned";
+}
+
+public static class MaintenancePlatformOutboxEventKinds
+{
+    public const string AssetReadinessChanged = "asset.readiness_changed";
+
+    public const string AssetOutOfService = "asset.out_of_service";
+
+    public const string AssetReturnedToService = "asset.returned_to_service";
+}
+
+public static class MaintenancePlatformEventRelatedEntityTypes
+{
+    public const string Asset = "asset";
+}

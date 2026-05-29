@@ -29,3 +29,8 @@ public sealed record DriverPortalScheduleResponse(
     IReadOnlyList<DriverPortalTripRow> TodayTrips,
     IReadOnlyList<DriverPortalTripRow> UpcomingTrips,
     DateTimeOffset GeneratedAt);
+
+public sealed record DriverPortalReportExceptionRequest(
+    string Title,
+    string Description,
+    string? ExceptionType);

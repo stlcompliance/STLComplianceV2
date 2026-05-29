@@ -47,7 +47,9 @@ public sealed record WorkflowGateCheckResponse(
     Guid? RuleEvaluationRunId,
     IReadOnlyList<WorkflowGateReasonResponse> Reasons,
     IReadOnlyList<ComplianceFindingResponse> FindingsEmitted,
-    DateTimeOffset CheckedAt);
+    DateTimeOffset CheckedAt,
+    Guid? AppliedWaiverId = null,
+    string? AppliedWaiverKey = null);
 
 public sealed record WorkflowGateBatchCheckItem(
     string GateKey,
@@ -74,7 +76,8 @@ public sealed record WorkflowGateBatchCheckSummary(
     int Total,
     int AllowCount,
     int WarnCount,
-    int BlockCount);
+    int BlockCount,
+    int WaivedCount);
 
 public sealed record WorkflowGateBatchCheckResponse(
     Guid BatchId,

@@ -224,6 +224,17 @@ public sealed class ManagerHierarchyService(
         return summaries[0];
     }
 
+    public Task<bool> IsDirectManagerOfAsync(
+        Guid tenantId,
+        Guid managerPersonId,
+        Guid subordinatePersonId,
+        CancellationToken cancellationToken = default) =>
+        db.People.AsNoTracking().AnyAsync(
+            x => x.TenantId == tenantId
+                && x.Id == subordinatePersonId
+                && x.ManagerPersonId == managerPersonId,
+            cancellationToken);
+
     private async Task<StaffPerson?> ValidateManagerReferenceAsync(
         Guid tenantId,
         Guid personId,

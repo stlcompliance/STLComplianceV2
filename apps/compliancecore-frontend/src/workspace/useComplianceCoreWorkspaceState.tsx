@@ -709,7 +709,7 @@ export function useComplianceCoreWorkspaceState() {
 
           productReference: '/api/people/{personId}/certifications',
 
-          configJson: '{}',
+          configJson: '{"scopeKey":"tenant","fetchRelativePath":"/api/internal/compliance-facts/{factKey}"}',
 
           priority: 0,
 

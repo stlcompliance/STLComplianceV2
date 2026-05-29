@@ -146,6 +146,193 @@
         }
       }
     },
+    "/api/asset-status-rollup-settings": {
+      "get": {
+        "tags": [
+          "AssetStatusRollupSettings"
+        ],
+        "operationId": "GetMaintainArrAssetStatusRollupSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AssetStatusRollupSettings"
+        ],
+        "operationId": "UpsertMaintainArrAssetStatusRollupSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertAssetStatusRollupSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/asset-status-rollup-settings/pending": {
+      "get": {
+        "tags": [
+          "AssetStatusRollupSettings"
+        ],
+        "operationId": "ListMaintainArrPendingAssetStatusRollups",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/asset-status-rollup-settings/runs": {
+      "get": {
+        "tags": [
+          "AssetStatusRollupSettings"
+        ],
+        "operationId": "ListMaintainArrAssetStatusRollupRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/asset-status-rollups/assets": {
+      "get": {
+        "tags": [
+          "AssetStatusRollups"
+        ],
+        "operationId": "ListMaintainArrAssetStatusRollups",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/asset-status-rollups/assets/{assetId}": {
+      "get": {
+        "tags": [
+          "AssetStatusRollups"
+        ],
+        "operationId": "GetMaintainArrAssetStatusRollup",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/asset-status-rollups/classes": {
+      "get": {
+        "tags": [
+          "AssetStatusRollups"
+        ],
+        "operationId": "ListMaintainArrAssetClassStatusRollups",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/asset-status-rollups/fleet": {
+      "get": {
+        "tags": [
+          "AssetStatusRollups"
+        ],
+        "operationId": "GetMaintainArrFleetAssetStatusRollup",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/asset-status-rollups/sites": {
+      "get": {
+        "tags": [
+          "AssetStatusRollups"
+        ],
+        "operationId": "ListMaintainArrSiteStatusRollups",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/asset-status-rollups/types": {
+      "get": {
+        "tags": [
+          "AssetStatusRollups"
+        ],
+        "operationId": "ListMaintainArrAssetTypeStatusRollups",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/asset-status-rollups/types/{assetTypeId}": {
+      "get": {
+        "tags": [
+          "AssetStatusRollups"
+        ],
+        "operationId": "GetMaintainArrAssetTypeStatusRollup",
+        "parameters": [
+          {
+            "name": "assetTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/asset-types": {
       "get": {
         "tags": [
@@ -457,8 +644,50 @@
               "type": "string",
               "format": "date-time"
             }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/filter-options": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetMaintainArrAuditPackageFilterOptions",
         "responses": {
           "200": {
             "description": "OK"
@@ -550,6 +779,150 @@
         }
       }
     },
+    "/api/audit-packages/summary": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetMaintainArrAuditPackageExportSummary",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-packages/timeline": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetMaintainArrAuditPackageTimeline",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/auth/handoff/redeem": {
       "post": {
         "tags": [
@@ -566,6 +939,107 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/defect-escalation-settings": {
+      "get": {
+        "tags": [
+          "DefectEscalationSettings"
+        ],
+        "operationId": "GetMaintainArrDefectEscalationSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "DefectEscalationSettings"
+        ],
+        "operationId": "UpsertMaintainArrDefectEscalationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDefectEscalationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/defect-escalation-settings/events": {
+      "get": {
+        "tags": [
+          "DefectEscalationSettings"
+        ],
+        "operationId": "ListMaintainArrDefectEscalationEvents",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/defect-escalation-settings/pending": {
+      "get": {
+        "tags": [
+          "DefectEscalationSettings"
+        ],
+        "operationId": "ListMaintainArrPendingDefectEscalations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/defect-escalation-settings/runs": {
+      "get": {
+        "tags": [
+          "DefectEscalationSettings"
+        ],
+        "operationId": "ListMaintainArrDefectEscalationRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -656,6 +1130,62 @@
         }
       }
     },
+    "/api/defects/{defectId}/evidence": {
+      "get": {
+        "tags": [
+          "DefectEvidence"
+        ],
+        "operationId": "ListDefectEvidence",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "DefectEvidence"
+        ],
+        "operationId": "UploadDefectEvidence",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaintainArrEvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/defects/{defectId}/status": {
       "patch": {
         "tags": [
@@ -724,12 +1254,431 @@
         }
       }
     },
+    "/api/downtime-tracking-settings": {
+      "get": {
+        "tags": [
+          "DowntimeTrackingSettings"
+        ],
+        "operationId": "GetMaintainArrDowntimeTrackingSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "DowntimeTrackingSettings"
+        ],
+        "operationId": "UpsertMaintainArrDowntimeTrackingSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDowntimeTrackingSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/downtime-tracking-settings/pending": {
+      "get": {
+        "tags": [
+          "DowntimeTrackingSettings"
+        ],
+        "operationId": "ListMaintainArrPendingDowntimeSync",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/downtime-tracking-settings/runs": {
+      "get": {
+        "tags": [
+          "DowntimeTrackingSettings"
+        ],
+        "operationId": "ListMaintainArrDowntimeSyncRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/downtime/availability/assets/{assetId}": {
+      "get": {
+        "tags": [
+          "Downtime"
+        ],
+        "operationId": "GetMaintainArrAssetAvailability",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "periodStart",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "periodEnd",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/downtime/availability/fleet": {
+      "get": {
+        "tags": [
+          "Downtime"
+        ],
+        "operationId": "GetMaintainArrFleetAvailability",
+        "parameters": [
+          {
+            "name": "periodStart",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "periodEnd",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/downtime/events": {
+      "get": {
+        "tags": [
+          "Downtime"
+        ],
+        "operationId": "ListMaintainArrDowntimeEvents",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "activeOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Downtime"
+        ],
+        "operationId": "CreateMaintainArrManualDowntimeEvent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateManualDowntimeEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/downtime/events/{eventId}": {
+      "get": {
+        "tags": [
+          "Downtime"
+        ],
+        "operationId": "GetMaintainArrDowntimeEvent",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/downtime/events/{eventId}/close": {
+      "post": {
+        "tags": [
+          "Downtime"
+        ],
+        "operationId": "CloseMaintainArrDowntimeEvent",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseDowntimeEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/assets": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportMaintainArrAssetsCsv",
+        "parameters": [
+          {
+            "name": "lifecycleStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/inspection-runs": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportMaintainArrInspectionRunsCsv",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/manifest": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "GetMaintainArrEntityExportManifest",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/work-orders": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportMaintainArrWorkOrdersCsv",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/field-inbox": {
       "get": {
         "tags": [
           "FieldInbox"
         ],
         "operationId": "GetMaintainArrFieldInbox",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/imports/assets/commit": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "CommitMaintainArrAssetImport",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AssetBulkImportRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/imports/assets/validate": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ValidateMaintainArrAssetImport",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AssetBulkImportRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1145,6 +2094,29 @@
         }
       }
     },
+    "/api/inspections/voice/normalize-numeric": {
+      "post": {
+        "tags": [
+          "Inspections"
+        ],
+        "operationId": "NormalizeInspectionVoiceNumeric",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NormalizeVoiceNumericRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/inspections/{inspectionRunId}": {
       "get": {
         "tags": [
@@ -1261,6 +2233,86 @@
         }
       }
     },
+    "/api/inspections/{inspectionRunId}/evidence": {
+      "get": {
+        "tags": [
+          "InspectionRunEvidence"
+        ],
+        "operationId": "ListInspectionRunEvidence",
+        "parameters": [
+          {
+            "name": "inspectionRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "InspectionRunEvidence"
+        ],
+        "operationId": "UploadInspectionRunEvidence",
+        "parameters": [
+          {
+            "name": "inspectionRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaintainArrEvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inspections/{inspectionRunId}/voice-guidance": {
+      "get": {
+        "tags": [
+          "Inspections"
+        ],
+        "operationId": "GetInspectionVoiceGuidance",
+        "parameters": [
+          {
+            "name": "inspectionRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/routarr-asset-readiness": {
       "get": {
         "tags": [
@@ -1299,6 +2351,29 @@
         }
       }
     },
+    "/api/integrations/staffarr-person-sync": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestStaffarrPersonSync",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestStaffarrPersonSyncRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/supplyarr-demand-status": {
       "post": {
         "tags": [
@@ -1310,6 +2385,84 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/IngestSupplyarrDemandStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/asset-status-rollups/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingAssetStatusRollups",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "stalenessHours",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/asset-status-rollups/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessAssetStatusRollups",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessAssetStatusRollupsRequest"
               }
             }
           },
@@ -1376,6 +2529,216 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ProcessAuditPackageGenerationJobsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/defect-escalation/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingDefectEscalations",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/defect-escalation/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessDefectEscalations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessDefectEscalationsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/downtime-sync/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingAssetDowntimeSync",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/downtime-sync/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessAssetDowntimeSync",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessAssetDowntimeSyncRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/maintenance-history-rollups/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingMaintenanceHistoryRollups",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "stalenessHours",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/maintenance-history-rollups/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessMaintenanceHistoryRollups",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessMaintenanceHistoryRollupsRequest"
               }
             }
           },
@@ -1520,6 +2883,116 @@
         }
       }
     },
+    "/api/internal/technician-refs/pending-stale": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingStaleTechnicianRefs",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "staleAfter",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(\\d\u002B\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/technician-refs/process-refresh": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessTechnicianRefRefresh",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessTechnicianRefRefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContext",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoff",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/maintenance-history": {
       "get": {
         "tags": [
@@ -1558,6 +3031,104 @@
                 "string"
               ],
               "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance-history-rollup-settings": {
+      "get": {
+        "tags": [
+          "MaintenanceHistoryRollupSettings"
+        ],
+        "operationId": "GetMaintainArrMaintenanceHistoryRollupSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "MaintenanceHistoryRollupSettings"
+        ],
+        "operationId": "UpsertMaintainArrMaintenanceHistoryRollupSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertMaintenanceHistoryRollupSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance-history-rollup-settings/pending": {
+      "get": {
+        "tags": [
+          "MaintenanceHistoryRollupSettings"
+        ],
+        "operationId": "ListMaintainArrPendingMaintenanceHistoryRollups",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance-history-rollup-settings/runs": {
+      "get": {
+        "tags": [
+          "MaintenanceHistoryRollupSettings"
+        ],
+        "operationId": "ListMaintainArrMaintenanceHistoryRollupRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/maintenance-history/summary": {
+      "get": {
+        "tags": [
+          "MaintenanceHistory"
+        ],
+        "operationId": "GetMaintenanceHistorySummary",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -1751,6 +3322,93 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/pm-due-scan-settings": {
+      "get": {
+        "tags": [
+          "PmDueScanSettings"
+        ],
+        "operationId": "GetMaintainArrPmDueScanSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PmDueScanSettings"
+        ],
+        "operationId": "UpsertMaintainArrPmDueScanSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPmDueScanSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/pm-due-scan-settings/pending": {
+      "get": {
+        "tags": [
+          "PmDueScanSettings"
+        ],
+        "operationId": "ListMaintainArrPendingPmDueScan",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/pm-due-scan-settings/runs": {
+      "get": {
+        "tags": [
+          "PmDueScanSettings"
+        ],
+        "operationId": "ListMaintainArrPmDueScanRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/pm-due-scan-settings/trigger": {
+      "post": {
+        "tags": [
+          "PmDueScanSettings"
+        ],
+        "operationId": "TriggerMaintainArrPmDueScan",
         "responses": {
           "200": {
             "description": "OK"
@@ -2053,12 +3711,318 @@
         }
       }
     },
+    "/api/reports/compliance/inspection-templates/{inspectionTemplateId}": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetMaintainArrComplianceReportTemplateDetail",
+        "parameters": [
+          {
+            "name": "inspectionTemplateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/summary": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetMaintainArrComplianceReportSummary",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "siteRef",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/summary/export": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ExportMaintainArrComplianceReportSummary",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "siteRef",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/executive/summary": {
+      "get": {
+        "tags": [
+          "ExecutiveReports"
+        ],
+        "operationId": "GetMaintainArrExecutiveReportSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/executive/summary/export": {
+      "get": {
+        "tags": [
+          "ExecutiveReports"
+        ],
+        "operationId": "ExportMaintainArrExecutiveReportSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/maintenance/assets/{assetId}": {
+      "get": {
+        "tags": [
+          "MaintenanceReports"
+        ],
+        "operationId": "GetMaintainArrMaintenanceReportAssetDetail",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/maintenance/defects/{defectId}": {
+      "get": {
+        "tags": [
+          "MaintenanceReports"
+        ],
+        "operationId": "GetMaintainArrMaintenanceReportDefectDetail",
+        "parameters": [
+          {
+            "name": "defectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/maintenance/inspection-runs/{inspectionRunId}": {
+      "get": {
+        "tags": [
+          "MaintenanceReports"
+        ],
+        "operationId": "GetMaintainArrMaintenanceReportInspectionRunDetail",
+        "parameters": [
+          {
+            "name": "inspectionRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/maintenance/pm-schedules/{pmScheduleId}": {
+      "get": {
+        "tags": [
+          "MaintenanceReports"
+        ],
+        "operationId": "GetMaintainArrMaintenanceReportPmScheduleDetail",
+        "parameters": [
+          {
+            "name": "pmScheduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/maintenance/summary": {
+      "get": {
+        "tags": [
+          "MaintenanceReports"
+        ],
+        "operationId": "GetMaintainArrMaintenanceReportSummary",
+        "parameters": [
+          {
+            "name": "lifecycleStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/maintenance/summary/export": {
+      "get": {
+        "tags": [
+          "MaintenanceReports"
+        ],
+        "operationId": "ExportMaintainArrMaintenanceReportSummary",
+        "parameters": [
+          {
+            "name": "lifecycleStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/maintenance/work-orders/{workOrderId}": {
+      "get": {
+        "tags": [
+          "MaintenanceReports"
+        ],
+        "operationId": "GetMaintainArrMaintenanceReportWorkOrderDetail",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/session": {
       "get": {
         "tags": [
           "Session"
         ],
         "operationId": "MaintainArrGetSessionBootstrap",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/technician-refs": {
+      "get": {
+        "tags": [
+          "TechnicianRefs"
+        ],
+        "operationId": "ListTechnicianRefs",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TechnicianRefs"
+        ],
+        "operationId": "UpsertTechnicianRef",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTechnicianRefRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -2383,6 +4347,30 @@
         }
       }
     },
+    "/api/work-orders/{workOrderId}/parts-demand/status-events": {
+      "get": {
+        "tags": [
+          "WorkOrderPartsDemand"
+        ],
+        "operationId": "ListWorkOrderPartsDemandStatusEvents",
+        "parameters": [
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/work-orders/{workOrderId}/status": {
       "patch": {
         "tags": [
@@ -2502,6 +4490,79 @@
   },
   "components": {
     "schemas": {
+      "AssetBulkImportRequest": {
+        "required": [
+          "assets"
+        ],
+        "type": "object",
+        "properties": {
+          "assets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetImportRowRequest"
+            }
+          }
+        }
+      },
+      "AssetImportRowRequest": {
+        "required": [
+          "assetClassKey",
+          "assetTypeKey",
+          "assetTag",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "assetClassKey": {
+            "type": "string"
+          },
+          "assetTypeKey": {
+            "type": "string"
+          },
+          "assetTag": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "default": ""
+          },
+          "siteRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lifecycleStatus": {
+            "type": "string",
+            "default": "active"
+          }
+        }
+      },
+      "CloseDowntimeEventRequest": {
+        "required": [
+          "endedAt",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "endedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateAssetClassRequest": {
         "required": [
           "classKey",
@@ -2632,6 +4693,31 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "action": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "result": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "targetType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "actorUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -2757,6 +4843,91 @@
           },
           "description": {
             "type": "string"
+          }
+        }
+      },
+      "CreateMaintainArrEvidenceRequest": {
+        "required": [
+          "evidenceTypeKey",
+          "fileName",
+          "contentType",
+          "contentBase64",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "evidenceTypeKey": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "contentBase64": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "checklistItemId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "CreateManualDowntimeEventRequest": {
+        "required": [
+          "assetId",
+          "reason",
+          "isPlanned",
+          "startedAt",
+          "notes",
+          "workOrderId",
+          "defectId"
+        ],
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "isPlanned": {
+            "type": "boolean"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "defectId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -3101,6 +5272,54 @@
           }
         }
       },
+      "IngestStaffarrPersonSyncRequest": {
+        "required": [
+          "tenantId",
+          "staffarrPersonId",
+          "displayName",
+          "employmentStatus",
+          "primarySite",
+          "eventType",
+          "occurredAt",
+          "correlationId"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "staffarrPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "employmentStatus": {
+            "type": "string"
+          },
+          "primarySite": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "correlationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "IngestSupplyarrDemandStatusRequest": {
         "required": [
           "tenantId",
@@ -3218,6 +5437,93 @@
           }
         }
       },
+      "NormalizeVoiceNumericRequest": {
+        "required": [
+          "transcript"
+        ],
+        "type": "object",
+        "properties": {
+          "transcript": {
+            "type": "string"
+          }
+        }
+      },
+      "ProcessAssetDowntimeSyncRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessAssetStatusRollupsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ProcessAuditPackageGenerationJobsRequest": {
         "required": [
           "tenantId",
@@ -3241,6 +5547,82 @@
             "format": "date-time"
           },
           "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessDefectEscalationsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessMaintenanceHistoryRollupsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalenessHours": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "null",
@@ -3324,6 +5706,47 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "ProcessTechnicianRefRefreshRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize",
+          "staleAfter"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "staleAfter": {
+            "pattern": "^-?(\\d\u002B\\.)?\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,7})?$",
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -3765,13 +6188,145 @@
           }
         }
       },
+      "UpsertAssetStatusRollupSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertDefectEscalationSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "lowThresholdHours",
+          "mediumThresholdHours",
+          "highThresholdHours",
+          "criticalThresholdHours",
+          "autoAcknowledgeOnEscalation",
+          "autoCreateWorkOrderOnEscalation",
+          "bumpSeverityOnRepeatEscalation",
+          "notifyOnEscalation"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "lowThresholdHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "mediumThresholdHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "highThresholdHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "criticalThresholdHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "autoAcknowledgeOnEscalation": {
+            "type": "boolean"
+          },
+          "autoCreateWorkOrderOnEscalation": {
+            "type": "boolean"
+          },
+          "bumpSeverityOnRepeatEscalation": {
+            "type": "boolean"
+          },
+          "notifyOnEscalation": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpsertDowntimeTrackingSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "autoTrackOutOfService",
+          "autoTrackNotReady",
+          "availabilityPeriodDays"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "autoTrackOutOfService": {
+            "type": "boolean"
+          },
+          "autoTrackNotReady": {
+            "type": "boolean"
+          },
+          "availabilityPeriodDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertMaintenanceHistoryRollupSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "UpsertMaintenanceNotificationSettingsRequest": {
         "required": [
           "isEnabled",
           "notificationWebhookUrl",
           "notifyOnWorkOrderCreated",
           "notifyOnPmScheduleDue",
-          "notifyOnPmScheduleOverdue"
+          "notifyOnPmScheduleOverdue",
+          "notifyOnDefectEscalated"
         ],
         "type": "object",
         "properties": {
@@ -3792,6 +6347,91 @@
           },
           "notifyOnPmScheduleOverdue": {
             "type": "boolean"
+          },
+          "notifyOnDefectEscalated": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpsertPmDueScanSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "scanIntervalMinutes",
+          "batchSize",
+          "overdueGraceDays"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "scanIntervalMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "overdueGraceDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertTechnicianRefRequest": {
+        "required": [
+          "personId",
+          "displayName",
+          "activeStatus",
+          "primarySite",
+          "sourceUpdatedAt",
+          "sourceCorrelationId"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "activeStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "primarySite": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceUpdatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "sourceCorrelationId": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       }
@@ -3812,6 +6452,9 @@
     },
     {
       "name": "Me"
+    },
+    {
+      "name": "Launch"
     },
     {
       "name": "AssetClasses"
@@ -3838,7 +6481,16 @@
       "name": "Defects"
     },
     {
+      "name": "DefectEvidence"
+    },
+    {
+      "name": "InspectionRunEvidence"
+    },
+    {
       "name": "WorkOrders"
+    },
+    {
+      "name": "TechnicianRefs"
     },
     {
       "name": "WorkOrderTasks"
@@ -3871,10 +6523,46 @@
       "name": "Internal"
     },
     {
+      "name": "PmDueScanSettings"
+    },
+    {
       "name": "NotificationSettings"
     },
     {
       "name": "AuditPackages"
+    },
+    {
+      "name": "DefectEscalationSettings"
+    },
+    {
+      "name": "AssetStatusRollupSettings"
+    },
+    {
+      "name": "AssetStatusRollups"
+    },
+    {
+      "name": "DowntimeTrackingSettings"
+    },
+    {
+      "name": "Downtime"
+    },
+    {
+      "name": "MaintenanceHistoryRollupSettings"
+    },
+    {
+      "name": "MaintenanceReports"
+    },
+    {
+      "name": "ExecutiveReports"
+    },
+    {
+      "name": "ComplianceReports"
+    },
+    {
+      "name": "Imports"
+    },
+    {
+      "name": "Exports"
     }
   ]
 }

@@ -25,6 +25,7 @@ public sealed class PersonLookupService(StaffArrDbContext db)
                 x.PrimaryEmail,
                 x.EmploymentStatus,
                 x.JobTitle,
+                x.WorkPhone,
                 x.PrimaryOrgUnitId,
                 x.ManagerPersonId
             })
@@ -45,6 +46,7 @@ public sealed class PersonLookupService(StaffArrDbContext db)
             person.PrimaryEmail,
             person.EmploymentStatus,
             person.JobTitle,
+            person.WorkPhone,
             person.PrimaryOrgUnitId,
             person.ManagerPersonId,
             cancellationToken);
@@ -77,6 +79,7 @@ public sealed class PersonLookupService(StaffArrDbContext db)
                 x.PrimaryEmail,
                 x.EmploymentStatus,
                 x.JobTitle,
+                x.WorkPhone,
                 x.PrimaryOrgUnitId,
                 x.ManagerPersonId
             })
@@ -97,6 +100,7 @@ public sealed class PersonLookupService(StaffArrDbContext db)
             person.PrimaryEmail,
             person.EmploymentStatus,
             person.JobTitle,
+            person.WorkPhone,
             person.PrimaryOrgUnitId,
             person.ManagerPersonId,
             cancellationToken);
@@ -112,6 +116,7 @@ public sealed class PersonLookupService(StaffArrDbContext db)
         string primaryEmail,
         string employmentStatus,
         string? jobTitle,
+        string? workPhone,
         Guid? primaryOrgUnitId,
         Guid? managerPersonId,
         CancellationToken cancellationToken)
@@ -174,6 +179,7 @@ public sealed class PersonLookupService(StaffArrDbContext db)
             primaryEmail,
             employmentStatus,
             jobTitle,
+            workPhone,
             new PersonLookupPlacementResponse(
                 primaryOrgUnitId,
                 primaryOrgUnitName,

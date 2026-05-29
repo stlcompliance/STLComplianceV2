@@ -97,6 +97,26 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
 
     public DbSet<MaintainArrStaffPersonRef> StaffPersonRefs => Set<MaintainArrStaffPersonRef>();
 
+    public DbSet<TenantDowntimeTrackingSettings> TenantDowntimeTrackingSettings =>
+        Set<TenantDowntimeTrackingSettings>();
+
+    public DbSet<AssetDowntimeEvent> AssetDowntimeEvents => Set<AssetDowntimeEvent>();
+
+    public DbSet<AssetAvailabilitySnapshot> AssetAvailabilitySnapshots => Set<AssetAvailabilitySnapshot>();
+
+    public DbSet<FleetAvailabilitySnapshot> FleetAvailabilitySnapshots => Set<FleetAvailabilitySnapshot>();
+
+    public DbSet<AssetDowntimeSyncRun> AssetDowntimeSyncRuns => Set<AssetDowntimeSyncRun>();
+
+    public DbSet<TenantMaintenancePlatformEventSettings> TenantMaintenancePlatformEventSettings =>
+        Set<TenantMaintenancePlatformEventSettings>();
+
+    public DbSet<MaintenancePlatformOutboxEvent> MaintenancePlatformOutboxEvents =>
+        Set<MaintenancePlatformOutboxEvent>();
+
+    public DbSet<MaintenancePlatformEventProcessingRun> MaintenancePlatformEventProcessingRuns =>
+        Set<MaintenancePlatformEventProcessingRun>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -760,6 +780,93 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.Property(x => x.SourceCorrelationId).HasMaxLength(128);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.StaffarrPersonId }).IsUnique();
+        });
+
+        modelBuilder.Entity<TenantDowntimeTrackingSettings>(entity =>
+        {
+            entity.ToTable("maintainarr_tenant_downtime_tracking_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<AssetDowntimeEvent>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_downtime_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.AssetTag).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.AssetName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Source).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Reason).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.StatusTrigger).HasMaxLength(128);
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.StartedAt });
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.EndedAt });
+            entity.HasIndex(x => new { x.TenantId, x.Source, x.EndedAt });
+        });
+
+        modelBuilder.Entity<AssetAvailabilitySnapshot>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_availability_snapshots");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.AssetTag).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.AssetName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.TotalHours).HasPrecision(18, 2);
+            entity.Property(x => x.DowntimeHours).HasPrecision(18, 2);
+            entity.Property(x => x.AvailabilityPercent).HasPrecision(5, 1);
+            entity.Property(x => x.PlannedDowntimeHours).HasPrecision(18, 2);
+            entity.Property(x => x.UnplannedDowntimeHours).HasPrecision(18, 2);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId }).IsUnique();
+        });
+
+        modelBuilder.Entity<FleetAvailabilitySnapshot>(entity =>
+        {
+            entity.ToTable("maintainarr_fleet_availability_snapshots");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TotalHours).HasPrecision(18, 2);
+            entity.Property(x => x.DowntimeHours).HasPrecision(18, 2);
+            entity.Property(x => x.AvailabilityPercent).HasPrecision(5, 1);
+            entity.Property(x => x.PlannedDowntimeHours).HasPrecision(18, 2);
+            entity.Property(x => x.UnplannedDowntimeHours).HasPrecision(18, 2);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<AssetDowntimeSyncRun>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_downtime_sync_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<TenantMaintenancePlatformEventSettings>(entity =>
+        {
+            entity.ToTable("maintainarr_tenant_platform_event_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<MaintenancePlatformOutboxEvent>(entity =>
+        {
+            entity.ToTable("maintainarr_platform_outbox_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.RelatedEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PayloadJson).IsRequired();
+            entity.Property(x => x.ProcessingStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ErrorMessage).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.IdempotencyKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ProcessingStatus, x.NextRetryAt });
+            entity.HasIndex(x => new { x.TenantId, x.EventKind, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<MaintenancePlatformEventProcessingRun>(entity =>
+        {
+            entity.ToTable("maintainarr_platform_event_processing_runs");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
         });
     }
 }

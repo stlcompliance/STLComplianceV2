@@ -14,6 +14,20 @@ public static class StlIntegrationTokenCatalog
     [
         Profile("handoff-staffarr", "staffarr-api", "Handoff__ServiceToken", "staffarr", ["staffarr"], "launch.redeem"),
         Profile(
+            "staffarr-nexarr-login-disable",
+            "staffarr-api",
+            "NexArr__ServiceToken",
+            "staffarr",
+            ["nexarr"],
+            "nexarr.users.login_disable"),
+        Profile(
+            "staffarr-nexarr-login-enable",
+            "staffarr-api",
+            "NexArr__ServiceToken",
+            "staffarr",
+            ["nexarr"],
+            "nexarr.users.login_enable"),
+        Profile(
             "staffarr-trainarr",
             "staffarr-api",
             "TrainArr__ServiceToken",
@@ -45,7 +59,13 @@ public static class StlIntegrationTokenCatalog
             "maintainarr",
             ["staffarr"],
             "staffarr.person.lookup"),
-        Profile("maintainarr-supplyarr", "maintainarr-api", "SupplyArr__ServiceToken", "maintainarr", ["supplyarr"], "supplyarr.demand_intake.write"),
+        Profile(
+            "maintainarr-supplyarr",
+            "maintainarr-api",
+            "SupplyArr__ServiceToken",
+            "maintainarr",
+            ["supplyarr"],
+            "supplyarr.demand_intake.write,supplyarr.readiness.read"),
         Profile(
             "staffarr-maintainarr",
             "staffarr-api",
@@ -268,6 +288,20 @@ public static class StlIntegrationTokenCatalog
             ["compliancecore"],
             "compliancecore.audit_packages.generate"),
         Profile(
+            "worker-compliancecore-waiver-expiration",
+            "shared-worker",
+            "ComplianceCoreWaiverExpiration__ServiceToken",
+            "shared-worker",
+            ["compliancecore"],
+            "compliancecore.waivers.expire_batch"),
+        Profile(
+            "worker-compliancecore-fact-source-sync",
+            "shared-worker",
+            "ComplianceCoreFactSourceSync__ServiceToken",
+            "shared-worker",
+            ["compliancecore"],
+            "compliancecore.fact_sources.sync"),
+        Profile(
             "worker-nexarr-companion-notifications",
             "shared-worker",
             "NexArrCompanionNotificationDispatch__ServiceToken",
@@ -324,6 +358,13 @@ public static class StlIntegrationTokenCatalog
             ["nexarr"],
             "nexarr.tenants.lifecycle.process"),
         Profile(
+            "worker-nexarr-platform-outbox",
+            "nexarr-worker",
+            "NexArrPlatformOutboxPublisher__ServiceToken",
+            "nexarr-worker",
+            ["nexarr"],
+            "nexarr.platform_outbox.publish"),
+        Profile(
             "worker-maintainarr-defect-escalation",
             "shared-worker",
             "MaintainArrDefectEscalation__ServiceToken",
@@ -345,6 +386,20 @@ public static class StlIntegrationTokenCatalog
             ["maintainarr"],
             "maintainarr.maintenance_history.rollup"),
         Profile(
+            "worker-maintainarr-downtime-sync",
+            "shared-worker",
+            "MaintainArrDowntimeSync__ServiceToken",
+            "shared-worker",
+            ["maintainarr"],
+            "maintainarr.downtime.sync"),
+        Profile(
+            "worker-maintainarr-platform-event-processing",
+            "shared-worker",
+            "MaintainArrPlatformEventProcessing__ServiceToken",
+            "shared-worker",
+            ["maintainarr"],
+            "maintainarr.platform_events.process"),
+        Profile(
             "worker-routarr-trip-completion-rollup",
             "shared-worker",
             "RoutArrTripCompletionRollup__ServiceToken",
@@ -358,6 +413,13 @@ public static class StlIntegrationTokenCatalog
             "shared-worker",
             ["routarr"],
             "routarr.attachments.retention.purge"),
+        Profile(
+            "worker-routarr-integration-events",
+            "shared-worker",
+            "RoutArrIntegrationEvents__ServiceToken",
+            "shared-worker",
+            ["routarr"],
+            "routarr.integration.events.process"),
         Profile(
             "worker-supplyarr-procurement-coordination",
             "shared-worker",

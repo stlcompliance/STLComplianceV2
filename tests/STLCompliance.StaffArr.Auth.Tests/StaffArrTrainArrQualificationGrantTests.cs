@@ -125,16 +125,13 @@ public class StaffArrTrainArrQualificationGrantTests : IAsyncLifetime
             "annual_compliance",
             "Annual Compliance Refresher");
 
-        var createRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
-        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+        var assignment = await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            adminToken,
             personId,
             definitionId,
-            null,
-            "manual",
-            DateTimeOffset.UtcNow.AddDays(30)));
-        var createResponse = await _trainarrClient.SendAsync(createRequest);
-        createResponse.EnsureSuccessStatusCode();
-        var assignment = (await createResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+            "annual_compliance",
+            DateTimeOffset.UtcNow.AddDays(30));
 
         var memberToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_member", personId: personId);
         await TrainArrCompletionTestHelper.SatisfyCompletionRequirementsAsync(
@@ -198,16 +195,13 @@ public class StaffArrTrainArrQualificationGrantTests : IAsyncLifetime
             "readiness.safety_orientation",
             "Safety Orientation");
 
-        var createRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
-        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+        var assignment = await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            adminToken,
             personId,
             definitionId,
-            null,
-            "manual",
-            null));
-        var createResponseMessage = await _trainarrClient.SendAsync(createRequest);
-        createResponseMessage.EnsureSuccessStatusCode();
-        var assignment = (await createResponseMessage.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+            "readiness.safety_orientation",
+            null);
 
         var memberToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_member", personId: personId);
         await TrainArrCompletionTestHelper.SatisfyCompletionRequirementsAsync(

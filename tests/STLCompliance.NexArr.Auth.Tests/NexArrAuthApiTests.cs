@@ -111,6 +111,61 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
         Assert.Contains(staffarr.Surfaces, s => s.SurfaceKey == "overview" && s.IsEnabled);
     }
 
+    [Fact]
+    public async Task Sessions_lists_active_session_after_login()
+    {
+        await SeedDatabaseAsync();
+        var tokens = await LoginAsync();
+
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/me/sessions");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var payload = await response.Content.ReadFromJsonAsync<UserSessionsResponse>();
+        Assert.NotNull(payload);
+        Assert.NotEmpty(payload.Sessions);
+        var current = Assert.Single(payload.Sessions, s => s.IsCurrent);
+        Assert.Equal(tokens.SessionId, current.SessionId);
+        Assert.True(current.IsActive);
+    }
+
+    [Fact]
+    public async Task Revoke_session_invalidates_refresh_token()
+    {
+        await SeedDatabaseAsync();
+        var tokens = await LoginAsync();
+
+        var revokeRequest = new HttpRequestMessage(HttpMethod.Delete, $"/api/me/sessions/{tokens.SessionId}");
+        revokeRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        var revokeResponse = await _client.SendAsync(revokeRequest);
+        Assert.Equal(HttpStatusCode.NoContent, revokeResponse.StatusCode);
+
+        var renewResponse = await _client.PostAsJsonAsync(
+            "/api/auth/renew",
+            new RenewSessionRequest(tokens.RefreshToken));
+        Assert.Equal(HttpStatusCode.Unauthorized, renewResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Revoke_other_users_session_returns_not_found()
+    {
+        await SeedDatabaseAsync();
+        var tokens = await LoginAsync();
+
+        var revokeRequest = new HttpRequestMessage(HttpMethod.Delete, $"/api/me/sessions/{Guid.NewGuid()}");
+        revokeRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        var revokeResponse = await _client.SendAsync(revokeRequest);
+        Assert.Equal(HttpStatusCode.NotFound, revokeResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sessions_requires_authentication()
+    {
+        var response = await _client.GetAsync("/api/me/sessions");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     private async Task<AuthTokenResponse> LoginAsync()
     {
         var response = await _client.PostAsJsonAsync(

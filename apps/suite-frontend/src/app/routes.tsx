@@ -4,7 +4,9 @@ import { RequirePlatformAdmin } from '../components/RequirePlatformAdmin'
 import { AppShellLayout } from '../layouts/AppShellLayout'
 import { PlatformAdminLayout } from '../layouts/PlatformAdminLayout'
 import { HomePage } from '../pages/HomePage'
+import { ForgotPasswordPage } from '../pages/ForgotPasswordPage'
 import { LoginPage } from '../pages/LoginPage'
+import { ResetPasswordPage } from '../pages/ResetPasswordPage'
 import { ProductShellLayout } from '../layouts/ProductShellLayout'
 import { ProductSurfacePage } from '../pages/ProductSurfacePage'
 import { LaunchDiagnosticsPage } from '../pages/platform-admin/LaunchDiagnosticsPage'
@@ -15,6 +17,7 @@ import { ServiceTokenCleanupPage } from '../pages/platform-admin/ServiceTokenCle
 import { EntitlementReconciliationPage } from '../pages/platform-admin/EntitlementReconciliationPage'
 import { TenantLifecyclePage } from '../pages/platform-admin/TenantLifecyclePage'
 import { PlatformLifecyclePage } from '../pages/platform-admin/PlatformLifecyclePage'
+import { PlatformOutboxPage } from '../pages/platform-admin/PlatformOutboxPage'
 import { PlatformWorkerHealthPage } from '../pages/platform-admin/PlatformWorkerHealthPage'
 import { TenantOverviewPage } from '../pages/platform-admin/TenantOverviewPage'
 import { HybridDataPlanePage } from '../pages/platform-admin/HybridDataPlanePage'
@@ -24,6 +27,8 @@ export function AppRoutes() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route element={<RequireAuth />}>
           <Route element={<AppShellLayout />}>
             <Route path="/" element={<Navigate to="/app" replace />} />
@@ -37,6 +42,7 @@ export function AppRoutes() {
                 <Route path="data-plane" element={<HybridDataPlanePage />} />
                 <Route path="audit-export" element={<PlatformAuditExportPage />} />
                 <Route path="lifecycle" element={<PlatformLifecyclePage />} />
+                <Route path="platform-outbox" element={<PlatformOutboxPage />} />
                 <Route path="orchestration" element={<PlatformWorkerHealthPage />} />
                 <Route path="service-tokens" element={<ServiceTokenCleanupPage />} />
                 <Route path="entitlements" element={<EntitlementReconciliationPage />} />

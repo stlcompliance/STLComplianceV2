@@ -140,16 +140,13 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
         var personId = Guid.NewGuid();
         await SeedStaffPersonAsync(personId, "Notify", "Assign", "notify.assign@example.com");
 
-        var createRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
-        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+        var assignment = await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            adminToken,
             personId,
             definitionId,
-            null,
-            "manual",
-            DateTimeOffset.UtcNow.AddDays(7)));
-        var createResponse = await _trainarrClient.SendAsync(createRequest);
-        createResponse.EnsureSuccessStatusCode();
-        var assignment = (await createResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+            "notification_test",
+            DateTimeOffset.UtcNow.AddDays(7));
 
         using (var scope = _trainarrFactory.Services.CreateScope())
         {
@@ -304,13 +301,21 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
         var personId = Guid.NewGuid();
         await SeedStaffPersonAsync(personId, "Retry", "Notify", "retry.notify@example.com");
 
+        var check = await TrainArrQualificationCheckTestHelper.RunQualificationCheckAsync(
+            retryClient,
+            adminToken,
+            personId,
+            "notification_test",
+            definitionId);
+
         var createRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
         createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
             personId,
             definitionId,
             null,
             "manual",
-            DateTimeOffset.UtcNow.AddDays(7)));
+            DateTimeOffset.UtcNow.AddDays(7),
+            check.CheckId));
         var createResponse = await retryClient.SendAsync(createRequest);
         createResponse.EnsureSuccessStatusCode();
         var assignment = (await createResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;

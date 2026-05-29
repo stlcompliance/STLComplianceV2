@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { MeResponse } from '../../api/types'
 import type { StoredAuthSession } from '../../auth/authStorage'
 import { summarizeSession } from '../../lib/dashboard'
@@ -50,6 +51,14 @@ export function SessionInfoWidget({
             <dd className="mt-0.5 text-xs font-medium text-teal-400">Platform administrator</dd>
           </div>
         )}
+        <div>
+          <Link
+            to="/app/nexarr/identity"
+            className="text-xs font-medium text-teal-400 hover:text-teal-300"
+          >
+            Identity & access
+          </Link>
+        </div>
       </dl>
     </DashboardCard>
   )

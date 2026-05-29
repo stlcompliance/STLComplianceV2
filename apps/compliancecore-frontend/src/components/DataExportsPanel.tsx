@@ -3,6 +3,7 @@ import {
   exportBulkEvaluationsCsv,
   exportBulkFindingsCsv,
   exportBulkRulePacksCsv,
+  exportBulkWorkflowGateChecksCsv,
   getEntityExportManifest,
 } from '../api/client'
 
@@ -54,6 +55,16 @@ export function DataExportsPanel({ accessToken, canExport }: DataExportsPanelPro
     },
   })
 
+  const workflowGateChecksExportMutation = useMutation({
+    mutationFn: () => exportBulkWorkflowGateChecksCsv(accessToken),
+    onSuccess: (blob) => {
+      triggerBlobDownload(
+        blob,
+        `compliancecore-workflow-gate-checks-${new Date().toISOString().slice(0, 10)}.csv`,
+      )
+    },
+  })
+
   if (!canExport) {
     return (
       <section
@@ -78,7 +89,7 @@ export function DataExportsPanel({ accessToken, canExport }: DataExportsPanelPro
       <header>
         <h2 className="text-lg font-semibold text-slate-50">Data exports</h2>
         <p className="mt-1 text-sm text-slate-400">
-          Bulk CSV exports for findings, rule evaluation runs, and rule packs.
+          Bulk CSV exports for findings, rule evaluation runs, workflow gate checks, and rule packs.
         </p>
       </header>
 
@@ -107,6 +118,8 @@ export function DataExportsPanel({ accessToken, canExport }: DataExportsPanelPro
                 disabled={
                   (entity.entityKey === 'findings' && findingsExportMutation.isPending) ||
                   (entity.entityKey === 'evaluations' && evaluationsExportMutation.isPending) ||
+                  (entity.entityKey === 'workflow_gate_checks' &&
+                    workflowGateChecksExportMutation.isPending) ||
                   (entity.entityKey === 'rule_packs' && rulePacksExportMutation.isPending)
                 }
                 onClick={() => {
@@ -114,6 +127,8 @@ export function DataExportsPanel({ accessToken, canExport }: DataExportsPanelPro
                     findingsExportMutation.mutate()
                   } else if (entity.entityKey === 'evaluations') {
                     evaluationsExportMutation.mutate()
+                  } else if (entity.entityKey === 'workflow_gate_checks') {
+                    workflowGateChecksExportMutation.mutate()
                   } else if (entity.entityKey === 'rule_packs') {
                     rulePacksExportMutation.mutate()
                   }

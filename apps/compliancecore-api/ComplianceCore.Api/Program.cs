@@ -27,6 +27,9 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
         app.MapComplianceCoreRegulatoryMappingEndpoints();
         app.MapComplianceCoreRuleEvaluationEndpoints();
         app.MapComplianceCoreFactSourceEndpoints();
+        app.MapComplianceCoreFactSourceSyncWorkerSettingsEndpoints();
+        app.MapComplianceCoreFactSourceSyncHealthEndpoints();
+        app.MapComplianceCoreInternalFactSourceSyncEndpoints();
         app.MapComplianceCoreInternalFactEndpoints();
         app.MapComplianceCoreProductFactIntegrationEndpoints();
         app.MapComplianceCoreSourceIngestionEndpoints();
@@ -41,10 +44,12 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
         app.MapComplianceCoreInternalM12AnalyticsBatchEndpoints();
         app.MapComplianceCoreInternalScheduledEvaluationEndpoints();
         app.MapComplianceCoreFindingEndpoints();
+        app.MapComplianceCoreWaiverEndpoints();
         app.MapComplianceCoreWorkflowGateEndpoints();
         app.MapComplianceCoreCsvImportExportEndpoints();
         app.MapComplianceCoreAuditPackageEndpoints();
         app.MapComplianceCoreInternalAuditPackageGenerationEndpoints();
+        app.MapComplianceCoreInternalWaiverEndpoints();
         app.MapComplianceCoreOperatorDashboardEndpoints();
         app.MapComplianceCoreFindingsReportEndpoints();
         app.MapComplianceCoreOperatorReportEndpoints();

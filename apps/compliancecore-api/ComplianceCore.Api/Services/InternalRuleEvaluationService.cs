@@ -12,6 +12,7 @@ public sealed class InternalRuleEvaluationService(
     FactResolveService factResolveService,
     RuleEvaluationService ruleEvaluationService,
     ComplianceFindingService findingService,
+    ComplianceWaiverService waiverService,
     IComplianceCoreAuditService auditService)
 {
     public const string EvaluateActionScope = "compliancecore.rules.evaluate";
@@ -98,11 +99,27 @@ public sealed class InternalRuleEvaluationService(
             unresolved,
             ruleResults);
 
+        var waiverApplied = await waiverService.ApplyWaiverIfEligibleAsync(
+            request.TenantId,
+            rulePack.Id,
+            rulePack.PackKey,
+            outcome,
+            reasonCode,
+            message,
+            ruleResults,
+            gateKey: null,
+            request.Context,
+            cancellationToken);
+        outcome = waiverApplied.Outcome;
+        reasonCode = waiverApplied.ReasonCode;
+        message = waiverApplied.Message;
+
         Guid? evaluationRunId = null;
         IReadOnlyList<ComplianceFindingResponse> findingsEmitted = [];
 
         if (request.EmitFindings &&
-            !string.Equals(outcome, ComplianceEvaluationOutcomes.Allow, StringComparison.OrdinalIgnoreCase))
+            !string.Equals(outcome, ComplianceEvaluationOutcomes.Allow, StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(outcome, ComplianceEvaluationOutcomes.Waived, StringComparison.OrdinalIgnoreCase))
         {
             var run = await ruleEvaluationService.PersistInternalEvaluationSnapshotAsync(
                 request.TenantId,
@@ -146,7 +163,9 @@ public sealed class InternalRuleEvaluationService(
             resolvedFacts,
             ruleResults,
             evaluationRunId,
-            findingsEmitted);
+            findingsEmitted,
+            waiverApplied.WaiverId,
+            waiverApplied.WaiverKey);
     }
 
     private static Dictionary<string, bool> BuildBooleanFactMap(IReadOnlyList<ResolvedFactValue> resolved)
@@ -255,6 +274,7 @@ public sealed class InternalRuleEvaluationService(
         var allowCount = 0;
         var warnCount = 0;
         var blockCount = 0;
+        var waivedCount = 0;
 
         foreach (var result in results)
         {
@@ -266,12 +286,20 @@ public sealed class InternalRuleEvaluationService(
                 case ComplianceEvaluationOutcomes.Warn:
                     warnCount++;
                     break;
+                case ComplianceEvaluationOutcomes.Waived:
+                    waivedCount++;
+                    break;
                 default:
                     blockCount++;
                     break;
             }
         }
 
-        return new InternalEvaluateRulePackBatchSummary(results.Count, allowCount, warnCount, blockCount);
+        return new InternalEvaluateRulePackBatchSummary(
+            results.Count,
+            allowCount,
+            warnCount,
+            blockCount,
+            waivedCount);
     }
 }

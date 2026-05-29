@@ -2151,10 +2151,24 @@ namespace SupplyArr.Api.Migrations
                     b.Property<DateTimeOffset?>("LastEscalatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("LastReopenReason")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
                     b.Property<Guid?>("LinkedPurchaseOrderId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("LinkedPurchaseRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ReopenCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("ReopenedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReopenedByUserId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("ResolutionNotes")
@@ -3432,6 +3446,11 @@ namespace SupplyArr.Api.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<string>("LastReopenReason")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
                     b.Property<Guid?>("PurchaseOrderId")
                         .HasColumnType("uuid");
 
@@ -3442,6 +3461,15 @@ namespace SupplyArr.Api.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("ReceivingReceiptId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ReopenCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("ReopenedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReopenedByUserId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ReportedByUserId")

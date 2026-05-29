@@ -57,6 +57,20 @@ vi.mock('../api/client', () => ({
       linkedPurchaseOrderKey: null,
     },
     {
+      exceptionId: 'ex-5',
+      exceptionKey: 'PEX-005',
+      status: 'cancelled',
+      exceptionCategory: 'policy_violation',
+      title: 'Cancelled exception',
+      slaDueAt: null,
+      isSlaBreached: false,
+      assignedToUserId: null,
+      linkedPurchaseRequestId: null,
+      linkedPurchaseOrderId: null,
+      linkedPurchaseRequestKey: null,
+      linkedPurchaseOrderKey: null,
+    },
+    {
       exceptionId: 'ex-4',
       exceptionKey: 'PEX-004',
       status: 'waived',
@@ -82,6 +96,7 @@ vi.mock('../api/client', () => ({
   rejectProcurementExceptionWaive: vi.fn(),
   closeProcurementException: vi.fn(),
   cancelProcurementException: vi.fn(),
+  reopenProcurementException: vi.fn(),
 }))
 
 describe('ProcurementExceptionsPanel', () => {
@@ -136,6 +151,8 @@ describe('ProcurementExceptionsPanel', () => {
     expect(await screen.findByTestId('procurement-exception-status-ex-1')).toHaveTextContent('open')
     expect(screen.getByTestId('procurement-exception-waive-justification')).toBeInTheDocument()
     expect(screen.getByTestId('procurement-exception-cancel-reason')).toBeInTheDocument()
+    expect(screen.getByTestId('procurement-exception-reopen-reason')).toBeInTheDocument()
+    expect(screen.getByTestId('procurement-exception-reopen-ex-5')).toBeInTheDocument()
     expect(screen.getByTestId('procurement-exception-request-waive-ex-2')).toBeInTheDocument()
     expect(screen.getByTestId('procurement-exception-cancel-ex-2')).toBeInTheDocument()
     expect(screen.getByTestId('procurement-exception-approve-waive-ex-3')).toBeInTheDocument()

@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import { z } from 'zod'
 import { useAuth } from '../auth/AuthProvider'
 import { getNexarrApiBaseUrl } from '../api/nexarrBaseUrl'
@@ -22,8 +22,9 @@ export function LoginPage() {
   const location = useLocation()
   const [error, setError] = useState<string | null>(null)
 
-  const from =
-    (location.state as { from?: string } | null)?.from?.toString() ?? '/app'
+  const locationState = location.state as { from?: string; passwordReset?: boolean } | null
+  const from = locationState?.from?.toString() ?? '/app'
+  const passwordResetDone = locationState?.passwordReset === true
 
   const {
     register,
@@ -69,6 +70,12 @@ export function LoginPage() {
           Uses NexArr <code className="text-xs text-slate-300">/api/auth/login</code> (demo tenant).
         </p>
 
+        {passwordResetDone && (
+          <p className="mt-4 text-sm text-emerald-300" role="status">
+            Password updated. Sign in with your new password.
+          </p>
+        )}
+
         <label className="mt-6 block text-sm font-medium text-slate-300" htmlFor="email">
           Email
         </label>
@@ -96,6 +103,12 @@ export function LoginPage() {
         {errors.password && (
           <p className="mt-1 text-xs text-red-300">{errors.password.message}</p>
         )}
+
+        <p className="mt-2 text-right text-sm">
+          <Link to="/forgot-password" className="text-stl-teal hover:underline">
+            Forgot password?
+          </Link>
+        </p>
 
         {error && (
           <p className="mt-4 text-sm text-red-300" role="alert">

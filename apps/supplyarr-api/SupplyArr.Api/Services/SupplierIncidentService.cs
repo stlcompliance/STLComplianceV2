@@ -280,6 +280,46 @@ public sealed class SupplierIncidentService(
         return Map(await LoadAsync(tenantId, entity.Id, cancellationToken));
     }
 
+    public async Task<SupplierIncidentResponse> ReopenAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid incidentId,
+        ReopenSupplierIncidentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadTrackedAsync(tenantId, incidentId, cancellationToken);
+        if (!string.Equals(entity.Status, SupplierIncidentStatuses.Cancelled, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "supplier_incidents.not_cancelled",
+                "Only cancelled supplier incidents can be reopened.",
+                409);
+        }
+
+        Transition(entity, SupplierIncidentStatuses.Investigating);
+
+        var now = DateTimeOffset.UtcNow;
+        entity.LastReopenReason = SupplierIncidentRules.NormalizeReopenReason(request.Reason);
+        entity.ReopenedByUserId = actorUserId;
+        entity.ReopenedAt = now;
+        entity.ReopenCount += 1;
+        entity.AssignedToUserId ??= actorUserId;
+        entity.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await WriteAuditAndOutboxAsync(
+            "supplier_incident.reopen",
+            IntegrationOutboxEventKinds.SupplierIncidentReopened,
+            tenantId,
+            actorUserId,
+            entity,
+            $"Supplier incident reopened: {entity.IncidentKey}",
+            cancellationToken);
+
+        return Map(await LoadAsync(tenantId, entity.Id, cancellationToken));
+    }
+
     public async Task<SupplierIncidentResponse> ApplyProcurementRestrictionAsync(
         Guid tenantId,
         Guid actorUserId,
@@ -483,6 +523,12 @@ public sealed class SupplierIncidentService(
             entity.ClosedByUserId,
             entity.ClosedAt,
             entity.CancellationReason,
+            entity.CancelledByUserId,
+            entity.CancelledAt,
+            entity.ReopenedByUserId,
+            entity.ReopenedAt,
+            entity.LastReopenReason,
+            entity.ReopenCount,
             entity.CreatedAt,
             entity.UpdatedAt);
 }

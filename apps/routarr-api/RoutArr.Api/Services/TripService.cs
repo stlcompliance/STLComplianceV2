@@ -11,6 +11,7 @@ public sealed class TripService(
     IRoutArrAuditService audit,
     DispatchAssignmentService dispatchAssignment,
     DispatchNotificationEnqueueService notificationEnqueueService,
+    IntegrationOutboxEnqueueService integrationOutboxEnqueueService,
     StaffarrPersonRefService staffarrPersonRefService)
 {
     public async Task<IReadOnlyList<TripSummaryResponse>> ListAsync(
@@ -175,6 +176,11 @@ public sealed class TripService(
                 trip.DispatchStatus,
                 cancellationToken);
         }
+
+        await integrationOutboxEnqueueService.TryEnqueueDriverAssignmentChangedAsync(
+            trip,
+            driverPersonId,
+            cancellationToken);
 
         return MapDetail(trip);
     }
@@ -363,6 +369,15 @@ public sealed class TripService(
                 trip,
                 normalized,
                 cancellationToken);
+
+            if (string.Equals(normalized, TripDispatchStatuses.Dispatched, StringComparison.OrdinalIgnoreCase))
+            {
+                await integrationOutboxEnqueueService.TryEnqueueTripDispatchedAsync(trip, cancellationToken);
+            }
+            else if (string.Equals(normalized, TripDispatchStatuses.Completed, StringComparison.OrdinalIgnoreCase))
+            {
+                await integrationOutboxEnqueueService.TryEnqueueTripCompletedAsync(trip, cancellationToken);
+            }
         }
 
         return MapDetail(trip);

@@ -302,6 +302,14 @@ export interface DefectSummaryResponse {
   evidenceCount: number
 }
 
+export interface DowntimeFollowUpResponse {
+  eventId: string
+  assetId: string
+  deepLinkPath: string
+  reason: string
+  trigger: string
+}
+
 export interface DefectDetailResponse {
   defectId: string
   assetId: string
@@ -321,6 +329,7 @@ export interface DefectDetailResponse {
   updatedAt: string
   resolvedAt: string | null
   evidenceCount: number
+  downtimeFollowUp?: DowntimeFollowUpResponse | null
 }
 
 export interface CreateDefectRequest {
@@ -421,6 +430,7 @@ export interface WorkOrderDetailResponse {
   startedAt: string | null
   completedAt: string | null
   cancelledAt: string | null
+  downtimeFollowUp?: DowntimeFollowUpResponse | null
 }
 
 export interface WorkOrderTaskLineResponse {
@@ -536,6 +546,42 @@ export interface WorkOrderPartsDemandStatusEventResponse {
   message: string
   occurredAt: string
   createdAt: string
+}
+
+export interface WorkOrderSupplyReadinessBlockerResponse {
+  reasonCode: string
+  message: string
+  sourceEntityType: string
+  sourceEntityId: string
+  relatedEntityId: string | null
+}
+
+export interface WorkOrderLineSupplyReadinessResponse {
+  demandLineId: string
+  lineNumber: number
+  supplyarrPartId: string | null
+  partNumber: string
+  quantityRequested: number
+  lineStatus: string
+  readinessStatus: string | null
+  readinessBasis: string | null
+  skipReason: string | null
+  quantityAvailable: number | null
+  calculatedAt: string | null
+  blockers: WorkOrderSupplyReadinessBlockerResponse[]
+}
+
+export interface WorkOrderSupplyReadinessResponse {
+  workOrderId: string
+  workOrderNumber: string
+  generatedAt: string
+  overallReadinessStatus: string
+  totalDemandLines: number
+  linesChecked: number
+  linesReady: number
+  linesBlocked: number
+  linesSkipped: number
+  lines: WorkOrderLineSupplyReadinessResponse[]
 }
 
 export interface CreateWorkOrderRequest {
@@ -1301,10 +1347,31 @@ export interface ExecutiveReportOperationalTotals {
   activeTechnicianAssignments: number
 }
 
+export interface ExecutiveReportDowntimePeriodMetrics {
+  periodStart: string
+  periodEnd: string
+  downtimeHours: number
+  availabilityPercent: number
+  plannedDowntimeHours: number
+  unplannedDowntimeHours: number
+  activeDowntimeEventCount: number
+  fromMaterializedSnapshot: boolean
+}
+
+export interface ExecutiveReportDowntimeTrend {
+  periodDays: number
+  currentPeriod: ExecutiveReportDowntimePeriodMetrics
+  previousPeriod: ExecutiveReportDowntimePeriodMetrics
+  downtimeHoursDelta: number
+  availabilityPercentDelta: number
+  fleetSnapshotComputedAt: string | null
+}
+
 export interface ExecutiveReportSummaryResponse {
   generatedAt: string
   fleetReadiness: ExecutiveReportFleetReadiness
   operationalTotals: ExecutiveReportOperationalTotals
+  downtimeTrend: ExecutiveReportDowntimeTrend
   supplyDemand: ExecutiveReportSupplyDemandSummary
   scopeReadiness: ExecutiveReportScopeReadinessItem[]
   workOrderStatusCounts: ExecutiveReportCountItem[]
@@ -1444,4 +1511,154 @@ export interface EntityExportManifestResponse {
   entities: EntityExportDescriptor[]
   reportExports: ReportExportDescriptor[]
   auditPackageFormats: EntityExportFormatDescriptor[]
+}
+
+export interface DowntimeTrackingSettingsResponse {
+  isEnabled: boolean
+  autoTrackOutOfService: boolean
+  autoTrackNotReady: boolean
+  availabilityPeriodDays: number
+  updatedAt: string | null
+}
+
+export interface UpsertDowntimeTrackingSettingsRequest {
+  isEnabled: boolean
+  autoTrackOutOfService: boolean
+  autoTrackNotReady: boolean
+  availabilityPeriodDays: number
+}
+
+export interface AssetDowntimeEventResponse {
+  eventId: string
+  assetId: string
+  assetTag: string
+  assetName: string
+  source: string
+  reason: string
+  isPlanned: boolean
+  startedAt: string
+  endedAt: string | null
+  statusTrigger: string | null
+  workOrderId: string | null
+  defectId: string | null
+  notes: string | null
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateManualDowntimeEventRequest {
+  assetId: string
+  reason: string
+  isPlanned: boolean
+  startedAt: string
+  notes?: string
+  workOrderId?: string
+  defectId?: string
+}
+
+export interface CloseDowntimeEventRequest {
+  endedAt?: string
+  notes?: string
+}
+
+export interface AssetAvailabilityResponse {
+  assetId: string
+  assetTag: string
+  assetName: string
+  periodStart: string
+  periodEnd: string
+  totalHours: number
+  downtimeHours: number
+  availabilityPercent: number
+  plannedDowntimeHours: number
+  unplannedDowntimeHours: number
+  hasActiveDowntime: boolean
+  computedAt: string
+  isMaterialized: boolean
+}
+
+export interface FleetAvailabilityResponse {
+  periodStart: string
+  periodEnd: string
+  assetCount: number
+  totalHours: number
+  downtimeHours: number
+  availabilityPercent: number
+  plannedDowntimeHours: number
+  unplannedDowntimeHours: number
+  activeDowntimeEventCount: number
+  computedAt: string
+  isMaterialized: boolean
+}
+
+export interface PendingAssetDowntimeSyncItem {
+  assetId: string
+  assetTag: string
+  assetName: string
+  lifecycleStatus: string
+  readinessStatus: string
+  hasOpenAutomaticEvent: boolean
+}
+
+export interface PendingAssetDowntimeSyncResponse {
+  asOfUtc: string
+  batchSize: number
+  items: PendingAssetDowntimeSyncItem[]
+}
+
+export interface AssetDowntimeSyncRunItem {
+  runId: string
+  asOfUtc: string
+  assetsScanned: number
+  eventsOpened: number
+  eventsClosed: number
+  snapshotsRefreshed: number
+  createdAt: string
+}
+
+export interface AssetDowntimeSyncRunsResponse {
+  items: AssetDowntimeSyncRunItem[]
+}
+
+export interface MaintenancePlatformEventSettingsResponse {
+  isEnabled: boolean
+  maxAttempts: number
+  retryIntervalMinutes: number
+  updatedAt: string | null
+}
+
+export interface UpsertMaintenancePlatformEventSettingsRequest {
+  isEnabled: boolean
+  maxAttempts?: number
+  retryIntervalMinutes?: number
+}
+
+export interface MaintenancePlatformOutboxEventItem {
+  id: string
+  eventKind: string
+  processingStatus: string
+  relatedEntityId: string
+  attemptCount: number
+  errorMessage: string | null
+  createdAt: string
+  processedAt: string | null
+}
+
+export interface MaintenancePlatformOutboxEventsResponse {
+  items: MaintenancePlatformOutboxEventItem[]
+}
+
+export interface MaintenancePlatformEventProcessingRunItem {
+  id: string
+  pendingFound: number
+  processedCount: number
+  retriedCount: number
+  abandonedCount: number
+  skippedCount: number
+  createdAt: string
+}
+
+export interface MaintenancePlatformEventProcessingRunsResponse {
+  items: MaintenancePlatformEventProcessingRunItem[]
 }

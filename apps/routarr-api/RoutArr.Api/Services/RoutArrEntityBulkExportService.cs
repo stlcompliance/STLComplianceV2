@@ -69,6 +69,11 @@ public sealed class RoutArrEntityBulkExportService(
                     "/api/reports/proof-dvir/summary/export",
                     "Proof & DVIR report CSV",
                     "Scoped pickup/delivery proof and pre/post-trip DVIR rows (Worker 218)."),
+                new(
+                    "dispatch_override_report",
+                    "/api/reports/dispatch-overrides/summary/export",
+                    "Dispatch override report CSV",
+                    "Scoped driver/vehicle assignment overrides with gate and eligibility bypass reasons."),
             ],
             AuditPackageFormats: []);
 

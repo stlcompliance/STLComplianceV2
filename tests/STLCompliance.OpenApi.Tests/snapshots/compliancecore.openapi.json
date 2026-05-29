@@ -21,6 +21,45 @@
         }
       }
     },
+    "/api/audit-delivery-orchestration": {
+      "get": {
+        "tags": [
+          "AuditDeliveryOrchestration"
+        ],
+        "operationId": "GetComplianceCoreAuditDeliveryOrchestrationStatus",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-delivery-orchestration/trigger-m12-batch": {
+      "post": {
+        "tags": [
+          "AuditDeliveryOrchestration"
+        ],
+        "operationId": "TriggerComplianceCoreM12AnalyticsBatch",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/audit-delivery-orchestration/trigger-scheduled-evaluation": {
+      "post": {
+        "tags": [
+          "AuditDeliveryOrchestration"
+        ],
+        "operationId": "TriggerComplianceCoreScheduledRuleEvaluation",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/audit-packages/export": {
       "get": {
         "tags": [
@@ -252,6 +291,98 @@
         }
       }
     },
+    "/api/control-effectiveness": {
+      "get": {
+        "tags": [
+          "ControlEffectiveness"
+        ],
+        "operationId": "ListControlEffectivenessRecords",
+        "parameters": [
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "effectivenessLevel",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "runId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/control-effectiveness/evaluate": {
+      "post": {
+        "tags": [
+          "ControlEffectiveness"
+        ],
+        "operationId": "EvaluateControlEffectiveness",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateControlEffectivenessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/control-effectiveness/summary": {
+      "get": {
+        "tags": [
+          "ControlEffectiveness"
+        ],
+        "operationId": "GetControlEffectivenessSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/csv-bundle/export": {
       "get": {
         "tags": [
@@ -330,6 +461,83 @@
           "Dashboards"
         ],
         "operationId": "GetComplianceCoreOperatorDashboard",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/evaluations": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "ExportComplianceCoreEvaluationsCsv",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/findings": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "ExportComplianceCoreFindingsCsv",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "openOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/manifest": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "GetComplianceCoreEntityExportManifest",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/rule-packs": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "ExportComplianceCoreRulePacksCsv",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -594,6 +802,174 @@
         }
       }
     },
+    "/api/hazcom": {
+      "get": {
+        "tags": [
+          "HazComReferences"
+        ],
+        "operationId": "ListHazComReferences",
+        "parameters": [
+          {
+            "name": "includeInactive",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "HazComReferences"
+        ],
+        "operationId": "CreateHazComReference",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHazComReferenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/hazcom/{hazComReferenceId}": {
+      "get": {
+        "tags": [
+          "HazComReferences"
+        ],
+        "operationId": "GetHazComReference",
+        "parameters": [
+          {
+            "name": "hazComReferenceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "HazComReferences"
+        ],
+        "operationId": "UpdateHazComReference",
+        "parameters": [
+          {
+            "name": "hazComReferenceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHazComReferenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/product-facts/ingest": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestProductFacts",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestProductFactsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/source-ingestion/product-facts/commit": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CommitProductFactSourceIngestion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductFactBulkIngestionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/source-ingestion/product-facts/validate": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ValidateProductFactSourceIngestion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductFactBulkIngestionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/audit-package-jobs/pending": {
       "get": {
         "tags": [
@@ -729,6 +1105,84 @@
         }
       }
     },
+    "/api/internal/m12-analytics-batches/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingM12AnalyticsBatches",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "intervalHours",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/m12-analytics-batches/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessM12AnalyticsBatches",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessM12AnalyticsBatchesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/resolve": {
       "post": {
         "tags": [
@@ -740,6 +1194,72 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/InternalResolveFactsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/rule-changes/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingRuleChangeScans",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/rule-changes/process-scan": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessRuleChangeScan",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessRuleChangeScanRequest"
               }
             }
           },
@@ -876,6 +1396,29 @@
         }
       }
     },
+    "/api/internal/waivers/expire-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessExpiredComplianceWaivers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessExpiredWaiversRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/workflow-gate-check": {
       "post": {
         "tags": [
@@ -966,12 +1509,82 @@
         }
       }
     },
+    "/api/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContext",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoff",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/load-test-journey/seed": {
       "post": {
         "tags": [
           "LoadTestJourney"
         ],
         "operationId": "SeedLoadTestJourney",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/m12-analytics-worker-settings": {
+      "get": {
+        "tags": [
+          "M12AnalyticsWorkerSettings"
+        ],
+        "operationId": "GetComplianceCoreM12AnalyticsWorkerSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "M12AnalyticsWorkerSettings"
+        ],
+        "operationId": "UpsertComplianceCoreM12AnalyticsWorkerSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertM12AnalyticsWorkerSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1019,6 +1632,190 @@
           "Me"
         ],
         "operationId": "ComplianceCoreGetMe",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/missing-evidence-warnings": {
+      "get": {
+        "tags": [
+          "MissingEvidenceWarnings"
+        ],
+        "operationId": "ListMissingEvidenceWarnings",
+        "parameters": [
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "runId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/missing-evidence-warnings/evaluate": {
+      "post": {
+        "tags": [
+          "MissingEvidenceWarnings"
+        ],
+        "operationId": "EvaluateMissingEvidenceWarnings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateMissingEvidenceWarningsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/missing-evidence-warnings/summary": {
+      "get": {
+        "tags": [
+          "MissingEvidenceWarnings"
+        ],
+        "operationId": "GetMissingEvidenceWarningSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/readiness-forecasts": {
+      "get": {
+        "tags": [
+          "ReadinessForecasts"
+        ],
+        "operationId": "ListReadinessForecasts",
+        "parameters": [
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "readinessLevel",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "runId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/readiness-forecasts/evaluate": {
+      "post": {
+        "tags": [
+          "ReadinessForecasts"
+        ],
+        "operationId": "EvaluateReadinessForecast",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateReadinessForecastRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/readiness-forecasts/summary": {
+      "get": {
+        "tags": [
+          "ReadinessForecasts"
+        ],
+        "operationId": "GetReadinessForecastSummary",
         "responses": {
           "200": {
             "description": "OK"
@@ -1139,6 +1936,293 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/findings/summary": {
+      "get": {
+        "tags": [
+          "FindingsReports"
+        ],
+        "operationId": "GetComplianceCoreFindingsReportSummary",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "openOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/findings/summary/export": {
+      "get": {
+        "tags": [
+          "FindingsReports"
+        ],
+        "operationId": "ExportComplianceCoreFindingsReportSummary",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "openOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/operator/summary": {
+      "get": {
+        "tags": [
+          "OperatorReports"
+        ],
+        "operationId": "GetComplianceCoreOperatorReportSummary",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/operator/summary/export": {
+      "get": {
+        "tags": [
+          "OperatorReports"
+        ],
+        "operationId": "ExportComplianceCoreOperatorReportSummary",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/risk-scores": {
+      "get": {
+        "tags": [
+          "RiskScores"
+        ],
+        "operationId": "ListRiskScores",
+        "parameters": [
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rulePackKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "runId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/risk-scores/evaluate": {
+      "post": {
+        "tags": [
+          "RiskScores"
+        ],
+        "operationId": "EvaluateRiskScores",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRiskScoresRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/risk-scores/summary": {
+      "get": {
+        "tags": [
+          "RiskScores"
+        ],
+        "operationId": "GetRiskScoreSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-changes/events": {
+      "get": {
+        "tags": [
+          "RuleChanges"
+        ],
+        "operationId": "ListRuleChangeEvents",
+        "parameters": [
+          {
+            "name": "packKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "changeType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-changes/events/{eventId}": {
+      "get": {
+        "tags": [
+          "RuleChanges"
+        ],
+        "operationId": "GetRuleChangeEvent",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-changes/summary": {
+      "get": {
+        "tags": [
+          "RuleChanges"
+        ],
+        "operationId": "GetRuleChangeMonitoringSummary",
         "responses": {
           "200": {
             "description": "OK"
@@ -1384,12 +2468,297 @@
         }
       }
     },
+    "/api/rule-versions": {
+      "get": {
+        "tags": [
+          "RuleVersions"
+        ],
+        "operationId": "ListRuleVersions",
+        "parameters": [
+          {
+            "name": "packKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-versions/{rulePackId}/publish": {
+      "post": {
+        "tags": [
+          "RuleVersions"
+        ],
+        "operationId": "PublishRuleVersion",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-versions/{rulePackId}/rollback": {
+      "post": {
+        "tags": [
+          "RuleVersions"
+        ],
+        "operationId": "RollbackRuleVersion",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/sds": {
+      "get": {
+        "tags": [
+          "SdsReferences"
+        ],
+        "operationId": "ListSdsReferences",
+        "parameters": [
+          {
+            "name": "includeInactive",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "SdsReferences"
+        ],
+        "operationId": "CreateSdsReference",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSdsReferenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/sds/{sdsReferenceId}": {
+      "get": {
+        "tags": [
+          "SdsReferences"
+        ],
+        "operationId": "GetSdsReference",
+        "parameters": [
+          {
+            "name": "sdsReferenceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "SdsReferences"
+        ],
+        "operationId": "UpdateSdsReference",
+        "parameters": [
+          {
+            "name": "sdsReferenceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSdsReferenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/session": {
       "get": {
         "tags": [
           "Session"
         ],
         "operationId": "ComplianceCoreGetSessionBootstrap",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/source-ingestion/batches": {
+      "get": {
+        "tags": [
+          "SourceIngestion"
+        ],
+        "operationId": "ListSourceIngestionBatches",
+        "parameters": [
+          {
+            "name": "ingestionType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/source-ingestion/batches/{batchId}": {
+      "get": {
+        "tags": [
+          "SourceIngestion"
+        ],
+        "operationId": "GetSourceIngestionBatch",
+        "parameters": [
+          {
+            "name": "batchId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/source-ingestion/fact-sources/commit": {
+      "post": {
+        "tags": [
+          "SourceIngestion"
+        ],
+        "operationId": "CommitFactSourceIngestion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/FactSourceBulkIngestionRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/source-ingestion/fact-sources/validate": {
+      "post": {
+        "tags": [
+          "SourceIngestion"
+        ],
+        "operationId": "ValidateFactSourceIngestion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/FactSourceBulkIngestionRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1469,6 +2838,203 @@
           "Vocabulary"
         ],
         "operationId": "ListVocabularyTypes",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/waivers": {
+      "get": {
+        "tags": [
+          "Waivers"
+        ],
+        "operationId": "ListComplianceWaivers",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "packKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Waivers"
+        ],
+        "operationId": "CreateComplianceWaiver",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateComplianceWaiverRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/waivers/{waiverId}": {
+      "get": {
+        "tags": [
+          "Waivers"
+        ],
+        "operationId": "GetComplianceWaiver",
+        "parameters": [
+          {
+            "name": "waiverId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/waivers/{waiverId}/approve": {
+      "post": {
+        "tags": [
+          "Waivers"
+        ],
+        "operationId": "ApproveComplianceWaiver",
+        "parameters": [
+          {
+            "name": "waiverId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/waivers/{waiverId}/reject": {
+      "post": {
+        "tags": [
+          "Waivers"
+        ],
+        "operationId": "RejectComplianceWaiver",
+        "parameters": [
+          {
+            "name": "waiverId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RejectComplianceWaiverRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/waivers/{waiverId}/revoke": {
+      "post": {
+        "tags": [
+          "Waivers"
+        ],
+        "operationId": "RevokeComplianceWaiver",
+        "parameters": [
+          {
+            "name": "waiverId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RevokeComplianceWaiverRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1702,6 +3268,59 @@
           }
         }
       },
+      "CreateComplianceWaiverRequest": {
+        "required": [
+          "waiverKey",
+          "rulePackId",
+          "subjectScopeKey",
+          "reasonCode",
+          "explanation",
+          "effectiveAt",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "waiverKey": {
+            "type": "string"
+          },
+          "rulePackId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectScopeKey": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "effectiveAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "ruleKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "gateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateFactDefinitionRequest": {
         "required": [
           "factKey",
@@ -1840,6 +3459,44 @@
           },
           "description": {
             "type": "string"
+          }
+        }
+      },
+      "CreateHazComReferenceRequest": {
+        "required": [
+          "hazComKey",
+          "title",
+          "description",
+          "linkedSdsKey",
+          "locationRef",
+          "documentUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "hazComKey": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "linkedSdsKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "locationRef": {
+            "type": "string"
+          },
+          "documentUrl": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
           }
         }
       },
@@ -2050,6 +3707,49 @@
           }
         }
       },
+      "CreateSdsReferenceRequest": {
+        "required": [
+          "sdsKey",
+          "materialKeyId",
+          "productName",
+          "manufacturer",
+          "documentUrl",
+          "revisionDate"
+        ],
+        "type": "object",
+        "properties": {
+          "sdsKey": {
+            "type": "string"
+          },
+          "materialKeyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "manufacturer": {
+            "type": "string"
+          },
+          "documentUrl": {
+            "type": "string"
+          },
+          "revisionDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
       "CreateVocabularyAliasRequest": {
         "required": [
           "vocabularyTermId",
@@ -2110,6 +3810,130 @@
           "rulePackId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "EvaluateControlEffectivenessRequest": {
+        "required": [
+          "scopeKey",
+          "rulePackKey",
+          "context"
+        ],
+        "type": "object",
+        "properties": {
+          "scopeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rulePackKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "context": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "EvaluateMissingEvidenceWarningsRequest": {
+        "required": [
+          "scopeKey",
+          "rulePackKey",
+          "context"
+        ],
+        "type": "object",
+        "properties": {
+          "scopeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rulePackKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "context": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "EvaluateReadinessForecastRequest": {
+        "required": [
+          "scopeKey",
+          "rulePackKey",
+          "context"
+        ],
+        "type": "object",
+        "properties": {
+          "scopeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rulePackKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "context": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "EvaluateRiskScoresRequest": {
+        "required": [
+          "scopeKey",
+          "rulePackKey",
+          "context"
+        ],
+        "type": "object",
+        "properties": {
+          "scopeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rulePackKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "context": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         }
       },
@@ -2175,6 +3999,108 @@
           "emitFindings": {
             "type": "boolean",
             "default": false
+          }
+        }
+      },
+      "FactSourceBulkIngestionRequest": {
+        "required": [
+          "sources"
+        ],
+        "type": "object",
+        "properties": {
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FactSourceIngestionRowRequest"
+            }
+          }
+        }
+      },
+      "FactSourceIngestionRowRequest": {
+        "required": [
+          "factDefinitionId",
+          "sourceKey",
+          "sourceType",
+          "label",
+          "description",
+          "productKey",
+          "productReference",
+          "configJson",
+          "priority"
+        ],
+        "type": "object",
+        "properties": {
+          "factDefinitionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceKey": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "productKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "productReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "configJson": {
+            "type": "string"
+          },
+          "priority": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "IngestProductFactsRequest": {
+        "required": [
+          "tenantId",
+          "publicationId",
+          "sourceProduct",
+          "publishedAt",
+          "facts"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "publicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "facts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductFactPublicationItemRequest"
+            }
           }
         }
       },
@@ -2462,6 +4388,110 @@
           }
         }
       },
+      "ProcessExpiredWaiversRequest": {
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessM12AnalyticsBatchesRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "intervalHours",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "intervalHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessRuleChangeScanRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ProcessScheduledRuleEvaluationsRequest": {
         "type": "object",
         "properties": {
@@ -2503,6 +4533,109 @@
           }
         }
       },
+      "ProductFactBulkIngestionRequest": {
+        "required": [
+          "tenantId",
+          "publicationId",
+          "sourceProduct",
+          "publishedAt",
+          "facts"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "publicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "facts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductFactPublicationItemRequest"
+            }
+          }
+        }
+      },
+      "ProductFactPublicationItemRequest": {
+        "required": [
+          "factKey",
+          "valueType",
+          "scopeKey",
+          "stringValue",
+          "booleanValue",
+          "numberValue",
+          "dateValue",
+          "sourceEntityType",
+          "sourceEntityId",
+          "sourceEventKind",
+          "idempotencyKey"
+        ],
+        "type": "object",
+        "properties": {
+          "factKey": {
+            "type": "string"
+          },
+          "valueType": {
+            "type": "string"
+          },
+          "scopeKey": {
+            "type": "string"
+          },
+          "stringValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "booleanValue": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "numberValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "dateValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntityType": {
+            "type": "string"
+          },
+          "sourceEntityId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "sourceEventKind": {
+            "type": "string"
+          },
+          "idempotencyKey": {
+            "type": "string"
+          }
+        }
+      },
       "RedeemHandoffRequest": {
         "required": [
           "handoffCode"
@@ -2511,6 +4644,28 @@
         "properties": {
           "handoffCode": {
             "type": "string"
+          }
+        }
+      },
+      "RejectComplianceWaiverRequest": {
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RevokeComplianceWaiverRequest": {
+        "type": "object",
+        "properties": {
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2538,6 +4693,10 @@
           },
           "expectedValue": {
             "type": "boolean"
+          },
+          "nonWaivable": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -2579,6 +4738,55 @@
           }
         }
       },
+      "UpdateHazComReferenceRequest": {
+        "required": [
+          "title",
+          "description",
+          "linkedSdsKey",
+          "locationRef",
+          "documentUrl",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "linkedSdsKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "locationRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isActive": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
       "UpdateRulePackContentRequest": {
         "required": [
           "content"
@@ -2598,6 +4806,120 @@
         "properties": {
           "status": {
             "type": "string"
+          }
+        }
+      },
+      "UpdateSdsReferenceRequest": {
+        "required": [
+          "materialKeyId",
+          "productName",
+          "manufacturer",
+          "documentUrl",
+          "revisionDate",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "materialKeyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "productName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "manufacturer": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "revisionDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "isActive": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "UpsertM12AnalyticsWorkerSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "defaultScopeKey",
+          "intervalHours",
+          "riskScoringEnabled",
+          "missingEvidenceEnabled",
+          "controlEffectivenessEnabled",
+          "readinessForecastEnabled",
+          "auditDeliveryEnabled"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "defaultScopeKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "intervalHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "riskScoringEnabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "missingEvidenceEnabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "controlEffectivenessEnabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "readinessForecastEnabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "auditDeliveryEnabled": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -2723,6 +5045,9 @@
       "name": "Me"
     },
     {
+      "name": "Launch"
+    },
+    {
       "name": "Vocabulary"
     },
     {
@@ -2730,6 +5055,15 @@
     },
     {
       "name": "MaterialKeys"
+    },
+    {
+      "name": "SdsReferences"
+    },
+    {
+      "name": "HazComReferences"
+    },
+    {
+      "name": "RuleVersions"
     },
     {
       "name": "RegulatoryRegistries"
@@ -2756,7 +5090,37 @@
       "name": "Internal"
     },
     {
+      "name": "Integrations"
+    },
+    {
+      "name": "SourceIngestion"
+    },
+    {
+      "name": "RuleChanges"
+    },
+    {
+      "name": "RiskScores"
+    },
+    {
+      "name": "MissingEvidenceWarnings"
+    },
+    {
+      "name": "ControlEffectiveness"
+    },
+    {
+      "name": "ReadinessForecasts"
+    },
+    {
+      "name": "M12AnalyticsWorkerSettings"
+    },
+    {
+      "name": "AuditDeliveryOrchestration"
+    },
+    {
       "name": "Findings"
+    },
+    {
+      "name": "Waivers"
     },
     {
       "name": "WorkflowGates"
@@ -2769,6 +5133,15 @@
     },
     {
       "name": "Dashboards"
+    },
+    {
+      "name": "FindingsReports"
+    },
+    {
+      "name": "OperatorReports"
+    },
+    {
+      "name": "EntityExports"
     }
   ]
 }

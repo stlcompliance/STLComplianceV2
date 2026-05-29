@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { normalizeUom, slugifyKey } from '@stl/shared-ui'
 import { useEffect, useState } from 'react'
-import { Navigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   activateInspectionTemplate,
   completeInspectionRun,
@@ -16,6 +16,7 @@ import {
   getWorkOrderLabor,
   getWorkOrderPartsDemand,
   getWorkOrderPartsDemandStatusEvents,
+  getWorkOrderSupplyReadiness,
   getWorkOrderTasks,
   getWorkOrders,
   logWorkOrderLabor,
@@ -95,6 +96,7 @@ async function fileToBase64(file: File): Promise<string> {
 export function useMaintainArrWorkspaceState() {
 
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const handoff = searchParams.get('handoff')
   const handoffRedirect = handoff
     ? <Navigate to={`/launch?handoff=${encodeURIComponent(handoff)}`} replace />
@@ -384,6 +386,12 @@ export function useMaintainArrWorkspaceState() {
     enabled: meQuery.isSuccess && Boolean(selectedWorkOrderId),
   })
 
+  const workOrderSupplyReadinessQuery = useQuery({
+    queryKey: ['maintainarr-work-order-supply-readiness', selectedWorkOrderId],
+    queryFn: () => getWorkOrderSupplyReadiness(accessToken, selectedWorkOrderId),
+    enabled: meQuery.isSuccess && Boolean(selectedWorkOrderId),
+  })
+
   const assetMetersQuery = useQuery({
     queryKey: ['maintainarr-asset-meters', meterAssetId],
     queryFn: () => getAssetMeters(accessToken, meterAssetId),
@@ -518,6 +526,9 @@ export function useMaintainArrWorkspaceState() {
       await queryClient.invalidateQueries({ queryKey: ['maintainarr-work-order-parts-demand', workOrderId] })
       await queryClient.invalidateQueries({
         queryKey: ['maintainarr-work-order-parts-demand-status-events', workOrderId],
+      })
+      await queryClient.invalidateQueries({
+        queryKey: ['maintainarr-work-order-supply-readiness', workOrderId],
       })
     }
   }
@@ -788,11 +799,14 @@ export function useMaintainArrWorkspaceState() {
         description: defectDescription,
         severity: defectSeverity,
       }),
-    onSuccess: async () => {
+    onSuccess: async (created) => {
       setDefectTitle('')
       setDefectDescription('')
       setApiError(null)
       await invalidateDefects()
+      if (created.downtimeFollowUp?.deepLinkPath) {
+        navigate(created.downtimeFollowUp.deepLinkPath)
+      }
     },
     onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to create defect'),
   })
@@ -847,9 +861,12 @@ export function useMaintainArrWorkspaceState() {
   const updateWorkOrderStatusMutation = useMutation({
     mutationFn: ({ workOrderId, status }: { workOrderId: string; status: string }) =>
       updateWorkOrderStatus(accessToken, workOrderId, { status }),
-    onSuccess: async (_, variables) => {
+    onSuccess: async (updated, variables) => {
       setApiError(null)
       await invalidateWorkOrders(variables.workOrderId)
+      if (updated.downtimeFollowUp?.deepLinkPath) {
+        navigate(updated.downtimeFollowUp.deepLinkPath)
+      }
     },
     onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to update work order status'),
   })
@@ -1331,6 +1348,7 @@ export function useMaintainArrWorkspaceState() {
     workOrderEvidenceQuery,
     workOrderPartsDemandQuery,
     workOrderPartsDemandStatusEventsQuery,
+    workOrderSupplyReadinessQuery,
     assetMetersQuery,
     meterReadingsQuery,
     meterForecastQuery,

@@ -33,6 +33,10 @@ public sealed record ProcurementExceptionResponse(
     DateTimeOffset? ClosedAt,
     DateTimeOffset? CancelledAt,
     string CancellationReason,
+    Guid? ReopenedByUserId,
+    DateTimeOffset? ReopenedAt,
+    string LastReopenReason,
+    int ReopenCount,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
@@ -62,3 +66,5 @@ public sealed record RejectProcurementExceptionWaiveRequest(string Reason);
 public sealed record CloseProcurementExceptionRequest(string? ResolutionNotes);
 
 public sealed record CancelProcurementExceptionRequest(string Reason);
+
+public sealed record ReopenProcurementExceptionRequest(string Reason);

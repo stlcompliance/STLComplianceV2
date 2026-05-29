@@ -3,10 +3,12 @@ import { useMemo, useState } from 'react'
 
 import {
   applySupplierIncidentProcurementRestriction,
+  cancelSupplierIncident,
   closeSupplierIncident,
   createSupplierIncident,
   listPartySupplierIncidents,
   listSupplierIncidents,
+  reopenSupplierIncident,
   resolveSupplierIncident,
   startSupplierIncidentInvestigation,
 } from '../api/client'
@@ -31,6 +33,8 @@ function statusClass(status: string): string {
       return 'bg-emerald-500/20 text-emerald-200'
     case 'closed':
       return 'bg-slate-500/20 text-slate-300'
+    case 'cancelled':
+      return 'bg-rose-500/20 text-rose-200'
     default:
       return 'bg-rose-500/20 text-rose-200'
   }
@@ -49,6 +53,8 @@ export function SupplierIncidentsPanel({
   const [incidentType, setIncidentType] = useState<(typeof INCIDENT_TYPES)[number]>('quality')
   const [severity, setSeverity] = useState<(typeof SEVERITIES)[number]>('medium')
   const [resolutionNotes] = useState('')
+  const [cancelReason, setCancelReason] = useState('')
+  const [reopenReason, setReopenReason] = useState('')
 
   const openQuery = useQuery({
     queryKey: ['supplyarr-supplier-incidents-open', accessToken],
@@ -94,7 +100,7 @@ export function SupplierIncidentsPanel({
 
   const workflowMutation = useMutation({
     mutationFn: async (action: {
-      type: 'investigate' | 'resolve' | 'close' | 'restrict'
+      type: 'investigate' | 'resolve' | 'close' | 'cancel' | 'reopen' | 'restrict'
       incidentId: string
     }) => {
       if (action.type === 'investigate') {
@@ -107,6 +113,18 @@ export function SupplierIncidentsPanel({
       }
       if (action.type === 'close') {
         return closeSupplierIncident(accessToken, action.incidentId)
+      }
+      if (action.type === 'reopen') {
+        return reopenSupplierIncident(accessToken, action.incidentId, {
+          reason:
+            reopenReason ||
+            'Reopened from parties workspace after mistaken cancellation.',
+        })
+      }
+      if (action.type === 'cancel') {
+        return cancelSupplierIncident(accessToken, action.incidentId, {
+          reason: cancelReason || 'Cancelled from parties workspace',
+        })
       }
       return applySupplierIncidentProcurementRestriction(accessToken, action.incidentId, {
         restrictionKey: `incident-${incidentKey || action.incidentId.slice(0, 8)}`,
@@ -220,6 +238,28 @@ export function SupplierIncidentsPanel({
                 onChange={(event) => setDescription(event.target.value)}
               />
             </label>
+            <label htmlFor="supplier-incident-cancel-reason" className="block text-sm text-slate-400 md:col-span-2">
+              Cancel reason (for cancel action)
+              <textarea
+                id="supplier-incident-cancel-reason"
+                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+                rows={2}
+                data-testid="supplier-incident-cancel-reason"
+                value={cancelReason}
+                onChange={(event) => setCancelReason(event.target.value)}
+              />
+            </label>
+            <label htmlFor="supplier-incident-reopen-reason" className="block text-sm text-slate-400 md:col-span-2">
+              Reopen reason (for reopen after cancel)
+              <textarea
+                id="supplier-incident-reopen-reason"
+                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+                rows={2}
+                data-testid="supplier-incident-reopen-reason"
+                value={reopenReason}
+                onChange={(event) => setReopenReason(event.target.value)}
+              />
+            </label>
             <button
               type="button"
               className="rounded bg-amber-700 px-3 py-1.5 text-sm text-white disabled:opacity-50 md:col-span-2 md:w-fit"
@@ -235,7 +275,11 @@ export function SupplierIncidentsPanel({
       {partyIncidentsQuery.data && partyIncidentsQuery.data.length > 0 && (
         <ul className="mt-4 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
           {partyIncidentsQuery.data.map((item) => (
-            <li key={item.incidentId} className="px-3 py-3">
+            <li
+              key={item.incidentId}
+              className="px-3 py-3"
+              data-testid={`supplier-incident-row-${item.incidentId}`}
+            >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <div className="font-medium text-slate-100">
@@ -244,44 +288,87 @@ export function SupplierIncidentsPanel({
                   <div className="text-xs text-slate-500">
                     {item.incidentType} · {item.severity}
                     {item.vendorRestrictionId ? ' · restriction applied' : ''}
+                    {item.reopenCount > 0 ? ` · reopened ${item.reopenCount}×` : ''}
                   </div>
                 </div>
-                <span className={`rounded px-2 py-0.5 text-xs ${statusClass(item.status)}`}>
+                <span
+                  className={`rounded px-2 py-0.5 text-xs ${statusClass(item.status)}`}
+                  data-testid={`supplier-incident-status-${item.incidentId}`}
+                >
                   {item.status}
                 </span>
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {item.status === 'open' && (
-                  <button
-                    type="button"
-                    className="rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-200"
-                    onClick={() =>
-                      workflowMutation.mutate({ type: 'investigate', incidentId: item.incidentId })
-                    }
-                  >
-                    Investigate
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      className="rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-200"
+                      data-testid={`supplier-incident-investigate-${item.incidentId}`}
+                      onClick={() =>
+                        workflowMutation.mutate({ type: 'investigate', incidentId: item.incidentId })
+                      }
+                    >
+                      Investigate
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded border border-rose-700 px-2 py-0.5 text-xs text-rose-200"
+                      data-testid={`supplier-incident-cancel-${item.incidentId}`}
+                      onClick={() =>
+                        workflowMutation.mutate({ type: 'cancel', incidentId: item.incidentId })
+                      }
+                    >
+                      Cancel
+                    </button>
+                  </>
                 )}
                 {item.status === 'investigating' && (
-                  <button
-                    type="button"
-                    className="rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-200"
-                    onClick={() =>
-                      workflowMutation.mutate({ type: 'resolve', incidentId: item.incidentId })
-                    }
-                  >
-                    Resolve
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      className="rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-200"
+                      data-testid={`supplier-incident-resolve-${item.incidentId}`}
+                      onClick={() =>
+                        workflowMutation.mutate({ type: 'resolve', incidentId: item.incidentId })
+                      }
+                    >
+                      Resolve
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded border border-rose-700 px-2 py-0.5 text-xs text-rose-200"
+                      data-testid={`supplier-incident-cancel-${item.incidentId}`}
+                      onClick={() =>
+                        workflowMutation.mutate({ type: 'cancel', incidentId: item.incidentId })
+                      }
+                    >
+                      Cancel
+                    </button>
+                  </>
                 )}
                 {item.status === 'resolved' && (
                   <button
                     type="button"
                     className="rounded border border-slate-600 px-2 py-0.5 text-xs text-slate-200"
+                    data-testid={`supplier-incident-close-${item.incidentId}`}
                     onClick={() =>
                       workflowMutation.mutate({ type: 'close', incidentId: item.incidentId })
                     }
                   >
                     Close
+                  </button>
+                )}
+                {item.status === 'cancelled' && (
+                  <button
+                    type="button"
+                    className="rounded border border-sky-600 px-2 py-0.5 text-xs text-sky-200"
+                    data-testid={`supplier-incident-reopen-${item.incidentId}`}
+                    onClick={() =>
+                      workflowMutation.mutate({ type: 'reopen', incidentId: item.incidentId })
+                    }
+                  >
+                    Reopen
                   </button>
                 )}
                 {!item.vendorRestrictionId &&
@@ -290,6 +377,7 @@ export function SupplierIncidentsPanel({
                     <button
                       type="button"
                       className="rounded border border-rose-700 px-2 py-0.5 text-xs text-rose-200"
+                      data-testid={`supplier-incident-restrict-${item.incidentId}`}
                       onClick={() =>
                         workflowMutation.mutate({ type: 'restrict', incidentId: item.incidentId })
                       }

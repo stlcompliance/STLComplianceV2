@@ -11,6 +11,7 @@ public sealed class WorkflowGateService(
     ComplianceCoreDbContext db,
     InternalRuleEvaluationService internalRuleEvaluationService,
     RuleEvaluationService ruleEvaluationService,
+    ComplianceWaiverService waiverService,
     IComplianceCoreAuditService auditService)
 {
     public const string CheckActionScope = "compliancecore.workflow.gates.check";
@@ -120,8 +121,9 @@ public sealed class WorkflowGateService(
             evaluation.RuleResults,
             request.Context,
             request.EmitFindings,
-            evaluation.FindingsEmitted,
-            cancellationToken);
+            evaluation.FindingsEmitted ?? [],
+            cancellationToken,
+            gateKey: gate.GateKey);
     }
 
     public async Task<WorkflowGateBatchCheckResponse> CheckBatchForUserAsync(
@@ -228,7 +230,10 @@ public sealed class WorkflowGateService(
             cancellationToken,
             evaluation.Outcome,
             evaluation.ReasonCode,
-            evaluation.Message);
+            evaluation.Message,
+            gateKey: gate.GateKey,
+            appliedWaiverId: evaluation.AppliedWaiverId,
+            appliedWaiverKey: evaluation.AppliedWaiverKey);
     }
 
     private async Task<WorkflowGateCheckResponse> FinalizeCheckAsync(
@@ -245,11 +250,47 @@ public sealed class WorkflowGateService(
         CancellationToken cancellationToken,
         string? precomputedOutcome = null,
         string? precomputedReasonCode = null,
-        string? precomputedMessage = null)
+        string? precomputedMessage = null,
+        string? gateKey = null,
+        Guid? appliedWaiverId = null,
+        string? appliedWaiverKey = null)
     {
         var (outcome, reasonCode, message, reasons) = precomputedOutcome is null
             ? RuleEvaluationOutcomeMapper.Map(evaluationResult, unresolvedFactKeys, ruleResults)
             : (precomputedOutcome, precomputedReasonCode!, precomputedMessage!, BuildReasons(unresolvedFactKeys, ruleResults));
+
+        if (appliedWaiverId is null)
+        {
+            var waiverApplied = await waiverService.ApplyWaiverIfEligibleAsync(
+                tenantId,
+                gate.RulePackId,
+                packKey,
+                outcome,
+                reasonCode,
+                message,
+                ruleResults,
+                gateKey ?? gate.GateKey,
+                context,
+                cancellationToken);
+            outcome = waiverApplied.Outcome;
+            reasonCode = waiverApplied.ReasonCode;
+            message = waiverApplied.Message;
+            appliedWaiverId = waiverApplied.WaiverId;
+            appliedWaiverKey = waiverApplied.WaiverKey;
+        }
+
+        if (evaluationRunId is not null && appliedWaiverId is not null)
+        {
+            var linkedRun = await db.RuleEvaluationRuns
+                .FirstOrDefaultAsync(
+                    x => x.TenantId == tenantId && x.Id == evaluationRunId.Value,
+                    cancellationToken);
+            if (linkedRun is not null)
+            {
+                linkedRun.AppliedWaiverId = appliedWaiverId;
+                linkedRun.AppliedWaiverKey = appliedWaiverKey;
+            }
+        }
 
         var now = DateTimeOffset.UtcNow;
         var checkResult = new WorkflowGateCheckResult
@@ -264,6 +305,8 @@ public sealed class WorkflowGateService(
             Message = message,
             ReasonsJson = JsonSerializer.Serialize(reasons, RuleEvaluationJson.Options),
             ContextJson = JsonSerializer.Serialize(context ?? new Dictionary<string, string>(), RuleEvaluationJson.Options),
+            AppliedWaiverId = appliedWaiverId,
+            AppliedWaiverKey = appliedWaiverKey,
             CreatedAt = now,
         };
 
@@ -292,7 +335,9 @@ public sealed class WorkflowGateService(
             evaluationRunId,
             reasons,
             emitFindings ? findingsEmitted : [],
-            now);
+            now,
+            appliedWaiverId,
+            appliedWaiverKey);
     }
 
     private async Task<WorkflowGateDefinition> LoadActiveGateAsync(
@@ -445,6 +490,7 @@ public sealed class WorkflowGateService(
         var allowCount = 0;
         var warnCount = 0;
         var blockCount = 0;
+        var waivedCount = 0;
 
         foreach (var result in results)
         {
@@ -456,12 +502,15 @@ public sealed class WorkflowGateService(
                 case ComplianceEvaluationOutcomes.Warn:
                     warnCount++;
                     break;
+                case ComplianceEvaluationOutcomes.Waived:
+                    waivedCount++;
+                    break;
                 default:
                     blockCount++;
                     break;
             }
         }
 
-        return new WorkflowGateBatchCheckSummary(results.Count, allowCount, warnCount, blockCount);
+        return new WorkflowGateBatchCheckSummary(results.Count, allowCount, warnCount, blockCount, waivedCount);
     }
 }

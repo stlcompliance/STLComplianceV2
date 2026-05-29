@@ -70,10 +70,11 @@ public sealed class NexArrPlatformWorkerHealthOrchestrationTests
         Assert.False(string.IsNullOrWhiteSpace(status.PlatformHealthStatus));
         Assert.Equal(6, status.ProductHealth.Count);
         Assert.True(status.ServiceTokens.ActiveCount >= 0);
-        Assert.Equal(3, status.Workers.Count);
+        Assert.Equal(4, status.Workers.Count);
         Assert.Contains(status.Workers, x => x.WorkerKey == "service_token_cleanup");
         Assert.Contains(status.Workers, x => x.WorkerKey == "entitlement_reconciliation");
         Assert.Contains(status.Workers, x => x.WorkerKey == "tenant_lifecycle");
+        Assert.Contains(status.Workers, x => x.WorkerKey == "platform_outbox_publisher");
     }
 
     [Fact]

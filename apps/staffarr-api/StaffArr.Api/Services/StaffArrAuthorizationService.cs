@@ -24,6 +24,26 @@ public sealed class StaffArrAuthorizationService
         }
     }
 
+    public void RequireSelfServicePortalAccess(ClaimsPrincipal principal)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (principal.GetPersonId() == Guid.Empty)
+        {
+            throw new StlApiException(
+                "auth.forbidden",
+                "Self-service portal requires a linked workforce person record.",
+                403);
+        }
+    }
+
+    public void RequireManagerTeamAccess(ClaimsPrincipal principal) =>
+        RequireSelfServicePortalAccess(principal);
+
     public void RequirePeopleRead(ClaimsPrincipal principal)
     {
         RequireStaffArrEntitlement(principal);
@@ -505,6 +525,46 @@ public sealed class StaffArrAuthorizationService
             "auth.forbidden",
             "Personnel document upload requires staffarr.documents.manage scope.",
             403);
+    }
+
+    public async Task RequirePersonnelUpdateRequestReviewAsync(
+        ClaimsPrincipal principal,
+        Guid subjectPersonId,
+        ManagerHierarchyService managerHierarchy,
+        CancellationToken cancellationToken = default)
+    {
+        RequireStaffArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (CanWriteByRole(principal.GetTenantRoleKey()))
+        {
+            return;
+        }
+
+        var reviewerPersonId = principal.GetPersonId();
+        if (reviewerPersonId == Guid.Empty)
+        {
+            throw new StlApiException(
+                "auth.forbidden",
+                "Personnel update review requires HR access or a linked manager person record.",
+                403);
+        }
+
+        var isDirectManager = await managerHierarchy.IsDirectManagerOfAsync(
+            principal.GetTenantId(),
+            reviewerPersonId,
+            subjectPersonId,
+            cancellationToken);
+        if (!isDirectManager)
+        {
+            throw new StlApiException(
+                "auth.forbidden",
+                "Personnel update review requires HR access or direct manager responsibility for the requester.",
+                403);
+        }
     }
 
     private static bool CanWriteByRole(string roleKey) =>

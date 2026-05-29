@@ -179,6 +179,30 @@ await StlWorkerHost.RunAsync(
 
         builder.Services.AddHostedService<ComplianceCoreRuleChangeMonitorJob>();
 
+        builder.Services.Configure<ComplianceCoreWaiverExpirationOptions>(
+            builder.Configuration.GetSection(ComplianceCoreWaiverExpirationOptions.SectionName));
+
+        builder.Services.AddHttpClient<ComplianceCoreWaiverExpirationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<ComplianceCoreWaiverExpirationOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.ComplianceCoreBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(5);
+        });
+
+        builder.Services.AddHostedService<ComplianceCoreWaiverExpirationJob>();
+
+        builder.Services.Configure<ComplianceCoreFactSourceSyncOptions>(
+            builder.Configuration.GetSection(ComplianceCoreFactSourceSyncOptions.SectionName));
+
+        builder.Services.AddHttpClient<ComplianceCoreFactSourceSyncClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<ComplianceCoreFactSourceSyncOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.ComplianceCoreBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(5);
+        });
+
+        builder.Services.AddHostedService<ComplianceCoreFactSourceSyncJob>();
+
         builder.Services.Configure<ComplianceCoreM12AnalyticsBatchOptions>(
             builder.Configuration.GetSection(ComplianceCoreM12AnalyticsBatchOptions.SectionName));
 
@@ -334,6 +358,18 @@ await StlWorkerHost.RunAsync(
         });
 
         builder.Services.AddHostedService<RoutArrAttachmentRetentionJob>();
+
+        builder.Services.Configure<RoutArrIntegrationEventsOptions>(
+            builder.Configuration.GetSection(RoutArrIntegrationEventsOptions.SectionName));
+
+        builder.Services.AddHttpClient<RoutArrIntegrationEventsClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<RoutArrIntegrationEventsOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.RoutArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<RoutArrIntegrationEventsJob>();
 
         builder.Services.Configure<SupplyArrReorderEvaluationOptions>(
             builder.Configuration.GetSection(SupplyArrReorderEvaluationOptions.SectionName));
@@ -586,4 +622,28 @@ await StlWorkerHost.RunAsync(
         });
 
         builder.Services.AddHostedService<MaintainArrMaintenanceHistoryRollupJob>();
+
+        builder.Services.Configure<MaintainArrDowntimeSyncOptions>(
+            builder.Configuration.GetSection(MaintainArrDowntimeSyncOptions.SectionName));
+
+        builder.Services.AddHttpClient<MaintainArrDowntimeSyncClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<MaintainArrDowntimeSyncOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.MaintainArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<MaintainArrDowntimeSyncJob>();
+
+        builder.Services.Configure<MaintainArrPlatformEventProcessingOptions>(
+            builder.Configuration.GetSection(MaintainArrPlatformEventProcessingOptions.SectionName));
+
+        builder.Services.AddHttpClient<MaintainArrPlatformEventProcessingClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<IOptions<MaintainArrPlatformEventProcessingOptions>>().Value;
+            client.BaseAddress = new Uri(StlServiceUrl.NormalizeHttpBaseUrl(options.MaintainArrBaseUrl) + "/");
+            client.Timeout = TimeSpan.FromMinutes(2);
+        });
+
+        builder.Services.AddHostedService<MaintainArrPlatformEventProcessingJob>();
     });

@@ -26,7 +26,7 @@ public static class RuleEvaluationOutcomeMapper
                      !string.Equals(item.Result, RuleEvaluationResults.Pass, StringComparison.OrdinalIgnoreCase)))
         {
             reasons.Add(new WorkflowGateReasonResponse(
-                "rule_failed",
+                rule.NonWaivable ? "non_waivable_rule_failed" : "rule_failed",
                 rule.Message,
                 rule.RuleKey,
                 null));

@@ -9,6 +9,7 @@ namespace ComplianceCore.Api.Services;
 public sealed class FactResolveService(
     ComplianceCoreDbContext db,
     ProductFactMirrorService productFactMirrorService,
+    FactSourceSyncCacheService factSourceSyncCacheService,
     IComplianceCoreAuditService auditService)
 {
     public const string ResolveActionScope = "compliancecore.facts.resolve";
@@ -163,6 +164,20 @@ public sealed class FactResolveService(
             {
                 return resolved;
             }
+
+            if (string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal))
+            {
+                var cached = await factSourceSyncCacheService.TryResolveCachedAsync(
+                    tenantId,
+                    definition,
+                    source,
+                    context,
+                    cancellationToken);
+                if (cached is not null)
+                {
+                    return cached;
+                }
+            }
         }
 
         return null;
@@ -191,6 +206,16 @@ public sealed class FactResolveService(
             }
 
             if (FactResolver.CanSourceResolve(definition, source, context: null))
+            {
+                return source;
+            }
+
+            if (string.Equals(source.SourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal)
+                && await factSourceSyncCacheService.HasCachedValueAsync(
+                    tenantId,
+                    definition,
+                    source,
+                    cancellationToken))
             {
                 return source;
             }

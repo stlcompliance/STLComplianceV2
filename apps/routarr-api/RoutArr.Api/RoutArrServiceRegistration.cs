@@ -78,6 +78,7 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<UnassignedWorkQueueService>();
         builder.Services.AddScoped<DriverPortalService>();
         builder.Services.AddScoped<DispatchReportService>();
+        builder.Services.AddScoped<DispatchOverrideReportService>();
         builder.Services.AddScoped<RouteReportService>();
         builder.Services.AddScoped<ProofDvirReportService>();
         builder.Services.AddScoped<RoutArrEntityBulkExportService>();
@@ -98,6 +99,9 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<DispatchNotificationSettingsService>();
         builder.Services.AddScoped<DispatchNotificationEnqueueService>();
         builder.Services.AddScoped<DispatchNotificationDispatchService>();
+        builder.Services.AddScoped<IntegrationEventSettingsService>();
+        builder.Services.AddScoped<IntegrationOutboxEnqueueService>();
+        builder.Services.AddScoped<IntegrationEventProcessingService>();
         builder.Services.AddScoped<TripCompletionRollupSettingsService>();
         builder.Services.AddScoped<TripCompletionRollupWorkerService>();
         builder.Services.AddScoped<TripCompletionService>();

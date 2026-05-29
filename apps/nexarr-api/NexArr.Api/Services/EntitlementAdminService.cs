@@ -11,7 +11,8 @@ namespace NexArr.Api.Services;
 public sealed class EntitlementAdminService(
     NexArrDbContext db,
     PlatformAuthorizationService authorization,
-    IPlatformAuditService audit)
+    IPlatformAuditService audit,
+    PlatformOutboxEnqueueService outboxEnqueue)
 {
     public async Task<PagedResult<EntitlementDetailResponse>> ListAsync(
         ClaimsPrincipal principal,
@@ -82,6 +83,7 @@ public sealed class EntitlementAdminService(
             .FirstOrDefaultAsync(e => e.TenantId == request.TenantId && e.ProductKey == productKey, cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
+        var wasRevoked = existing?.Status == EntitlementStatuses.Revoked;
         if (existing is null)
         {
             existing = new TenantProductEntitlement
@@ -110,6 +112,27 @@ public sealed class EntitlementAdminService(
             "Success",
             tenantId: request.TenantId,
             actorUserId: principal.GetUserId(),
+            cancellationToken: cancellationToken);
+
+        await outboxEnqueue.TryEnqueueAsync(
+            wasRevoked ? PlatformOutboxEventKinds.TenantEntitlementUpdated : PlatformOutboxEventKinds.TenantEntitlementGranted,
+            "entitlement",
+            existing.Id.ToString(),
+            existing.GrantedAt.ToUnixTimeMilliseconds().ToString(),
+            new PlatformOutboxPayload(
+                PlatformOutboxRules.DefaultSchemaVersion,
+                request.TenantId,
+                principal.GetUserId(),
+                "entitlement",
+                existing.Id.ToString(),
+                wasRevoked
+                    ? $"Entitlement re-granted for {productKey}"
+                    : $"Entitlement granted for {productKey}",
+                new Dictionary<string, string>
+                {
+                    ["productCode"] = productKey,
+                    ["status"] = existing.Status,
+                }),
             cancellationToken: cancellationToken);
 
         return new EntitlementDetailResponse(
@@ -158,6 +181,25 @@ public sealed class EntitlementAdminService(
             "Success",
             tenantId: entitlement.TenantId,
             actorUserId: principal.GetUserId(),
+            cancellationToken: cancellationToken);
+
+        await outboxEnqueue.TryEnqueueAsync(
+            PlatformOutboxEventKinds.TenantEntitlementRevoked,
+            "entitlement",
+            entitlement.Id.ToString(),
+            entitlement.RevokedAt?.ToUnixTimeMilliseconds().ToString() ?? DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString(),
+            new PlatformOutboxPayload(
+                PlatformOutboxRules.DefaultSchemaVersion,
+                entitlement.TenantId,
+                principal.GetUserId(),
+                "entitlement",
+                entitlement.Id.ToString(),
+                $"Entitlement revoked for {entitlement.ProductKey}",
+                new Dictionary<string, string>
+                {
+                    ["productCode"] = entitlement.ProductKey,
+                    ["status"] = entitlement.Status,
+                }),
             cancellationToken: cancellationToken);
 
         var displayName = await db.ProductCatalog.AsNoTracking()

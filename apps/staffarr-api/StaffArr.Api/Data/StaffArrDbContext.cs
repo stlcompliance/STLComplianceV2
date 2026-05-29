@@ -42,6 +42,12 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
 
     public DbSet<PersonTrainingAcknowledgement> PersonTrainingAcknowledgements => Set<PersonTrainingAcknowledgement>();
 
+    public DbSet<PersonOffboardingRecord> PersonOffboardingRecords => Set<PersonOffboardingRecord>();
+
+    public DbSet<PersonOffboardingStep> PersonOffboardingSteps => Set<PersonOffboardingStep>();
+
+    public DbSet<PersonnelUpdateRequest> PersonnelUpdateRequests => Set<PersonnelUpdateRequest>();
+
     public DbSet<IncidentTrainarrRouting> IncidentTrainarrRoutings => Set<IncidentTrainarrRouting>();
 
     public DbSet<ReadinessRollup> ReadinessRollups => Set<ReadinessRollup>();
@@ -97,6 +103,7 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.PrimaryEmail).HasMaxLength(320).IsRequired();
             entity.Property(x => x.EmploymentStatus).HasMaxLength(32).IsRequired();
             entity.Property(x => x.JobTitle).HasMaxLength(128);
+            entity.Property(x => x.WorkPhone).HasMaxLength(32);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.PrimaryEmail });
             entity.HasIndex(x => new { x.TenantId, x.ExternalUserId }).IsUnique();
@@ -540,6 +547,50 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.Summary).HasMaxLength(512);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.WorkerKey, x.StartedAt });
+        });
+
+        modelBuilder.Entity<PersonOffboardingRecord>(entity =>
+        {
+            entity.ToTable("staffarr_person_offboarding_records");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SeparationReason).HasMaxLength(512);
+            entity.Property(x => x.TargetEmploymentStatus).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.StartedAt });
+            entity.HasOne(x => x.Person).WithMany().HasForeignKey(x => x.PersonId);
+            entity.HasMany(x => x.Steps).WithOne(x => x.OffboardingRecord).HasForeignKey(x => x.OffboardingRecordId);
+        });
+
+        modelBuilder.Entity<PersonOffboardingStep>(entity =>
+        {
+            entity.ToTable("staffarr_person_offboarding_steps");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.StepKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Detail).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.BlockerDetail).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.OffboardingRecordId, x.StepKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<PersonnelUpdateRequest>(entity =>
+        {
+            entity.ToTable("staffarr_personnel_update_requests");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RequestType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.FieldKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.CurrentValue).HasMaxLength(512);
+            entity.Property(x => x.RequestedValue).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.Details).HasMaxLength(2048);
+            entity.Property(x => x.ReviewNotes).HasMaxLength(1024);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.PersonId, x.SubmittedAt });
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.SubmittedAt });
+            entity.HasOne(x => x.Person).WithMany().HasForeignKey(x => x.PersonId);
         });
     }
 }

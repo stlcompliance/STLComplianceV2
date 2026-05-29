@@ -10,7 +10,8 @@ public sealed class WorkOrderService(
     MaintainArrDbContext db,
     IMaintainArrAuditService audit,
     MaintenanceNotificationEnqueueService notificationEnqueueService,
-    TechnicianRefService technicianRefService)
+    TechnicianRefService technicianRefService,
+    AssetDowntimeService assetDowntimeService)
 {
     public async Task<IReadOnlyList<WorkOrderSummaryResponse>> ListAsync(
         Guid tenantId,
@@ -451,6 +452,25 @@ public sealed class WorkOrderService(
 
         await db.SaveChangesAsync(cancellationToken);
 
+        DowntimeFollowUpResponse? downtimeFollowUp = null;
+        if (string.Equals(normalized, WorkOrderStatuses.InProgress, StringComparison.OrdinalIgnoreCase))
+        {
+            var asset = await db.Assets
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == workOrder.AssetId, cancellationToken);
+            if (asset is not null)
+            {
+                downtimeFollowUp = await assetDowntimeService.TryOpenWorkOrderRepairDowntimeAsync(
+                    tenantId,
+                    actorUserId,
+                    workOrder.Id,
+                    asset.Id,
+                    asset.AssetTag,
+                    asset.Name,
+                    cancellationToken);
+            }
+        }
+
         await audit.WriteAsync(
             "work_order.status_update",
             tenantId,
@@ -460,7 +480,7 @@ public sealed class WorkOrderService(
             workOrder.Status,
             cancellationToken: cancellationToken);
 
-        return await MapDetailAsync(tenantId, workOrder, cancellationToken);
+        return await MapDetailAsync(tenantId, workOrder, cancellationToken, downtimeFollowUp);
     }
 
     private static void EnsureTechnicianCanTransition(
@@ -635,7 +655,8 @@ public sealed class WorkOrderService(
     private async Task<WorkOrderDetailResponse> MapDetailAsync(
         Guid tenantId,
         WorkOrder workOrder,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        DowntimeFollowUpResponse? downtimeFollowUp = null)
     {
         var summaries = await MapSummariesAsync(tenantId, [workOrder], cancellationToken);
         var summary = summaries[0];
@@ -679,7 +700,8 @@ public sealed class WorkOrderService(
             workOrder.UpdatedAt,
             workOrder.StartedAt,
             workOrder.CompletedAt,
-            workOrder.CancelledAt);
+            workOrder.CancelledAt,
+            downtimeFollowUp);
     }
 
     private static string MapDefectSeverityToPriority(string severity) =>

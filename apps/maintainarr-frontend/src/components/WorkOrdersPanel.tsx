@@ -6,12 +6,14 @@ import type {
   WorkOrderLaborEntryResponse,
   WorkOrderPartsDemandLineResponse,
   WorkOrderPartsDemandStatusEventResponse,
+  WorkOrderSupplyReadinessResponse,
   WorkOrderSummaryResponse,
   WorkOrderTaskLineResponse,
 } from '../api/types'
 import { WorkOrderLaborEvidencePanel } from './WorkOrderLaborEvidencePanel'
 import { WorkOrderLifecyclePanel } from './WorkOrderLifecyclePanel'
 import { WorkOrderPartsDemandPanel } from './WorkOrderPartsDemandPanel'
+import { WorkOrderSupplyReadinessPanel } from './WorkOrderSupplyReadinessPanel'
 
 interface WorkOrdersPanelProps {
   canCreate: boolean
@@ -70,6 +72,8 @@ interface WorkOrdersPanelProps {
   isUploadingEvidence: boolean
   partsDemand: WorkOrderPartsDemandLineResponse[]
   partsDemandStatusEvents: WorkOrderPartsDemandStatusEventResponse[]
+  supplyReadiness: WorkOrderSupplyReadinessResponse | null
+  isSupplyReadinessLoading: boolean
   demandPartNumber: string
   demandSupplyarrPartId: string
   demandQuantity: string
@@ -189,6 +193,8 @@ export function WorkOrdersPanel({
   onPublishPartsDemand,
   isAddingPartsDemand,
   isPublishingPartsDemand,
+  supplyReadiness,
+  isSupplyReadinessLoading,
 }: WorkOrdersPanelProps) {
   return (
     <section
@@ -489,6 +495,10 @@ export function WorkOrdersPanel({
               onPublishDemand={onPublishPartsDemand}
               isAdding={isAddingPartsDemand}
               isPublishing={isPublishingPartsDemand}
+            />
+            <WorkOrderSupplyReadinessPanel
+              readiness={supplyReadiness}
+              isLoading={isSupplyReadinessLoading}
             />
             </>
           ) : (

@@ -315,6 +315,8 @@ export interface RuleDefinitionDto {
   type: string
   factKey: string
   expectedValue: boolean
+  /** When true, compliance waivers cannot override failures for this rule. */
+  nonWaivable?: boolean
 }
 
 export interface RulePackContentBody {
@@ -384,6 +386,7 @@ export interface RuleEvaluationItemResponse {
   label: string
   result: string
   message: string
+  nonWaivable?: boolean
 }
 
 export interface RuleEvaluationRunResponse {
@@ -460,6 +463,7 @@ export interface WorkflowGateBatchCheckSummary {
   allowCount: number
   warnCount: number
   blockCount: number
+  waivedCount: number
 }
 
 export interface WorkflowGateBatchCheckResponse {
@@ -496,6 +500,8 @@ export interface AuditPackageCountsResponse {
   auditEvents: number
   findings: number
   evaluationRuns: number
+  workflowGateChecks: number
+  waivers: number
   rulePacks: number
 }
 
@@ -522,6 +528,8 @@ export interface AuditPackageExportResponse {
   auditEvents: unknown[]
   findings: unknown[]
   evaluationRuns: unknown[]
+  workflowGateChecks: unknown[]
+  waivers: unknown[]
   rulePacks: unknown[]
 }
 
@@ -564,6 +572,8 @@ export interface WorkflowGateCheckResponse {
   reasons: WorkflowGateReasonResponse[]
   findingsEmitted: ComplianceFindingResponse[]
   checkedAt: string
+  appliedWaiverId?: string | null
+  appliedWaiverKey?: string | null
 }
 
 export interface OperatorDashboardFindingsSummary {
@@ -946,6 +956,48 @@ export interface UpsertM12AnalyticsWorkerSettingsRequest {
   auditDeliveryEnabled?: boolean
 }
 
+export interface FactSourceSyncWorkerSettingsResponse {
+  isEnabled: boolean
+  defaultScopeKey: string
+  intervalMinutes: number
+  lastBatchRunAt: string | null
+  updatedAt: string | null
+}
+
+export interface UpsertFactSourceSyncWorkerSettingsRequest {
+  isEnabled: boolean
+  defaultScopeKey?: string
+  intervalMinutes?: number
+}
+
+export interface FactSourceSyncHealthItem {
+  factSourceId: string
+  sourceKey: string
+  factKey: string
+  sourceType: string
+  productKey: string | null
+  scopeKey: string
+  healthStatus: string
+  lastAttemptAt: string | null
+  lastSuccessAt: string | null
+  lastFailureAt: string | null
+  lastErrorMessage: string | null
+  consecutiveFailureCount: number
+}
+
+export interface FactSourceSyncHealthResponse {
+  tenantId: string
+  workerEnabled: boolean
+  intervalMinutes: number
+  lastBatchRunAt: string | null
+  productApiSourceCount: number
+  healthyCount: number
+  staleCount: number
+  failedCount: number
+  pendingCount: number
+  sources: FactSourceSyncHealthItem[]
+}
+
 export interface ScheduledRuleEvaluationRunSummary {
   runId: string
   startedAt: string
@@ -1170,4 +1222,38 @@ export interface RuleVersionListResponse {
 export interface RuleVersionRollbackResponse {
   archivedVersion: RuleVersionResponse
   restoredVersion: RuleVersionResponse
+}
+
+export interface ComplianceWaiverResponse {
+  waiverId: string
+  waiverKey: string
+  rulePackId: string
+  packKey: string
+  ruleKey: string | null
+  gateKey: string | null
+  subjectScopeKey: string
+  reasonCode: string
+  explanation: string
+  status: string
+  effectiveAt: string
+  expiresAt: string | null
+  createdByUserId: string | null
+  approvedByUserId: string | null
+  approvedAt: string | null
+  revokedByUserId: string | null
+  revokedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateComplianceWaiverRequest {
+  waiverKey: string
+  rulePackId: string
+  subjectScopeKey: string
+  reasonCode: string
+  explanation: string
+  effectiveAt: string
+  expiresAt?: string | null
+  ruleKey?: string | null
+  gateKey?: string | null
 }

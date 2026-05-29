@@ -55,7 +55,11 @@ export function QualificationCheckPanel({
         {isChecking ? 'Checking authorization…' : 'Run qualification check'}
       </button>
       {check && (
-        <div className={`rounded-lg border p-3 text-sm ${outcomeClass(check.outcome)}`}>
+        <div
+          className={`rounded-lg border p-3 text-sm ${outcomeClass(check.outcome)}`}
+          data-testid="qualification-check-latest-result"
+          data-outcome={check.outcome}
+        >
           <p className="font-semibold uppercase tracking-wide">{check.outcome}</p>
           <p className="mt-2">{check.message}</p>
           {check.localQualification && (

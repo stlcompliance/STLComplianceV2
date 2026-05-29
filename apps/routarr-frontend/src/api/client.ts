@@ -35,6 +35,7 @@ import type {
   UnassignedWorkQueueResponse,
   CreateTripProofRequest,
   DriverPortalScheduleResponse,
+  DriverPortalReportExceptionRequest,
   SubmitTripDvirRequest,
   TripExecutionSummaryResponse,
   TripCaptureReadinessResponse,
@@ -49,6 +50,7 @@ import type {
   DispatchReportSummaryResponse,
   DispatchReportTripDetailResponse,
   DispatchReportExceptionDetailResponse,
+  DispatchOverrideReportSummaryResponse,
   ProofDvirReportSummaryResponse,
   ProofDvirReportTripDetailResponse,
   ProofDvirReportProofDetailResponse,
@@ -89,10 +91,16 @@ import type {
   DispatchNotificationDispatchesResponse,
   DispatchNotificationSettingsResponse,
   UpsertDispatchNotificationSettingsRequest,
+  IntegrationEventSettingsResponse,
+  UpsertIntegrationEventSettingsRequest,
+  IntegrationOutboxEventListResponse,
   TripCompletionRollupSettingsResponse,
   UpsertTripCompletionRollupSettingsRequest,
   PendingTripCompletionRollupsResponse,
   TripCompletionRollupRunsResponse,
+  TripCompletionsListResponse,
+  TripCompletionDetailResponse,
+  RouteCompletionsListResponse,
   AttachmentRetentionSettingsResponse,
   UpsertAttachmentRetentionSettingsRequest,
   AttachmentRetentionRunsResponse,
@@ -510,6 +518,22 @@ export async function submitDriverPortalTripDvir(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<TripDvirInspectionResponse>(response, 'Failed to submit DVIR')
+}
+
+export async function reportDriverPortalTripException(
+  accessToken: string,
+  tripId: string,
+  payload: DriverPortalReportExceptionRequest,
+): Promise<DispatchExceptionSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/driver-portal/trips/${tripId}/exceptions`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<DispatchExceptionSummaryResponse>(
+    response,
+    'Failed to report trip exception',
+  )
 }
 
 export async function submitTripDvir(
@@ -1144,6 +1168,47 @@ export async function getDispatchNotificationDispatches(
   )
 }
 
+export async function getIntegrationEventSettings(
+  accessToken: string,
+): Promise<IntegrationEventSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/integration-event-settings`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<IntegrationEventSettingsResponse>(
+    response,
+    'Failed to load integration event settings',
+  )
+}
+
+export async function upsertIntegrationEventSettings(
+  accessToken: string,
+  payload: UpsertIntegrationEventSettingsRequest,
+): Promise<IntegrationEventSettingsResponse> {
+  const response = await fetch(`${apiBase}/api/integration-event-settings`, {
+    method: 'PUT',
+    headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<IntegrationEventSettingsResponse>(
+    response,
+    'Failed to save integration event settings',
+  )
+}
+
+export async function listIntegrationOutboxEvents(
+  accessToken: string,
+  limit = 20,
+): Promise<IntegrationOutboxEventListResponse> {
+  const search = new URLSearchParams({ limit: String(limit) })
+  const response = await fetch(`${apiBase}/api/integration-event-settings/outbox?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<IntegrationOutboxEventListResponse>(
+    response,
+    'Failed to load integration outbox events',
+  )
+}
+
 export async function getTripCompletionRollupSettings(
   accessToken: string,
 ): Promise<TripCompletionRollupSettingsResponse> {
@@ -1194,6 +1259,49 @@ export async function getTripCompletionRollupRuns(
   return parseJsonResponse<TripCompletionRollupRunsResponse>(
     response,
     'Failed to load trip completion rollup runs',
+  )
+}
+
+export async function getTripCompletions(
+  accessToken: string,
+  options?: { dispatchStatus?: string },
+): Promise<TripCompletionsListResponse> {
+  const search = new URLSearchParams()
+  if (options?.dispatchStatus) {
+    search.set('dispatchStatus', options.dispatchStatus)
+  }
+  const suffix = search.size > 0 ? `?${search}` : ''
+  const response = await fetch(`${apiBase}/api/trip-completions${suffix}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TripCompletionsListResponse>(
+    response,
+    'Failed to load trip completion summaries',
+  )
+}
+
+export async function getTripCompletionDetail(
+  accessToken: string,
+  tripId: string,
+): Promise<TripCompletionDetailResponse> {
+  const response = await fetch(`${apiBase}/api/trip-completions/${tripId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TripCompletionDetailResponse>(
+    response,
+    'Failed to load trip completion detail',
+  )
+}
+
+export async function getRouteCompletions(
+  accessToken: string,
+): Promise<RouteCompletionsListResponse> {
+  const response = await fetch(`${apiBase}/api/route-completions`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RouteCompletionsListResponse>(
+    response,
+    'Failed to load route completion summaries',
   )
 }
 
@@ -1298,6 +1406,47 @@ export async function exportDispatchReportSummaryCsv(
     const body = await response.text()
     throw new RoutArrApiError(
       body || `Dispatch report export failed (${response.status})`,
+      response.status,
+      body,
+    )
+  }
+  return response.blob()
+}
+
+export async function getDispatchOverrideReportSummary(
+  accessToken: string,
+  options?: { scope?: 'daily' | 'weekly' },
+): Promise<DispatchOverrideReportSummaryResponse> {
+  const params = new URLSearchParams()
+  if (options?.scope) {
+    params.set('scope', options.scope)
+  }
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/reports/dispatch-overrides/summary${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DispatchOverrideReportSummaryResponse>(
+    response,
+    'Failed to load dispatch override report summary',
+  )
+}
+
+export async function exportDispatchOverrideReportSummaryCsv(
+  accessToken: string,
+  options?: { scope?: 'daily' | 'weekly' },
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (options?.scope) {
+    params.set('scope', options.scope)
+  }
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/reports/dispatch-overrides/summary/export${query}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!response.ok) {
+    const body = await response.text()
+    throw new RoutArrApiError(
+      body || `Dispatch override report export failed (${response.status})`,
       response.status,
       body,
     )

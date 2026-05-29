@@ -1,9 +1,9 @@
-import { LayoutDashboard, LogOut, Shield } from 'lucide-react'
+import { LayoutDashboard, LockKeyhole, LogOut, Shield } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { AppTopBar } from '../components/AppTopBar'
 import { PermissionGate } from '../components/PermissionGate'
-import { isPlatformAdmin } from '../lib/permissions'
+import { hasProductEntitlement, isPlatformAdmin } from '../lib/permissions'
 
 export function AppShellLayout() {
   const { me, logout } = useAuth()
@@ -41,6 +41,23 @@ export function AppShellLayout() {
             <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden />
             Suite dashboard
           </NavLink>
+
+          <PermissionGate allowed={hasProductEntitlement(me?.entitlements ?? [], 'nexarr')}>
+            <NavLink
+              to="/app/nexarr/identity"
+              className={({ isActive }) =>
+                [
+                  'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  isActive
+                    ? 'border-l-2 border-stl-teal bg-slate-800/80 pl-[10px] text-white'
+                    : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
+                ].join(' ')
+              }
+            >
+              <LockKeyhole className="h-4 w-4 shrink-0" aria-hidden />
+              Identity & access
+            </NavLink>
+          </PermissionGate>
         </nav>
 
         <PermissionGate allowed={isPlatformAdmin(me)}>

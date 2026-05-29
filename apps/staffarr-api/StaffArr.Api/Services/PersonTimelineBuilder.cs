@@ -240,6 +240,43 @@ public static class PersonTimelineBuilder
                 null));
         }
 
+        var offboardingRecords = await db.PersonOffboardingRecords
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.PersonId == personId)
+            .ToListAsync(cancellationToken);
+
+        foreach (var offboarding in offboardingRecords)
+        {
+            entries.Add(new PersonTimelineEntryResponse(
+                $"offboarding:{offboarding.Id}:started",
+                personId,
+                "offboarding",
+                "offboarding_started",
+                "Workforce offboarding started",
+                offboarding.SeparationReason ?? offboarding.TargetEmploymentStatus,
+                offboarding.StartedAt,
+                offboarding.StartedByUserId,
+                "person_offboarding_record",
+                offboarding.Id.ToString(),
+                null));
+
+            if (offboarding.CompletedAt is DateTimeOffset completedAt)
+            {
+                entries.Add(new PersonTimelineEntryResponse(
+                    $"offboarding:{offboarding.Id}:completed",
+                    personId,
+                    "offboarding",
+                    "offboarding_completed",
+                    "Workforce offboarding completed",
+                    offboarding.TargetEmploymentStatus,
+                    completedAt,
+                    offboarding.CompletedByUserId,
+                    "person_offboarding_record",
+                    offboarding.Id.ToString(),
+                    null));
+            }
+        }
+
         return entries;
     }
 }

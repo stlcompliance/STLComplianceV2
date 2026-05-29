@@ -292,16 +292,13 @@ public class StaffArrTrainArrQualificationLifecycleTests : IAsyncLifetime
             qualificationKey,
             qualificationKey.Replace('_', ' '));
 
-        var createRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
-        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+        var assignment = await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            adminToken,
             personId,
             definitionId,
-            null,
-            "manual",
-            DateTimeOffset.UtcNow.AddDays(30)));
-        var createResponse = await _trainarrClient.SendAsync(createRequest);
-        createResponse.EnsureSuccessStatusCode();
-        var assignment = (await createResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+            qualificationKey,
+            DateTimeOffset.UtcNow.AddDays(30));
 
         var memberToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_member", personId: personId);
         await TrainArrCompletionTestHelper.SatisfyCompletionRequirementsAsync(

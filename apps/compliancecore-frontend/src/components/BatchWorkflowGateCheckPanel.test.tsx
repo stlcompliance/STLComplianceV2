@@ -104,7 +104,7 @@ describe('BatchWorkflowGateCheckPanel', () => {
               checkedAt: '2026-01-01T00:00:00Z',
             },
           ],
-          summary: { total: 1, allowCount: 1, warnCount: 0, blockCount: 0 },
+          summary: { total: 1, allowCount: 1, warnCount: 0, blockCount: 0, waivedCount: 0 },
         }}
         isChecking={false}
         onRunBatch={vi.fn()}

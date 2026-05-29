@@ -21,6 +21,271 @@
         }
       }
     },
+    "/api/applicability-profiles": {
+      "get": {
+        "tags": [
+          "TrainingApplicability"
+        ],
+        "operationId": "ListTrainingApplicabilityProfiles",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingApplicability"
+        ],
+        "operationId": "CreateTrainingApplicabilityProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingApplicabilityProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/applicability-profiles/{profileId}": {
+      "put": {
+        "tags": [
+          "TrainingApplicability"
+        ],
+        "operationId": "UpdateTrainingApplicabilityProfile",
+        "parameters": [
+          {
+            "name": "profileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrainingApplicabilityProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "TrainingApplicability"
+        ],
+        "operationId": "DeleteTrainingApplicabilityProfile",
+        "parameters": [
+          {
+            "name": "profileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assignment-due-reminder-settings": {
+      "get": {
+        "tags": [
+          "AssignmentDueReminderSettings"
+        ],
+        "operationId": "GetTrainArrAssignmentDueReminderSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AssignmentDueReminderSettings"
+        ],
+        "operationId": "UpsertTrainArrAssignmentDueReminderSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertAssignmentDueReminderSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assignment-due-reminder-settings/pending": {
+      "get": {
+        "tags": [
+          "AssignmentDueReminderSettings"
+        ],
+        "operationId": "ListTrainArrPendingAssignmentDueReminders",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assignment-due-reminder-settings/runs": {
+      "get": {
+        "tags": [
+          "AssignmentDueReminderSettings"
+        ],
+        "operationId": "ListTrainArrAssignmentDueReminderRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assignment-escalation-settings": {
+      "get": {
+        "tags": [
+          "AssignmentEscalationSettings"
+        ],
+        "operationId": "GetTrainArrAssignmentEscalationSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AssignmentEscalationSettings"
+        ],
+        "operationId": "UpsertTrainArrAssignmentEscalationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertAssignmentEscalationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assignment-escalation-settings/events": {
+      "get": {
+        "tags": [
+          "AssignmentEscalationSettings"
+        ],
+        "operationId": "ListTrainArrAssignmentEscalationEvents",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assignment-escalation-settings/pending": {
+      "get": {
+        "tags": [
+          "AssignmentEscalationSettings"
+        ],
+        "operationId": "ListTrainArrPendingAssignmentEscalations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/assignment-escalation-settings/runs": {
+      "get": {
+        "tags": [
+          "AssignmentEscalationSettings"
+        ],
+        "operationId": "ListTrainArrAssignmentEscalationRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/audit-packages/export": {
       "get": {
         "tags": [
@@ -233,6 +498,48 @@
         }
       }
     },
+    "/api/evaluations/review-timeline": {
+      "get": {
+        "tags": [
+          "Evaluations"
+        ],
+        "operationId": "ListTrainingEvaluationReviewTimeline",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/event-processing-settings": {
       "get": {
         "tags": [
@@ -348,6 +655,76 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/manifest": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "GetTrainArrEntityExportManifest",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/qualification-issues": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "ExportTrainArrQualificationIssuesCsv",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/training-assignments": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "ExportTrainArrTrainingAssignmentsCsv",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/exports/training-definitions": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "ExportTrainArrTrainingDefinitionsCsv",
         "responses": {
           "200": {
             "description": "OK"
@@ -494,6 +871,51 @@
         }
       }
     },
+    "/api/integrations/person-training-history": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetTrainArrPersonTrainingHistoryIntegration",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/routarr-qualification-check": {
       "post": {
         "tags": [
@@ -505,6 +927,161 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RoutarrQualificationCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/supplyarr-demand-status": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestSupplyarrDemandStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestSupplyarrDemandStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/assignment-due-reminders/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingAssignmentDueReminders",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/assignment-due-reminders/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessAssignmentDueReminders",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessAssignmentDueRemindersRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/assignment-escalations/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingAssignmentEscalations",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/assignment-escalations/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessAssignmentEscalations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessAssignmentEscalationsRequest"
               }
             }
           },
@@ -1496,6 +2073,76 @@
         }
       }
     },
+    "/api/program-versions": {
+      "get": {
+        "tags": [
+          "ProgramVersions"
+        ],
+        "operationId": "ListTrainingProgramVersions",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/program-versions/start-revision": {
+      "post": {
+        "tags": [
+          "ProgramVersions"
+        ],
+        "operationId": "StartTrainingProgramRevision",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartProgramRevisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/program-versions/{programVersionId}": {
+      "get": {
+        "tags": [
+          "ProgramVersions"
+        ],
+        "operationId": "GetTrainingProgramVersion",
+        "parameters": [
+          {
+            "name": "programVersionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/qualification-checks": {
       "post": {
         "tags": [
@@ -1512,6 +2159,46 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "QualificationChecks"
+        ],
+        "operationId": "ListQualificationChecks",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "qualificationKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1535,6 +2222,28 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/qualification-issues": {
+      "get": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "ListQualificationIssues",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1807,6 +2516,152 @@
                 "string"
               ],
               "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/assignments/summary": {
+      "get": {
+        "tags": [
+          "AssignmentReports"
+        ],
+        "operationId": "GetTrainArrAssignmentReportSummary",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "overdueOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/assignments/summary/export": {
+      "get": {
+        "tags": [
+          "AssignmentReports"
+        ],
+        "operationId": "ExportTrainArrAssignmentReportSummary",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "overdueOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/summary": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetTrainArrComplianceReportSummary",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/summary/export": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ExportTrainArrComplianceReportSummary",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/qualifications/summary": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "GetTrainArrQualificationReportSummary",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/qualifications/summary/export": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "ExportTrainArrQualificationReportSummary",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -2251,6 +3106,30 @@
         }
       }
     },
+    "/api/training-assignments/{assignmentId}/evaluations/history": {
+      "get": {
+        "tags": [
+          "Evaluations"
+        ],
+        "operationId": "GetTrainingEvaluationHistoryForAssignment",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/training-assignments/{assignmentId}/evidence": {
       "get": {
         "tags": [
@@ -2307,6 +3186,120 @@
         }
       }
     },
+    "/api/training-assignments/{assignmentId}/material-demand": {
+      "get": {
+        "tags": [
+          "TrainingAssignmentMaterialDemand"
+        ],
+        "operationId": "ListTrainingAssignmentMaterialDemand",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingAssignmentMaterialDemand"
+        ],
+        "operationId": "CreateTrainingAssignmentMaterialDemandLine",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingAssignmentMaterialDemandLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-assignments/{assignmentId}/material-demand/publish": {
+      "post": {
+        "tags": [
+          "TrainingAssignmentMaterialDemand"
+        ],
+        "operationId": "PublishTrainingAssignmentMaterialDemand",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishTrainingAssignmentMaterialDemandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-assignments/{assignmentId}/material-demand/status-events": {
+      "get": {
+        "tags": [
+          "TrainingAssignmentMaterialDemand"
+        ],
+        "operationId": "ListTrainingAssignmentMaterialDemandStatusEvents",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/training-assignments/{assignmentId}/signoffs": {
       "get": {
         "tags": [
@@ -2351,6 +3344,73 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SubmitTrainingSignoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-assignments/{assignmentId}/steps": {
+      "get": {
+        "tags": [
+          "TrainingAssignmentSteps"
+        ],
+        "operationId": "ListTrainingAssignmentSteps",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-assignments/{assignmentId}/steps/{stepId}/submit": {
+      "post": {
+        "tags": [
+          "TrainingAssignmentSteps"
+        ],
+        "operationId": "SubmitTrainingAssignmentStep",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "stepId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitTrainingAssignmentStepRequest"
               }
             }
           },
@@ -2712,6 +3772,226 @@
         }
       }
     },
+    "/api/training-definitions/{trainingDefinitionId}/steps": {
+      "get": {
+        "tags": [
+          "TrainingDefinitionSteps"
+        ],
+        "operationId": "ListTrainingDefinitionSteps",
+        "parameters": [
+          {
+            "name": "trainingDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingDefinitionSteps"
+        ],
+        "operationId": "CreateTrainingDefinitionStep",
+        "parameters": [
+          {
+            "name": "trainingDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingDefinitionStepRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-definitions/{trainingDefinitionId}/steps/{stepId}": {
+      "put": {
+        "tags": [
+          "TrainingDefinitionSteps"
+        ],
+        "operationId": "UpdateTrainingDefinitionStep",
+        "parameters": [
+          {
+            "name": "trainingDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "stepId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrainingDefinitionStepRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "TrainingDefinitionSteps"
+        ],
+        "operationId": "DeleteTrainingDefinitionStep",
+        "parameters": [
+          {
+            "name": "trainingDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "stepId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-matrix": {
+      "get": {
+        "tags": [
+          "TrainingMatrix"
+        ],
+        "operationId": "GetTrainingMatrix",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingMatrix"
+        ],
+        "operationId": "CreateTrainingMatrixEntry",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingMatrixEntryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-matrix/{matrixEntryId}": {
+      "put": {
+        "tags": [
+          "TrainingMatrix"
+        ],
+        "operationId": "UpdateTrainingMatrixEntry",
+        "parameters": [
+          {
+            "name": "matrixEntryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrainingMatrixEntryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "TrainingMatrix"
+        ],
+        "operationId": "DeleteTrainingMatrixEntry",
+        "parameters": [
+          {
+            "name": "matrixEntryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/training-programs": {
       "get": {
         "tags": [
@@ -3012,6 +4292,132 @@
         }
       }
     },
+    "/api/training-requirements": {
+      "get": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "ListTrainingRequirements",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "CreateTrainingRequirement",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingRequirementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-requirements/builder-view": {
+      "get": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "GetTrainingRequirementBuilderView",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-requirements/sync-to-matrix": {
+      "post": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "SyncTrainingRequirementToMatrix",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncRequirementToMatrixRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-requirements/{requirementId}": {
+      "put": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "UpdateTrainingRequirement",
+        "parameters": [
+          {
+            "name": "requirementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrainingRequirementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "DeleteTrainingRequirement",
+        "parameters": [
+          {
+            "name": "requirementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -3268,6 +4674,98 @@
           }
         }
       },
+      "CreateTrainingApplicabilityProfileRequest": {
+        "required": [
+          "label",
+          "scopeType",
+          "scopeKey",
+          "description",
+          "sourceProduct",
+          "sourceRecordId"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "scopeType": {
+            "type": "string"
+          },
+          "scopeKey": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceRecordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateTrainingAssignmentMaterialDemandLineRequest": {
+        "required": [
+          "supplyarrPartId",
+          "partNumber",
+          "description",
+          "quantityRequested",
+          "unitOfMeasure",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "supplyarrPartId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "partNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantityRequested": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "unitOfMeasure": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateTrainingAssignmentRequest": {
         "required": [
           "staffarrPersonId",
@@ -3302,6 +4800,13 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "authorizationQualificationCheckId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -3329,6 +4834,42 @@
           },
           "qualificationName": {
             "type": "string"
+          }
+        }
+      },
+      "CreateTrainingDefinitionStepRequest": {
+        "required": [
+          "stepKey",
+          "name",
+          "description",
+          "stepType",
+          "configJson",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "stepKey": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "stepType": {
+            "type": "string"
+          },
+          "configJson": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -3362,6 +4903,50 @@
           }
         }
       },
+      "CreateTrainingMatrixEntryRequest": {
+        "required": [
+          "applicabilityKey",
+          "applicabilityLabel",
+          "trainingProgramId",
+          "trainingDefinitionId",
+          "requirementLevel",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "applicabilityKey": {
+            "type": "string"
+          },
+          "applicabilityLabel": {
+            "type": "string"
+          },
+          "trainingProgramId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "trainingDefinitionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "requirementLevel": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "CreateTrainingProgramRequest": {
         "required": [
           "programKey",
@@ -3386,6 +4971,76 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "CreateTrainingRequirementRequest": {
+        "required": [
+          "requirementKey",
+          "label",
+          "description",
+          "requirementSource",
+          "sourceKey",
+          "trainingProgramId",
+          "trainingDefinitionId",
+          "applicabilityProfileId",
+          "requirementLevel",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "requirementKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requirementSource": {
+            "type": "string"
+          },
+          "sourceKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "trainingProgramId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "trainingDefinitionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "applicabilityProfileId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "requirementLevel": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -3434,6 +5089,153 @@
           "reportedAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "IngestSupplyarrDemandStatusRequest": {
+        "required": [
+          "tenantId",
+          "trainarrPublicationId",
+          "supplyarrDemandRefId",
+          "supplyarrCallbackPublicationId",
+          "eventType",
+          "procurementStatus",
+          "supplyarrPurchaseRequestId",
+          "supplyarrPurchaseOrderId",
+          "supplyarrReceivingReceiptId",
+          "quantityReceivedDelta",
+          "message",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "trainarrPublicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrDemandRefId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "supplyarrCallbackPublicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "procurementStatus": {
+            "type": "string"
+          },
+          "supplyarrPurchaseRequestId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "supplyarrPurchaseOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "supplyarrReceivingReceiptId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "quantityReceivedDelta": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ProcessAssignmentDueRemindersRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessAssignmentEscalationsRequest": {
+        "required": [
+          "tenantId",
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -3795,6 +5597,17 @@
           }
         }
       },
+      "PublishTrainingAssignmentMaterialDemandRequest": {
+        "required": [
+          "createPurchaseRequestDraft"
+        ],
+        "type": "object",
+        "properties": {
+          "createPurchaseRequestDraft": {
+            "type": "boolean"
+          }
+        }
+      },
       "QualificationLifecycleActionRequest": {
         "required": [
           "reason"
@@ -3858,6 +5671,54 @@
           }
         }
       },
+      "StartProgramRevisionRequest": {
+        "required": [
+          "trainingProgramId"
+        ],
+        "type": "object",
+        "properties": {
+          "trainingProgramId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "SubmitTrainingAssignmentStepRequest": {
+        "required": [
+          "selectedOptionIndexes",
+          "practicalResult",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "selectedOptionIndexes": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          "practicalResult": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "SubmitTrainingEvaluationRequest": {
         "required": [
           "trainingAssignmentId",
@@ -3914,6 +5775,92 @@
           }
         }
       },
+      "SyncRequirementToMatrixRequest": {
+        "required": [
+          "requirementId"
+        ],
+        "type": "object",
+        "properties": {
+          "requirementId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "UpdateTrainingApplicabilityProfileRequest": {
+        "required": [
+          "label",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateTrainingDefinitionStepRequest": {
+        "required": [
+          "name",
+          "description",
+          "stepType",
+          "configJson",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "stepType": {
+            "type": "string"
+          },
+          "configJson": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpdateTrainingMatrixEntryRequest": {
+        "required": [
+          "applicabilityLabel",
+          "requirementLevel",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "applicabilityLabel": {
+            "type": "string"
+          },
+          "requirementLevel": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "UpdateTrainingProgramRequest": {
         "required": [
           "name",
@@ -3938,6 +5885,117 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "UpdateTrainingRequirementRequest": {
+        "required": [
+          "label",
+          "description",
+          "requirementLevel",
+          "sortOrder",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requirementLevel": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "UpsertAssignmentDueReminderSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "dueSoonLeadDays",
+          "reminderCooldownHours",
+          "maxRemindersPerAssignment"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "dueSoonLeadDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "reminderCooldownHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "maxRemindersPerAssignment": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertAssignmentEscalationSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "overdueEscalationAfterHours",
+          "escalationCooldownHours",
+          "maxEscalationsPerAssignment"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "overdueEscalationAfterHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "escalationCooldownHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "maxEscalationsPerAssignment": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -4153,6 +6211,8 @@
           "notifyOnQualificationSuspended",
           "notifyOnQualificationRevoked",
           "notifyOnQualificationExpired",
+          "notifyOnAssignmentDueReminder",
+          "notifyOnAssignmentOverdueEscalation",
           "expiringLeadDays",
           "maxAttempts",
           "retryIntervalMinutes"
@@ -4187,6 +6247,12 @@
             "type": "boolean"
           },
           "notifyOnQualificationExpired": {
+            "type": "boolean"
+          },
+          "notifyOnAssignmentDueReminder": {
+            "type": "boolean"
+          },
+          "notifyOnAssignmentOverdueEscalation": {
             "type": "boolean"
           },
           "expiringLeadDays": {
@@ -4257,10 +6323,31 @@
       "name": "TrainingDefinitions"
     },
     {
+      "name": "TrainingDefinitionSteps"
+    },
+    {
+      "name": "TrainingAssignmentSteps"
+    },
+    {
       "name": "TrainingPrograms"
     },
     {
+      "name": "ProgramVersions"
+    },
+    {
+      "name": "TrainingMatrix"
+    },
+    {
+      "name": "TrainingApplicability"
+    },
+    {
+      "name": "TrainingRequirements"
+    },
+    {
       "name": "TrainingAssignments"
+    },
+    {
+      "name": "TrainingAssignmentMaterialDemand"
     },
     {
       "name": "TrainingEvidence"
@@ -4305,6 +6392,12 @@
       "name": "NotificationSettings"
     },
     {
+      "name": "AssignmentDueReminderSettings"
+    },
+    {
+      "name": "AssignmentEscalationSettings"
+    },
+    {
       "name": "RecertificationSettings"
     },
     {
@@ -4330,6 +6423,18 @@
     },
     {
       "name": "IntegrationSettings"
+    },
+    {
+      "name": "AssignmentReports"
+    },
+    {
+      "name": "QualificationReports"
+    },
+    {
+      "name": "ComplianceReports"
+    },
+    {
+      "name": "EntityExports"
     }
   ]
 }

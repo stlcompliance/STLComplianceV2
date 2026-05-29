@@ -49,6 +49,8 @@ const partsDemandProps = {
   onPublishPartsDemand: vi.fn(),
   isAddingPartsDemand: false,
   isPublishingPartsDemand: false,
+  supplyReadiness: null,
+  isSupplyReadinessLoading: false,
 }
 
 describe('WorkOrdersPanel', () => {

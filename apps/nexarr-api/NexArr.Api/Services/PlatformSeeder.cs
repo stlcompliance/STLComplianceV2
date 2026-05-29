@@ -20,6 +20,7 @@ public static class PlatformSeeder
     private static readonly (string Key, string Name, int Order)[] Products =
     [
         ("shared-worker", "STL Shared Worker", 5),
+        ("nexarr-worker", "NexArr Worker", 8),
         ("nexarr", "NexArr", 10),
         ("staffarr", "StaffArr", 20),
         ("trainarr", "TrainArr", 30),

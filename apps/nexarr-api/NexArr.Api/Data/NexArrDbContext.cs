@@ -18,6 +18,8 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
     public DbSet<ServiceTokenRecord> ServiceTokens => Set<ServiceTokenRecord>();
     public DbSet<ProductLaunchProfile> LaunchProfiles => Set<ProductLaunchProfile>();
     public DbSet<HandoffCodeRecord> HandoffCodes => Set<HandoffCodeRecord>();
+
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<ProductCallbackAllowlistEntry> CallbackAllowlist => Set<ProductCallbackAllowlistEntry>();
 
     public DbSet<TenantCompanionNotificationSettings> TenantCompanionNotificationSettings =>
@@ -53,6 +55,13 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
     public DbSet<CompanionFieldSubmission> CompanionFieldSubmissions => Set<CompanionFieldSubmission>();
 
     public DbSet<TenantProductDataPlaneProfile> DataPlaneProfiles => Set<TenantProductDataPlaneProfile>();
+
+    public DbSet<PlatformOutboxEvent> PlatformOutboxEvents => Set<PlatformOutboxEvent>();
+
+    public DbSet<PlatformOutboxPublisherSettings> PlatformOutboxPublisherSettings =>
+        Set<PlatformOutboxPublisherSettings>();
+
+    public DbSet<PlatformOutboxPublisherRun> PlatformOutboxPublisherRuns => Set<PlatformOutboxPublisherRun>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -232,6 +241,17 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
         });
 
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.ToTable("password_reset_tokens");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TokenHash).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => x.TokenHash).IsUnique();
+            entity.HasIndex(x => x.ExpiresAt);
+            entity.HasIndex(x => new { x.UserId, x.UsedAt });
+            entity.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId);
+        });
+
         modelBuilder.Entity<ProductCallbackAllowlistEntry>(entity =>
         {
             entity.ToTable("product_callback_allowlist");
@@ -342,6 +362,35 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasIndex(x => new { x.TenantId, x.ProductKey }).IsUnique();
             entity.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
             entity.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductKey);
+        });
+
+        modelBuilder.Entity<PlatformOutboxEvent>(entity =>
+        {
+            entity.ToTable("platform_outbox_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ProcessingStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ProductCode).HasMaxLength(64);
+            entity.Property(x => x.ErrorMessage).HasMaxLength(512);
+            entity.HasIndex(x => x.IdempotencyKey).IsUnique();
+            entity.HasIndex(x => new { x.ProcessingStatus, x.OccurredAt });
+            entity.HasIndex(x => x.TenantId);
+        });
+
+        modelBuilder.Entity<PlatformOutboxPublisherSettings>(entity =>
+        {
+            entity.ToTable("nexarr_platform_outbox_publisher_settings");
+            entity.HasKey(x => x.Id);
+        });
+
+        modelBuilder.Entity<PlatformOutboxPublisherRun>(entity =>
+        {
+            entity.ToTable("nexarr_platform_outbox_publisher_runs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SkipReason).HasMaxLength(512);
+            entity.HasIndex(x => x.ProcessedAt);
         });
     }
 }

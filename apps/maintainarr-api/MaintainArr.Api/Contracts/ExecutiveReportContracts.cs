@@ -40,10 +40,29 @@ public sealed record ExecutiveReportOperationalTotals(
     int WorkOrdersCompletedLast30Days,
     int ActiveTechnicianAssignments);
 
+public sealed record ExecutiveReportDowntimePeriodMetrics(
+    DateTimeOffset PeriodStart,
+    DateTimeOffset PeriodEnd,
+    decimal DowntimeHours,
+    decimal AvailabilityPercent,
+    decimal PlannedDowntimeHours,
+    decimal UnplannedDowntimeHours,
+    int ActiveDowntimeEventCount,
+    bool FromMaterializedSnapshot);
+
+public sealed record ExecutiveReportDowntimeTrend(
+    int PeriodDays,
+    ExecutiveReportDowntimePeriodMetrics CurrentPeriod,
+    ExecutiveReportDowntimePeriodMetrics PreviousPeriod,
+    decimal DowntimeHoursDelta,
+    decimal AvailabilityPercentDelta,
+    DateTimeOffset? FleetSnapshotComputedAt);
+
 public sealed record ExecutiveReportSummaryResponse(
     DateTimeOffset GeneratedAt,
     ExecutiveReportFleetReadiness FleetReadiness,
     ExecutiveReportOperationalTotals OperationalTotals,
+    ExecutiveReportDowntimeTrend DowntimeTrend,
     ExecutiveReportSupplyDemandSummary SupplyDemand,
     IReadOnlyList<ExecutiveReportScopeReadinessItem> ScopeReadiness,
     IReadOnlyList<ExecutiveReportCountItem> WorkOrderStatusCounts,

@@ -170,6 +170,21 @@ public static class ProcurementExceptionRules
             (ProcurementExceptionStatuses.WaivePending, ProcurementExceptionStatuses.Investigating) => true,
             (ProcurementExceptionStatuses.Resolved, ProcurementExceptionStatuses.Closed) => true,
             (ProcurementExceptionStatuses.Waived, ProcurementExceptionStatuses.Closed) => true,
+            (ProcurementExceptionStatuses.Cancelled, ProcurementExceptionStatuses.Investigating) => true,
             _ => false,
         };
+
+    public static string NormalizeReopenReason(string reason)
+    {
+        var normalized = reason.Trim();
+        if (normalized.Length is < 10 or > 512)
+        {
+            throw new STLCompliance.Shared.Contracts.StlApiException(
+                "procurement_exceptions.invalid_reopen_reason",
+                "Reopen reason must be between 10 and 512 characters.",
+                400);
+        }
+
+        return normalized;
+    }
 }

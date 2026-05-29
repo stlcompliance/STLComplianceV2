@@ -49,7 +49,7 @@ public static class FactSourceTypes
     public const string StaticConfig = "static_config";
 
     /// <summary>
-    /// Reserved for future HTTP/product API fetchers. Resolve uses request context overrides when present.
+    /// Product API sources resolve from caller context, background sync cache, or configured fetch paths.
     /// </summary>
     public const string ProductApi = "product_api";
 

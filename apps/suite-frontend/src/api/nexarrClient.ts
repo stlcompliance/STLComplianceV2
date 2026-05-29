@@ -13,6 +13,7 @@ import type {
   HandoffCreatedResponse,
   LaunchContextResponse,
   LaunchDiagnosticsResponse,
+  ForgotPasswordResponse,
   LoginRequest,
   EntitlementSummary,
   MeResponse,
@@ -41,6 +42,11 @@ import type {
   TriggerEntitlementReconciliationOrchestrationResponse,
   TriggerServiceTokenCleanupOrchestrationResponse,
   TriggerTenantLifecycleOrchestrationResponse,
+  PlatformOutboxPublisherSettings,
+  PlatformOutboxPublisherRunsResponse,
+  PlatformOutboxPublisherStatusResponse,
+  PlatformOutboxEventsListResponse,
+  TriggerPlatformOutboxPublisherOrchestrationResponse,
   TenantOverviewRow,
   TenantDetailResponse,
   CreateTenantRequest,
@@ -59,6 +65,7 @@ import type {
   DataPlaneProfile,
   UpsertDataPlaneProfileRequest,
   EffectiveDataPlaneProfile,
+  UserSessionsResponse,
 } from './types'
 import { NexarrApiError } from './types'
 
@@ -179,6 +186,32 @@ export async function login(request: LoginRequest): Promise<StoredAuthSession> {
   return session
 }
 
+export async function requestPasswordReset(email: string): Promise<ForgotPasswordResponse> {
+  const response = await fetch(apiUrl('/api/auth/password/forgot'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+
+  return (await response.json()) as ForgotPasswordResponse
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  const response = await fetch(apiUrl('/api/auth/password/reset'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, newPassword }),
+  })
+
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+}
+
 export async function logout(): Promise<void> {
   const session = loadAuthSession()
   if (session?.refreshToken) {
@@ -207,6 +240,23 @@ export async function getNavigation(): Promise<NavigationResponse> {
     throw await parseError(response)
   }
   return (await response.json()) as NavigationResponse
+}
+
+export async function getMySessions(): Promise<UserSessionsResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/me/sessions')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as UserSessionsResponse
+}
+
+export async function revokeMySession(sessionId: string): Promise<void> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/me/sessions/${sessionId}`, { method: 'DELETE' })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
 }
 
 export async function getMyEntitlements(): Promise<EntitlementSummary[]> {
@@ -314,6 +364,71 @@ export async function triggerPlatformTenantLifecycle(): Promise<TriggerTenantLif
     throw await parseError(response)
   }
   return (await response.json()) as TriggerTenantLifecycleOrchestrationResponse
+}
+
+export async function getPlatformOutboxPublisherSettings(): Promise<PlatformOutboxPublisherSettings> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/platform-outbox/settings')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformOutboxPublisherSettings
+}
+
+export async function upsertPlatformOutboxPublisherSettings(
+  body: Pick<PlatformOutboxPublisherSettings, 'isEnabled' | 'maxRetryAttempts' | 'retryIntervalMinutes'>,
+): Promise<PlatformOutboxPublisherSettings> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/platform-outbox/settings', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformOutboxPublisherSettings
+}
+
+export async function getPlatformOutboxPublisherStatus(): Promise<PlatformOutboxPublisherStatusResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/platform-outbox/status')
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformOutboxPublisherStatusResponse
+}
+
+export async function getPlatformOutboxPublisherRuns(
+  limit = 8,
+): Promise<PlatformOutboxPublisherRunsResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/platform-outbox/runs?limit=${limit}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformOutboxPublisherRunsResponse
+}
+
+export async function getPlatformOutboxEvents(limit = 20): Promise<PlatformOutboxEventsListResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/platform-admin/platform-outbox/events?limit=${limit}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PlatformOutboxEventsListResponse
+}
+
+export async function triggerPlatformOutboxPublisher(): Promise<TriggerPlatformOutboxPublisherOrchestrationResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    '/api/platform-admin/worker-health-orchestration/trigger-platform-outbox',
+    { method: 'POST' },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TriggerPlatformOutboxPublisherOrchestrationResponse
 }
 
 export async function getPlatformAdminLaunchDiagnostics(

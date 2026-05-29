@@ -18,7 +18,9 @@ public sealed class DefectService(
 
     MaintainArrDbContext db,
 
-    IMaintainArrAuditService audit)
+    IMaintainArrAuditService audit,
+
+    AssetDowntimeService assetDowntimeService)
 
 {
 
@@ -176,7 +178,31 @@ public sealed class DefectService(
 
         await db.SaveChangesAsync(cancellationToken);
 
+        DowntimeFollowUpResponse? downtimeFollowUp = null;
+        if (string.Equals(entity.Severity, DefectSeverities.Critical, StringComparison.OrdinalIgnoreCase))
+        {
+            var asset = await db.Assets
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == entity.AssetId, cancellationToken);
+            if (asset is not null
+                && string.Equals(asset.LifecycleStatus, "active", StringComparison.OrdinalIgnoreCase))
+            {
+                asset.LifecycleStatus = "out_of_service";
+                asset.UpdatedAt = DateTimeOffset.UtcNow;
+                await db.SaveChangesAsync(cancellationToken);
+            }
 
+            if (asset is not null)
+            {
+                downtimeFollowUp = await assetDowntimeService.TryOpenCriticalDefectOutOfServiceDowntimeAsync(
+                    tenantId,
+                    actorUserId,
+                    entity.Id,
+                    asset.Id,
+                    asset.AssetTag,
+                    asset.Name,
+                    cancellationToken);
+            }
+        }
 
         await audit.WriteAsync(
 
@@ -196,7 +222,7 @@ public sealed class DefectService(
 
 
 
-        return await MapDetailAsync(tenantId, entity, cancellationToken);
+        return await MapDetailAsync(tenantId, entity, cancellationToken, downtimeFollowUp);
 
     }
 
@@ -936,7 +962,9 @@ public sealed class DefectService(
 
         Defect defect,
 
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+
+        DowntimeFollowUpResponse? downtimeFollowUp = null)
 
     {
 
@@ -1002,7 +1030,9 @@ public sealed class DefectService(
 
             defect.ResolvedAt,
 
-            summary.EvidenceCount);
+            summary.EvidenceCount,
+
+            downtimeFollowUp);
 
     }
 

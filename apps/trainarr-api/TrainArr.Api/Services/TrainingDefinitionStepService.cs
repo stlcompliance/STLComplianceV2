@@ -165,6 +165,14 @@ public sealed class TrainingDefinitionStepService(
             .Select(x => x.TrainingDefinitionStepId)
             .ToListAsync(cancellationToken);
 
+        var branchesByStepId = await LoadBranchesByStepIdAsync(tenantId, assignment.TrainingDefinitionId, cancellationToken);
+        var remediationTargetKeys = BuildRemediationTargetKeys(steps, branchesByStepId);
+        var progressByStepKey = await BuildProgressByStepKeyAsync(
+            tenantId,
+            assignment.Id,
+            steps,
+            cancellationToken);
+
         var now = DateTimeOffset.UtcNow;
         foreach (var step in steps)
         {
@@ -173,16 +181,29 @@ public sealed class TrainingDefinitionStepService(
                 continue;
             }
 
+            branchesByStepId.TryGetValue(step.Id, out var branches);
+            var initialStatus = ResolveInitialStepStatus(
+                step,
+                branches ?? [],
+                progressByStepKey,
+                remediationTargetKeys);
+
             db.TrainingAssignmentStepProgress.Add(new TrainingAssignmentStepProgress
             {
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
                 TrainingAssignmentId = assignment.Id,
                 TrainingDefinitionStepId = step.Id,
-                Status = "pending",
+                Status = initialStatus,
                 CreatedAt = now,
                 UpdatedAt = now,
             });
+
+            progressByStepKey[step.StepKey] = new TrainingAssignmentStepProgress
+            {
+                Status = initialStatus,
+                TrainingDefinitionStep = step,
+            };
         }
 
         if (db.ChangeTracker.HasChanges())
@@ -199,12 +220,13 @@ public sealed class TrainingDefinitionStepService(
         await EnsureAssignmentProgressAsync(tenantId, assignment, cancellationToken);
 
         var rows = await db.TrainingAssignmentStepProgress
-            .AsNoTracking()
             .Where(x => x.TenantId == tenantId && x.TrainingAssignmentId == assignment.Id)
             .Include(x => x.TrainingDefinitionStep)
             .OrderBy(x => x.TrainingDefinitionStep.SortOrder)
             .ThenBy(x => x.TrainingDefinitionStep.Name)
             .ToListAsync(cancellationToken);
+
+        await ApplyVisibilityStatusesAsync(tenantId, assignment, rows, cancellationToken);
 
         return rows.Select(MapProgress).ToList();
     }
@@ -241,6 +263,14 @@ public sealed class TrainingDefinitionStepService(
                 "training_steps.already_completed",
                 "This training step is already completed.",
                 409);
+        }
+
+        if (string.Equals(progress.Status, "hidden", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "training_steps.not_visible",
+                "This training step is not available until its visibility conditions are met.",
+                403);
         }
 
         var step = progress.TrainingDefinitionStep;
@@ -305,6 +335,16 @@ public sealed class TrainingDefinitionStepService(
             assignment.UpdatedAt = now;
         }
 
+        if (string.Equals(progress.Status, "failed", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(step.StepType, TrainingStepTypes.Quiz, StringComparison.OrdinalIgnoreCase))
+        {
+            var allProgress = await db.TrainingAssignmentStepProgress
+                .Include(x => x.TrainingDefinitionStep)
+                .Where(x => x.TenantId == tenantId && x.TrainingAssignmentId == assignment.Id)
+                .ToListAsync(cancellationToken);
+            await ApplyQuizFailedRemediationAsync(tenantId, assignment, step, allProgress, cancellationToken);
+        }
+
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
             "training_assignment_step.submit",
@@ -317,6 +357,13 @@ public sealed class TrainingDefinitionStepService(
 
         return MapProgress(progress);
     }
+
+    public async Task<TrainingDefinitionStep> GetDefinitionStepAsync(
+        Guid tenantId,
+        Guid trainingDefinitionId,
+        Guid stepId,
+        CancellationToken cancellationToken = default) =>
+        await LoadDefinitionStepAsync(tenantId, trainingDefinitionId, stepId, cancellationToken);
 
     private async Task<TrainingDefinitionStep> LoadDefinitionStepAsync(
         Guid tenantId,
@@ -365,9 +412,211 @@ public sealed class TrainingDefinitionStepService(
             entity.TrainingDefinitionStep.ConfigJson,
             entity.TrainingDefinitionStep.SortOrder,
             entity.Status,
+            !string.Equals(entity.Status, "hidden", StringComparison.OrdinalIgnoreCase),
             entity.QuizScorePercent,
             entity.ResponseJson,
             entity.CompletedAt);
+
+    private async Task ApplyVisibilityStatusesAsync(
+        Guid tenantId,
+        TrainingAssignment assignment,
+        IReadOnlyList<TrainingAssignmentStepProgress> rows,
+        CancellationToken cancellationToken)
+    {
+        if (rows.Count == 0)
+        {
+            return;
+        }
+
+        var branchesByStepId = await LoadBranchesByStepIdAsync(tenantId, assignment.TrainingDefinitionId, cancellationToken);
+        var remediationTargetKeys = BuildRemediationTargetKeys(
+            rows.Select(x => x.TrainingDefinitionStep).DistinctBy(x => x.Id).ToList(),
+            branchesByStepId);
+        var progressByStepKey = rows.ToDictionary(
+            x => x.TrainingDefinitionStep.StepKey,
+            x => x,
+            StringComparer.OrdinalIgnoreCase);
+
+        var changed = false;
+        foreach (var row in rows)
+        {
+            if (remediationTargetKeys.Contains(row.TrainingDefinitionStep.StepKey))
+            {
+                continue;
+            }
+
+            branchesByStepId.TryGetValue(row.TrainingDefinitionStepId, out var branches);
+            var shouldBeVisible = TrainingStepBranchEvaluator.IsStepVisible(
+                row.TrainingDefinitionStep,
+                branches ?? [],
+                progressByStepKey);
+
+            if (shouldBeVisible
+                && string.Equals(row.Status, "hidden", StringComparison.OrdinalIgnoreCase))
+            {
+                row.Status = "pending";
+                row.UpdatedAt = DateTimeOffset.UtcNow;
+                changed = true;
+            }
+            else if (!shouldBeVisible
+                && string.Equals(row.Status, "pending", StringComparison.OrdinalIgnoreCase))
+            {
+                row.Status = "hidden";
+                row.UpdatedAt = DateTimeOffset.UtcNow;
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private async Task ApplyQuizFailedRemediationAsync(
+        Guid tenantId,
+        TrainingAssignment assignment,
+        TrainingDefinitionStep failedStep,
+        IReadOnlyList<TrainingAssignmentStepProgress>? rows,
+        CancellationToken cancellationToken)
+    {
+        var branchesByStepId = await LoadBranchesByStepIdAsync(tenantId, assignment.TrainingDefinitionId, cancellationToken);
+        branchesByStepId.TryGetValue(failedStep.Id, out var branches);
+        var targetKeys = TrainingStepBranchEvaluator.GetQuizFailedRemediationTargets(failedStep, branches ?? []);
+        if (targetKeys.Count == 0)
+        {
+            return;
+        }
+
+        var progressRows = rows ?? await db.TrainingAssignmentStepProgress
+            .Include(x => x.TrainingDefinitionStep)
+            .Where(x => x.TenantId == tenantId && x.TrainingAssignmentId == assignment.Id)
+            .ToListAsync(cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        var activated = false;
+        foreach (var progress in progressRows)
+        {
+            if (!targetKeys.Contains(progress.TrainingDefinitionStep.StepKey, StringComparer.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (string.Equals(progress.Status, "hidden", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(progress.Status, "skipped", StringComparison.OrdinalIgnoreCase))
+            {
+                progress.Status = "pending";
+                progress.UpdatedAt = now;
+                activated = true;
+            }
+        }
+
+        if (activated
+            && !string.Equals(assignment.Status, "remediation_required", StringComparison.OrdinalIgnoreCase))
+        {
+            assignment.Status = "remediation_required";
+            assignment.UpdatedAt = now;
+        }
+    }
+
+    private static string ResolveInitialStepStatus(
+        TrainingDefinitionStep step,
+        IReadOnlyList<TrainingDefinitionStepBranch> branches,
+        IReadOnlyDictionary<string, TrainingAssignmentStepProgress> progressByStepKey,
+        IReadOnlySet<string> remediationTargetKeys)
+    {
+        if (remediationTargetKeys.Contains(step.StepKey))
+        {
+            return "hidden";
+        }
+
+        return TrainingStepBranchEvaluator.IsStepVisible(step, branches, progressByStepKey)
+            ? "pending"
+            : "hidden";
+    }
+
+    private static HashSet<string> BuildRemediationTargetKeys(
+        IReadOnlyList<TrainingDefinitionStep> steps,
+        IReadOnlyDictionary<Guid, IReadOnlyList<TrainingDefinitionStepBranch>> branchesByStepId)
+    {
+        var stepById = steps.ToDictionary(x => x.Id);
+        var targets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var (stepId, branches) in branchesByStepId)
+        {
+            if (!stepById.TryGetValue(stepId, out var sourceStep))
+            {
+                continue;
+            }
+
+            foreach (var targetKey in TrainingStepBranchEvaluator.GetQuizFailedRemediationTargets(sourceStep, branches))
+            {
+                targets.Add(targetKey);
+            }
+        }
+
+        return targets;
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, IReadOnlyList<TrainingDefinitionStepBranch>>> LoadBranchesByStepIdAsync(
+        Guid tenantId,
+        Guid trainingDefinitionId,
+        CancellationToken cancellationToken)
+    {
+        var stepIds = await db.TrainingDefinitionSteps
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.TrainingDefinitionId == trainingDefinitionId)
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        if (stepIds.Count == 0)
+        {
+            return new Dictionary<Guid, IReadOnlyList<TrainingDefinitionStepBranch>>();
+        }
+
+        var branches = await db.TrainingDefinitionStepBranches
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && stepIds.Contains(x.TrainingDefinitionStepId))
+            .ToListAsync(cancellationToken);
+
+        return branches
+            .GroupBy(x => x.TrainingDefinitionStepId)
+            .ToDictionary(
+                x => x.Key,
+                x => (IReadOnlyList<TrainingDefinitionStepBranch>)x.OrderBy(b => b.SortOrder).ToList());
+    }
+
+    private async Task<Dictionary<string, TrainingAssignmentStepProgress>> BuildProgressByStepKeyAsync(
+        Guid tenantId,
+        Guid assignmentId,
+        IReadOnlyList<TrainingDefinitionStep> steps,
+        CancellationToken cancellationToken)
+    {
+        var existing = await db.TrainingAssignmentStepProgress
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.TrainingAssignmentId == assignmentId)
+            .Include(x => x.TrainingDefinitionStep)
+            .ToListAsync(cancellationToken);
+
+        var map = existing.ToDictionary(
+            x => x.TrainingDefinitionStep.StepKey,
+            x => x,
+            StringComparer.OrdinalIgnoreCase);
+
+        foreach (var step in steps)
+        {
+            if (!map.ContainsKey(step.StepKey))
+            {
+                map[step.StepKey] = new TrainingAssignmentStepProgress
+                {
+                    Status = "pending",
+                    TrainingDefinitionStep = step,
+                };
+            }
+        }
+
+        return map;
+    }
 
     private static (int ScorePercent, bool Passed) ScoreQuiz(
         string configJson,

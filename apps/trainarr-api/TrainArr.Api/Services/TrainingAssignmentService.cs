@@ -10,6 +10,7 @@ public sealed class TrainingAssignmentService(
     TrainArrDbContext db,
     TrainingDefinitionService definitionService,
     TrainingDefinitionStepService stepService,
+    TrainingCompletionEvaluationService completionEvaluationService,
     CertificationPublicationService publicationService,
     TrainingAcknowledgementPublicationService acknowledgementPublicationService,
     QualificationIssueService qualificationIssueService,
@@ -73,7 +74,7 @@ public sealed class TrainingAssignmentService(
         var assignment = await LoadAssignmentAsync(tenantId, assignmentId, cancellationToken);
         await acknowledgementPublicationService.SyncMirrorFromStaffArrAsync(assignment, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        return MapDetail(assignment);
+        return await MapDetailAsync(assignment, cancellationToken);
     }
 
     public async Task<TrainingAssignmentDetailResponse> CreateAsync(
@@ -222,7 +223,7 @@ public sealed class TrainingAssignmentService(
             cancellationToken);
 
         var loaded = await LoadAssignmentAsync(tenantId, assignment.Id, cancellationToken);
-        return MapDetail(loaded);
+        return await MapDetailAsync(loaded, cancellationToken);
     }
 
     public async Task<TrainingAssignmentDetailResponse> CreateRecertificationByWorkerAsync(
@@ -302,7 +303,7 @@ public sealed class TrainingAssignmentService(
             cancellationToken);
 
         var loaded = await LoadAssignmentAsync(tenantId, assignment.Id, cancellationToken);
-        return MapDetail(loaded);
+        return await MapDetailAsync(loaded, cancellationToken);
     }
 
     public async Task<CompleteTrainingAssignmentResponse> CompleteAsync(
@@ -320,12 +321,12 @@ public sealed class TrainingAssignmentService(
                 409);
         }
 
-        if (!TrainingCompletionRequirements.AreMet(assignment))
+        var completion = await completionEvaluationService.EvaluateAsync(assignment, cancellationToken);
+        if (!completion.AreMet)
         {
-            var missing = TrainingCompletionRequirements.MissingRequirements(assignment);
             throw new StlApiException(
                 "assignments.completion_requirements",
-                $"Assignment cannot be completed until requirements are met: {string.Join(", ", missing)}.",
+                $"Assignment cannot be completed until requirements are met: {string.Join(", ", completion.MissingRequirements)}.",
                 409);
         }
 
@@ -422,8 +423,12 @@ public sealed class TrainingAssignmentService(
             entity.DueAt,
             entity.CreatedAt);
 
-    private static TrainingAssignmentDetailResponse MapDetail(TrainingAssignment entity) =>
-        new(
+    private async Task<TrainingAssignmentDetailResponse> MapDetailAsync(
+        TrainingAssignment entity,
+        CancellationToken cancellationToken)
+    {
+        var completion = await completionEvaluationService.EvaluateAsync(entity, cancellationToken);
+        return new TrainingAssignmentDetailResponse(
             entity.Id,
             entity.StaffarrPersonId,
             entity.TrainingDefinitionId,
@@ -452,8 +457,9 @@ public sealed class TrainingAssignmentService(
                 .OrderBy(x => x.SignoffRole)
                 .Select(MapSignoff)
                 .ToList(),
-            TrainingCompletionRequirements.AreMet(entity),
+            completion.AreMet,
             MapQualificationIssue(entity.QualificationIssue));
+    }
 
     private static QualificationIssueResponse? MapQualificationIssue(QualificationIssue? entity) =>
         entity is null

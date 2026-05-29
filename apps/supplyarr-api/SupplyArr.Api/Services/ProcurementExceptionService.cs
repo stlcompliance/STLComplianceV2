@@ -485,6 +485,50 @@ public sealed class ProcurementExceptionService(
         return await MapAsync(tenantId, entity, cancellationToken);
     }
 
+    public async Task<ProcurementExceptionResponse> ReopenAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid exceptionId,
+        ReopenProcurementExceptionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadTrackedAsync(tenantId, exceptionId, cancellationToken);
+        if (!string.Equals(entity.Status, ProcurementExceptionStatuses.Cancelled, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "procurement_exceptions.not_cancelled",
+                "Only cancelled procurement exceptions can be reopened.",
+                409);
+        }
+
+        Transition(entity, ProcurementExceptionStatuses.Investigating);
+
+        var now = DateTimeOffset.UtcNow;
+        entity.LastReopenReason = ProcurementExceptionRules.NormalizeReopenReason(request.Reason);
+        entity.ReopenedByUserId = actorUserId;
+        entity.ReopenedAt = now;
+        entity.ReopenCount += 1;
+        entity.AssignedToUserId ??= actorUserId;
+        entity.InvestigatedByUserId = actorUserId;
+        entity.InvestigatedAt = now;
+        entity.SlaDueAt = ProcurementExceptionRules.ComputeDefaultSlaDueAt(entity.ExceptionCategory, now);
+        entity.LastEscalatedAt = null;
+        entity.UpdatedAt = now;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await WriteAuditAndOutboxAsync(
+            "procurement_exception.reopen",
+            IntegrationOutboxEventKinds.ProcurementExceptionReopened,
+            tenantId,
+            actorUserId,
+            entity,
+            $"Procurement exception reopened: {entity.ExceptionKey}",
+            cancellationToken);
+
+        return await MapAsync(tenantId, entity, cancellationToken);
+    }
+
     private async Task EnsurePurchaseRequestExistsAsync(
         Guid tenantId,
         Guid purchaseRequestId,
@@ -689,6 +733,10 @@ public sealed class ProcurementExceptionService(
             entity.ClosedAt,
             entity.CancelledAt,
             entity.CancellationReason,
+            entity.ReopenedByUserId,
+            entity.ReopenedAt,
+            entity.LastReopenReason,
+            entity.ReopenCount,
             entity.CreatedAt,
             entity.UpdatedAt);
     }

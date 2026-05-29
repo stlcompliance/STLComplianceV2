@@ -74,6 +74,14 @@ public sealed class ProcurementException : IHasTenant
 
     public string CancellationReason { get; set; } = string.Empty;
 
+    public Guid? ReopenedByUserId { get; set; }
+
+    public DateTimeOffset? ReopenedAt { get; set; }
+
+    public string LastReopenReason { get; set; } = string.Empty;
+
+    public int ReopenCount { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

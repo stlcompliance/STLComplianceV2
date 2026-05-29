@@ -17,6 +17,14 @@ vi.mock('../../components/ProofDvirReportsPanel', () => ({
   ProofDvirReportsPanel: () => <div data-testid="proof-dvir-reports-panel" />,
 }))
 
+vi.mock('../../components/TripCompletionReportsPanel', () => ({
+  TripCompletionReportsPanel: () => <div data-testid="trip-completion-reports-panel" />,
+}))
+
+vi.mock('../../components/DispatchOverrideReportsPanel', () => ({
+  DispatchOverrideReportsPanel: () => <div data-testid="dispatch-override-reports-panel" />,
+}))
+
 vi.mock('../../components/DataExportsPanel', () => ({
   DataExportsPanel: () => <div data-testid="data-exports-panel" />,
 }))
@@ -37,7 +45,7 @@ describe('ReportsSection', () => {
     cleanup()
   })
 
-  it('renders reports workspace with all four M12 panels for routarr_admin', () => {
+  it('renders reports workspace with all six M12 panels for routarr_admin', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
     render(
@@ -50,6 +58,8 @@ describe('ReportsSection', () => {
     expect(screen.getByTestId('dispatch-reports-panel')).toBeInTheDocument()
     expect(screen.getByTestId('route-reports-panel')).toBeInTheDocument()
     expect(screen.getByTestId('proof-dvir-reports-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('trip-completion-reports-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('dispatch-override-reports-panel')).toBeInTheDocument()
     expect(screen.getByTestId('data-exports-panel')).toBeInTheDocument()
     expect(screen.getByTestId('routarr-audit-export-panel')).toBeInTheDocument()
   })

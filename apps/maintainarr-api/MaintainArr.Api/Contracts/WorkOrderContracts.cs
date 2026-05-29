@@ -41,7 +41,8 @@ public sealed record WorkOrderDetailResponse(
     DateTimeOffset UpdatedAt,
     DateTimeOffset? StartedAt,
     DateTimeOffset? CompletedAt,
-    DateTimeOffset? CancelledAt);
+    DateTimeOffset? CancelledAt,
+    DowntimeFollowUpResponse? DowntimeFollowUp = null);
 
 public sealed record CreateWorkOrderRequest(
     Guid AssetId,

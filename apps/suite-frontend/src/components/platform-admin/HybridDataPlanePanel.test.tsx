@@ -32,6 +32,7 @@ describe('HybridDataPlanePanel', () => {
   afterEach(() => {
     cleanup()
     vi.clearAllMocks()
+    vi.useRealTimers()
   })
 
   it('shows effective deployment map for selected tenant', async () => {

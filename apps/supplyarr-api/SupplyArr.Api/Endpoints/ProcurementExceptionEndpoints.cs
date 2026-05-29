@@ -206,6 +206,21 @@ public static class ProcurementExceptionEndpoints
         })
         .WithName("CancelProcurementException");
 
+        group.MapPost("/{exceptionId:guid}/reopen", async (
+            Guid exceptionId,
+            ReopenProcurementExceptionRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ProcurementExceptionService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePurchaseRequestCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.ReopenAsync(tenantId, actorUserId, exceptionId, request, cancellationToken));
+        })
+        .WithName("ReopenProcurementException");
+
         MapSubjectCreateEndpoint(
             app,
             "/api/purchase-requests/{subjectId:guid}/procurement-exceptions",

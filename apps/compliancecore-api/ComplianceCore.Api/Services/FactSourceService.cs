@@ -237,6 +237,7 @@ public sealed class FactSourceService(
 
         if (string.Equals(sourceType, FactSourceTypes.ProductApi, StringComparison.Ordinal))
         {
+            FactSourceApiSyncConfigParser.ValidateForSourceType(sourceType, valueType, configJson, "tenant");
             return;
         }
 

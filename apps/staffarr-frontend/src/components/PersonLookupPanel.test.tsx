@@ -12,6 +12,7 @@ const sampleLookup: PersonLookupResponse = {
   primaryEmail: 'alex.rivera@example.com',
   employmentStatus: 'active',
   jobTitle: 'Operator',
+  workPhone: null,
   placement: {
     primaryOrgUnitId: '22222222-2222-2222-2222-222222222222',
     primaryOrgUnitName: 'Day Shift',

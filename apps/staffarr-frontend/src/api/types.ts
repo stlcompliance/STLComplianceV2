@@ -29,6 +29,102 @@ export interface StaffArrMeResponse {
   entitlements: string[]
 }
 
+export interface MePortalPermissionSummaryResponse {
+  permissionCount: number
+  permissionSummaries: string[]
+}
+
+export interface MePortalCertificationSummaryResponse {
+  activeCount: number
+  expiringSoonCount: number
+  missingRequirementCount: number
+  highlights: PersonCertificationResponse[]
+}
+
+export interface MePortalReadinessSummaryResponse {
+  readinessStatus: string
+  readinessBasis: string
+  blockerMessages: string[]
+}
+
+export interface MePortalOnboardingSummaryResponse {
+  overallStatus: string
+  completedSteps: number
+  totalSteps: number
+  blockedSteps: number
+}
+
+export interface MePortalSummaryResponse {
+  session: StaffArrMeResponse
+  profile: PersonLookupResponse
+  readiness: MePortalReadinessSummaryResponse
+  certifications: MePortalCertificationSummaryResponse
+  permissions: MePortalPermissionSummaryResponse
+  onboarding: MePortalOnboardingSummaryResponse | null
+  directReportCount: number
+  directReportsPreview: SubordinateSummaryResponse[]
+  productAccess: string[]
+}
+
+export interface PersonnelUpdateRequestResponse {
+  requestId: string
+  personId: string
+  requestType: string
+  status: string
+  fieldKey: string
+  currentValue: string | null
+  requestedValue: string
+  details: string | null
+  submittedByUserId: string
+  submittedAt: string
+  reviewedByUserId: string | null
+  reviewedAt: string | null
+  reviewNotes: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SubmitPersonnelUpdateRequest {
+  requestType: string
+  fieldKey: string
+  currentValue: string | null
+  requestedValue: string
+  details: string | null
+}
+
+export interface ReviewPersonnelUpdateRequest {
+  decision: 'approve' | 'deny'
+  reviewNotes: string | null
+  applyToProfile?: boolean
+}
+
+export interface PersonnelUpdateRequestReviewResponse {
+  request: PersonnelUpdateRequestResponse
+  appliedToProfile: boolean
+}
+
+export interface MyTeamMemberResponse {
+  summary: SubordinateSummaryResponse
+  readinessStatus: string
+  blockerCount: number
+  expiringCertificationCount: number
+  openIncidentCount: number
+  pendingUpdateRequestCount: number
+  pendingTrainingBlockerCount: number
+}
+
+export interface MyTeamDashboardResponse {
+  directReportCount: number
+  notReadyCount: number
+  expiringCertificationCount: number
+  openIncidentCount: number
+  pendingUpdateRequestCount: number
+  onboardingInProgressCount: number
+  pendingTrainingBlockerCount: number
+  members: MyTeamMemberResponse[]
+  pendingUpdateRequests: PersonnelUpdateRequestResponse[]
+}
+
 export interface StaffPersonSummaryResponse {
   personId: string
   externalUserId: string | null
@@ -88,6 +184,7 @@ export interface PersonLookupResponse {
   primaryEmail: string
   employmentStatus: string
   jobTitle: string | null
+  workPhone: string | null
   placement: PersonLookupPlacementResponse
   lookedUpAt: string
 }
@@ -714,6 +811,14 @@ export interface CreatePersonnelIncidentRequest {
   occurredAt: string
 }
 
+export interface SubmitSelfReportedPersonnelIncidentRequest {
+  reasonCategoryKey: PersonnelIncidentReasonCategory
+  severity: PersonnelIncidentSeverity
+  title: string
+  description: string
+  occurredAt: string
+}
+
 export type PersonnelNoteCategoryKey =
   | 'general'
   | 'performance'
@@ -837,6 +942,49 @@ export interface WorkforceOnboardingJourneyResponse {
   overallSummary: string
   steps: WorkforceOnboardingJourneyStepResponse[]
   trainarrIntegrationNote: string | null
+}
+
+export interface PersonOffboardingStepResponse {
+  stepKey: string
+  title: string
+  detail: string
+  status: string
+  blockerDetail: string | null
+  sortOrder: number
+  completedAt: string | null
+}
+
+export interface PersonOffboardingResponse {
+  offboardingId: string
+  personId: string
+  status: string
+  separationDate: string
+  separationReason: string | null
+  targetEmploymentStatus: string
+  disableLoginRequested: boolean
+  newManagerPersonIdForReports: string | null
+  startedAt: string
+  startedByUserId: string
+  completedAt: string | null
+  completedByUserId: string | null
+  steps: PersonOffboardingStepResponse[]
+  activeDirectReportCount: number
+  openIncidentCount: number
+  activeRoleAssignmentCount: number
+  activeOrgAssignmentCount: number
+}
+
+export interface StartPersonOffboardingRequest {
+  personId: string
+  separationDate: string
+  separationReason: string | null
+  targetEmploymentStatus: string
+  disableLoginRequested: boolean
+  newManagerPersonIdForReports: string | null
+}
+
+export interface ExecutePersonOffboardingRequest {
+  newManagerPersonIdForReports: string | null
 }
 
 export interface PersonnelHistorySummaryResponse {

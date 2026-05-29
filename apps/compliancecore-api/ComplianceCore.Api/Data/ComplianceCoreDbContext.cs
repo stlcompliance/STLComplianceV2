@@ -87,6 +87,13 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
 
     public DbSet<M12AnalyticsBatchRun> M12AnalyticsBatchRuns => Set<M12AnalyticsBatchRun>();
 
+    public DbSet<TenantFactSourceSyncWorkerSettings> TenantFactSourceSyncWorkerSettings =>
+        Set<TenantFactSourceSyncWorkerSettings>();
+
+    public DbSet<FactSourceSyncStatus> FactSourceSyncStatuses => Set<FactSourceSyncStatus>();
+
+    public DbSet<ComplianceWaiver> ComplianceWaivers => Set<ComplianceWaiver>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -587,9 +594,11 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
             entity.Property(x => x.OverallResult).HasMaxLength(16).IsRequired();
             entity.Property(x => x.FactInputsJson).HasColumnType("jsonb").IsRequired();
             entity.Property(x => x.RuleResultsJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.AppliedWaiverKey).HasMaxLength(64);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => x.RulePackId);
             entity.HasIndex(x => x.CreatedAt);
+            entity.HasIndex(x => x.AppliedWaiverId);
             entity.HasOne(x => x.RulePack)
                 .WithMany()
                 .HasForeignKey(x => x.RulePackId)
@@ -649,9 +658,11 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
             entity.Property(x => x.Message).HasMaxLength(1024).IsRequired();
             entity.Property(x => x.ReasonsJson).HasColumnType("jsonb").IsRequired();
             entity.Property(x => x.ContextJson).HasColumnType("jsonb").IsRequired();
+            entity.Property(x => x.AppliedWaiverKey).HasMaxLength(64);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => x.WorkflowGateDefinitionId);
             entity.HasIndex(x => x.CreatedAt);
+            entity.HasIndex(x => x.AppliedWaiverId);
             entity.HasOne(x => x.WorkflowGateDefinition)
                 .WithMany()
                 .HasForeignKey(x => x.WorkflowGateDefinitionId)
@@ -701,6 +712,29 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
             entity.HasIndex(x => x.TenantId).IsUnique();
         });
 
+        modelBuilder.Entity<TenantFactSourceSyncWorkerSettings>(entity =>
+        {
+            entity.ToTable("compliancecore_tenant_fact_source_sync_worker_settings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DefaultScopeKey).HasMaxLength(256).IsRequired();
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<FactSourceSyncStatus>(entity =>
+        {
+            entity.ToTable("compliancecore_fact_source_sync_statuses");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ScopeKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.HealthStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.LastErrorMessage).HasMaxLength(2000);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.FactSourceId).IsUnique();
+            entity.HasOne(x => x.FactSource)
+                .WithMany()
+                .HasForeignKey(x => x.FactSourceId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<M12AnalyticsBatchRun>(entity =>
         {
             entity.ToTable("compliancecore_m12_analytics_batch_runs");
@@ -722,6 +756,27 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
             entity.Property(x => x.ArtifactJson);
             entity.HasIndex(x => new { x.TenantId, x.Status, x.CreatedAt });
             entity.HasIndex(x => x.CreatedAt);
+        });
+
+        modelBuilder.Entity<ComplianceWaiver>(entity =>
+        {
+            entity.ToTable("compliancecore_waivers");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.WaiverKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PackKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.RuleKey).HasMaxLength(128);
+            entity.Property(x => x.GateKey).HasMaxLength(128);
+            entity.Property(x => x.SubjectScopeKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ReasonCode).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Explanation).HasMaxLength(2000).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.WaiverKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.ExpiresAt });
+            entity.HasOne(x => x.RulePack)
+                .WithMany()
+                .HasForeignKey(x => x.RulePackId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

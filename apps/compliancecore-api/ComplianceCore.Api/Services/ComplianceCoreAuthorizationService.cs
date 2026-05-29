@@ -380,6 +380,16 @@ public sealed class ComplianceCoreAuthorizationService
         RequireAuditDeliveryOrchestrationManage(principal);
     }
 
+    public void RequireFactSourceSyncWorkerSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireAuditDeliveryOrchestrationManage(principal);
+    }
+
+    public void RequireFactSourceSyncHealthRead(ClaimsPrincipal principal)
+    {
+        RequireOperatorDashboardRead(principal);
+    }
+
     public void RequireAuditDeliveryOrchestrationRead(ClaimsPrincipal principal)
     {
         RequireComplianceCoreEntitlement(principal);
@@ -440,6 +450,53 @@ public sealed class ComplianceCoreAuthorizationService
     public void RequireOperatorReportExport(ClaimsPrincipal principal)
     {
         RequireAuditPackageExport(principal);
+    }
+
+    public void RequireWaiverRead(ClaimsPrincipal principal)
+    {
+        RequireFindingsRead(principal);
+    }
+
+    public void RequireWaiverManage(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Compliance waiver management requires tenant admin or compliance admin role.",
+            403);
+    }
+
+    public void RequireWaiverApprove(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "compliance_admin",
+                "compliance_reviewer"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Compliance waiver approval requires compliance admin or reviewer role.",
+            403);
     }
 
     private static bool MatchesRole(string roleKey, params string[] candidates) =>

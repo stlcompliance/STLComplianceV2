@@ -9,6 +9,7 @@ import {
   getDriverPortalCaptureReadiness,
   getDriverPortalSchedule,
   getDriverPortalTripExecution,
+  reportDriverPortalTripException,
   startDriverPortalTrip,
   submitDriverPortalTripDvir,
 } from '../api/client'
@@ -27,6 +28,124 @@ function formatTimestamp(iso: string | null) {
   } catch {
     return iso
   }
+}
+
+const REPORTABLE_EXCEPTION_STATUSES = new Set(['assigned', 'dispatched', 'in_progress'])
+
+function DriverPortalExceptionSection({
+  accessToken,
+  trip,
+  onReported,
+}: {
+  accessToken: string
+  trip: DriverPortalTripRow
+  onReported: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [exceptionType, setExceptionType] = useState('traffic_delay')
+  const [reportError, setReportError] = useState<string | null>(null)
+  const [reportedKey, setReportedKey] = useState<string | null>(null)
+
+  if (!REPORTABLE_EXCEPTION_STATUSES.has(trip.dispatchStatus)) {
+    return null
+  }
+
+  const reportMutation = useMutation({
+    mutationFn: () =>
+      reportDriverPortalTripException(accessToken, trip.tripId, {
+        title,
+        description,
+        exceptionType,
+      }),
+    onSuccess: (created) => {
+      setReportError(null)
+      setReportedKey(created.exceptionKey)
+      setTitle('')
+      setDescription('')
+      setOpen(false)
+      onReported()
+    },
+    onError: (err: Error) => setReportError(err.message),
+  })
+
+  return (
+    <div
+      className="mt-3 border-t border-slate-700 pt-3"
+      data-testid={`driver-portal-exception-${trip.tripId}`}
+    >
+      {reportedKey ? (
+        <p className="text-xs text-emerald-400">
+          Exception {reportedKey} reported to dispatch.
+        </p>
+      ) : null}
+      {!open ? (
+        <button
+          type="button"
+          className="rounded border border-amber-700/60 bg-amber-950/40 px-2 py-1 text-xs text-amber-200"
+          onClick={() => setOpen(true)}
+        >
+          Report exception
+        </button>
+      ) : (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-slate-300">Report exception</p>
+          <select
+            className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs text-slate-100"
+            value={exceptionType}
+            onChange={(e) => setExceptionType(e.target.value)}
+            aria-label="Exception type"
+          >
+            <option value="traffic_delay">Traffic / delay</option>
+            <option value="equipment_issue">Equipment issue</option>
+            <option value="customer_access">Customer / stop access</option>
+            <option value="route_issue">Route issue</option>
+            <option value="other">Other</option>
+          </select>
+          <input
+            type="text"
+            className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs text-slate-100"
+            placeholder="Short title (required)"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <textarea
+            className="min-h-[72px] w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs text-slate-100"
+            placeholder="What happened?"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <div className="flex flex-wrap gap-1">
+            <button
+              type="button"
+              className="rounded bg-amber-700 px-2 py-1 text-xs text-white disabled:opacity-50"
+              disabled={reportMutation.isPending || !title.trim()}
+              onClick={() => reportMutation.mutate()}
+            >
+              Submit to dispatch
+            </button>
+            <button
+              type="button"
+              className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-300"
+              disabled={reportMutation.isPending}
+              onClick={() => {
+                setOpen(false)
+                setReportError(null)
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+          {reportError ? (
+            <p className="text-xs text-red-400" role="alert">
+              {reportError}
+            </p>
+          ) : null}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function TripProofDvirSection({
@@ -334,6 +453,12 @@ function TripCard({
         ) : null}
       </div>
 
+      <DriverPortalExceptionSection
+        accessToken={accessToken}
+        trip={trip}
+        onReported={onProofDvirUpdated}
+      />
+
       <TripProofDvirSection
         accessToken={accessToken}
         trip={trip}
@@ -443,8 +568,9 @@ export function DriverPortalPanel({ accessToken }: Props) {
         <h2 className="text-lg font-semibold text-slate-100">Driver portal</h2>
         <p className="mt-1 text-sm text-slate-400">
           Today&apos;s assignments and upcoming trips for your person record. Execute dispatch,
-          start, complete, and close only on trips assigned to you. Capture pickup/delivery proof and
-          pre/post-trip DVIR on active trips; tenant policy may require DVIR before start.
+          start, complete, and close only on trips assigned to you. Report operational exceptions to
+          dispatch on active trips. Capture pickup/delivery proof and pre/post-trip DVIR; tenant policy
+          may require DVIR before start.
         </p>
       </header>
 

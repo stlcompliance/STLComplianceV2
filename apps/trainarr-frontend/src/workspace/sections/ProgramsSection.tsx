@@ -1,6 +1,8 @@
 import { ProgramBuilderPanel } from '../../components/ProgramBuilderPanel'
 import { ApplicabilityBuilderPanel } from '../../components/ApplicabilityBuilderPanel'
 import { StepBuilderPanel } from '../../components/StepBuilderPanel'
+import { CompletionRuleBuilderPanel } from '../../components/CompletionRuleBuilderPanel'
+import { StepBranchBuilderPanel } from '../../components/StepBranchBuilderPanel'
 import { TrainingMatrixPanel } from '../../components/TrainingMatrixPanel'
 import type { TrainArrWorkspaceState } from '../useTrainArrWorkspaceState'
 
@@ -50,6 +52,44 @@ export function ProgramsSection({ state }: Props) {
         }}
         onDeleteStep={async (stepId) => {
           await s.deleteDefinitionStepMutation.mutateAsync(stepId)
+        }}
+      />
+      <CompletionRuleBuilderPanel
+        definitions={s.definitionsQuery.data ?? []}
+        selectedDefinitionId={s.selectedDefinitionIdForCitations}
+        catalog={s.completionRuleCatalogQuery.data ?? []}
+        rules={s.definitionCompletionRulesQuery.data ?? []}
+        isLoading={s.definitionCompletionRulesQuery.isLoading}
+        canManage={s.canPrograms}
+        isSubmitting={s.createCompletionRuleMutation.isPending}
+        onSelectDefinition={s.setSelectedDefinitionIdForCitations}
+        onCreateRule={async (request) => {
+          await s.createCompletionRuleMutation.mutateAsync(request)
+        }}
+        onDeleteRule={async (completionRuleId) => {
+          await s.deleteCompletionRuleMutation.mutateAsync(completionRuleId)
+        }}
+      />
+      <StepBranchBuilderPanel
+        definitions={s.definitionsQuery.data ?? []}
+        selectedDefinitionId={s.selectedDefinitionIdForCitations}
+        steps={s.definitionStepsQuery.data ?? []}
+        selectedStepId={s.selectedStepIdForBranches}
+        catalog={s.stepBranchCatalogQuery.data ?? []}
+        branches={s.definitionStepBranchesQuery.data ?? []}
+        isLoading={s.definitionStepBranchesQuery.isLoading}
+        canManage={s.canPrograms}
+        isSubmitting={s.createStepBranchMutation.isPending}
+        onSelectDefinition={(definitionId) => {
+          s.setSelectedDefinitionIdForCitations(definitionId)
+          s.setSelectedStepIdForBranches(null)
+        }}
+        onSelectStep={s.setSelectedStepIdForBranches}
+        onCreateBranch={async (request) => {
+          await s.createStepBranchMutation.mutateAsync(request)
+        }}
+        onDeleteBranch={async (branchId) => {
+          await s.deleteStepBranchMutation.mutateAsync(branchId)
         }}
       />
       <TrainingMatrixPanel

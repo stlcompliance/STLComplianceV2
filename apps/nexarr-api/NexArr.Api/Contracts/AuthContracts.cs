@@ -56,3 +56,22 @@ public sealed record NavigationItem(
 public sealed record NavigationResponse(
     Guid TenantId,
     IReadOnlyList<NavigationItem> Products);
+
+public sealed record UserSessionSummary(
+    Guid SessionId,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset ExpiresAt,
+    DateTimeOffset? RevokedAt,
+    string? UserAgent,
+    string? IpAddress,
+    Guid? ActiveTenantId,
+    bool IsCurrent,
+    bool IsActive);
+
+public sealed record UserSessionsResponse(IReadOnlyList<UserSessionSummary> Sessions);
+
+public sealed record ForgotPasswordRequest(string Email);
+
+public sealed record ForgotPasswordResponse(string Message, string? DevResetToken);
+
+public sealed record ResetPasswordRequest(string Token, string NewPassword);

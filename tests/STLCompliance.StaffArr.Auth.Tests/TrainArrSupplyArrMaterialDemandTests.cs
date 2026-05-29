@@ -404,12 +404,13 @@ public sealed class TrainArrSupplyArrMaterialDemandTests : IAsyncLifetime
     private async Task<Guid> CreateAssignmentAsync(string trainarrToken, Guid personId)
     {
         var definitionId = await CreateTrainingDefinitionAsync(trainarrToken);
-        var createRequest = Authorized(HttpMethod.Post, "/api/training-assignments", trainarrToken);
-        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
-            personId, definitionId, null, "manual", DateTimeOffset.UtcNow.AddDays(7)));
-        var createResponse = await _trainarrClient.SendAsync(createRequest);
-        createResponse.EnsureSuccessStatusCode();
-        var assignment = (await createResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+        var assignment = await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            trainarrToken,
+            personId,
+            definitionId,
+            "demand_test",
+            DateTimeOffset.UtcNow.AddDays(7));
         return assignment.AssignmentId;
     }
 

@@ -45,5 +45,14 @@ public static class PlatformWorkerHealthOrchestrationEndpoints
             return Results.Ok(await service.TriggerTenantLifecycleAsync(context.User, cancellationToken));
         })
         .WithName("TriggerPlatformTenantLifecycleOrchestration");
+
+        group.MapPost("/trigger-platform-outbox", async (
+            HttpContext context,
+            PlatformWorkerHealthOrchestrationService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.TriggerPlatformOutboxPublisherAsync(context.User, cancellationToken));
+        })
+        .WithName("TriggerPlatformOutboxPublisherOrchestration");
     }
 }

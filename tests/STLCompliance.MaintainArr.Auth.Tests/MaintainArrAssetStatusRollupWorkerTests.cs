@@ -120,6 +120,55 @@ public sealed class MaintainArrAssetStatusRollupWorkerTests : IAsyncLifetime
                 && x.ScopeType == AssetStatusRollupScopeTypes.Fleet);
         Assert.Equal(0, fleetRollup.ReadyCount);
         Assert.Equal(1, fleetRollup.NotReadyCount);
+
+        var siteRollup = await db.AssetStatusScopeRollups.SingleAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.ScopeType == AssetStatusRollupScopeTypes.Site
+                && x.ScopeEntityKey == "Plant-A");
+        Assert.Equal(1, siteRollup.TotalAssets);
+        Assert.Equal(0, siteRollup.ReadyCount);
+
+        var assetTypeRollup = await db.AssetStatusScopeRollups.SingleAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.ScopeType == AssetStatusRollupScopeTypes.AssetType);
+        Assert.Equal(1, assetTypeRollup.TotalAssets);
+    }
+
+    [Fact]
+    public async Task Pending_preview_uses_tenant_configured_staleness_hours()
+    {
+        var assetId = await SeedAssetWithCriticalDefectAsync();
+        await UpsertRollupSettingsAsync(stalenessHours: 24);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        db.AssetStatusRollups.Add(new AssetStatusRollup
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            AssetId = assetId,
+            AssetTag = "ROLL-001",
+            AssetName = "Rollup Asset",
+            LifecycleStatus = "active",
+            ReadinessStatus = "not_ready",
+            ReadinessBasis = "live",
+            BlockerCount = 1,
+            ComputedAt = now.AddHours(-2),
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+        await db.SaveChangesAsync();
+
+        var listRequest = Authorized(
+            HttpMethod.Get,
+            $"/api/asset-status-rollup-settings/pending",
+            CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin"));
+        var listResponse = await _maintainarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var pending = (await listResponse.Content.ReadFromJsonAsync<PendingAssetStatusRollupsResponse>())!;
+        Assert.Equal(24, pending.StalenessHours);
+        Assert.DoesNotContain(pending.Items, x => x.AssetId == assetId);
     }
 
     [Fact]
@@ -157,11 +206,11 @@ public sealed class MaintainArrAssetStatusRollupWorkerTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-    private async Task UpsertRollupSettingsAsync()
+    private async Task UpsertRollupSettingsAsync(int stalenessHours = 1)
     {
         var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
         var request = Authorized(HttpMethod.Put, "/api/asset-status-rollup-settings", token);
-        request.Content = JsonContent.Create(new UpsertAssetStatusRollupSettingsRequest(true, 1));
+        request.Content = JsonContent.Create(new UpsertAssetStatusRollupSettingsRequest(true, stalenessHours));
         var response = await _maintainarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
     }

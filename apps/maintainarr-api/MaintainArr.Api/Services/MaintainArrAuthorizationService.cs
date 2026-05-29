@@ -348,6 +348,41 @@ public sealed class MaintainArrAuthorizationService
 
     public void RequireAssetStatusRollupRead(ClaimsPrincipal principal) => RequireAssetsRead(principal);
 
+    public void RequireDowntimeRead(ClaimsPrincipal principal) => RequireAssetsRead(principal);
+
+    public void RequireDowntimeManage(ClaimsPrincipal principal)
+    {
+        RequireMaintainArrEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        if (MatchesRole(
+                principal.GetTenantRoleKey(),
+                "tenant_admin",
+                "maintainarr_admin",
+                "maintainarr_manager"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            "Downtime management requires MaintainArr manager or administrator role.",
+            403);
+    }
+
+    public void RequireDowntimeTrackingSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireNotificationSettingsManage(principal);
+    }
+
+    public void RequirePlatformEventSettingsManage(ClaimsPrincipal principal)
+    {
+        RequireNotificationSettingsManage(principal);
+    }
+
     public void RequireMaintenanceReportRead(ClaimsPrincipal principal) => RequireAssetsRead(principal);
 
     public void RequireMaintenanceReportExport(ClaimsPrincipal principal) => RequireAuditPackageExport(principal);

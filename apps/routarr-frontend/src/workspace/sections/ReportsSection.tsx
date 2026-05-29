@@ -3,6 +3,8 @@ import { DataExportsPanel } from '../../components/DataExportsPanel'
 import { DispatchReportsPanel } from '../../components/DispatchReportsPanel'
 import { ProofDvirReportsPanel } from '../../components/ProofDvirReportsPanel'
 import { RouteReportsPanel } from '../../components/RouteReportsPanel'
+import { DispatchOverrideReportsPanel } from '../../components/DispatchOverrideReportsPanel'
+import { TripCompletionReportsPanel } from '../../components/TripCompletionReportsPanel'
 import {
   canExportDispatchReports,
   canReadDispatchReports,
@@ -34,6 +36,16 @@ export function ReportsSection({ state }: Props) {
             canExport={canExport}
           />
           <ProofDvirReportsPanel
+            accessToken={state.session.accessToken}
+            canRead={canRead}
+            canExport={canExport}
+          />
+          <TripCompletionReportsPanel
+            accessToken={state.session.accessToken}
+            canRead={canRead}
+            canExport={canExport}
+          />
+          <DispatchOverrideReportsPanel
             accessToken={state.session.accessToken}
             canRead={canRead}
             canExport={canExport}

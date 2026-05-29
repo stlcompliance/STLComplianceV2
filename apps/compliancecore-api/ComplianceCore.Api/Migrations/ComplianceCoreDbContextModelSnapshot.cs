@@ -250,6 +250,97 @@ namespace ComplianceCore.Api.Migrations
                     b.ToTable("compliancecore_compliance_keys", (string)null);
                 });
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ComplianceWaiver", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ApprovedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("EffectiveAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("GateKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("PackKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ReasonCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RevokedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RuleKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("RulePackId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SubjectScopeKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("WaiverKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RulePackId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "WaiverKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "Status", "ExpiresAt");
+
+                    b.ToTable("compliancecore_waivers", (string)null);
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.ControlEffectivenessRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -550,6 +641,63 @@ namespace ComplianceCore.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("compliancecore_fact_sources", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.FactSourceSyncStatus", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ConsecutiveFailureCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FactSourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("HealthStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("LastAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset?>("LastFailureAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("LastMirrorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("LastSuccessAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ScopeKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FactSourceId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("compliancecore_fact_source_sync_statuses", (string)null);
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.GoverningBody", b =>
@@ -1592,6 +1740,13 @@ namespace ComplianceCore.Api.Migrations
                     b.Property<Guid?>("ActorUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("AppliedWaiverId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AppliedWaiverKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1620,6 +1775,8 @@ namespace ComplianceCore.Api.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AppliedWaiverId");
 
                     b.HasIndex("CreatedAt");
 
@@ -1957,6 +2114,46 @@ namespace ComplianceCore.Api.Migrations
                     b.ToTable("compliancecore_source_ingestion_jobs", (string)null);
                 });
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TenantFactSourceSyncWorkerSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DefaultScopeKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<int>("IntervalMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastBatchRunAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("compliancecore_tenant_fact_source_sync_worker_settings", (string)null);
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.TenantM12AnalyticsWorkerSettings", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2158,6 +2355,13 @@ namespace ComplianceCore.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("AppliedWaiverId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AppliedWaiverKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("ContextJson")
                         .IsRequired()
                         .HasColumnType("jsonb");
@@ -2199,6 +2403,8 @@ namespace ComplianceCore.Api.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AppliedWaiverId");
 
                     b.HasIndex("CreatedAt");
 
@@ -2320,6 +2526,17 @@ namespace ComplianceCore.Api.Migrations
                     b.Navigation("RulePack");
                 });
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ComplianceWaiver", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.RulePack", "RulePack")
+                        .WithMany()
+                        .HasForeignKey("RulePackId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("RulePack");
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.ControlEffectivenessRecord", b =>
                 {
                     b.HasOne("ComplianceCore.Api.Entities.ControlEffectivenessRun", "Run")
@@ -2365,6 +2582,17 @@ namespace ComplianceCore.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("FactDefinition");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.FactSourceSyncStatus", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.FactSource", "FactSource")
+                        .WithMany()
+                        .HasForeignKey("FactSourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FactSource");
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.Jurisdiction", b =>

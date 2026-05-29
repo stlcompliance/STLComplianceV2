@@ -65,10 +65,11 @@ public sealed class NexArrPlatformLifecycleOverviewTests : IClassFixture<WebAppl
         response.EnsureSuccessStatusCode();
 
         var overview = (await response.Content.ReadFromJsonAsync<PlatformLifecycleOverviewResponse>())!;
-        Assert.Equal(3, overview.Workers.Count);
+        Assert.Equal(4, overview.Workers.Count);
         Assert.Contains(overview.Workers, x => x.WorkerKey == "service_token_cleanup");
         Assert.Contains(overview.Workers, x => x.WorkerKey == "entitlement_reconciliation");
         Assert.Contains(overview.Workers, x => x.WorkerKey == "tenant_lifecycle");
+        Assert.Contains(overview.Workers, x => x.WorkerKey == "platform_outbox_publisher");
         Assert.Contains(
             overview.Workers,
             x => x.ServiceTokenScope == ServiceTokenCleanupWorkerService.ProcessCleanupActionScope);
@@ -78,6 +79,9 @@ public sealed class NexArrPlatformLifecycleOverviewTests : IClassFixture<WebAppl
         Assert.Contains(
             overview.Workers,
             x => x.ServiceTokenScope == TenantLifecycleWorkerService.ProcessLifecycleActionScope);
+        Assert.Contains(
+            overview.Workers,
+            x => x.ServiceTokenScope == PlatformOutboxPublisherWorkerService.ProcessPublishActionScope);
     }
 
     private async Task SeedDatabaseAsync()

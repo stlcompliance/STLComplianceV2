@@ -52,6 +52,10 @@ public static class StlDocs23CrossProductFlowCatalog
             "compliance_core_operational_validation",
             "Compliance Core validation from an operational product",
             PlaywrightSpec: StlE2ePlaywrightSpecCatalog.ComplianceCoreOperatorWorkflowGateJourneySmokeSpec),
+        new(
+            "trainarr_qualification_gate_routarr_dispatch",
+            "TrainArr qualification gate to RoutArr driver eligibility",
+            PlaywrightSpec: StlE2ePlaywrightSpecCatalog.TrainArrRoutArrQualificationGateAssignJourneySmokeSpec),
     ];
 }
 

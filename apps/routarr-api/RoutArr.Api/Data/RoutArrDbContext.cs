@@ -63,6 +63,11 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
 
     public DbSet<AuditPackageGenerationJob> AuditPackageGenerationJobs => Set<AuditPackageGenerationJob>();
 
+    public DbSet<TenantIntegrationEventSettings> TenantIntegrationEventSettings =>
+        Set<TenantIntegrationEventSettings>();
+
+    public DbSet<IntegrationOutboxEvent> IntegrationOutboxEvents => Set<IntegrationOutboxEvent>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -426,6 +431,28 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.Property(x => x.ArtifactJson);
             entity.HasIndex(x => new { x.TenantId, x.Status, x.CreatedAt });
             entity.HasIndex(x => x.CreatedAt);
+        });
+
+        modelBuilder.Entity<TenantIntegrationEventSettings>(entity =>
+        {
+            entity.ToTable("routarr_tenant_integration_event_settings");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => x.TenantId).IsUnique();
+        });
+
+        modelBuilder.Entity<IntegrationOutboxEvent>(entity =>
+        {
+            entity.ToTable("routarr_integration_outbox_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.IdempotencyKey).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.RelatedEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PayloadJson).IsRequired();
+            entity.Property(x => x.ProcessingStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ErrorMessage).HasMaxLength(512);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.IdempotencyKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ProcessingStatus, x.NextRetryAt });
         });
     }
 }

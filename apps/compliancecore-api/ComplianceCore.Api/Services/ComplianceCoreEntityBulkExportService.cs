@@ -14,7 +14,10 @@ public sealed class ComplianceCoreEntityBulkExportService(
         "findingId,findingKey,severity,status,title,packKey,ruleKey,factKey,createdAt";
 
     public const string EvaluationsCsvHeader =
-        "evaluationRunId,rulePackId,packKey,overallResult,createdAt";
+        "evaluationRunId,rulePackId,packKey,overallResult,appliedWaiverId,appliedWaiverKey,createdAt";
+
+    public const string WorkflowGateChecksCsvHeader =
+        "checkResultId,gateKey,rulePackId,packKey,ruleEvaluationRunId,outcome,reasonCode,appliedWaiverId,appliedWaiverKey,checkedAt";
 
     public const string RulePacksCsvHeader =
         "rulePackId,packKey,label,status,version,createdAt,updatedAt";
@@ -42,7 +45,14 @@ public sealed class ComplianceCoreEntityBulkExportService(
                     "/api/exports/evaluations",
                     "Rule evaluation runs",
                     EvaluationsCsvHeader,
-                    "Historical rule evaluation outcomes with pack references.",
+                    "Historical rule evaluation outcomes with pack references and applied waiver audit trail.",
+                    [CsvFormat]),
+                new(
+                    "workflow_gate_checks",
+                    "/api/exports/workflow-gate-checks",
+                    "Workflow gate checks",
+                    WorkflowGateChecksCsvHeader,
+                    "Workflow gate check outcomes with applied waiver references for audit review.",
                     [CsvFormat]),
                 new(
                     "rule_packs",
@@ -160,6 +170,8 @@ public sealed class ComplianceCoreEntityBulkExportService(
                 run.RulePackId,
                 pack.PackKey,
                 run.OverallResult,
+                run.AppliedWaiverId,
+                run.AppliedWaiverKey,
                 run.CreatedAt,
             })
             .ToListAsync(cancellationToken);
@@ -175,6 +187,10 @@ public sealed class ComplianceCoreEntityBulkExportService(
             builder.Append(CsvEscape(evaluation.PackKey));
             builder.Append(',');
             builder.Append(CsvEscape(evaluation.OverallResult));
+            builder.Append(',');
+            builder.Append(CsvEscape(evaluation.AppliedWaiverId?.ToString() ?? string.Empty));
+            builder.Append(',');
+            builder.Append(CsvEscape(evaluation.AppliedWaiverKey ?? string.Empty));
             builder.AppendLine(CsvEscape(evaluation.CreatedAt.ToString("O")));
         }
 
@@ -190,6 +206,72 @@ public sealed class ComplianceCoreEntityBulkExportService(
         return new CsvExportResult(
             "text/csv",
             $"compliancecore-evaluations-{DateTime.UtcNow:yyyy-MM-dd}.csv",
+            Encoding.UTF8.GetBytes(builder.ToString()));
+    }
+
+    public async Task<CsvExportResult> ExportWorkflowGateChecksCsvAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var gateChecks = await (
+            from check in db.WorkflowGateCheckResults.AsNoTracking()
+            join gate in db.WorkflowGateDefinitions.AsNoTracking()
+                on check.WorkflowGateDefinitionId equals gate.Id
+            join pack in db.RulePacks.AsNoTracking() on gate.RulePackId equals pack.Id
+            where check.TenantId == tenantId
+            orderby check.CreatedAt descending
+            select new
+            {
+                check.Id,
+                check.GateKey,
+                gate.RulePackId,
+                pack.PackKey,
+                check.RuleEvaluationRunId,
+                check.Outcome,
+                check.ReasonCode,
+                check.AppliedWaiverId,
+                check.AppliedWaiverKey,
+                check.CreatedAt,
+            })
+            .ToListAsync(cancellationToken);
+
+        var builder = new StringBuilder();
+        builder.AppendLine(WorkflowGateChecksCsvHeader);
+        foreach (var check in gateChecks)
+        {
+            builder.Append(CsvEscape(check.Id.ToString()));
+            builder.Append(',');
+            builder.Append(CsvEscape(check.GateKey));
+            builder.Append(',');
+            builder.Append(CsvEscape(check.RulePackId.ToString()));
+            builder.Append(',');
+            builder.Append(CsvEscape(check.PackKey));
+            builder.Append(',');
+            builder.Append(CsvEscape(check.RuleEvaluationRunId?.ToString() ?? string.Empty));
+            builder.Append(',');
+            builder.Append(CsvEscape(check.Outcome));
+            builder.Append(',');
+            builder.Append(CsvEscape(check.ReasonCode));
+            builder.Append(',');
+            builder.Append(CsvEscape(check.AppliedWaiverId?.ToString() ?? string.Empty));
+            builder.Append(',');
+            builder.Append(CsvEscape(check.AppliedWaiverKey ?? string.Empty));
+            builder.AppendLine(CsvEscape(check.CreatedAt.ToString("O")));
+        }
+
+        await auditService.WriteAsync(
+            "compliancecore.exports.workflow_gate_checks",
+            tenantId,
+            actorUserId,
+            "workflow_gate_checks_export",
+            null,
+            "success",
+            cancellationToken: cancellationToken);
+
+        return new CsvExportResult(
+            "text/csv",
+            $"compliancecore-workflow-gate-checks-{DateTime.UtcNow:yyyy-MM-dd}.csv",
             Encoding.UTF8.GetBytes(builder.ToString()));
     }
 

@@ -142,7 +142,7 @@ public class ComplianceCoreFactSourceRegistryTests : IAsyncLifetime
             "Resolved from StaffArr caller context until product fetch is implemented.",
             "staffarr",
             "/api/people/{personId}/certifications",
-            "{}",
+            """{"scopeKey":"tenant","fetchRelativePath":"/api/internal/compliance-facts/{factKey}"}""",
             0));
         (await _complianceCoreClient.SendAsync(createRequest)).EnsureSuccessStatusCode();
 

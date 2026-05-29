@@ -18,7 +18,9 @@ public sealed record InternalEvaluateRulePackResponse(
     IReadOnlyDictionary<string, bool> ResolvedFacts,
     IReadOnlyList<RuleEvaluationItemResponse> RuleResults,
     Guid? EvaluationRunId = null,
-    IReadOnlyList<ComplianceFindingResponse> FindingsEmitted = null!);
+    IReadOnlyList<ComplianceFindingResponse> FindingsEmitted = null!,
+    Guid? AppliedWaiverId = null,
+    string? AppliedWaiverKey = null);
 
 public sealed record InternalEvaluateRulePackBatchItem(
     string RulePackKey,
@@ -34,7 +36,8 @@ public sealed record InternalEvaluateRulePackBatchSummary(
     int Total,
     int AllowCount,
     int WarnCount,
-    int BlockCount);
+    int BlockCount,
+    int WaivedCount);
 
 public sealed record InternalEvaluateRulePackBatchResponse(
     Guid BatchId,
@@ -48,4 +51,6 @@ public static class ComplianceEvaluationOutcomes
     public const string Warn = "warn";
 
     public const string Block = "block";
+
+    public const string Waived = "waived";
 }

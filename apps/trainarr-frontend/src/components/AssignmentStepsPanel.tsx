@@ -47,7 +47,10 @@ export function AssignmentStepsPanel({
   const [notesByStep, setNotesByStep] = useState<Record<string, string>>({})
 
   const pendingSteps = useMemo(
-    () => steps.filter((step) => step.status === 'pending' || step.status === 'failed'),
+    () =>
+      steps.filter(
+        (step) => step.isVisible && (step.status === 'pending' || step.status === 'failed'),
+      ),
     [steps],
   )
 
@@ -73,7 +76,8 @@ export function AssignmentStepsPanel({
         {steps.map((step) => {
           const quizQuestions = step.stepType === 'quiz' ? parseQuizQuestions(step.configJson) : []
           const canSubmit =
-            step.status !== 'completed'
+            step.isVisible
+            && step.status !== 'completed'
             && ((step.stepType === 'practical' && canEvaluate) || (step.stepType !== 'practical' && canComplete))
 
           return (
@@ -91,6 +95,12 @@ export function AssignmentStepsPanel({
 
               {step.quizScorePercent !== null ? (
                 <p className="mt-2 text-xs text-slate-400">Quiz score: {step.quizScorePercent}%</p>
+              ) : null}
+
+              {!step.isVisible ? (
+                <p className="mt-2 text-xs text-amber-300/90">
+                  This step is not available yet. Complete prerequisite steps or meet branch conditions first.
+                </p>
               ) : null}
 
               {canSubmit ? (

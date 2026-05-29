@@ -1473,6 +1473,12 @@ export interface SupplierIncidentResponse {
   closedByUserId: string | null
   closedAt: string | null
   cancellationReason: string
+  cancelledByUserId: string | null
+  cancelledAt: string | null
+  reopenedByUserId: string | null
+  reopenedAt: string | null
+  lastReopenReason: string
+  reopenCount: number
   createdAt: string
   updatedAt: string
 }
@@ -1496,6 +1502,10 @@ export interface ResolveSupplierIncidentRequest {
 }
 
 export interface CancelSupplierIncidentRequest {
+  reason: string
+}
+
+export interface ReopenSupplierIncidentRequest {
   reason: string
 }
 
@@ -1538,6 +1548,10 @@ export interface ProcurementExceptionResponse {
   closedAt: string | null
   cancelledAt: string | null
   cancellationReason: string
+  reopenedByUserId: string | null
+  reopenedAt: string | null
+  lastReopenReason: string
+  reopenCount: number
   createdAt: string
   updatedAt: string
 }
@@ -1585,6 +1599,10 @@ export interface CloseProcurementExceptionRequest {
 }
 
 export interface CancelProcurementExceptionRequest {
+  reason: string
+}
+
+export interface ReopenProcurementExceptionRequest {
   reason: string
 }
 
@@ -1801,6 +1819,60 @@ export interface SupplyReadinessDashboardResponse {
   totals: SupplyReadinessTotalsResponse
   demandRefsBySource: SupplyReadinessDemandRefSourceCountResponse[]
   attentionItems: SupplyReadinessAttentionItemResponse[]
+}
+
+export interface SupplyReadinessBlockerResponse {
+  reasonCode: string
+  message: string
+  sourceEntityType: string
+  sourceEntityId: string
+  relatedEntityId: string | null
+}
+
+export interface SupplyReadinessAvailabilitySnapshotResponse {
+  quantityOnHand: number
+  quantityReserved: number
+  quantityAvailable: number
+  reorderPoint: number | null
+  activeReservationCount: number
+  openBackorderCount: number
+}
+
+export interface PartSupplyReadinessResponse {
+  partId: string
+  partKey: string
+  displayName: string
+  status: string
+  readinessStatus: string
+  readinessBasis: string
+  calculatedAt: string
+  blockers: SupplyReadinessBlockerResponse[]
+  availability: SupplyReadinessAvailabilitySnapshotResponse
+}
+
+export interface VendorSupplyReadinessResponse {
+  externalPartyId: string
+  partyKey: string
+  displayName: string
+  partyType: string
+  approvalStatus: string
+  status: string
+  readinessStatus: string
+  readinessBasis: string
+  calculatedAt: string
+  blockers: SupplyReadinessBlockerResponse[]
+}
+
+export interface ProcurementPathReadinessResponse {
+  partId: string
+  partKey: string
+  externalPartyId: string
+  partyKey: string
+  requestedQuantity: number | null
+  readinessStatus: string
+  readinessBasis: string
+  calculatedAt: string
+  blockers: SupplyReadinessBlockerResponse[]
 }
 
 export interface VendorApprovalStatusSummary {

@@ -52,6 +52,12 @@ public static class MaintainArrServiceRegistration
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<SupplyArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
+        builder.Services.AddHttpClient<SupplyArrSupplyReadinessClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<SupplyArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddScoped<WorkOrderSupplyReadinessService>();
         builder.Services.Configure<EvidenceStorageOptions>(builder.Configuration.GetSection(EvidenceStorageOptions.SectionName));
         builder.Services.AddSingleton<MaintainArrEvidenceStorageService>();
         builder.Services.AddScoped<MaintenanceHistoryService>();
@@ -70,6 +76,12 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<AssetStatusRollupSettingsService>();
         builder.Services.AddScoped<AssetStatusRollupWorkerService>();
         builder.Services.AddScoped<AssetStatusRollupService>();
+        builder.Services.AddScoped<DowntimeTrackingSettingsService>();
+        builder.Services.AddScoped<AssetDowntimeService>();
+        builder.Services.AddScoped<AssetDowntimeSyncWorkerService>();
+        builder.Services.AddScoped<MaintenancePlatformEventSettingsService>();
+        builder.Services.AddScoped<MaintenancePlatformEventProcessingService>();
+        builder.Services.AddScoped<MaintenancePlatformOutboxEnqueueService>();
         builder.Services.AddScoped<MaintenanceReportService>();
         builder.Services.AddScoped<ExecutiveReportService>();
         builder.Services.AddScoped<ComplianceReportService>();

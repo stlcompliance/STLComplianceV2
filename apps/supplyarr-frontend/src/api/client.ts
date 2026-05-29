@@ -99,6 +99,9 @@ import type {
   DemandProcessingDetailResponse,
   DemandProcessingOperatorActionResponse,
   SupplyReadinessDashboardResponse,
+  PartSupplyReadinessResponse,
+  VendorSupplyReadinessResponse,
+  ProcurementPathReadinessResponse,
   IntegrationEventSettingsResponse,
   UpsertIntegrationEventSettingsRequest,
   IntegrationEventsListResponse,
@@ -115,6 +118,8 @@ import type {
   SupplierIncidentResponse,
   CreateSupplierIncidentRequest,
   ResolveSupplierIncidentRequest,
+  CancelSupplierIncidentRequest,
+  ReopenSupplierIncidentRequest,
   ApplySupplierIncidentProcurementRestrictionRequest,
   ProcurementExceptionResponse,
   ProcurementExceptionResolutionTemplateResponse,
@@ -126,6 +131,7 @@ import type {
   RejectProcurementExceptionWaiveRequest,
   CloseProcurementExceptionRequest,
   CancelProcurementExceptionRequest,
+  ReopenProcurementExceptionRequest,
   ProcurementApprovalAuthorityMirrorResponse,
   PartyComplianceDocumentResponse,
   EmergencyPurchaseResponse,
@@ -1803,6 +1809,58 @@ export async function getSupplyReadinessDashboard(
   )
 }
 
+export async function getPartSupplyReadiness(
+  accessToken: string,
+  partId: string,
+  quantity?: number,
+): Promise<PartSupplyReadinessResponse> {
+  const params = new URLSearchParams()
+  if (quantity !== undefined) {
+    params.set('quantity', String(quantity))
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/supply-readiness/parts/${partId}${query ? `?${query}` : ''}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<PartSupplyReadinessResponse>(
+    response,
+    'Failed to load part supply readiness',
+  )
+}
+
+export async function getVendorSupplyReadiness(
+  accessToken: string,
+  externalPartyId: string,
+): Promise<VendorSupplyReadinessResponse> {
+  const response = await fetch(`${apiBase}/api/supply-readiness/vendors/${externalPartyId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<VendorSupplyReadinessResponse>(
+    response,
+    'Failed to load vendor supply readiness',
+  )
+}
+
+export async function getProcurementPathReadiness(
+  accessToken: string,
+  partId: string,
+  externalPartyId: string,
+  quantity?: number,
+): Promise<ProcurementPathReadinessResponse> {
+  const params = new URLSearchParams({ partId, externalPartyId })
+  if (quantity !== undefined) {
+    params.set('quantity', String(quantity))
+  }
+  const response = await fetch(`${apiBase}/api/supply-readiness/procurement-path?${params}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ProcurementPathReadinessResponse>(
+    response,
+    'Failed to load procurement path readiness',
+  )
+}
+
 export async function getDemandProcessingSettings(
   accessToken: string,
 ): Promise<DemandProcessingSettingsResponse> {
@@ -2629,6 +2687,32 @@ export async function closeSupplierIncident(
   return parseJsonResponse<SupplierIncidentResponse>(response, 'Failed to close supplier incident')
 }
 
+export async function cancelSupplierIncident(
+  accessToken: string,
+  incidentId: string,
+  payload: CancelSupplierIncidentRequest,
+): Promise<SupplierIncidentResponse> {
+  const response = await fetch(`${apiBase}/api/supplier-incidents/${incidentId}/cancel`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<SupplierIncidentResponse>(response, 'Failed to cancel supplier incident')
+}
+
+export async function reopenSupplierIncident(
+  accessToken: string,
+  incidentId: string,
+  payload: ReopenSupplierIncidentRequest,
+): Promise<SupplierIncidentResponse> {
+  const response = await fetch(`${apiBase}/api/supplier-incidents/${incidentId}/reopen`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<SupplierIncidentResponse>(response, 'Failed to reopen supplier incident')
+}
+
 export async function applySupplierIncidentProcurementRestriction(
   accessToken: string,
   incidentId: string,
@@ -2860,6 +2944,22 @@ export async function cancelProcurementException(
   return parseJsonResponse<ProcurementExceptionResponse>(
     response,
     'Failed to cancel procurement exception',
+  )
+}
+
+export async function reopenProcurementException(
+  accessToken: string,
+  exceptionId: string,
+  payload: ReopenProcurementExceptionRequest,
+): Promise<ProcurementExceptionResponse> {
+  const response = await fetch(`${apiBase}/api/procurement-exceptions/${exceptionId}/reopen`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<ProcurementExceptionResponse>(
+    response,
+    'Failed to reopen procurement exception',
   )
 }
 

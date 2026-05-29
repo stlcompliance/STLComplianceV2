@@ -12,7 +12,9 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.Configure<NexArrClientOptions>(builder.Configuration.GetSection(NexArrClientOptions.SectionName));
         builder.Services.Configure<HandoffOptions>(builder.Configuration.GetSection(HandoffOptions.SectionName));
         builder.Services.Configure<StlServiceTokenOptions>(builder.Configuration.GetSection(StlServiceTokenOptions.SectionName));
+        builder.Services.Configure<ProductApiIntegrationOptions>(builder.Configuration.GetSection(ProductApiIntegrationOptions.SectionName));
         builder.Services.AddSingleton<StlServiceTokenValidator>();
+        builder.Services.AddHttpClient(nameof(ProductFactApiFetcher));
 
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
@@ -36,9 +38,15 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<RegulatoryMappingService>();
         builder.Services.AddScoped<RuleContentService>();
         builder.Services.AddScoped<ComplianceFindingService>();
+        builder.Services.AddScoped<ComplianceWaiverService>();
         builder.Services.AddScoped<RuleEvaluationService>();
         builder.Services.AddScoped<RulePackBatchEvaluationService>();
         builder.Services.AddScoped<FactSourceService>();
+        builder.Services.AddScoped<FactSourceSyncCacheService>();
+        builder.Services.AddScoped<ProductFactApiFetcher>();
+        builder.Services.AddScoped<FactSourceSyncWorkerSettingsService>();
+        builder.Services.AddScoped<FactSourceSyncWorkerService>();
+        builder.Services.AddScoped<FactSourceSyncHealthService>();
         builder.Services.AddScoped<ProductFactMirrorService>();
         builder.Services.AddScoped<ProductFactIngestionService>();
         builder.Services.AddScoped<SourceIngestionService>();

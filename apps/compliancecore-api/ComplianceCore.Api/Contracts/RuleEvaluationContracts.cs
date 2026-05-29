@@ -19,7 +19,8 @@ public sealed record RuleDefinitionDto(
     string Label,
     string Type,
     string FactKey,
-    bool ExpectedValue);
+    bool ExpectedValue,
+    bool NonWaivable = false);
 
 public sealed record UpdateRulePackContentRequest(RulePackContentBody Content);
 
@@ -38,13 +39,16 @@ public sealed record RuleEvaluationRunResponse(
     IReadOnlyDictionary<string, bool> FactInputs,
     IReadOnlyList<RuleEvaluationItemResponse> RuleResults,
     DateTimeOffset CreatedAt,
-    IReadOnlyList<ComplianceFindingResponse> FindingsEmitted = null!);
+    IReadOnlyList<ComplianceFindingResponse> FindingsEmitted = null!,
+    Guid? AppliedWaiverId = null,
+    string? AppliedWaiverKey = null);
 
 public sealed record RuleEvaluationItemResponse(
     string RuleKey,
     string Label,
     string Result,
-    string Message);
+    string Message,
+    bool NonWaivable = false);
 
 public sealed record EvaluateRulePackBatchItem(
     string RulePackKey,

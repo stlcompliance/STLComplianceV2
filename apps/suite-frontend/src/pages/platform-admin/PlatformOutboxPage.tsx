@@ -1,0 +1,16 @@
+import { PlatformOutboxPublisherPanel } from '../../components/platform-admin/PlatformOutboxPublisherPanel'
+
+export function PlatformOutboxPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h4 className="text-lg font-semibold text-stl-navy">Platform event outbox</h4>
+        <p className="mt-1 text-sm text-slate-600">
+          Integration events for tenant and entitlement changes — published by{' '}
+          <code className="text-xs">nexarr-worker</code> for downstream product mirrors.
+        </p>
+      </div>
+      <PlatformOutboxPublisherPanel />
+    </div>
+  )
+}

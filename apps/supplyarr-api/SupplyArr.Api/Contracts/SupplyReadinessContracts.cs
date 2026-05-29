@@ -34,3 +34,52 @@ public sealed record SupplyReadinessDashboardResponse(
     SupplyReadinessTotalsResponse Totals,
     IReadOnlyList<SupplyReadinessDemandRefSourceCountResponse> DemandRefsBySource,
     IReadOnlyList<SupplyReadinessAttentionItemResponse> AttentionItems);
+
+public sealed record SupplyReadinessBlockerResponse(
+    string ReasonCode,
+    string Message,
+    string SourceEntityType,
+    string SourceEntityId,
+    string? RelatedEntityId);
+
+public sealed record SupplyReadinessAvailabilitySnapshotResponse(
+    decimal QuantityOnHand,
+    decimal QuantityReserved,
+    decimal QuantityAvailable,
+    decimal? ReorderPoint,
+    int ActiveReservationCount,
+    int OpenBackorderCount);
+
+public sealed record PartSupplyReadinessResponse(
+    Guid PartId,
+    string PartKey,
+    string DisplayName,
+    string Status,
+    string ReadinessStatus,
+    string ReadinessBasis,
+    DateTimeOffset CalculatedAt,
+    IReadOnlyList<SupplyReadinessBlockerResponse> Blockers,
+    SupplyReadinessAvailabilitySnapshotResponse Availability);
+
+public sealed record VendorSupplyReadinessResponse(
+    Guid ExternalPartyId,
+    string PartyKey,
+    string DisplayName,
+    string PartyType,
+    string ApprovalStatus,
+    string Status,
+    string ReadinessStatus,
+    string ReadinessBasis,
+    DateTimeOffset CalculatedAt,
+    IReadOnlyList<SupplyReadinessBlockerResponse> Blockers);
+
+public sealed record ProcurementPathReadinessResponse(
+    Guid PartId,
+    string PartKey,
+    Guid ExternalPartyId,
+    string PartyKey,
+    decimal? RequestedQuantity,
+    string ReadinessStatus,
+    string ReadinessBasis,
+    DateTimeOffset CalculatedAt,
+    IReadOnlyList<SupplyReadinessBlockerResponse> Blockers);

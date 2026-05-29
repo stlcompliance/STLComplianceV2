@@ -1,6 +1,7 @@
 import type { RoutArrWorkspaceState } from '../useRoutArrWorkspaceState'
 import { canManageNotificationSettings } from '../../auth/sessionStorage'
 import { NotificationSettingsPanel } from '../../components/NotificationSettingsPanel'
+import { IntegrationEventSettingsPanel } from '../../components/IntegrationEventSettingsPanel'
 import { TripCompletionRollupSettingsPanel } from '../../components/TripCompletionRollupSettingsPanel'
 import { AttachmentRetentionSettingsPanel } from '../../components/AttachmentRetentionSettingsPanel'
 import { TripExecutionSettingsPanel } from '../../components/TripExecutionSettingsPanel'
@@ -18,6 +19,7 @@ export function SettingsSection({ state }: Props) {
   return (
     <div className="mt-8 space-y-6" data-testid="routarr-settings-admin-workspace">
       <NotificationSettingsPanel accessToken={session.accessToken} canManage={canManage} />
+      <IntegrationEventSettingsPanel accessToken={session.accessToken} canManage={canManage} />
       <TripExecutionSettingsPanel accessToken={session.accessToken} canManage={canManage} />
       <TripCompletionRollupSettingsPanel accessToken={session.accessToken} canManage={canManage} />
       <AttachmentRetentionSettingsPanel accessToken={session.accessToken} canManage={canManage} />

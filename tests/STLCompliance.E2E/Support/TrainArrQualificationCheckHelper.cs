@@ -25,6 +25,34 @@ internal static class TrainArrQualificationCheckHelper
         return (await response.Content.ReadFromJsonAsync<QualificationCheckResponse>())!;
     }
 
+    public static async Task<TrainingAssignmentDetailResponse> CreateManualAssignmentAsync(
+        HttpClient trainarrClient,
+        string accessToken,
+        Guid staffarrPersonId,
+        Guid trainingDefinitionId,
+        string qualificationKey,
+        DateTimeOffset? dueAt = null)
+    {
+        var check = await RunQualificationCheckAsync(
+            trainarrClient,
+            accessToken,
+            staffarrPersonId,
+            qualificationKey,
+            trainingDefinitionId);
+
+        var createRequest = HttpTestClient.Authorized(HttpMethod.Post, "/api/training-assignments", accessToken);
+        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+            staffarrPersonId,
+            trainingDefinitionId,
+            null,
+            "manual",
+            dueAt,
+            check.CheckId));
+        var createResponse = await trainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        return (await createResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+    }
+
     public static async Task<TrainingAssignmentDetailResponse> CreateRemediationAssignmentAsync(
         HttpClient trainarrClient,
         string accessToken,

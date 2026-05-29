@@ -63,6 +63,20 @@ public static class SupplierIncidentRules
         return normalized;
     }
 
+    public static string NormalizeReopenReason(string reason)
+    {
+        var normalized = reason.Trim();
+        if (normalized.Length is < 10 or > 512)
+        {
+            throw new STLCompliance.Shared.Contracts.StlApiException(
+                "supplier_incidents.invalid_reopen_reason",
+                "Reopen reason must be between 10 and 512 characters.",
+                400);
+        }
+
+        return normalized;
+    }
+
     public static string NormalizeCancellationReason(string reason)
     {
         var normalized = reason.Trim();
@@ -99,6 +113,7 @@ public static class SupplierIncidentRules
             (SupplierIncidentStatuses.Investigating, SupplierIncidentStatuses.Resolved) => true,
             (SupplierIncidentStatuses.Investigating, SupplierIncidentStatuses.Cancelled) => true,
             (SupplierIncidentStatuses.Resolved, SupplierIncidentStatuses.Closed) => true,
+            (SupplierIncidentStatuses.Cancelled, SupplierIncidentStatuses.Investigating) => true,
             _ => false,
         };
 }

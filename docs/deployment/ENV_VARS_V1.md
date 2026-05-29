@@ -117,6 +117,24 @@ Issue tokens in NexArr (platform admin / service clients) with the scopes docume
 | `StaffArrPermissionProjection__ServiceToken` | scope `staffarr.permissions.project` |
 | `MaintainArrPmDueScan__MaintainArrBaseUrl` | `http://maintainarr-api:10000` |
 | `MaintainArrPmDueScan__ServiceToken` | scope `maintainarr.pm.scan` |
+| `MaintainArrAssetStatusRollup__MaintainArrBaseUrl` | `http://maintainarr-api:10000` |
+| `MaintainArrAssetStatusRollup__ServiceToken` | scope `maintainarr.asset_status.rollup` |
+| `MaintainArrMaintenanceHistoryRollup__MaintainArrBaseUrl` | `http://maintainarr-api:10000` |
+| `MaintainArrMaintenanceHistoryRollup__ServiceToken` | scope `maintainarr.maintenance_history.rollup` |
+| `MaintainArrDowntimeSync__MaintainArrBaseUrl` | `http://maintainarr-api:10000` |
+| `MaintainArrDowntimeSync__ServiceToken` | scope `maintainarr.downtime.sync` |
+| `MaintainArrPlatformEventProcessing__MaintainArrBaseUrl` | `http://maintainarr-api:10000` |
+| `MaintainArrPlatformEventProcessing__ServiceToken` | scope `maintainarr.platform_events.process` |
+| `MaintainArrDefectEscalation__MaintainArrBaseUrl` | `http://maintainarr-api:10000` |
+| `MaintainArrDefectEscalation__ServiceToken` | scope `maintainarr.defects.escalate` |
+| `MaintainArrTechnicianRefRefresh__MaintainArrBaseUrl` | `http://maintainarr-api:10000` |
+| `MaintainArrTechnicianRefRefresh__ServiceToken` | scope `maintainarr.technician_refs.refresh` |
+| `RoutArrTripCompletionRollup__RoutArrBaseUrl` | `http://routarr-api:10000` |
+| `RoutArrTripCompletionRollup__ServiceToken` | scope `routarr.trips.completion.rollup` |
+| `RoutArrIntegrationEvents__RoutArrBaseUrl` | `http://routarr-api:10000` |
+| `RoutArrIntegrationEvents__ServiceToken` | scope `routarr.integration.events.process` |
+| `TrainArrOrphanReference__TrainArrBaseUrl` | `http://trainarr-api:10000` |
+| `TrainArrOrphanReference__ServiceToken` | scope `trainarr.orphan_references.scan` |
 | `SupplyArrReorderEvaluation__SupplyArrBaseUrl` | `http://supplyarr-api:10000` |
 | `SupplyArrReorderEvaluation__ServiceToken` | scope `supplyarr.reorder.evaluate` |
 | `SupplyArrProcurementCoordination__SupplyArrBaseUrl` | `http://supplyarr-api:10000` |
@@ -129,6 +147,10 @@ Issue tokens in NexArr (platform admin / service clients) with the scopes docume
 | `ComplianceCoreScheduledEvaluation__ServiceToken` | scope `compliancecore.rules.evaluate.scheduled` |
 | `ComplianceCoreRuleChangeMonitor__ComplianceCoreBaseUrl` | `http://compliancecore-api:10000` |
 | `ComplianceCoreRuleChangeMonitor__ServiceToken` | scope `compliancecore.rule_changes.monitor` |
+| `ComplianceCoreWaiverExpiration__ComplianceCoreBaseUrl` | `http://compliancecore-api:10000` |
+| `ComplianceCoreWaiverExpiration__ServiceToken` | scope `compliancecore.waivers.expire_batch` |
+| `ComplianceCoreFactSourceSync__ComplianceCoreBaseUrl` | `http://compliancecore-api:10000` |
+| `ComplianceCoreFactSourceSync__ServiceToken` | scope `compliancecore.fact_sources.sync` |
 | `ComplianceCoreM12AnalyticsBatch__ServiceToken` | scope `compliancecore.m12_analytics.process_batch` |
 | `ComplianceCoreAuditPackageGeneration__ServiceToken` | scope `compliancecore.audit_packages.generate` |
 | `StaffArrPersonExportDelivery__ServiceToken` | scope `staffarr.people.export.deliver` |
@@ -144,6 +166,8 @@ Issue tokens in NexArr (platform admin / service clients) with the scopes docume
 | `NexArrEntitlementReconciliation__ServiceToken` | scope `nexarr.entitlements.reconcile` |
 | `NexArrTenantLifecycle__NexArrBaseUrl` | `http://nexarr-api:10000` |
 | `NexArrTenantLifecycle__ServiceToken` | scope `nexarr.tenants.lifecycle.process` |
+| `NexArrPlatformOutboxPublisher__NexArrBaseUrl` | `http://nexarr-api:10000` |
+| `NexArrPlatformOutboxPublisher__ServiceToken` | scope `nexarr.platform_outbox.publish` |
 
 ## CORS (product APIs)
 

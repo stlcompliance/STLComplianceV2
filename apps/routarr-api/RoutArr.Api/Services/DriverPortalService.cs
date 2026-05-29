@@ -13,6 +13,7 @@ public sealed class DriverPortalService(
     TripService tripService,
     TripExecutionCaptureService captureService,
     TripCaptureAttachmentService attachmentService,
+    IntegrationOutboxEnqueueService integrationOutbox,
     RoutArrAuthorizationService authorization,
     IRoutArrAuditService audit)
 {
@@ -21,6 +22,7 @@ public sealed class DriverPortalService(
     public const string CompleteAction = "driver_portal.trip.complete";
     public const string CloseAction = "driver_portal.trip.close";
     public const string DispatchAction = "driver_portal.trip.dispatch";
+    public const string ReportExceptionAction = "driver_portal.exception.report";
 
     public async Task<DriverPortalScheduleResponse> GetScheduleAsync(
         ClaimsPrincipal principal,
@@ -243,6 +245,60 @@ public sealed class DriverPortalService(
             cancellationToken);
     }
 
+    public async Task<DispatchExceptionSummaryResponse> ReportExceptionAsync(
+        ClaimsPrincipal principal,
+        Guid tripId,
+        DriverPortalReportExceptionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireDriverPortalExecute(principal);
+        var tenantId = principal.GetTenantId();
+        var actorUserId = principal.GetUserId();
+        var actorPersonId = principal.GetPersonId().ToString();
+
+        ValidateExceptionTitle(request.Title);
+
+        var trip = await db.Trips
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken)
+            ?? throw new StlApiException("trip.not_found", "Trip was not found.", 404);
+
+        EnsureAssignedDriver(trip.AssignedDriverPersonId, actorPersonId);
+        DriverPortalExceptionRules.EnsureReportableTripStatus(trip.DispatchStatus);
+
+        var category = DriverPortalExceptionRules.MapExceptionTypeToCategory(request.ExceptionType);
+        var now = DateTimeOffset.UtcNow;
+        var entity = new DispatchException
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            ExceptionKey = await GenerateExceptionKeyAsync(tenantId, cancellationToken),
+            Title = request.Title.Trim(),
+            Description = DriverPortalExceptionRules.BuildDriverReportedDescription(request.Description),
+            Category = category,
+            Status = DispatchExceptionStatuses.Open,
+            TripId = trip.Id,
+            SlaDueAt = DispatchExceptionRules.NormalizeSlaDueAt(null, category, now),
+            CreatedByUserId = actorUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.DispatchExceptions.Add(entity);
+        await db.SaveChangesAsync(cancellationToken);
+        await integrationOutbox.TryEnqueueExceptionCreatedAsync(trip, entity, cancellationToken);
+
+        await audit.WriteAsync(
+            ReportExceptionAction,
+            tenantId,
+            actorUserId,
+            "dispatch_exception",
+            entity.Id.ToString(),
+            entity.ExceptionKey,
+            cancellationToken: cancellationToken);
+
+        return MapExceptionSummary(entity, trip);
+    }
+
     private async Task<TripDetailResponse> ExecuteTransitionAsync(
         ClaimsPrincipal principal,
         Guid tripId,
@@ -294,6 +350,68 @@ public sealed class DriverPortalService(
 
         return updated;
     }
+
+    private static void ValidateExceptionTitle(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new StlApiException(
+                "driver_portal.exception.title_required",
+                "Exception title is required.",
+                400);
+        }
+
+        if (title.Trim().Length > 256)
+        {
+            throw new StlApiException(
+                "driver_portal.exception.title_too_long",
+                "Exception title must be 256 characters or fewer.",
+                400);
+        }
+    }
+
+    private async Task<string> GenerateExceptionKeyAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var datePart = DateTimeOffset.UtcNow.ToString("yyyyMMdd");
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            var suffix = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+            var candidate = $"DEX-{datePart}-{suffix}";
+            var exists = await db.DispatchExceptions.AnyAsync(
+                x => x.TenantId == tenantId && x.ExceptionKey == candidate,
+                cancellationToken);
+            if (!exists)
+            {
+                return candidate;
+            }
+        }
+
+        return $"DEX-{datePart}-{Guid.NewGuid():N}".ToUpperInvariant();
+    }
+
+    private static DispatchExceptionSummaryResponse MapExceptionSummary(
+        DispatchException entity,
+        Trip trip) =>
+        new(
+            entity.Id,
+            entity.ExceptionKey,
+            entity.Title,
+            entity.Description,
+            entity.Category,
+            entity.Status,
+            entity.TripId,
+            trip.TripNumber,
+            trip.Title,
+            entity.AssignedToUserId,
+            entity.SlaDueAt,
+            DispatchExceptionRules.IsSlaBreached(entity, DateTimeOffset.UtcNow),
+            entity.ResolutionTemplateKey,
+            entity.ResolutionNotes,
+            entity.CreatedByUserId,
+            entity.CreatedAt,
+            entity.UpdatedAt,
+            entity.AssignedAt,
+            entity.ResolvedAt);
 
     private static void EnsureAssignedDriver(string? assignedPersonId, string actorPersonId)
     {
