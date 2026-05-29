@@ -50,6 +50,7 @@ public static class PlatformSeeder
         CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
+        await EnsureProductCatalogManifestColumnsAsync(db, cancellationToken);
         await EnsureProductCatalogAsync(db, cancellationToken);
 
         if (await db.Users.AnyAsync(u => u.Email == DemoAdminEmail, cancellationToken))
@@ -170,6 +171,31 @@ public static class PlatformSeeder
         SeedCallbackAllowlist(db, now);
 
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static async Task EnsureProductCatalogManifestColumnsAsync(
+        NexArrDbContext db,
+        CancellationToken cancellationToken)
+    {
+        // Keep startup resilient when a deployed DB has older `product_catalog` shape.
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            ALTER TABLE product_catalog
+                ADD COLUMN IF NOT EXISTS "ProductCategory" character varying(64) NOT NULL DEFAULT 'operations',
+                ADD COLUMN IF NOT EXISTS "ProductOwner" character varying(128) NOT NULL DEFAULT 'STL Compliance',
+                ADD COLUMN IF NOT EXISTS "ProductStatus" character varying(32) NOT NULL DEFAULT 'available',
+                ADD COLUMN IF NOT EXISTS "CanonicalCallbackPath" character varying(128) NOT NULL DEFAULT '/auth/nexarr/callback',
+                ADD COLUMN IF NOT EXISTS "ApiBaseUrl" character varying(512) NOT NULL DEFAULT '',
+                ADD COLUMN IF NOT EXISTS "HealthUrl" character varying(512) NOT NULL DEFAULT '',
+                ADD COLUMN IF NOT EXISTS "ServiceAudience" character varying(128) NOT NULL DEFAULT '',
+                ADD COLUMN IF NOT EXISTS "MarketingUrl" character varying(512) NOT NULL DEFAULT '',
+                ADD COLUMN IF NOT EXISTS "DocumentationUrl" character varying(512) NOT NULL DEFAULT '',
+                ADD COLUMN IF NOT EXISTS "SupportUrl" character varying(512) NOT NULL DEFAULT '',
+                ADD COLUMN IF NOT EXISTS "EnvironmentKey" character varying(64) NOT NULL DEFAULT 'local',
+                ADD COLUMN IF NOT EXISTS "EntitlementDependencyRules" character varying(2048) NOT NULL DEFAULT '',
+                ADD COLUMN IF NOT EXISTS "ProductDependencyMetadata" character varying(2048) NOT NULL DEFAULT '';
+            """,
+            cancellationToken);
     }
 
     private static async Task EnsureProductCatalogAsync(

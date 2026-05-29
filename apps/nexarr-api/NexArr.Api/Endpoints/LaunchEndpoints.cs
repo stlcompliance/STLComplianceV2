@@ -19,6 +19,16 @@ public static class LaunchEndpoints
         })
         .WithName("GetLaunchContext");
 
+        group.MapGet("/catalog", async (
+            string? currentProductKey,
+            HttpContext context,
+            LaunchService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.GetLaunchCatalogAsync(context.User, currentProductKey, cancellationToken));
+        })
+        .WithName("GetLaunchCatalog");
+
         group.MapPost("/handoff", async (
             CreateHandoffRequest request,
             HttpContext context,

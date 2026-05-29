@@ -41,6 +41,21 @@ public sealed record ValidateCallbackRequest(string ProductKey, string CallbackU
 
 public sealed record ValidateCallbackResponse(bool IsAllowed, string? ReasonCode);
 
+public sealed record LaunchCatalogResponse(
+    Guid TenantId,
+    string TenantSlug,
+    string TenantDisplayName,
+    string? CurrentProductKey,
+    IReadOnlyList<LaunchCatalogItemResponse> Products,
+    DateTimeOffset GeneratedAt);
+
+public sealed record LaunchCatalogItemResponse(
+    string ProductKey,
+    string DisplayName,
+    string ProductStatus,
+    string LaunchUrl,
+    bool IsCurrentProduct);
+
 public sealed record CreateCallbackAllowlistEntryRequest(
     string ProductKey,
     Guid? TenantId,

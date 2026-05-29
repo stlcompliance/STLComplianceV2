@@ -53,6 +53,13 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
     }
 
     [Fact]
+    public async Task Launch_catalog_requires_authentication()
+    {
+        var response = await _client.GetAsync("/api/launch/catalog");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Platform_admin_gets_launch_context_for_entitled_product()
     {
         await SeedDatabaseAsync();
@@ -79,6 +86,31 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
             Authorized(HttpMethod.Get, "/api/launch/context?productKey=nonexistent-product", token));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Launch_catalog_returns_entitled_launchable_products_with_current_indicator()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/launch/catalog?currentProductKey=staffarr", token));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var catalog = await response.Content.ReadFromJsonAsync<LaunchCatalogResponse>();
+        Assert.NotNull(catalog);
+        Assert.Equal(PlatformSeeder.DemoTenantId, catalog.TenantId);
+        Assert.Equal("staffarr", catalog.CurrentProductKey);
+        Assert.NotEmpty(catalog.Products);
+
+        var staffarr = catalog.Products.FirstOrDefault(x => x.ProductKey == "staffarr");
+        Assert.NotNull(staffarr);
+        Assert.True(staffarr.IsCurrentProduct);
+        Assert.Equal("/launch/staffarr", staffarr.LaunchUrl);
+
+        Assert.DoesNotContain(catalog.Products, x => x.ProductKey == "shared-worker");
+        Assert.DoesNotContain(catalog.Products, x => x.ProductKey == "nexarr-worker");
     }
 
     [Fact]

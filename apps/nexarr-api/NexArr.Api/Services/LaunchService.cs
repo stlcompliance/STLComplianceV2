@@ -60,6 +60,61 @@ public sealed class LaunchService(
             denial);
     }
 
+    public async Task<LaunchCatalogResponse> GetLaunchCatalogAsync(
+        ClaimsPrincipal principal,
+        string? currentProductKey,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequireNexArrAccessAsync(principal, cancellationToken);
+
+        var tenantId = principal.GetTenantId();
+        var tenant = await db.Tenants.AsNoTracking().FirstAsync(t => t.Id == tenantId, cancellationToken);
+        var normalizedCurrentProductKey = string.IsNullOrWhiteSpace(currentProductKey)
+            ? null
+            : currentProductKey.Trim().ToLowerInvariant();
+
+        var launchableProductKeys = await db.LaunchProfiles.AsNoTracking()
+            .Where(profile => profile.IsActive && profile.BaseUrl != "")
+            .Select(profile => profile.ProductKey)
+            .ToListAsync(cancellationToken);
+
+        var productsQuery = db.ProductCatalog.AsNoTracking()
+            .Where(product =>
+                product.IsActive
+                && launchableProductKeys.Contains(product.ProductKey)
+                && product.ProductStatus != "worker");
+
+        if (!principal.IsPlatformAdmin())
+        {
+            var entitledProductKeys = await db.Entitlements.AsNoTracking()
+                .Where(entitlement =>
+                    entitlement.TenantId == tenantId
+                    && entitlement.Status == EntitlementStatuses.Active)
+                .Select(entitlement => entitlement.ProductKey)
+                .ToListAsync(cancellationToken);
+
+            productsQuery = productsQuery.Where(product => entitledProductKeys.Contains(product.ProductKey));
+        }
+
+        var products = await productsQuery
+            .OrderBy(product => product.SortOrder)
+            .Select(product => new LaunchCatalogItemResponse(
+                product.ProductKey,
+                product.DisplayName,
+                product.ProductStatus,
+                $"/launch/{product.ProductKey}",
+                normalizedCurrentProductKey == product.ProductKey))
+            .ToListAsync(cancellationToken);
+
+        return new LaunchCatalogResponse(
+            tenant.Id,
+            tenant.Slug,
+            tenant.DisplayName,
+            normalizedCurrentProductKey,
+            products,
+            DateTimeOffset.UtcNow);
+    }
+
     public async Task<HandoffCreatedResponse> CreateHandoffAsync(
         ClaimsPrincipal principal,
         CreateHandoffRequest request,
