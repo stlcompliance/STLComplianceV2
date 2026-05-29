@@ -68,8 +68,9 @@ describe('WorkOrderLifecyclePanel', () => {
             personId: 'person-tech-001',
             hoursWorked: 2,
             laborTypeKey: 'regular',
-            taskLineId: null,
+            workOrderTaskLineId: null,
             notes: null,
+            loggedByUserId: 'user-001',
             loggedAt: '2026-05-27T12:00:00Z',
           },
         ]}
@@ -82,6 +83,7 @@ describe('WorkOrderLifecyclePanel', () => {
             contentType: 'image/jpeg',
             sizeBytes: 1024,
             notes: null,
+            uploadedByUserId: 'user-001',
             createdAt: '2026-05-27T12:30:00Z',
           },
         ]}
