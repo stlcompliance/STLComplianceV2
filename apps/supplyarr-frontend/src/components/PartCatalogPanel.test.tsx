@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { PartCatalogPanel } from './PartCatalogPanel'
 
@@ -95,5 +95,52 @@ describe('PartCatalogPanel', () => {
     expect(screen.getByText('Primary Oil Filter')).toBeInTheDocument()
     expect(screen.getByText('OEM Filters')).toBeInTheDocument()
     expect(screen.getByText(/Acme Parts Co/)).toBeInTheDocument()
+  })
+
+  it('shows generated key preview when managing catalog', () => {
+    render(
+      <PartCatalogPanel
+        catalogs={[]}
+        parts={[]}
+        canManage={true}
+        isLoading={false}
+        catalogKey=""
+        catalogName="OEM Filters"
+        catalogDescription=""
+        partKey=""
+        partName=""
+        partCategory="general"
+        partUom="each"
+        partManufacturer=""
+        partMfgNumber=""
+        selectedCatalogId=""
+        vendorPartNumber=""
+        selectedPartId=""
+        selectedVendorId=""
+        vendors={[]}
+        onCatalogKeyChange={() => {}}
+        onCatalogNameChange={() => {}}
+        onCatalogDescriptionChange={() => {}}
+        onPartKeyChange={() => {}}
+        onPartNameChange={() => {}}
+        onPartCategoryChange={() => {}}
+        onPartUomChange={() => {}}
+        onPartManufacturerChange={() => {}}
+        onPartMfgNumberChange={() => {}}
+        onSelectedCatalogIdChange={() => {}}
+        onVendorPartNumberChange={() => {}}
+        onSelectedPartIdChange={() => {}}
+        onSelectedVendorIdChange={() => {}}
+        onCreateCatalog={() => {}}
+        onCreatePart={() => {}}
+        onLinkVendor={() => {}}
+        isCreatingCatalog={false}
+        isCreatingPart={false}
+        isLinkingVendor={false}
+      />,
+    )
+
+    const catalogSection = screen.getByRole('heading', { name: 'Add catalog' }).parentElement!
+    expect(within(catalogSection).getByTestId('generated-key-preview')).toHaveTextContent('oem-filters')
   })
 })

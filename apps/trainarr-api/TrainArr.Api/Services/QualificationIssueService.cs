@@ -83,6 +83,34 @@ public sealed class QualificationIssueService(
         return MapResponse(issue);
     }
 
+    public async Task<IReadOnlyList<QualificationIssueListItemResponse>> ListAsync(
+        Guid tenantId,
+        string? status,
+        CancellationToken cancellationToken = default)
+    {
+        var query = db.QualificationIssues.AsNoTracking().Where(x => x.TenantId == tenantId);
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            var normalized = status.Trim().ToLowerInvariant();
+            query = query.Where(x => x.Status == normalized);
+        }
+
+        return await query
+            .OrderByDescending(x => x.UpdatedAt)
+            .Select(x => new QualificationIssueListItemResponse(
+                x.Id,
+                x.TrainingAssignmentId,
+                x.StaffarrPersonId,
+                x.QualificationKey,
+                x.QualificationName,
+                x.Status,
+                x.IssuedAt,
+                x.ExpiresAt,
+                x.StatusChangedAt,
+                x.LifecycleReason))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<QualificationIssueResponse> GetByIdAsync(
         Guid tenantId,
         Guid qualificationIssueId,

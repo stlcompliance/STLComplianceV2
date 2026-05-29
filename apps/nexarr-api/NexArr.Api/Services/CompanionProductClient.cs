@@ -25,7 +25,7 @@ public sealed class CompanionProductClient(
                 Entitled: false,
                 Fetched: false,
                 ErrorCode: "not_entitled",
-                ErrorMessage: $"Tenant is not entitled to {productKey}.",
+                ErrorMessage: CompanionDeniedReasonCatalog.ToPlainMessage("not_entitled"),
                 Items: []);
         }
 
@@ -37,7 +37,7 @@ public sealed class CompanionProductClient(
                 Entitled: true,
                 Fetched: false,
                 ErrorCode: "product_url_missing",
-                ErrorMessage: $"{productKey} API URL is not configured.",
+                ErrorMessage: CompanionDeniedReasonCatalog.ToPlainMessage("product_url_missing"),
                 Items: []);
         }
 
@@ -57,7 +57,9 @@ public sealed class CompanionProductClient(
                     Fetched: false,
                     ErrorCode: $"upstream_{(int)response.StatusCode}",
                     ErrorMessage: string.IsNullOrWhiteSpace(body)
-                        ? $"{productKey} field inbox request failed."
+                        ? CompanionDeniedReasonCatalog.ToPlainMessage(
+                            "upstream_unreachable",
+                            $"{productKey} field inbox request failed.")
                         : body,
                     Items: []);
             }
@@ -78,7 +80,9 @@ public sealed class CompanionProductClient(
                 Entitled: true,
                 Fetched: false,
                 ErrorCode: "upstream_unreachable",
-                ErrorMessage: ex.Message,
+                ErrorMessage: CompanionDeniedReasonCatalog.ToPlainMessage(
+                    "upstream_unreachable",
+                    ex.Message),
                 Items: []);
         }
     }
@@ -142,6 +146,489 @@ public sealed class CompanionProductClient(
             created.CreatedAt);
     }
 
+    public async Task<CompanionFieldDvirResponse> SubmitRoutArrTripDvirAsync(
+        string accessToken,
+        Guid tripId,
+        string phase,
+        string result,
+        long? odometerReading,
+        string? defectNotes,
+        string? vehicleRefKey,
+        CancellationToken cancellationToken = default)
+    {
+        var baseUrl = ResolveBaseUrl("routarr");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new StlApiException(
+                "companion.field_dvir.product_url_missing",
+                "RoutArr API URL is not configured for companion DVIR capture.",
+                503);
+        }
+
+        var client = httpClientFactory.CreateClient(nameof(CompanionProductClient));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{baseUrl.TrimEnd('/')}/api/trips/{tripId:D}/dvir");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = JsonContent.Create(new RoutArrSubmitTripDvirUpstreamRequest(
+            phase,
+            vehicleRefKey,
+            result,
+            odometerReading,
+            defectNotes));
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "companion.field_dvir.upstream_failed",
+                string.IsNullOrWhiteSpace(body) ? "RoutArr DVIR submission failed." : body,
+                (int)response.StatusCode);
+        }
+
+        var created = await response.Content.ReadFromJsonAsync<RoutArrTripDvirUpstreamResponse>(cancellationToken)
+            ?? throw new StlApiException(
+                "companion.field_dvir.upstream_invalid",
+                "RoutArr returned an empty DVIR response.",
+                502);
+
+        return new CompanionFieldDvirResponse(
+            $"routarr:trip:{tripId:D}",
+            "routarr",
+            created.DvirId,
+            created.TripId,
+            created.Phase,
+            created.Result,
+            created.OdometerReading,
+            created.DefectNotes,
+            created.SubmittedAt);
+    }
+
+    public async Task<MaintainArrInspectionRunUpstreamResponse> GetMaintainArrInspectionRunAsync(
+        string accessToken,
+        Guid inspectionRunId,
+        CancellationToken cancellationToken = default)
+    {
+        var baseUrl = ResolveBaseUrl("maintainarr");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new StlApiException(
+                "companion.field_inspection.product_url_missing",
+                "MaintainArr API URL is not configured for companion inspection capture.",
+                503);
+        }
+
+        var client = httpClientFactory.CreateClient(nameof(CompanionProductClient));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"{baseUrl.TrimEnd('/')}/api/inspections/{inspectionRunId:D}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "companion.field_inspection.upstream_failed",
+                string.IsNullOrWhiteSpace(body) ? "MaintainArr inspection load failed." : body,
+                (int)response.StatusCode);
+        }
+
+        return await response.Content.ReadFromJsonAsync<MaintainArrInspectionRunUpstreamResponse>(cancellationToken)
+            ?? throw new StlApiException(
+                "companion.field_inspection.upstream_invalid",
+                "MaintainArr returned an empty inspection response.",
+                502);
+    }
+
+    public async Task<MaintainArrInspectionRunUpstreamResponse> SubmitMaintainArrInspectionAnswersAsync(
+        string accessToken,
+        Guid inspectionRunId,
+        IReadOnlyList<CompanionFieldInspectionAnswerInput> answers,
+        CancellationToken cancellationToken = default)
+    {
+        var baseUrl = ResolveBaseUrl("maintainarr");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new StlApiException(
+                "companion.field_inspection.product_url_missing",
+                "MaintainArr API URL is not configured for companion inspection capture.",
+                503);
+        }
+
+        var client = httpClientFactory.CreateClient(nameof(CompanionProductClient));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Put,
+            $"{baseUrl.TrimEnd('/')}/api/inspections/{inspectionRunId:D}/answers");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = JsonContent.Create(new MaintainArrSubmitInspectionAnswersUpstreamRequest(
+            answers.Select(answer => new MaintainArrInspectionAnswerUpstreamInput(
+                answer.ChecklistItemId,
+                answer.PassFailValue,
+                answer.NumericValue,
+                answer.TextValue)).ToList()));
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "companion.field_inspection.upstream_failed",
+                string.IsNullOrWhiteSpace(body) ? "MaintainArr inspection answer submission failed." : body,
+                (int)response.StatusCode);
+        }
+
+        return await response.Content.ReadFromJsonAsync<MaintainArrInspectionRunUpstreamResponse>(cancellationToken)
+            ?? throw new StlApiException(
+                "companion.field_inspection.upstream_invalid",
+                "MaintainArr returned an empty inspection response.",
+                502);
+    }
+
+    public async Task<MaintainArrInspectionRunUpstreamResponse> CompleteMaintainArrInspectionRunAsync(
+        string accessToken,
+        Guid inspectionRunId,
+        CancellationToken cancellationToken = default)
+    {
+        var baseUrl = ResolveBaseUrl("maintainarr");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new StlApiException(
+                "companion.field_inspection.product_url_missing",
+                "MaintainArr API URL is not configured for companion inspection capture.",
+                503);
+        }
+
+        var client = httpClientFactory.CreateClient(nameof(CompanionProductClient));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{baseUrl.TrimEnd('/')}/api/inspections/{inspectionRunId:D}/complete");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "companion.field_inspection.upstream_failed",
+                string.IsNullOrWhiteSpace(body) ? "MaintainArr inspection completion failed." : body,
+                (int)response.StatusCode);
+        }
+
+        return await response.Content.ReadFromJsonAsync<MaintainArrInspectionRunUpstreamResponse>(cancellationToken)
+            ?? throw new StlApiException(
+                "companion.field_inspection.upstream_invalid",
+                "MaintainArr returned an empty inspection response.",
+                502);
+    }
+
+    public async Task<MaintainArrWorkOrderDetailUpstreamResponse> GetMaintainArrWorkOrderAsync(
+        string accessToken,
+        Guid workOrderId,
+        CancellationToken cancellationToken = default)
+    {
+        var baseUrl = ResolveBaseUrl("maintainarr");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new StlApiException(
+                "companion.field_work_order.product_url_missing",
+                "MaintainArr API URL is not configured for companion work order capture.",
+                503);
+        }
+
+        var client = httpClientFactory.CreateClient(nameof(CompanionProductClient));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"{baseUrl.TrimEnd('/')}/api/work-orders/{workOrderId:D}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "companion.field_work_order.upstream_failed",
+                string.IsNullOrWhiteSpace(body) ? "MaintainArr work order load failed." : body,
+                (int)response.StatusCode);
+        }
+
+        return await response.Content.ReadFromJsonAsync<MaintainArrWorkOrderDetailUpstreamResponse>(cancellationToken)
+            ?? throw new StlApiException(
+                "companion.field_work_order.upstream_invalid",
+                "MaintainArr returned an empty work order response.",
+                502);
+    }
+
+    public async Task<IReadOnlyList<MaintainArrWorkOrderTaskLineUpstreamResponse>> ListMaintainArrWorkOrderTasksAsync(
+        string accessToken,
+        Guid workOrderId,
+        CancellationToken cancellationToken = default)
+    {
+        var baseUrl = ResolveBaseUrl("maintainarr");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new StlApiException(
+                "companion.field_work_order.product_url_missing",
+                "MaintainArr API URL is not configured for companion work order capture.",
+                503);
+        }
+
+        var client = httpClientFactory.CreateClient(nameof(CompanionProductClient));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"{baseUrl.TrimEnd('/')}/api/work-orders/{workOrderId:D}/tasks");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "companion.field_work_order.upstream_failed",
+                string.IsNullOrWhiteSpace(body) ? "MaintainArr work order task load failed." : body,
+                (int)response.StatusCode);
+        }
+
+        return await response.Content.ReadFromJsonAsync<List<MaintainArrWorkOrderTaskLineUpstreamResponse>>(cancellationToken)
+            ?? [];
+    }
+
+    public async Task<IReadOnlyList<MaintainArrWorkOrderLaborEntryUpstreamResponse>> ListMaintainArrWorkOrderLaborAsync(
+        string accessToken,
+        Guid workOrderId,
+        CancellationToken cancellationToken = default)
+    {
+        var baseUrl = ResolveBaseUrl("maintainarr");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new StlApiException(
+                "companion.field_work_order.product_url_missing",
+                "MaintainArr API URL is not configured for companion work order capture.",
+                503);
+        }
+
+        var client = httpClientFactory.CreateClient(nameof(CompanionProductClient));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"{baseUrl.TrimEnd('/')}/api/work-orders/{workOrderId:D}/labor");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "companion.field_work_order.upstream_failed",
+                string.IsNullOrWhiteSpace(body) ? "MaintainArr work order labor load failed." : body,
+                (int)response.StatusCode);
+        }
+
+        return await response.Content.ReadFromJsonAsync<List<MaintainArrWorkOrderLaborEntryUpstreamResponse>>(cancellationToken)
+            ?? [];
+    }
+
+    public async Task<MaintainArrWorkOrderDetailUpstreamResponse> UpdateMaintainArrWorkOrderStatusAsync(
+        string accessToken,
+        Guid workOrderId,
+        string status,
+        CancellationToken cancellationToken = default)
+    {
+        var baseUrl = ResolveBaseUrl("maintainarr");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new StlApiException(
+                "companion.field_work_order.product_url_missing",
+                "MaintainArr API URL is not configured for companion work order capture.",
+                503);
+        }
+
+        var client = httpClientFactory.CreateClient(nameof(CompanionProductClient));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Patch,
+            $"{baseUrl.TrimEnd('/')}/api/work-orders/{workOrderId:D}/status");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = JsonContent.Create(new MaintainArrUpdateWorkOrderStatusUpstreamRequest(status));
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "companion.field_work_order.upstream_failed",
+                string.IsNullOrWhiteSpace(body) ? "MaintainArr work order status update failed." : body,
+                (int)response.StatusCode);
+        }
+
+        return await response.Content.ReadFromJsonAsync<MaintainArrWorkOrderDetailUpstreamResponse>(cancellationToken)
+            ?? throw new StlApiException(
+                "companion.field_work_order.upstream_invalid",
+                "MaintainArr returned an empty work order response.",
+                502);
+    }
+
+    public async Task<MaintainArrWorkOrderLaborEntryUpstreamResponse> LogMaintainArrWorkOrderLaborAsync(
+        string accessToken,
+        Guid workOrderId,
+        string personId,
+        decimal hoursWorked,
+        string laborTypeKey,
+        Guid? workOrderTaskLineId,
+        string? notes,
+        CancellationToken cancellationToken = default)
+    {
+        var baseUrl = ResolveBaseUrl("maintainarr");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new StlApiException(
+                "companion.field_work_order.product_url_missing",
+                "MaintainArr API URL is not configured for companion work order capture.",
+                503);
+        }
+
+        var client = httpClientFactory.CreateClient(nameof(CompanionProductClient));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{baseUrl.TrimEnd('/')}/api/work-orders/{workOrderId:D}/labor");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = JsonContent.Create(new MaintainArrCreateWorkOrderLaborUpstreamRequest(
+            personId,
+            hoursWorked,
+            laborTypeKey,
+            workOrderTaskLineId,
+            notes));
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "companion.field_work_order.upstream_failed",
+                string.IsNullOrWhiteSpace(body) ? "MaintainArr work order labor logging failed." : body,
+                (int)response.StatusCode);
+        }
+
+        return await response.Content.ReadFromJsonAsync<MaintainArrWorkOrderLaborEntryUpstreamResponse>(cancellationToken)
+            ?? throw new StlApiException(
+                "companion.field_work_order.upstream_invalid",
+                "MaintainArr returned an empty labor response.",
+                502);
+    }
+
+    public async Task<SupplyArrReceivingReceiptUpstreamResponse> GetSupplyArrReceivingReceiptAsync(
+        string accessToken,
+        Guid receivingReceiptId,
+        CancellationToken cancellationToken = default)
+    {
+        var baseUrl = ResolveBaseUrl("supplyarr");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new StlApiException(
+                "companion.field_receiving.product_url_missing",
+                "SupplyArr API URL is not configured for companion receiving capture.",
+                503);
+        }
+
+        var client = httpClientFactory.CreateClient(nameof(CompanionProductClient));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"{baseUrl.TrimEnd('/')}/api/receiving/{receivingReceiptId:D}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "companion.field_receiving.upstream_failed",
+                string.IsNullOrWhiteSpace(body) ? "SupplyArr receiving load failed." : body,
+                (int)response.StatusCode);
+        }
+
+        return await response.Content.ReadFromJsonAsync<SupplyArrReceivingReceiptUpstreamResponse>(cancellationToken)
+            ?? throw new StlApiException(
+                "companion.field_receiving.upstream_invalid",
+                "SupplyArr returned an empty receiving response.",
+                502);
+    }
+
+    public async Task<SupplyArrReceivingReceiptUpstreamResponse> UpdateSupplyArrReceivingLineAsync(
+        string accessToken,
+        Guid receivingReceiptId,
+        Guid lineId,
+        decimal quantityReceived,
+        CancellationToken cancellationToken = default)
+    {
+        var baseUrl = ResolveBaseUrl("supplyarr");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new StlApiException(
+                "companion.field_receiving.product_url_missing",
+                "SupplyArr API URL is not configured for companion receiving capture.",
+                503);
+        }
+
+        var client = httpClientFactory.CreateClient(nameof(CompanionProductClient));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Put,
+            $"{baseUrl.TrimEnd('/')}/api/receiving/{receivingReceiptId:D}/lines/{lineId:D}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = JsonContent.Create(new SupplyArrUpdateReceivingReceiptLineUpstreamRequest(quantityReceived));
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "companion.field_receiving.upstream_failed",
+                string.IsNullOrWhiteSpace(body) ? "SupplyArr receiving line update failed." : body,
+                (int)response.StatusCode);
+        }
+
+        return await response.Content.ReadFromJsonAsync<SupplyArrReceivingReceiptUpstreamResponse>(cancellationToken)
+            ?? throw new StlApiException(
+                "companion.field_receiving.upstream_invalid",
+                "SupplyArr returned an empty receiving response.",
+                502);
+    }
+
+    public async Task<SupplyArrReceivingReceiptUpstreamResponse> PostSupplyArrReceivingReceiptAsync(
+        string accessToken,
+        Guid receivingReceiptId,
+        CancellationToken cancellationToken = default)
+    {
+        var baseUrl = ResolveBaseUrl("supplyarr");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new StlApiException(
+                "companion.field_receiving.product_url_missing",
+                "SupplyArr API URL is not configured for companion receiving capture.",
+                503);
+        }
+
+        var client = httpClientFactory.CreateClient(nameof(CompanionProductClient));
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{baseUrl.TrimEnd('/')}/api/receiving/{receivingReceiptId:D}/post");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "companion.field_receiving.upstream_failed",
+                string.IsNullOrWhiteSpace(body) ? "SupplyArr receiving post failed." : body,
+                (int)response.StatusCode);
+        }
+
+        return await response.Content.ReadFromJsonAsync<SupplyArrReceivingReceiptUpstreamResponse>(cancellationToken)
+            ?? throw new StlApiException(
+                "companion.field_receiving.upstream_invalid",
+                "SupplyArr returned an empty receiving response.",
+                502);
+    }
+
     private string ResolveBaseUrl(string productKey)
     {
         var urls = options.Value;
@@ -173,4 +660,31 @@ public sealed class CompanionProductClient(
         string? Notes,
         Guid UploadedByUserId,
         DateTimeOffset CreatedAt);
+
+    private sealed record RoutArrSubmitTripDvirUpstreamRequest(
+        string Phase,
+        string? VehicleRefKey,
+        string Result,
+        long? OdometerReading,
+        string? DefectNotes);
+
+    private sealed record RoutArrTripDvirUpstreamResponse(
+        Guid DvirId,
+        Guid TripId,
+        string Phase,
+        string VehicleRefKey,
+        string Result,
+        long? OdometerReading,
+        string DefectNotes,
+        string SubmittedByPersonId,
+        DateTimeOffset SubmittedAt);
+
+    private sealed record MaintainArrSubmitInspectionAnswersUpstreamRequest(
+        IReadOnlyList<MaintainArrInspectionAnswerUpstreamInput> Answers);
+
+    private sealed record MaintainArrInspectionAnswerUpstreamInput(
+        Guid ChecklistItemId,
+        string? PassFailValue,
+        decimal? NumericValue,
+        string? TextValue);
 }

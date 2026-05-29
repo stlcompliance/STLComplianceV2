@@ -11,6 +11,12 @@ public static class ReadinessRollupRules
         SiteScope
     };
 
+    public static readonly IReadOnlySet<string> SupportedMemberReadinessFilters = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "ready",
+        "not_ready"
+    };
+
     public static int NormalizeBatchSize(int? batchSize) =>
         Math.Clamp(batchSize ?? 50, 1, 500);
 

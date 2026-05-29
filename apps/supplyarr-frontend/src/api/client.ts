@@ -12,6 +12,9 @@ import type {
   PartCatalogResponse,
   PartResponse,
   PartStockLevelResponse,
+  StockReservationResponse,
+  CreateStockReservationRequest,
+  ReleaseStockReservationRequest,
   PartVendorLinkResponse,
   SupplyArrMeResponse,
   UpsertPartStockLevelRequest,
@@ -300,6 +303,63 @@ export async function getPartStockLevels(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PartStockLevelResponse[]>(response, 'Failed to load stock levels')
+}
+
+export async function getStockReservations(
+  accessToken: string,
+  options?: { status?: string; partId?: string; binId?: string },
+): Promise<StockReservationResponse[]> {
+  const params = new URLSearchParams()
+  if (options?.status) {
+    params.set('status', options.status)
+  }
+  if (options?.partId) {
+    params.set('partId', options.partId)
+  }
+  if (options?.binId) {
+    params.set('binId', options.binId)
+  }
+  const query = params.toString() ? `?${params.toString()}` : ''
+  const response = await fetch(`${apiBase}/api/inventory/reservations${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StockReservationResponse[]>(response, 'Failed to load stock reservations')
+}
+
+export async function createStockReservation(
+  accessToken: string,
+  request: CreateStockReservationRequest,
+): Promise<StockReservationResponse> {
+  const response = await fetch(`${apiBase}/api/inventory/reservations`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<StockReservationResponse>(response, 'Failed to create stock reservation')
+}
+
+export async function releaseStockReservation(
+  accessToken: string,
+  reservationId: string,
+  request: ReleaseStockReservationRequest,
+): Promise<StockReservationResponse> {
+  const response = await fetch(`${apiBase}/api/inventory/reservations/${reservationId}/release`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<StockReservationResponse>(response, 'Failed to release stock reservation')
+}
+
+export async function fulfillStockReservation(
+  accessToken: string,
+  reservationId: string,
+): Promise<StockReservationResponse> {
+  const response = await fetch(`${apiBase}/api/inventory/reservations/${reservationId}/fulfill`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<StockReservationResponse>(response, 'Failed to fulfill stock reservation')
 }
 
 export async function createInventoryLocation(
@@ -1137,6 +1197,16 @@ export async function getDemandRefs(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<MaintainArrDemandRefResponse[]>(response, 'Failed to load demand references')
+}
+
+export async function getDemandRef(
+  accessToken: string,
+  demandRefId: string,
+): Promise<MaintainArrDemandRefResponse> {
+  const response = await fetch(`${apiBase}/api/demand-refs/${demandRefId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintainArrDemandRefResponse>(response, 'Failed to load demand reference')
 }
 
 export async function createPurchaseRequestFromDemandRef(

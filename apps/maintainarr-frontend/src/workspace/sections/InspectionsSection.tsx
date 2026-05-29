@@ -37,6 +37,17 @@ export function InspectionsSection({ state }: Props) {
         onSubmitAnswers={() => s.submitAnswersMutation.mutate()}
         onCompleteRun={() => s.completeRunMutation.mutate()}
         onCreateDefectsFromRun={() => s.createDefectsFromRunMutation.mutate()}
+        voiceGuidanceEnabled={s.voiceGuidanceEnabled}
+        voiceGuidanceSupported={s.voiceGuidanceSupported}
+        voiceGuidanceLoading={s.voiceGuidanceLoading}
+        currentVoicePrompt={s.currentVoicePrompt}
+        voiceStatusMessage={s.voiceStatusMessage}
+        isVoiceListening={s.isVoiceListening}
+        onVoiceGuidanceEnabledChange={s.setVoiceGuidanceEnabled}
+        onReadCurrentPrompt={s.handleReadCurrentPrompt}
+        onListenForAnswer={() => {
+          void s.handleListenForAnswer()
+        }}
       />
     </div>
   )

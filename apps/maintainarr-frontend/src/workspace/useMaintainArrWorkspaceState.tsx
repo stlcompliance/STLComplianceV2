@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { normalizeUom, slugifyKey } from '@stl/shared-ui'
 import { useEffect, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import {
@@ -14,6 +15,7 @@ import {
   getWorkOrderEvidence,
   getWorkOrderLabor,
   getWorkOrderPartsDemand,
+  getWorkOrderPartsDemandStatusEvents,
   getWorkOrderTasks,
   getWorkOrders,
   logWorkOrderLabor,
@@ -44,6 +46,9 @@ import {
   getInspectionRuns,
   getInspectionTemplate,
   getInspectionTemplates,
+  getInspectionVoiceGuidance,
+  getTechnicianRefs,
+  normalizeInspectionVoiceNumeric,
   getAssetReadinessFleet,
   getMaintenanceHistory,
   getMaintenanceHistorySummary,
@@ -65,6 +70,13 @@ import {
   canViewAllInspectionRuns,
   loadSession,
 } from '../auth/sessionStorage'
+import {
+  isSpeechRecognitionSupported,
+  isSpeechSynthesisSupported,
+  listenForTranscript,
+  parsePassFailTranscript,
+  speakPrompt,
+} from '../inspections/voiceGuidance'
 async function fileToBase64(file: File): Promise<string> {
   const buffer = await file.arrayBuffer()
   const bytes = new Uint8Array(buffer)
@@ -86,11 +98,13 @@ export function useMaintainArrWorkspaceState() {
   const session = loadSession()
   const accessToken = session?.accessToken ?? ''
   const queryClient = useQueryClient()
-  const [classKey, setClassKey] = useState('')
+  const [classKeyManualOverride, setClassKeyManualOverride] = useState('')
+  const [confirmedClassKey, setConfirmedClassKey] = useState<string | null>(null)
   const [className, setClassName] = useState('')
   const [classDescription, setClassDescription] = useState('')
   const [selectedClassId, setSelectedClassId] = useState('')
-  const [typeKey, setTypeKey] = useState('')
+  const [typeKeyManualOverride, setTypeKeyManualOverride] = useState('')
+  const [confirmedTypeKey, setConfirmedTypeKey] = useState<string | null>(null)
   const [typeName, setTypeName] = useState('')
   const [typeDescription, setTypeDescription] = useState('')
   const [selectedTypeId, setSelectedTypeId] = useState('')
@@ -144,7 +158,8 @@ export function useMaintainArrWorkspaceState() {
   const [createPurchaseRequestDraft, setCreatePurchaseRequestDraft] = useState(false)
   const [meterAssetId, setMeterAssetId] = useState('')
   const [selectedMeterId, setSelectedMeterId] = useState('')
-  const [meterKey, setMeterKey] = useState('')
+  const [meterKeyManualOverride, setMeterKeyManualOverride] = useState('')
+  const [confirmedMeterKey, setConfirmedMeterKey] = useState<string | null>(null)
   const [meterName, setMeterName] = useState('')
   const [meterUnit, setMeterUnit] = useState('hours')
   const [baselineReading, setBaselineReading] = useState('')
@@ -159,7 +174,22 @@ export function useMaintainArrWorkspaceState() {
   const [selectedProgramId, setSelectedProgramId] = useState('')
   const [selectedProgramScheduleIds, setSelectedProgramScheduleIds] = useState<string[]>([])
   const [historyAssetId, setHistoryAssetId] = useState('')
+  const [voiceGuidanceEnabled, setVoiceGuidanceEnabled] = useState(false)
+  const [voiceStatusMessage, setVoiceStatusMessage] = useState<string | null>(null)
+  const [isVoiceListening, setIsVoiceListening] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setConfirmedClassKey(null)
+  }, [className])
+
+  useEffect(() => {
+    setConfirmedTypeKey(null)
+  }, [typeName])
+
+  useEffect(() => {
+    setConfirmedMeterKey(null)
+  }, [meterName])
 
   const meQuery = useQuery({
     queryKey: ['maintainarr-me', session?.accessToken],
@@ -240,6 +270,22 @@ export function useMaintainArrWorkspaceState() {
     enabled: meQuery.isSuccess && Boolean(selectedRunId),
   })
 
+  const voiceGuidanceQuery = useQuery({
+    queryKey: ['maintainarr-inspection-voice-guidance', selectedRunId],
+    queryFn: () => getInspectionVoiceGuidance(accessToken, selectedRunId),
+    enabled:
+      meQuery.isSuccess
+      && Boolean(selectedRunId)
+      && voiceGuidanceEnabled
+      && inspectionRunQuery.data?.status === 'in_progress',
+  })
+
+  const technicianRefsQuery = useQuery({
+    queryKey: ['maintainarr-technician-refs'],
+    queryFn: () => getTechnicianRefs(accessToken),
+    enabled: meQuery.isSuccess,
+  })
+
   const defectsQuery = useQuery({
     queryKey: ['maintainarr-defects', defectStatusFilter],
     queryFn: () =>
@@ -297,6 +343,12 @@ export function useMaintainArrWorkspaceState() {
   const workOrderPartsDemandQuery = useQuery({
     queryKey: ['maintainarr-work-order-parts-demand', selectedWorkOrderId],
     queryFn: () => getWorkOrderPartsDemand(accessToken, selectedWorkOrderId),
+    enabled: meQuery.isSuccess && Boolean(selectedWorkOrderId),
+  })
+
+  const workOrderPartsDemandStatusEventsQuery = useQuery({
+    queryKey: ['maintainarr-work-order-parts-demand-status-events', selectedWorkOrderId],
+    queryFn: () => getWorkOrderPartsDemandStatusEvents(accessToken, selectedWorkOrderId),
     enabled: meQuery.isSuccess && Boolean(selectedWorkOrderId),
   })
 
@@ -411,13 +463,19 @@ export function useMaintainArrWorkspaceState() {
   }
 
   const invalidateWorkOrders = async (workOrderId?: string) => {
-    await queryClient.invalidateQueries({ queryKey: ['maintainarr-work-orders'] })
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['maintainarr-work-orders'] }),
+      queryClient.invalidateQueries({ queryKey: ['maintainarr-technician-refs'] }),
+    ])
     if (workOrderId) {
       await queryClient.invalidateQueries({ queryKey: ['maintainarr-work-order', workOrderId] })
       await queryClient.invalidateQueries({ queryKey: ['maintainarr-work-order-tasks', workOrderId] })
       await queryClient.invalidateQueries({ queryKey: ['maintainarr-work-order-labor', workOrderId] })
       await queryClient.invalidateQueries({ queryKey: ['maintainarr-work-order-evidence', workOrderId] })
       await queryClient.invalidateQueries({ queryKey: ['maintainarr-work-order-parts-demand', workOrderId] })
+      await queryClient.invalidateQueries({
+        queryKey: ['maintainarr-work-order-parts-demand-status-events', workOrderId],
+      })
     }
   }
 
@@ -439,15 +497,25 @@ export function useMaintainArrWorkspaceState() {
     }
   }
 
+  const resolveClassKey = () =>
+    confirmedClassKey ?? (classKeyManualOverride.trim() || slugifyKey(className))
+
+  const resolveTypeKey = () =>
+    confirmedTypeKey ?? (typeKeyManualOverride.trim() || slugifyKey(typeName))
+
+  const resolveMeterKey = () =>
+    confirmedMeterKey ?? (meterKeyManualOverride.trim() || slugifyKey(meterName))
+
   const createClassMutation = useMutation({
     mutationFn: () =>
       createAssetClass(accessToken, {
-        classKey,
+        classKey: resolveClassKey(),
         name: className,
         description: classDescription,
       }),
-    onSuccess: async () => {
-      setClassKey('')
+    onSuccess: async (created) => {
+      setConfirmedClassKey(created.classKey)
+      setClassKeyManualOverride('')
       setClassName('')
       setClassDescription('')
       setApiError(null)
@@ -460,12 +528,13 @@ export function useMaintainArrWorkspaceState() {
     mutationFn: () =>
       createAssetType(accessToken, {
         assetClassId: selectedClassId,
-        typeKey,
+        typeKey: resolveTypeKey(),
         name: typeName,
         description: typeDescription,
       }),
-    onSuccess: async () => {
-      setTypeKey('')
+    onSuccess: async (created) => {
+      setConfirmedTypeKey(created.typeKey)
+      setTypeKeyManualOverride('')
       setTypeName('')
       setTypeDescription('')
       setApiError(null)
@@ -634,14 +703,15 @@ export function useMaintainArrWorkspaceState() {
   const createMeterMutation = useMutation({
     mutationFn: () =>
       createAssetMeter(accessToken, meterAssetId, {
-        meterKey,
+        meterKey: resolveMeterKey(),
         name: meterName,
         description: '',
         unit: meterUnit,
         baselineReading: Number(baselineReading),
       }),
     onSuccess: async (created) => {
-      setMeterKey('')
+      setConfirmedMeterKey(created.meterKey)
+      setMeterKeyManualOverride('')
       setMeterName('')
       setBaselineReading('')
       setSelectedMeterId(created.assetMeterId)
@@ -801,7 +871,7 @@ export function useMaintainArrWorkspaceState() {
         supplyarrPartId: demandSupplyarrPartId || null,
         partNumber: demandPartNumber || null,
         quantityRequested: Number.parseFloat(demandQuantity),
-        unitOfMeasure: demandUnitOfMeasure,
+        unitOfMeasure: normalizeUom(demandUnitOfMeasure),
         notes: demandNotes || null,
       }),
     onSuccess: async () => {
@@ -891,6 +961,70 @@ export function useMaintainArrWorkspaceState() {
     onError: (error) => setApiError(error instanceof Error ? error.message : 'Failed to activate PM program'),
   })
 
+  const voiceGuidanceSupported = isSpeechSynthesisSupported() && isSpeechRecognitionSupported()
+  const currentVoicePrompt =
+    voiceGuidanceQuery.data?.prompts[voiceGuidanceQuery.data.nextUnansweredIndex] ?? null
+
+  const handleReadCurrentPrompt = () => {
+    if (!currentVoicePrompt) {
+      return
+    }
+    speakPrompt(currentVoicePrompt.ttsPrompt)
+    setVoiceStatusMessage('Reading prompt aloud…')
+  }
+
+  const handleListenForAnswer = async () => {
+    if (!currentVoicePrompt) {
+      return
+    }
+
+    setIsVoiceListening(true)
+    setVoiceStatusMessage(null)
+    try {
+      const transcript = await listenForTranscript()
+      if (currentVoicePrompt.itemType === 'pass_fail') {
+        const value = parsePassFailTranscript(transcript)
+        if (!value) {
+          throw new Error(`Could not map "${transcript}" to pass, fail, or N/A.`)
+        }
+        setAnswerDrafts((current) => ({
+          ...current,
+          [currentVoicePrompt.checklistItemId]: {
+            ...current[currentVoicePrompt.checklistItemId],
+            passFailValue: value,
+          },
+        }))
+      } else if (currentVoicePrompt.itemType === 'numeric') {
+        const normalized = await normalizeInspectionVoiceNumeric(accessToken, transcript)
+        if (!normalized.understood || normalized.value == null) {
+          throw new Error(`Could not normalize "${transcript}" as a number.`)
+        }
+        setAnswerDrafts((current) => ({
+          ...current,
+          [currentVoicePrompt.checklistItemId]: {
+            ...current[currentVoicePrompt.checklistItemId],
+            numericValue: String(normalized.value),
+          },
+        }))
+      } else {
+        setAnswerDrafts((current) => ({
+          ...current,
+          [currentVoicePrompt.checklistItemId]: {
+            ...current[currentVoicePrompt.checklistItemId],
+            textValue: transcript,
+          },
+        }))
+      }
+
+      setVoiceStatusMessage(`Captured voice answer: ${transcript}`)
+      await queryClient.invalidateQueries({ queryKey: ['maintainarr-inspection-voice-guidance', selectedRunId] })
+    } catch (error) {
+      setVoiceStatusMessage(error instanceof Error ? error.message : 'Voice capture failed.')
+    } finally {
+      setIsVoiceListening(false)
+    }
+  }
+
   return {
     handoffRedirect,
     ready: Boolean(session && meQuery.data),
@@ -900,11 +1034,13 @@ export function useMaintainArrWorkspaceState() {
     accessToken,
     apiError,
     searchParams,
-    classKey,
+    classKeyManualOverride,
+    confirmedClassKey,
     className,
     classDescription,
     selectedClassId,
-    typeKey,
+    typeKeyManualOverride,
+    confirmedTypeKey,
     typeName,
     typeDescription,
     selectedTypeId,
@@ -927,6 +1063,16 @@ export function useMaintainArrWorkspaceState() {
     runTemplateId,
     selectedRunId,
     answerDrafts,
+    voiceGuidanceEnabled,
+    voiceGuidanceSupported,
+    voiceGuidanceLoading: voiceGuidanceQuery.isLoading,
+    currentVoicePrompt,
+    voiceStatusMessage,
+    isVoiceListening,
+    setVoiceGuidanceEnabled,
+    handleReadCurrentPrompt,
+    handleListenForAnswer,
+    technicianRefs: technicianRefsQuery.data?.items ?? [],
     defectAssetId,
     defectTitle,
     defectDescription,
@@ -956,7 +1102,8 @@ export function useMaintainArrWorkspaceState() {
     createPurchaseRequestDraft,
     meterAssetId,
     selectedMeterId,
-    meterKey,
+    meterKeyManualOverride,
+    confirmedMeterKey,
     meterName,
     meterUnit,
     baselineReading,
@@ -971,11 +1118,13 @@ export function useMaintainArrWorkspaceState() {
     selectedProgramId,
     selectedProgramScheduleIds,
     historyAssetId,
-    setClassKey,
+    setClassKeyManualOverride,
+    setConfirmedClassKey,
     setClassName,
     setClassDescription,
     setSelectedClassId,
-    setTypeKey,
+    setTypeKeyManualOverride,
+    setConfirmedTypeKey,
     setTypeName,
     setTypeDescription,
     setSelectedTypeId,
@@ -1027,7 +1176,8 @@ export function useMaintainArrWorkspaceState() {
     setCreatePurchaseRequestDraft,
     setMeterAssetId,
     setSelectedMeterId,
-    setMeterKey,
+    setMeterKeyManualOverride,
+    setConfirmedMeterKey,
     setMeterName,
     setMeterUnit,
     setBaselineReading,
@@ -1056,6 +1206,8 @@ export function useMaintainArrWorkspaceState() {
     templateDetailQuery,
     inspectionRunsQuery,
     inspectionRunQuery,
+    voiceGuidanceQuery,
+    technicianRefsQuery,
     defectsQuery,
     workOrdersQuery,
     maintenanceHistoryQuery,
@@ -1065,6 +1217,7 @@ export function useMaintainArrWorkspaceState() {
     workOrderLaborQuery,
     workOrderEvidenceQuery,
     workOrderPartsDemandQuery,
+    workOrderPartsDemandStatusEventsQuery,
     assetMetersQuery,
     meterReadingsQuery,
     meterForecastQuery,

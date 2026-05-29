@@ -41,5 +41,17 @@ public static class TripExecutionCaptureEndpoints
                 cancellationToken));
         })
         .WithName("UpsertRoutArrTripExecutionSettings");
+
+        var tripGroup = app.MapGroup("/api/trips/{tripId:guid}")
+            .WithTags("TripExecutionCapture")
+            .RequireAuthorization();
+
+        tripGroup.MapGet("/capture-readiness", async (
+            Guid tripId,
+            TripExecutionCaptureService captureService,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await captureService.GetCaptureReadinessAsync(context.User, tripId, cancellationToken)))
+        .WithName("GetTripCaptureReadiness");
     }
 }

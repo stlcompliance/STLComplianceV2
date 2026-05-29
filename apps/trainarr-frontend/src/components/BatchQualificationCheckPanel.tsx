@@ -1,3 +1,5 @@
+import { CheckboxMultiSelect, ControlledSelect, type PickerOption } from '@stl/shared-ui'
+
 import type { BatchQualificationCheckResponse } from '../api/types'
 
 interface BatchQualificationCheckPanelProps {
@@ -9,8 +11,10 @@ interface BatchQualificationCheckPanelProps {
   onQualificationKeyChange: (value: string) => void
   rulePackKey: string
   onRulePackKeyChange: (value: string) => void
-  personIdsText: string
-  onPersonIdsTextChange: (value: string) => void
+  rulePackOptions: PickerOption[]
+  selectedPersonIds: string[]
+  onSelectedPersonIdsChange: (values: string[]) => void
+  personPickerOptions: PickerOption[]
   selectedRemediationPersonIds: string[]
   onToggleRemediationPerson: (personId: string) => void
   remediationPersonOptions: { remediationId: string; label: string; staffarrPersonId: string }[]
@@ -38,8 +42,10 @@ export function BatchQualificationCheckPanel({
   onQualificationKeyChange,
   rulePackKey,
   onRulePackKeyChange,
-  personIdsText,
-  onPersonIdsTextChange,
+  rulePackOptions,
+  selectedPersonIds,
+  onSelectedPersonIdsChange,
+  personPickerOptions,
   selectedRemediationPersonIds,
   onToggleRemediationPerson,
   remediationPersonOptions,
@@ -62,16 +68,15 @@ export function BatchQualificationCheckPanel({
             placeholder="hazmat_endorsement"
           />
         </label>
-        <label className="block text-xs text-slate-400">
-          Compliance Core rule pack key
-          <input
-            type="text"
-            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm text-slate-100"
-            value={rulePackKey}
-            onChange={(e) => onRulePackKeyChange(e.target.value)}
-            placeholder="driver_qualification"
-          />
-        </label>
+        <ControlledSelect
+          label="Compliance Core rule pack key"
+          value={rulePackKey}
+          onChange={onRulePackKeyChange}
+          options={rulePackOptions}
+          emptyLabel="Select rule pack…"
+          testId="batch-qualification-rule-pack"
+          className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm text-slate-100"
+        />
       </div>
 
       {remediationPersonOptions.length > 0 && (
@@ -98,15 +103,21 @@ export function BatchQualificationCheckPanel({
         </div>
       )}
 
-      <label className="mt-4 block text-xs text-slate-400">
-        StaffArr person IDs (one per line, comma, or semicolon)
-        <textarea
-          className="mt-1 min-h-[88px] w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 font-mono text-xs text-slate-100"
-          value={personIdsText}
-          onChange={(e) => onPersonIdsTextChange(e.target.value)}
-          placeholder="00000000-0000-0000-0000-000000000001"
-        />
-      </label>
+      {personPickerOptions.length > 0 ? (
+        <div className="mt-4">
+          <CheckboxMultiSelect
+            label="StaffArr people"
+            values={selectedPersonIds}
+            onChange={onSelectedPersonIdsChange}
+            options={personPickerOptions}
+            testId="batch-qualification-person-picker"
+          />
+        </div>
+      ) : (
+        <p className="mt-4 text-xs text-slate-500">
+          No people directory refs loaded. Select people from remediations above or add qualification issues first.
+        </p>
+      )}
 
       <button
         type="button"

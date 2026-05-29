@@ -13,6 +13,7 @@ export function WorkOrdersSection({ state }: Props) {
         canClose={s.canCloseWorkOrder}
         viewAllWorkOrders={s.viewAllWorkOrders}
         sessionPersonId={s.session.personId}
+        technicianRefs={s.technicianRefs}
         assets={s.assetsQuery.data ?? []}
         workOrders={s.workOrdersQuery.data ?? []}
         selectedWorkOrder={s.workOrderDetailQuery.data ?? null}
@@ -64,6 +65,7 @@ export function WorkOrdersSection({ state }: Props) {
         isLoggingLabor={s.logWorkOrderLaborMutation.isPending}
         isUploadingEvidence={s.uploadWorkOrderEvidenceMutation.isPending}
         partsDemand={s.workOrderPartsDemandQuery.data ?? []}
+        partsDemandStatusEvents={s.workOrderPartsDemandStatusEventsQuery.data ?? []}
         demandPartNumber={s.demandPartNumber}
         demandSupplyarrPartId={s.demandSupplyarrPartId}
         demandQuantity={s.demandQuantity}

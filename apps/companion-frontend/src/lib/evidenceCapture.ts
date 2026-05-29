@@ -1,8 +1,24 @@
 export const EVIDENCE_CAPTURE_KINDS = ['photo', 'document', 'signature'] as const
 export type EvidenceCaptureKind = (typeof EVIDENCE_CAPTURE_KINDS)[number]
 
+export function isMaintainarrInspectionTask(taskKey: string): boolean {
+  return taskKey.startsWith('maintainarr:inspection:')
+}
+
+export function isSupplyarrReceivingTask(taskKey: string): boolean {
+  return taskKey.startsWith('supplyarr:receiving:')
+}
+
+export function isMaintainarrWorkOrderTask(taskKey: string): boolean {
+  return taskKey.startsWith('maintainarr:work-order:')
+}
+
 export function isTrainarrFieldTask(taskKey: string): boolean {
   return taskKey.startsWith('trainarr:assignment:')
+}
+
+export function isRoutarrTripTask(taskKey: string): boolean {
+  return taskKey.startsWith('routarr:trip:')
 }
 
 export function defaultFileName(kind: EvidenceCaptureKind): string {

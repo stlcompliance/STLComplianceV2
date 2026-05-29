@@ -1,8 +1,12 @@
+import { ControlledSelect } from '@stl/shared-ui'
+
 import type {
   LeadTimeSnapshotResponse,
   PartResponse,
   PricingSnapshotResponse,
 } from '../api/types'
+import { CURRENCY_OPTIONS } from '../forms/controlledFormHelpers'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface PricingLeadTimePanelProps {
   parts: PartResponse[]
@@ -69,6 +73,11 @@ export function PricingLeadTimePanel({
       label: `${part.partKey} · ${link.partyKey} · ${link.vendorPartNumber}`,
     })),
   )
+  const selectedLink = vendorLinks.find((link) => link.linkId === selectedVendorLinkId)
+  const pricingKeySource = selectedLink ? `${selectedLink.label}-price` : ''
+  const leadTimeKeySource = selectedLink ? `${selectedLink.label}-lead` : ''
+  const existingPricingKeys = pricingSnapshots.map((row) => row.snapshotKey)
+  const existingLeadTimeKeys = leadTimeSnapshots.map((row) => row.snapshotKey)
 
   const filteredPricing = currentOnlyFilter
     ? pricingSnapshots.filter((row) => row.isCurrent)
@@ -183,22 +192,18 @@ export function PricingLeadTimePanel({
           </label>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-sm text-slate-400">
-              Pricing snapshot key
-              <input
-                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
-                value={pricingSnapshotKey}
-                onChange={(e) => onPricingSnapshotKeyChange(e.target.value)}
-              />
-            </label>
-            <label className="block text-sm text-slate-400">
-              Lead-time snapshot key
-              <input
-                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
-                value={leadTimeSnapshotKey}
-                onChange={(e) => onLeadTimeSnapshotKeyChange(e.target.value)}
-              />
-            </label>
+            <GeneratedKeyFieldGroup
+              sourceLabel={pricingKeySource}
+              existingKeys={existingPricingKeys}
+              onKeyChange={onPricingSnapshotKeyChange}
+              label="Pricing snapshot key"
+            />
+            <GeneratedKeyFieldGroup
+              sourceLabel={leadTimeKeySource}
+              existingKeys={existingLeadTimeKeys}
+              onKeyChange={onLeadTimeSnapshotKeyChange}
+              label="Lead-time snapshot key"
+            />
             <label className="block text-sm text-slate-400">
               Unit price
               <input
@@ -210,14 +215,12 @@ export function PricingLeadTimePanel({
                 onChange={(e) => onUnitPriceChange(e.target.value)}
               />
             </label>
-            <label className="block text-sm text-slate-400">
-              Currency
-              <input
-                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
-                value={currencyCode}
-                onChange={(e) => onCurrencyCodeChange(e.target.value)}
-              />
-            </label>
+            <ControlledSelect
+              label="Currency"
+              value={currencyCode}
+              onChange={onCurrencyCodeChange}
+              options={CURRENCY_OPTIONS}
+            />
             <label className="block text-sm text-slate-400">
               Minimum order qty (optional)
               <input
@@ -244,8 +247,9 @@ export function PricingLeadTimePanel({
 
           <label className="block text-sm text-slate-400">
             Notes
-            <input
+            <textarea
               className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
+              rows={2}
               value={snapshotNotes}
               onChange={(e) => onSnapshotNotesChange(e.target.value)}
             />

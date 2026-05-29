@@ -140,6 +140,28 @@ export interface TenantOverviewRow {
   createdAt: string
 }
 
+export interface TenantDetailResponse {
+  tenantId: string
+  slug: string
+  displayName: string
+  status: string
+  createdAt: string
+  modifiedAt: string
+}
+
+export interface CreateTenantRequest {
+  slug: string
+  displayName: string
+}
+
+export interface UpdateTenantRequest {
+  displayName: string
+}
+
+export interface UpdateTenantStatusRequest {
+  status: string
+}
+
 export interface PagedResult<T> {
   items: T[]
   page: number
@@ -156,6 +178,26 @@ export interface ProductOverviewRow {
   hasLaunchProfile: boolean
   launchProfileActive: boolean
   baseUrl: string | null
+}
+
+export interface ProductDetailResponse {
+  productKey: string
+  displayName: string
+  sortOrder: number
+  isActive: boolean
+}
+
+export interface CreateProductRequest {
+  productKey: string
+  displayName: string
+  sortOrder: number
+  isActive?: boolean
+}
+
+export interface UpdateProductRequest {
+  displayName: string
+  sortOrder: number
+  isActive: boolean
 }
 
 export interface ApiErrorBody {
@@ -228,6 +270,7 @@ export interface PlatformAuditPackageFilterOptions {
   results: string[]
   targetTypes: string[]
   productKeys: string[]
+  actorUserIds: string[]
 }
 
 export interface PlatformAuditPackageBreakdownItem {
@@ -444,6 +487,99 @@ export interface TriggerTenantLifecycleOrchestrationResponse {
   suspendedCount: number
   reactivatedCount: number
   skippedCount: number
+}
+
+export interface EntitlementDetail {
+  entitlementId: string
+  tenantId: string
+  productKey: string
+  productDisplayName: string
+  status: string
+  grantedAt: string
+  revokedAt: string | null
+}
+
+export interface GrantEntitlementRequest {
+  tenantId: string
+  productKey: string
+}
+
+export interface ServiceClientSummary {
+  serviceClientId: string
+  clientKey: string
+  displayName: string
+  sourceProductKey: string
+  allowedProductKeys: string[]
+  isActive: boolean
+  createdAt: string
+}
+
+export interface RegisterServiceClientRequest {
+  clientKey: string
+  displayName: string
+  sourceProductKey: string
+  allowedProductKeys: string[]
+}
+
+export interface IssueServiceTokenRequest {
+  serviceClientId: string
+  tenantId?: string | null
+  allowedProductKeys?: string[] | null
+  actionScope?: string | null
+  lifetimeMinutes?: number | null
+}
+
+export interface ServiceTokenIssueResult {
+  accessToken: string
+  tokenId: string
+  expiresAt: string
+  serviceClientId: string
+  tenantId: string | null
+  allowedProductKeys: string[]
+  actionScope: string | null
+}
+
+export interface ServiceTokenSummary {
+  tokenId: string
+  serviceClientId: string
+  clientKey: string
+  tenantId: string | null
+  allowedProductKeys: string[]
+  actionScope: string | null
+  expiresAt: string
+  revokedAt: string | null
+  createdAt: string
+}
+
+export interface DataPlaneProfile {
+  profileId: string
+  tenantId: string
+  tenantSlug: string
+  tenantDisplayName: string
+  productKey: string
+  productDisplayName: string
+  deploymentMode: string
+  dataEndpointUrl: string | null
+  trustStatus: string
+  notes: string | null
+  modifiedAt: string
+}
+
+export interface UpsertDataPlaneProfileRequest {
+  tenantId: string
+  productKey: string
+  deploymentMode: string
+  dataEndpointUrl?: string | null
+  trustStatus: string
+  notes?: string | null
+}
+
+export interface EffectiveDataPlaneProfile {
+  tenantId: string
+  productKey: string
+  productDisplayName: string
+  deploymentMode: string
+  trustStatus: string
 }
 
 export class NexarrApiError extends Error {

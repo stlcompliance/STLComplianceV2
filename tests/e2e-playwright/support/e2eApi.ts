@@ -51,6 +51,12 @@ export type MaintainArrFieldInboxFixture = {
   workOrderId: string
 }
 
+export type MaintainArrPartsDemandJourneyFixture = {
+  workOrderId: string
+  workOrderNumber: string
+  partNumber: string
+}
+
 export type RoutArrFieldInboxFixture = {
   tripId: string
 }
@@ -2211,6 +2217,105 @@ export async function ensureMaintainArrFieldInboxFixture(): Promise<MaintainArrF
   )
 
   return { workOrderId: workOrder.workOrderId }
+}
+
+export async function ensureMaintainArrPartsDemandJourneyFixture(): Promise<MaintainArrPartsDemandJourneyFixture> {
+  const supplyarrToken = await redeemHandoffForProduct('supplyarr')
+  const maintainarrToken = await redeemHandoffForProduct('maintainarr')
+  const suffix = Date.now()
+  const partNumber = `E2E-BRK-${suffix}`
+
+  const part = await readJson<{ partId: string }>(
+    await fetch(`${supplyarrApiUrl()}/api/parts`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${supplyarrToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        partNumber,
+        manufacturerPartNumber: null,
+        name: 'E2E brake pads',
+        description: 'Cross-product parts demand journey',
+        categoryKey: 'general',
+        unitOfMeasure: 'each',
+        manufacturerName: 'Acme',
+        manufacturerSku: 'AC-100',
+      }),
+    }),
+  )
+
+  const assetClass = await readJson<{ assetClassId: string }>(
+    await fetch(`${maintainarrApiUrl()}/api/asset-classes`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${maintainarrToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        classKey: `e2e-demand-class-${suffix}`,
+        name: 'E2E demand class',
+        description: '',
+      }),
+    }),
+  )
+
+  const assetType = await readJson<{ assetTypeId: string }>(
+    await fetch(`${maintainarrApiUrl()}/api/asset-types`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${maintainarrToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        assetClassId: assetClass.assetClassId,
+        typeKey: `e2e-demand-type-${suffix}`,
+        name: 'E2E demand type',
+        description: '',
+      }),
+    }),
+  )
+
+  const asset = await readJson<{ assetId: string }>(
+    await fetch(`${maintainarrApiUrl()}/api/assets`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${maintainarrToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        assetTypeId: assetType.assetTypeId,
+        assetTag: `E2E-DEMAND-${suffix}`,
+        name: 'E2E demand asset',
+        locationLabel: 'Shop',
+        notes: null,
+      }),
+    }),
+  )
+
+  const workOrder = await readJson<{ workOrderId: string; workOrderNumber: string }>(
+    await fetch(`${maintainarrApiUrl()}/api/work-orders`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${maintainarrToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        assetId: asset.assetId,
+        title: `E2E parts demand ${suffix}`,
+        description: 'Cross-product MaintainArr → SupplyArr journey',
+        priority: 'medium',
+        assignedTechnicianPersonId: null,
+        pmScheduleId: null,
+      }),
+    }),
+  )
+
+  await readJson(
+    await fetch(`${maintainarrApiUrl()}/api/work-orders/${workOrder.workOrderId}/parts-demand`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${maintainarrToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        supplyarrPartId: part.partId,
+        partNumber,
+        description: 'E2E brake pads',
+        quantityRequested: 2,
+        unitOfMeasure: 'each',
+        notes: 'Journey smoke',
+      }),
+    }),
+  )
+
+  return {
+    workOrderId: workOrder.workOrderId,
+    workOrderNumber: workOrder.workOrderNumber,
+    partNumber,
+  }
 }
 
 export async function ensureRoutArrFieldInboxFixture(): Promise<RoutArrFieldInboxFixture> {

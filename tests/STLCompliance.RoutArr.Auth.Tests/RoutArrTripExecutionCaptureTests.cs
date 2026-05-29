@@ -170,6 +170,46 @@ public sealed class RoutArrTripExecutionCaptureTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Dispatcher_reads_trip_capture_readiness_via_trips_api()
+    {
+        var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
+        var trip = await CreateDispatchedTripAsync(driverPersonId);
+
+        var readinessResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/trips/{trip.TripId}/capture-readiness", _dispatcherToken));
+        readinessResponse.EnsureSuccessStatusCode();
+        var readiness = (await readinessResponse.Content.ReadFromJsonAsync<TripCaptureReadinessResponse>())!;
+        Assert.Equal(trip.TripId, readiness.TripId);
+        Assert.False(readiness.CanStartTrip);
+        Assert.Contains(readiness.Items, x => x.Key == "pre_trip_dvir" && !x.Satisfied);
+    }
+
+    [Fact]
+    public async Task Trip_audit_trail_lists_status_and_proof_events()
+    {
+        var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
+        var driverToken = CreateRoutArrAccessToken(["routarr"], "routarr_driver", PlatformSeeder.DemoAdminUserId);
+        var trip = await CreateDispatchedTripAsync(driverPersonId);
+
+        var proofRequest = Authorized(HttpMethod.Post, $"/api/driver-portal/trips/{trip.TripId}/proofs", driverToken);
+        proofRequest.Content = JsonContent.Create(new CreateTripProofRequest(
+            "pickup",
+            trip.VehicleRefKey,
+            "BOL-1",
+            "Audit trail test",
+            null));
+        (await _routarrClient.SendAsync(proofRequest)).EnsureSuccessStatusCode();
+
+        var auditResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/trips/{trip.TripId}/audit-trail?limit=20", _dispatcherToken));
+        auditResponse.EnsureSuccessStatusCode();
+        var audit = (await auditResponse.Content.ReadFromJsonAsync<TripAuditTrailResponse>())!;
+        Assert.Equal(trip.TripId, audit.TripId);
+        Assert.Contains(audit.Entries, x => x.Action == "trip.status");
+        Assert.Contains(audit.Entries, x => x.Action == "trip_proof.create");
+    }
+
     private async Task<TripDetailResponse> CreateDispatchedTripAsync(string driverPersonId)
     {
         var now = DateTimeOffset.UtcNow;

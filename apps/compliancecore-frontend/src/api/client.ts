@@ -45,6 +45,13 @@ import type {
   FindingsReportSummaryResponse,
   OperatorReportSummaryResponse,
   EntityExportManifestResponse,
+  SdsReferenceResponse,
+  CreateSdsReferenceRequest,
+  HazComReferenceResponse,
+  CreateHazComReferenceRequest,
+  RuleVersionListResponse,
+  RuleVersionResponse,
+  RuleVersionRollbackResponse,
   FactSourceBulkIngestionRequest,
   SourceIngestionBatchDetailResponse,
   SourceIngestionBatchResponse,
@@ -1253,4 +1260,79 @@ export async function exportBulkRulePacksCsv(
     throw new ComplianceCoreApiError(body || 'Failed to export rule packs CSV', response.status, body)
   }
   return response.blob()
+}
+
+export async function listSdsReferences(
+  accessToken: string,
+  includeInactive = false,
+): Promise<SdsReferenceResponse[]> {
+  const query = includeInactive ? '?includeInactive=true' : ''
+  const response = await fetch(`${apiBase}/api/sds${query}`, { headers: authHeaders(accessToken) })
+  return parseJsonResponse<SdsReferenceResponse[]>(response, 'Failed to load SDS references')
+}
+
+export async function createSdsReference(
+  accessToken: string,
+  request: CreateSdsReferenceRequest,
+): Promise<SdsReferenceResponse> {
+  const response = await fetch(`${apiBase}/api/sds`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<SdsReferenceResponse>(response, 'Failed to create SDS reference')
+}
+
+export async function listHazComReferences(
+  accessToken: string,
+  includeInactive = false,
+): Promise<HazComReferenceResponse[]> {
+  const query = includeInactive ? '?includeInactive=true' : ''
+  const response = await fetch(`${apiBase}/api/hazcom${query}`, { headers: authHeaders(accessToken) })
+  return parseJsonResponse<HazComReferenceResponse[]>(response, 'Failed to load HazCom references')
+}
+
+export async function createHazComReference(
+  accessToken: string,
+  request: CreateHazComReferenceRequest,
+): Promise<HazComReferenceResponse> {
+  const response = await fetch(`${apiBase}/api/hazcom`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<HazComReferenceResponse>(response, 'Failed to create HazCom reference')
+}
+
+export async function listRuleVersions(
+  accessToken: string,
+  packKey?: string,
+): Promise<RuleVersionListResponse> {
+  const query = packKey ? `?packKey=${encodeURIComponent(packKey)}` : ''
+  const response = await fetch(`${apiBase}/api/rule-versions${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RuleVersionListResponse>(response, 'Failed to load rule versions')
+}
+
+export async function publishRuleVersion(
+  accessToken: string,
+  rulePackId: string,
+): Promise<RuleVersionResponse> {
+  const response = await fetch(`${apiBase}/api/rule-versions/${rulePackId}/publish`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RuleVersionResponse>(response, 'Failed to publish rule version')
+}
+
+export async function rollbackRuleVersion(
+  accessToken: string,
+  rulePackId: string,
+): Promise<RuleVersionRollbackResponse> {
+  const response = await fetch(`${apiBase}/api/rule-versions/${rulePackId}/rollback`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RuleVersionRollbackResponse>(response, 'Failed to roll back rule version')
 }

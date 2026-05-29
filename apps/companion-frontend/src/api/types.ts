@@ -186,6 +186,212 @@ export interface CompanionFieldEvidenceResponse {
   createdAt: string
 }
 
+export interface SubmitCompanionFieldDvirRequest {
+  taskKey: string
+  phase: string
+  result: string
+  odometerReading: number | null
+  defectNotes: string | null
+  vehicleRefKey: string | null
+}
+
+export interface CompanionFieldDvirResponse {
+  taskKey: string
+  productKey: string
+  dvirId: string
+  tripId: string
+  phase: string
+  result: string
+  odometerReading: number | null
+  defectNotes: string
+  submittedAt: string
+}
+
+export interface CompanionFieldInspectionChecklistItem {
+  checklistItemId: string
+  itemKey: string
+  prompt: string
+  itemType: string
+  isRequired: boolean
+  sortOrder: number
+}
+
+export interface CompanionFieldInspectionAnswer {
+  checklistItemId: string
+  itemKey: string
+  passFailValue: string | null
+  numericValue: number | null
+  textValue: string | null
+  answeredAt: string
+}
+
+export interface CompanionFieldInspectionDetailResponse {
+  taskKey: string
+  productKey: string
+  inspectionRunId: string
+  assetTag: string
+  assetName: string
+  templateName: string
+  status: string
+  result: string | null
+  checklistItems: CompanionFieldInspectionChecklistItem[]
+  answers: CompanionFieldInspectionAnswer[]
+}
+
+export interface CompanionFieldInspectionAnswerInput {
+  checklistItemId: string
+  passFailValue: string | null
+  numericValue: number | null
+  textValue: string | null
+}
+
+export interface SubmitCompanionFieldInspectionAnswersRequest {
+  taskKey: string
+  answers: CompanionFieldInspectionAnswerInput[]
+}
+
+export interface CompanionFieldInspectionAnswersResponse {
+  taskKey: string
+  productKey: string
+  inspectionRunId: string
+  status: string
+  answerCount: number
+  requiredItemCount: number
+  answers: CompanionFieldInspectionAnswer[]
+}
+
+export interface CompleteCompanionFieldInspectionRequest {
+  taskKey: string
+}
+
+export interface CompanionFieldInspectionCompleteResponse {
+  taskKey: string
+  productKey: string
+  inspectionRunId: string
+  status: string
+  result: string
+  completedAt: string
+}
+
+export interface CompanionFieldWorkOrderTaskLine {
+  taskLineId: string
+  title: string
+  description: string
+  sortOrder: number
+  status: string
+  completedAt: string | null
+}
+
+export interface CompanionFieldWorkOrderLaborEntry {
+  laborEntryId: string
+  personId: string
+  hoursWorked: number
+  laborTypeKey: string
+  notes: string | null
+  loggedAt: string
+}
+
+export interface CompanionFieldWorkOrderDetailResponse {
+  taskKey: string
+  productKey: string
+  workOrderId: string
+  workOrderNumber: string
+  assetTag: string
+  assetName: string
+  title: string
+  description: string
+  priority: string
+  status: string
+  tasks: CompanionFieldWorkOrderTaskLine[]
+  laborEntries: CompanionFieldWorkOrderLaborEntry[]
+}
+
+export interface UpdateCompanionFieldWorkOrderStatusRequest {
+  taskKey: string
+  status: string
+}
+
+export interface CompanionFieldWorkOrderStatusResponse {
+  taskKey: string
+  productKey: string
+  workOrderId: string
+  status: string
+  updatedAt: string
+}
+
+export interface LogCompanionFieldWorkOrderLaborRequest {
+  taskKey: string
+  hoursWorked: number
+  laborTypeKey: string
+  notes: string | null
+  workOrderTaskLineId: string | null
+}
+
+export interface CompanionFieldWorkOrderLaborResponse {
+  taskKey: string
+  productKey: string
+  workOrderId: string
+  laborEntryId: string
+  hoursWorked: number
+  laborTypeKey: string
+  status: string
+  loggedAt: string
+}
+
+export interface CompanionFieldReceivingLine {
+  lineId: string
+  lineNumber: number
+  partKey: string
+  partDisplayName: string
+  quantityExpected: number
+  quantityReceived: number
+  quantityOrdered: number
+  quantityRemainingOnOrder: number
+  openExceptionCount: number
+}
+
+export interface CompanionFieldReceivingDetailResponse {
+  taskKey: string
+  productKey: string
+  receivingReceiptId: string
+  receiptKey: string
+  status: string
+  purchaseOrderKey: string
+  binKey: string
+  binName: string
+  locationName: string
+  notes: string
+  lines: CompanionFieldReceivingLine[]
+}
+
+export interface UpdateCompanionFieldReceivingLineRequest {
+  taskKey: string
+  lineId: string
+  quantityReceived: number
+}
+
+export interface CompanionFieldReceivingLineResponse {
+  taskKey: string
+  productKey: string
+  receivingReceiptId: string
+  lineId: string
+  quantityReceived: number
+  status: string
+  updatedAt: string
+}
+
+export interface PostCompanionFieldReceivingRequest {
+  taskKey: string
+}
+
+export interface CompanionFieldReceivingPostResponse {
+  taskKey: string
+  productKey: string
+  receivingReceiptId: string
+  status: string
+  postedAt: string
+}
+
 export interface FieldTaskSubmissionStatusItem {
   taskKey: string
   submissionKind: string

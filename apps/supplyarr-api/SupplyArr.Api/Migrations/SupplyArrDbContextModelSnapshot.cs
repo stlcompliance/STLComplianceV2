@@ -1164,6 +1164,97 @@ namespace SupplyArr.Api.Migrations
                     b.ToTable("supplyarr_part_stock_levels", (string)null);
                 });
 
+            modelBuilder.Entity("SupplyArr.Api.Entities.PartStockReservation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("FulfilledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("FulfilledByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("InventoryBinId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<Guid>("PartId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PartStockLevelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("QuantityReserved")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<string>("ReleaseReason")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTimeOffset?>("ReleasedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReleasedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReservationKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid?>("SourceReferenceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InventoryBinId");
+
+                    b.HasIndex("PartId");
+
+                    b.HasIndex("PartStockLevelId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "ReservationKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "InventoryBinId", "Status");
+
+                    b.HasIndex("TenantId", "PartId", "Status");
+
+                    b.ToTable("supplyarr_part_stock_reservations", (string)null);
+                });
+
             modelBuilder.Entity("SupplyArr.Api.Entities.PartVendorAvailabilityCaptureState", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4562,6 +4653,33 @@ namespace SupplyArr.Api.Migrations
                     b.Navigation("InventoryBin");
 
                     b.Navigation("Part");
+                });
+
+            modelBuilder.Entity("SupplyArr.Api.Entities.PartStockReservation", b =>
+                {
+                    b.HasOne("SupplyArr.Api.Entities.InventoryBin", "InventoryBin")
+                        .WithMany()
+                        .HasForeignKey("InventoryBinId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SupplyArr.Api.Entities.Part", "Part")
+                        .WithMany()
+                        .HasForeignKey("PartId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SupplyArr.Api.Entities.PartStockLevel", "PartStockLevel")
+                        .WithMany()
+                        .HasForeignKey("PartStockLevelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("InventoryBin");
+
+                    b.Navigation("Part");
+
+                    b.Navigation("PartStockLevel");
                 });
 
             modelBuilder.Entity("SupplyArr.Api.Entities.PartVendorAvailabilityCaptureState", b =>

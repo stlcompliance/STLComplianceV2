@@ -16,8 +16,9 @@ export function MetersSection({ state }: Props) {
         forecast={s.meterForecastQuery.data ?? null}
         selectedAssetId={s.meterAssetId}
         selectedMeterId={s.selectedMeterId}
-        meterKey={s.meterKey}
         meterName={s.meterName}
+        meterKeyManualOverride={s.meterKeyManualOverride}
+        confirmedMeterKey={s.confirmedMeterKey}
         meterUnit={s.meterUnit}
         baselineReading={s.baselineReading}
         readingValue={s.readingValue}
@@ -30,8 +31,8 @@ export function MetersSection({ state }: Props) {
           s.setSelectedMeterId('')
         }}
         onSelectedMeterIdChange={s.setSelectedMeterId}
-        onMeterKeyChange={s.setMeterKey}
         onMeterNameChange={s.setMeterName}
+        onMeterKeyManualOverrideChange={s.setMeterKeyManualOverride}
         onMeterUnitChange={s.setMeterUnit}
         onBaselineReadingChange={s.setBaselineReading}
         onReadingValueChange={s.setReadingValue}

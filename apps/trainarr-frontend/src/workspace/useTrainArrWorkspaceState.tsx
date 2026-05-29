@@ -1,18 +1,37 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import {
   completeTrainingAssignment,
   createQualificationCheck,
   createBatchQualificationCheck,
+  listQualificationChecks,
   createTrainingAssignment,
   createTrainingEvidence,
   createTrainingProgram,
+  createTrainingDefinitionStep,
+  deleteTrainingDefinitionStep,
+  getTrainingDefinitionSteps,
+  createTrainingMatrixEntry,
+  deleteTrainingMatrixEntry,
+  getTrainingMatrix,
+  getTrainingRequirementBuilderView,
+  createTrainingApplicabilityProfile,
+  deleteTrainingApplicabilityProfile,
+  createTrainingRequirement,
+  deleteTrainingRequirement,
+  syncTrainingRequirementToMatrix,
+  getTrainingProgram,
+  getTrainingProgramVersions,
+  listQualificationIssues,
+  startTrainingProgramRevision,
+  updateTrainingProgram,
   expireQualificationIssue,
   revokeQualificationIssue,
   submitTrainingEvaluation,
   submitTrainingSignoff,
   suspendQualificationIssue,
+  getTrainingEvaluationHistory,
   getIncidentRemediations,
   getMe,
   getTrainingAssignment,
@@ -48,11 +67,6 @@ import {
 
 const personIdPattern =
   /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi
-
-function parsePersonIdsFromText(text: string): string[] {
-  const matches = text.match(personIdPattern) ?? []
-  return [...new Set(matches.map((id) => id.toLowerCase()))]
-}
 
 async function fileToBase64(file: File): Promise<string> {
   const buffer = await file.arrayBuffer()
@@ -108,12 +122,46 @@ export function useTrainArrWorkspaceState() {
   const [qualificationCheck, setQualificationCheck] = useState<
     import('../api/types').QualificationCheckResponse | null
   >(null)
+  const [manualAssignmentPersonId, setManualAssignmentPersonId] = useState('')
+  const [manualAssignmentDefinitionId, setManualAssignmentDefinitionId] = useState('')
+  const [manualQualificationCheck, setManualQualificationCheck] = useState<
+    import('../api/types').QualificationCheckResponse | null
+  >(null)
+  const [operationsCheckPersonId, setOperationsCheckPersonId] = useState('')
+  const [operationsCheckDefinitionId, setOperationsCheckDefinitionId] = useState('')
+  const [operationsQualificationCheck, setOperationsQualificationCheck] = useState<
+    import('../api/types').QualificationCheckResponse | null
+  >(null)
   const [batchQualificationKey, setBatchQualificationKey] = useState('hazmat_endorsement')
-  const [batchPersonIdsText, setBatchPersonIdsText] = useState('')
+  const [selectedBatchPersonIds, setSelectedBatchPersonIds] = useState<string[]>([])
   const [selectedBatchRemediationPersonIds, setSelectedBatchRemediationPersonIds] = useState<string[]>([])
   const [batchQualificationCheck, setBatchQualificationCheck] = useState<
     import('../api/types').BatchQualificationCheckResponse | null
   >(null)
+  const [matrixApplicabilityKey, setMatrixApplicabilityKey] = useState('')
+  const [matrixApplicabilityLabel, setMatrixApplicabilityLabel] = useState('')
+  const [matrixTargetType, setMatrixTargetType] = useState<'program' | 'definition'>('program')
+  const [matrixTargetId, setMatrixTargetId] = useState('')
+  const [matrixRequirementLevel, setMatrixRequirementLevel] = useState('required')
+  const [matrixSortOrder, setMatrixSortOrder] = useState('0')
+  const [deletingMatrixEntryId, setDeletingMatrixEntryId] = useState<string | null>(null)
+  const [profileLabel, setProfileLabel] = useState('')
+  const [profileScopeType, setProfileScopeType] = useState('role_template')
+  const [profileScopeKey, setProfileScopeKey] = useState('')
+  const [profileDescription, setProfileDescription] = useState('')
+  const [requirementKey, setRequirementKey] = useState('')
+  const [requirementLabel, setRequirementLabel] = useState('')
+  const [requirementSource, setRequirementSource] = useState('internal')
+  const [requirementSourceKey, setRequirementSourceKey] = useState('')
+  const [requirementTargetType, setRequirementTargetType] = useState<'program' | 'definition'>('program')
+  const [requirementTargetId, setRequirementTargetId] = useState('')
+  const [requirementProfileId, setRequirementProfileId] = useState('')
+  const [requirementLevel, setRequirementLevel] = useState('required')
+  const [deletingApplicabilityProfileId, setDeletingApplicabilityProfileId] = useState<string | null>(null)
+  const [deletingRequirementId, setDeletingRequirementId] = useState<string | null>(null)
+  const [syncingRequirementId, setSyncingRequirementId] = useState<string | null>(null)
+  const [qualificationStatusFilter, setQualificationStatusFilter] = useState('')
+  const [selectedQualificationIssueId, setSelectedQualificationIssueId] = useState<string | null>(null)
 
   const meQuery = useQuery({
     queryKey: ['trainarr-me', session?.accessToken],
@@ -134,6 +182,64 @@ export function useTrainArrWorkspaceState() {
     enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
   })
 
+  const programDetailQuery = useQuery({
+    queryKey: ['trainarr-program-detail', session?.accessToken, selectedProgramId],
+    queryFn: () => getTrainingProgram(session!.accessToken, selectedProgramId!),
+    enabled: Boolean(session?.accessToken && selectedProgramId),
+  })
+
+  const programVersionsQuery = useQuery({
+    queryKey: ['trainarr-program-versions', session?.accessToken, selectedProgramId],
+    queryFn: () => getTrainingProgramVersions(session!.accessToken, selectedProgramId!),
+    enabled: Boolean(session?.accessToken && selectedProgramId),
+  })
+
+  const trainingMatrixQuery = useQuery({
+    queryKey: ['trainarr-training-matrix', session?.accessToken],
+    queryFn: () => getTrainingMatrix(session!.accessToken),
+    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+  })
+
+  const requirementBuilderQuery = useQuery({
+    queryKey: ['trainarr-requirement-builder', session?.accessToken],
+    queryFn: () => getTrainingRequirementBuilderView(session!.accessToken),
+    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+  })
+
+  const qualificationIssuesQuery = useQuery({
+    queryKey: ['trainarr-qualification-issues', session?.accessToken, qualificationStatusFilter],
+    queryFn: () =>
+      listQualificationIssues(
+        session!.accessToken,
+        qualificationStatusFilter.trim() || undefined,
+      ),
+    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+  })
+
+  const qualificationCheckHistoryQuery = useQuery({
+    queryKey: [
+      'trainarr-qualification-check-history',
+      session?.accessToken,
+      operationsCheckPersonId,
+    ],
+    queryFn: () =>
+      listQualificationChecks(session!.accessToken, {
+        staffarrPersonId: operationsCheckPersonId.trim() || undefined,
+        limit: 25,
+      }),
+    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+  })
+
+  useEffect(() => {
+    const detail = programDetailQuery.data
+    if (!detail || !selectedProgramId) {
+      return
+    }
+    setProgramName(detail.name)
+    setProgramDescription(detail.description)
+    setSelectedProgramDefinitionIds(detail.definitions.map((d) => d.trainingDefinitionId))
+  }, [programDetailQuery.data, selectedProgramId])
+
   const assignmentsQuery = useQuery({
     queryKey: ['trainarr-assignments', session?.accessToken],
     queryFn: () => getTrainingAssignments(session!.accessToken),
@@ -152,9 +258,21 @@ export function useTrainArrWorkspaceState() {
     enabled: Boolean(session?.accessToken && selectedAssignmentId),
   })
 
+  const evaluationHistoryQuery = useQuery({
+    queryKey: ['trainarr-evaluation-history', session?.accessToken, selectedAssignmentId],
+    queryFn: () => getTrainingEvaluationHistory(session!.accessToken, selectedAssignmentId!),
+    enabled: Boolean(session?.accessToken && selectedAssignmentId),
+  })
+
   const definitionCitationsQuery = useQuery({
     queryKey: ['trainarr-definition-citations', session?.accessToken, selectedDefinitionIdForCitations],
     queryFn: () => getTrainingDefinitionCitations(session!.accessToken, selectedDefinitionIdForCitations!),
+    enabled: Boolean(session?.accessToken && selectedDefinitionIdForCitations),
+  })
+
+  const definitionStepsQuery = useQuery({
+    queryKey: ['trainarr-definition-steps', session?.accessToken, selectedDefinitionIdForCitations],
+    queryFn: () => getTrainingDefinitionSteps(session!.accessToken, selectedDefinitionIdForCitations!),
     enabled: Boolean(session?.accessToken && selectedDefinitionIdForCitations),
   })
 
@@ -185,10 +303,9 @@ export function useTrainArrWorkspaceState() {
 
   const batchQualificationCheckMutation = useMutation({
     mutationFn: async () => {
-      const pastedIds = parsePersonIdsFromText(batchPersonIdsText)
-      const personIds = [...new Set([...selectedBatchRemediationPersonIds, ...pastedIds])]
+      const personIds = [...new Set([...selectedBatchRemediationPersonIds, ...selectedBatchPersonIds])]
       if (personIds.length === 0) {
-        throw new Error('Add at least one StaffArr person id or select people from remediations.')
+        throw new Error('Select at least one StaffArr person or remediation subject.')
       }
       const qualificationKey = batchQualificationKey.trim()
       if (!qualificationKey) {
@@ -226,24 +343,93 @@ export function useTrainArrWorkspaceState() {
     },
   })
 
+  const manualQualificationCheckMutation = useMutation({
+    mutationFn: async () => {
+      const definition = definitionsQuery.data?.find(
+        (d) => d.trainingDefinitionId === manualAssignmentDefinitionId,
+      )
+      if (!manualAssignmentPersonId.trim() || !definition) {
+        throw new Error('Enter a person id and select a training definition before running a check.')
+      }
+      return createQualificationCheck(session!.accessToken, {
+        staffarrPersonId: manualAssignmentPersonId.trim(),
+        qualificationKey: definition.qualificationKey,
+        rulePackKey: rulePackKey.trim() || null,
+        trainingDefinitionId: manualAssignmentDefinitionId,
+        context: null,
+      })
+    },
+    onSuccess: (result) => {
+      setManualQualificationCheck(result)
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-qualification-check-history'] })
+    },
+  })
+
+  const operationsQualificationCheckMutation = useMutation({
+    mutationFn: async () => {
+      const definition = definitionsQuery.data?.find(
+        (d) => d.trainingDefinitionId === operationsCheckDefinitionId,
+      )
+      if (!operationsCheckPersonId.trim() || !definition) {
+        throw new Error('Enter a person id and select a training definition before running a check.')
+      }
+      return createQualificationCheck(session!.accessToken, {
+        staffarrPersonId: operationsCheckPersonId.trim(),
+        qualificationKey: definition.qualificationKey,
+        rulePackKey: rulePackKey.trim() || null,
+        trainingDefinitionId: operationsCheckDefinitionId,
+        context: null,
+      })
+    },
+    onSuccess: (result) => {
+      setOperationsQualificationCheck(result)
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-qualification-check-history'] })
+    },
+  })
+
   const createAssignmentMutation = useMutation({
     mutationFn: async () => {
       const remediation = remediationsQuery.data?.find((r) => r.remediationId === selectedRemediationId)
-      if (!remediation || !selectedDefinitionId) {
-        throw new Error('Select a remediation and training definition.')
+      if (!remediation || !selectedDefinitionId || !qualificationCheck) {
+        throw new Error('Select a remediation, training definition, and run an authorization check.')
       }
       return createTrainingAssignment(session!.accessToken, {
         staffarrPersonId: remediation.staffarrPersonId,
         trainingDefinitionId: selectedDefinitionId,
         staffarrIncidentRemediationId: remediation.remediationId,
         assignmentReason: 'incident_remediation',
+        authorizationQualificationCheckId: qualificationCheck.checkId,
       })
     },
     onSuccess: (created) => {
       setSelectedAssignmentId(created.assignmentId)
       setSelectedRemediationId(null)
+      setQualificationCheck(null)
       void queryClient.invalidateQueries({ queryKey: ['trainarr-assignments'] })
       void queryClient.invalidateQueries({ queryKey: ['trainarr-remediations'] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-qualification-check-history'] })
+    },
+  })
+
+  const createManualAssignmentMutation = useMutation({
+    mutationFn: async () => {
+      if (!manualAssignmentPersonId.trim() || !manualAssignmentDefinitionId || !manualQualificationCheck) {
+        throw new Error('Enter person, definition, and run an authorization check before creating the assignment.')
+      }
+      return createTrainingAssignment(session!.accessToken, {
+        staffarrPersonId: manualAssignmentPersonId.trim(),
+        trainingDefinitionId: manualAssignmentDefinitionId,
+        assignmentReason: 'manual',
+        authorizationQualificationCheckId: manualQualificationCheck.checkId,
+      })
+    },
+    onSuccess: (created) => {
+      setSelectedAssignmentId(created.assignmentId)
+      setManualAssignmentPersonId('')
+      setManualAssignmentDefinitionId('')
+      setManualQualificationCheck(null)
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-assignments'] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-qualification-check-history'] })
     },
   })
 
@@ -343,12 +529,209 @@ export function useTrainArrWorkspaceState() {
         description: programDescription,
         trainingDefinitionIds: selectedProgramDefinitionIds,
       }),
-    onSuccess: () => {
+    onSuccess: (created) => {
       setProgramKey('')
       setProgramName('')
       setProgramDescription('')
       setSelectedProgramDefinitionIds([])
+      setSelectedProgramId(created.programId)
       void queryClient.invalidateQueries({ queryKey: ['trainarr-programs'] })
+    },
+  })
+
+  const createDefinitionStepMutation = useMutation({
+    mutationFn: async (payload: {
+      stepKey: string
+      name: string
+      description: string
+      stepType: 'content' | 'quiz' | 'practical'
+      configJson: string
+      sortOrder: number
+    }) => {
+      if (!selectedDefinitionIdForCitations) {
+        throw new Error('Select a training definition first.')
+      }
+      return createTrainingDefinitionStep(session!.accessToken, selectedDefinitionIdForCitations, payload)
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['trainarr-definition-steps', session?.accessToken, selectedDefinitionIdForCitations],
+      })
+    },
+  })
+
+  const deleteDefinitionStepMutation = useMutation({
+    mutationFn: async (stepId: string) => {
+      if (!selectedDefinitionIdForCitations) {
+        throw new Error('Select a training definition first.')
+      }
+      await deleteTrainingDefinitionStep(session!.accessToken, selectedDefinitionIdForCitations, stepId)
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['trainarr-definition-steps', session?.accessToken, selectedDefinitionIdForCitations],
+      })
+    },
+  })
+
+  const saveProgramMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedProgramId) {
+        throw new Error('Select a program to save.')
+      }
+      return updateTrainingProgram(session!.accessToken, selectedProgramId, {
+        name: programName,
+        description: programDescription,
+        status: 'draft',
+        trainingDefinitionIds: selectedProgramDefinitionIds,
+      })
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-programs'] })
+      void queryClient.invalidateQueries({
+        queryKey: ['trainarr-program-detail', session?.accessToken, selectedProgramId],
+      })
+    },
+  })
+
+  const publishProgramMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedProgramId) {
+        throw new Error('Select a program to publish.')
+      }
+      return updateTrainingProgram(session!.accessToken, selectedProgramId, {
+        name: programName,
+        description: programDescription,
+        status: 'published',
+        trainingDefinitionIds: selectedProgramDefinitionIds,
+      })
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-programs'] })
+      void queryClient.invalidateQueries({
+        queryKey: ['trainarr-program-detail', session?.accessToken, selectedProgramId],
+      })
+      void queryClient.invalidateQueries({
+        queryKey: ['trainarr-program-versions', session?.accessToken, selectedProgramId],
+      })
+    },
+  })
+
+  const startRevisionMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedProgramId) {
+        throw new Error('Select a program to revise.')
+      }
+      return startTrainingProgramRevision(session!.accessToken, {
+        trainingProgramId: selectedProgramId,
+      })
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-programs'] })
+      void queryClient.invalidateQueries({
+        queryKey: ['trainarr-program-detail', session?.accessToken, selectedProgramId],
+      })
+    },
+  })
+
+  const createMatrixEntryMutation = useMutation({
+    mutationFn: async () =>
+      createTrainingMatrixEntry(session!.accessToken, {
+        applicabilityKey: matrixApplicabilityKey.trim(),
+        applicabilityLabel: matrixApplicabilityLabel.trim(),
+        trainingProgramId: matrixTargetType === 'program' ? matrixTargetId : null,
+        trainingDefinitionId: matrixTargetType === 'definition' ? matrixTargetId : null,
+        requirementLevel: matrixRequirementLevel,
+        sortOrder: Number.parseInt(matrixSortOrder, 10) || 0,
+      }),
+    onSuccess: () => {
+      setMatrixApplicabilityKey('')
+      setMatrixApplicabilityLabel('')
+      setMatrixTargetId('')
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-training-matrix'] })
+    },
+  })
+
+  const deleteMatrixEntryMutation = useMutation({
+    mutationFn: async (matrixEntryId: string) => {
+      setDeletingMatrixEntryId(matrixEntryId)
+      await deleteTrainingMatrixEntry(session!.accessToken, matrixEntryId)
+    },
+    onSettled: () => {
+      setDeletingMatrixEntryId(null)
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-training-matrix'] })
+    },
+  })
+
+  const createApplicabilityProfileMutation = useMutation({
+    mutationFn: async () =>
+      createTrainingApplicabilityProfile(session!.accessToken, {
+        label: profileLabel.trim(),
+        scopeType: profileScopeType,
+        scopeKey: profileScopeKey.trim(),
+        description: profileDescription.trim() || null,
+        sourceProduct: profileScopeType === 'role_template' || profileScopeType === 'org_unit' ? 'StaffArr' : null,
+      }),
+    onSuccess: () => {
+      setProfileLabel('')
+      setProfileScopeKey('')
+      setProfileDescription('')
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-requirement-builder'] })
+    },
+  })
+
+  const deleteApplicabilityProfileMutation = useMutation({
+    mutationFn: async (profileId: string) => {
+      setDeletingApplicabilityProfileId(profileId)
+      await deleteTrainingApplicabilityProfile(session!.accessToken, profileId)
+    },
+    onSettled: () => {
+      setDeletingApplicabilityProfileId(null)
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-requirement-builder'] })
+    },
+  })
+
+  const createRequirementMutation = useMutation({
+    mutationFn: async () =>
+      createTrainingRequirement(session!.accessToken, {
+        requirementKey: requirementKey.trim(),
+        label: requirementLabel.trim(),
+        requirementSource,
+        sourceKey: requirementSourceKey.trim() || null,
+        trainingProgramId: requirementTargetType === 'program' ? requirementTargetId : null,
+        trainingDefinitionId: requirementTargetType === 'definition' ? requirementTargetId : null,
+        applicabilityProfileId: requirementProfileId,
+        requirementLevel,
+        sortOrder: 0,
+      }),
+    onSuccess: () => {
+      setRequirementKey('')
+      setRequirementLabel('')
+      setRequirementSourceKey('')
+      setRequirementTargetId('')
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-requirement-builder'] })
+    },
+  })
+
+  const deleteRequirementMutation = useMutation({
+    mutationFn: async (requirementId: string) => {
+      setDeletingRequirementId(requirementId)
+      await deleteTrainingRequirement(session!.accessToken, requirementId)
+    },
+    onSettled: () => {
+      setDeletingRequirementId(null)
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-requirement-builder'] })
+    },
+  })
+
+  const syncRequirementToMatrixMutation = useMutation({
+    mutationFn: async (requirementId: string) => {
+      setSyncingRequirementId(requirementId)
+      return syncTrainingRequirementToMatrix(session!.accessToken, requirementId)
+    },
+    onSettled: () => {
+      setSyncingRequirementId(null)
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-training-matrix'] })
     },
   })
 
@@ -401,6 +784,8 @@ export function useTrainArrWorkspaceState() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['trainarr-assignment', session?.accessToken, selectedAssignmentId] })
       void queryClient.invalidateQueries({ queryKey: ['trainarr-assignments'] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-evaluation-history', session?.accessToken, selectedAssignmentId] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-evaluation-review-timeline', session?.accessToken] })
     },
   })
 
@@ -454,6 +839,8 @@ export function useTrainArrWorkspaceState() {
     onSuccess: () => {
       setLifecycleReason('')
       void queryClient.invalidateQueries({ queryKey: ['trainarr-assignment', session?.accessToken, selectedAssignmentId] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-qualification-issues'] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-assignments'] })
     },
   })
 
@@ -465,6 +852,8 @@ export function useTrainArrWorkspaceState() {
     onSuccess: () => {
       setLifecycleReason('')
       void queryClient.invalidateQueries({ queryKey: ['trainarr-assignment', session?.accessToken, selectedAssignmentId] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-qualification-issues'] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-assignments'] })
     },
   })
 
@@ -476,8 +865,43 @@ export function useTrainArrWorkspaceState() {
     onSuccess: () => {
       setLifecycleReason('')
       void queryClient.invalidateQueries({ queryKey: ['trainarr-assignment', session?.accessToken, selectedAssignmentId] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-qualification-issues'] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-assignments'] })
     },
   })
+
+  const rulePackOptions = useMemo(() => {
+    const keys = new Set<string>(['driver_qualification'])
+    if (rulePackKey.trim()) {
+      keys.add(rulePackKey.trim())
+    }
+    for (const item of definitionRulePackRequirementsQuery.data ?? []) {
+      keys.add(item.rulePackKey)
+    }
+    for (const item of programRulePackRequirementsQuery.data ?? []) {
+      keys.add(item.rulePackKey)
+    }
+    return [...keys].sort().map((value) => ({ value, label: value }))
+  }, [rulePackKey, definitionRulePackRequirementsQuery.data, programRulePackRequirementsQuery.data])
+
+  const personPickerOptions = useMemo(() => {
+    const options = new Map<string, { value: string; label: string }>()
+    for (const issue of qualificationIssuesQuery.data ?? []) {
+      options.set(issue.staffarrPersonId, {
+        value: issue.staffarrPersonId,
+        label: `${issue.qualificationKey} · ${issue.staffarrPersonId.slice(0, 8)}…`,
+      })
+    }
+    for (const assignment of assignmentsQuery.data ?? []) {
+      if (!options.has(assignment.staffarrPersonId)) {
+        options.set(assignment.staffarrPersonId, {
+          value: assignment.staffarrPersonId,
+          label: `Assignment · ${assignment.staffarrPersonId.slice(0, 8)}…`,
+        })
+      }
+    }
+    return [...options.values()].sort((left, right) => left.label.localeCompare(right.label))
+  }, [qualificationIssuesQuery.data, assignmentsQuery.data])
 
 const me = meQuery.data
   const canManage = me ? canManageAssignments(me.tenantRoleKey, me.isPlatformAdmin) : false
@@ -555,29 +979,60 @@ const me = meQuery.data
     lifecycleReason,
     rulePackKey,
     qualificationCheck,
+    manualAssignmentPersonId,
+    manualAssignmentDefinitionId,
+    manualQualificationCheck,
+    operationsCheckPersonId,
+    operationsCheckDefinitionId,
+    operationsQualificationCheck,
     batchQualificationKey,
-    batchPersonIdsText,
+    selectedBatchPersonIds,
     selectedBatchRemediationPersonIds,
     batchQualificationCheck,
+    rulePackOptions,
+    personPickerOptions,
     meQuery,
     definitionsQuery,
     programsQuery,
+    programDetailQuery,
+    programVersionsQuery,
+    trainingMatrixQuery,
+    requirementBuilderQuery,
+    qualificationIssuesQuery,
+    qualificationCheckHistoryQuery,
     assignmentsQuery,
     remediationsQuery,
     assignmentDetailQuery,
+    evaluationHistoryQuery,
     definitionCitationsQuery,
+    definitionStepsQuery,
     programCitationsQuery,
     definitionRulePackRequirementsQuery,
     programRulePackRequirementsQuery,
     evidenceQuery,
     batchQualificationCheckMutation,
     qualificationCheckMutation,
+    manualQualificationCheckMutation,
+    operationsQualificationCheckMutation,
     createAssignmentMutation,
+    createManualAssignmentMutation,
     attachDefinitionCitationMutation,
     attachProgramCitationMutation,
     upsertDefinitionRulePackMutation,
     upsertProgramRulePackMutation,
     createProgramMutation,
+    saveProgramMutation,
+    publishProgramMutation,
+    startRevisionMutation,
+    createMatrixEntryMutation,
+    deleteMatrixEntryMutation,
+    createApplicabilityProfileMutation,
+    deleteApplicabilityProfileMutation,
+    createRequirementMutation,
+    deleteRequirementMutation,
+    syncRequirementToMatrixMutation,
+    createDefinitionStepMutation,
+    deleteDefinitionStepMutation,
     rulePackImpactMutation,
     uploadEvidenceMutation,
     submitEvaluationMutation,
@@ -630,10 +1085,60 @@ const me = meQuery.data
     setLifecycleReason,
     setRulePackKey,
     setQualificationCheck,
+    setManualAssignmentPersonId,
+    setManualAssignmentDefinitionId,
+    setManualQualificationCheck,
+    setOperationsCheckPersonId,
+    setOperationsCheckDefinitionId,
+    setOperationsQualificationCheck,
     setBatchQualificationKey,
-    setBatchPersonIdsText,
+    setSelectedBatchPersonIds,
     setSelectedBatchRemediationPersonIds,
     setBatchQualificationCheck,
+    matrixApplicabilityKey,
+    matrixApplicabilityLabel,
+    matrixTargetType,
+    matrixTargetId,
+    matrixRequirementLevel,
+    matrixSortOrder,
+    deletingMatrixEntryId,
+    qualificationStatusFilter,
+    selectedQualificationIssueId,
+    setMatrixApplicabilityKey,
+    setMatrixApplicabilityLabel,
+    setMatrixTargetType,
+    setMatrixTargetId,
+    setMatrixRequirementLevel,
+    setMatrixSortOrder,
+    profileLabel,
+    profileScopeType,
+    profileScopeKey,
+    profileDescription,
+    requirementKey,
+    requirementLabel,
+    requirementSource,
+    requirementSourceKey,
+    requirementTargetType,
+    requirementTargetId,
+    requirementProfileId,
+    requirementLevel,
+    deletingApplicabilityProfileId,
+    deletingRequirementId,
+    syncingRequirementId,
+    setProfileLabel,
+    setProfileScopeType,
+    setProfileScopeKey,
+    setProfileDescription,
+    setRequirementKey,
+    setRequirementLabel,
+    setRequirementSource,
+    setRequirementSourceKey,
+    setRequirementTargetType,
+    setRequirementTargetId,
+    setRequirementProfileId,
+    setRequirementLevel,
+    setQualificationStatusFilter,
+    setSelectedQualificationIssueId,
   }
 }
 

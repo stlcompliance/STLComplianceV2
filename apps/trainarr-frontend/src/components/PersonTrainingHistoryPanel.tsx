@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { useState } from 'react'
 
 import { getPersonTrainingHistory } from '../api/client'
@@ -6,11 +7,13 @@ import { getPersonTrainingHistory } from '../api/client'
 interface PersonTrainingHistoryPanelProps {
   accessToken: string
   defaultStaffarrPersonId?: string
+  personOptions: PickerOption[]
 }
 
 export function PersonTrainingHistoryPanel({
   accessToken,
   defaultStaffarrPersonId = '',
+  personOptions,
 }: PersonTrainingHistoryPanelProps) {
   const [staffarrPersonId, setStaffarrPersonId] = useState(defaultStaffarrPersonId)
 
@@ -30,19 +33,19 @@ export function PersonTrainingHistoryPanel({
         Materialized training timeline for a StaffArr person, built from processed domain events.
       </p>
 
-      <label className="mt-4 block text-sm">
-        StaffArr person ID
-        <input
-          className="mt-1 w-full rounded border border-border px-2 py-1 font-mono text-xs"
+      <div className="mt-4">
+        <StaticSearchPicker
+          label="StaffArr person"
           value={staffarrPersonId}
-          onChange={(event) => setStaffarrPersonId(event.target.value.trim())}
-          placeholder="00000000-0000-0000-0000-000000000000"
-          data-testid="person-training-history-person-id"
+          onChange={setStaffarrPersonId}
+          options={personOptions}
+          placeholder="Search people…"
+          testId="person-training-history-person-picker"
         />
-      </label>
+      </div>
 
       {staffarrPersonId.length === 0 && (
-        <p className="mt-3 text-sm text-muted-foreground">Enter a person ID to load training history.</p>
+        <p className="mt-3 text-sm text-muted-foreground">Select a person to load training history.</p>
       )}
 
       {historyQuery.isLoading && staffarrPersonId.length > 0 && (

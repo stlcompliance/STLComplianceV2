@@ -23,6 +23,7 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<PartRegistryService>();
         builder.Services.AddScoped<InventoryLocationService>();
         builder.Services.AddScoped<PartStockService>();
+        builder.Services.AddScoped<StockReservationService>();
         builder.Services.AddScoped<PurchaseRequestService>();
         builder.Services.AddScoped<PurchaseOrderService>();
         builder.Services.AddScoped<ReceivingService>();

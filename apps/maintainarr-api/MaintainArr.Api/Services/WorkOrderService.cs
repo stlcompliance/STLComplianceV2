@@ -9,7 +9,8 @@ namespace MaintainArr.Api.Services;
 public sealed class WorkOrderService(
     MaintainArrDbContext db,
     IMaintainArrAuditService audit,
-    MaintenanceNotificationEnqueueService notificationEnqueueService)
+    MaintenanceNotificationEnqueueService notificationEnqueueService,
+    TechnicianRefService technicianRefService)
 {
     public async Task<IReadOnlyList<WorkOrderSummaryResponse>> ListAsync(
         Guid tenantId,
@@ -123,6 +124,12 @@ public sealed class WorkOrderService(
             entity.AssetId,
             "work_order",
             entity.Id,
+            cancellationToken);
+
+        await MirrorAssignedTechnicianAsync(
+            tenantId,
+            actorUserId,
+            entity.AssignedTechnicianPersonId,
             cancellationToken);
 
         return await MapDetailAsync(tenantId, entity, cancellationToken);
@@ -371,6 +378,12 @@ public sealed class WorkOrderService(
             workOrder.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
+
+        await MirrorAssignedTechnicianAsync(
+            tenantId,
+            actorUserId,
+            workOrder.AssignedTechnicianPersonId,
+            cancellationToken);
 
         return await MapDetailAsync(tenantId, workOrder, cancellationToken);
     }
@@ -733,5 +746,24 @@ public sealed class WorkOrderService(
         }
 
         return personId.Trim();
+    }
+
+    private async Task MirrorAssignedTechnicianAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        string? assignedTechnicianPersonId,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(assignedTechnicianPersonId))
+        {
+            return;
+        }
+
+        await technicianRefService.UpsertFromAssignmentAsync(
+            tenantId,
+            actorUserId,
+            assignedTechnicianPersonId,
+            null,
+            cancellationToken);
     }
 }

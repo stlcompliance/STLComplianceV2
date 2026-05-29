@@ -41,7 +41,11 @@ import {
   upsertPartReorderPolicy,
   createPurchaseRequestFromReorder,
   createPurchaseRequestFromDemandRef,
+  createStockReservation,
+  fulfillStockReservation,
   getDemandRefs,
+  getStockReservations,
+  releaseStockReservation,
 
   createVendor,
 
@@ -185,6 +189,22 @@ export function useSupplyArrWorkspaceState() {
   const [selectedStockBinId, setSelectedStockBinId] = useState('')
 
   const [stockQuantity, setStockQuantity] = useState('')
+
+  const [reservationKey, setReservationKey] = useState('')
+
+  const [selectedReservationId, setSelectedReservationId] = useState('')
+
+  const [selectedReservationPartId, setSelectedReservationPartId] = useState('')
+
+  const [selectedReservationBinId, setSelectedReservationBinId] = useState('')
+
+  const [reservationQuantity, setReservationQuantity] = useState('')
+
+  const [reservationNotes, setReservationNotes] = useState('')
+
+  const [reservationReleaseReason, setReservationReleaseReason] = useState('')
+
+  const [reservationStatusFilter, setReservationStatusFilter] = useState('active')
 
   const [prRequestKey, setPrRequestKey] = useState('')
 
@@ -555,6 +575,26 @@ export function useSupplyArrWorkspaceState() {
 
         locationId: selectedInvLocationId || undefined,
 
+      }),
+
+    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+
+  })
+
+
+
+  const stockReservationsQuery = useQuery({
+
+    queryKey: [
+      'supplyarr-stock-reservations',
+      session?.accessToken,
+      reservationStatusFilter,
+      selectedInvLocationId,
+    ],
+
+    queryFn: () =>
+      getStockReservations(session!.accessToken, {
+        status: reservationStatusFilter || undefined,
       }),
 
     enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
@@ -1475,6 +1515,46 @@ export function useSupplyArrWorkspaceState() {
 
   })
 
+  const createStockReservationMutation = useMutation({
+    mutationFn: () =>
+      createStockReservation(session!.accessToken, {
+        reservationKey,
+        partId: selectedReservationPartId,
+        binId: selectedReservationBinId,
+        quantity: Number(reservationQuantity),
+        sourceType: 'manual',
+        notes: reservationNotes || null,
+      }),
+    onSuccess: async (created) => {
+      setReservationKey('')
+      setReservationQuantity('')
+      setReservationNotes('')
+      setSelectedReservationId(created.reservationId)
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-reservations'] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
+    },
+  })
+
+  const releaseStockReservationMutation = useMutation({
+    mutationFn: () =>
+      releaseStockReservation(session!.accessToken, selectedReservationId, {
+        reason: reservationReleaseReason || null,
+      }),
+    onSuccess: async () => {
+      setReservationReleaseReason('')
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-reservations'] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
+    },
+  })
+
+  const fulfillStockReservationMutation = useMutation({
+    mutationFn: () => fulfillStockReservation(session!.accessToken, selectedReservationId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-stock-reservations'] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-inventory-stock'] })
+    },
+  })
+
   const me = meQuery.data
 
   const canManage = me ? canManageParties(me.tenantRoleKey, me.isPlatformAdmin) : false
@@ -1673,6 +1753,14 @@ export function useSupplyArrWorkspaceState() {
     selectedStockPartId,
     selectedStockBinId,
     stockQuantity,
+    reservationKey,
+    selectedReservationId,
+    selectedReservationPartId,
+    selectedReservationBinId,
+    reservationQuantity,
+    reservationNotes,
+    reservationReleaseReason,
+    reservationStatusFilter,
     prRequestKey,
     prTitle,
     prNotes,
@@ -1758,6 +1846,7 @@ export function useSupplyArrWorkspaceState() {
     reorderEvaluationQuery,
     demandRefsQuery,
     stockQuery,
+    stockReservationsQuery,
     createVendorMutation,
     createCatalogMutation,
     createPartMutation,
@@ -1789,6 +1878,9 @@ export function useSupplyArrWorkspaceState() {
     createPurchaseRequestFromReorderMutation,
     createPurchaseRequestFromDemandRefMutation,
     upsertStockMutation,
+    createStockReservationMutation,
+    releaseStockReservationMutation,
+    fulfillStockReservationMutation,
     canManage,
     canManageCatalog,
     canManageInv,
@@ -1847,6 +1939,14 @@ export function useSupplyArrWorkspaceState() {
     setSelectedStockPartId,
     setSelectedStockBinId,
     setStockQuantity,
+    setReservationKey,
+    setSelectedReservationId,
+    setSelectedReservationPartId,
+    setSelectedReservationBinId,
+    setReservationQuantity,
+    setReservationNotes,
+    setReservationReleaseReason,
+    setReservationStatusFilter,
     setPrRequestKey,
     setPrTitle,
     setPrNotes,

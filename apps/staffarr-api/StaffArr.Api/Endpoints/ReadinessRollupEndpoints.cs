@@ -53,6 +53,25 @@ public static class ReadinessRollupEndpoints
         })
         .WithName("GetTeamReadinessRollup");
 
+        rollups.MapGet("/teams/{teamOrgUnitId:guid}/members", async (
+            Guid teamOrgUnitId,
+            string? readinessStatus,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            ReadinessRollupService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReadinessRollupRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListMembersAsync(
+                tenantId,
+                ReadinessRollupRules.TeamScope,
+                teamOrgUnitId,
+                readinessStatus,
+                cancellationToken));
+        })
+        .WithName("ListTeamReadinessRollupMembers");
+
         rollups.MapGet("/sites/{siteOrgUnitId:guid}", async (
             Guid siteOrgUnitId,
             HttpContext context,
@@ -69,5 +88,24 @@ public static class ReadinessRollupEndpoints
                 cancellationToken));
         })
         .WithName("GetSiteReadinessRollup");
+
+        rollups.MapGet("/sites/{siteOrgUnitId:guid}/members", async (
+            Guid siteOrgUnitId,
+            string? readinessStatus,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            ReadinessRollupService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReadinessRollupRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListMembersAsync(
+                tenantId,
+                ReadinessRollupRules.SiteScope,
+                siteOrgUnitId,
+                readinessStatus,
+                cancellationToken));
+        })
+        .WithName("ListSiteReadinessRollupMembers");
     }
 }

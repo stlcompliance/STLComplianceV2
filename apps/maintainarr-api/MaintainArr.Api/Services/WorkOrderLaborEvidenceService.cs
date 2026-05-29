@@ -9,7 +9,8 @@ namespace MaintainArr.Api.Services;
 public sealed class WorkOrderLaborEvidenceService(
     MaintainArrDbContext db,
     MaintainArrEvidenceStorageService storage,
-    IMaintainArrAuditService audit)
+    IMaintainArrAuditService audit,
+    TechnicianRefService technicianRefService)
 {
     private const long MaxEvidenceBytes = 10 * 1024 * 1024;
     private const decimal MaxLaborHours = 24m;
@@ -146,6 +147,13 @@ public sealed class WorkOrderLaborEvidenceService(
             entity.Id.ToString(),
             workOrderId.ToString(),
             cancellationToken: cancellationToken);
+
+        await technicianRefService.UpsertFromAssignmentAsync(
+            tenantId,
+            actorUserId,
+            personId,
+            null,
+            cancellationToken);
 
         return MapLaborResponse(entity);
     }

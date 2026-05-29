@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filterTasks, formatWhen, productLabel, taskTypeLabel } from './fieldInbox'
+import { filterTasks, formatWhen, inboxSourceLoadFailures, productLabel, taskTypeLabel } from './fieldInbox'
 import type { FieldInboxTaskItem } from '../api/types'
 
 const sampleTask: FieldInboxTaskItem = {
@@ -33,5 +33,25 @@ describe('fieldInbox helpers', () => {
   it('formats due timestamps for display', () => {
     expect(formatWhen(null)).toBe('No due date')
     expect(formatWhen('2026-05-27T12:00:00.000Z')).toContain('May')
+  })
+
+  it('collects plain inbox source load failures', () => {
+    expect(
+      inboxSourceLoadFailures([
+        {
+          productKey: 'routarr',
+          entitled: true,
+          fetched: false,
+          errorCode: 'upstream_unreachable',
+          errorMessage: null,
+          items: [],
+        },
+      ]),
+    ).toEqual([
+      {
+        productKey: 'routarr',
+        message: expect.stringContaining('connectivity'),
+      },
+    ])
   })
 })

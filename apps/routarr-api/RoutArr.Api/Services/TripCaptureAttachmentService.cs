@@ -296,7 +296,7 @@ public sealed class TripCaptureAttachmentService(
 
     private void EnsureTripProofAccess(ClaimsPrincipal principal, string? assignedPersonId, bool write)
     {
-        if (!write && authorization.CanViewAllTrips(principal))
+        if (authorization.CanViewAllTrips(principal))
         {
             return;
         }
@@ -311,7 +311,7 @@ public sealed class TripCaptureAttachmentService(
         throw new StlApiException(
             write ? "trip_capture_attachment.not_assigned" : "auth.forbidden",
             write
-                ? "Only the assigned driver can upload capture attachments for this trip."
+                ? "Only the assigned driver or dispatch operator can upload capture attachments for this trip."
                 : "You can only read capture attachments for trips assigned to you.",
             403);
     }

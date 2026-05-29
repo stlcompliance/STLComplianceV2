@@ -1,11 +1,16 @@
+import { AdvancedReferenceField, ControlledSelect } from '@stl/shared-ui'
+
 import type {
   WorkOrderDetailResponse,
   WorkOrderPartsDemandLineResponse,
+  WorkOrderPartsDemandStatusEventResponse,
 } from '../api/types'
+import { PARTS_DEMAND_UOM_OPTIONS } from './formOptions'
 
 interface WorkOrderPartsDemandPanelProps {
   workOrder: WorkOrderDetailResponse | null
   demandLines: WorkOrderPartsDemandLineResponse[]
+  statusEvents: WorkOrderPartsDemandStatusEventResponse[]
   canPerform: boolean
   partNumber: string
   supplyarrPartId: string
@@ -40,8 +45,10 @@ function procurementBadgeClass(status: string): string {
       return 'bg-violet-500/20 text-violet-300 ring-violet-500/40'
     case 'partially_received':
     case 'received_complete':
+    case 'fulfilled':
       return 'bg-amber-500/20 text-amber-300 ring-amber-500/40'
     case 'pr_rejected':
+    case 'cancelled':
       return 'bg-rose-500/20 text-rose-300 ring-rose-500/40'
     default:
       return 'bg-slate-500/20 text-slate-300 ring-slate-500/40'
@@ -51,6 +58,7 @@ function procurementBadgeClass(status: string): string {
 export function WorkOrderPartsDemandPanel({
   workOrder,
   demandLines,
+  statusEvents,
   canPerform,
   partNumber,
   supplyarrPartId,
@@ -77,11 +85,14 @@ export function WorkOrderPartsDemandPanel({
   const pendingCount = demandLines.filter((line) => line.status === 'pending').length
 
   return (
-    <section className="mt-6 border-t border-slate-800 pt-4">
+    <section
+      className="mt-6 border-t border-slate-800 pt-4"
+      data-testid="work-order-parts-demand-panel"
+    >
       <h4 className="text-sm font-semibold text-white">Parts demand (SupplyArr)</h4>
       <p className="mt-1 text-xs text-slate-500">
         Request parts for this work order. Publish sends demand to SupplyArr with opaque work order
-        references.
+        references; procurement status updates arrive via SupplyArr callbacks.
       </p>
 
       {demandLines.length === 0 ? (
@@ -101,6 +112,7 @@ export function WorkOrderPartsDemandPanel({
                 {line.status === 'published' ? (
                   <span
                     className={`rounded px-2 py-0.5 text-xs ring-1 ${procurementBadgeClass(line.procurementStatus)}`}
+                    data-testid={`procurement-status-${line.demandLineId}`}
                   >
                     {line.procurementStatus}
                   </span>
@@ -111,22 +123,56 @@ export function WorkOrderPartsDemandPanel({
                 {line.quantityReceived > 0 ? ` · received ${line.quantityReceived}` : ''}
                 {line.supplyarrDemandRefId ? ` · SupplyArr ref ${line.supplyarrDemandRefId.slice(0, 8)}…` : ''}
                 {line.procurementStatusMessage ? ` · ${line.procurementStatusMessage}` : ''}
+                {line.lastProcurementStatusAt
+                  ? ` · updated ${new Date(line.lastProcurementStatusAt).toLocaleString()}`
+                  : ''}
               </div>
             </li>
           ))}
         </ul>
       )}
 
+      {statusEvents.length > 0 ? (
+        <div className="mt-4 border-t border-slate-800 pt-3" data-testid="parts-demand-status-timeline">
+          <h5 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Procurement status timeline
+          </h5>
+          <ol className="mt-2 space-y-2 text-xs text-slate-400">
+            {statusEvents.map((event) => (
+              <li
+                key={event.statusEventId}
+                className="rounded border border-slate-800/80 bg-slate-950/30 px-2 py-1.5"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={`rounded px-1.5 py-0.5 ring-1 ${procurementBadgeClass(event.procurementStatus)}`}
+                  >
+                    {event.procurementStatus}
+                  </span>
+                  <span className="text-slate-500">{event.eventType}</span>
+                  <span className="text-slate-600">
+                    {new Date(event.occurredAt).toLocaleString()}
+                  </span>
+                </div>
+                {event.message ? <p className="mt-1 text-slate-500">{event.message}</p> : null}
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
+
       {canPerform && editable ? (
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <label className="block text-xs text-slate-400">
-            SupplyArr part id (optional)
-            <input
-              className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
+          <div className="block text-xs text-slate-400">
+            SupplyArr part (optional)
+            <AdvancedReferenceField
               value={supplyarrPartId}
-              onChange={(event) => onSupplyarrPartIdChange(event.target.value)}
+              onChange={onSupplyarrPartIdChange}
+              label="SupplyArr part ID"
+              followUpId="maintainarr-supplyarr-part-picker"
+              testId="work-order-parts-demand-supplyarr-part"
             />
-          </label>
+          </div>
           <label className="block text-xs text-slate-400">
             Part number
             <input
@@ -143,14 +189,15 @@ export function WorkOrderPartsDemandPanel({
               onChange={(event) => onQuantityRequestedChange(event.target.value)}
             />
           </label>
-          <label className="block text-xs text-slate-400">
-            Unit of measure
-            <input
-              className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
-              value={unitOfMeasure}
-              onChange={(event) => onUnitOfMeasureChange(event.target.value)}
-            />
-          </label>
+          <ControlledSelect
+            label="Unit of measure"
+            value={unitOfMeasure}
+            onChange={onUnitOfMeasureChange}
+            options={PARTS_DEMAND_UOM_OPTIONS}
+            emptyLabel="Select unit…"
+            testId="work-order-parts-demand-uom"
+            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
+          />
           <label className="md:col-span-2 block text-xs text-slate-400">
             Notes
             <input
@@ -185,6 +232,7 @@ export function WorkOrderPartsDemandPanel({
           <button
             type="button"
             className="rounded bg-emerald-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            data-testid="work-order-parts-demand-publish"
             disabled={isPublishing}
             onClick={onPublishDemand}
           >

@@ -1105,3 +1105,69 @@ export interface EntityExportManifestResponse {
   }>
   auditPackageFormats: string[]
 }
+
+export interface SdsReferenceResponse {
+  sdsReferenceId: string
+  sdsKey: string
+  materialKeyId: string | null
+  materialKey: string | null
+  productName: string
+  manufacturer: string
+  documentUrl: string
+  revisionDate: string | null
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateSdsReferenceRequest {
+  sdsKey: string
+  materialKeyId: string | null
+  productName: string
+  manufacturer: string
+  documentUrl: string
+  revisionDate: string | null
+}
+
+export interface HazComReferenceResponse {
+  hazComReferenceId: string
+  hazComKey: string
+  title: string
+  description: string
+  linkedSdsKey: string | null
+  locationRef: string
+  documentUrl: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateHazComReferenceRequest {
+  hazComKey: string
+  title: string
+  description: string
+  linkedSdsKey: string | null
+  locationRef: string
+  documentUrl: string
+}
+
+export interface RuleVersionResponse {
+  rulePackId: string
+  packKey: string
+  programKey: string
+  programLabel: string
+  versionNumber: number
+  status: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RuleVersionListResponse {
+  items: RuleVersionResponse[]
+}
+
+export interface RuleVersionRollbackResponse {
+  archivedVersion: RuleVersionResponse
+  restoredVersion: RuleVersionResponse
+}

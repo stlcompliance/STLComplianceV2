@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import {
+  createPerson,
   createPersonOrgAssignment,
   createPersonRoleAssignment,
   createRoleTemplate,
@@ -30,6 +31,7 @@ import {
   personnelDocumentContentUrl,
   getPersonReadiness,
   getPersonLookup,
+  getReadinessRollupMembers,
   getSiteReadinessRollups,
   getTeamReadinessRollups,
   grantPersonReadinessOverride,
@@ -62,6 +64,8 @@ import { canManagePersonnelDocuments } from '../components/PersonnelDocumentsPan
 import { canOverrideReadiness } from '../components/ReadinessPanel'
 import { canViewReadinessRollups } from '../components/ReadinessRollupSupervisorPanel'
 import { canManageOrgHierarchy } from '../components/OrgHierarchyManager'
+import type { PersonTimelineCategoryFilter } from '../components/PersonTimelinePanel'
+import type { ReadinessRollupSelection } from '../api/types'
 
 export function useStaffArrWorkspaceState() {
 
@@ -92,6 +96,10 @@ export function useStaffArrWorkspaceState() {
     enabled: Boolean(session?.accessToken),
   })
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
+  const [personTimelinePage, setPersonTimelinePage] = useState(1)
+  const [personTimelinePageSize, setPersonTimelinePageSize] = useState(25)
+  const [personTimelineCategoryFilter, setPersonTimelineCategoryFilter] =
+    useState<PersonTimelineCategoryFilter>('')
   const fallbackPersonId = peopleQuery.data?.[0]?.personId ?? meQuery.data?.personId ?? null
   useEffect(() => {
     if (!selectedPersonId && fallbackPersonId) {
@@ -100,6 +108,10 @@ export function useStaffArrWorkspaceState() {
   }, [fallbackPersonId, selectedPersonId])
 
   const effectivePersonId = selectedPersonId ?? fallbackPersonId
+
+  useEffect(() => {
+    setPersonTimelinePage(1)
+  }, [effectivePersonId, personTimelineCategoryFilter, personTimelinePageSize])
   const personProfileQuery = useQuery({
     queryKey: ['staffarr-person', session?.accessToken, effectivePersonId],
     queryFn: () => getPerson(session!.accessToken, effectivePersonId!),
@@ -155,8 +167,22 @@ export function useStaffArrWorkspaceState() {
     enabled: Boolean(session?.accessToken && effectivePersonId),
   })
   const personTimelineQuery = useQuery({
-    queryKey: ['staffarr-person-timeline', session?.accessToken, effectivePersonId],
-    queryFn: () => getPersonTimeline(session!.accessToken, effectivePersonId!, 1, 50),
+    queryKey: [
+      'staffarr-person-timeline',
+      session?.accessToken,
+      effectivePersonId,
+      personTimelinePage,
+      personTimelinePageSize,
+      personTimelineCategoryFilter,
+    ],
+    queryFn: () =>
+      getPersonTimeline(
+        session!.accessToken,
+        effectivePersonId!,
+        personTimelinePage,
+        personTimelinePageSize,
+        personTimelineCategoryFilter || undefined,
+      ),
     enabled: Boolean(session?.accessToken && effectivePersonId),
   })
   const personHistorySummaryQuery = useQuery({
@@ -192,15 +218,39 @@ export function useStaffArrWorkspaceState() {
   const canViewReadinessRollupSummaries =
     meQuery.data != null &&
     canViewReadinessRollups(meQuery.data.tenantRoleKey, meQuery.data.isPlatformAdmin)
+  const [readinessRollupSiteFilterId, setReadinessRollupSiteFilterId] = useState<string | null>(null)
+  const [selectedReadinessRollup, setSelectedReadinessRollup] = useState<ReadinessRollupSelection | null>(null)
+  const [readinessRollupMemberFilter, setReadinessRollupMemberFilter] = useState<'all' | 'not_ready'>('all')
+  useEffect(() => {
+    setSelectedReadinessRollup(null)
+  }, [readinessRollupSiteFilterId])
   const teamReadinessRollupsQuery = useQuery({
-    queryKey: ['staffarr-team-readiness-rollups', session?.accessToken],
-    queryFn: () => getTeamReadinessRollups(session!.accessToken),
+    queryKey: ['staffarr-team-readiness-rollups', session?.accessToken, readinessRollupSiteFilterId],
+    queryFn: () =>
+      getTeamReadinessRollups(session!.accessToken, readinessRollupSiteFilterId ?? undefined),
     enabled: Boolean(session?.accessToken && canViewReadinessRollupSummaries),
   })
   const siteReadinessRollupsQuery = useQuery({
     queryKey: ['staffarr-site-readiness-rollups', session?.accessToken],
     queryFn: () => getSiteReadinessRollups(session!.accessToken),
     enabled: Boolean(session?.accessToken && canViewReadinessRollupSummaries),
+  })
+  const readinessRollupMembersQuery = useQuery({
+    queryKey: [
+      'staffarr-readiness-rollup-members',
+      session?.accessToken,
+      selectedReadinessRollup?.scopeType,
+      selectedReadinessRollup?.orgUnitId,
+      readinessRollupMemberFilter,
+    ],
+    queryFn: () =>
+      getReadinessRollupMembers(
+        session!.accessToken,
+        selectedReadinessRollup!.scopeType,
+        selectedReadinessRollup!.orgUnitId,
+        readinessRollupMemberFilter === 'not_ready' ? 'not_ready' : undefined,
+      ),
+    enabled: Boolean(session?.accessToken && canViewReadinessRollupSummaries && selectedReadinessRollup),
   })
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null)
   useEffect(() => {
@@ -460,6 +510,25 @@ export function useStaffArrWorkspaceState() {
       ])
     },
   })
+  const createPersonMutation = useMutation({
+    mutationFn: (payload: {
+      givenName: string
+      familyName: string
+      primaryEmail: string
+      employmentStatus: string
+      primaryOrgUnitId: string | null
+      managerPersonId: string | null
+      jobTitle: string | null
+    }) => createPerson(session!.accessToken, payload),
+    onSuccess: async (created) => {
+      setSelectedPersonId(created.personId)
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-people', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person', session?.accessToken, created.personId] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
+      ])
+    },
+  })
   const updatePersonMutation = useMutation({
     mutationFn: (payload: {
       personId: string
@@ -585,6 +654,7 @@ export function useStaffArrWorkspaceState() {
   const permissionHistory = permissionHistoryQuery.data ?? []
   const personTimelineEntries = personTimelineQuery.data?.items ?? []
   const personTimelineTotalCount = personTimelineQuery.data?.totalCount ?? 0
+  const personTimelineHasNextPage = personTimelineQuery.data?.hasNextPage ?? false
   const certificationDefinitions = certificationDefinitionsQuery.data ?? []
   const personCertifications = personCertificationsQuery.data ?? []
   const canManageOrgUnits = me ? canManageOrgHierarchy(me.tenantRoleKey, me.isPlatformAdmin) : false
@@ -617,7 +687,10 @@ export function useStaffArrWorkspaceState() {
   const noteMutationError = createNoteMutation.error ?? null
   const documentMutationError = uploadDocumentMutation.error ?? null
   const personProfileMutationError =
-    updatePersonMutation.error ?? updateEmploymentStatusMutation.error ?? null
+    createPersonMutation.error ??
+    updatePersonMutation.error ??
+    updateEmploymentStatusMutation.error ??
+    null
 
   return {
     handoffRedirect,
@@ -662,8 +735,15 @@ export function useStaffArrWorkspaceState() {
     personReadinessQuery,
     personLookupQuery,
     canViewReadinessRollupSummaries,
+    readinessRollupSiteFilterId,
+    setReadinessRollupSiteFilterId,
+    selectedReadinessRollup,
+    setSelectedReadinessRollup,
+    readinessRollupMemberFilter,
+    setReadinessRollupMemberFilter,
     teamReadinessRollupsQuery,
     siteReadinessRollupsQuery,
+    readinessRollupMembersQuery,
     personIncidentsQuery,
     incidentDetailQuery,
     createOrgUnitMutation,
@@ -680,6 +760,7 @@ export function useStaffArrWorkspaceState() {
     updateRoleAssignmentStatusMutation,
     grantCertificationMutation,
     updateCertificationMutation,
+    createPersonMutation,
     updatePersonMutation,
     updateEmploymentStatusMutation,
     grantReadinessOverrideMutation,
@@ -707,6 +788,13 @@ export function useStaffArrWorkspaceState() {
     permissionHistory,
     personTimelineEntries,
     personTimelineTotalCount,
+    personTimelineHasNextPage,
+    personTimelinePage,
+    setPersonTimelinePage,
+    personTimelinePageSize,
+    setPersonTimelinePageSize,
+    personTimelineCategoryFilter,
+    setPersonTimelineCategoryFilter,
     certificationDefinitions,
     personCertifications,
     canManageOrgUnits,

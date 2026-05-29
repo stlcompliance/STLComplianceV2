@@ -24,7 +24,8 @@ public sealed record PlatformAuditPackageFilterOptionsResponse(
     IReadOnlyList<string> Actions,
     IReadOnlyList<string> Results,
     IReadOnlyList<string> TargetTypes,
-    IReadOnlyList<string> ProductKeys);
+    IReadOnlyList<string> ProductKeys,
+    IReadOnlyList<Guid> ActorUserIds);
 
 public sealed record PlatformAuditPackageBreakdownItem(
     string Key,

@@ -90,6 +90,79 @@ public sealed class ReadinessRollupService(
         return MapSummary(rollup);
     }
 
+    public async Task<ReadinessRollupMembersResponse> ListMembersAsync(
+        Guid tenantId,
+        string scopeType,
+        Guid orgUnitId,
+        string? readinessStatus,
+        CancellationToken cancellationToken = default)
+    {
+        if (!ReadinessRollupRules.SupportedScopeTypes.Contains(scopeType))
+        {
+            throw new StlApiException(
+                "readiness_rollup.invalid_scope",
+                "Readiness rollup scope must be team or site.",
+                400);
+        }
+
+        if (!string.IsNullOrWhiteSpace(readinessStatus)
+            && !ReadinessRollupRules.SupportedMemberReadinessFilters.Contains(readinessStatus))
+        {
+            throw new StlApiException(
+                "readiness_rollup.invalid_member_filter",
+                "Member readiness filter must be ready or not_ready.",
+                400);
+        }
+
+        var rollup = await GetRollupAsync(tenantId, scopeType, orgUnitId, cancellationToken);
+        var personIds = await ResolveMemberPersonIdsAsync(
+            tenantId,
+            scopeType,
+            orgUnitId,
+            cancellationToken);
+
+        if (personIds.Count == 0)
+        {
+            return new ReadinessRollupMembersResponse(rollup, []);
+        }
+
+        var people = await db.People.AsNoTracking()
+            .Where(x => x.TenantId == tenantId && personIds.Contains(x.Id))
+            .Select(x => new { x.Id, x.DisplayName, x.GivenName, x.FamilyName })
+            .ToListAsync(cancellationToken);
+
+        var displayNameLookup = people.ToDictionary(
+            x => x.Id,
+            x => string.IsNullOrWhiteSpace(x.DisplayName)
+                ? $"{x.GivenName} {x.FamilyName}".Trim()
+                : x.DisplayName);
+
+        var members = new List<ReadinessRollupMemberResponse>();
+        foreach (var personId in personIds)
+        {
+            var readiness = await readinessService.GetPersonReadinessAsync(
+                tenantId,
+                personId,
+                cancellationToken);
+
+            if (!string.IsNullOrWhiteSpace(readinessStatus)
+                && !string.Equals(readiness.ReadinessStatus, readinessStatus, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            displayNameLookup.TryGetValue(personId, out var displayName);
+            members.Add(MapMember(personId, displayName ?? personId.ToString(), readiness));
+        }
+
+        var ordered = members
+            .OrderBy(x => string.Equals(x.ReadinessStatus, "ready", StringComparison.OrdinalIgnoreCase) ? 1 : 0)
+            .ThenBy(x => x.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return new ReadinessRollupMembersResponse(rollup, ordered);
+    }
+
     public async Task<PendingReadinessRollupsResponse> ListPendingAsync(
         Guid? tenantId,
         DateTimeOffset? asOfUtc,
@@ -335,6 +408,19 @@ public sealed class ReadinessRollupService(
             rollup.OverrideCount,
             rollup.ReadyPercent,
             rollup.ComputedAt);
+
+    private static ReadinessRollupMemberResponse MapMember(
+        Guid personId,
+        string displayName,
+        PersonReadinessResponse readiness) =>
+        new(
+            personId,
+            displayName,
+            readiness.ReadinessStatus,
+            readiness.ReadinessBasis,
+            readiness.ActiveOverride is not null,
+            readiness.Blockers.Count,
+            readiness.Blockers.FirstOrDefault()?.Message);
 
     private sealed record PendingRollupCandidate(
         Guid TenantId,

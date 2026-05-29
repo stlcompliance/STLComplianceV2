@@ -120,6 +120,10 @@ public sealed class CompanionFieldTaskValidationService(CompanionFieldInboxServi
         {
             CompanionFieldValidationReasonCodes.NotEntitled => 403,
             CompanionFieldValidationReasonCodes.EvidenceUnsupported => 409,
+            CompanionFieldValidationReasonCodes.DvirUnsupported => 409,
+            CompanionFieldValidationReasonCodes.InspectionUnsupported => 409,
+            CompanionFieldValidationReasonCodes.WorkOrderUnsupported => 409,
+            CompanionFieldValidationReasonCodes.ReceivingUnsupported => 409,
             CompanionFieldValidationReasonCodes.NotInInbox => 404,
             CompanionFieldValidationReasonCodes.InboxUnavailable => 503,
             _ => 400,
@@ -136,7 +140,11 @@ public sealed class CompanionFieldTaskValidationService(CompanionFieldInboxServi
     {
         var normalized = submissionKind.Trim().ToLowerInvariant();
         if (!string.Equals(normalized, CompanionFieldSubmissionKinds.Acknowledge, StringComparison.Ordinal)
-            && !string.Equals(normalized, CompanionFieldSubmissionKinds.Evidence, StringComparison.Ordinal))
+            && !string.Equals(normalized, CompanionFieldSubmissionKinds.Evidence, StringComparison.Ordinal)
+            && !string.Equals(normalized, CompanionFieldSubmissionKinds.Dvir, StringComparison.Ordinal)
+            && !string.Equals(normalized, CompanionFieldSubmissionKinds.Inspection, StringComparison.Ordinal)
+            && !string.Equals(normalized, CompanionFieldSubmissionKinds.WorkOrder, StringComparison.Ordinal)
+            && !string.Equals(normalized, CompanionFieldSubmissionKinds.Receiving, StringComparison.Ordinal))
         {
             throw new StlApiException(
                 CompanionFieldValidationReasonCodes.UnsupportedSubmissionKind,
@@ -155,8 +163,33 @@ public sealed class CompanionFieldTaskValidationService(CompanionFieldInboxServi
             return true;
         }
 
-        return string.Equals(taskRef.ProductKey, "trainarr", StringComparison.Ordinal)
-            && string.Equals(taskRef.ResourceType, "assignment", StringComparison.Ordinal);
+        if (string.Equals(submissionKind, CompanionFieldSubmissionKinds.Evidence, StringComparison.Ordinal))
+        {
+            return string.Equals(taskRef.ProductKey, "trainarr", StringComparison.Ordinal)
+                && string.Equals(taskRef.ResourceType, "assignment", StringComparison.Ordinal);
+        }
+
+        if (string.Equals(submissionKind, CompanionFieldSubmissionKinds.Dvir, StringComparison.Ordinal))
+        {
+            return string.Equals(taskRef.ProductKey, "routarr", StringComparison.Ordinal)
+                && string.Equals(taskRef.ResourceType, "trip", StringComparison.Ordinal);
+        }
+
+        if (string.Equals(submissionKind, CompanionFieldSubmissionKinds.Inspection, StringComparison.Ordinal))
+        {
+            return string.Equals(taskRef.ProductKey, "maintainarr", StringComparison.Ordinal)
+                && string.Equals(taskRef.ResourceType, "inspection", StringComparison.Ordinal);
+        }
+
+        if (string.Equals(submissionKind, CompanionFieldSubmissionKinds.Receiving, StringComparison.Ordinal))
+        {
+            return string.Equals(taskRef.ProductKey, "supplyarr", StringComparison.Ordinal)
+                && string.Equals(taskRef.ResourceType, "receiving", StringComparison.Ordinal);
+        }
+
+        return string.Equals(submissionKind, CompanionFieldSubmissionKinds.WorkOrder, StringComparison.Ordinal)
+            && string.Equals(taskRef.ProductKey, "maintainarr", StringComparison.Ordinal)
+            && string.Equals(taskRef.ResourceType, "work-order", StringComparison.Ordinal);
     }
 
     private static bool BlockedReasonAllowsEvidence(string blockedReason)

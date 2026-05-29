@@ -11,6 +11,7 @@ vi.mock('../../api/nexarrClient', async (importOriginal) => {
     ...actual,
     getPlatformAuditPackageManifest: vi.fn(),
     getPlatformAuditPackageFilterOptions: vi.fn(),
+    getPlatformAdminTenantOverview: vi.fn(),
     getPlatformAuditPackageExportSummary: vi.fn(),
     getPlatformAuditPackageTimeline: vi.fn(),
   }
@@ -48,6 +49,14 @@ describe('PlatformAuditPackageExportPanel', () => {
       results: ['success'],
       targetTypes: ['user'],
       productKeys: ['nexarr'],
+      actorUserIds: [],
+    })
+    vi.mocked(nexarr.getPlatformAdminTenantOverview).mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 200,
+      totalCount: 0,
+      hasNextPage: false,
     })
     vi.mocked(nexarr.getPlatformAuditPackageExportSummary).mockResolvedValue({
       filters: {

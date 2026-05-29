@@ -8,6 +8,7 @@ const baseProps = {
   evidence: [],
   canPerform: true,
   sessionPersonId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+  technicianRefs: [],
   taskTitle: '',
   laborHours: '1',
   laborTypeKey: 'regular',
@@ -71,6 +72,7 @@ describe('WorkOrderLaborEvidencePanel', () => {
     expect(screen.getByText('Task lines')).toBeInTheDocument()
     expect(screen.getByText('Labor')).toBeInTheDocument()
     expect(screen.getByText('Evidence')).toBeInTheDocument()
+    expect(screen.getByTestId('work-order-evidence-type')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Log labor' })).toBeInTheDocument()
   })
 })

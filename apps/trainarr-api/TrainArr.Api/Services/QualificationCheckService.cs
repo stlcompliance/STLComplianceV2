@@ -30,6 +30,12 @@ public sealed class QualificationCheckService(
 
     public const int MaxBatchSubjects = 100;
 
+    public const int DefaultHistoryLimit = 25;
+
+    public const int MaxHistoryLimit = 100;
+
+    public static readonly TimeSpan AssignmentCheckValidity = TimeSpan.FromMinutes(30);
+
 
 
     public async Task<QualificationCheckResponse> CheckAsync(
@@ -139,6 +145,26 @@ public sealed class QualificationCheckService(
             reasonCode: result.ReasonCode,
 
             cancellationToken: cancellationToken);
+
+
+
+        await PersistRecordAsync(
+
+            tenantId,
+
+            actorUserId,
+
+            result,
+
+            rulePackKey,
+
+            request.TrainingDefinitionId,
+
+            request.TrainingProgramId,
+
+            batchId: null,
+
+            cancellationToken);
 
 
 
@@ -321,6 +347,26 @@ public sealed class QualificationCheckService(
                 localState,
 
                 complianceSummary));
+
+            var subjectResult = results[^1];
+
+            await PersistRecordAsync(
+
+                tenantId,
+
+                actorUserId,
+
+                subjectResult,
+
+                resolvedRulePackKey,
+
+                request.TrainingDefinitionId,
+
+                request.TrainingProgramId,
+
+                batchId,
+
+                cancellationToken);
 
         }
 
@@ -813,6 +859,256 @@ public sealed class QualificationCheckService(
 
 
         return normalized;
+
+    }
+
+
+
+    public async Task<IReadOnlyList<QualificationCheckHistoryItemResponse>> ListRecentAsync(
+
+        Guid tenantId,
+
+        Guid? staffarrPersonId,
+
+        string? qualificationKey,
+
+        int? limit,
+
+        CancellationToken cancellationToken = default)
+
+    {
+
+        var take = Math.Clamp(limit ?? DefaultHistoryLimit, 1, MaxHistoryLimit);
+
+        var query = db.QualificationCheckRecords
+
+            .AsNoTracking()
+
+            .Where(x => x.TenantId == tenantId);
+
+
+
+        if (staffarrPersonId is Guid personId)
+
+        {
+
+            query = query.Where(x => x.StaffarrPersonId == personId);
+
+        }
+
+
+
+        if (!string.IsNullOrWhiteSpace(qualificationKey))
+
+        {
+
+            var normalizedKey = qualificationKey.Trim().ToLowerInvariant();
+
+            query = query.Where(x => x.QualificationKey == normalizedKey);
+
+        }
+
+
+
+        return await query
+
+            .OrderByDescending(x => x.CheckedAt)
+
+            .Take(take)
+
+            .Select(x => new QualificationCheckHistoryItemResponse(
+
+                x.Id,
+
+                x.StaffarrPersonId,
+
+                x.QualificationKey,
+
+                x.Outcome,
+
+                x.ReasonCode,
+
+                x.Message,
+
+                x.RulePackKey,
+
+                x.TrainingDefinitionId,
+
+                x.BatchId,
+
+                x.CheckedAt))
+
+            .ToListAsync(cancellationToken);
+
+    }
+
+
+
+    public async Task ValidateForAssignmentAsync(
+
+        Guid tenantId,
+
+        Guid authorizationQualificationCheckId,
+
+        Guid staffarrPersonId,
+
+        string qualificationKey,
+
+        CancellationToken cancellationToken = default)
+
+    {
+
+        var normalizedKey = NormalizeQualificationKey(qualificationKey);
+
+        var record = await db.QualificationCheckRecords
+
+            .AsNoTracking()
+
+            .FirstOrDefaultAsync(
+
+                x => x.TenantId == tenantId && x.Id == authorizationQualificationCheckId,
+
+                cancellationToken);
+
+
+
+        if (record is null)
+
+        {
+
+            throw new StlApiException(
+
+                "assignments.qualification_check_not_found",
+
+                "Authorization qualification check was not found.",
+
+                404);
+
+        }
+
+
+
+        if (record.StaffarrPersonId != staffarrPersonId)
+
+        {
+
+            throw new StlApiException(
+
+                "assignments.qualification_check_person_mismatch",
+
+                "Authorization qualification check does not match the assignment person.",
+
+                400);
+
+        }
+
+
+
+        if (!string.Equals(record.QualificationKey, normalizedKey, StringComparison.Ordinal))
+
+        {
+
+            throw new StlApiException(
+
+                "assignments.qualification_check_key_mismatch",
+
+                "Authorization qualification check does not match the training definition qualification key.",
+
+                400);
+
+        }
+
+
+
+        if (DateTimeOffset.UtcNow - record.CheckedAt > AssignmentCheckValidity)
+
+        {
+
+            throw new StlApiException(
+
+                "assignments.qualification_check_expired",
+
+                "Authorization qualification check is too old. Run a new check before creating the assignment.",
+
+                409);
+
+        }
+
+
+
+        if (string.Equals(record.Outcome, QualificationCheckOutcomes.Block, StringComparison.OrdinalIgnoreCase))
+
+        {
+
+            throw new StlApiException(
+
+                "assignments.qualification_check_blocked",
+
+                "Assignment creation is blocked because the authorization check outcome is block.",
+
+                409);
+
+        }
+
+    }
+
+
+
+    private async Task PersistRecordAsync(
+
+        Guid tenantId,
+
+        Guid? actorUserId,
+
+        QualificationCheckResponse result,
+
+        string? rulePackKey,
+
+        Guid? trainingDefinitionId,
+
+        Guid? trainingProgramId,
+
+        Guid? batchId,
+
+        CancellationToken cancellationToken)
+
+    {
+
+        db.QualificationCheckRecords.Add(new QualificationCheckRecord
+
+        {
+
+            Id = result.CheckId,
+
+            TenantId = tenantId,
+
+            StaffarrPersonId = result.StaffarrPersonId,
+
+            QualificationKey = result.QualificationKey,
+
+            Outcome = result.Outcome,
+
+            ReasonCode = result.ReasonCode,
+
+            Message = result.Message,
+
+            RulePackKey = rulePackKey,
+
+            TrainingDefinitionId = trainingDefinitionId,
+
+            TrainingProgramId = trainingProgramId,
+
+            ActorUserId = actorUserId,
+
+            BatchId = batchId,
+
+            CheckedAt = DateTimeOffset.UtcNow,
+
+        });
+
+
+
+        await db.SaveChangesAsync(cancellationToken);
 
     }
 

@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ControlledSelect, type PickerOption } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 import type {
   PlatformAuditPackageExportPreview,
@@ -54,6 +55,51 @@ export function PlatformAuditPackageExportPanel() {
     queryKey: ['platform-audit-package-filter-options', scope.tenantId],
     queryFn: () => nexarr.getPlatformAuditPackageFilterOptions({ tenantId: scope.tenantId }),
   })
+
+  const tenantsQuery = useQuery({
+    queryKey: ['platform-admin-tenant-overview-audit'],
+    queryFn: () => nexarr.getPlatformAdminTenantOverview(1, 200),
+  })
+
+  const filterOptions = filterOptionsQuery.data
+
+  const tenantOptions: PickerOption[] = useMemo(
+    () =>
+      (tenantsQuery.data?.items ?? []).map((tenant) => ({
+        value: tenant.tenantId,
+        label: `${tenant.displayName} (${tenant.slug})`,
+      })),
+    [tenantsQuery.data?.items],
+  )
+
+  const actorOptions: PickerOption[] = useMemo(
+    () =>
+      (filterOptions?.actorUserIds ?? []).map((actorId) => ({
+        value: actorId,
+        label: actorId,
+      })),
+    [filterOptions?.actorUserIds],
+  )
+
+  const actionOptions: PickerOption[] = useMemo(
+    () => (filterOptions?.actions ?? []).map((item) => ({ value: item, label: item })),
+    [filterOptions?.actions],
+  )
+
+  const resultOptions: PickerOption[] = useMemo(
+    () => (filterOptions?.results ?? []).map((item) => ({ value: item, label: item })),
+    [filterOptions?.results],
+  )
+
+  const targetTypeOptions: PickerOption[] = useMemo(
+    () => (filterOptions?.targetTypes ?? []).map((item) => ({ value: item, label: item })),
+    [filterOptions?.targetTypes],
+  )
+
+  const productKeyOptions: PickerOption[] = useMemo(
+    () => (filterOptions?.productKeys ?? []).map((item) => ({ value: item, label: item })),
+    [filterOptions?.productKeys],
+  )
 
   const summaryQuery = useQuery({
     queryKey: ['platform-audit-package-summary', scope],
@@ -135,7 +181,6 @@ export function PlatformAuditPackageExportPanel() {
     })
   }, [activeJobId, jobStatusQuery.data])
 
-  const filterOptions = filterOptionsQuery.data
   const summary = summaryQuery.data
   const jobStatus = jobStatusQuery.data
   const jobInFlight =
@@ -153,7 +198,7 @@ export function PlatformAuditPackageExportPanel() {
       className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
     >
       <header>
-        <h2 className="text-lg font-semibold text-slate-50">Platform audit package export</h2>
+        <h2 className="text-lg font-semibold text-slate-50">Platform audit search &amp; export</h2>
         <p className="mt-1 text-sm text-slate-400">
           Export NexArr control-plane audit events, tenants, entitlements, service clients, launch
           profiles, and callback allowlist metadata. Filter by action, result, target type, actor,
@@ -187,17 +232,15 @@ export function PlatformAuditPackageExportPanel() {
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
         <h3 className="text-sm font-medium text-slate-200">Export filters</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <label className="block text-sm text-slate-300 sm:col-span-2 lg:col-span-3">
-            Tenant scope (optional GUID)
-            <input
-              type="text"
-              value={tenantId}
-              onChange={(event) => setTenantId(event.target.value)}
-              placeholder="All tenants when empty"
-              data-testid="platform-audit-filter-tenant"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            />
-          </label>
+          <ControlledSelect
+            label="Tenant scope (optional)"
+            value={tenantId}
+            onChange={setTenantId}
+            options={tenantOptions}
+            emptyLabel="All tenants"
+            testId="platform-audit-filter-tenant"
+            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 sm:col-span-2 lg:col-span-3"
+          />
           <label className="block text-sm text-slate-300">
             From (optional)
             <input
@@ -218,81 +261,47 @@ export function PlatformAuditPackageExportPanel() {
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             />
           </label>
-          <label className="block text-sm text-slate-300">
-            Action
-            <select
-              value={action}
-              onChange={(event) => setAction(event.target.value)}
-              data-testid="platform-audit-filter-action"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            >
-              <option value="">All actions</option>
-              {(filterOptions?.actions ?? []).map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm text-slate-300">
-            Result
-            <select
-              value={result}
-              onChange={(event) => setResult(event.target.value)}
-              data-testid="platform-audit-filter-result"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            >
-              <option value="">All results</option>
-              {(filterOptions?.results ?? []).map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm text-slate-300">
-            Target type
-            <select
-              value={targetType}
-              onChange={(event) => setTargetType(event.target.value)}
-              data-testid="platform-audit-filter-target-type"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            >
-              <option value="">All target types</option>
-              {(filterOptions?.targetTypes ?? []).map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm text-slate-300">
-            Product key
-            <select
-              value={productKey}
-              onChange={(event) => setProductKey(event.target.value)}
-              data-testid="platform-audit-filter-product-key"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            >
-              <option value="">All products</option>
-              {(filterOptions?.productKeys ?? []).map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm text-slate-300 sm:col-span-2">
-            Actor user ID (optional GUID)
-            <input
-              type="text"
-              value={actorUserId}
-              onChange={(event) => setActorUserId(event.target.value)}
-              placeholder="Any actor when empty"
-              data-testid="platform-audit-filter-actor"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            />
-          </label>
+          <ControlledSelect
+            label="Action"
+            value={action}
+            onChange={setAction}
+            options={actionOptions}
+            emptyLabel="All actions"
+            testId="platform-audit-filter-action"
+          />
+          <ControlledSelect
+            label="Result"
+            value={result}
+            onChange={setResult}
+            options={resultOptions}
+            emptyLabel="All results"
+            testId="platform-audit-filter-result"
+          />
+          <ControlledSelect
+            label="Target type"
+            value={targetType}
+            onChange={setTargetType}
+            options={targetTypeOptions}
+            emptyLabel="All target types"
+            testId="platform-audit-filter-target-type"
+          />
+          <ControlledSelect
+            label="Product key"
+            value={productKey}
+            onChange={setProductKey}
+            options={productKeyOptions}
+            emptyLabel="All products"
+            testId="platform-audit-filter-product-key"
+          />
+          <ControlledSelect
+            label="Actor user (optional)"
+            value={actorUserId}
+            onChange={setActorUserId}
+            options={actorOptions}
+            emptyLabel="Any actor"
+            testId="platform-audit-filter-actor"
+            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 sm:col-span-2"
+          />
         </div>
       </div>
 

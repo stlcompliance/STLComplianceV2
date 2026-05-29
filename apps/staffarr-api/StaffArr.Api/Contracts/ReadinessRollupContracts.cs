@@ -11,6 +11,19 @@ public sealed record ReadinessRollupSummaryResponse(
     decimal ReadyPercent,
     DateTimeOffset ComputedAt);
 
+public sealed record ReadinessRollupMemberResponse(
+    Guid PersonId,
+    string DisplayName,
+    string ReadinessStatus,
+    string ReadinessBasis,
+    bool HasActiveOverride,
+    int BlockerCount,
+    string? PrimaryBlockerMessage);
+
+public sealed record ReadinessRollupMembersResponse(
+    ReadinessRollupSummaryResponse Rollup,
+    IReadOnlyList<ReadinessRollupMemberResponse> Members);
+
 public sealed record PendingReadinessRollupItem(
     Guid OrgUnitId,
     string ScopeType,

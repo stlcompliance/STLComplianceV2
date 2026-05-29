@@ -18,4 +18,14 @@ public sealed class CompanionDeniedReasonCatalogTests
         var message = CompanionDeniedReasonCatalog.ToPlainMessage("unknown.code", "Custom fallback.");
         Assert.Equal("Custom fallback.", message);
     }
+
+    [Fact]
+    public void ToPlainMessage_returns_launch_and_inbox_source_entries()
+    {
+        var launch = CompanionDeniedReasonCatalog.ToPlainMessage("not_entitled");
+        Assert.Contains("entitled", launch, StringComparison.OrdinalIgnoreCase);
+
+        var inbox = CompanionDeniedReasonCatalog.ToPlainMessage("upstream_unreachable");
+        Assert.Contains("connectivity", inbox, StringComparison.OrdinalIgnoreCase);
+    }
 }

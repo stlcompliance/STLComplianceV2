@@ -32,6 +32,7 @@ const laborEvidenceProps = {
 
 const partsDemandProps = {
   partsDemand: [],
+  partsDemandStatusEvents: [],
   demandPartNumber: '',
   demandSupplyarrPartId: '',
   demandQuantity: '1',
@@ -59,6 +60,15 @@ describe('WorkOrdersPanel', () => {
         canClose
         viewAllWorkOrders
         sessionPersonId="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+        technicianRefs={[
+          {
+            personId: 'person-tech-001',
+            displayName: 'Alex Technician',
+            activeStatus: 'active',
+            primarySite: 'yard-a',
+            lastSeenAt: '2026-05-28T00:00:00Z',
+          },
+        ]}
         assets={[
           {
             assetId: '11111111-1111-1111-1111-111111111111',
@@ -138,6 +148,7 @@ describe('WorkOrdersPanel', () => {
         canClose={false}
         viewAllWorkOrders={false}
         sessionPersonId=""
+        technicianRefs={[]}
         assets={[]}
         workOrders={[]}
         selectedWorkOrder={null}

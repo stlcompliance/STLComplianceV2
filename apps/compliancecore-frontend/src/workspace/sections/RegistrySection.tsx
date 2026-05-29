@@ -1,4 +1,6 @@
 import { RegulatoryRegistryPanel } from '../../components/RegulatoryRegistryPanel'
+import { RuleVersionManagementPanel } from '../../components/RuleVersionManagementPanel'
+import { SdsHazComReferencesPanel } from '../../components/SdsHazComReferencesPanel'
 import { VocabularyPanel } from '../../components/VocabularyPanel'
 import type { ComplianceCoreWorkspaceState } from '../useComplianceCoreWorkspaceState'
 
@@ -29,6 +31,16 @@ export function RegistrySection({ state }: Props) {
         isSeeding={s.seedRegistryMutation.isPending}
         onAdvanceRulePack={(rulePackId, status) => s.advanceRulePackMutation.mutate({ rulePackId, status })}
         isAdvancingRulePack={s.advanceRulePackMutation.isPending}
+      />
+      <RuleVersionManagementPanel
+        accessToken={s.accessToken}
+        canRead
+        canManage={s.canManage}
+      />
+      <SdsHazComReferencesPanel
+        accessToken={s.accessToken}
+        canRead
+        canManage={s.canManage}
       />
     </>
   )

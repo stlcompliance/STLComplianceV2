@@ -187,7 +187,17 @@ public static class TrainArrServiceRegistration
 
         builder.Services.AddScoped<TrainingDefinitionService>();
 
+        builder.Services.AddScoped<TrainingDefinitionStepService>();
+
+        builder.Services.AddScoped<TrainingProgramVersionService>();
+
         builder.Services.AddScoped<TrainingProgramService>();
+
+        builder.Services.AddScoped<TrainingMatrixService>();
+
+        builder.Services.AddScoped<TrainingApplicabilityProfileService>();
+
+        builder.Services.AddScoped<TrainingRequirementService>();
 
         builder.Services.AddScoped<TrainingAcknowledgementPublicationService>();
 

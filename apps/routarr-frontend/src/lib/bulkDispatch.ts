@@ -5,6 +5,7 @@ import type {
 } from '../api/types'
 
 import { formatAssignmentConflictMessage, resolveAssignmentIgnoreFlags } from './dispatchAssignment'
+import { buildDispatchAssignmentGateLines } from './dispatchGateMessaging'
 
 export type BulkDispatchIgnoreFlags = {
   ignoreAvailabilityConflicts: boolean
@@ -16,24 +17,25 @@ export type BulkDispatchIgnoreFlags = {
 function appendAssignmentSummary(
   parts: string[],
   preview: DispatchAssignmentPreviewResponse | null | undefined,
+  role: 'driver' | 'vehicle',
 ) {
   if (!preview) {
     return
   }
 
-  if (preview.hasBlockingConflicts) {
-    parts.push(formatAssignmentConflictMessage(preview))
+  const lines = buildDispatchAssignmentGateLines(preview).filter((line) => line.severity !== 'info')
+  if (lines.length === 0) {
     return
   }
 
-  if (preview.driverEligibility?.outcome === 'warn' && !preview.driverEligibility.isBlocking) {
-    parts.push(`eligibility warning: ${preview.driverEligibility.message}`)
+  const prefix = role === 'driver' ? 'Driver' : 'Vehicle'
+  if (preview.hasBlockingConflicts) {
+    parts.push(`${prefix}: ${formatAssignmentConflictMessage(preview)}`)
+    return
   }
-  if (preview.assetDispatchability?.outcome === 'warn' && !preview.assetDispatchability.isBlocking) {
-    parts.push(`dispatchability warning: ${preview.assetDispatchability.message}`)
-  }
-  if (preview.workflowGates?.outcome === 'warn' && !preview.workflowGates.isBlocking) {
-    parts.push(`workflow gate warning: ${preview.workflowGates.message}`)
+
+  for (const line of lines) {
+    parts.push(`${prefix} ${line.label.toLowerCase()}: ${line.detail}`)
   }
 }
 
@@ -50,8 +52,8 @@ export function formatBulkDispatchItemSummary(item: BulkDispatchItemPreview) {
     parts.push('status blocked')
   }
 
-  appendAssignmentSummary(parts, item.driverPreview)
-  appendAssignmentSummary(parts, item.vehiclePreview)
+  appendAssignmentSummary(parts, item.driverPreview, 'driver')
+  appendAssignmentSummary(parts, item.vehiclePreview, 'vehicle')
 
   const uniqueParts = [...new Set(parts.filter((part) => part.length > 0))]
   return uniqueParts.length > 0 ? uniqueParts.join('; ') : 'ready'

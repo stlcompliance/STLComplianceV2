@@ -47,6 +47,7 @@ describe('AuditPackageExportPanel', () => {
       actions: ['work_order.create'],
       results: ['success'],
       targetTypes: ['work_order'],
+      actorUserIds: [],
     })
     vi.mocked(client.getAuditPackageExportSummary).mockResolvedValue({
       filters: {
@@ -92,6 +93,7 @@ describe('AuditPackageExportPanel', () => {
       actions: [],
       results: [],
       targetTypes: [],
+      actorUserIds: [],
     })
     vi.mocked(client.getAuditPackageExportSummary).mockResolvedValue({
       filters: {

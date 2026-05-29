@@ -12,6 +12,19 @@ public static class QualificationIssueEndpoints
             .WithTags("QualificationIssues")
             .RequireAuthorization();
 
+        qualifications.MapGet("/", async (
+            string? status,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            QualificationIssueService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireQualificationsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListAsync(tenantId, status, cancellationToken));
+        })
+        .WithName("ListQualificationIssues");
+
         qualifications.MapGet("/{qualificationIssueId:guid}", async (
             Guid qualificationIssueId,
             HttpContext context,

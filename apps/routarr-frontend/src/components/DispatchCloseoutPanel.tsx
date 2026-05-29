@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { Check, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 import {
   applyDispatchCloseout,
@@ -133,6 +134,7 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
 
   const summary = summaryQuery.data
   const openTripRows = openTrips ?? []
+  const openRouteRows = summary?.openRoutes ?? []
   const notReadyCount = (checklistsQuery.data?.trips ?? []).filter((x) => !x.readyForCloseout).length
 
   const toggleTrip = (tripId: string) => {
@@ -300,6 +302,33 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
         </div>
       ) : null}
 
+      {openRouteRows.length > 0 ? (
+        <div className="mb-4 rounded border border-slate-700" data-testid="closeout-open-routes">
+          <div className="border-b border-slate-700 bg-slate-900/60 px-3 py-2">
+            <span className="text-sm font-medium text-slate-200">Open routes in window</span>
+          </div>
+          <ul className="max-h-40 divide-y divide-slate-800 overflow-y-auto">
+            {openRouteRows.map((route) => (
+              <li key={route.routeId} className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
+                <span className="font-medium text-slate-200">{route.routeNumber}</span>
+                <span className="text-slate-400">{route.routeStatus}</span>
+                <span className="text-xs text-slate-500">
+                  {route.openStopCount} open stop{route.openStopCount === 1 ? '' : 's'}
+                </span>
+                {route.tripId ? (
+                  <Link
+                    to={`/trips/${route.tripId}`}
+                    className="ml-auto text-xs text-teal-300 hover:text-teal-200"
+                  >
+                    Trip workspace →
+                  </Link>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
@@ -365,6 +394,15 @@ export function DispatchCloseoutPanel({ accessToken, scope, canAssign }: Dispatc
                   <td className="px-3 py-2">{action.stopKey}</td>
                   <td className="px-3 py-2">{action.currentStopStatus}</td>
                   <td className="px-3 py-2">{action.targetStopStatus}</td>
+                  <td className="px-3 py-2">{action.canApply ? 'yes' : action.blockMessage ?? 'no'}</td>
+                </tr>
+              ))}
+              {preview.routeActions.slice(0, 8).map((action) => (
+                <tr key={action.routeId} className="border-t border-slate-800">
+                  <td className="px-3 py-2">Route</td>
+                  <td className="px-3 py-2">{action.routeNumber}</td>
+                  <td className="px-3 py-2">{action.currentRouteStatus}</td>
+                  <td className="px-3 py-2">{action.targetRouteStatus}</td>
                   <td className="px-3 py-2">{action.canApply ? 'yes' : action.blockMessage ?? 'no'}</td>
                 </tr>
               ))}

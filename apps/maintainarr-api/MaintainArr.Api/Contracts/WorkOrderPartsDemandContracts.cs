@@ -38,3 +38,16 @@ public sealed record PublishWorkOrderPartsDemandResponse(
     Guid? SupplyarrPurchaseRequestId,
     bool CreatedPurchaseRequestDraft,
     IReadOnlyList<WorkOrderPartsDemandLineResponse> Lines);
+
+public sealed record WorkOrderPartsDemandStatusEventResponse(
+    Guid StatusEventId,
+    Guid MaintainarrPublicationId,
+    Guid SupplyarrDemandRefId,
+    string EventType,
+    string ProcurementStatus,
+    Guid? SupplyarrPurchaseRequestId,
+    Guid? SupplyarrPurchaseOrderId,
+    Guid? SupplyarrReceivingReceiptId,
+    string Message,
+    DateTimeOffset OccurredAt,
+    DateTimeOffset CreatedAt);

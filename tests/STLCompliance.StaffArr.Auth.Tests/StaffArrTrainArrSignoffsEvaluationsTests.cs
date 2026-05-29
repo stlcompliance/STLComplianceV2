@@ -171,6 +171,54 @@ public class StaffArrTrainArrSignoffsEvaluationsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Evaluation_revision_history_and_review_timeline()
+    {
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "History Subject", "history.subject@example.com");
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+        var trainerToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_trainer");
+        var definitionId = await CreateTrainingDefinitionAsync(adminToken);
+        var assignmentId = await CreateAssignmentAsync(adminToken, personId, definitionId);
+
+        var firstEvaluationRequest = Authorized(HttpMethod.Post, "/api/evaluations", trainerToken);
+        firstEvaluationRequest.Content = JsonContent.Create(new SubmitTrainingEvaluationRequest(
+            assignmentId,
+            "fail",
+            55m,
+            "First attempt incomplete."));
+        (await _trainarrClient.SendAsync(firstEvaluationRequest)).EnsureSuccessStatusCode();
+
+        var revisedEvaluationRequest = Authorized(HttpMethod.Post, "/api/evaluations", trainerToken);
+        revisedEvaluationRequest.Content = JsonContent.Create(new SubmitTrainingEvaluationRequest(
+            assignmentId,
+            "pass",
+            88m,
+            "Improved after coaching."));
+        (await _trainarrClient.SendAsync(revisedEvaluationRequest)).EnsureSuccessStatusCode();
+
+        var historyResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/training-assignments/{assignmentId}/evaluations/history", adminToken));
+        historyResponse.EnsureSuccessStatusCode();
+        var history = (await historyResponse.Content.ReadFromJsonAsync<TrainingEvaluationHistoryResponse>())!;
+        Assert.Equal(2, history.Items.Count);
+        Assert.True(history.Items[0].IsCurrent);
+        Assert.Equal("pass", history.Items[0].Result);
+        Assert.False(history.Items[1].IsCurrent);
+        Assert.Equal("fail", history.Items[1].Result);
+        Assert.NotNull(history.Items[1].SupersededAt);
+
+        var timelineResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/evaluations/review-timeline?result=pass", trainerToken));
+        timelineResponse.EnsureSuccessStatusCode();
+        var timeline = (await timelineResponse.Content.ReadFromJsonAsync<TrainingEvaluationReviewTimelineResponse>())!;
+        Assert.Contains(timeline.Items, item => item.TrainingAssignmentId == assignmentId && item.Result == "pass");
+
+        var memberTimelineResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/evaluations/review-timeline", CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_member", personId: personId)));
+        Assert.Equal(HttpStatusCode.Forbidden, memberTimelineResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Complete_denied_until_evaluation_and_signoffs_recorded()
     {
         var personId = Guid.NewGuid();
@@ -282,16 +330,12 @@ public class StaffArrTrainArrSignoffsEvaluationsTests : IAsyncLifetime
 
     private async Task<Guid> CreateAssignmentAsync(string adminToken, Guid personId, Guid definitionId)
     {
-        var createRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
-        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+        var assignment = await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            adminToken,
             personId,
             definitionId,
-            null,
-            "manual",
-            null));
-        var createResponse = await _trainarrClient.SendAsync(createRequest);
-        createResponse.EnsureSuccessStatusCode();
-        var assignment = (await createResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+            "signoff_qualification");
         return assignment.AssignmentId;
     }
 

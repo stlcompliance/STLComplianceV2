@@ -20,33 +20,42 @@ const program: TrainingProgramSummaryResponse = {
   name: 'Onboarding bundle',
   status: 'draft',
   definitionCount: 1,
+  publishedVersionCount: 0,
   createdAt: '2026-05-27T12:00:00Z',
   updatedAt: '2026-05-27T12:00:00Z',
 }
 
+const baseProps = {
+  programs: [program],
+  definitions: [definition],
+  selectedDefinitionIds: [] as string[],
+  selectedProgramId: null as string | null,
+  selectedProgramDetail: undefined,
+  programVersions: [],
+  selectedDefinitionIdForCitations: null,
+  onSelectProgram: vi.fn(),
+  onSelectDefinitionForCitations: vi.fn(),
+  programKey: '',
+  programName: '',
+  programDescription: '',
+  onProgramKeyChange: vi.fn(),
+  onProgramNameChange: vi.fn(),
+  onProgramDescriptionChange: vi.fn(),
+  onToggleDefinition: vi.fn(),
+  onCreateProgram: vi.fn(),
+  onSaveProgram: vi.fn(),
+  onPublishProgram: vi.fn(),
+  onStartRevision: vi.fn(),
+  isCreating: false,
+  isSaving: false,
+  isPublishing: false,
+  isStartingRevision: false,
+  canManage: false,
+}
+
 describe('ProgramBuilderPanel', () => {
   it('renders manage gate for non-admin users', () => {
-    render(
-      <ProgramBuilderPanel
-        programs={[program]}
-        definitions={[definition]}
-        selectedDefinitionIds={[]}
-        selectedProgramId={null}
-        selectedDefinitionIdForCitations={null}
-        onSelectProgram={vi.fn()}
-        onSelectDefinitionForCitations={vi.fn()}
-        programKey=""
-        programName=""
-        programDescription=""
-        onProgramKeyChange={vi.fn()}
-        onProgramNameChange={vi.fn()}
-        onProgramDescriptionChange={vi.fn()}
-        onToggleDefinition={vi.fn()}
-        onCreateProgram={vi.fn()}
-        isCreating={false}
-        canManage={false}
-      />,
-    )
+    render(<ProgramBuilderPanel {...baseProps} />)
     expect(screen.getByText(/program builder requires trainarr admin/i)).toBeInTheDocument()
     expect(screen.getByText('Onboarding bundle')).toBeInTheDocument()
   })
@@ -54,26 +63,40 @@ describe('ProgramBuilderPanel', () => {
   it('renders create program form for admins', () => {
     render(
       <ProgramBuilderPanel
+        {...baseProps}
         programs={[]}
-        definitions={[definition]}
         selectedDefinitionIds={['d1']}
-        selectedProgramId={null}
-        selectedDefinitionIdForCitations={null}
-        onSelectProgram={vi.fn()}
-        onSelectDefinitionForCitations={vi.fn()}
         programKey="onboarding"
         programName="Onboarding"
         programDescription="New hire training bundle for operational staff."
-        onProgramKeyChange={vi.fn()}
-        onProgramNameChange={vi.fn()}
-        onProgramDescriptionChange={vi.fn()}
-        onToggleDefinition={vi.fn()}
-        onCreateProgram={vi.fn()}
-        isCreating={false}
         canManage
       />,
     )
     expect(screen.getByRole('button', { name: /create program/i })).toBeInTheDocument()
     expect(screen.getByText('Annual compliance refresher')).toBeInTheDocument()
+  })
+
+  it('renders edit controls when a program is selected', () => {
+    render(
+      <ProgramBuilderPanel
+        {...baseProps}
+        selectedProgramId="p1"
+        selectedProgramDetail={{
+          programId: 'p1',
+          programKey: 'onboarding',
+          name: 'Onboarding bundle',
+          description: 'Bundle description for operational staff.',
+          status: 'draft',
+          definitions: [],
+          createdAt: '2026-05-27T12:00:00Z',
+          updatedAt: '2026-05-27T12:00:00Z',
+        }}
+        programName="Onboarding bundle"
+        programDescription="Bundle description for operational staff."
+        canManage
+      />,
+    )
+    expect(screen.getByRole('button', { name: /save draft/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /publish version/i })).toBeInTheDocument()
   })
 })

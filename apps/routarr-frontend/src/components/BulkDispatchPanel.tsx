@@ -1,13 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
+import { AdvancedReferenceField, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
-import { applyBulkDispatch, getTrips, previewBulkDispatch } from '../api/client'
+import { applyBulkDispatch, listDrivers, listVehicleRefs, getTrips, previewBulkDispatch } from '../api/client'
 import type { BulkDispatchItemPreview, TripSummaryResponse } from '../api/types'
+import {
+  driverToPickerOption,
+  findDriverLabel,
+  findVehicleLabel,
+  vehicleRefToPickerOption,
+} from '../lib/referencePickers'
 import {
   buildBulkDispatchPreviewResponse,
   confirmBulkDispatchPreview,
   formatBulkDispatchItemSummary,
 } from '../lib/bulkDispatch'
+import { DispatchAssignmentGateDetails } from './DispatchAssignmentGateDetails'
 
 type BulkDispatchPanelProps = {
   accessToken: string
@@ -31,6 +39,37 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
     queryFn: () => getTrips(accessToken),
     enabled: canAssign,
   })
+
+  const driversQuery = useQuery({
+    queryKey: ['routarr-drivers-bulk', accessToken],
+    queryFn: () => listDrivers(accessToken),
+    enabled: canAssign,
+  })
+
+  const vehicleRefsQuery = useQuery({
+    queryKey: ['routarr-vehicle-refs-bulk', accessToken],
+    queryFn: () => listVehicleRefs(accessToken),
+    enabled: canAssign,
+  })
+
+  const driverOptions = useMemo(
+    () => (driversQuery.data?.items ?? []).map(driverToPickerOption),
+    [driversQuery.data],
+  )
+  const vehicleOptions = useMemo(
+    () => (vehicleRefsQuery.data?.items ?? []).map(vehicleRefToPickerOption),
+    [vehicleRefsQuery.data],
+  )
+
+  const selectedDriverOption = useMemo((): PickerOption | undefined => {
+    const label = findDriverLabel(driversQuery.data?.items ?? [], driverPersonId)
+    return label ? { value: driverPersonId, label } : undefined
+  }, [driverPersonId, driversQuery.data])
+
+  const selectedVehicleOption = useMemo((): PickerOption | undefined => {
+    const label = findVehicleLabel(vehicleRefsQuery.data?.items ?? [], vehicleRefKey)
+    return label ? { value: vehicleRefKey, label } : undefined
+  }, [vehicleRefKey, vehicleRefsQuery.data])
 
   const assignableTrips = useMemo(
     () =>
@@ -204,33 +243,54 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
           Leave fields blank to skip that change. Vehicle field uses empty to clear assignment.
         </p>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
-          <label className="block text-xs text-slate-400">
-            Driver person id
-            <input
-              type="text"
+          <div>
+            <StaticSearchPicker
+              label="Driver"
               value={driverPersonId}
-              onChange={(event) => {
-                setDriverPersonId(event.target.value)
+              onChange={(value) => {
+                setDriverPersonId(value)
                 setPreviewItems(null)
               }}
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
-              placeholder="Optional"
-              aria-label="Driver person id"
+              options={driverOptions}
+              selectedOption={selectedDriverOption}
+              placeholder="No change"
+              disabled={driversQuery.isLoading}
+              testId="bulk-dispatch-driver-picker"
             />
-          </label>
-          <label className="block text-xs text-slate-400">
-            Vehicle ref key
-            <input
-              type="text"
+            <AdvancedReferenceField
+              value={driverPersonId}
+              onChange={(value) => {
+                setDriverPersonId(value)
+                setPreviewItems(null)
+              }}
+              label="Driver person id"
+              testId="bulk-dispatch-driver-advanced"
+            />
+          </div>
+          <div>
+            <StaticSearchPicker
+              label="Vehicle"
               value={vehicleRefKey}
-              onChange={(event) => {
-                setVehicleRefKey(event.target.value)
+              onChange={(value) => {
+                setVehicleRefKey(value)
                 setPreviewItems(null)
               }}
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
-              placeholder="Optional"
+              options={vehicleOptions}
+              selectedOption={selectedVehicleOption}
+              placeholder="No change"
+              disabled={vehicleRefsQuery.isLoading}
+              testId="bulk-dispatch-vehicle-picker"
             />
-          </label>
+            <AdvancedReferenceField
+              value={vehicleRefKey}
+              onChange={(value) => {
+                setVehicleRefKey(value)
+                setPreviewItems(null)
+              }}
+              label="Vehicle ref key"
+              testId="bulk-dispatch-vehicle-advanced"
+            />
+          </div>
           <label className="block text-xs text-slate-400">
             Dispatch status
             <select
@@ -291,6 +351,22 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
                 <p className="text-xs opacity-80" data-testid={`bulk-preview-summary-${item.tripId}`}>
                   {formatBulkDispatchItemSummary(item)}
                 </p>
+                {item.driverPreview ? (
+                  <DispatchAssignmentGateDetails
+                    preview={item.driverPreview}
+                    title="Driver assignment gates"
+                    compact
+                    data-testid={`bulk-preview-driver-gates-${item.tripId}`}
+                  />
+                ) : null}
+                {item.vehiclePreview ? (
+                  <DispatchAssignmentGateDetails
+                    preview={item.vehiclePreview}
+                    title="Vehicle assignment gates"
+                    compact
+                    data-testid={`bulk-preview-vehicle-gates-${item.tripId}`}
+                  />
+                ) : null}
               </li>
             ))}
           </ul>

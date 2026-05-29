@@ -14,6 +14,7 @@ import type {
   PersonManagerResponse,
   RoleTemplateResponse,
   StaffArrMeResponse,
+  CreateStaffPersonRequest,
   StaffPersonDetailResponse,
   StaffPersonSummaryResponse,
   SubordinateSummaryResponse,
@@ -28,6 +29,7 @@ import type {
   PersonCertificationResponse,
   GrantReadinessOverrideRequest,
   PersonReadinessResponse,
+  ReadinessRollupMembersResponse,
   ReadinessRollupSummaryResponse,
   GrantPersonCertificationRequest,
   UpdatePersonCertificationRequest,
@@ -132,6 +134,18 @@ export async function getPerson(accessToken: string, personId: string): Promise<
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<StaffPersonDetailResponse>(response, 'Failed to load person profile')
+}
+
+export async function createPerson(
+  accessToken: string,
+  request: CreateStaffPersonRequest,
+): Promise<StaffPersonDetailResponse> {
+  const response = await fetch(`${apiBase}/api/people`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<StaffPersonDetailResponse>(response, 'Failed to create person')
 }
 
 export async function updatePerson(
@@ -625,13 +639,18 @@ export async function getPersonTimeline(
   personId: string,
   page = 1,
   pageSize = 50,
+  category?: string,
 ): Promise<PagedResult<PersonTimelineEntryResponse>> {
-  const response = await fetch(
-    `${apiBase}/api/people/${personId}/timeline?page=${page}&pageSize=${pageSize}`,
-    {
-      headers: authHeaders(accessToken),
-    },
-  )
+  const params = new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+  })
+  if (category?.trim()) {
+    params.set('category', category.trim())
+  }
+  const response = await fetch(`${apiBase}/api/people/${personId}/timeline?${params}`, {
+    headers: authHeaders(accessToken),
+  })
   return parseJsonResponse<PagedResult<PersonTimelineEntryResponse>>(response, 'Failed to load person timeline')
 }
 
@@ -759,6 +778,28 @@ export async function getSiteReadinessRollups(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ReadinessRollupSummaryResponse[]>(response, 'Failed to load site readiness rollups')
+}
+
+export async function getReadinessRollupMembers(
+  accessToken: string,
+  scopeType: 'team' | 'site',
+  orgUnitId: string,
+  readinessStatus?: 'ready' | 'not_ready',
+): Promise<ReadinessRollupMembersResponse> {
+  const params = new URLSearchParams()
+  if (readinessStatus) {
+    params.set('readinessStatus', readinessStatus)
+  }
+
+  const query = params.size > 0 ? `?${params.toString()}` : ''
+  const response = await fetch(
+    `${apiBase}/api/readiness-rollups/${scopeType === 'team' ? 'teams' : 'sites'}/${orgUnitId}/members${query}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<ReadinessRollupMembersResponse>(
+    response,
+    'Failed to load readiness rollup members',
+  )
 }
 
 export async function grantPersonReadinessOverride(

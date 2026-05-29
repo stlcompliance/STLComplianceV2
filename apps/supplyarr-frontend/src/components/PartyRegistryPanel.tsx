@@ -1,4 +1,8 @@
+import { ControlledSelect } from '@stl/shared-ui'
+import { useMemo } from 'react'
+
 import type { ExternalPartyResponse } from '../api/types'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface PartyRegistryPanelProps {
   title: string
@@ -50,6 +54,8 @@ export function PartyRegistryPanel({
   onCreate,
   isCreating,
 }: PartyRegistryPanelProps) {
+  const existingPartyKeys = useMemo(() => parties.map((party) => party.partyKey), [parties])
+
   if (isLoading) {
     return <p className="text-sm text-slate-400">Loading {title.toLowerCase()}…</p>
   }
@@ -86,32 +92,35 @@ export function PartyRegistryPanel({
       </ul>
       {canManage ? (
         <div className="mt-4 space-y-2">
-          <input
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-            placeholder="Party key"
-            value={partyKey}
-            onChange={(e) => onPartyKeyChange(e.target.value)}
+          <label className="block text-sm text-slate-400">
+            Display name
+            <input
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              placeholder="Display name"
+              value={displayName}
+              onChange={(e) => onDisplayNameChange(e.target.value)}
+            />
+          </label>
+          <GeneratedKeyFieldGroup
+            sourceLabel={displayName}
+            existingKeys={existingPartyKeys}
+            onKeyChange={onPartyKeyChange}
+            label="Party key"
           />
           <input
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-            placeholder="Display name"
-            value={displayName}
-            onChange={(e) => onDisplayNameChange(e.target.value)}
-          />
-          <input
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             placeholder="Legal name"
             value={legalName}
             onChange={(e) => onLegalNameChange(e.target.value)}
           />
           <input
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             placeholder="Tax identifier (optional)"
             value={taxIdentifier}
             onChange={(e) => onTaxIdentifierChange(e.target.value)}
           />
           <textarea
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             placeholder="Notes"
             rows={2}
             value={notes}

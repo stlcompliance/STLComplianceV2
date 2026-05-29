@@ -42,6 +42,23 @@ import type {
   TriggerServiceTokenCleanupOrchestrationResponse,
   TriggerTenantLifecycleOrchestrationResponse,
   TenantOverviewRow,
+  TenantDetailResponse,
+  CreateTenantRequest,
+  UpdateTenantRequest,
+  UpdateTenantStatusRequest,
+  ProductDetailResponse,
+  CreateProductRequest,
+  UpdateProductRequest,
+  EntitlementDetail,
+  GrantEntitlementRequest,
+  ServiceClientSummary,
+  RegisterServiceClientRequest,
+  IssueServiceTokenRequest,
+  ServiceTokenIssueResult,
+  ServiceTokenSummary,
+  DataPlaneProfile,
+  UpsertDataPlaneProfileRequest,
+  EffectiveDataPlaneProfile,
 } from './types'
 import { NexarrApiError } from './types'
 
@@ -340,6 +357,60 @@ export async function getPlatformAdminTenantOverview(
   return (await response.json()) as PagedResult<TenantOverviewRow>
 }
 
+export async function listTenants(page = 1, pageSize = 50): Promise<PagedResult<TenantDetailResponse>> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/tenants?page=${page}&pageSize=${pageSize}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<TenantDetailResponse>
+}
+
+export async function createTenant(request: CreateTenantRequest): Promise<TenantDetailResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/tenants', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantDetailResponse
+}
+
+export async function updateTenant(
+  tenantId: string,
+  request: UpdateTenantRequest,
+): Promise<TenantDetailResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/tenants/${tenantId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantDetailResponse
+}
+
+export async function updateTenantStatus(
+  tenantId: string,
+  request: UpdateTenantStatusRequest,
+): Promise<TenantDetailResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/tenants/${tenantId}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as TenantDetailResponse
+}
+
 export async function getPlatformAdminProductOverview(): Promise<ProductOverviewRow[]> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth('/api/platform-admin/overview/products')
@@ -347,6 +418,44 @@ export async function getPlatformAdminProductOverview(): Promise<ProductOverview
     throw await parseError(response)
   }
   return (await response.json()) as ProductOverviewRow[]
+}
+
+export async function listProducts(page = 1, pageSize = 50): Promise<PagedResult<ProductDetailResponse>> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/products?page=${page}&pageSize=${pageSize}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<ProductDetailResponse>
+}
+
+export async function createProduct(request: CreateProductRequest): Promise<ProductDetailResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/products', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ProductDetailResponse
+}
+
+export async function updateProduct(
+  productKey: string,
+  request: UpdateProductRequest,
+): Promise<ProductDetailResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/products/${encodeURIComponent(productKey)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ProductDetailResponse
 }
 
 function buildPlatformAuditPackageQuery(
@@ -663,4 +772,181 @@ export async function getTenantLifecyclePending(
     throw await parseError(response)
   }
   return (await response.json()) as PendingTenantLifecycleResponse
+}
+
+export async function listEntitlements(
+  tenantId: string,
+  page = 1,
+  pageSize = 50,
+): Promise<PagedResult<EntitlementDetail>> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/entitlements?tenantId=${encodeURIComponent(tenantId)}&page=${page}&pageSize=${pageSize}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<EntitlementDetail>
+}
+
+export async function grantEntitlement(
+  body: GrantEntitlementRequest,
+): Promise<EntitlementDetail> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/entitlements', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as EntitlementDetail
+}
+
+export async function revokeEntitlement(entitlementId: string): Promise<EntitlementDetail> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/entitlements/${entitlementId}/revoke`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as EntitlementDetail
+}
+
+export async function listServiceClients(
+  page = 1,
+  pageSize = 50,
+): Promise<PagedResult<ServiceClientSummary>> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/service-tokens/clients?page=${page}&pageSize=${pageSize}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<ServiceClientSummary>
+}
+
+export async function registerServiceClient(
+  body: RegisterServiceClientRequest,
+): Promise<ServiceClientSummary> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/service-tokens/clients', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ServiceClientSummary
+}
+
+export async function listServiceTokens(
+  tenantId?: string,
+  page = 1,
+  pageSize = 50,
+): Promise<PagedResult<ServiceTokenSummary>> {
+  await ensureValidAccessToken()
+  const search = new URLSearchParams({ page: String(page), pageSize: String(pageSize) })
+  if (tenantId) {
+    search.set('tenantId', tenantId)
+  }
+  const response = await fetchWithAuth(`/api/service-tokens?${search.toString()}`)
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<ServiceTokenSummary>
+}
+
+export async function issueServiceToken(
+  body: IssueServiceTokenRequest,
+): Promise<ServiceTokenIssueResult> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/service-tokens', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ServiceTokenIssueResult
+}
+
+export async function revokeServiceToken(tokenId: string): Promise<void> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(`/api/service-tokens/${tokenId}/revoke`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+}
+
+export async function listDataPlaneProfiles(
+  params: { tenantId?: string; productKey?: string; page?: number; pageSize?: number } = {},
+): Promise<PagedResult<DataPlaneProfile>> {
+  await ensureValidAccessToken()
+  const search = new URLSearchParams()
+  if (params.tenantId) {
+    search.set('tenantId', params.tenantId)
+  }
+  if (params.productKey) {
+    search.set('productKey', params.productKey)
+  }
+  if (params.page) {
+    search.set('page', String(params.page))
+  }
+  if (params.pageSize) {
+    search.set('pageSize', String(params.pageSize))
+  }
+  const qs = search.toString()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/data-plane${qs ? `?${qs}` : ''}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as PagedResult<DataPlaneProfile>
+}
+
+export async function listEffectiveDataPlaneProfiles(
+  tenantId: string,
+): Promise<EffectiveDataPlaneProfile[]> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/data-plane/effective?tenantId=${encodeURIComponent(tenantId)}`,
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as EffectiveDataPlaneProfile[]
+}
+
+export async function upsertDataPlaneProfile(
+  body: UpsertDataPlaneProfileRequest,
+): Promise<DataPlaneProfile> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/platform-admin/data-plane', {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as DataPlaneProfile
+}
+
+export async function deleteDataPlaneProfile(
+  tenantId: string,
+  productKey: string,
+): Promise<void> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth(
+    `/api/platform-admin/data-plane/${tenantId}/${encodeURIComponent(productKey)}`,
+    { method: 'DELETE' },
+  )
+  if (!response.ok) {
+    throw await parseError(response)
+  }
 }

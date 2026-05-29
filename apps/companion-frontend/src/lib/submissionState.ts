@@ -1,6 +1,6 @@
 export const SUBMISSION_STATE_STORAGE_KEY = 'stl-companion-submission-state-v1'
 
-export type SubmissionKind = 'acknowledge' | 'evidence'
+export type SubmissionKind = 'acknowledge' | 'evidence' | 'dvir' | 'inspection' | 'work-order' | 'receiving'
 export type LocalSubmissionPhase = 'queued' | 'syncing' | 'uploading' | 'synced' | 'failed'
 
 export interface LocalSubmissionEntry {
@@ -147,6 +147,10 @@ export function mergeSubmissionChips(input: {
   taskKey: string
   acknowledgeLocal?: LocalSubmissionEntry
   evidenceLocal?: LocalSubmissionEntry
+  dvirLocal?: LocalSubmissionEntry
+  inspectionLocal?: LocalSubmissionEntry
+  workOrderLocal?: LocalSubmissionEntry
+  receivingLocal?: LocalSubmissionEntry
   serverItems: ReadonlyArray<{
     submissionKind: string
     status: string
@@ -157,6 +161,10 @@ export function mergeSubmissionChips(input: {
 
   const acknowledgeServer = input.serverItems.find((item) => item.submissionKind === 'acknowledge')
   const evidenceServer = input.serverItems.find((item) => item.submissionKind === 'evidence')
+  const dvirServer = input.serverItems.find((item) => item.submissionKind === 'dvir')
+  const inspectionServer = input.serverItems.find((item) => item.submissionKind === 'inspection')
+  const workOrderServer = input.serverItems.find((item) => item.submissionKind === 'work-order')
+  const receivingServer = input.serverItems.find((item) => item.submissionKind === 'receiving')
 
   const acknowledgeChip = buildChip(
     'acknowledge',
@@ -171,6 +179,41 @@ export function mergeSubmissionChips(input: {
   const evidenceChip = buildChip('evidence', 'Evidence', input.evidenceLocal, evidenceServer)
   if (evidenceChip) {
     chips.push(evidenceChip)
+  }
+
+  const dvirChip = buildChip('dvir', 'DVIR', input.dvirLocal, dvirServer)
+  if (dvirChip) {
+    chips.push(dvirChip)
+  }
+
+  const inspectionChip = buildChip(
+    'inspection',
+    'Inspection',
+    input.inspectionLocal,
+    inspectionServer,
+  )
+  if (inspectionChip) {
+    chips.push(inspectionChip)
+  }
+
+  const workOrderChip = buildChip(
+    'work-order',
+    'Work order',
+    input.workOrderLocal,
+    workOrderServer,
+  )
+  if (workOrderChip) {
+    chips.push(workOrderChip)
+  }
+
+  const receivingChip = buildChip(
+    'receiving',
+    'Receiving',
+    input.receivingLocal,
+    receivingServer,
+  )
+  if (receivingChip) {
+    chips.push(receivingChip)
   }
 
   return chips

@@ -60,14 +60,17 @@ const inbox: AggregatedFieldInboxResponse = {
 describe('FieldInboxPanel', () => {
   it('renders tasks and filters by product', () => {
     const onFilter = vi.fn()
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
     render(
-      <FieldInboxPanel
-        inbox={inbox}
-        productFilter=""
-        onProductFilterChange={onFilter}
-        accessToken="test-token"
-      />,
+      <QueryClientProvider client={client}>
+        <FieldInboxPanel
+          inbox={inbox}
+          productFilter=""
+          onProductFilterChange={onFilter}
+          accessToken="test-token"
+        />
+      </QueryClientProvider>,
     )
 
     expect(screen.getByText('Replace belt')).toBeInTheDocument()
@@ -123,5 +126,41 @@ describe('FieldInboxPanel', () => {
       'href',
       'https://trainarr.example/assignments/00000000-0000-0000-0000-000000000002/evidence',
     )
+  })
+
+  it('shows plain blocked reasons and per-product inbox load failures', () => {
+    const blockedTrip: FieldInboxTaskItem = {
+      ...tripTask,
+      blockedReason: 'Pre-trip DVIR required',
+    }
+
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <FieldInboxPanel
+          inbox={{
+            ...inbox,
+            summary: { ...inbox.summary, blockedCount: 1 },
+            items: [blockedTrip],
+            sources: [
+              {
+                productKey: 'routarr',
+                entitled: true,
+                fetched: false,
+                errorCode: 'upstream_unreachable',
+                errorMessage: null,
+                items: [],
+              },
+            ],
+          }}
+          productFilter=""
+          onProductFilterChange={() => undefined}
+          accessToken="test-token"
+        />
+      </QueryClientProvider>,
+    )
+
+    expect(screen.getByTestId('companion-inbox-source-errors')).toHaveTextContent('RoutArr')
+    expect(screen.getByTestId('companion-task-blocked-reason')).toHaveTextContent('Pre-trip DVIR')
   })
 })

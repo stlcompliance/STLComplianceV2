@@ -66,7 +66,14 @@ public sealed class PlatformAuditPackageService(
             .Select(x => x.ProductKey)
             .ToListAsync(cancellationToken);
 
-        return new PlatformAuditPackageFilterOptionsResponse(actions, results, targetTypes, productKeys);
+        var actorUserIds = await query
+            .Where(x => x.ActorUserId != null)
+            .Select(x => x.ActorUserId!.Value)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToListAsync(cancellationToken);
+
+        return new PlatformAuditPackageFilterOptionsResponse(actions, results, targetTypes, productKeys, actorUserIds);
     }
 
     public async Task<PlatformAuditPackageExportSummaryResponse> GetExportSummaryAsync(

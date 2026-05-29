@@ -1,6 +1,8 @@
 import { canCompleteAssignment } from '../../auth/sessionStorage'
 import { AssignmentsPanel } from '../../components/AssignmentsPanel'
+import { EvaluationReviewTimelinePanel } from '../../components/EvaluationReviewTimelinePanel'
 import { EvidenceCapturePanel } from '../../components/EvidenceCapturePanel'
+import { ManualAssignmentPanel } from '../../components/ManualAssignmentPanel'
 import { SignoffEvaluationPanel } from '../../components/SignoffEvaluationPanel'
 import type { TrainArrWorkspaceState } from '../useTrainArrWorkspaceState'
 
@@ -11,7 +13,38 @@ export function AssignmentsSection({ state }: Props) {
   const selectedAssignment = s.selectedAssignment
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="space-y-6">
+      <ManualAssignmentPanel
+        definitions={s.definitionsQuery.data ?? []}
+        staffarrPersonId={s.manualAssignmentPersonId}
+        onStaffarrPersonIdChange={(value) => {
+          s.setManualAssignmentPersonId(value)
+          s.setManualQualificationCheck(null)
+        }}
+        selectedDefinitionId={s.manualAssignmentDefinitionId}
+        onSelectDefinition={(value) => {
+          s.setManualAssignmentDefinitionId(value)
+          s.setManualQualificationCheck(null)
+        }}
+        qualificationCheck={s.manualQualificationCheck}
+        isCheckingQualification={s.manualQualificationCheckMutation.isPending}
+        onRunQualificationCheck={() => s.manualQualificationCheckMutation.mutate()}
+        rulePackKey={s.rulePackKey}
+        onRulePackKeyChange={s.setRulePackKey}
+        rulePackOptions={s.rulePackOptions}
+        onCreateAssignment={() => s.createManualAssignmentMutation.mutate()}
+        isCreating={s.createManualAssignmentMutation.isPending}
+        canManage={s.canManage}
+      />
+
+      <EvaluationReviewTimelinePanel
+        accessToken={s.accessToken}
+        canReview={s.canEvaluate}
+        selectedAssignmentId={s.selectedAssignmentId}
+        onSelectAssignment={s.setSelectedAssignmentId}
+      />
+
+      <div className="grid gap-6 lg:grid-cols-2">
       <AssignmentsPanel
         assignments={s.assignments}
         selectedAssignmentId={s.selectedAssignmentId}
@@ -201,6 +234,8 @@ export function AssignmentsSection({ state }: Props) {
 
         <SignoffEvaluationPanel
           assignment={selectedAssignment ?? null}
+          evaluationHistory={s.evaluationHistoryQuery.data?.items ?? []}
+          isLoadingHistory={s.evaluationHistoryQuery.isLoading}
           evaluationResult={s.evaluationResult}
           evaluationScore={s.evaluationScore}
           evaluationNotes={s.evaluationNotes}

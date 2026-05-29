@@ -4,6 +4,7 @@ import { Navigate, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@stl/shared-ui'
 import { getFieldInbox, getMe } from '../api/client'
 import { loadSession } from '../auth/sessionStorage'
+import { companionPlainReason } from '../lib/companionPlainReason'
 import { FieldInboxPanel } from '../components/FieldInboxPanel'
 import { FieldScanPanel } from '../components/FieldScanPanel'
 import type { CompanionScanResolveResponse } from '../api/types'
@@ -85,9 +86,7 @@ export function HomePage() {
 
       {inboxQuery.error && (
         <p className="rounded-xl border border-red-500/40 bg-red-950/30 px-4 py-3 text-sm text-red-200">
-          {inboxQuery.error instanceof Error
-            ? inboxQuery.error.message
-            : 'Failed to load field inbox.'}
+          {companionPlainReason(inboxQuery.error, 'Failed to load field inbox.')}
         </p>
       )}
 

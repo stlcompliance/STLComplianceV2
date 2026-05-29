@@ -1,4 +1,5 @@
 import { StaffArrApiError } from '../../api/client'
+import { CreatePersonPanel } from '../../components/CreatePersonPanel'
 import { PersonProfileEditorPanel } from '../../components/PersonProfileEditorPanel'
 import { PersonLookupPanel } from '../../components/PersonLookupPanel'
 import { PersonTimelinePanel } from '../../components/PersonTimelinePanel'
@@ -64,6 +65,24 @@ export function PeopleSection({ state }: Props) {
           )}
         </div>
       </section>
+
+      <CreatePersonPanel
+        orgUnits={s.orgUnits}
+        peopleOptions={s.people.map((person) => ({
+          personId: person.personId,
+          displayName: person.displayName,
+        }))}
+        canManage={s.canManagePeopleProfiles}
+        isSubmitting={s.createPersonMutation.isPending}
+        errorMessage={
+          s.createPersonMutation.error instanceof StaffArrApiError
+            ? s.createPersonMutation.error.body || s.createPersonMutation.error.message
+            : null
+        }
+        onCreate={async (request) => {
+          await s.createPersonMutation.mutateAsync(request)
+        }}
+      />
 
       <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
         <h2 className="text-sm font-medium text-slate-300">Selected profile</h2>
@@ -201,7 +220,14 @@ export function PeopleSection({ state }: Props) {
           personDisplayName={s.selectedPerson.displayName}
           entries={s.personTimelineEntries}
           totalCount={s.personTimelineTotalCount}
+          page={s.personTimelinePage}
+          pageSize={s.personTimelinePageSize}
+          hasNextPage={s.personTimelineHasNextPage}
+          categoryFilter={s.personTimelineCategoryFilter}
           isLoading={s.personTimelineQuery.isLoading}
+          onCategoryFilterChange={s.setPersonTimelineCategoryFilter}
+          onPageChange={s.setPersonTimelinePage}
+          onPageSizeChange={s.setPersonTimelinePageSize}
         />
       ) : null}
 

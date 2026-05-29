@@ -16,6 +16,7 @@ describe('QualificationCheckPanel', () => {
         canRun
         rulePackKey="driver_qualification"
         onRulePackKeyChange={vi.fn()}
+        rulePackOptions={[{ value: 'driver_qualification', label: 'driver_qualification' }]}
       />,
     )
 
@@ -52,6 +53,7 @@ describe('QualificationCheckPanel', () => {
         canRun
         rulePackKey="driver_qualification"
         onRulePackKeyChange={vi.fn()}
+        rulePackOptions={[{ value: 'driver_qualification', label: 'driver_qualification' }]}
       />,
     )
 
@@ -70,6 +72,7 @@ describe('QualificationCheckPanel', () => {
         canRun
         rulePackKey="driver_qualification"
         onRulePackKeyChange={vi.fn()}
+        rulePackOptions={[{ value: 'driver_qualification', label: 'driver_qualification' }]}
       />,
     )
 

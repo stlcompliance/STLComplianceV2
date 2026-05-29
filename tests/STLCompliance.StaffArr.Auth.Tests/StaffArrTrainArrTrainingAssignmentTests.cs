@@ -141,16 +141,14 @@ public class StaffArrTrainArrTrainingAssignmentTests : IAsyncLifetime
         var trainarrAdminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
         var definitionId = await CreateTrainingDefinitionAsync(trainarrAdminToken);
 
-        var createRequest = Authorized(HttpMethod.Post, "/api/training-assignments", trainarrAdminToken);
-        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+        var assignment = await TrainArrQualificationCheckTestHelper.CreateRemediationAssignmentAsync(
+            _trainarrClient,
+            trainarrAdminToken,
             personId,
             definitionId,
+            "annual_compliance",
             remediationId,
-            "incident_remediation",
-            DateTimeOffset.UtcNow.AddDays(14)));
-        var createResponse = await _trainarrClient.SendAsync(createRequest);
-        createResponse.EnsureSuccessStatusCode();
-        var assignment = (await createResponse.Content.ReadFromJsonAsync<TrainingAssignmentDetailResponse>())!;
+            DateTimeOffset.UtcNow.AddDays(14));
         Assert.Equal("assigned", assignment.Status);
         Assert.Equal(remediationId, assignment.StaffarrIncidentRemediationId);
         Assert.NotNull(assignment.BlockerPublicationId);
@@ -216,15 +214,12 @@ public class StaffArrTrainArrTrainingAssignmentTests : IAsyncLifetime
         var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
         var definitionId = await CreateTrainingDefinitionAsync(adminToken);
 
-        var createRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
-        createRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
+        await TrainArrQualificationCheckTestHelper.CreateManualAssignmentAsync(
+            _trainarrClient,
+            adminToken,
             personId,
             definitionId,
-            null,
-            "manual",
-            null));
-        var createResponse = await _trainarrClient.SendAsync(createRequest);
-        createResponse.EnsureSuccessStatusCode();
+            "annual_compliance");
 
         var memberToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_member", personId: personId);
         var listResponse = await _trainarrClient.SendAsync(
@@ -244,20 +239,30 @@ public class StaffArrTrainArrTrainingAssignmentTests : IAsyncLifetime
         var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
         var definitionId = await CreateTrainingDefinitionAsync(adminToken);
 
-        var payload = new CreateTrainingAssignmentRequest(
+        var firstAssignment = await TrainArrQualificationCheckTestHelper.CreateRemediationAssignmentAsync(
+            _trainarrClient,
+            adminToken,
+            personId,
+            definitionId,
+            "annual_compliance",
+            remediationId);
+        Assert.Equal("assigned", firstAssignment.Status);
+
+        var secondCheck = await TrainArrQualificationCheckTestHelper.RunQualificationCheckAsync(
+            _trainarrClient,
+            adminToken,
+            personId,
+            "annual_compliance",
+            definitionId);
+
+        var secondRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
+        secondRequest.Content = JsonContent.Create(new CreateTrainingAssignmentRequest(
             personId,
             definitionId,
             remediationId,
             "incident_remediation",
-            null);
-
-        var firstRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
-        firstRequest.Content = JsonContent.Create(payload);
-        var firstResponse = await _trainarrClient.SendAsync(firstRequest);
-        firstResponse.EnsureSuccessStatusCode();
-
-        var secondRequest = Authorized(HttpMethod.Post, "/api/training-assignments", adminToken);
-        secondRequest.Content = JsonContent.Create(payload);
+            null,
+            secondCheck.CheckId));
         var secondResponse = await _trainarrClient.SendAsync(secondRequest);
         Assert.Equal(HttpStatusCode.Conflict, secondResponse.StatusCode);
     }

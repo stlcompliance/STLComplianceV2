@@ -1,9 +1,11 @@
 import type {
   AssetResponse,
+  TechnicianRefResponse,
   WorkOrderDetailResponse,
   WorkOrderEvidenceResponse,
   WorkOrderLaborEntryResponse,
   WorkOrderPartsDemandLineResponse,
+  WorkOrderPartsDemandStatusEventResponse,
   WorkOrderSummaryResponse,
   WorkOrderTaskLineResponse,
 } from '../api/types'
@@ -16,6 +18,7 @@ interface WorkOrdersPanelProps {
   canClose: boolean
   viewAllWorkOrders: boolean
   sessionPersonId: string
+  technicianRefs: TechnicianRefResponse[]
   assets: AssetResponse[]
   workOrders: WorkOrderSummaryResponse[]
   selectedWorkOrder: WorkOrderDetailResponse | null
@@ -65,6 +68,7 @@ interface WorkOrdersPanelProps {
   isLoggingLabor: boolean
   isUploadingEvidence: boolean
   partsDemand: WorkOrderPartsDemandLineResponse[]
+  partsDemandStatusEvents: WorkOrderPartsDemandStatusEventResponse[]
   demandPartNumber: string
   demandSupplyarrPartId: string
   demandQuantity: string
@@ -117,6 +121,7 @@ export function WorkOrdersPanel({
   canClose,
   viewAllWorkOrders,
   sessionPersonId,
+  technicianRefs,
   assets,
   workOrders,
   selectedWorkOrder,
@@ -166,6 +171,7 @@ export function WorkOrdersPanel({
   isLoggingLabor,
   isUploadingEvidence,
   partsDemand,
+  partsDemandStatusEvents,
   demandPartNumber,
   demandSupplyarrPartId,
   demandQuantity,
@@ -264,13 +270,22 @@ export function WorkOrdersPanel({
           </label>
 
           <label className="block text-sm">
-            <span className="text-slate-300">Assigned technician (StaffArr person id)</span>
-            <input
+            <span className="text-slate-300">Assigned technician</span>
+            <select
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-white"
-              placeholder={sessionPersonId}
               value={assignedPersonId}
               onChange={(event) => onAssignedPersonIdChange(event.target.value)}
-            />
+            >
+              <option value="">Unassigned</option>
+              <option value={sessionPersonId}>Me ({sessionPersonId})</option>
+              {technicianRefs
+                .filter((ref) => ref.personId !== sessionPersonId)
+                .map((ref) => (
+                  <option key={ref.personId} value={ref.personId}>
+                    {ref.displayName} ({ref.personId})
+                  </option>
+                ))}
+            </select>
           </label>
 
           <div className="flex items-end md:col-span-2">
@@ -403,6 +418,7 @@ export function WorkOrdersPanel({
               evidence={evidence}
               canPerform={canPerform}
               sessionPersonId={sessionPersonId}
+              technicianRefs={technicianRefs}
               taskTitle={taskTitle}
               laborHours={laborHours}
               laborTypeKey={laborTypeKey}
@@ -429,6 +445,7 @@ export function WorkOrdersPanel({
             <WorkOrderPartsDemandPanel
               workOrder={selectedWorkOrder}
               demandLines={partsDemand}
+              statusEvents={partsDemandStatusEvents}
               canPerform={canPerform}
               partNumber={demandPartNumber}
               supplyarrPartId={demandSupplyarrPartId}

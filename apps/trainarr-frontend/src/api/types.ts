@@ -46,6 +46,58 @@ export interface CreateTrainingDefinitionRequest {
   qualificationName: string
 }
 
+export interface TrainingDefinitionStepResponse {
+  stepId: string
+  trainingDefinitionId: string
+  stepKey: string
+  name: string
+  description: string
+  stepType: 'content' | 'quiz' | 'practical'
+  configJson: string
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateTrainingDefinitionStepRequest {
+  stepKey: string
+  name: string
+  description: string
+  stepType: 'content' | 'quiz' | 'practical'
+  configJson: string
+  sortOrder: number
+}
+
+export interface UpdateTrainingDefinitionStepRequest {
+  name: string
+  description: string
+  stepType: 'content' | 'quiz' | 'practical'
+  configJson: string
+  sortOrder: number
+}
+
+export interface TrainingAssignmentStepProgressResponse {
+  progressId: string
+  trainingAssignmentId: string
+  stepId: string
+  stepKey: string
+  name: string
+  description: string
+  stepType: 'content' | 'quiz' | 'practical'
+  configJson: string
+  sortOrder: number
+  status: string
+  quizScorePercent: number | null
+  responseJson: string | null
+  completedAt: string | null
+}
+
+export interface SubmitTrainingAssignmentStepRequest {
+  selectedOptionIndexes?: number[]
+  practicalResult?: string
+  notes?: string
+}
+
 export interface TrainingAssignmentSummaryResponse {
   assignmentId: string
   staffarrPersonId: string
@@ -68,6 +120,41 @@ export interface TrainingEvaluationResponse {
   notes: string | null
   evaluatorUserId: string
   evaluatedAt: string
+}
+
+export interface TrainingEvaluationHistoryItem {
+  entryId: string
+  trainingAssignmentId: string
+  result: string
+  score: number | null
+  notes: string | null
+  evaluatorUserId: string
+  evaluatedAt: string
+  isCurrent: boolean
+  supersededAt: string | null
+}
+
+export interface TrainingEvaluationHistoryResponse {
+  trainingAssignmentId: string
+  items: TrainingEvaluationHistoryItem[]
+}
+
+export interface TrainingEvaluationReviewItem {
+  evaluationId: string
+  trainingAssignmentId: string
+  staffarrPersonId: string
+  trainingDefinitionName: string
+  qualificationName: string
+  assignmentStatus: string
+  result: string
+  score: number | null
+  notes: string | null
+  evaluatorUserId: string
+  evaluatedAt: string
+}
+
+export interface TrainingEvaluationReviewTimelineResponse {
+  items: TrainingEvaluationReviewItem[]
 }
 
 export interface TrainingSignoffResponse {
@@ -193,8 +280,152 @@ export interface TrainingProgramSummaryResponse {
   name: string
   status: string
   definitionCount: number
+  publishedVersionCount: number
   createdAt: string
   updatedAt: string
+}
+
+export interface TrainingProgramVersionSummaryResponse {
+  programVersionId: string
+  programId: string
+  versionNumber: number
+  status: string
+  name: string
+  definitionCount: number
+  publishedAt: string | null
+  createdAt: string
+}
+
+export interface TrainingProgramVersionDetailResponse {
+  programVersionId: string
+  programId: string
+  programKey: string
+  versionNumber: number
+  status: string
+  name: string
+  description: string
+  definitions: TrainingProgramDefinitionLinkResponse[]
+  publishedAt: string | null
+  createdAt: string
+}
+
+export interface StartProgramRevisionRequest {
+  trainingProgramId: string
+}
+
+export interface TrainingMatrixEntryResponse {
+  matrixEntryId: string
+  applicabilityKey: string
+  applicabilityLabel: string
+  trainingProgramId: string | null
+  trainingProgramName: string | null
+  trainingDefinitionId: string | null
+  trainingDefinitionName: string | null
+  requirementLevel: string
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface TrainingMatrixViewResponse {
+  applicabilityKeys: string[]
+  entries: TrainingMatrixEntryResponse[]
+}
+
+export interface CreateTrainingMatrixEntryRequest {
+  applicabilityKey: string
+  applicabilityLabel: string
+  trainingProgramId: string | null
+  trainingDefinitionId: string | null
+  requirementLevel: string
+  sortOrder: number
+}
+
+export interface UpdateTrainingMatrixEntryRequest {
+  applicabilityLabel: string
+  requirementLevel: string
+  sortOrder: number
+}
+
+export interface TrainingApplicabilityProfileResponse {
+  applicabilityProfileId: string
+  profileKey: string
+  label: string
+  description: string | null
+  scopeType: string
+  scopeKey: string
+  sourceProduct: string | null
+  sourceRecordId: string | null
+  sourceUpdatedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateTrainingApplicabilityProfileRequest {
+  label: string
+  scopeType: string
+  scopeKey: string
+  description?: string | null
+  sourceProduct?: string | null
+  sourceRecordId?: string | null
+}
+
+export interface TrainingRequirementResponse {
+  requirementId: string
+  requirementKey: string
+  label: string
+  description: string | null
+  requirementSource: string
+  sourceKey: string | null
+  trainingProgramId: string | null
+  trainingProgramName: string | null
+  trainingDefinitionId: string | null
+  trainingDefinitionName: string | null
+  applicabilityProfileId: string | null
+  applicabilityProfileKey: string | null
+  applicabilityProfileLabel: string | null
+  requirementLevel: string
+  sortOrder: number
+  status: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateTrainingRequirementRequest {
+  requirementKey: string
+  label: string
+  description?: string | null
+  requirementSource: string
+  sourceKey?: string | null
+  trainingProgramId?: string | null
+  trainingDefinitionId?: string | null
+  applicabilityProfileId?: string | null
+  requirementLevel: string
+  sortOrder: number
+}
+
+export interface TrainingRequirementBuilderViewResponse {
+  profiles: TrainingApplicabilityProfileResponse[]
+  requirements: TrainingRequirementResponse[]
+}
+
+export interface SyncRequirementToMatrixResponse {
+  requirementId: string
+  matrixEntryId: string
+  applicabilityKey: string
+}
+
+export interface QualificationIssueListItemResponse {
+  qualificationIssueId: string
+  trainingAssignmentId: string
+  staffarrPersonId: string
+  qualificationKey: string
+  qualificationName: string
+  status: string
+  issuedAt: string
+  expiresAt: string | null
+  statusChangedAt: string | null
+  lifecycleReason: string | null
 }
 
 export interface TrainingProgramDefinitionLinkResponse {
@@ -255,6 +486,7 @@ export interface CreateTrainingAssignmentRequest {
   staffarrIncidentRemediationId?: string | null
   assignmentReason: string
   dueAt?: string | null
+  authorizationQualificationCheckId?: string | null
 }
 
 export interface CompleteTrainingAssignmentResponse {
@@ -327,6 +559,19 @@ export interface BatchQualificationCheckResponse {
   qualificationKey: string
   results: QualificationCheckResponse[]
   summary: BatchQualificationCheckSummary
+}
+
+export interface QualificationCheckHistoryItemResponse {
+  checkId: string
+  staffarrPersonId: string
+  qualificationKey: string
+  outcome: string
+  reasonCode: string
+  message: string
+  rulePackKey: string | null
+  trainingDefinitionId: string | null
+  batchId: string | null
+  checkedAt: string
 }
 
 export interface QualificationLocalStateResponse {

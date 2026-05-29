@@ -282,7 +282,7 @@ public sealed class TripProofDvirService(
 
     private void EnsureTripProofAccess(ClaimsPrincipal principal, string? assignedPersonId, bool write)
     {
-        if (!write && authorization.CanViewAllTrips(principal))
+        if (authorization.CanViewAllTrips(principal))
         {
             return;
         }
@@ -297,7 +297,7 @@ public sealed class TripProofDvirService(
         throw new StlApiException(
             write ? "trip_proof.not_assigned" : "auth.forbidden",
             write
-                ? "Only the assigned driver can capture proof or DVIR for this trip."
+                ? "Only the assigned driver or dispatch operator can capture proof or DVIR for this trip."
                 : "You can only read proof and DVIR for trips assigned to you.",
             403);
     }

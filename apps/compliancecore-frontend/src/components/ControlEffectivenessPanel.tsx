@@ -7,6 +7,7 @@ import {
   listControlEffectivenessRecords,
 } from '../api/client'
 import type { EvaluateControlEffectivenessResponse } from '../api/types'
+import { M12AnalyticsScopeFilters } from './M12AnalyticsScopeFilters'
 
 interface ControlEffectivenessPanelProps {
   accessToken: string
@@ -106,38 +107,15 @@ export function ControlEffectivenessPanel({
 
       {canEvaluate ? (
         <div className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-          <div className="flex flex-wrap gap-3">
-            <label className="flex flex-col gap-1 text-sm text-slate-400">
-              Scope key
-              <input
-                type="text"
-                value={scopeKey}
-                onChange={(event) => setScopeKey(event.target.value)}
-                placeholder="tenant"
-                className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 font-mono text-sm text-slate-200"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm text-slate-400">
-              Rule pack key (optional)
-              <input
-                type="text"
-                value={rulePackKey}
-                onChange={(event) => setRulePackKey(event.target.value)}
-                placeholder="All published packs"
-                className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 font-mono text-sm text-slate-200"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm text-slate-400">
-              Purchase request ID (context)
-              <input
-                type="text"
-                value={purchaseRequestId}
-                onChange={(event) => setPurchaseRequestId(event.target.value)}
-                placeholder="Optional GUID for scope resolution"
-                className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 font-mono text-sm text-slate-200"
-              />
-            </label>
-          </div>
+          <M12AnalyticsScopeFilters
+            accessToken={accessToken}
+            scopeKey={scopeKey}
+            onScopeKeyChange={setScopeKey}
+            rulePackKey={rulePackKey}
+            onRulePackKeyChange={setRulePackKey}
+            purchaseRequestId={purchaseRequestId}
+            onPurchaseRequestIdChange={setPurchaseRequestId}
+          />
           <button
             type="button"
             onClick={() => evaluateMutation.mutate()}

@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
+import { ControlledSelect } from '@stl/shared-ui'
+
 import {
   createPurchaseRequestFromRfq,
   createRfq,
@@ -15,6 +17,8 @@ import {
   upsertVendorQuoteLine,
 } from '../api/client'
 import type { PartResponse, RfqResponse } from '../api/types'
+import { CURRENCY_OPTIONS, toPartPickerOptions } from '../forms/controlledFormHelpers'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface RfqPanelProps {
   accessToken: string
@@ -38,6 +42,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
   const [quoteUnitPrice, setQuoteUnitPrice] = useState('')
   const [quoteLeadDays, setQuoteLeadDays] = useState('')
   const [selectedQuoteId, setSelectedQuoteId] = useState('')
+  const [quoteCurrency, setQuoteCurrency] = useState('USD')
   const [prKeyFromRfq, setPrKeyFromRfq] = useState('')
 
   const rfqsQuery = useQuery({
@@ -105,7 +110,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
       createVendorQuote(accessToken, selectedRfqId, {
         vendorPartyId: quoteVendorId,
         quoteKey,
-        currencyCode: 'USD',
+        currencyCode: quoteCurrency,
         notes: '',
       }),
     onSuccess: invalidate,
@@ -149,6 +154,11 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
     onSuccess: invalidate,
   })
 
+  const existingRfqKeys = useMemo(() => (rfqsQuery.data ?? []).map((rfq) => rfq.rfqKey), [rfqsQuery.data])
+  const quoteVendor = selectedRfq?.invitations.find((invite) => invite.vendorPartyId === quoteVendorId)
+  const quoteKeySource = quoteVendor ? `${selectedRfq?.rfqKey ?? ''}-${quoteVendor.vendorDisplayName}` : ''
+  const prKeySource = selectedRfq?.title ?? ''
+
   if (!canManage) {
     return null
   }
@@ -164,31 +174,29 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <input
-          className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm"
-          placeholder="RFQ key"
-          value={rfqKey}
-          onChange={(e) => setRfqKey(e.target.value)}
-        />
-        <input
-          className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm"
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <select
-          className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm"
+        <label className="block text-sm text-slate-400 sm:col-span-2">
+          Title
+          <input
+            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
+            placeholder="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </label>
+        <ControlledSelect
+          label="Part (optional line)"
           value={partId}
-          onChange={(e) => setPartId(e.target.value)}
-        >
-          <option value="">Part (optional line)</option>
-          {parts.map((p) => (
-            <option key={p.partId} value={p.partId}>
-              {p.partKey}
-            </option>
-          ))}
-        </select>
+          onChange={setPartId}
+          options={toPartPickerOptions(parts)}
+          emptyLabel="Part (optional line)"
+        />
       </div>
+      <GeneratedKeyFieldGroup
+        sourceLabel={title}
+        existingKeys={existingRfqKeys}
+        onKeyChange={setRfqKey}
+        label="RFQ key"
+      />
       <button
         type="button"
         className="mt-3 rounded bg-sky-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
@@ -238,18 +246,16 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
 
           {selectedRfq.status === 'submitted' && (
             <div className="flex flex-wrap items-end gap-2">
-              <select
-                className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs"
+              <ControlledSelect
+                label="Invite vendor"
                 value={inviteVendorId}
-                onChange={(e) => setInviteVendorId(e.target.value)}
-              >
-                <option value="">Invite vendor</option>
-                {vendors.map((v) => (
-                  <option key={v.partyId} value={v.partyId}>
-                    {v.displayName}
-                  </option>
-                ))}
-              </select>
+                onChange={setInviteVendorId}
+                options={vendors.map((vendor) => ({
+                  value: vendor.partyId,
+                  label: vendor.displayName,
+                }))}
+                emptyLabel="Invite vendor"
+              />
               <button
                 type="button"
                 className="rounded bg-slate-700 px-2 py-1 text-xs text-white"
@@ -263,24 +269,30 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
 
           {selectedRfq.status === 'submitted' && selectedRfq.invitations.length > 0 && (
             <div className="grid gap-2 sm:grid-cols-4">
-              <select
-                className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs"
+              <ControlledSelect
+                label="Quote vendor"
                 value={quoteVendorId}
-                onChange={(e) => setQuoteVendorId(e.target.value)}
-              >
-                <option value="">Quote vendor</option>
-                {selectedRfq.invitations.map((i) => (
-                  <option key={i.vendorPartyId} value={i.vendorPartyId}>
-                    {i.vendorDisplayName}
-                  </option>
-                ))}
-              </select>
-              <input
-                className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs"
-                placeholder="Quote key"
-                value={quoteKey}
-                onChange={(e) => setQuoteKey(e.target.value)}
+                onChange={setQuoteVendorId}
+                options={selectedRfq.invitations.map((invite) => ({
+                  value: invite.vendorPartyId,
+                  label: invite.vendorDisplayName,
+                }))}
+                emptyLabel="Quote vendor"
               />
+              <ControlledSelect
+                label="Currency"
+                value={quoteCurrency}
+                onChange={setQuoteCurrency}
+                options={CURRENCY_OPTIONS}
+              />
+              <div className="sm:col-span-2">
+                <GeneratedKeyFieldGroup
+                  sourceLabel={quoteKeySource}
+                  existingKeys={selectedRfq.quotes.map((quote) => quote.quoteKey)}
+                  onKeyChange={setQuoteKey}
+                  label="Quote key"
+                />
+              </div>
               <input
                 className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs"
                 placeholder="Unit price"
@@ -398,12 +410,14 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
 
           {selectedRfq.status === 'awarded' && !selectedRfq.purchaseRequestId && (
             <div className="flex flex-wrap items-end gap-2">
-              <input
-                className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs"
-                placeholder="PR key from RFQ"
-                value={prKeyFromRfq}
-                onChange={(e) => setPrKeyFromRfq(e.target.value)}
-              />
+              <div className="min-w-[12rem] flex-1">
+                <GeneratedKeyFieldGroup
+                  sourceLabel={prKeySource}
+                  existingKeys={[]}
+                  onKeyChange={setPrKeyFromRfq}
+                  label="PR key from RFQ"
+                />
+              </div>
               <button
                 type="button"
                 className="rounded bg-emerald-700 px-2 py-1 text-xs text-white"

@@ -2,6 +2,8 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { BatchQualificationCheckPanel } from './BatchQualificationCheckPanel'
 
+const rulePackOptions = [{ value: 'driver_qualification', label: 'driver_qualification' }]
+
 describe('BatchQualificationCheckPanel', () => {
   afterEach(() => {
     cleanup()
@@ -18,8 +20,10 @@ describe('BatchQualificationCheckPanel', () => {
         onQualificationKeyChange={vi.fn()}
         rulePackKey="driver_qualification"
         onRulePackKeyChange={vi.fn()}
-        personIdsText=""
-        onPersonIdsTextChange={vi.fn()}
+        rulePackOptions={rulePackOptions}
+        selectedPersonIds={['person-1']}
+        onSelectedPersonIdsChange={vi.fn()}
+        personPickerOptions={[{ value: 'person-1', label: 'Person 1' }]}
         selectedRemediationPersonIds={[]}
         onToggleRemediationPerson={vi.fn()}
         remediationPersonOptions={[]}
@@ -28,6 +32,7 @@ describe('BatchQualificationCheckPanel', () => {
 
     expect(screen.getByRole('button', { name: /run batch qualification check/i })).toBeEnabled()
     expect(screen.getByPlaceholderText(/hazmat_endorsement/i)).toBeInTheDocument()
+    expect(screen.getByTestId('batch-qualification-rule-pack')).toBeInTheDocument()
   })
 
   it('shows batch summary and per-person outcomes', () => {
@@ -67,8 +72,10 @@ describe('BatchQualificationCheckPanel', () => {
         onQualificationKeyChange={vi.fn()}
         rulePackKey="driver_qualification"
         onRulePackKeyChange={vi.fn()}
-        personIdsText=""
-        onPersonIdsTextChange={vi.fn()}
+        rulePackOptions={rulePackOptions}
+        selectedPersonIds={[]}
+        onSelectedPersonIdsChange={vi.fn()}
+        personPickerOptions={[]}
         selectedRemediationPersonIds={[]}
         onToggleRemediationPerson={vi.fn()}
         remediationPersonOptions={[]}
@@ -92,8 +99,10 @@ describe('BatchQualificationCheckPanel', () => {
         onQualificationKeyChange={vi.fn()}
         rulePackKey=""
         onRulePackKeyChange={vi.fn()}
-        personIdsText="person-1"
-        onPersonIdsTextChange={vi.fn()}
+        rulePackOptions={rulePackOptions}
+        selectedPersonIds={['person-1']}
+        onSelectedPersonIdsChange={vi.fn()}
+        personPickerOptions={[{ value: 'person-1', label: 'Person 1' }]}
         selectedRemediationPersonIds={[]}
         onToggleRemediationPerson={vi.fn()}
         remediationPersonOptions={[]}

@@ -153,6 +153,34 @@ public sealed class RoutArrTripProofDvirTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Dispatcher_submits_dvir_via_trip_api_for_assigned_trip()
+    {
+        var driverPersonId = Guid.NewGuid().ToString();
+        var now = DateTimeOffset.UtcNow;
+        var trip = await CreateAssignedTripAsync(driverPersonId, now);
+
+        var preDvirRequest = Authorized(HttpMethod.Post, $"/api/trips/{trip.TripId}/dvir", _dispatcherToken);
+        preDvirRequest.Content = JsonContent.Create(new SubmitTripDvirRequest(
+            "pre_trip",
+            trip.VehicleRefKey,
+            "pass",
+            12000,
+            null));
+        var preDvirResponse = await _routarrClient.SendAsync(preDvirRequest);
+        preDvirResponse.EnsureSuccessStatusCode();
+        var preDvir = (await preDvirResponse.Content.ReadFromJsonAsync<TripDvirInspectionResponse>())!;
+        Assert.Equal("pre_trip", preDvir.Phase);
+        Assert.Equal("pass", preDvir.Result);
+
+        var summaryResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/trips/{trip.TripId}/execution", _dispatcherToken));
+        summaryResponse.EnsureSuccessStatusCode();
+        var summary = (await summaryResponse.Content.ReadFromJsonAsync<TripExecutionSummaryResponse>())!;
+        Assert.True(summary.HasPreTripDvir);
+        Assert.False(summary.HasPostTripDvir);
+    }
+
+    [Fact]
     public async Task Driver_schedule_includes_proof_and_dvir_flags()
     {
         var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();

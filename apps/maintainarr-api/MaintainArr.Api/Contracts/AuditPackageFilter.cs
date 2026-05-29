@@ -19,7 +19,8 @@ public sealed record AuditPackageAppliedFiltersResponse(
 public sealed record AuditPackageFilterOptionsResponse(
     IReadOnlyList<string> Actions,
     IReadOnlyList<string> Results,
-    IReadOnlyList<string> TargetTypes);
+    IReadOnlyList<string> TargetTypes,
+    IReadOnlyList<Guid> ActorUserIds);
 
 public sealed record AuditPackageBreakdownItem(
     string Key,

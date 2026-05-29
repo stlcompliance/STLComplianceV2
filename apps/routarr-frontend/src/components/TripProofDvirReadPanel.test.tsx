@@ -5,6 +5,28 @@ import { TripProofDvirReadPanel } from './TripProofDvirReadPanel'
 
 vi.mock('../api/client', () => ({
   getTripExecutionSummary: vi.fn(),
+  getTrips: vi.fn().mockResolvedValue([
+    {
+      tripId: 'trip-1',
+      tripNumber: 'TR-001',
+      title: 'North route',
+      dispatchStatus: 'completed',
+      assignedDriverPersonId: null,
+      vehicleRefKey: null,
+      scheduledStartAt: null,
+      scheduledEndAt: null,
+      loadCount: 0,
+      createdByUserId: 'user-1',
+      createdAt: '2026-05-27T08:00:00Z',
+      updatedAt: '2026-05-27T08:00:00Z',
+      assignedAt: null,
+      dispatchedAt: null,
+      startedAt: null,
+      completedAt: null,
+      cancelledAt: null,
+      closedAt: null,
+    },
+  ]),
   downloadTripCaptureAttachment: vi.fn(),
 }))
 
@@ -76,7 +98,8 @@ describe('TripProofDvirReadPanel', () => {
     })
 
     renderPanel()
-    fireEvent.change(screen.getByPlaceholderText('Paste trip GUID'), {
+    fireEvent.click(screen.getByTestId('trip-proof-dvir-trip-advanced-toggle'))
+    fireEvent.change(screen.getByTestId('trip-proof-dvir-trip-advanced-input'), {
       target: { value: 'trip-1' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Load execution' }))
@@ -130,7 +153,8 @@ describe('TripProofDvirReadPanel', () => {
     })
 
     renderPanel()
-    fireEvent.change(screen.getByPlaceholderText('Paste trip GUID'), {
+    fireEvent.click(screen.getByTestId('trip-proof-dvir-trip-advanced-toggle'))
+    fireEvent.change(screen.getByTestId('trip-proof-dvir-trip-advanced-input'), {
       target: { value: 'trip-1' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Load execution' }))
@@ -191,7 +215,8 @@ describe('TripProofDvirReadPanel', () => {
     })
 
     renderPanel()
-    fireEvent.change(screen.getByPlaceholderText('Paste trip GUID'), {
+    fireEvent.click(screen.getByTestId('trip-proof-dvir-trip-advanced-toggle'))
+    fireEvent.change(screen.getByTestId('trip-proof-dvir-trip-advanced-input'), {
       target: { value: 'trip-1' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Load execution' }))
@@ -252,7 +277,8 @@ describe('TripProofDvirReadPanel', () => {
     })
 
     renderPanel()
-    fireEvent.change(screen.getByPlaceholderText('Paste trip GUID'), {
+    fireEvent.click(screen.getByTestId('trip-proof-dvir-trip-advanced-toggle'))
+    fireEvent.change(screen.getByTestId('trip-proof-dvir-trip-advanced-input'), {
       target: { value: 'trip-1' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Load execution' }))

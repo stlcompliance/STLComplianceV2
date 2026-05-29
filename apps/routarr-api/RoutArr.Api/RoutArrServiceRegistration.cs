@@ -71,6 +71,7 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<DispatchBoardService>();
         builder.Services.AddScoped<DispatchBoardStateService>();
         builder.Services.AddScoped<StaffarrPersonRefService>();
+        builder.Services.AddScoped<VehicleRefService>();
         builder.Services.AddScoped<DispatchCommandCenterService>();
         builder.Services.AddScoped<DispatchExceptionService>();
         builder.Services.AddScoped<ActiveTripsService>();
@@ -86,6 +87,7 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<TripCaptureAttachmentService>();
         builder.Services.AddSingleton<RoutArrCaptureAttachmentStorageService>();
         builder.Services.AddScoped<TripExecutionCaptureService>();
+        builder.Services.AddScoped<TripAuditTrailService>();
         builder.Services.AddScoped<RouteCalendarService>();
         builder.Services.AddScoped<DriverAvailabilityService>();
         builder.Services.AddScoped<EquipmentAvailabilityService>();

@@ -1098,6 +1098,50 @@ namespace MaintainArr.Api.Migrations
                     b.ToTable("maintainarr_import_batches", (string)null);
                 });
 
+            modelBuilder.Entity("MaintainArr.Api.Entities.MaintainArrStaffPersonRef", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActiveStatusSnapshot")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("DisplayNameSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PrimarySiteSnapshot")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SourceCorrelationId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("StaffarrPersonId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "StaffarrPersonId")
+                        .IsUnique();
+
+                    b.ToTable("maintainarr_staff_person_refs", (string)null);
+                });
+
             modelBuilder.Entity("MaintainArr.Api.Entities.MaintenanceHistoryEvent", b =>
                 {
                     b.Property<Guid>("Id")

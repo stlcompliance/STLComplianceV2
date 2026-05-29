@@ -62,7 +62,7 @@ describe('formatBulkDispatchItemSummary', () => {
       }),
     )
 
-    expect(summary).toContain('workflow gate: Driver license invalid')
+    expect(summary).toContain('Driver: Compliance workflow: Driver license invalid')
   })
 })
 

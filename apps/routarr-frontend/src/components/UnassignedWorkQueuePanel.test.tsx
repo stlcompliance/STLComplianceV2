@@ -369,6 +369,146 @@ describe('UnassignedWorkQueuePanel', () => {
 
   })
 
+
+
+  it('shows inline gate preview when a driver is selected on a trip row', async () => {
+
+    vi.mocked(client.getUnassignedWorkQueue).mockResolvedValue({
+
+      scope: 'daily',
+
+      windowStart: new Date().toISOString(),
+
+      windowEnd: new Date(Date.now() + 86400000).toISOString(),
+
+      generatedAt: new Date().toISOString(),
+
+      summary: {
+
+        unassignedCount: 1,
+
+        lateCount: 0,
+
+        atRiskCount: 0,
+
+        urgentCount: 0,
+
+      },
+
+      items: [
+
+        {
+
+          tripId: 'trip-u1',
+
+          tripNumber: 'TR-U1',
+
+          title: 'Needs driver',
+
+          dispatchStatus: 'planned',
+
+          scheduledStartAt: new Date().toISOString(),
+
+          scheduledEndAt: null,
+
+          isLate: false,
+
+          isAtRisk: false,
+
+          routeCount: 0,
+
+          pendingStopCount: 0,
+
+          minutesUntilStart: 45,
+
+        },
+
+      ],
+
+      driverRefs: {
+
+        items: [{ personId: 'person-1', displayName: 'Alex', mirroredAt: new Date().toISOString() }],
+
+      },
+
+    })
+
+
+
+    vi.mocked(client.previewDispatchAssignment).mockResolvedValue({
+
+      tripId: 'trip-u1',
+
+      assignmentKind: 'driver',
+
+      canAssign: false,
+
+      hasBlockingConflicts: true,
+
+      blockingDriverAvailability: [],
+
+      blockingEquipmentAvailability: [],
+
+      overlappingTrips: [],
+
+      driverEligibility: null,
+
+      assetDispatchability: null,
+
+      workflowGates: {
+
+        outcome: 'block',
+
+        reasonCode: 'license_invalid',
+
+        message: 'Driver license invalid',
+
+        isBlocking: true,
+
+        gates: [
+
+          {
+
+            gateKey: 'driver_qualification',
+
+            outcome: 'block',
+
+            reasonCode: 'license_invalid',
+
+            message: 'Driver license invalid',
+
+            isBlocking: true,
+
+          },
+
+        ],
+
+      },
+
+    })
+
+
+
+    renderPanel(true)
+
+    await screen.findByTestId('unassigned-trip-trip-u1')
+
+
+
+    fireEvent.change(screen.getByLabelText(/Assign driver for Needs driver/i), {
+
+      target: { value: 'person-1' },
+
+    })
+
+
+
+    expect(await screen.findByTestId('unassigned-gate-preview-trip-u1')).toBeTruthy()
+
+    expect(screen.getByText('driver_qualification')).toBeTruthy()
+
+  })
+
 })
 
 

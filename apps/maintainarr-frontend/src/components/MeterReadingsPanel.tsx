@@ -1,3 +1,5 @@
+import { GeneratedKeyField, slugifyKey } from '@stl/shared-ui'
+
 import type { AssetMeterResponse, AssetResponse, MeterPmForecastResponse, MeterReadingResponse } from '../api/types'
 
 interface MeterReadingsPanelProps {
@@ -9,8 +11,9 @@ interface MeterReadingsPanelProps {
   forecast: MeterPmForecastResponse | null
   selectedAssetId: string
   selectedMeterId: string
-  meterKey: string
   meterName: string
+  meterKeyManualOverride: string
+  confirmedMeterKey: string | null
   meterUnit: string
   baselineReading: string
   readingValue: string
@@ -20,8 +23,8 @@ interface MeterReadingsPanelProps {
   isRecording: boolean
   onSelectedAssetIdChange: (assetId: string) => void
   onSelectedMeterIdChange: (meterId: string) => void
-  onMeterKeyChange: (value: string) => void
   onMeterNameChange: (value: string) => void
+  onMeterKeyManualOverrideChange: (value: string) => void
   onMeterUnitChange: (value: string) => void
   onBaselineReadingChange: (value: string) => void
   onReadingValueChange: (value: string) => void
@@ -39,8 +42,9 @@ export function MeterReadingsPanel({
   forecast,
   selectedAssetId,
   selectedMeterId,
-  meterKey,
   meterName,
+  meterKeyManualOverride,
+  confirmedMeterKey,
   meterUnit,
   baselineReading,
   readingValue,
@@ -50,8 +54,8 @@ export function MeterReadingsPanel({
   isRecording,
   onSelectedAssetIdChange,
   onSelectedMeterIdChange,
-  onMeterKeyChange,
   onMeterNameChange,
+  onMeterKeyManualOverrideChange,
   onMeterUnitChange,
   onBaselineReadingChange,
   onReadingValueChange,
@@ -128,11 +132,14 @@ export function MeterReadingsPanel({
             <div className="mb-6 rounded-lg border border-slate-700 bg-slate-950/50 p-4">
               <h3 className="text-sm font-medium text-slate-200">Define meter</h3>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
-                <input
-                  className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                  placeholder="Meter key"
-                  value={meterKey}
-                  onChange={(e) => onMeterKeyChange(e.target.value)}
+                <GeneratedKeyField
+                  sourceLabel={meterName}
+                  generatedKey={slugifyKey(meterName)}
+                  confirmedKey={confirmedMeterKey}
+                  manualOverride={meterKeyManualOverride}
+                  onManualOverrideChange={onMeterKeyManualOverrideChange}
+                  showAdvancedKey
+                  label="Meter key"
                 />
                 <input
                   className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"

@@ -43,6 +43,7 @@ export function TripsSection({ state }: Props) {
   return (
     <div className="mt-8">
       <TripsPanel
+        accessToken={accessToken}
         canCreate={canCreateTrips(roleKey, isPlatformAdmin)}
         canAssign={canAssignDrivers(roleKey, isPlatformAdmin)}
         canPerform={canPerformTrips(roleKey, isPlatformAdmin)}

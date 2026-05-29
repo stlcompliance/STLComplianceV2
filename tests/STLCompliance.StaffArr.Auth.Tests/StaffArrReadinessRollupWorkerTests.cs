@@ -169,6 +169,29 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
         Assert.Equal(1, teamRollup.TotalMembers);
         Assert.Equal(1, teamRollup.ReadyCount);
         Assert.Equal(0, teamRollup.NotReadyCount);
+
+        var membersRequest = Authorized(
+            HttpMethod.Get,
+            $"/api/readiness-rollups/teams/{teamId}/members",
+            _supervisorToken);
+        var membersResponse = await _staffarrClient.SendAsync(membersRequest);
+        membersResponse.EnsureSuccessStatusCode();
+        var membersBody = (await membersResponse.Content.ReadFromJsonAsync<ReadinessRollupMembersResponse>())!;
+        Assert.Equal(teamId, membersBody.Rollup.OrgUnitId);
+        Assert.Single(membersBody.Members);
+        Assert.Equal(readyPersonId, membersBody.Members[0].PersonId);
+        Assert.Equal("ready", membersBody.Members[0].ReadinessStatus);
+        Assert.Equal("Rollup Ready", membersBody.Members[0].DisplayName);
+
+        var notReadyFilterRequest = Authorized(
+            HttpMethod.Get,
+            $"/api/readiness-rollups/teams/{teamId}/members?readinessStatus=not_ready",
+            _supervisorToken);
+        var notReadyFilterResponse = await _staffarrClient.SendAsync(notReadyFilterRequest);
+        notReadyFilterResponse.EnsureSuccessStatusCode();
+        var notReadyFilterBody =
+            (await notReadyFilterResponse.Content.ReadFromJsonAsync<ReadinessRollupMembersResponse>())!;
+        Assert.Empty(notReadyFilterBody.Members);
     }
 
     [Fact]

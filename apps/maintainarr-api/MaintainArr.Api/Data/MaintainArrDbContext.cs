@@ -91,6 +91,8 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
 
     public DbSet<MaintainArrImportBatch> MaintainArrImportBatches => Set<MaintainArrImportBatch>();
 
+    public DbSet<MaintainArrStaffPersonRef> StaffPersonRefs => Set<MaintainArrStaffPersonRef>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -703,6 +705,19 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.ComplianceKey });
             entity.HasIndex(x => new { x.TenantId, x.SubjectType, x.SubjectId, x.ComplianceKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<MaintainArrStaffPersonRef>(entity =>
+        {
+            entity.ToTable("maintainarr_staff_person_refs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.StaffarrPersonId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.DisplayNameSnapshot).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ActiveStatusSnapshot).HasMaxLength(64);
+            entity.Property(x => x.PrimarySiteSnapshot).HasMaxLength(128);
+            entity.Property(x => x.SourceCorrelationId).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.StaffarrPersonId }).IsUnique();
         });
     }
 }

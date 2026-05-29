@@ -1,0 +1,1245 @@
+USER INPUT FIELDS INVENTORY
+Generated: 2026-05-29
+
+SUMMARY
+-------
+Total input elements: 705
+Total component files: 162
+
+By app:
+  stlcompliancesite: 4 fields in 1 files
+  suite-frontend: 47 fields in 10 files
+  compliancecore-frontend: 48 fields in 17 files
+  staffarr-frontend: 91 fields in 20 files
+  maintainarr-frontend: 104 fields in 19 files
+  routarr-frontend: 88 fields in 23 files
+  supplyarr-frontend: 201 fields in 35 files
+  trainarr-frontend: 105 fields in 30 files
+  companion-frontend: 17 fields in 7 files
+
+METHODOLOGY
+-----------
+- Scanned *.tsx in product frontends (excludes *.test.tsx and *.ref.tsx)
+- Counts native <input>, <textarea>, <select> elements
+- Labels inferred from preceding <label>, aria-label, placeholder, id, name, or data-testid
+- Dynamic/repeated fields counted once per JSX element, not per runtime row
+
+================================================================================
+
+APP: STLCOMPLIANCESITE
+--------------------------------------------------------------------------------
+
+File: apps/stlcompliancesite/src/pages/DemoContactPage.tsx
+Fields (4):
+  1. Name -> text
+  2. Work email -> email
+  3. Organization -> text
+  4. What would you like to see? -> textarea
+
+APP: SUITE-FRONTEND
+--------------------------------------------------------------------------------
+
+File: apps/suite-frontend/src/components/platform-admin/EntitlementAdminPanel.tsx
+Fields (2):
+  1. Tenant -> select
+  2. Product to grant -> select
+
+File: apps/suite-frontend/src/components/platform-admin/EntitlementReconciliationSettingsPanel.tsx
+Fields (3):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> checkbox
+  3. (unlabeled) -> checkbox
+
+File: apps/suite-frontend/src/components/platform-admin/HybridDataPlanePanel.tsx
+Fields (6):
+  1. Tenant -> select
+  2. Product -> select
+  3. Deployment mode -> select
+  4. Data endpoint URL {endpointRequired ? '(required)' : '(hosted default)'} -> text
+  5. Trust status -> select
+  6. Notes (optional) -> text
+
+File: apps/suite-frontend/src/components/platform-admin/PlatformAuditPackageExportPanel.tsx
+Fields (8):
+  1. Tenant scope (optional GUID) -> text
+  2. From (optional) -> date
+  3. To (optional) -> date
+  4. Action -> select
+  5. Result -> select
+  6. Target type -> select
+  7. Product key -> select
+  8. Actor user ID (optional GUID) -> text
+
+File: apps/suite-frontend/src/components/platform-admin/ProductCatalogAdminPanel.tsx
+Fields (5):
+  1. Product key -> text
+  2. Display name -> text
+  3. Sort order -> number
+  4. (unlabeled) -> checkbox
+  5. Selected product -> select
+
+File: apps/suite-frontend/src/components/platform-admin/ServiceTokenAdminPanel.tsx
+Fields (8):
+  1. Client key -> text
+  2. Display name -> text
+  3. Source product -> select
+  4. Allowed product keys (comma-separated) -> text
+  5. Service client -> select
+  6. Tenant scope (optional) -> select
+  7. Action scope (optional) -> text
+  8. Lifetime (minutes) -> number
+
+File: apps/suite-frontend/src/components/platform-admin/ServiceTokenCleanupSettingsPanel.tsx
+Fields (3):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+  3. (unlabeled) -> number
+
+File: apps/suite-frontend/src/components/platform-admin/TenantCatalogAdminPanel.tsx
+Fields (5):
+  1. Slug -> text
+  2. Display name -> text
+  3. Selected tenant -> select
+  4. Update display name -> text
+  5. Status -> select
+
+File: apps/suite-frontend/src/components/platform-admin/TenantLifecycleSettingsPanel.tsx
+Fields (5):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> checkbox
+  3. Grace days after last license coverage ends -> number
+  4. (unlabeled) -> checkbox
+  5. (unlabeled) -> checkbox
+
+File: apps/suite-frontend/src/pages/LoginPage.tsx
+Fields (2):
+  1. Email -> email (id=email)
+  2. Password -> password (id=password)
+
+APP: COMPLIANCECORE-FRONTEND
+--------------------------------------------------------------------------------
+
+File: apps/compliancecore-frontend/src/components/AuditPackageExportPanel.tsx
+Fields (2):
+  1. From (optional) -> date
+  2. To (optional) -> date
+
+File: apps/compliancecore-frontend/src/components/BatchRuleEvaluationPanel.tsx
+Fields (3):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> checkbox
+  3. batch-rule-evaluation-emit-findings -> checkbox (data-testid=batch-rule-evaluation-emit-findings)
+
+File: apps/compliancecore-frontend/src/components/BatchWorkflowGateCheckPanel.tsx
+Fields (3):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> checkbox
+  3. batch-workflow-gate-emit-findings -> checkbox (data-testid=batch-workflow-gate-emit-findings)
+
+File: apps/compliancecore-frontend/src/components/ComplianceReportsPanel.tsx
+Fields (2):
+  1. Severity -> select
+  2. (unlabeled) -> checkbox
+
+File: apps/compliancecore-frontend/src/components/ControlEffectivenessPanel.tsx
+Fields (3):
+  1. Scope key -> text
+  2. Rule pack key (optional) -> text
+  3. Purchase request ID (context) -> text
+
+File: apps/compliancecore-frontend/src/components/CsvImportExportPanel.tsx
+Fields (2):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> file
+
+File: apps/compliancecore-frontend/src/components/FindingsWorkflowGatesPanel.tsx
+Fields (3):
+  1. Gate -> select (id=findings-workflow-gate-select, data-testid=findings-workflow-gate-select)
+  2. findings-workflow-gate-emit-findings -> checkbox (data-testid=findings-workflow-gate-emit-findings)
+  3. (unlabeled) -> checkbox
+
+File: apps/compliancecore-frontend/src/components/M12AnalyticsWorkerSettingsPanel.tsx
+Fields (8):
+  1. (unlabeled) -> checkbox
+  2. Default scope key -> text
+  3. Interval (hours) -> number
+  4. (unlabeled) -> checkbox
+  5. (unlabeled) -> checkbox
+  6. (unlabeled) -> checkbox
+  7. (unlabeled) -> checkbox
+  8. (unlabeled) -> checkbox
+
+File: apps/compliancecore-frontend/src/components/MissingEvidenceWarningsPanel.tsx
+Fields (3):
+  1. Scope key -> text
+  2. Rule pack key (optional) -> text
+  3. Purchase request ID (context) -> text
+
+File: apps/compliancecore-frontend/src/components/OperatorReportsPanel.tsx
+Fields (1):
+  1. (unlabeled) -> checkbox
+
+File: apps/compliancecore-frontend/src/components/ReadinessForecastPanel.tsx
+Fields (3):
+  1. Scope key -> text
+  2. Rule pack key (optional) -> text
+  3. Purchase request ID (context) -> text
+
+File: apps/compliancecore-frontend/src/components/RiskScoringPanel.tsx
+Fields (3):
+  1. Scope key -> text
+  2. Rule pack key (optional) -> text
+  3. Purchase request ID (context) -> text
+
+File: apps/compliancecore-frontend/src/components/RuleChangeMonitoringPanel.tsx
+Fields (2):
+  1. Change type -> select
+  2. Pack key filter -> text
+
+File: apps/compliancecore-frontend/src/components/RuleEvaluationPanel.tsx
+Fields (4):
+  1. (unlabeled) -> select
+  2. Logic -> select
+  3. Rules JSON (fact_boolean rules) -> textarea
+  4. (unlabeled) -> checkbox
+
+File: apps/compliancecore-frontend/src/components/SdsHazComReferencesPanel.tsx
+Fields (4):
+  1. sds_key -> text
+  2. product name -> text
+  3. hazcom_key -> text
+  4. title -> text
+
+File: apps/compliancecore-frontend/src/components/SourceIngestionPanel.tsx
+Fields (1):
+  1. Fact sources JSON -> textarea (id=source-ingestion-json)
+
+File: apps/compliancecore-frontend/src/components/VocabularyPanel.tsx
+Fields (1):
+  1. Vocabulary type -> select
+
+APP: STAFFARR-FRONTEND
+--------------------------------------------------------------------------------
+
+File: apps/staffarr-frontend/src/components/AuditPackageExportPanel.tsx
+Fields (6):
+  1. From (optional) -> date
+  2. To (optional) -> date
+  3. Action -> select
+  4. Result -> select
+  5. Target type -> select
+  6. Actor user ID (optional GUID) -> text
+
+File: apps/staffarr-frontend/src/components/CertificationPanel.tsx
+Fields (3):
+  1. Certification definition -> select
+  2. Expiration override (optional) -> date
+  3. Grant notes (optional) -> textarea
+
+File: apps/staffarr-frontend/src/components/CreatePersonPanel.tsx
+Fields (7):
+  1. Given name -> text
+  2. Family name -> text
+  3. Primary email -> email
+  4. Employment status -> select
+  5. Job title -> text
+  6. Primary org unit -> select
+  7. Manager -> select
+
+File: apps/staffarr-frontend/src/components/IncidentReportsPanel.tsx
+Fields (2):
+  1. Status -> select
+  2. (unlabeled) -> checkbox
+
+File: apps/staffarr-frontend/src/components/IncidentsPanel.tsx
+Fields (5):
+  1. Reason category -> select
+  2. Severity -> select
+  3. Title -> text
+  4. Description -> textarea
+  5. Occurred at -> datetime-local
+
+File: apps/staffarr-frontend/src/components/ManagerHierarchyPanel.tsx
+Fields (1):
+  1. (unlabeled) -> select
+
+File: apps/staffarr-frontend/src/components/OrgHierarchyManager.tsx
+Fields (6):
+  1. (unlabeled) -> text
+  2. (unlabeled) -> text
+  3. (unlabeled) -> select
+  4. (unlabeled) -> text
+  5. (unlabeled) -> text
+  6. (unlabeled) -> select
+
+File: apps/staffarr-frontend/src/components/PersonBulkImportPanel.tsx
+Fields (2):
+  1. CSV rows -> textarea
+  2. (unlabeled) -> checkbox
+
+File: apps/staffarr-frontend/src/components/PersonExportDeliverySettingsPanel.tsx
+Fields (5):
+  1. (unlabeled) -> checkbox
+  2. Delivery interval (hours) -> number
+  3. Notification webhook URL (optional) -> url
+  4. (unlabeled) -> checkbox
+  5. (unlabeled) -> checkbox
+
+File: apps/staffarr-frontend/src/components/PersonExportPanel.tsx
+Fields (7):
+  1. (unlabeled) -> checkbox
+  2. Delivery interval (hours) -> number
+  3. Notification webhook URL (optional) -> url
+  4. (unlabeled) -> checkbox
+  5. (unlabeled) -> checkbox
+  6. Employment status filter (optional) -> select
+  7. Primary org unit filter (optional) -> select
+
+File: apps/staffarr-frontend/src/components/PersonOrgAssignmentsManager.tsx
+Fields (8):
+  1. (unlabeled) -> select
+  2. (unlabeled) -> select
+  3. (unlabeled) -> select
+  4. (unlabeled) -> select
+  5. (unlabeled) -> select
+  6. (unlabeled) -> select
+  7. (unlabeled) -> select
+  8. (unlabeled) -> select
+
+File: apps/staffarr-frontend/src/components/PersonProfileEditorPanel.tsx
+Fields (7):
+  1. Given name -> text
+  2. Family name -> text
+  3. Primary email -> email
+  4. Primary org unit -> select
+  5. Manager -> select
+  6. Job title -> text
+  7. Reason (optional) -> text
+
+File: apps/staffarr-frontend/src/components/PersonTimelinePanel.tsx
+Fields (2):
+  1. Category -> select
+  2. Page size -> select
+
+File: apps/staffarr-frontend/src/components/PersonnelDocumentsPanel.tsx
+Fields (5):
+  1. Document type -> select
+  2. Title -> text
+  3. Description -> textarea
+  4. Expires at (optional) -> datetime-local
+  5. File -> file
+
+File: apps/staffarr-frontend/src/components/PersonnelNotesPanel.tsx
+Fields (4):
+  1. Category -> select
+  2. Visibility -> select
+  3. Subject -> text
+  4. Body -> textarea
+
+File: apps/staffarr-frontend/src/components/PersonnelReportsPanel.tsx
+Fields (1):
+  1. Employment status -> select
+
+File: apps/staffarr-frontend/src/components/ReadinessPanel.tsx
+Fields (2):
+  1. (unlabeled) -> textarea
+  2. (unlabeled) -> datetime-local
+
+File: apps/staffarr-frontend/src/components/ReadinessReportsPanel.tsx
+Fields (2):
+  1. Scope -> select
+  2. (unlabeled) -> checkbox
+
+File: apps/staffarr-frontend/src/components/RoleTemplateAssignmentPanel.tsx
+Fields (12):
+  1. (unlabeled) -> text
+  2. (unlabeled) -> text
+  3. (unlabeled) -> text
+  4. (unlabeled) -> text
+  5. (unlabeled) -> text
+  6. (unlabeled) -> text
+  7. (unlabeled) -> select
+  8. (unlabeled) -> select
+  9. (unlabeled) -> checkbox
+  10. (unlabeled) -> select
+  11. (unlabeled) -> select
+  12. (unlabeled) -> select
+
+File: apps/staffarr-frontend/src/components/StaffArrScheduledWorkerSettingsPanel.tsx
+Fields (4):
+  1. (unlabeled) -> checkbox
+  2. Scan interval (minutes) -> number
+  3. Batch size -> number
+  4. Staleness window (hours) -> number
+
+APP: MAINTAINARR-FRONTEND
+--------------------------------------------------------------------------------
+
+File: apps/maintainarr-frontend/src/components/AssetBulkImportPanel.tsx
+Fields (1):
+  1. (unlabeled) -> textarea
+
+File: apps/maintainarr-frontend/src/components/AssetRegistryPanel.tsx
+Fields (12):
+  1. Class key -> text
+  2. Class name -> text
+  3. Description -> text
+  4. (unlabeled) -> select
+  5. Type key -> text
+  6. Type name -> text
+  7. Description -> text
+  8. (unlabeled) -> select
+  9. Asset tag -> text
+  10. Asset name -> text
+  11. Description -> text
+  12. Site reference (optional) -> text
+
+File: apps/maintainarr-frontend/src/components/AssetStatusRollupSettingsPanel.tsx
+Fields (2):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+
+File: apps/maintainarr-frontend/src/components/AuditPackageExportPanel.tsx
+Fields (6):
+  1. From (optional) -> date
+  2. To (optional) -> date
+  3. Action -> select
+  4. Result -> select
+  5. Target type -> select
+  6. Actor user ID (optional GUID) -> text
+
+File: apps/maintainarr-frontend/src/components/ComplianceReportsPanel.tsx
+Fields (2):
+  1. (unlabeled) -> checkbox
+  2. Site -> text
+
+File: apps/maintainarr-frontend/src/components/DefectEscalationSettingsPanel.tsx
+Fields (9):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+  3. (unlabeled) -> number
+  4. (unlabeled) -> number
+  5. (unlabeled) -> number
+  6. (unlabeled) -> checkbox
+  7. (unlabeled) -> checkbox
+  8. (unlabeled) -> checkbox
+  9. (unlabeled) -> checkbox
+
+File: apps/maintainarr-frontend/src/components/DefectsPanel.tsx
+Fields (6):
+  1. (unlabeled) -> select
+  2. (unlabeled) -> select
+  3. (unlabeled) -> text
+  4. (unlabeled) -> textarea
+  5. (unlabeled) -> select
+  6. (unlabeled) -> select
+
+File: apps/maintainarr-frontend/src/components/InspectionRunnerPanel.tsx
+Fields (6):
+  1. (unlabeled) -> select
+  2. (unlabeled) -> select
+  3. (unlabeled) -> checkbox
+  4. (unlabeled) -> select
+  5. (unlabeled) -> number
+  6. (unlabeled) -> textarea
+
+File: apps/maintainarr-frontend/src/components/InspectionTemplateBuilderPanel.tsx
+Fields (10):
+  1. (unlabeled) -> text
+  2. (unlabeled) -> text
+  3. (unlabeled) -> text
+  4. (unlabeled) -> text
+  5. (unlabeled) -> text
+  6. (unlabeled) -> text
+  7. (unlabeled) -> select
+  8. (unlabeled) -> text
+  9. (unlabeled) -> select
+  10. (unlabeled) -> checkbox
+
+File: apps/maintainarr-frontend/src/components/MaintenanceHistoryPanel.tsx
+Fields (1):
+  1. Asset -> select (id=history-asset-select)
+
+File: apps/maintainarr-frontend/src/components/MaintenanceHistoryRollupSettingsPanel.tsx
+Fields (2):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+
+File: apps/maintainarr-frontend/src/components/MaintenanceReportsPanel.tsx
+Fields (1):
+  1. Lifecycle -> select
+
+File: apps/maintainarr-frontend/src/components/MeterReadingsPanel.tsx
+Fields (8):
+  1. (unlabeled) -> select
+  2. (unlabeled) -> select
+  3. Meter key -> text
+  4. Display name -> text
+  5. Unit (hours, miles) -> text
+  6. Baseline reading -> text
+  7. Reading value -> text
+  8. Notes (optional) -> text
+
+File: apps/maintainarr-frontend/src/components/NotificationSettingsPanel.tsx
+Fields (6):
+  1. (unlabeled) -> checkbox
+  2. https://hooks.example.com/maintainarr -> url
+  3. (unlabeled) -> checkbox
+  4. (unlabeled) -> checkbox
+  5. (unlabeled) -> checkbox
+  6. (unlabeled) -> checkbox
+
+File: apps/maintainarr-frontend/src/components/PmDueScanSettingsPanel.tsx
+Fields (4):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+  3. (unlabeled) -> number
+  4. (unlabeled) -> number
+
+File: apps/maintainarr-frontend/src/components/PmProgramBuilderPanel.tsx
+Fields (7):
+  1. (unlabeled) -> text
+  2. (unlabeled) -> text
+  3. (unlabeled) -> text
+  4. (unlabeled) -> select
+  5. (unlabeled) -> select
+  6. (unlabeled) -> select
+  7. (unlabeled) -> checkbox
+
+File: apps/maintainarr-frontend/src/components/WorkOrderLaborEvidencePanel.tsx
+Fields (8):
+  1. Task title -> text
+  2. (unlabeled) -> select
+  3. Hours -> number
+  4. (unlabeled) -> select
+  5. (unlabeled) -> select
+  6. Evidence type (e.g. before_photo) -> text
+  7. (unlabeled) -> file
+  8. Notes (optional) -> text
+
+File: apps/maintainarr-frontend/src/components/WorkOrderPartsDemandPanel.tsx
+Fields (6):
+  1. SupplyArr part id (optional) -> text
+  2. Part number -> text
+  3. Quantity -> text
+  4. Unit of measure -> text
+  5. Notes -> text
+  6. (unlabeled) -> checkbox
+
+File: apps/maintainarr-frontend/src/components/WorkOrdersPanel.tsx
+Fields (7):
+  1. (unlabeled) -> select
+  2. (unlabeled) -> select
+  3. (unlabeled) -> text
+  4. (unlabeled) -> textarea
+  5. (unlabeled) -> select
+  6. (unlabeled) -> select
+  7. (unlabeled) -> select
+
+APP: ROUTARR-FRONTEND
+--------------------------------------------------------------------------------
+
+File: apps/routarr-frontend/src/components/ActiveTripsPanel.tsx
+Fields (2):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> select
+
+File: apps/routarr-frontend/src/components/AttachmentRetentionSettingsPanel.tsx
+Fields (2):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+
+File: apps/routarr-frontend/src/components/AuditPackageExportPanel.tsx
+Fields (6):
+  1. From (optional) -> date
+  2. To (optional) -> date
+  3. Action -> select
+  4. Result -> select
+  5. Target type -> select
+  6. Actor user ID (optional GUID) -> text
+
+File: apps/routarr-frontend/src/components/BulkDispatchPanel.tsx
+Fields (4):
+  1. Driver person id -> text
+  2. Vehicle ref key -> text
+  3. Dispatch status -> select
+  4. (unlabeled) -> checkbox
+
+File: apps/routarr-frontend/src/components/DispatchCloseoutPanel.tsx
+Fields (3):
+  1. Remaining trips -> select
+  2. Open stops -> select
+  3. (unlabeled) -> checkbox
+
+File: apps/routarr-frontend/src/components/DispatchCommandCenterPanel.tsx
+Fields (1):
+  1. (unlabeled) -> select
+
+File: apps/routarr-frontend/src/components/DispatchExceptionQueuePanel.tsx
+Fields (11):
+  1. (unlabeled) -> checkbox
+  2. Trip id to link… -> text
+  3. Resolution notes… -> text
+  4. exception-overdue-filter -> checkbox (data-testid=exception-overdue-filter)
+  5. Exception title -> text
+  6. Description -> text
+  7. (unlabeled) -> select
+  8. Optional trip id -> text
+  9. exception-assign-on-create -> checkbox (data-testid=exception-assign-on-create)
+  10. exception-resolution-template -> select (data-testid=exception-resolution-template)
+  11. Bulk resolve notes… -> text
+
+File: apps/routarr-frontend/src/components/DispatchReportsPanel.tsx
+Fields (1):
+  1. Scope -> select
+
+File: apps/routarr-frontend/src/components/DriverAvailabilityPanel.tsx
+Fields (3):
+  1. Person id -> text
+  2. Status -> select
+  3. Reason -> text
+
+File: apps/routarr-frontend/src/components/DriverPortalPanel.tsx
+Fields (3):
+  1. (unlabeled) -> select
+  2. Reference (BOL, POD…) -> text
+  3. Notes -> text
+
+File: apps/routarr-frontend/src/components/EquipmentAvailabilityPanel.tsx
+Fields (3):
+  1. Vehicle ref key -> text
+  2. Status -> select
+  3. Reason -> text
+
+File: apps/routarr-frontend/src/components/NotificationSettingsPanel.tsx
+Fields (8):
+  1. (unlabeled) -> checkbox
+  2. https://hooks.example.com/routarr -> url
+  3. (unlabeled) -> checkbox
+  4. (unlabeled) -> checkbox
+  5. (unlabeled) -> checkbox
+  6. (unlabeled) -> checkbox
+  7. (unlabeled) -> checkbox
+  8. (unlabeled) -> checkbox
+
+File: apps/routarr-frontend/src/components/ProofDvirReportsPanel.tsx
+Fields (1):
+  1. Scope -> select
+
+File: apps/routarr-frontend/src/components/RouteReportsPanel.tsx
+Fields (1):
+  1. Scope -> select
+
+File: apps/routarr-frontend/src/components/RoutesPanel.tsx
+Fields (6):
+  1. Route title -> text
+  2. Description -> text
+  3. First stop key -> text
+  4. Stop type -> select
+  5. Stop label -> text
+  6. Address label -> text
+
+File: apps/routarr-frontend/src/components/TripCaptureAttachmentPanel.tsx
+Fields (2):
+  1. Photo -> file
+  2. Document -> file
+
+File: apps/routarr-frontend/src/components/TripCompletionRollupSettingsPanel.tsx
+Fields (2):
+  1. (unlabeled) -> checkbox
+  2. Staleness window (hours) -> number
+
+File: apps/routarr-frontend/src/components/TripDvirSubmitForm.tsx
+Fields (3):
+  1. (unlabeled) -> select
+  2. Odometer -> number
+  3. Defect notes (required) -> textarea
+
+File: apps/routarr-frontend/src/components/TripExecutionSettingsPanel.tsx
+Fields (11):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> checkbox
+  3. (unlabeled) -> checkbox
+  4. (unlabeled) -> checkbox
+  5. (unlabeled) -> checkbox
+  6. (unlabeled) -> checkbox
+  7. (unlabeled) -> checkbox
+  8. (unlabeled) -> checkbox
+  9. (unlabeled) -> checkbox
+  10. (unlabeled) -> checkbox
+  11. (unlabeled) -> checkbox
+
+File: apps/routarr-frontend/src/components/TripExecutionWorkspacePanel.tsx
+Fields (1):
+  1. Dispatch status -> select
+
+File: apps/routarr-frontend/src/components/TripProofDvirReadPanel.tsx
+Fields (1):
+  1. Trip ID -> text
+
+File: apps/routarr-frontend/src/components/TripsPanel.tsx
+Fields (9):
+  1. Status filter -> select
+  2. Title -> text
+  3. Description -> text
+  4. Vehicle ref -> text
+  5. Initial load key -> text
+  6. Load origin -> text
+  7. Load destination -> text
+  8. Assign driver (StaffArr person id) -> text
+  9. Dispatch status -> select
+
+File: apps/routarr-frontend/src/components/UnassignedWorkQueuePanel.tsx
+Fields (4):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> select
+  3. (unlabeled) -> checkbox
+  4. (unlabeled) -> select
+
+APP: SUPPLYARR-FRONTEND
+--------------------------------------------------------------------------------
+
+File: apps/supplyarr-frontend/src/components/ApprovalReminderSettingsPanel.tsx
+Fields (7):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+  3. (unlabeled) -> number
+  4. (unlabeled) -> number
+  5. (unlabeled) -> number
+  6. (unlabeled) -> checkbox
+  7. (unlabeled) -> checkbox
+
+File: apps/supplyarr-frontend/src/components/AuditHistoryPanel.tsx
+Fields (4):
+  1. Action contains -> text
+  2. Target type -> text
+  3. Target id -> text
+  4. Result -> select
+
+File: apps/supplyarr-frontend/src/components/AvailabilitySnapshotSettingsPanel.tsx
+Fields (2):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+
+File: apps/supplyarr-frontend/src/components/AvailabilitySnapshotsPanel.tsx
+Fields (6):
+  1. (unlabeled) -> checkbox
+  2. Vendor part link -> select
+  3. Snapshot key -> text
+  4. Availability status -> select
+  5. Quantity available (optional) -> number
+  6. Notes -> text
+
+File: apps/supplyarr-frontend/src/components/BackordersPanel.tsx
+Fields (6):
+  1. Status filter -> select
+  2. PO line -> select
+  3. Backorder key -> text
+  4. Quantity (optional) -> number
+  5. Notes -> text
+  6. Cancel reason -> text
+
+File: apps/supplyarr-frontend/src/components/ComplianceReportsPanel.tsx
+Fields (1):
+  1. (unlabeled) -> checkbox
+
+File: apps/supplyarr-frontend/src/components/DemandProcessingSettingsPanel.tsx
+Fields (6):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> checkbox
+  3. (unlabeled) -> checkbox
+  4. Min hours before first processing -> number
+  5. Reprocess staleness (hours) -> number
+  6. (unlabeled) -> checkbox
+
+File: apps/supplyarr-frontend/src/components/DemandRefsPanel.tsx
+Fields (3):
+  1. PR request key -> text
+  2. PR title -> text
+  3. PR notes -> text
+
+File: apps/supplyarr-frontend/src/components/EmergencyPurchasePanel.tsx
+Fields (8):
+  1. Request key -> text
+  2. Title -> text
+  3. Emergency reason (required) -> text
+  4. (unlabeled) -> select
+  5. (unlabeled) -> select
+  6. Active emergency purchases -> select
+  7. Override justification -> text
+  8. PO order key -> text
+
+File: apps/supplyarr-frontend/src/components/ForgivingSearchBar.tsx
+Fields (1):
+  1. (unlabeled) -> search
+
+File: apps/supplyarr-frontend/src/components/IntegrationEventSettingsPanel.tsx
+Fields (3):
+  1. (unlabeled) -> checkbox
+  2. Max attempts -> number
+  3. Retry interval (minutes) -> number
+
+File: apps/supplyarr-frontend/src/components/InventoryPanel.tsx
+Fields (10):
+  1. Location key -> text
+  2. Display name -> text
+  3. (unlabeled) -> select
+  4. Address (optional) -> text
+  5. (unlabeled) -> select
+  6. Bin key -> text
+  7. Bin name -> text
+  8. (unlabeled) -> select
+  9. (unlabeled) -> select
+  10. Quantity on hand -> number
+
+File: apps/supplyarr-frontend/src/components/LeadTimeSnapshotSettingsPanel.tsx
+Fields (2):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+
+File: apps/supplyarr-frontend/src/components/NotificationSettingsPanel.tsx
+Fields (6):
+  1. (unlabeled) -> checkbox
+  2. https://hooks.example.com/supplyarr -> url
+  3. (unlabeled) -> checkbox
+  4. (unlabeled) -> checkbox
+  5. (unlabeled) -> checkbox
+  6. (unlabeled) -> checkbox
+
+File: apps/supplyarr-frontend/src/components/PartCatalogPanel.tsx
+Fields (13):
+  1. Catalog key -> text
+  2. Name -> text
+  3. Description -> text
+  4. (unlabeled) -> select
+  5. Part key -> text
+  6. Display name -> text
+  7. Category key -> text
+  8. Unit of measure -> text
+  9. Manufacturer -> text
+  10. Manufacturer part # -> text
+  11. (unlabeled) -> select
+  12. (unlabeled) -> select
+  13. Vendor part number -> text
+
+File: apps/supplyarr-frontend/src/components/PartsInventoryReportsPanel.tsx
+Fields (3):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> checkbox
+  3. Location -> select
+
+File: apps/supplyarr-frontend/src/components/PartyRegistryPanel.tsx
+Fields (5):
+  1. Party key -> text
+  2. Display name -> text
+  3. Legal name -> text
+  4. Tax identifier (optional) -> text
+  5. Notes -> textarea
+
+File: apps/supplyarr-frontend/src/components/PriceSnapshotSettingsPanel.tsx
+Fields (2):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+
+File: apps/supplyarr-frontend/src/components/PricingLeadTimePanel.tsx
+Fields (9):
+  1. (unlabeled) -> checkbox
+  2. Vendor part link -> select
+  3. Pricing snapshot key -> text
+  4. Lead-time snapshot key -> text
+  5. Unit price -> number
+  6. Currency -> text
+  7. Minimum order qty (optional) -> number
+  8. Lead time (days) -> number
+  9. Notes -> text
+
+File: apps/supplyarr-frontend/src/components/ProcurementCoordinationSettingsPanel.tsx
+Fields (2):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+
+File: apps/supplyarr-frontend/src/components/ProcurementExceptionEscalationSettingsPanel.tsx
+Fields (4):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+  3. (unlabeled) -> number
+  4. (unlabeled) -> checkbox
+
+File: apps/supplyarr-frontend/src/components/ProcurementExceptionsPanel.tsx
+Fields (13):
+  1. Subject type -> select
+  2. Subject record -> select (id=procurement-exception-subject-record, data-testid=procurement-exception-subject-record)
+  3. Exception key -> text
+  4. Category -> select
+  5. (unlabeled) -> checkbox
+  6. Title -> text
+  7. Description -> textarea
+  8. Resolution template -> select (id=procurement-exception-resolution-template, data-testid=procurement-exception-resolution-template)
+  9. Resolution notes -> text
+  10. Waive justification (for waive request) -> textarea (id=procurement-exception-waive-justification, data-testid=procurement-exception-waive-justification)
+  11. Cancel reason (for cancel action) -> textarea (id=procurement-exception-cancel-reason, data-testid=procurement-exception-cancel-reason)
+  12. Link follow-up PR -> select (id=procurement-exception-link-pr, data-testid=procurement-exception-link-pr)
+  13. Link follow-up PO -> select (id=procurement-exception-link-po, data-testid=procurement-exception-link-po)
+
+File: apps/supplyarr-frontend/src/components/PurchaseOrderPanel.tsx
+Fields (2):
+  1. Approved purchase request -> select
+  2. Order key -> text
+
+File: apps/supplyarr-frontend/src/components/PurchaseRequestPanel.tsx
+Fields (8):
+  1. Rejection reason -> text
+  2. Request key -> text
+  3. Title -> text
+  4. Notes -> textarea
+  5. (unlabeled) -> select
+  6. (unlabeled) -> select
+  7. Qty -> number
+  8. Line notes -> text
+
+File: apps/supplyarr-frontend/src/components/PurchasingReportsPanel.tsx
+Fields (1):
+  1. (unlabeled) -> checkbox
+
+File: apps/supplyarr-frontend/src/components/ReceivingPanel.tsx
+Fields (7):
+  1. Good quantity received -> number
+  2. Type -> select
+  3. Quantity -> number
+  4. Notes -> text
+  5. Issued purchase order -> select
+  6. Receipt key -> text
+  7. Destination bin -> select
+
+File: apps/supplyarr-frontend/src/components/ReorderEvaluationPanel.tsx
+Fields (7):
+  1. Part -> select
+  2. Reorder point -> text
+  3. Reorder quantity -> text
+  4. (unlabeled) -> checkbox
+  5. PR key -> text
+  6. Title -> text
+  7. Notes -> text
+
+File: apps/supplyarr-frontend/src/components/ReturnsPanel.tsx
+Fields (11):
+  1. Status filter -> select
+  2. Source -> select
+  3. Return key -> text
+  4. Inventory bin -> select
+  5. Vendor -> select
+  6. Part -> select
+  7. PO line -> select
+  8. Quantity -> number
+  9. RMA number -> text
+  10. Notes -> text
+  11. Cancel reason -> text
+
+File: apps/supplyarr-frontend/src/components/RfqPanel.tsx
+Fields (11):
+  1. RFQ key -> text
+  2. Title -> text
+  3. (unlabeled) -> select
+  4. (unlabeled) -> select
+  5. (unlabeled) -> select
+  6. (unlabeled) -> select
+  7. Quote key -> text
+  8. Unit price -> text
+  9. Lead days -> text
+  10. (unlabeled) -> select
+  11. PR key from RFQ -> text
+
+File: apps/supplyarr-frontend/src/components/StockReservationsPanel.tsx
+Fields (7):
+  1. Status filter -> select
+  2. Release reason (optional) -> text
+  3. Reservation key -> text
+  4. Quantity -> number
+  5. (unlabeled) -> select
+  6. (unlabeled) -> select
+  7. Notes (optional) -> text
+
+File: apps/supplyarr-frontend/src/components/SupplierIncidentsPanel.tsx
+Fields (6):
+  1. Party -> select
+  2. Incident key -> text
+  3. Type -> select
+  4. Severity -> select
+  5. Title -> text
+  6. Description -> textarea
+
+File: apps/supplyarr-frontend/src/components/SupplierOnboardingPanel.tsx
+Fields (6):
+  1. Party -> select
+  2. Notes -> text
+  3. (unlabeled) -> select
+  4. Document key -> text
+  5. Title -> text
+  6. Rejection reason -> text
+
+File: apps/supplyarr-frontend/src/components/VendorReportsPanel.tsx
+Fields (2):
+  1. Approval -> select
+  2. (unlabeled) -> checkbox
+
+File: apps/supplyarr-frontend/src/components/VendorRestrictionsPanel.tsx
+Fields (4):
+  1. Party -> select
+  2. Restriction key -> text
+  3. Reason -> textarea
+  4. (unlabeled) -> checkbox
+
+File: apps/supplyarr-frontend/src/components/WarrantyClaimsPanel.tsx
+Fields (13):
+  1. Claim key -> text
+  2. Type -> select
+  3. Vendor -> select
+  4. Part -> select
+  5. Purchase order (optional) -> select
+  6. PO line (optional) -> select
+  7. Quantity claimed -> text
+  8. Problem description -> textarea
+  9. Vendor disposition -> select
+  10. Vendor disposition -> textarea
+  11. Denial reason -> textarea
+  12. Closure notes -> textarea
+  13. Cancel reason -> textarea
+
+APP: TRAINARR-FRONTEND
+--------------------------------------------------------------------------------
+
+File: apps/trainarr-frontend/src/components/AssignmentMaterialDemandPanel.tsx
+Fields (6):
+  1. SupplyArr part id (optional) -> text
+  2. Part number -> text
+  3. Quantity -> text
+  4. Unit of measure -> text
+  5. Notes -> text
+  6. (unlabeled) -> checkbox
+
+File: apps/trainarr-frontend/src/components/AssignmentReminderEscalationSettingsPanel.tsx
+Fields (8):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+  3. (unlabeled) -> number
+  4. (unlabeled) -> number
+  5. (unlabeled) -> checkbox
+  6. (unlabeled) -> number
+  7. (unlabeled) -> number
+  8. (unlabeled) -> number
+
+File: apps/trainarr-frontend/src/components/AssignmentReportsPanel.tsx
+Fields (2):
+  1. Status -> select
+  2. (unlabeled) -> checkbox
+
+File: apps/trainarr-frontend/src/components/AssignmentStepsPanel.tsx
+Fields (3):
+  1. (unlabeled) -> radio
+  2. Practical result -> select
+  3. Notes -> text
+
+File: apps/trainarr-frontend/src/components/AuditPackageExportPanel.tsx
+Fields (2):
+  1. From date -> date
+  2. To date -> date
+
+File: apps/trainarr-frontend/src/components/BatchQualificationCheckPanel.tsx
+Fields (4):
+  1. Qualification key -> text
+  2. Compliance Core rule pack key -> text
+  3. (unlabeled) -> checkbox
+  4. StaffArr person IDs (one per line, comma, or semicolon) -> textarea
+
+File: apps/trainarr-frontend/src/components/CitationAttachmentPanel.tsx
+Fields (3):
+  1. Compliance Core citation id -> text
+  2. Citation key -> text
+  3. (unlabeled) -> checkbox
+
+File: apps/trainarr-frontend/src/components/ComplianceReportsPanel.tsx
+Fields (1):
+  1. (unlabeled) -> checkbox
+
+File: apps/trainarr-frontend/src/components/EventProcessingSettingsPanel.tsx
+Fields (3):
+  1. (unlabeled) -> checkbox
+  2. Max processing attempts -> text
+  3. Retry interval (minutes) -> text
+
+File: apps/trainarr-frontend/src/components/EvidenceCapturePanel.tsx
+Fields (3):
+  1. Evidence type -> text
+  2. File -> file
+  3. Notes (optional) -> text
+
+File: apps/trainarr-frontend/src/components/EvidenceRetentionSettingsPanel.tsx
+Fields (2):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+
+File: apps/trainarr-frontend/src/components/IntegrationSettingsPanel.tsx
+Fields (7):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> checkbox
+  3. (unlabeled) -> checkbox
+  4. (unlabeled) -> checkbox
+  5. (unlabeled) -> checkbox
+  6. (unlabeled) -> checkbox
+  7. (unlabeled) -> checkbox
+
+File: apps/trainarr-frontend/src/components/NotificationSettingsPanel.tsx
+Fields (14):
+  1. (unlabeled) -> checkbox
+  2. https://hooks.example.com/trainarr -> url
+  3. (unlabeled) -> checkbox
+  4. (unlabeled) -> checkbox
+  5. (unlabeled) -> checkbox
+  6. (unlabeled) -> checkbox
+  7. (unlabeled) -> checkbox
+  8. (unlabeled) -> checkbox
+  9. (unlabeled) -> checkbox
+  10. (unlabeled) -> checkbox
+  11. (unlabeled) -> checkbox
+  12. (unlabeled) -> number
+  13. (unlabeled) -> number
+  14. (unlabeled) -> number
+
+File: apps/trainarr-frontend/src/components/OrphanReferenceSettingsPanel.tsx
+Fields (2):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+
+File: apps/trainarr-frontend/src/components/PersonTrainingHistoryPanel.tsx
+Fields (1):
+  1. StaffArr person ID -> text
+
+File: apps/trainarr-frontend/src/components/ProgramBuilderPanel.tsx
+Fields (6):
+  1. (unlabeled) -> checkbox
+  2. Program key -> text
+  3. Program name -> text
+  4. Description -> textarea
+  5. Program name -> text
+  6. Description -> textarea
+
+File: apps/trainarr-frontend/src/components/QualificationCheckPanel.tsx
+Fields (1):
+  1. Compliance Core rule pack key -> text
+
+File: apps/trainarr-frontend/src/components/QualificationManagementPanel.tsx
+Fields (2):
+  1. Status filter -> select
+  2. Lifecycle reason (optional) -> textarea
+
+File: apps/trainarr-frontend/src/components/QualificationRecalculationSettingsPanel.tsx
+Fields (3):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+  3. (unlabeled) -> checkbox
+
+File: apps/trainarr-frontend/src/components/QualificationReportsPanel.tsx
+Fields (1):
+  1. Status -> select
+
+File: apps/trainarr-frontend/src/components/RecertificationSettingsPanel.tsx
+Fields (2):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+
+File: apps/trainarr-frontend/src/components/RemediationAssignmentPanel.tsx
+Fields (2):
+  1. Remediation -> select
+  2. Training definition -> select
+
+File: apps/trainarr-frontend/src/components/RulePackImpactPanel.tsx
+Fields (1):
+  1. Rule pack key -> text
+
+File: apps/trainarr-frontend/src/components/RulePackImpactSettingsPanel.tsx
+Fields (3):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+  3. (unlabeled) -> checkbox
+
+File: apps/trainarr-frontend/src/components/RulePackRequirementPanel.tsx
+Fields (2):
+  1. Rule pack key -> text
+  2. (unlabeled) -> checkbox
+
+File: apps/trainarr-frontend/src/components/SignoffEvaluationPanel.tsx
+Fields (4):
+  1. Result -> select
+  2. Score (optional) -> number
+  3. Notes -> text
+  4. Signoff notes (optional) -> text
+
+File: apps/trainarr-frontend/src/components/StaffarrPublicationSettingsPanel.tsx
+Fields (3):
+  1. (unlabeled) -> checkbox
+  2. (unlabeled) -> number
+  3. (unlabeled) -> number
+
+File: apps/trainarr-frontend/src/components/StepBuilderPanel.tsx
+Fields (7):
+  1. Training definition -> select
+  2. Step key -> text
+  3. Sort order -> number
+  4. Name -> text
+  5. Description -> textarea
+  6. Step type -> select
+  7. Config JSON -> textarea
+
+File: apps/trainarr-frontend/src/components/TrainingMatrixPanel.tsx
+Fields (6):
+  1. Applicability key -> text
+  2. Label -> text
+  3. Target type -> select
+  4. Target -> select
+  5. Requirement -> select
+  6. Sort order -> number
+
+File: apps/trainarr-frontend/src/workspace/sections/AssignmentsSection.tsx
+Fields (1):
+  1. Lifecycle reason (optional) -> textarea
+
+APP: COMPANION-FRONTEND
+--------------------------------------------------------------------------------
+
+File: apps/companion-frontend/src/components/FieldScanPanel.tsx
+Fields (1):
+  1. Manual scan code -> text (id=companion-scan-manual-input, data-testid=companion-scan-manual-input)
+
+File: apps/companion-frontend/src/components/FieldTaskDvirPanel.tsx
+Fields (3):
+  1. (unlabeled) -> select
+  2. Odometer -> number
+  3. Defect notes (required for fail/conditional) -> textarea
+
+File: apps/companion-frontend/src/components/FieldTaskEvidencePanel.tsx
+Fields (2):
+  1. companion-evidence-file-input -> file (data-testid=companion-evidence-file-input)
+  2. (unlabeled) -> textarea
+
+File: apps/companion-frontend/src/components/FieldTaskInspectionPanel.tsx
+Fields (3):
+  1. (unlabeled) -> select
+  2. (unlabeled) -> number
+  3. (unlabeled) -> textarea
+
+File: apps/companion-frontend/src/components/FieldTaskReceivingPanel.tsx
+Fields (1):
+  1. Quantity received -> number
+
+File: apps/companion-frontend/src/components/FieldTaskWorkOrderPanel.tsx
+Fields (3):
+  1. Hours worked -> number
+  2. Labor type -> select
+  3. Notes -> textarea
+
+File: apps/companion-frontend/src/components/NotificationSettingsPanel.tsx
+Fields (4):
+  1. (unlabeled) -> checkbox
+  2. https://hooks.example.com/companion -> url
+  3. (unlabeled) -> checkbox
+  4. (unlabeled) -> checkbox

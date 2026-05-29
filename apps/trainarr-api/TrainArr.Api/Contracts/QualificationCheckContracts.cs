@@ -54,6 +54,18 @@ public sealed record BatchQualificationCheckResponse(
     IReadOnlyList<QualificationCheckResponse> Results,
     BatchQualificationCheckSummary Summary);
 
+public sealed record QualificationCheckHistoryItemResponse(
+    Guid CheckId,
+    Guid StaffarrPersonId,
+    string QualificationKey,
+    string Outcome,
+    string ReasonCode,
+    string Message,
+    string? RulePackKey,
+    Guid? TrainingDefinitionId,
+    Guid? BatchId,
+    DateTimeOffset CheckedAt);
+
 public static class QualificationCheckOutcomes
 {
     public const string Allow = "allow";

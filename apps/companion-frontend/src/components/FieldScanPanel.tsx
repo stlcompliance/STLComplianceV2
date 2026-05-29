@@ -3,6 +3,8 @@ import { ScanLine } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CompanionScanResolveResponse } from '../api/types'
 import { resolveCompanionScan } from '../api/client'
+import { resolveDeniedReason } from '../lib/companionDeniedReasonCatalog'
+import { companionPlainReason } from '../lib/companionPlainReason'
 import { productLabel } from '../lib/fieldInbox'
 
 interface FieldScanPanelProps {
@@ -65,7 +67,7 @@ export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps)
 
         setLastDenied(result)
       } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : 'Scan resolve failed.')
+        setErrorMessage(companionPlainReason(error, 'Scan resolve failed.'))
       } finally {
         setIsResolving(false)
       }
@@ -197,7 +199,7 @@ export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps)
 
         {lastDenied && (
           <p className="rounded-lg border border-amber-500/40 bg-amber-950/30 px-3 py-2 text-sm text-amber-100" data-testid="companion-scan-denied">
-            {lastDenied.reasonMessage ?? 'Scan was denied.'}
+            {resolveDeniedReason(lastDenied, 'Scan was denied.')}
           </p>
         )}
 

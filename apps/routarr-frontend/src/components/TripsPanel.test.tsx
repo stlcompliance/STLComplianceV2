@@ -1,11 +1,19 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { TripsPanel } from './TripsPanel'
 
-describe('TripsPanel', () => {
-  it('renders trip list and create form', () => {
-    render(
+vi.mock('../api/client', () => ({
+  listDrivers: vi.fn().mockResolvedValue({ items: [] }),
+  listVehicleRefs: vi.fn().mockResolvedValue({ items: [] }),
+}))
+
+function renderPanel(overrides: Partial<Parameters<typeof TripsPanel>[0]> = {}) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={client}>
       <TripsPanel
+        accessToken="token"
         canCreate
         canAssign
         canPerform
@@ -61,11 +69,20 @@ describe('TripsPanel', () => {
         onCreateTrip={vi.fn()}
         onAssignDriver={vi.fn()}
         onUpdateStatus={vi.fn()}
-      />,
-    )
+        {...overrides}
+      />
+    </QueryClientProvider>,
+  )
+}
+
+describe('TripsPanel', () => {
+  it('renders trip list and create form', () => {
+    renderPanel()
 
     expect(screen.getByText('North yard delivery')).toBeInTheDocument()
     expect(screen.getByText('assigned')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create trip' })).toBeInTheDocument()
+    expect(screen.getByTestId('trip-create-vehicle-picker')).toBeInTheDocument()
+    expect(screen.getByTestId('generated-key-field')).toBeInTheDocument()
   })
 })

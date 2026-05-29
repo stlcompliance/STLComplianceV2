@@ -38,6 +38,26 @@ public static class TrainingEvaluationEndpoints
         })
         .WithName("ListTrainingEvaluations");
 
+        evaluations.MapGet("/review-timeline", async (
+            Guid? staffarrPersonId,
+            string? result,
+            int? limit,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingEvaluationService evaluationService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireEvaluationSubmit(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await evaluationService.ListReviewTimelineAsync(
+                tenantId,
+                staffarrPersonId,
+                result,
+                limit ?? 50,
+                cancellationToken));
+        })
+        .WithName("ListTrainingEvaluationReviewTimeline");
+
         evaluations.MapPost("/", async (
             SubmitTrainingEvaluationRequest request,
             HttpContext context,
@@ -75,6 +95,24 @@ public static class TrainingEvaluationEndpoints
             return Results.Ok(items);
         })
         .WithName("ListTrainingEvaluationsForAssignment");
+
+        nested.MapGet("/history", async (
+            Guid assignmentId,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingAssignmentService assignmentService,
+            TrainingEvaluationService evaluationService,
+            CancellationToken cancellationToken) =>
+        {
+            var tenantId = context.User.GetTenantId();
+            var assignment = await assignmentService.GetAsync(tenantId, assignmentId, cancellationToken);
+            authorization.RequireEvaluationsRead(context.User, assignment.StaffarrPersonId);
+            return Results.Ok(await evaluationService.GetHistoryForAssignmentAsync(
+                tenantId,
+                assignmentId,
+                cancellationToken));
+        })
+        .WithName("GetTrainingEvaluationHistoryForAssignment");
 
         nested.MapPost("/", async (
             Guid assignmentId,

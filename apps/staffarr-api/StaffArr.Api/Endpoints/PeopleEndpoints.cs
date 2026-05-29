@@ -50,6 +50,7 @@ public static class PeopleEndpoints
             Guid personId,
             int? page,
             int? pageSize,
+            string? category,
             HttpContext context,
             StaffArrAuthorizationService authorization,
             PersonTimelineService timelineService,
@@ -62,6 +63,7 @@ public static class PeopleEndpoints
                 personId,
                 page ?? 1,
                 pageSize ?? 50,
+                category,
                 cancellationToken));
         })
         .WithName("GetPersonTimeline");

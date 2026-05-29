@@ -1,9 +1,14 @@
 import type { AggregatedFieldInboxResponse, FieldInboxTaskItem } from '../api/types'
-import { formatWhen, productLabel, taskTypeLabel } from '../lib/fieldInbox'
-import { isTrainarrFieldTask } from '../lib/evidenceCapture'
+import { formatBlockedTaskReason } from '../lib/companionDeniedReasonCatalog'
+import { formatWhen, inboxSourceLoadFailures, productLabel, taskTypeLabel } from '../lib/fieldInbox'
+import { isMaintainarrInspectionTask, isMaintainarrWorkOrderTask, isRoutarrTripTask, isSupplyarrReceivingTask, isTrainarrFieldTask } from '../lib/evidenceCapture'
+import { FieldTaskReceivingPanel } from './FieldTaskReceivingPanel'
 import { productLaunchUrl } from '../api/client'
 import type { MergedSubmissionChip } from '../lib/submissionState'
 import { FieldTaskEvidencePanel } from './FieldTaskEvidencePanel'
+import { FieldTaskDvirPanel } from './FieldTaskDvirPanel'
+import { FieldTaskInspectionPanel } from './FieldTaskInspectionPanel'
+import { FieldTaskWorkOrderPanel } from './FieldTaskWorkOrderPanel'
 import { TaskSubmissionStatusBadge } from './TaskSubmissionStatusBadge'
 
 interface FieldInboxPanelProps {
@@ -34,6 +39,7 @@ export function FieldInboxPanel({
     : inbox.items
 
   const productOptions = Object.keys(inbox.summary.countByProduct).sort()
+  const sourceFailures = inboxSourceLoadFailures(inbox.sources)
 
   return (
     <section className="space-y-4">
@@ -60,10 +66,20 @@ export function FieldInboxPanel({
         ))}
       </div>
 
-      {inbox.sources.some((source) => source.entitled && !source.fetched) && (
-        <div className="rounded-lg border border-amber-500/40 bg-amber-950/30 px-4 py-3 text-sm text-amber-100">
-          Some product inboxes could not be loaded. Tasks from entitled products still appear below
-          when available.
+      {sourceFailures.length > 0 && (
+        <div
+          className="rounded-lg border border-amber-500/40 bg-amber-950/30 px-4 py-3 text-sm text-amber-100"
+          data-testid="companion-inbox-source-errors"
+        >
+          <p className="font-medium">Some product inboxes could not be loaded</p>
+          <ul className="mt-2 space-y-1 text-amber-100/90">
+            {sourceFailures.map((failure) => (
+              <li key={failure.productKey}>
+                <span className="font-medium">{productLabel(failure.productKey)}:</span>{' '}
+                {failure.message}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -183,8 +199,11 @@ function TaskCard({
         <span>{formatWhen(task.dueAt ?? task.sortAt)}</span>
         {task.priority && <span className="uppercase">Priority {task.priority}</span>}
         {task.blockedReason && (
-          <span className="rounded bg-amber-950/60 px-2 py-0.5 text-amber-200">
-            {task.blockedReason}
+          <span
+            className="rounded bg-amber-950/60 px-2 py-0.5 text-amber-200"
+            data-testid="companion-task-blocked-reason"
+          >
+            {formatBlockedTaskReason(task.blockedReason)}
           </span>
         )}
       </div>
@@ -222,6 +241,38 @@ function TaskCard({
           accessToken={accessToken}
           task={task}
           onUploadComplete={onEvidenceUploadComplete}
+        />
+      )}
+
+      {isRoutarrTripTask(task.taskKey) && (
+        <FieldTaskDvirPanel
+          accessToken={accessToken}
+          task={task}
+          onSubmitComplete={onEvidenceUploadComplete}
+        />
+      )}
+
+      {isMaintainarrInspectionTask(task.taskKey) && (
+        <FieldTaskInspectionPanel
+          accessToken={accessToken}
+          task={task}
+          onSubmitComplete={onEvidenceUploadComplete}
+        />
+      )}
+
+      {isMaintainarrWorkOrderTask(task.taskKey) && (
+        <FieldTaskWorkOrderPanel
+          accessToken={accessToken}
+          task={task}
+          onSubmitComplete={onEvidenceUploadComplete}
+        />
+      )}
+
+      {isSupplyarrReceivingTask(task.taskKey) && (
+        <FieldTaskReceivingPanel
+          accessToken={accessToken}
+          task={task}
+          onSubmitComplete={onEvidenceUploadComplete}
         />
       )}
     </li>

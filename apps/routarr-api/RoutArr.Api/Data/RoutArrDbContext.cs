@@ -46,6 +46,8 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
 
     public DbSet<StaffarrPersonRef> StaffarrPersonRefs => Set<StaffarrPersonRef>();
 
+    public DbSet<RoutarrVehicleRef> RoutarrVehicleRefs => Set<RoutarrVehicleRef>();
+
     public DbSet<DispatchException> DispatchExceptions => Set<DispatchException>();
 
     public DbSet<TripProofRecord> TripProofRecords => Set<TripProofRecord>();
@@ -305,6 +307,18 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.Property(x => x.SourceProduct).HasMaxLength(32).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.PersonId }).IsUnique();
+        });
+
+        modelBuilder.Entity<RoutarrVehicleRef>(entity =>
+        {
+            entity.ToTable("routarr_vehicle_refs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.VehicleRefKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.DisplayLabel).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.AssetTag).HasMaxLength(128);
+            entity.Property(x => x.SourceProduct).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.VehicleRefKey }).IsUnique();
         });
 
         modelBuilder.Entity<TripProofRecord>(entity =>

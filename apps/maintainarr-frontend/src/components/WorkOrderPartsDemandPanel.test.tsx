@@ -34,6 +34,7 @@ describe('WorkOrderPartsDemandPanel', () => {
       <WorkOrderPartsDemandPanel
         workOrder={workOrder}
         demandLines={[]}
+        statusEvents={[]}
         canPerform
         partNumber=""
         supplyarrPartId=""
@@ -55,5 +56,72 @@ describe('WorkOrderPartsDemandPanel', () => {
     )
 
     expect(screen.getByText(/No parts demand lines yet/i)).toBeInTheDocument()
+  })
+
+  it('renders published line procurement badge and status timeline', () => {
+    render(
+      <WorkOrderPartsDemandPanel
+        workOrder={workOrder}
+        demandLines={[
+          {
+            demandLineId: 'line-1',
+            lineNumber: 1,
+            supplyarrPartId: 'part-1',
+            partNumber: 'BRK-001',
+            description: 'Brake pads',
+            quantityRequested: 2,
+            unitOfMeasure: 'each',
+            notes: '',
+            status: 'published',
+            maintainarrPublicationId: 'pub-1',
+            supplyarrDemandRefId: 'ref-1',
+            publishedAt: '2026-05-27T12:00:00Z',
+            procurementStatus: 'pr_submitted',
+            supplyarrPurchaseRequestId: 'pr-1',
+            supplyarrPurchaseOrderId: null,
+            quantityReceived: 0,
+            procurementStatusMessage: 'PR submitted for approval',
+            lastProcurementStatusAt: '2026-05-27T13:00:00Z',
+            createdAt: '2026-05-27T11:00:00Z',
+          },
+        ]}
+        statusEvents={[
+          {
+            statusEventId: 'evt-1',
+            maintainarrPublicationId: 'pub-1',
+            supplyarrDemandRefId: 'ref-1',
+            eventType: 'pr_submitted',
+            procurementStatus: 'pr_submitted',
+            supplyarrPurchaseRequestId: 'pr-1',
+            supplyarrPurchaseOrderId: null,
+            supplyarrReceivingReceiptId: null,
+            message: 'PR submitted for approval',
+            occurredAt: '2026-05-27T13:00:00Z',
+            createdAt: '2026-05-27T13:00:00Z',
+          },
+        ]}
+        canPerform
+        partNumber=""
+        supplyarrPartId=""
+        quantityRequested=""
+        unitOfMeasure="each"
+        notes=""
+        createPurchaseRequestDraft={false}
+        onPartNumberChange={vi.fn()}
+        onSupplyarrPartIdChange={vi.fn()}
+        onQuantityRequestedChange={vi.fn()}
+        onUnitOfMeasureChange={vi.fn()}
+        onNotesChange={vi.fn()}
+        onCreatePurchaseRequestDraftChange={vi.fn()}
+        onAddDemandLine={vi.fn()}
+        onPublishDemand={vi.fn()}
+        isAdding={false}
+        isPublishing={false}
+      />,
+    )
+
+    expect(screen.getByTestId('procurement-status-line-1')).toHaveTextContent('pr_submitted')
+    expect(screen.getByTestId('parts-demand-status-timeline')).toBeInTheDocument()
+    expect(screen.getAllByText(/PR submitted for approval/i).length).toBeGreaterThan(0)
   })
 })

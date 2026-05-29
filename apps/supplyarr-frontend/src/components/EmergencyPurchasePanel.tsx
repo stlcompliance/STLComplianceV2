@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
+import { ControlledSelect } from '@stl/shared-ui'
+
 import {
   createEmergencyPurchase,
   expeditedSubmitEmergencyPurchase,
@@ -10,6 +12,8 @@ import {
   managerOverrideApproveEmergencyPurchase,
 } from '../api/client'
 import type { EmergencyPurchaseResponse, PartResponse } from '../api/types'
+import { toPartPickerOptions, toPartyPickerOptions } from '../forms/controlledFormHelpers'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface EmergencyPurchasePanelProps {
   accessToken: string
@@ -71,6 +75,11 @@ export function EmergencyPurchasePanel({
     () => listQuery.data?.find((x) => x.purchaseRequestId === selectedId),
     [listQuery.data, selectedId],
   )
+  const existingRequestKeys = useMemo(
+    () => (listQuery.data ?? []).map((item) => item.requestKey),
+    [listQuery.data],
+  )
+  const orderKeySource = selected ? `${selected.requestKey}-po` : ''
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['supplyarr-emergency-purchases', accessToken] })
@@ -156,48 +165,43 @@ export function EmergencyPurchasePanel({
 
       {canCreate ? (
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <label className="block text-sm text-slate-400 sm:col-span-2">
+            Title
+            <input
+              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              placeholder="Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </label>
+          <div className="sm:col-span-2">
+            <GeneratedKeyFieldGroup
+              sourceLabel={title}
+              existingKeys={existingRequestKeys}
+              onKeyChange={setRequestKey}
+              label="Request key"
+            />
+          </div>
           <input
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-            placeholder="Request key"
-            value={requestKey}
-            onChange={(e) => setRequestKey(e.target.value)}
-          />
-          <input
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <input
-            className="sm:col-span-2 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            className="sm:col-span-2 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
             placeholder="Emergency reason (required)"
             value={emergencyReason}
             onChange={(e) => setEmergencyReason(e.target.value)}
           />
-          <select
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+          <ControlledSelect
+            label="Vendor"
             value={vendorId}
-            onChange={(e) => setVendorId(e.target.value)}
-          >
-            <option value="">Select vendor…</option>
-            {vendors.map((v) => (
-              <option key={v.partyId} value={v.partyId}>
-                {v.displayName}
-              </option>
-            ))}
-          </select>
-          <select
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            onChange={setVendorId}
+            options={toPartyPickerOptions(vendors)}
+            emptyLabel="Select vendor…"
+          />
+          <ControlledSelect
+            label="Part"
             value={partId}
-            onChange={(e) => setPartId(e.target.value)}
-          >
-            <option value="">Select part…</option>
-            {parts.map((p) => (
-              <option key={p.partId} value={p.partId}>
-                {p.displayName}
-              </option>
-            ))}
-          </select>
+            onChange={setPartId}
+            options={toPartPickerOptions(parts)}
+            emptyLabel="Select part…"
+          />
           <button
             type="button"
             className="rounded-lg bg-rose-700 px-3 py-2 text-sm text-white disabled:opacity-50"
@@ -288,12 +292,14 @@ export function EmergencyPurchasePanel({
 
       {canIssue && selected ? (
         <div className="mt-3 flex flex-wrap gap-2">
-          <input
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-            placeholder="PO order key"
-            value={orderKey}
-            onChange={(e) => setOrderKey(e.target.value)}
-          />
+          <div className="min-w-[12rem] flex-1">
+            <GeneratedKeyFieldGroup
+              sourceLabel={orderKeySource}
+              existingKeys={[]}
+              onKeyChange={setOrderKey}
+              label="PO order key"
+            />
+          </div>
           <button
             type="button"
             className="rounded-lg bg-sky-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"

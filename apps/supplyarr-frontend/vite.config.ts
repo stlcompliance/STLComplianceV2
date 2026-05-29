@@ -13,6 +13,9 @@ export default defineConfig({
     dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
     alias: {
       '@stl/shared-ui': path.resolve(appRoot, '../../packages/shared-ui/src'),
+      react: path.resolve(appRoot, 'node_modules/react'),
+      'react-dom': path.resolve(appRoot, 'node_modules/react-dom'),
+      'lucide-react': path.resolve(appRoot, 'node_modules/lucide-react'),
     },
   },
   server: {

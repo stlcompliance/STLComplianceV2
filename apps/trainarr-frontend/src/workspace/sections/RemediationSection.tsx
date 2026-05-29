@@ -27,6 +27,7 @@ export function RemediationSection({ state }: Props) {
       onRunQualificationCheck={() => s.qualificationCheckMutation.mutate()}
       rulePackKey={s.rulePackKey}
       onRulePackKeyChange={s.setRulePackKey}
+      rulePackOptions={s.rulePackOptions}
     />
   )
 }

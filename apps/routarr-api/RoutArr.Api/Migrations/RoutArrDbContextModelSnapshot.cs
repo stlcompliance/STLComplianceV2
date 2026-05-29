@@ -505,6 +505,50 @@ namespace RoutArr.Api.Migrations
                     b.ToTable("routarr_audit_events", (string)null);
                 });
 
+            modelBuilder.Entity("RoutArr.Api.Entities.RoutarrVehicleRef", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AssetTag")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("DisplayLabel")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("MirroredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SourceProduct")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("SourceUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VehicleRefKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "VehicleRefKey")
+                        .IsUnique();
+
+                    b.ToTable("routarr_vehicle_refs", (string)null);
+                });
+
             modelBuilder.Entity("RoutArr.Api.Entities.RouteStop", b =>
                 {
                     b.Property<Guid>("Id")

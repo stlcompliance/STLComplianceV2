@@ -1,5 +1,7 @@
 import type { FieldInboxProductSlice, FieldInboxTaskItem } from '../api/types'
 
+import { formatInboxSourceError } from './companionDeniedReasonCatalog'
+
 const PRODUCT_LABELS: Record<string, string> = {
   maintainarr: 'MaintainArr',
   routarr: 'RoutArr',
@@ -56,4 +58,16 @@ export function filterTasks(
 
 export function entitledProductKeys(sources: FieldInboxProductSlice[]): string[] {
   return sources.filter((source) => source.entitled).map((source) => source.productKey)
+}
+
+export function inboxSourceLoadFailures(sources: FieldInboxProductSlice[]): Array<{
+  productKey: string
+  message: string
+}> {
+  return sources
+    .filter((source) => source.entitled && !source.fetched)
+    .map((source) => ({
+      productKey: source.productKey,
+      message: formatInboxSourceError(source.productKey, source.errorCode, source.errorMessage),
+    }))
 }

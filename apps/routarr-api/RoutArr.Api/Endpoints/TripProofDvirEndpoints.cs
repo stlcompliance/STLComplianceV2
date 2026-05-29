@@ -53,5 +53,14 @@ public static class TripProofDvirEndpoints
             CancellationToken cancellationToken) =>
             Results.Ok(await service.GetExecutionSummaryAsync(context.User, tripId, cancellationToken)))
         .WithName("GetTripExecutionSummary");
+
+        group.MapGet("/audit-trail", async (
+            Guid tripId,
+            int? limit,
+            HttpContext context,
+            TripAuditTrailService service,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await service.ListAsync(context.User, tripId, limit ?? 25, cancellationToken)))
+        .WithName("GetTripAuditTrail");
     }
 }

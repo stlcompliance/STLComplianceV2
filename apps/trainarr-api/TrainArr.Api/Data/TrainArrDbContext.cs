@@ -24,6 +24,11 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
     public DbSet<TrainingDefinition> TrainingDefinitions => Set<TrainingDefinition>();
 
+    public DbSet<TrainingDefinitionStep> TrainingDefinitionSteps => Set<TrainingDefinitionStep>();
+
+    public DbSet<TrainingAssignmentStepProgress> TrainingAssignmentStepProgress =>
+        Set<TrainingAssignmentStepProgress>();
+
 
 
     public DbSet<TrainingAssignment> TrainingAssignments => Set<TrainingAssignment>();
@@ -42,7 +47,16 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
     public DbSet<TrainingProgramDefinition> TrainingProgramDefinitions => Set<TrainingProgramDefinition>();
 
+    public DbSet<TrainingProgramVersion> TrainingProgramVersions => Set<TrainingProgramVersion>();
 
+    public DbSet<TrainingProgramVersionDefinition> TrainingProgramVersionDefinitions =>
+        Set<TrainingProgramVersionDefinition>();
+
+    public DbSet<TrainingMatrixEntry> TrainingMatrixEntries => Set<TrainingMatrixEntry>();
+
+    public DbSet<TrainingApplicabilityProfile> TrainingApplicabilityProfiles => Set<TrainingApplicabilityProfile>();
+
+    public DbSet<TrainingRequirement> TrainingRequirements => Set<TrainingRequirement>();
 
     public DbSet<TrainingEvidence> TrainingEvidence => Set<TrainingEvidence>();
 
@@ -50,11 +64,15 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
     public DbSet<TrainingEvaluation> TrainingEvaluations => Set<TrainingEvaluation>();
 
+    public DbSet<TrainingEvaluationRevision> TrainingEvaluationRevisions => Set<TrainingEvaluationRevision>();
+
 
 
     public DbSet<TrainingSignoff> TrainingSignoffs => Set<TrainingSignoff>();
 
     public DbSet<QualificationIssue> QualificationIssues => Set<QualificationIssue>();
+
+    public DbSet<QualificationCheckRecord> QualificationCheckRecords => Set<QualificationCheckRecord>();
 
     public DbSet<TrainingCitationAttachment> TrainingCitationAttachments => Set<TrainingCitationAttachment>();
 
@@ -231,6 +249,41 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
         });
 
+        modelBuilder.Entity<TrainingDefinitionStep>(entity =>
+        {
+            entity.ToTable("trainarr_training_definition_steps");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.StepKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.StepType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ConfigJson).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TrainingDefinitionId, x.StepKey }).IsUnique();
+            entity.HasOne(x => x.TrainingDefinition)
+                .WithMany()
+                .HasForeignKey(x => x.TrainingDefinitionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TrainingAssignmentStepProgress>(entity =>
+        {
+            entity.ToTable("trainarr_training_assignment_step_progress");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ResponseJson);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TrainingAssignmentId, x.TrainingDefinitionStepId }).IsUnique();
+            entity.HasOne(x => x.TrainingAssignment)
+                .WithMany()
+                .HasForeignKey(x => x.TrainingAssignmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.TrainingDefinitionStep)
+                .WithMany()
+                .HasForeignKey(x => x.TrainingDefinitionStepId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
 
 
         modelBuilder.Entity<TrainingAssignment>(entity =>
@@ -388,7 +441,96 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
         });
 
+        modelBuilder.Entity<TrainingProgramVersion>(entity =>
+        {
+            entity.ToTable("trainarr_training_program_versions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(2048).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TrainingProgramId, x.VersionNumber }).IsUnique();
+            entity.HasOne(x => x.TrainingProgram)
+                .WithMany()
+                .HasForeignKey(x => x.TrainingProgramId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
+        modelBuilder.Entity<TrainingProgramVersionDefinition>(entity =>
+        {
+            entity.ToTable("trainarr_training_program_version_definitions");
+            entity.HasKey(x => new { x.TrainingProgramVersionId, x.TrainingDefinitionId });
+            entity.HasOne(x => x.TrainingProgramVersion)
+                .WithMany(x => x.VersionDefinitions)
+                .HasForeignKey(x => x.TrainingProgramVersionId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.TrainingDefinition)
+                .WithMany()
+                .HasForeignKey(x => x.TrainingDefinitionId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(x => new { x.TrainingProgramVersionId, x.SortOrder });
+        });
+
+        modelBuilder.Entity<TrainingMatrixEntry>(entity =>
+        {
+            entity.ToTable("trainarr_training_matrix_entries");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ApplicabilityKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ApplicabilityLabel).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.RequirementLevel).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ApplicabilityKey, x.SortOrder });
+            entity.HasOne(x => x.TrainingProgram)
+                .WithMany()
+                .HasForeignKey(x => x.TrainingProgramId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.TrainingDefinition)
+                .WithMany()
+                .HasForeignKey(x => x.TrainingDefinitionId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<TrainingApplicabilityProfile>(entity =>
+        {
+            entity.ToTable("trainarr_training_applicability_profiles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProfileKey).HasMaxLength(96).IsRequired();
+            entity.Property(x => x.Label).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(512);
+            entity.Property(x => x.ScopeType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ScopeKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(32);
+            entity.Property(x => x.SourceRecordId).HasMaxLength(64);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ProfileKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<TrainingRequirement>(entity =>
+        {
+            entity.ToTable("trainarr_training_requirements");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RequirementKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Label).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(512);
+            entity.Property(x => x.RequirementSource).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceKey).HasMaxLength(128);
+            entity.Property(x => x.RequirementLevel).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.RequirementKey }).IsUnique();
+            entity.HasOne(x => x.TrainingProgram)
+                .WithMany()
+                .HasForeignKey(x => x.TrainingProgramId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.TrainingDefinition)
+                .WithMany()
+                .HasForeignKey(x => x.TrainingDefinitionId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.ApplicabilityProfile)
+                .WithMany()
+                .HasForeignKey(x => x.ApplicabilityProfileId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
 
         modelBuilder.Entity<TrainingEvaluation>(entity =>
 
@@ -416,7 +558,15 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
         });
 
-
+        modelBuilder.Entity<TrainingEvaluationRevision>(entity =>
+        {
+            entity.ToTable("trainarr_training_evaluation_revisions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Result).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(2048);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TrainingAssignmentId, x.SupersededAt });
+        });
 
         modelBuilder.Entity<TrainingSignoff>(entity =>
 
@@ -760,6 +910,21 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.SourceDomainEventId }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.StaffarrPersonId, x.OccurredAt });
+        });
+
+        modelBuilder.Entity<QualificationCheckRecord>(entity =>
+        {
+            entity.ToTable("trainarr_qualification_check_records");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.QualificationKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Outcome).HasMaxLength(16).IsRequired();
+            entity.Property(x => x.ReasonCode).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Message).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.RulePackKey).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.StaffarrPersonId, x.CheckedAt });
+            entity.HasIndex(x => new { x.TenantId, x.QualificationKey, x.CheckedAt });
+            entity.HasIndex(x => new { x.TenantId, x.BatchId });
         });
 
         modelBuilder.Entity<TrainArrAuditEvent>(entity =>

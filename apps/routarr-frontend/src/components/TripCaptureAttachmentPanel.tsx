@@ -3,6 +3,7 @@ import { useRef, useState } from 'react'
 import {
   readFileAsDataUrl,
   uploadDriverPortalCaptureAttachment,
+  uploadTripCaptureAttachment,
 } from '../api/client'
 import type { TripCaptureAttachmentResponse } from '../api/types'
 
@@ -14,6 +15,7 @@ type Props = {
   subjectLabel: string
   attachments: TripCaptureAttachmentResponse[]
   onUploaded: () => void
+  captureChannel?: 'driver-portal' | 'operator'
 }
 
 function SignaturePad({
@@ -130,6 +132,7 @@ export function TripCaptureAttachmentPanel({
   subjectLabel,
   attachments,
   onUploaded,
+  captureChannel = 'driver-portal',
 }: Props) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -143,12 +146,17 @@ export function TripCaptureAttachmentPanel({
     setPending(true)
     setError(null)
     try {
-      await uploadDriverPortalCaptureAttachment(accessToken, tripId, subjectType, subjectId, {
+      const payload = {
         attachmentKind,
         fileName,
         contentType,
         contentBase64,
-      })
+      }
+      if (captureChannel === 'operator') {
+        await uploadTripCaptureAttachment(accessToken, tripId, subjectType, subjectId, payload)
+      } else {
+        await uploadDriverPortalCaptureAttachment(accessToken, tripId, subjectType, subjectId, payload)
+      }
       onUploaded()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')

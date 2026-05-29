@@ -1,0 +1,84 @@
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { ManualAssignmentPanel } from './ManualAssignmentPanel'
+
+describe('ManualAssignmentPanel', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  const definitions = [
+    {
+      trainingDefinitionId: 'def-1',
+      definitionKey: 'annual',
+      name: 'Annual Compliance',
+      description: '',
+      qualificationKey: 'annual_compliance',
+      qualificationName: 'Annual Compliance',
+      status: 'active',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+    },
+  ]
+
+  it('requires authorization check before create', () => {
+    render(
+      <ManualAssignmentPanel
+        definitions={definitions}
+        staffarrPersonId="person-1"
+        onStaffarrPersonIdChange={vi.fn()}
+        selectedDefinitionId="def-1"
+        onSelectDefinition={vi.fn()}
+        qualificationCheck={null}
+        isCheckingQualification={false}
+        onRunQualificationCheck={vi.fn()}
+        rulePackKey="driver_qualification"
+        onRulePackKeyChange={vi.fn()}
+        rulePackOptions={[{ value: 'driver_qualification', label: 'driver_qualification' }]}
+        onCreateAssignment={vi.fn()}
+        isCreating={false}
+        canManage
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: /create manual assignment/i })).toBeDisabled()
+    expect(screen.getByText(/run an authorization check before creating/i)).toBeInTheDocument()
+  })
+
+  it('enables create when check outcome is allow', () => {
+    const onCreateAssignment = vi.fn()
+
+    render(
+      <ManualAssignmentPanel
+        definitions={definitions}
+        staffarrPersonId="person-1"
+        onStaffarrPersonIdChange={vi.fn()}
+        selectedDefinitionId="def-1"
+        onSelectDefinition={vi.fn()}
+        qualificationCheck={{
+          checkId: 'check-1',
+          staffarrPersonId: 'person-1',
+          qualificationKey: 'annual_compliance',
+          outcome: 'allow',
+          reasonCode: 'local_issued',
+          message: 'Authorization check passed.',
+          localQualification: null,
+          complianceCore: null,
+        }}
+        isCheckingQualification={false}
+        onRunQualificationCheck={vi.fn()}
+        rulePackKey="driver_qualification"
+        onRulePackKeyChange={vi.fn()}
+        rulePackOptions={[{ value: 'driver_qualification', label: 'driver_qualification' }]}
+        onCreateAssignment={onCreateAssignment}
+        isCreating={false}
+        canManage
+      />,
+    )
+
+    const button = screen.getByRole('button', { name: /create manual assignment/i })
+    expect(button).toBeEnabled()
+    fireEvent.click(button)
+    expect(onCreateAssignment).toHaveBeenCalledOnce()
+  })
+})

@@ -1,6 +1,25 @@
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  AdvancedReferenceField,
+  GeneratedKeyField,
+  slugifyKey,
+  StaticSearchPicker,
+  type PickerOption,
+} from '@stl/shared-ui'
+import { Link } from 'react-router-dom'
+
+import { listDrivers, listVehicleRefs } from '../api/client'
 import type { TripDetailResponse, TripSummaryResponse } from '../api/types'
+import {
+  driverToPickerOption,
+  findDriverLabel,
+  findVehicleLabel,
+  vehicleRefToPickerOption,
+} from '../lib/referencePickers'
 
 interface TripsPanelProps {
+  accessToken: string
   canCreate: boolean
   canAssign: boolean
   canPerform: boolean
@@ -60,6 +79,7 @@ function statusOptionsFor(currentStatus: string, canManage: boolean): string[] {
 }
 
 export function TripsPanel({
+  accessToken,
   canCreate,
   canAssign,
   canPerform,
@@ -95,6 +115,66 @@ export function TripsPanel({
   onAssignDriver,
   onUpdateStatus,
 }: TripsPanelProps) {
+  const [loadKeyManualOverride, setLoadKeyManualOverride] = useState('')
+  const [showAdvancedLoadKey, setShowAdvancedLoadKey] = useState(false)
+
+  const driversQuery = useQuery({
+    queryKey: ['routarr-drivers', accessToken],
+    queryFn: () => listDrivers(accessToken),
+    enabled: Boolean(accessToken) && (canCreate || canAssign),
+  })
+
+  const vehicleRefsQuery = useQuery({
+    queryKey: ['routarr-vehicle-refs', accessToken],
+    queryFn: () => listVehicleRefs(accessToken),
+    enabled: Boolean(accessToken) && canCreate,
+  })
+
+  const drivers = driversQuery.data?.items ?? []
+  const vehicleRefs = vehicleRefsQuery.data?.items ?? []
+
+  const driverOptions = useMemo(() => drivers.map(driverToPickerOption), [drivers])
+  const vehicleOptions = useMemo(() => vehicleRefs.map(vehicleRefToPickerOption), [vehicleRefs])
+
+  const loadSourceLabel = [loadOrigin, loadDestination].filter(Boolean).join(' - ')
+  const generatedLoadKey = slugifyKey(loadSourceLabel)
+  const effectiveLoadKey = loadKeyManualOverride.trim() || generatedLoadKey
+
+  useEffect(() => {
+    if (effectiveLoadKey !== loadKey) {
+      onLoadKeyChange(effectiveLoadKey)
+    }
+  }, [effectiveLoadKey, loadKey, onLoadKeyChange])
+
+  const selectedDriverOption = useMemo((): PickerOption | undefined => {
+    const label = findDriverLabel(drivers, driverPersonId)
+    return label ? { value: driverPersonId, label } : undefined
+  }, [driverPersonId, drivers])
+
+  const selectedVehicleOption = useMemo((): PickerOption | undefined => {
+    const label = findVehicleLabel(vehicleRefs, vehicleRefKey)
+    return label ? { value: vehicleRefKey, label } : undefined
+  }, [vehicleRefKey, vehicleRefs])
+
+  const assignedDriverLabel =
+    findDriverLabel(drivers, selectedTrip?.assignedDriverPersonId) ??
+    (selectedTrip?.assignedDriverPersonId ? undefined : 'Unassigned')
+
+  const assignedDriverSelectedOption = useMemo((): PickerOption | undefined => {
+    if (!selectedTrip?.assignedDriverPersonId) {
+      return undefined
+    }
+    const label = findDriverLabel(drivers, selectedTrip.assignedDriverPersonId)
+    return {
+      value: selectedTrip.assignedDriverPersonId,
+      label: label ?? selectedTrip.assignedDriverPersonId,
+      inactive: !label,
+    }
+  }, [drivers, selectedTrip?.assignedDriverPersonId])
+
+  const detailVehicleLabel =
+    findVehicleLabel(vehicleRefs, selectedTrip?.vehicleRefKey) ?? selectedTrip?.vehicleRefKey
+
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -140,22 +220,42 @@ export function TripsPanel({
               onChange={(event) => onTripDescriptionChange(event.target.value)}
             />
           </label>
-          <label className="text-sm text-slate-300">
-            Vehicle ref
-            <input
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
+          <div>
+            <StaticSearchPicker
+              label="Vehicle"
               value={vehicleRefKey}
-              onChange={(event) => onVehicleRefKeyChange(event.target.value)}
+              onChange={onVehicleRefKeyChange}
+              options={vehicleOptions}
+              selectedOption={selectedVehicleOption}
+              placeholder="Search vehicles…"
+              disabled={vehicleRefsQuery.isLoading}
+              testId="trip-create-vehicle-picker"
             />
-          </label>
-          <label className="text-sm text-slate-300">
-            Initial load key
-            <input
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
-              value={loadKey}
-              onChange={(event) => onLoadKeyChange(event.target.value)}
+            <AdvancedReferenceField
+              value={vehicleRefKey}
+              onChange={onVehicleRefKeyChange}
+              label="Vehicle ref key"
+              testId="trip-create-vehicle-advanced"
             />
-          </label>
+          </div>
+          <div>
+            <GeneratedKeyField
+              label="Initial load key"
+              sourceLabel={loadSourceLabel}
+              generatedKey={generatedLoadKey}
+              confirmedKey={effectiveLoadKey}
+              manualOverride={loadKeyManualOverride}
+              onManualOverrideChange={setLoadKeyManualOverride}
+              showAdvancedKey={showAdvancedLoadKey}
+            />
+            <button
+              type="button"
+              className="mt-2 text-xs text-slate-400 underline hover:text-slate-200"
+              onClick={() => setShowAdvancedLoadKey((current) => !current)}
+            >
+              {showAdvancedLoadKey ? 'Hide manual key override' : 'Manual key override'}
+            </button>
+          </div>
           <label className="text-sm text-slate-300">
             Load origin
             <input
@@ -214,7 +314,7 @@ export function TripsPanel({
                 <p className="mt-1 text-xs text-slate-500">
                   {trip.loadCount} load{trip.loadCount === 1 ? '' : 's'}
                   {trip.assignedDriverPersonId
-                    ? ` · driver ${trip.assignedDriverPersonId.slice(0, 8)}…`
+                    ? ` · driver ${findDriverLabel(drivers, trip.assignedDriverPersonId) ?? 'assigned'}`
                     : ' · unassigned'}
                 </p>
               </button>
@@ -232,6 +332,15 @@ export function TripsPanel({
               <div>
                 <h3 className="text-base font-semibold text-white">{selectedTrip.title}</h3>
                 <p className="text-sm text-slate-400">{selectedTrip.tripNumber}</p>
+                <p className="mt-2">
+                  <Link
+                    to={`/trips/${selectedTrip.tripId}`}
+                    className="text-sm text-teal-300 hover:text-teal-200"
+                    data-testid="open-trip-workspace"
+                  >
+                    Open execution workspace →
+                  </Link>
+                </p>
                 <p className="mt-2 text-sm text-slate-300">{selectedTrip.description || 'No description'}</p>
               </div>
 
@@ -241,13 +350,16 @@ export function TripsPanel({
                   <dd className="font-medium text-slate-200">{selectedTrip.dispatchStatus}</dd>
                 </div>
                 <div>
-                  <dt className="text-slate-500">Vehicle ref</dt>
-                  <dd className="font-medium text-slate-200">{selectedTrip.vehicleRefKey ?? '—'}</dd>
+                  <dt className="text-slate-500">Vehicle</dt>
+                  <dd className="font-medium text-slate-200">{detailVehicleLabel ?? '—'}</dd>
                 </div>
                 <div className="col-span-2">
                   <dt className="text-slate-500">Assigned driver</dt>
                   <dd className="font-medium text-slate-200">
-                    {selectedTrip.assignedDriverPersonId ?? 'Unassigned'}
+                    {assignedDriverLabel ??
+                      (assignedDriverSelectedOption
+                        ? assignedDriverSelectedOption.label
+                        : 'Unassigned')}
                   </dd>
                 </div>
               </dl>
@@ -274,15 +386,22 @@ export function TripsPanel({
               selectedTrip.dispatchStatus !== 'completed' &&
               selectedTrip.dispatchStatus !== 'cancelled' ? (
                 <div className="space-y-2 rounded border border-slate-700 p-3">
-                  <label className="block text-sm text-slate-300">
-                    Assign driver (StaffArr person id)
-                    <input
-                      className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
-                      value={driverPersonId}
-                      placeholder={sessionPersonId}
-                      onChange={(event) => onDriverPersonIdChange(event.target.value)}
-                    />
-                  </label>
+                  <StaticSearchPicker
+                    label="Assign driver"
+                    value={driverPersonId}
+                    onChange={onDriverPersonIdChange}
+                    options={driverOptions}
+                    selectedOption={selectedDriverOption}
+                    placeholder={findDriverLabel(drivers, sessionPersonId) ?? 'Search drivers…'}
+                    disabled={driversQuery.isLoading}
+                    testId="trip-assign-driver-picker"
+                  />
+                  <AdvancedReferenceField
+                    value={driverPersonId}
+                    onChange={onDriverPersonIdChange}
+                    label="Driver person id"
+                    testId="trip-assign-driver-advanced"
+                  />
                   <button
                     type="button"
                     className="rounded bg-indigo-600 px-3 py-2 text-sm text-white disabled:opacity-50"

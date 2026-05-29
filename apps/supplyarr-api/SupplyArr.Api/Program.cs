@@ -16,6 +16,7 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrPartyRegistryEndpoints();
         app.MapSupplyArrPartCatalogEndpoints();
         app.MapSupplyArrInventoryEndpoints();
+        app.MapSupplyArrStockReservationEndpoints();
         app.MapSupplyArrRfqEndpoints();
         app.MapSupplyArrSupplierOnboardingEndpoints();
         app.MapSupplyArrVendorRestrictionEndpoints();

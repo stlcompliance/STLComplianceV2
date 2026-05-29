@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MemoryRouter } from 'react-router-dom'
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 
@@ -25,13 +26,11 @@ function renderPanel() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
   render(
-
     <QueryClientProvider client={qc}>
-
-      <ActiveTripsPanel accessToken="token" scope="daily" />
-
+      <MemoryRouter>
+        <ActiveTripsPanel accessToken="token" scope="daily" />
+      </MemoryRouter>
     </QueryClientProvider>,
-
   )
 
 }

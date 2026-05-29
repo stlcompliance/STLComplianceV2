@@ -50,7 +50,14 @@ public sealed class AuditPackageService(
             .OrderBy(x => x)
             .ToListAsync(cancellationToken);
 
-        return new AuditPackageFilterOptionsResponse(actions, results, targetTypes);
+        var actorUserIds = await query
+            .Where(x => x.ActorUserId != null)
+            .Select(x => x.ActorUserId!.Value)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToListAsync(cancellationToken);
+
+        return new AuditPackageFilterOptionsResponse(actions, results, targetTypes, actorUserIds);
     }
 
     public async Task<AuditPackageExportSummaryResponse> GetExportSummaryAsync(

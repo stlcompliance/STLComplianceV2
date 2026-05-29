@@ -19,7 +19,11 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@stl/shared-ui": ["../../packages/shared-ui/src/index.ts"],
+      "@stl/shared-ui/*": ["../../packages/shared-ui/src/*"]
+    }
   },
   "include": ["src"]
 }

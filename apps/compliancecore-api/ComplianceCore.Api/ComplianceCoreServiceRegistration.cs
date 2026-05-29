@@ -23,6 +23,9 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<VocabularyService>();
         builder.Services.AddScoped<ComplianceKeyService>();
         builder.Services.AddScoped<MaterialKeyService>();
+        builder.Services.AddScoped<SdsReferenceService>();
+        builder.Services.AddScoped<HazComReferenceService>();
+        builder.Services.AddScoped<RuleVersionService>();
         builder.Services.AddScoped<GoverningBodyService>();
         builder.Services.AddScoped<JurisdictionService>();
         builder.Services.AddScoped<RegulatoryProgramService>();

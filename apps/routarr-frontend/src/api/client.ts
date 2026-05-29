@@ -38,6 +38,7 @@ import type {
   SubmitTripDvirRequest,
   TripExecutionSummaryResponse,
   TripCaptureReadinessResponse,
+  TripAuditTrailResponse,
   TripExecutionSettingsResponse,
   UpsertTripExecutionSettingsRequest,
   TripProofRecordResponse,
@@ -72,7 +73,9 @@ import type {
   RouteStopSummaryResponse,
   RouteSummaryResponse,
   DriverAvailabilityPanelResponse,
+  DriverListResponse,
   CreateDriverAvailabilityRequest,
+  UpdateDriverAvailabilityRequest,
   DriverEligibilityCheckRequest,
   DriverEligibilityCheckResponse,
   AssetDispatchabilityCheckRequest,
@@ -80,7 +83,9 @@ import type {
   DispatchWorkflowGateCheckRequest,
   DispatchWorkflowGateCheckResponse,
   EquipmentAvailabilityPanelResponse,
+  VehicleRefListResponse,
   CreateEquipmentAvailabilityRequest,
+  UpdateEquipmentAvailabilityRequest,
   DispatchNotificationDispatchesResponse,
   DispatchNotificationSettingsResponse,
   UpsertDispatchNotificationSettingsRequest,
@@ -139,6 +144,20 @@ export async function getMe(accessToken: string): Promise<RoutArrMeResponse> {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<RoutArrMeResponse>(response, 'Failed to load profile')
+}
+
+export async function listDrivers(accessToken: string): Promise<DriverListResponse> {
+  const response = await fetch(`${apiBase}/api/drivers`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<DriverListResponse>(response, 'Failed to load drivers')
+}
+
+export async function listVehicleRefs(accessToken: string): Promise<VehicleRefListResponse> {
+  const response = await fetch(`${apiBase}/api/vehicle-refs`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<VehicleRefListResponse>(response, 'Failed to load vehicle references')
 }
 
 export async function getTrips(
@@ -493,6 +512,19 @@ export async function submitDriverPortalTripDvir(
   return parseJsonResponse<TripDvirInspectionResponse>(response, 'Failed to submit DVIR')
 }
 
+export async function submitTripDvir(
+  accessToken: string,
+  tripId: string,
+  payload: SubmitTripDvirRequest,
+): Promise<TripDvirInspectionResponse> {
+  const response = await fetch(`${apiBase}/api/trips/${tripId}/dvir`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TripDvirInspectionResponse>(response, 'Failed to submit DVIR')
+}
+
 export async function getDriverPortalCaptureReadiness(
   accessToken: string,
   tripId: string,
@@ -616,6 +648,31 @@ export async function getTripExecutionSummary(
   )
 }
 
+export async function getTripCaptureReadiness(
+  accessToken: string,
+  tripId: string,
+): Promise<TripCaptureReadinessResponse> {
+  const response = await fetch(`${apiBase}/api/trips/${tripId}/capture-readiness`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TripCaptureReadinessResponse>(
+    response,
+    'Failed to load trip capture readiness',
+  )
+}
+
+export async function getTripAuditTrail(
+  accessToken: string,
+  tripId: string,
+  limit = 25,
+): Promise<TripAuditTrailResponse> {
+  const response = await fetch(
+    `${apiBase}/api/trips/${tripId}/audit-trail?limit=${encodeURIComponent(String(limit))}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<TripAuditTrailResponse>(response, 'Failed to load trip audit trail')
+}
+
 export function getTripCaptureAttachmentContentUrl(
   tripId: string,
   subjectType: 'proof' | 'dvir',
@@ -646,6 +703,28 @@ export async function downloadTripCaptureAttachment(
   anchor.download = fileName
   anchor.click()
   URL.revokeObjectURL(objectUrl)
+}
+
+export async function uploadTripCaptureAttachment(
+  accessToken: string,
+  tripId: string,
+  subjectType: 'proof' | 'dvir',
+  subjectId: string,
+  payload: UploadTripCaptureAttachmentRequest,
+): Promise<TripCaptureAttachmentResponse> {
+  const segment = subjectType === 'proof' ? 'proofs' : 'dvir'
+  const response = await fetch(
+    `${apiBase}/api/trips/${tripId}/${segment}/${subjectId}/attachments`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: JSON.stringify(payload),
+    },
+  )
+  return parseJsonResponse<TripCaptureAttachmentResponse>(
+    response,
+    'Failed to upload capture attachment',
+  )
 }
 
 export async function getActiveTrips(
@@ -869,6 +948,32 @@ export async function createDriverAvailability(
   return parseJsonResponse(response, 'Failed to create driver availability')
 }
 
+export async function updateDriverAvailability(
+  accessToken: string,
+  availabilityId: string,
+  payload: UpdateDriverAvailabilityRequest,
+): Promise<unknown> {
+  const response = await fetch(`${apiBase}/api/driver-availability/${availabilityId}`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse(response, 'Failed to update driver availability')
+}
+
+export async function deleteDriverAvailability(
+  accessToken: string,
+  availabilityId: string,
+): Promise<void> {
+  const response = await fetch(`${apiBase}/api/driver-availability/${availabilityId}`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    await parseJsonResponse(response, 'Failed to delete driver availability')
+  }
+}
+
 export async function getEquipmentAvailabilityPanel(
   accessToken: string,
   scope: 'daily' | 'weekly' = 'daily',
@@ -893,6 +998,32 @@ export async function createEquipmentAvailability(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse(response, 'Failed to create equipment availability')
+}
+
+export async function updateEquipmentAvailability(
+  accessToken: string,
+  availabilityId: string,
+  payload: UpdateEquipmentAvailabilityRequest,
+): Promise<unknown> {
+  const response = await fetch(`${apiBase}/api/equipment-availability/${availabilityId}`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse(response, 'Failed to update equipment availability')
+}
+
+export async function deleteEquipmentAvailability(
+  accessToken: string,
+  availabilityId: string,
+): Promise<void> {
+  const response = await fetch(`${apiBase}/api/equipment-availability/${availabilityId}`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    await parseJsonResponse(response, 'Failed to delete equipment availability')
+  }
 }
 
 export async function getDispatchCloseoutSummary(

@@ -58,6 +58,8 @@ public sealed class TrainingAssignment : IHasTenant
 
     public Guid? BlockerPublicationId { get; set; }
 
+    public Guid? AuthorizationQualificationCheckId { get; set; }
+
     public Guid? StaffarrAcknowledgementRequestId { get; set; }
 
     public string? StaffarrAcknowledgementStatus { get; set; }

@@ -14,6 +14,7 @@ public sealed class PersonTimelineService(StaffArrDbContext db)
         Guid personId,
         int page,
         int pageSize,
+        string? category = null,
         CancellationToken cancellationToken = default)
     {
         var personExists = await db.People.AnyAsync(
@@ -37,6 +38,15 @@ public sealed class PersonTimelineService(StaffArrDbContext db)
             tenantId,
             personId,
             cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            var categoryFilter = category.Trim();
+            entries = entries
+                .Where(x => string.Equals(x.Category, categoryFilter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
         var total = entries.Count;
         var items = entries
             .OrderByDescending(x => x.OccurredAt)

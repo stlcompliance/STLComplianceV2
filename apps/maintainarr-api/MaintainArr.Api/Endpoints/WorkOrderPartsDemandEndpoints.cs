@@ -31,6 +31,28 @@ public static class WorkOrderPartsDemandEndpoints
         })
         .WithName("ListWorkOrderPartsDemand");
 
+        group.MapGet("/status-events", async (
+            Guid workOrderId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            WorkOrderService workOrderService,
+            WorkOrderPartsDemandService partsDemandService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkOrdersRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var detail = await workOrderService.GetAsync(tenantId, workOrderId, cancellationToken);
+            authorization.RequireWorkOrderAccess(
+                context.User,
+                detail.CreatedByUserId,
+                detail.AssignedTechnicianPersonId);
+            return Results.Ok(await partsDemandService.ListStatusEventsAsync(
+                tenantId,
+                workOrderId,
+                cancellationToken));
+        })
+        .WithName("ListWorkOrderPartsDemandStatusEvents");
+
         group.MapPost("/", async (
             Guid workOrderId,
             CreateWorkOrderPartsDemandLineRequest request,

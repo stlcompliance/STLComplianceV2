@@ -20,6 +20,7 @@ describe('RemediationAssignmentPanel', () => {
         onRunQualificationCheck={vi.fn()}
         rulePackKey="driver_qualification"
         onRulePackKeyChange={vi.fn()}
+        rulePackOptions={[{ value: 'driver_qualification', label: 'driver_qualification' }]}
       />,
     )
     expect(container).toBeEmptyDOMElement()
@@ -63,6 +64,7 @@ describe('RemediationAssignmentPanel', () => {
         onRunQualificationCheck={vi.fn()}
         rulePackKey="driver_qualification"
         onRulePackKeyChange={vi.fn()}
+        rulePackOptions={[{ value: 'driver_qualification', label: 'driver_qualification' }]}
       />,
     )
     expect(screen.getByText(/remediation → assignment/i)).toBeInTheDocument()

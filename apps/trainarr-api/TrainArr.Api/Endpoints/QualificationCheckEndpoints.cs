@@ -27,6 +27,35 @@ public static class QualificationCheckEndpoints
         })
         .WithName("CreateQualificationCheck");
 
+        checks.MapGet("/", async (
+            Guid? staffarrPersonId,
+            string? qualificationKey,
+            int? limit,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            QualificationCheckService service,
+            CancellationToken cancellationToken) =>
+        {
+            if (staffarrPersonId is Guid personId)
+            {
+                authorization.RequireQualificationChecks(context.User, personId);
+            }
+            else
+            {
+                authorization.RequireBatchQualificationChecks(context.User);
+            }
+
+            var tenantId = context.User.GetTenantId();
+            var history = await service.ListRecentAsync(
+                tenantId,
+                staffarrPersonId,
+                qualificationKey,
+                limit,
+                cancellationToken);
+            return Results.Ok(history);
+        })
+        .WithName("ListQualificationChecks");
+
         checks.MapPost("/batch", async (
             CreateBatchQualificationCheckRequest request,
             HttpContext context,

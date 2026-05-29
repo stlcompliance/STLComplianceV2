@@ -312,6 +312,104 @@ public sealed class RulePackService(
 
 
 
+    public async Task<RulePackResponse> RestorePublishedVersionForRollbackAsync(
+
+        Guid tenantId,
+
+        Guid? actorUserId,
+
+        Guid rulePackId,
+
+        CancellationToken cancellationToken = default)
+
+    {
+
+        var entity = await db.RulePacks.FirstOrDefaultAsync(
+
+            x => x.TenantId == tenantId && x.Id == rulePackId && x.IsActive,
+
+            cancellationToken);
+
+        if (entity is null)
+
+        {
+
+            throw new StlApiException("rule_packs.not_found", "Rule pack was not found.", 404);
+
+        }
+
+
+
+        if (!string.Equals(entity.Status, RulePackStatuses.Archived, StringComparison.OrdinalIgnoreCase))
+
+        {
+
+            throw new StlApiException(
+
+                "rule_packs.invalid_rollback_restore",
+
+                "Only archived rule pack versions can be restored during rollback.",
+
+                409);
+
+        }
+
+
+
+        var previousStatus = entity.Status;
+
+        entity.Status = RulePackStatuses.Published;
+
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+
+
+        await auditService.WriteAsync(
+
+            "rule_pack.rollback.restore",
+
+            tenantId,
+
+            actorUserId,
+
+            "rule_pack",
+
+            entity.Id.ToString(),
+
+            "success",
+
+            reasonCode: RulePackStatuses.Published,
+
+            cancellationToken: cancellationToken);
+
+        var program = await db.RegulatoryPrograms.AsNoTracking()
+
+            .FirstAsync(x => x.Id == entity.RegulatoryProgramId, cancellationToken);
+
+        await ruleChangeMonitoring.RecordStatusChangedAsync(
+
+            tenantId,
+
+            actorUserId,
+
+            entity,
+
+            program.ProgramKey,
+
+            previousStatus,
+
+            RulePackStatuses.Published,
+
+            cancellationToken);
+
+        return MapResponse(entity, program);
+
+    }
+
+
+
     private static RulePackResponse MapResponse(RulePack entity, RegulatoryProgram program) =>
 
         new(

@@ -484,6 +484,70 @@ namespace TrainArr.Api.Migrations
                     b.ToTable("trainarr_person_training_history_entries", (string)null);
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.QualificationCheckRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CheckedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("QualificationKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ReasonCode")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RulePackKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("StaffarrPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TrainingDefinitionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TrainingProgramId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "BatchId");
+
+                    b.HasIndex("TenantId", "QualificationKey", "CheckedAt");
+
+                    b.HasIndex("TenantId", "StaffarrPersonId", "CheckedAt");
+
+                    b.ToTable("trainarr_qualification_check_records", (string)null);
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.QualificationIssue", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1434,6 +1498,66 @@ namespace TrainArr.Api.Migrations
                     b.ToTable("trainarr_audit_events", (string)null);
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingApplicabilityProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ProfileKey")
+                        .IsRequired()
+                        .HasMaxLength(96)
+                        .HasColumnType("character varying(96)");
+
+                    b.Property<string>("ScopeKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ScopeType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SourceProduct")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SourceRecordId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("SourceUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "ProfileKey")
+                        .IsUnique();
+
+                    b.ToTable("trainarr_training_applicability_profiles", (string)null);
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingAssignment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1447,6 +1571,9 @@ namespace TrainArr.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("AuthorizationQualificationCheckId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid?>("BlockerPublicationId")
                         .HasColumnType("uuid");
@@ -1695,6 +1822,58 @@ namespace TrainArr.Api.Migrations
                     b.ToTable("trainarr_training_assignment_material_demand_status_events", (string)null);
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingAssignmentStepProgress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CompletedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("QuizScorePercent")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ResponseJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainingAssignmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainingDefinitionStepId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TrainingAssignmentId");
+
+                    b.HasIndex("TrainingDefinitionStepId");
+
+                    b.HasIndex("TenantId", "TrainingAssignmentId", "TrainingDefinitionStepId")
+                        .IsUnique();
+
+                    b.ToTable("trainarr_training_assignment_step_progress", (string)null);
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingCitationAttachment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1795,6 +1974,63 @@ namespace TrainArr.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("trainarr_training_definitions", (string)null);
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingDefinitionStep", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConfigJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StepKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("StepType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainingDefinitionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TrainingDefinitionId");
+
+                    b.HasIndex("TenantId", "TrainingDefinitionId", "StepKey")
+                        .IsUnique();
+
+                    b.ToTable("trainarr_training_definition_steps", (string)null);
                 });
 
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingDomainEvent", b =>
@@ -1919,6 +2155,57 @@ namespace TrainArr.Api.Migrations
                     b.ToTable("trainarr_training_evaluations", (string)null);
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingEvaluationRevision", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("EvaluatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("EvaluatorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("Result")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<decimal?>("Score")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTimeOffset>("SupersededAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SupersededByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainingAssignmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainingEvaluationId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "TrainingAssignmentId", "SupersededAt");
+
+                    b.ToTable("trainarr_training_evaluation_revisions", (string)null);
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingEvidence", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1973,6 +2260,58 @@ namespace TrainArr.Api.Migrations
                     b.HasIndex("TenantId", "TrainingAssignmentId", "CreatedAt");
 
                     b.ToTable("trainarr_training_evidence", (string)null);
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingMatrixEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ApplicabilityKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ApplicabilityLabel")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RequirementLevel")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TrainingDefinitionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TrainingProgramId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TrainingDefinitionId");
+
+                    b.HasIndex("TrainingProgramId");
+
+                    b.HasIndex("TenantId", "ApplicabilityKey", "SortOrder");
+
+                    b.ToTable("trainarr_training_matrix_entries", (string)null);
                 });
 
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingNotificationDispatch", b =>
@@ -2107,6 +2446,153 @@ namespace TrainArr.Api.Migrations
                     b.ToTable("trainarr_training_program_definitions", (string)null);
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingProgramVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("PublishedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainingProgramId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TrainingProgramId");
+
+                    b.HasIndex("TenantId", "TrainingProgramId", "VersionNumber")
+                        .IsUnique();
+
+                    b.ToTable("trainarr_training_program_versions", (string)null);
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingProgramVersionDefinition", b =>
+                {
+                    b.Property<Guid>("TrainingProgramVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TrainingDefinitionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("TrainingProgramVersionId", "TrainingDefinitionId");
+
+                    b.HasIndex("TrainingDefinitionId");
+
+                    b.HasIndex("TrainingProgramVersionId", "SortOrder");
+
+                    b.ToTable("trainarr_training_program_version_definitions", (string)null);
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingRequirement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ApplicabilityProfileId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RequirementKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("RequirementLevel")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("RequirementSource")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TrainingDefinitionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TrainingProgramId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicabilityProfileId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TrainingDefinitionId");
+
+                    b.HasIndex("TrainingProgramId");
+
+                    b.HasIndex("TenantId", "RequirementKey")
+                        .IsUnique();
+
+                    b.ToTable("trainarr_training_requirements", (string)null);
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingRulePackRequirement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2239,6 +2725,37 @@ namespace TrainArr.Api.Migrations
                     b.Navigation("TrainingAssignment");
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingAssignmentStepProgress", b =>
+                {
+                    b.HasOne("TrainArr.Api.Entities.TrainingAssignment", "TrainingAssignment")
+                        .WithMany()
+                        .HasForeignKey("TrainingAssignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TrainArr.Api.Entities.TrainingDefinitionStep", "TrainingDefinitionStep")
+                        .WithMany()
+                        .HasForeignKey("TrainingDefinitionStepId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_trainarr_training_assignment_step_progress_trainarr_traini~1");
+
+                    b.Navigation("TrainingAssignment");
+
+                    b.Navigation("TrainingDefinitionStep");
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingDefinitionStep", b =>
+                {
+                    b.HasOne("TrainArr.Api.Entities.TrainingDefinition", "TrainingDefinition")
+                        .WithMany()
+                        .HasForeignKey("TrainingDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TrainingDefinition");
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingEvaluation", b =>
                 {
                     b.HasOne("TrainArr.Api.Entities.TrainingAssignment", "TrainingAssignment")
@@ -2261,6 +2778,23 @@ namespace TrainArr.Api.Migrations
                     b.Navigation("TrainingAssignment");
                 });
 
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingMatrixEntry", b =>
+                {
+                    b.HasOne("TrainArr.Api.Entities.TrainingDefinition", "TrainingDefinition")
+                        .WithMany()
+                        .HasForeignKey("TrainingDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TrainArr.Api.Entities.TrainingProgram", "TrainingProgram")
+                        .WithMany()
+                        .HasForeignKey("TrainingProgramId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("TrainingDefinition");
+
+                    b.Navigation("TrainingProgram");
+                });
+
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingProgramDefinition", b =>
                 {
                     b.HasOne("TrainArr.Api.Entities.TrainingDefinition", "TrainingDefinition")
@@ -2274,6 +2808,61 @@ namespace TrainArr.Api.Migrations
                         .HasForeignKey("TrainingProgramId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("TrainingDefinition");
+
+                    b.Navigation("TrainingProgram");
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingProgramVersion", b =>
+                {
+                    b.HasOne("TrainArr.Api.Entities.TrainingProgram", "TrainingProgram")
+                        .WithMany()
+                        .HasForeignKey("TrainingProgramId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TrainingProgram");
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingProgramVersionDefinition", b =>
+                {
+                    b.HasOne("TrainArr.Api.Entities.TrainingDefinition", "TrainingDefinition")
+                        .WithMany()
+                        .HasForeignKey("TrainingDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TrainArr.Api.Entities.TrainingProgramVersion", "TrainingProgramVersion")
+                        .WithMany("VersionDefinitions")
+                        .HasForeignKey("TrainingProgramVersionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_trainarr_training_program_version_definitions_trainarr_tra~1");
+
+                    b.Navigation("TrainingDefinition");
+
+                    b.Navigation("TrainingProgramVersion");
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingRequirement", b =>
+                {
+                    b.HasOne("TrainArr.Api.Entities.TrainingApplicabilityProfile", "ApplicabilityProfile")
+                        .WithMany()
+                        .HasForeignKey("ApplicabilityProfileId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("TrainArr.Api.Entities.TrainingDefinition", "TrainingDefinition")
+                        .WithMany()
+                        .HasForeignKey("TrainingDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TrainArr.Api.Entities.TrainingProgram", "TrainingProgram")
+                        .WithMany()
+                        .HasForeignKey("TrainingProgramId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ApplicabilityProfile");
 
                     b.Navigation("TrainingDefinition");
 
@@ -2305,6 +2894,11 @@ namespace TrainArr.Api.Migrations
             modelBuilder.Entity("TrainArr.Api.Entities.TrainingProgram", b =>
                 {
                     b.Navigation("ProgramDefinitions");
+                });
+
+            modelBuilder.Entity("TrainArr.Api.Entities.TrainingProgramVersion", b =>
+                {
+                    b.Navigation("VersionDefinitions");
                 });
 #pragma warning restore 612, 618
         }

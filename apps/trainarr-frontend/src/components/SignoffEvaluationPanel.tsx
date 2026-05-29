@@ -1,7 +1,10 @@
-import type { TrainingAssignmentDetailResponse } from '../api/types'
+import type { TrainingAssignmentDetailResponse, TrainingEvaluationHistoryItem } from '../api/types'
+import { EvaluationHistoryTimeline } from './EvaluationHistoryTimeline'
 
 interface SignoffEvaluationPanelProps {
   assignment: TrainingAssignmentDetailResponse | null
+  evaluationHistory: TrainingEvaluationHistoryItem[]
+  isLoadingHistory: boolean
   evaluationResult: string
   evaluationScore: string
   evaluationNotes: string
@@ -25,8 +28,74 @@ function hasSignoff(assignment: TrainingAssignmentDetailResponse, role: string):
   return assignment.signoffs.some((s) => s.signoffRole === role)
 }
 
+function EvaluationSubmitForm({
+  evaluationResult,
+  evaluationScore,
+  evaluationNotes,
+  isSubmittingEvaluation,
+  onEvaluationResultChange,
+  onEvaluationScoreChange,
+  onEvaluationNotesChange,
+  onSubmitEvaluation,
+  submitLabel,
+}: {
+  evaluationResult: string
+  evaluationScore: string
+  evaluationNotes: string
+  isSubmittingEvaluation: boolean
+  onEvaluationResultChange: (value: string) => void
+  onEvaluationScoreChange: (value: string) => void
+  onEvaluationNotesChange: (value: string) => void
+  onSubmitEvaluation: () => void
+  submitLabel: string
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="block text-xs text-slate-400">
+        Result
+        <select
+          className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
+          value={evaluationResult}
+          onChange={(e) => onEvaluationResultChange(e.target.value)}
+        >
+          <option value="pass">pass</option>
+          <option value="fail">fail</option>
+          <option value="incomplete">incomplete</option>
+        </select>
+      </label>
+      <label className="block text-xs text-slate-400">
+        Score (optional)
+        <input
+          type="number"
+          className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
+          value={evaluationScore}
+          onChange={(e) => onEvaluationScoreChange(e.target.value)}
+        />
+      </label>
+      <label className="block text-xs text-slate-400">
+        Notes
+        <input
+          className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
+          value={evaluationNotes}
+          onChange={(e) => onEvaluationNotesChange(e.target.value)}
+        />
+      </label>
+      <button
+        type="button"
+        className="rounded bg-violet-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-violet-600 disabled:opacity-50"
+        disabled={isSubmittingEvaluation}
+        onClick={onSubmitEvaluation}
+      >
+        {isSubmittingEvaluation ? 'Submitting…' : submitLabel}
+      </button>
+    </div>
+  )
+}
+
 export function SignoffEvaluationPanel({
   assignment,
+  evaluationHistory,
+  isLoadingHistory,
   evaluationResult,
   evaluationScore,
   evaluationNotes,
@@ -57,6 +126,9 @@ export function SignoffEvaluationPanel({
   const assignmentOpen = assignment.status === 'assigned' || assignment.status === 'in_progress'
   const traineeSigned = hasSignoff(assignment, 'trainee')
   const trainerSigned = hasSignoff(assignment, 'trainer')
+  const hasEvaluation = Boolean(assignment.evaluation)
+  const showInitialSubmit = canSubmitEvaluation && assignmentOpen && !hasEvaluation
+  const showReviseSubmit = canSubmitEvaluation && assignmentOpen && hasEvaluation
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
@@ -71,65 +143,43 @@ export function SignoffEvaluationPanel({
       </p>
 
       <div className="mt-4 space-y-3 border-t border-slate-700 pt-4">
-        <h3 className="text-xs font-semibold uppercase text-slate-500">Evaluation</h3>
-        {assignment.evaluation ? (
-          <div className="rounded-lg border border-slate-700 bg-slate-950/40 p-3 text-sm">
-            <p className="font-medium text-slate-100">Result: {assignment.evaluation.result}</p>
-            {assignment.evaluation.score != null && (
-              <p className="mt-1 text-xs text-slate-400">Score: {assignment.evaluation.score}</p>
-            )}
-            {assignment.evaluation.notes && (
-              <p className="mt-1 text-xs text-slate-300">{assignment.evaluation.notes}</p>
-            )}
-            <p className="mt-1 text-xs text-slate-500">
-              {new Date(assignment.evaluation.evaluatedAt).toLocaleString()}
-            </p>
-          </div>
+        <h3 className="text-xs font-semibold uppercase text-slate-500">Evaluation history</h3>
+        {isLoadingHistory ? (
+          <p className="text-sm text-slate-400">Loading evaluation history…</p>
         ) : (
-          <p className="text-sm text-slate-400">No evaluation recorded.</p>
+          <EvaluationHistoryTimeline items={evaluationHistory} />
         )}
 
-        {canSubmitEvaluation && assignmentOpen && !assignment.evaluation && (
-          <div className="space-y-2">
-            <label className="block text-xs text-slate-400">
-              Result
-              <select
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
-                value={evaluationResult}
-                onChange={(e) => onEvaluationResultChange(e.target.value)}
-              >
-                <option value="pass">pass</option>
-                <option value="fail">fail</option>
-                <option value="incomplete">incomplete</option>
-              </select>
-            </label>
-            <label className="block text-xs text-slate-400">
-              Score (optional)
-              <input
-                type="number"
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
-                value={evaluationScore}
-                onChange={(e) => onEvaluationScoreChange(e.target.value)}
-              />
-            </label>
-            <label className="block text-xs text-slate-400">
-              Notes
-              <input
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
-                value={evaluationNotes}
-                onChange={(e) => onEvaluationNotesChange(e.target.value)}
-              />
-            </label>
-            <button
-              type="button"
-              className="rounded bg-violet-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-violet-600 disabled:opacity-50"
-              disabled={isSubmittingEvaluation}
-              onClick={onSubmitEvaluation}
-            >
-              {isSubmittingEvaluation ? 'Submitting…' : 'Submit evaluation'}
-            </button>
+        {showInitialSubmit ? (
+          <EvaluationSubmitForm
+            evaluationResult={evaluationResult}
+            evaluationScore={evaluationScore}
+            evaluationNotes={evaluationNotes}
+            isSubmittingEvaluation={isSubmittingEvaluation}
+            onEvaluationResultChange={onEvaluationResultChange}
+            onEvaluationScoreChange={onEvaluationScoreChange}
+            onEvaluationNotesChange={onEvaluationNotesChange}
+            onSubmitEvaluation={onSubmitEvaluation}
+            submitLabel="Submit evaluation"
+          />
+        ) : null}
+
+        {showReviseSubmit ? (
+          <div className="space-y-2 border-t border-slate-800 pt-3">
+            <p className="text-xs text-slate-500">Revise evaluation (prior result moves to history).</p>
+            <EvaluationSubmitForm
+              evaluationResult={evaluationResult}
+              evaluationScore={evaluationScore}
+              evaluationNotes={evaluationNotes}
+              isSubmittingEvaluation={isSubmittingEvaluation}
+              onEvaluationResultChange={onEvaluationResultChange}
+              onEvaluationScoreChange={onEvaluationScoreChange}
+              onEvaluationNotesChange={onEvaluationNotesChange}
+              onSubmitEvaluation={onSubmitEvaluation}
+              submitLabel="Submit revised evaluation"
+            />
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="mt-4 space-y-3 border-t border-slate-700 pt-4">

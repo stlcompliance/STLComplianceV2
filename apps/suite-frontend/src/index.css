@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@source "../../../packages/shared-ui/src";
+
 @theme {
   --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
   --color-stl-navy: #0f2744;

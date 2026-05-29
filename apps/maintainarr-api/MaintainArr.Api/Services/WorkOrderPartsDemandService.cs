@@ -26,6 +26,48 @@ public sealed class WorkOrderPartsDemandService(
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<WorkOrderPartsDemandStatusEventResponse>> ListStatusEventsAsync(
+        Guid tenantId,
+        Guid workOrderId,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsureWorkOrderExistsAsync(tenantId, workOrderId, cancellationToken);
+
+        var publicationIds = await db.WorkOrderPartsDemandLines
+            .AsNoTracking()
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.WorkOrderId == workOrderId
+                && x.MaintainarrPublicationId != null)
+            .Select(x => x.MaintainarrPublicationId!.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        if (publicationIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await db.WorkOrderPartsDemandStatusEvents
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && publicationIds.Contains(x.MaintainarrPublicationId))
+            .OrderByDescending(x => x.OccurredAt)
+            .ThenByDescending(x => x.CreatedAt)
+            .Select(x => new WorkOrderPartsDemandStatusEventResponse(
+                x.Id,
+                x.MaintainarrPublicationId,
+                x.SupplyarrDemandRefId,
+                x.EventType,
+                x.ProcurementStatus,
+                x.SupplyarrPurchaseRequestId,
+                x.SupplyarrPurchaseOrderId,
+                x.SupplyarrReceivingReceiptId,
+                x.Message,
+                x.OccurredAt,
+                x.CreatedAt))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<WorkOrderPartsDemandLineResponse> CreateAsync(
         Guid tenantId,
         Guid actorUserId,

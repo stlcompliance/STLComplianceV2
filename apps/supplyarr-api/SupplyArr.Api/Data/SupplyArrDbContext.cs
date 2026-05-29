@@ -42,6 +42,8 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
 
     public DbSet<PartStockLevel> PartStockLevels => Set<PartStockLevel>();
 
+    public DbSet<PartStockReservation> PartStockReservations => Set<PartStockReservation>();
+
     public DbSet<PurchaseRequest> PurchaseRequests => Set<PurchaseRequest>();
 
     public DbSet<PurchaseRequestLine> PurchaseRequestLines => Set<PurchaseRequestLine>();
@@ -470,6 +472,34 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
                 .WithMany(x => x.StockLevels)
                 .HasForeignKey(x => x.InventoryBinId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PartStockReservation>(entity =>
+        {
+            entity.ToTable("supplyarr_part_stock_reservations");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ReservationKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.QuantityReserved).HasPrecision(18, 4);
+            entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.ReleaseReason).HasMaxLength(512).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ReservationKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.PartId, x.Status });
+            entity.HasIndex(x => new { x.TenantId, x.InventoryBinId, x.Status });
+            entity.HasOne(x => x.Part)
+                .WithMany()
+                .HasForeignKey(x => x.PartId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.InventoryBin)
+                .WithMany()
+                .HasForeignKey(x => x.InventoryBinId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.PartStockLevel)
+                .WithMany()
+                .HasForeignKey(x => x.PartStockLevelId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<PurchaseRequest>(entity =>

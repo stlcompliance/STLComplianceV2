@@ -1,3 +1,5 @@
+import { ControlledSelect, GeneratedKeyField, slugifyKey } from '@stl/shared-ui'
+
 import type {
   AssetClassResponse,
   AssetReadinessSummaryResponse,
@@ -13,25 +15,27 @@ interface AssetRegistryPanelProps {
   readinessByAssetId: Record<string, AssetReadinessSummaryResponse>
   isLoading: boolean
   isReadinessLoading: boolean
-  classKey: string
   className: string
   classDescription: string
+  classKeyManualOverride: string
+  confirmedClassKey: string | null
   selectedClassId: string
-  typeKey: string
   typeName: string
   typeDescription: string
+  typeKeyManualOverride: string
+  confirmedTypeKey: string | null
   selectedTypeId: string
   assetTag: string
   assetName: string
   assetDescription: string
   siteRef: string
-  onClassKeyChange: (value: string) => void
   onClassNameChange: (value: string) => void
   onClassDescriptionChange: (value: string) => void
+  onClassKeyManualOverrideChange: (value: string) => void
   onSelectedClassIdChange: (value: string) => void
-  onTypeKeyChange: (value: string) => void
   onTypeNameChange: (value: string) => void
   onTypeDescriptionChange: (value: string) => void
+  onTypeKeyManualOverrideChange: (value: string) => void
   onSelectedTypeIdChange: (value: string) => void
   onAssetTagChange: (value: string) => void
   onAssetNameChange: (value: string) => void
@@ -63,25 +67,27 @@ export function AssetRegistryPanel({
   readinessByAssetId,
   isLoading,
   isReadinessLoading,
-  classKey,
   className,
   classDescription,
+  classKeyManualOverride,
+  confirmedClassKey,
   selectedClassId,
-  typeKey,
   typeName,
   typeDescription,
+  typeKeyManualOverride,
+  confirmedTypeKey,
   selectedTypeId,
   assetTag,
   assetName,
   assetDescription,
   siteRef,
-  onClassKeyChange,
   onClassNameChange,
   onClassDescriptionChange,
+  onClassKeyManualOverrideChange,
   onSelectedClassIdChange,
-  onTypeKeyChange,
   onTypeNameChange,
   onTypeDescriptionChange,
+  onTypeKeyManualOverrideChange,
   onSelectedTypeIdChange,
   onAssetTagChange,
   onAssetNameChange,
@@ -97,6 +103,15 @@ export function AssetRegistryPanel({
   if (isLoading) {
     return <p className="text-sm text-slate-400">Loading asset registry…</p>
   }
+
+  const classOptions = classes.map((item) => ({
+    value: item.assetClassId,
+    label: `${item.name} (${item.classKey})`,
+  }))
+  const typeOptions = types.map((item) => ({
+    value: item.assetTypeId,
+    label: `${item.className} / ${item.name}`,
+  }))
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -116,11 +131,14 @@ export function AssetRegistryPanel({
         </ul>
         {canManage ? (
           <div className="mt-4 space-y-2">
-            <input
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              placeholder="Class key"
-              value={classKey}
-              onChange={(event) => onClassKeyChange(event.target.value)}
+            <GeneratedKeyField
+              sourceLabel={className}
+              generatedKey={slugifyKey(className)}
+              confirmedKey={confirmedClassKey}
+              manualOverride={classKeyManualOverride}
+              onManualOverrideChange={onClassKeyManualOverrideChange}
+              showAdvancedKey
+              label="Class key"
             />
             <input
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
@@ -164,23 +182,22 @@ export function AssetRegistryPanel({
         </ul>
         {canManage ? (
           <div className="mt-4 space-y-2">
-            <select
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            <ControlledSelect
+              label="Asset class"
               value={selectedClassId}
-              onChange={(event) => onSelectedClassIdChange(event.target.value)}
-            >
-              <option value="">Select asset class</option>
-              {classes.map((item) => (
-                <option key={item.assetClassId} value={item.assetClassId}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-            <input
+              onChange={onSelectedClassIdChange}
+              options={classOptions}
+              emptyLabel="Select asset class"
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              placeholder="Type key"
-              value={typeKey}
-              onChange={(event) => onTypeKeyChange(event.target.value)}
+            />
+            <GeneratedKeyField
+              sourceLabel={typeName}
+              generatedKey={slugifyKey(typeName)}
+              confirmedKey={confirmedTypeKey}
+              manualOverride={typeKeyManualOverride}
+              onManualOverrideChange={onTypeKeyManualOverrideChange}
+              showAdvancedKey
+              label="Type key"
             />
             <input
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
@@ -250,18 +267,14 @@ export function AssetRegistryPanel({
         </ul>
         {canManage ? (
           <div className="mt-4 grid gap-2 md:grid-cols-2">
-            <select
-              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm md:col-span-2"
+            <ControlledSelect
+              label="Asset type"
               value={selectedTypeId}
-              onChange={(event) => onSelectedTypeIdChange(event.target.value)}
-            >
-              <option value="">Select asset type</option>
-              {types.map((item) => (
-                <option key={item.assetTypeId} value={item.assetTypeId}>
-                  {item.className} / {item.name}
-                </option>
-              ))}
-            </select>
+              onChange={onSelectedTypeIdChange}
+              options={typeOptions}
+              emptyLabel="Select asset type"
+              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm md:col-span-2"
+            />
             <input
               className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
               placeholder="Asset tag"

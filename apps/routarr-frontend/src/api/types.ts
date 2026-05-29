@@ -917,6 +917,23 @@ export interface TripCaptureReadinessResponse {
   items: TripCaptureReadinessItem[]
 }
 
+export interface TripAuditTrailEntry {
+  auditEventId: string
+  actorUserId: string | null
+  action: string
+  targetType: string
+  targetId: string | null
+  result: string
+  reasonCode: string | null
+  correlationId: string
+  occurredAt: string
+}
+
+export interface TripAuditTrailResponse {
+  tripId: string
+  entries: TripAuditTrailEntry[]
+}
+
 export interface TripExecutionSettingsResponse {
   requirePreTripDvirBeforeStart: boolean
   requirePostTripDvirBeforeComplete: boolean
@@ -1391,6 +1408,7 @@ export interface AuditPackageFilterOptions {
   actions: string[]
   results: string[]
   targetTypes: string[]
+  actorUserIds: string[]
 }
 
 export interface AuditPackageBreakdownItem {
@@ -1547,6 +1565,14 @@ export interface CreateDriverAvailabilityRequest {
   notes?: string | null
 }
 
+export interface UpdateDriverAvailabilityRequest {
+  availabilityStatus?: string | null
+  startsAt?: string | null
+  endsAt?: string | null
+  reason?: string | null
+  notes?: string | null
+}
+
 export interface EquipmentAvailabilityTripConflict {
   tripId: string
   tripNumber: string
@@ -1585,11 +1611,41 @@ export interface EquipmentAvailabilityPanelResponse {
   generatedAt: string
 }
 
+export interface DriverResponse {
+  personId: string
+  displayName: string
+  mirroredAt: string
+}
+
+export interface DriverListResponse {
+  items: DriverResponse[]
+}
+
+export interface VehicleRefResponse {
+  vehicleRefKey: string
+  displayLabel: string
+  assetTag: string | null
+  mirroredAt: string | null
+  fromMirror: boolean
+}
+
+export interface VehicleRefListResponse {
+  items: VehicleRefResponse[]
+}
+
 export interface CreateEquipmentAvailabilityRequest {
   vehicleRefKey: string
   availabilityStatus: string
   startsAt: string
   endsAt: string
+  reason?: string | null
+  notes?: string | null
+}
+
+export interface UpdateEquipmentAvailabilityRequest {
+  availabilityStatus?: string | null
+  startsAt?: string | null
+  endsAt?: string | null
   reason?: string | null
   notes?: string | null
 }

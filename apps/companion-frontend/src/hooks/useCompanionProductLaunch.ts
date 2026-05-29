@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { normalizeProductKey } from '@stl/shared-ui'
 
 import { createHandoff, getLaunchContext } from '../api/client'
+import { resolveDeniedReason } from '../lib/companionDeniedReasonCatalog'
 import { buildCompanionProductCallbackUrl } from '../lib/productLaunch'
 
 export function useCompanionProductLaunch(input: {
@@ -18,7 +19,12 @@ export function useCompanionProductLaunch(input: {
 
       const context = await getLaunchContext(input.accessToken, normalized)
       if (!context.canLaunch) {
-        throw new Error(context.denialReasonCode ?? 'launch.denied')
+        throw new Error(
+          resolveDeniedReason(
+            { reasonCode: context.denialReasonCode },
+            'Product launch is not permitted.',
+          ),
+        )
       }
 
       const callbackUrl = buildCompanionProductCallbackUrl(

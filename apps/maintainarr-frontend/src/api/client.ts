@@ -61,6 +61,11 @@ import type {
   PmScheduleResponse,
   StartInspectionRunRequest,
   SubmitInspectionRunAnswersRequest,
+  TechnicianRefListResponse,
+  UpsertTechnicianRefRequest,
+  TechnicianRefResponse,
+  InspectionVoiceGuidanceResponse,
+  NormalizeVoiceNumericResponse,
   UpdateDefectStatusRequest,
   WorkOrderDetailResponse,
   WorkOrderSummaryResponse,
@@ -77,6 +82,7 @@ import type {
   CreateWorkOrderPartsDemandLineRequest,
   PublishWorkOrderPartsDemandRequest,
   PublishWorkOrderPartsDemandResponse,
+  WorkOrderPartsDemandStatusEventResponse,
   MaintenanceReportSummaryResponse,
   MaintenanceReportAssetDetailResponse,
   MaintenanceReportWorkOrderDetailResponse,
@@ -399,6 +405,47 @@ export async function completeInspectionRun(
   return parseJsonResponse<InspectionRunDetailResponse>(response, 'Failed to complete inspection run')
 }
 
+export async function getInspectionVoiceGuidance(
+  accessToken: string,
+  inspectionRunId: string,
+): Promise<InspectionVoiceGuidanceResponse> {
+  const response = await fetch(`${apiBase}/api/inspections/${inspectionRunId}/voice-guidance`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<InspectionVoiceGuidanceResponse>(response, 'Failed to load inspection voice guidance')
+}
+
+export async function normalizeInspectionVoiceNumeric(
+  accessToken: string,
+  transcript: string,
+): Promise<NormalizeVoiceNumericResponse> {
+  const response = await fetch(`${apiBase}/api/inspections/voice/normalize-numeric`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ transcript }),
+  })
+  return parseJsonResponse<NormalizeVoiceNumericResponse>(response, 'Failed to normalize voice numeric answer')
+}
+
+export async function getTechnicianRefs(accessToken: string): Promise<TechnicianRefListResponse> {
+  const response = await fetch(`${apiBase}/api/technician-refs`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TechnicianRefListResponse>(response, 'Failed to load technician references')
+}
+
+export async function upsertTechnicianRef(
+  accessToken: string,
+  payload: UpsertTechnicianRefRequest,
+): Promise<TechnicianRefResponse> {
+  const response = await fetch(`${apiBase}/api/technician-refs`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TechnicianRefResponse>(response, 'Failed to upsert technician reference')
+}
+
 export async function getDefects(
   accessToken: string,
   params?: { assetId?: string; inspectionRunId?: string; status?: string },
@@ -690,6 +737,20 @@ export async function publishWorkOrderPartsDemand(
   return parseJsonResponse<PublishWorkOrderPartsDemandResponse>(
     response,
     'Failed to publish work order parts demand',
+  )
+}
+
+export async function getWorkOrderPartsDemandStatusEvents(
+  accessToken: string,
+  workOrderId: string,
+): Promise<WorkOrderPartsDemandStatusEventResponse[]> {
+  const response = await fetch(
+    `${apiBase}/api/work-orders/${workOrderId}/parts-demand/status-events`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<WorkOrderPartsDemandStatusEventResponse[]>(
+    response,
+    'Failed to load work order parts demand status events',
   )
 }
 

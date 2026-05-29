@@ -52,6 +52,8 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
 
     public DbSet<SdsReference> SdsReferences => Set<SdsReference>();
 
+    public DbSet<HazComReference> HazComReferences => Set<HazComReference>();
+
     public DbSet<AuditPackageGenerationJob> AuditPackageGenerationJobs => Set<AuditPackageGenerationJob>();
 
     public DbSet<SourceIngestionBatch> SourceIngestionBatches => Set<SourceIngestionBatch>();
@@ -675,6 +677,20 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
                 .WithMany()
                 .HasForeignKey(x => x.MaterialKeyId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<HazComReference>(entity =>
+        {
+            entity.ToTable("compliancecore_hazcom_references");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.HazComKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.LinkedSdsKey).HasMaxLength(64);
+            entity.Property(x => x.LocationRef).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.DocumentUrl).HasMaxLength(1024).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.HazComKey }).IsUnique();
         });
 
         modelBuilder.Entity<TenantM12AnalyticsWorkerSettings>(entity =>

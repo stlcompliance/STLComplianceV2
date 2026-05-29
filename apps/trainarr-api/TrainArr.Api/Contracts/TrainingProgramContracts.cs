@@ -38,6 +38,8 @@ public sealed record TrainingProgramSummaryResponse(
 
     int DefinitionCount,
 
+    int PublishedVersionCount,
+
     DateTimeOffset CreatedAt,
 
     DateTimeOffset UpdatedAt);

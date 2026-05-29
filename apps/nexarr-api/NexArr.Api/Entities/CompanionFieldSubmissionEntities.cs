@@ -18,6 +18,10 @@ public static class CompanionFieldSubmissionKinds
 {
     public const string Acknowledge = "acknowledge";
     public const string Evidence = "evidence";
+    public const string Dvir = "dvir";
+    public const string Inspection = "inspection";
+    public const string WorkOrder = "work-order";
+    public const string Receiving = "receiving";
 }
 
 public static class CompanionFieldSubmissionStatuses

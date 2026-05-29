@@ -1,5 +1,11 @@
 import type { DispatchAssignmentPreviewResponse } from '../api/types'
 
+import {
+  buildDispatchAssignmentGateLines,
+  formatDispatchAssignmentGateConfirmMessage,
+  formatDispatchAssignmentGateLines,
+} from './dispatchGateMessaging'
+
 export type DragAssignmentPayload =
   | { kind: 'driver'; personId: string }
   | { kind: 'vehicle'; vehicleRefKey: string }
@@ -14,36 +20,16 @@ export const BOARD_ASSIGNABLE_STATUSES = new Set([
 export const DRAG_MIME = 'application/routarr-assignment'
 
 export function formatAssignmentConflictMessage(preview: DispatchAssignmentPreviewResponse) {
-  if (preview.validationMessages && preview.validationMessages.length > 0) {
-    return preview.validationMessages.join(' ')
+  const lines = buildDispatchAssignmentGateLines(preview).filter((line) => line.severity !== 'info')
+  if (lines.length > 0) {
+    return formatDispatchAssignmentGateLines(lines, { includeReasonCodes: false })
   }
 
-  const parts: string[] = []
-  if (preview.blockingDriverAvailability.length > 0) {
-    parts.push(`${preview.blockingDriverAvailability.length} driver availability block(s)`)
+  if (preview.validationMessages && preview.validationMessages.length > 0) {
+    return preview.validationMessages.join('; ')
   }
-  if (preview.blockingEquipmentAvailability.length > 0) {
-    parts.push(`${preview.blockingEquipmentAvailability.length} equipment availability block(s)`)
-  }
-  if (preview.overlappingTrips.length > 0) {
-    parts.push(`${preview.overlappingTrips.length} overlapping trip(s)`)
-  }
-  if (preview.driverEligibility?.isBlocking) {
-    parts.push(`eligibility: ${preview.driverEligibility.message}`)
-  } else if (preview.driverEligibility?.outcome === 'warn') {
-    parts.push(`eligibility warning: ${preview.driverEligibility.message}`)
-  }
-  if (preview.assetDispatchability?.isBlocking) {
-    parts.push(`dispatchability: ${preview.assetDispatchability.message}`)
-  } else if (preview.assetDispatchability?.outcome === 'warn') {
-    parts.push(`dispatchability warning: ${preview.assetDispatchability.message}`)
-  }
-  if (preview.workflowGates?.isBlocking) {
-    parts.push(`workflow gate: ${preview.workflowGates.message}`)
-  } else if (preview.workflowGates?.outcome === 'warn') {
-    parts.push(`workflow gate warning: ${preview.workflowGates.message}`)
-  }
-  return parts.join(', ')
+
+  return 'Conflicts detected'
 }
 
 export function resolveAssignmentIgnoreFlags(preview: DispatchAssignmentPreviewResponse) {
@@ -95,9 +81,7 @@ export function confirmDispatchAssignmentPreview(
   const flags = resolveAssignmentIgnoreFlags(preview)
 
   if (preview.hasBlockingConflicts) {
-    const confirmed = confirm(
-      `Assignment blocked: ${formatAssignmentConflictMessage(preview)}. Assign anyway?`,
-    )
+    const confirmed = confirm(formatDispatchAssignmentGateConfirmMessage(preview))
     if (!confirmed) {
       return null
     }

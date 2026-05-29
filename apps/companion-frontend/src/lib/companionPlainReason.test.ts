@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { companionPlainReason, parseApiErrorBody } from './companionPlainReason'
+import { CompanionFieldValidationReasonCodes } from './companionValidationReasonCodes'
 
 describe('companionPlainReason', () => {
   it('parses API error JSON from companion client failures', () => {
@@ -13,6 +14,18 @@ describe('companionPlainReason', () => {
 
     const message = companionPlainReason({ body }, 'Fallback')
     expect(message).toContain('field inbox')
+  })
+
+  it('maps reason code from JSON when message is missing', () => {
+    const body = JSON.stringify({
+      code: CompanionFieldValidationReasonCodes.NotEntitled,
+    })
+
+    expect(companionPlainReason({ body }, 'Fallback.')).toContain('entitled')
+  })
+
+  it('maps bare reason codes on Error messages', () => {
+    expect(companionPlainReason(new Error('not_entitled'), 'Fallback.')).toContain('entitled')
   })
 
   it('returns fallback when error has no parseable body', () => {

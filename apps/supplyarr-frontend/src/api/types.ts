@@ -170,6 +170,48 @@ export interface PartStockLevelResponse {
   updatedAt: string
 }
 
+export interface StockReservationResponse {
+  reservationId: string
+  reservationKey: string
+  status: string
+  sourceType: string
+  sourceReferenceId: string | null
+  partId: string
+  partKey: string
+  partDisplayName: string
+  binId: string
+  binKey: string
+  binName: string
+  locationId: string
+  locationKey: string
+  locationName: string
+  partStockLevelId: string
+  quantityReserved: number
+  notes: string
+  createdByUserId: string
+  fulfilledByUserId: string | null
+  fulfilledAt: string | null
+  releasedByUserId: string | null
+  releasedAt: string | null
+  releaseReason: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateStockReservationRequest {
+  reservationKey: string
+  partId: string
+  binId: string
+  quantity: number
+  sourceType?: string | null
+  sourceReferenceId?: string | null
+  notes?: string | null
+}
+
+export interface ReleaseStockReservationRequest {
+  reason?: string | null
+}
+
 export interface CreateInventoryLocationRequest {
   locationKey: string
   name: string

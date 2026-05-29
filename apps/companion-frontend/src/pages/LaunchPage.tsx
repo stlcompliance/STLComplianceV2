@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CompanionApiError, redeemHandoff } from '../api/client'
+import { companionPlainReason } from '../lib/companionPlainReason'
 import { saveSession, toStoredSession } from '../auth/sessionStorage'
 
 export function LaunchPage() {
@@ -35,7 +36,7 @@ export function LaunchPage() {
             setError('The handoff code is invalid or expired. Relaunch from the suite.')
             return
           }
-          setError(err instanceof Error ? err.message : 'Handoff failed')
+          setError(companionPlainReason(err, 'Handoff failed.'))
         }
       }
     })()

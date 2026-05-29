@@ -27,11 +27,13 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<PmDueScanSettingsService>();
         builder.Services.AddScoped<InspectionTemplateService>();
         builder.Services.AddScoped<InspectionRunService>();
+        builder.Services.AddScoped<InspectionVoiceGuidanceService>();
         builder.Services.AddScoped<DefectService>();
         builder.Services.AddScoped<AssetMeterService>();
         builder.Services.AddScoped<MeterReadingService>();
         builder.Services.AddScoped<MeterPmForecastService>();
         builder.Services.AddScoped<WorkOrderService>();
+        builder.Services.AddScoped<TechnicianRefService>();
         builder.Services.AddScoped<WorkOrderLaborEvidenceService>();
         builder.Services.AddScoped<WorkOrderPartsDemandService>();
         builder.Services.AddScoped<WorkOrderPartsDemandStatusIngestionService>();

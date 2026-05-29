@@ -50,6 +50,10 @@ export function useFieldTaskSubmissionState(accessToken: string, taskKeys: strin
         taskKey,
         acknowledgeLocal: getLocalSubmission(taskKey, 'acknowledge'),
         evidenceLocal: getLocalSubmission(taskKey, 'evidence'),
+        dvirLocal: getLocalSubmission(taskKey, 'dvir'),
+        inspectionLocal: getLocalSubmission(taskKey, 'inspection'),
+        workOrderLocal: getLocalSubmission(taskKey, 'work-order'),
+        receivingLocal: getLocalSubmission(taskKey, 'receiving'),
         serverItems: serverByTask.get(taskKey) ?? [],
       })
     },

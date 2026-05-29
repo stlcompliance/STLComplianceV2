@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { AdvancedReferenceField, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
-import { getTripExecutionSummary, downloadTripCaptureAttachment } from '../api/client'
+import { getTripExecutionSummary, getTrips, downloadTripCaptureAttachment } from '../api/client'
+import { tripToPickerOption } from '../lib/referencePickers'
 
 type Props = {
   accessToken: string
@@ -19,6 +21,22 @@ export function TripProofDvirReadPanel({ accessToken }: Props) {
   const [tripId, setTripId] = useState('')
   const [lookupId, setLookupId] = useState<string | null>(null)
 
+  const tripsQuery = useQuery({
+    queryKey: ['routarr-trips-proof-dvir', accessToken],
+    queryFn: () => getTrips(accessToken),
+    enabled: Boolean(accessToken),
+  })
+
+  const tripOptions = useMemo(
+    () => (tripsQuery.data ?? []).map(tripToPickerOption),
+    [tripsQuery.data],
+  )
+
+  const selectedTripOption = useMemo((): PickerOption | undefined => {
+    const trip = (tripsQuery.data ?? []).find((item) => item.tripId === tripId)
+    return trip ? tripToPickerOption(trip) : undefined
+  }, [tripId, tripsQuery.data])
+
   const summaryQuery = useQuery({
     queryKey: ['trip-execution-summary', lookupId],
     queryFn: () => getTripExecutionSummary(accessToken, lookupId!),
@@ -35,16 +53,24 @@ export function TripProofDvirReadPanel({ accessToken }: Props) {
       </header>
 
       <div className="mt-4 flex flex-wrap items-end gap-2">
-        <label className="flex flex-col gap-1 text-xs text-slate-400">
-          Trip ID
-          <input
-            type="text"
-            className="min-w-[280px] rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
+        <div className="min-w-[280px] flex-1">
+          <StaticSearchPicker
+            label="Trip"
             value={tripId}
-            onChange={(e) => setTripId(e.target.value)}
-            placeholder="Paste trip GUID"
+            onChange={setTripId}
+            options={tripOptions}
+            selectedOption={selectedTripOption}
+            placeholder="Search trips…"
+            disabled={tripsQuery.isLoading}
+            testId="trip-proof-dvir-trip-picker"
           />
-        </label>
+          <AdvancedReferenceField
+            value={tripId}
+            onChange={setTripId}
+            label="Trip id"
+            testId="trip-proof-dvir-trip-advanced"
+          />
+        </div>
         <button
           type="button"
           className="rounded bg-slate-700 px-3 py-1.5 text-sm text-white disabled:opacity-50"

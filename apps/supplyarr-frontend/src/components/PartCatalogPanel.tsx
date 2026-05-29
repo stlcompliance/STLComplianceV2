@@ -1,4 +1,15 @@
+import { ControlledSelect, normalizeUom } from '@stl/shared-ui'
+import { useMemo } from 'react'
+
 import type { PartCatalogResponse, PartResponse } from '../api/types'
+import {
+  distinctCategoryOptions,
+  toCatalogPickerOptions,
+  toPartPickerOptions,
+  toPartyPickerOptions,
+  UOM_OPTIONS,
+} from '../forms/controlledFormHelpers'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface PartCatalogPanelProps {
   catalogs: PartCatalogResponse[]
@@ -85,6 +96,10 @@ export function PartCatalogPanel({
   isCreatingPart,
   isLinkingVendor,
 }: PartCatalogPanelProps) {
+  const catalogKeys = useMemo(() => catalogs.map((catalog) => catalog.catalogKey), [catalogs])
+  const partKeys = useMemo(() => parts.map((part) => part.partKey), [parts])
+  const categoryOptions = useMemo(() => distinctCategoryOptions(parts), [parts])
+
   if (isLoading) {
     return <p className="text-sm text-slate-400">Loading part catalog…</p>
   }
@@ -160,20 +175,23 @@ export function PartCatalogPanel({
         <div className="mt-6 grid gap-6 border-t border-slate-800 pt-6 lg:grid-cols-3">
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-slate-300">Add catalog</h3>
-            <input
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              placeholder="Catalog key"
-              value={catalogKey}
-              onChange={(e) => onCatalogKeyChange(e.target.value)}
+            <label className="block text-sm text-slate-400">
+              Name
+              <input
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                placeholder="Catalog name"
+                value={catalogName}
+                onChange={(e) => onCatalogNameChange(e.target.value)}
+              />
+            </label>
+            <GeneratedKeyFieldGroup
+              sourceLabel={catalogName}
+              existingKeys={catalogKeys}
+              onKeyChange={onCatalogKeyChange}
+              label="Catalog key"
             />
             <input
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              placeholder="Name"
-              value={catalogName}
-              onChange={(e) => onCatalogNameChange(e.target.value)}
-            />
-            <input
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               placeholder="Description"
               value={catalogDescription}
               onChange={(e) => onCatalogDescriptionChange(e.target.value)}
@@ -190,50 +208,50 @@ export function PartCatalogPanel({
 
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-slate-300">Add part SKU</h3>
-            <select
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            <ControlledSelect
+              label="Catalog"
               value={selectedCatalogId}
-              onChange={(e) => onSelectedCatalogIdChange(e.target.value)}
-            >
-              <option value="">No catalog</option>
-              {catalogs.map((c) => (
-                <option key={c.catalogId} value={c.catalogId}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <input
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              placeholder="Part key"
-              value={partKey}
-              onChange={(e) => onPartKeyChange(e.target.value)}
+              onChange={onSelectedCatalogIdChange}
+              options={toCatalogPickerOptions(catalogs)}
+              emptyLabel="No catalog"
             />
-            <input
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              placeholder="Display name"
-              value={partName}
-              onChange={(e) => onPartNameChange(e.target.value)}
+            <label className="block text-sm text-slate-400">
+              Display name
+              <input
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                placeholder="Display name"
+                value={partName}
+                onChange={(e) => onPartNameChange(e.target.value)}
+              />
+            </label>
+            <GeneratedKeyFieldGroup
+              sourceLabel={partName}
+              existingKeys={partKeys}
+              onKeyChange={onPartKeyChange}
+              label="Part key"
             />
-            <input
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              placeholder="Category key"
+            <ControlledSelect
+              label="Category"
               value={partCategory}
-              onChange={(e) => onPartCategoryChange(e.target.value)}
+              onChange={onPartCategoryChange}
+              options={categoryOptions}
+              emptyLabel="Select category…"
             />
-            <input
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              placeholder="Unit of measure"
+            <ControlledSelect
+              label="Unit of measure"
               value={partUom}
-              onChange={(e) => onPartUomChange(e.target.value)}
+              onChange={(value) => onPartUomChange(normalizeUom(value))}
+              options={UOM_OPTIONS}
+              emptyLabel="Select UOM…"
             />
             <input
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               placeholder="Manufacturer"
               value={partManufacturer}
               onChange={(e) => onPartManufacturerChange(e.target.value)}
             />
             <input
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               placeholder="Manufacturer part #"
               value={partMfgNumber}
               onChange={(e) => onPartMfgNumberChange(e.target.value)}
@@ -250,32 +268,22 @@ export function PartCatalogPanel({
 
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-slate-300">Link vendor</h3>
-            <select
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            <ControlledSelect
+              label="Part"
               value={selectedPartId}
-              onChange={(e) => onSelectedPartIdChange(e.target.value)}
-            >
-              <option value="">Select part</option>
-              {parts.map((p) => (
-                <option key={p.partId} value={p.partId}>
-                  {p.displayName}
-                </option>
-              ))}
-            </select>
-            <select
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              onChange={onSelectedPartIdChange}
+              options={toPartPickerOptions(parts)}
+              emptyLabel="Select part"
+            />
+            <ControlledSelect
+              label="Vendor"
               value={selectedVendorId}
-              onChange={(e) => onSelectedVendorIdChange(e.target.value)}
-            >
-              <option value="">Select vendor</option>
-              {vendors.map((v) => (
-                <option key={v.partyId} value={v.partyId}>
-                  {v.displayName}
-                </option>
-              ))}
-            </select>
+              onChange={onSelectedVendorIdChange}
+              options={toPartyPickerOptions(vendors)}
+              emptyLabel="Select vendor"
+            />
             <input
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               placeholder="Vendor part number"
               value={vendorPartNumber}
               onChange={(e) => onVendorPartNumberChange(e.target.value)}

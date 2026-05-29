@@ -36,7 +36,7 @@ describe('ForgivingSearchBar', () => {
       </QueryClientProvider>,
     )
 
-    const input = screen.getByLabelText(/Forgiving search/i)
+    const input = screen.getByPlaceholderText(/Search vendors, parts, SKUs/i)
     fireEvent.change(input, { target: { value: 'acme' } })
 
     await waitFor(() => {

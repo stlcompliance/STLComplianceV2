@@ -1,9 +1,13 @@
+import { ControlledSelect } from '@stl/shared-ui'
+
 import type {
+  TechnicianRefResponse,
   WorkOrderDetailResponse,
   WorkOrderEvidenceResponse,
   WorkOrderLaborEntryResponse,
   WorkOrderTaskLineResponse,
 } from '../api/types'
+import { WORK_ORDER_EVIDENCE_TYPE_OPTIONS } from './formOptions'
 
 interface WorkOrderLaborEvidencePanelProps {
   workOrder: WorkOrderDetailResponse | null
@@ -12,6 +16,7 @@ interface WorkOrderLaborEvidencePanelProps {
   evidence: WorkOrderEvidenceResponse[]
   canPerform: boolean
   sessionPersonId: string
+  technicianRefs: TechnicianRefResponse[]
   taskTitle: string
   laborHours: string
   laborTypeKey: string
@@ -53,6 +58,7 @@ export function WorkOrderLaborEvidencePanel({
   evidence,
   canPerform,
   sessionPersonId,
+  technicianRefs,
   taskTitle,
   laborHours,
   laborTypeKey,
@@ -143,12 +149,21 @@ export function WorkOrderLaborEvidencePanel({
         )}
         {canPerform && editable ? (
           <div className="mt-3 grid gap-2 md:grid-cols-2">
-            <input
+            <select
               className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
-              placeholder={`Person id (${sessionPersonId})`}
               value={laborPersonId}
               onChange={(event) => onLaborPersonIdChange(event.target.value)}
-            />
+            >
+              <option value="">Select technician…</option>
+              <option value={sessionPersonId}>Me ({sessionPersonId})</option>
+              {technicianRefs
+                .filter((ref) => ref.personId !== sessionPersonId)
+                .map((ref) => (
+                  <option key={ref.personId} value={ref.personId}>
+                    {ref.displayName}
+                  </option>
+                ))}
+            </select>
             <input
               className="rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
               placeholder="Hours"
@@ -211,11 +226,14 @@ export function WorkOrderLaborEvidencePanel({
         )}
         {canPerform && editable ? (
           <div className="mt-3 space-y-2">
-            <input
-              className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
-              placeholder="Evidence type (e.g. before_photo)"
+            <ControlledSelect
+              label="Evidence type"
               value={evidenceTypeKey}
-              onChange={(event) => onEvidenceTypeKeyChange(event.target.value)}
+              onChange={onEvidenceTypeKeyChange}
+              options={WORK_ORDER_EVIDENCE_TYPE_OPTIONS}
+              emptyLabel="Select evidence type…"
+              testId="work-order-evidence-type"
+              className="w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-white"
             />
             <input
               type="file"

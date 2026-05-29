@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import * as nexarr from '../../api/nexarrClient'
+import { TenantCatalogAdminPanel } from '../../components/platform-admin/TenantCatalogAdminPanel'
 
 export function TenantOverviewPage() {
   const overviewQuery = useQuery({
@@ -50,6 +51,7 @@ export function TenantOverviewPage() {
           ))}
         </tbody>
       </table>
+      <TenantCatalogAdminPanel />
     </div>
   )
 }

@@ -29,7 +29,17 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
 
         app.MapTrainArrTrainingDefinitionEndpoints();
 
+        app.MapTrainArrTrainingDefinitionStepEndpoints();
+
         app.MapTrainArrTrainingProgramEndpoints();
+
+        app.MapTrainArrTrainingProgramVersionEndpoints();
+
+        app.MapTrainArrTrainingMatrixEndpoints();
+
+        app.MapTrainArrTrainingApplicabilityProfileEndpoints();
+
+        app.MapTrainArrTrainingRequirementEndpoints();
 
         app.MapTrainArrTrainingAssignmentEndpoints();
 

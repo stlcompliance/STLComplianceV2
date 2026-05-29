@@ -12,7 +12,9 @@ public sealed record CreateTrainingAssignmentRequest(
 
     string AssignmentReason,
 
-    DateTimeOffset? DueAt);
+    DateTimeOffset? DueAt,
+
+    Guid? AuthorizationQualificationCheckId = null);
 
 
 

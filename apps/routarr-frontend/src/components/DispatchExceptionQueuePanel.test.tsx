@@ -6,6 +6,7 @@ import { DispatchExceptionQueuePanel } from './DispatchExceptionQueuePanel'
 vi.mock('../api/client', () => ({
   listDispatchExceptions: vi.fn(),
   listDispatchExceptionResolutionTemplates: vi.fn(),
+  getTrips: vi.fn().mockResolvedValue([]),
   createDispatchException: vi.fn(),
   assignDispatchException: vi.fn(),
   resolveDispatchException: vi.fn(),

@@ -12,6 +12,23 @@ import type {
   SyncCompanionOfflineActionsRequest,
   SyncCompanionOfflineActionsResponse,
   SubmitCompanionFieldEvidenceRequest,
+  SubmitCompanionFieldDvirRequest,
+  CompanionFieldDvirResponse,
+  SubmitCompanionFieldInspectionAnswersRequest,
+  CompanionFieldInspectionAnswersResponse,
+  CompleteCompanionFieldInspectionRequest,
+  CompanionFieldInspectionCompleteResponse,
+  CompanionFieldInspectionDetailResponse,
+  CompanionFieldWorkOrderDetailResponse,
+  UpdateCompanionFieldWorkOrderStatusRequest,
+  CompanionFieldWorkOrderStatusResponse,
+  LogCompanionFieldWorkOrderLaborRequest,
+  CompanionFieldWorkOrderLaborResponse,
+  CompanionFieldReceivingDetailResponse,
+  UpdateCompanionFieldReceivingLineRequest,
+  CompanionFieldReceivingLineResponse,
+  PostCompanionFieldReceivingRequest,
+  CompanionFieldReceivingPostResponse,
   CompanionScanResolveRequest,
   CompanionScanResolveResponse,
   CompanionPushVapidPublicKeyResponse,
@@ -276,6 +293,153 @@ export async function submitCompanionFieldEvidence(
   return parseJsonResponse<CompanionFieldEvidenceResponse>(
     response,
     'Failed to upload field task evidence',
+  )
+}
+
+export async function submitCompanionFieldDvir(
+  accessToken: string,
+  body: SubmitCompanionFieldDvirRequest,
+): Promise<CompanionFieldDvirResponse> {
+  const response = await fetch(`${apiBase}/api/companion/field-tasks/dvir`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<CompanionFieldDvirResponse>(
+    response,
+    'Failed to submit field task DVIR',
+  )
+}
+
+export async function getCompanionFieldInspectionDetail(
+  accessToken: string,
+  taskKey: string,
+): Promise<CompanionFieldInspectionDetailResponse> {
+  const search = new URLSearchParams({ taskKey })
+  const response = await fetch(`${apiBase}/api/companion/field-tasks/inspection?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CompanionFieldInspectionDetailResponse>(
+    response,
+    'Failed to load field inspection detail',
+  )
+}
+
+export async function submitCompanionFieldInspectionAnswers(
+  accessToken: string,
+  body: SubmitCompanionFieldInspectionAnswersRequest,
+): Promise<CompanionFieldInspectionAnswersResponse> {
+  const response = await fetch(`${apiBase}/api/companion/field-tasks/inspection/answers`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<CompanionFieldInspectionAnswersResponse>(
+    response,
+    'Failed to submit field inspection answers',
+  )
+}
+
+export async function completeCompanionFieldInspection(
+  accessToken: string,
+  body: CompleteCompanionFieldInspectionRequest,
+): Promise<CompanionFieldInspectionCompleteResponse> {
+  const response = await fetch(`${apiBase}/api/companion/field-tasks/inspection/complete`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<CompanionFieldInspectionCompleteResponse>(
+    response,
+    'Failed to complete field inspection',
+  )
+}
+
+export async function getCompanionFieldWorkOrderDetail(
+  accessToken: string,
+  taskKey: string,
+): Promise<CompanionFieldWorkOrderDetailResponse> {
+  const search = new URLSearchParams({ taskKey })
+  const response = await fetch(`${apiBase}/api/companion/field-tasks/work-order?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CompanionFieldWorkOrderDetailResponse>(
+    response,
+    'Failed to load field work order detail',
+  )
+}
+
+export async function updateCompanionFieldWorkOrderStatus(
+  accessToken: string,
+  body: UpdateCompanionFieldWorkOrderStatusRequest,
+): Promise<CompanionFieldWorkOrderStatusResponse> {
+  const response = await fetch(`${apiBase}/api/companion/field-tasks/work-order/status`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<CompanionFieldWorkOrderStatusResponse>(
+    response,
+    'Failed to update field work order status',
+  )
+}
+
+export async function logCompanionFieldWorkOrderLabor(
+  accessToken: string,
+  body: LogCompanionFieldWorkOrderLaborRequest,
+): Promise<CompanionFieldWorkOrderLaborResponse> {
+  const response = await fetch(`${apiBase}/api/companion/field-tasks/work-order/labor`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<CompanionFieldWorkOrderLaborResponse>(
+    response,
+    'Failed to log field work order labor',
+  )
+}
+
+export async function getCompanionFieldReceivingDetail(
+  accessToken: string,
+  taskKey: string,
+): Promise<CompanionFieldReceivingDetailResponse> {
+  const search = new URLSearchParams({ taskKey })
+  const response = await fetch(`${apiBase}/api/companion/field-tasks/receiving?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CompanionFieldReceivingDetailResponse>(
+    response,
+    'Failed to load field receiving detail',
+  )
+}
+
+export async function updateCompanionFieldReceivingLine(
+  accessToken: string,
+  body: UpdateCompanionFieldReceivingLineRequest,
+): Promise<CompanionFieldReceivingLineResponse> {
+  const response = await fetch(`${apiBase}/api/companion/field-tasks/receiving/line`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<CompanionFieldReceivingLineResponse>(
+    response,
+    'Failed to update field receiving line',
+  )
+}
+
+export async function postCompanionFieldReceiving(
+  accessToken: string,
+  body: PostCompanionFieldReceivingRequest,
+): Promise<CompanionFieldReceivingPostResponse> {
+  const response = await fetch(`${apiBase}/api/companion/field-tasks/receiving/post`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(body),
+  })
+  return parseJsonResponse<CompanionFieldReceivingPostResponse>(
+    response,
+    'Failed to post field receiving receipt',
   )
 }
 

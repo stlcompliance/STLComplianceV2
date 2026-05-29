@@ -13,6 +13,20 @@ export function ReadinessSection({ state }: Props) {
         <ReadinessRollupSupervisorPanel
           teamRollups={s.teamReadinessRollupsQuery.data ?? []}
           siteRollups={s.siteReadinessRollupsQuery.data ?? []}
+          siteFilterOrgUnitId={s.readinessRollupSiteFilterId}
+          onSiteFilterChange={s.setReadinessRollupSiteFilterId}
+          memberReadinessFilter={s.readinessRollupMemberFilter}
+          onMemberReadinessFilterChange={s.setReadinessRollupMemberFilter}
+          selectedRollup={s.selectedReadinessRollup}
+          onSelectRollup={s.setSelectedReadinessRollup}
+          rollupMembers={s.readinessRollupMembersQuery.data ?? null}
+          rollupMembersLoading={s.readinessRollupMembersQuery.isLoading}
+          rollupMembersErrorMessage={
+            s.readinessRollupMembersQuery.error instanceof StaffArrApiError
+              ? s.readinessRollupMembersQuery.error.body || s.readinessRollupMembersQuery.error.message
+              : null
+          }
+          onSelectPerson={s.setSelectedPersonId}
           isLoading={s.teamReadinessRollupsQuery.isLoading || s.siteReadinessRollupsQuery.isLoading}
           errorMessage={
             s.teamReadinessRollupsQuery.error instanceof StaffArrApiError

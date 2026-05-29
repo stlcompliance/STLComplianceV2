@@ -1314,6 +1314,46 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Person_timeline_category_filter_returns_only_matching_events()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Timeline Category User", "timeline.category@example.com");
+
+        var incidentRequest = Authorized(HttpMethod.Post, "/api/incidents", token);
+        incidentRequest.Content = JsonContent.Create(new CreatePersonnelIncidentRequest(
+            personId,
+            "policy",
+            "low",
+            "Policy coaching",
+            "Category filter coverage incident.",
+            DateTimeOffset.UtcNow.AddHours(-2)));
+        (await _staffarrClient.SendAsync(incidentRequest)).EnsureSuccessStatusCode();
+
+        var readinessRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/readiness/override", token);
+        readinessRequest.Content = JsonContent.Create(new GrantReadinessOverrideRequest(
+            "Temporary access for category filter coverage.",
+            DateTimeOffset.UtcNow.AddDays(1)));
+        (await _staffarrClient.SendAsync(readinessRequest)).EnsureSuccessStatusCode();
+
+        var incidentOnlyResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/timeline?category=incident&page=1&pageSize=50", token));
+        incidentOnlyResponse.EnsureSuccessStatusCode();
+        var incidentOnly = (await incidentOnlyResponse.Content.ReadFromJsonAsync<PagedResult<PersonTimelineEntryResponse>>())!;
+
+        Assert.True(incidentOnly.TotalCount >= 1);
+        Assert.All(incidentOnly.Items, x => Assert.Equal("incident", x.Category));
+
+        var readinessOnlyResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/timeline?category=readiness&page=1&pageSize=50", token));
+        readinessOnlyResponse.EnsureSuccessStatusCode();
+        var readinessOnly = (await readinessOnlyResponse.Content.ReadFromJsonAsync<PagedResult<PersonTimelineEntryResponse>>())!;
+
+        Assert.True(readinessOnly.TotalCount >= 1);
+        Assert.All(readinessOnly.Items, x => Assert.Equal("readiness", x.Category));
+    }
+
+    [Fact]
     public async Task Person_timeline_allows_tenant_member_self_and_denies_other_people()
     {
         var selfPersonId = Guid.NewGuid();

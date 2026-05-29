@@ -239,6 +239,50 @@ export interface SubmitInspectionRunAnswersRequest {
   answers: InspectionRunAnswerInput[]
 }
 
+export interface TechnicianRefResponse {
+  personId: string
+  displayName: string
+  activeStatus: string | null
+  primarySite: string | null
+  lastSeenAt: string
+}
+
+export interface TechnicianRefListResponse {
+  items: TechnicianRefResponse[]
+}
+
+export interface UpsertTechnicianRefRequest {
+  personId: string
+  displayName: string
+  activeStatus?: string | null
+  primarySite?: string | null
+  sourceUpdatedAt?: string | null
+  sourceCorrelationId?: string | null
+}
+
+export interface InspectionVoicePromptResponse {
+  checklistItemId: string
+  itemKey: string
+  prompt: string
+  itemType: string
+  ttsPrompt: string
+  voiceAnswerHint: string
+  sortOrder: number
+  isAnswered: boolean
+}
+
+export interface InspectionVoiceGuidanceResponse {
+  inspectionRunId: string
+  prompts: InspectionVoicePromptResponse[]
+  nextUnansweredIndex: number
+}
+
+export interface NormalizeVoiceNumericResponse {
+  value: number | null
+  normalizedText: string | null
+  understood: boolean
+}
+
 export interface DefectSummaryResponse {
   defectId: string
   assetId: string
@@ -442,6 +486,20 @@ export interface PublishWorkOrderPartsDemandResponse {
   supplyarrPurchaseRequestId: string | null
   createdPurchaseRequestDraft: boolean
   lines: WorkOrderPartsDemandLineResponse[]
+}
+
+export interface WorkOrderPartsDemandStatusEventResponse {
+  statusEventId: string
+  maintainarrPublicationId: string
+  supplyarrDemandRefId: string
+  eventType: string
+  procurementStatus: string
+  supplyarrPurchaseRequestId: string | null
+  supplyarrPurchaseOrderId: string | null
+  supplyarrReceivingReceiptId: string | null
+  message: string
+  occurredAt: string
+  createdAt: string
 }
 
 export interface CreateWorkOrderRequest {
@@ -979,6 +1037,7 @@ export interface AuditPackageFilterOptions {
   actions: string[]
   results: string[]
   targetTypes: string[]
+  actorUserIds: string[]
 }
 
 export interface AuditPackageAppliedFilters {

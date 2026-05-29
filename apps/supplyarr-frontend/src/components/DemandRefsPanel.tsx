@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 import type { MaintainArrDemandRefResponse, PartResponse } from '../api/types'
 
 interface DemandRefsPanelProps {
@@ -16,6 +18,17 @@ interface DemandRefsPanelProps {
   onCreatePurchaseRequest: () => void
   isCreatingPurchaseRequest: boolean
 }
+
+const PROCUREMENT_JOURNEY_STEPS = [
+  'received',
+  'pr_drafted',
+  'pr_submitted',
+  'pr_approved',
+  'po_created',
+  'po_issued',
+  'partially_received',
+  'received_complete',
+] as const
 
 function statusBadgeClass(status: string): string {
   switch (status) {
@@ -46,6 +59,16 @@ function procurementBadgeClass(status: string): string {
   }
 }
 
+function procurementStepIndex(status: string): number {
+  const normalized = status === 'pr_rejected' ? 'pr_drafted' : status
+  const index = PROCUREMENT_JOURNEY_STEPS.indexOf(normalized as (typeof PROCUREMENT_JOURNEY_STEPS)[number])
+  return index >= 0 ? index : 0
+}
+
+function formatStepLabel(step: string): string {
+  return step.replaceAll('_', ' ')
+}
+
 export function DemandRefsPanel({
   demandRefs,
   parts,
@@ -63,12 +86,14 @@ export function DemandRefsPanel({
   isCreatingPurchaseRequest,
 }: DemandRefsPanelProps) {
   const selected = demandRefs.find((ref) => ref.demandRefId === selectedDemandRefId) ?? null
+  const activeStepIndex = selected ? procurementStepIndex(selected.procurementStatus) : -1
 
   return (
-    <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
+    <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-5" data-testid="demand-refs-panel">
       <h2 className="text-lg font-semibold text-white">MaintainArr demand intake</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Local mirror of work-order parts demand from MaintainArr (opaque work order ids).
+        Local mirror of work-order parts demand from MaintainArr (opaque work order ids). Track
+        procurement journey from intake through receiving.
       </p>
 
       {isLoading ? <p className="mt-4 text-sm text-slate-400">Loading demand references…</p> : null}
@@ -128,6 +153,59 @@ export function DemandRefsPanel({
           <p className="mt-1 text-xs text-slate-500">
             MaintainArr WO {selected.maintainarrWorkOrderNumber} · asset {selected.maintainarrAssetId.slice(0, 8)}…
           </p>
+
+          <div className="mt-3" data-testid="demand-ref-procurement-journey">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Procurement journey
+            </h4>
+            <ol className="mt-2 flex flex-wrap gap-2">
+              {PROCUREMENT_JOURNEY_STEPS.map((step, index) => {
+                const reached = index <= activeStepIndex
+                const current = index === activeStepIndex
+                return (
+                  <li
+                    key={step}
+                    className={`rounded px-2 py-1 text-xs ring-1 ${
+                      current
+                        ? procurementBadgeClass(selected.procurementStatus)
+                        : reached
+                          ? 'bg-slate-700/40 text-slate-300 ring-slate-600/40'
+                          : 'bg-slate-900/40 text-slate-600 ring-slate-800'
+                    }`}
+                  >
+                    {formatStepLabel(step)}
+                  </li>
+                )
+              })}
+            </ol>
+            <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
+              <span>Received {new Date(selected.receivedAt).toLocaleString()}</span>
+              {selected.lastStatusCallbackAt ? (
+                <span>Last callback {new Date(selected.lastStatusCallbackAt).toLocaleString()}</span>
+              ) : null}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-3 text-xs">
+              {selected.purchaseRequestId ? (
+                <Link
+                  to="/purchasing"
+                  className="text-violet-300 underline-offset-2 hover:underline"
+                  data-testid="demand-ref-open-pr"
+                >
+                  Open purchase request {selected.purchaseRequestId.slice(0, 8)}…
+                </Link>
+              ) : null}
+              {selected.purchaseOrderId ? (
+                <Link
+                  to="/purchasing"
+                  className="text-violet-300 underline-offset-2 hover:underline"
+                  data-testid="demand-ref-open-po"
+                >
+                  Linked PO {selected.purchaseOrderId.slice(0, 8)}…
+                </Link>
+              ) : null}
+            </div>
+          </div>
+
           <ul className="mt-3 space-y-2 text-sm">
             {selected.lines.map((line) => {
               const part = parts.find((p) => p.partId === line.partId)

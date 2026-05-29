@@ -44,6 +44,7 @@ describe('AuditPackageExportPanel', () => {
       actions: ['people.create'],
       results: ['success'],
       targetTypes: ['person'],
+      actorUserIds: ['actor-user-1'],
     })
     vi.mocked(client.getAuditPackageExportSummary).mockResolvedValue({
       filters: {
@@ -107,6 +108,7 @@ describe('AuditPackageExportPanel', () => {
       actions: [],
       results: [],
       targetTypes: [],
+      actorUserIds: [],
     })
     vi.mocked(client.getAuditPackageExportSummary).mockResolvedValue({
       filters: {

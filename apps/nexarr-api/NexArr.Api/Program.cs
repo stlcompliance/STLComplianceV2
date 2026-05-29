@@ -29,12 +29,17 @@ await StlApiHost.RunAsync<NexArrDbContext>(
         app.MapNexArrInternalTenantLifecycleEndpoints();
         app.MapPlatformLifecycleOverviewEndpoints();
         app.MapPlatformWorkerHealthOrchestrationEndpoints();
+        app.MapHybridDataPlaneEndpoints();
         app.MapPlatformHealthEndpoints();
         app.MapCompanionEndpoints();
         app.MapCompanionNotificationEndpoints();
         app.MapCompanionPushEndpoints();
         app.MapCompanionOfflineEndpoints();
         app.MapCompanionFieldEvidenceEndpoints();
+        app.MapCompanionFieldDvirEndpoints();
+        app.MapCompanionFieldInspectionEndpoints();
+        app.MapCompanionFieldWorkOrderEndpoints();
+        app.MapCompanionFieldReceivingEndpoints();
         app.MapCompanionFieldSubmissionEndpoints();
         app.MapCompanionScanEndpoints();
         app.MapInternalCompanionNotificationEndpoints();

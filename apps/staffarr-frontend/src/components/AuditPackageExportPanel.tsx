@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { ControlledSelect } from '@stl/shared-ui'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   createAuditPackageGenerationJob,
@@ -129,6 +130,14 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
   }, [accessToken, activeJobId, jobStatusQuery.data])
 
   const filterOptions = filterOptionsQuery.data
+  const actorUserOptions = useMemo(
+    () =>
+      (filterOptions?.actorUserIds ?? []).map((id) => ({
+        value: id,
+        label: id,
+      })),
+    [filterOptions?.actorUserIds],
+  )
   const summary = summaryQuery.data
   const jobStatus = jobStatusQuery.data
   const jobInFlight =
@@ -243,17 +252,15 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
               ))}
             </select>
           </label>
-          <label className="block text-sm text-slate-300 sm:col-span-2">
-            Actor user ID (optional GUID)
-            <input
-              type="text"
-              value={actorUserId}
-              onChange={(e) => setActorUserId(e.target.value)}
-              data-testid="staffarr-audit-filter-actor"
-              placeholder="Any actor when empty"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            />
-          </label>
+          <ControlledSelect
+            label="Actor user"
+            value={actorUserId}
+            onChange={setActorUserId}
+            options={actorUserOptions}
+            emptyLabel="Any actor"
+            testId="staffarr-audit-filter-actor"
+            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 sm:col-span-2"
+          />
         </div>
       </div>
 

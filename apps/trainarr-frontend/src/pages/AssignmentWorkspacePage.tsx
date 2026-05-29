@@ -10,8 +10,11 @@ import {
   getTrainingAssignment,
   getTrainingAssignmentMaterialDemand,
   getTrainingAssignmentMaterialDemandStatusEvents,
+  getTrainingAssignmentSteps,
   getTrainingEvidence,
+  getTrainingEvaluationHistory,
   publishTrainingAssignmentMaterialDemand,
+  submitTrainingAssignmentStep,
   submitTrainingEvaluation,
   submitTrainingSignoff,
 } from '../api/client'
@@ -25,6 +28,7 @@ import {
   loadSession,
 } from '../auth/sessionStorage'
 import { AssignmentMaterialDemandPanel } from '../components/AssignmentMaterialDemandPanel'
+import { AssignmentStepsPanel } from '../components/AssignmentStepsPanel'
 import { EvidenceCapturePanel } from '../components/EvidenceCapturePanel'
 import { SignoffEvaluationPanel } from '../components/SignoffEvaluationPanel'
 
@@ -87,6 +91,12 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
     enabled: Boolean(session?.accessToken && assignmentId),
   })
 
+  const assignmentStepsQuery = useQuery({
+    queryKey: ['trainarr-assignment-steps', session?.accessToken, assignmentId],
+    queryFn: () => getTrainingAssignmentSteps(session!.accessToken, assignmentId!),
+    enabled: Boolean(session?.accessToken && assignmentId),
+  })
+
   const materialDemandQuery = useQuery({
     queryKey: ['trainarr-material-demand', session?.accessToken, assignmentId],
     queryFn: () => getTrainingAssignmentMaterialDemand(session!.accessToken, assignmentId!),
@@ -97,6 +107,12 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
     queryKey: ['trainarr-material-demand-status-events', session?.accessToken, assignmentId],
     queryFn: () =>
       getTrainingAssignmentMaterialDemandStatusEvents(session!.accessToken, assignmentId!),
+    enabled: Boolean(session?.accessToken && assignmentId),
+  })
+
+  const evaluationHistoryQuery = useQuery({
+    queryKey: ['trainarr-evaluation-history', session?.accessToken, assignmentId],
+    queryFn: () => getTrainingEvaluationHistory(session!.accessToken, assignmentId!),
     enabled: Boolean(session?.accessToken && assignmentId),
   })
 
@@ -139,6 +155,8 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['trainarr-assignment', session?.accessToken, assignmentId] })
       void queryClient.invalidateQueries({ queryKey: ['trainarr-assignments'] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-evaluation-history', session?.accessToken, assignmentId] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-evaluation-review-timeline', session?.accessToken] })
     },
   })
 
@@ -180,6 +198,22 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
     mutationFn: () => completeTrainingAssignment(session!.accessToken, assignmentId!),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['trainarr-assignments'] })
+      void queryClient.invalidateQueries({ queryKey: ['trainarr-assignment', session?.accessToken, assignmentId] })
+    },
+  })
+
+  const submitAssignmentStepMutation = useMutation({
+    mutationFn: async ({
+      stepId,
+      payload,
+    }: {
+      stepId: string
+      payload: { selectedOptionIndexes?: number[]; practicalResult?: string; notes?: string }
+    }) => submitTrainingAssignmentStep(session!.accessToken, assignmentId!, stepId, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['trainarr-assignment-steps', session?.accessToken, assignmentId],
+      })
       void queryClient.invalidateQueries({ queryKey: ['trainarr-assignment', session?.accessToken, assignmentId] })
     },
   })
@@ -250,6 +284,9 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
     assignment &&
     !assignment.staffarrAcknowledgementRequired &&
     canUploadEvidence(me.tenantRoleKey, me.isPlatformAdmin, assignment.staffarrPersonId, me.personId)
+  const canSubmitSteps =
+    assignment &&
+    canCompleteAssignment(me.tenantRoleKey, me.isPlatformAdmin, assignment.staffarrPersonId, me.personId)
   const canComplete =
     assignment &&
     canCompleteAssignment(me.tenantRoleKey, me.isPlatformAdmin, assignment.staffarrPersonId, me.personId)
@@ -338,6 +375,17 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
             ) : null}
           </section>
 
+          <AssignmentStepsPanel
+            steps={assignmentStepsQuery.data ?? []}
+            isLoading={assignmentStepsQuery.isLoading}
+            canComplete={Boolean(canSubmitSteps)}
+            canEvaluate={canEvaluate}
+            isSubmitting={submitAssignmentStepMutation.isPending}
+            onSubmitStep={async (stepId, payload) => {
+              await submitAssignmentStepMutation.mutateAsync({ stepId, payload })
+            }}
+          />
+
           <div ref={evidenceSectionRef} id="assignment-evidence" data-testid="assignment-evidence-section">
             <EvidenceCapturePanel
               assignment={assignment}
@@ -356,6 +404,8 @@ export function AssignmentWorkspacePage({ focus }: AssignmentWorkspacePageProps)
 
           <SignoffEvaluationPanel
             assignment={assignment}
+            evaluationHistory={evaluationHistoryQuery.data?.items ?? []}
+            isLoadingHistory={evaluationHistoryQuery.isLoading}
             evaluationResult={evaluationResult}
             evaluationScore={evaluationScore}
             evaluationNotes={evaluationNotes}

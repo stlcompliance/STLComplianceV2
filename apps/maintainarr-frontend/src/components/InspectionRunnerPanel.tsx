@@ -3,6 +3,7 @@ import type {
   InspectionRunDetailResponse,
   InspectionRunSummaryResponse,
   InspectionTemplateSummaryResponse,
+  InspectionVoicePromptResponse,
 } from '../api/types'
 
 interface InspectionRunnerPanelProps {
@@ -22,6 +23,15 @@ interface InspectionRunnerPanelProps {
   isSubmitting: boolean
   isCompleting: boolean
   isCreatingDefects: boolean
+  voiceGuidanceEnabled: boolean
+  voiceGuidanceSupported: boolean
+  voiceGuidanceLoading: boolean
+  currentVoicePrompt: InspectionVoicePromptResponse | null
+  voiceStatusMessage: string | null
+  isVoiceListening: boolean
+  onVoiceGuidanceEnabledChange: (enabled: boolean) => void
+  onReadCurrentPrompt: () => void
+  onListenForAnswer: () => void
   onSelectedAssetIdChange: (value: string) => void
   onSelectedTemplateIdChange: (value: string) => void
   onSelectedRunIdChange: (value: string) => void
@@ -66,6 +76,15 @@ export function InspectionRunnerPanel({
   isSubmitting,
   isCompleting,
   isCreatingDefects,
+  voiceGuidanceEnabled,
+  voiceGuidanceSupported,
+  voiceGuidanceLoading,
+  currentVoicePrompt,
+  voiceStatusMessage,
+  isVoiceListening,
+  onVoiceGuidanceEnabledChange,
+  onReadCurrentPrompt,
+  onListenForAnswer,
   onSelectedAssetIdChange,
   onSelectedTemplateIdChange,
   onSelectedRunIdChange,
@@ -156,7 +175,7 @@ export function InspectionRunnerPanel({
                   </p>
                 </div>
                 {inProgressRun && canExecute ? (
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
                       className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-50"
@@ -189,6 +208,59 @@ export function InspectionRunnerPanel({
                   </div>
                 ) : null}
               </div>
+
+              {inProgressRun && canExecute ? (
+                <div className="mb-4 rounded-lg border border-violet-900/60 bg-violet-950/20 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <label className="flex items-center gap-2 text-sm text-slate-200">
+                      <input
+                        type="checkbox"
+                        checked={voiceGuidanceEnabled}
+                        disabled={!voiceGuidanceSupported}
+                        onChange={(event) => onVoiceGuidanceEnabledChange(event.target.checked)}
+                      />
+                      Voice-guided inspection
+                    </label>
+                    {voiceGuidanceEnabled ? (
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          className="rounded border border-violet-700 px-3 py-1 text-sm text-violet-100 hover:bg-violet-900/40 disabled:opacity-50"
+                          disabled={!currentVoicePrompt || voiceGuidanceLoading}
+                          onClick={onReadCurrentPrompt}
+                        >
+                          Read prompt
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded bg-violet-800 px-3 py-1 text-sm text-white hover:bg-violet-700 disabled:opacity-50"
+                          disabled={!currentVoicePrompt || isVoiceListening || voiceGuidanceLoading}
+                          onClick={onListenForAnswer}
+                        >
+                          {isVoiceListening ? 'Listening…' : 'Listen for answer'}
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                  {!voiceGuidanceSupported ? (
+                    <p className="mt-2 text-xs text-slate-400">
+                      Voice guidance requires browser speech synthesis and recognition support.
+                    </p>
+                  ) : null}
+                  {voiceGuidanceEnabled && currentVoicePrompt ? (
+                    <div className="mt-3 text-sm">
+                      <p className="font-medium text-violet-100">{currentVoicePrompt.prompt}</p>
+                      <p className="mt-1 text-xs text-violet-200/80">{currentVoicePrompt.voiceAnswerHint}</p>
+                    </div>
+                  ) : null}
+                  {voiceGuidanceEnabled && voiceGuidanceLoading ? (
+                    <p className="mt-2 text-xs text-slate-400">Loading voice prompts…</p>
+                  ) : null}
+                  {voiceStatusMessage ? (
+                    <p className="mt-2 text-xs text-emerald-300">{voiceStatusMessage}</p>
+                  ) : null}
+                </div>
+              ) : null}
 
               <ul className="space-y-3">
                 {activeRun.checklistItems.map((item) => {

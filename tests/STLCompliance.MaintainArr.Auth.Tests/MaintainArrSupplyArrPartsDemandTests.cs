@@ -344,6 +344,67 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Parts_demand_status_events_list_after_callback()
+    {
+        var maintainarrToken = await RedeemMaintainArrTokenAsync();
+        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var partId = await SeedSupplyArrPartAsync(supplyarrToken);
+        var assetId = await SeedAssetOnlyAsync(maintainarrToken);
+        var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
+
+        var createLineRequest = Authorized(HttpMethod.Post, $"/api/work-orders/{workOrderId}/parts-demand", maintainarrToken);
+        createLineRequest.Content = JsonContent.Create(new CreateWorkOrderPartsDemandLineRequest(
+            partId,
+            "EVT-001",
+            "Status events list part",
+            1m,
+            "each",
+            null));
+        await _maintainarrClient.SendAsync(createLineRequest);
+
+        var publishRequest = Authorized(HttpMethod.Post, $"/api/work-orders/{workOrderId}/parts-demand/publish", maintainarrToken);
+        publishRequest.Content = JsonContent.Create(new PublishWorkOrderPartsDemandRequest(false));
+        var publishResponse = await _maintainarrClient.SendAsync(publishRequest);
+        publishResponse.EnsureSuccessStatusCode();
+        var published = (await publishResponse.Content.ReadFromJsonAsync<PublishWorkOrderPartsDemandResponse>())!;
+
+        var callbackRequest = ServiceAuthorized(
+            HttpMethod.Post,
+            "/api/integrations/supplyarr-demand-status",
+            _maintainarrStatusCallbackToken);
+        callbackRequest.Content = JsonContent.Create(new IngestSupplyarrDemandStatusRequest(
+            PlatformSeeder.DemoTenantId,
+            published.PublicationId,
+            published.SupplyarrDemandRefId,
+            Guid.NewGuid(),
+            "pr_submitted",
+            "pr_submitted",
+            null,
+            null,
+            null,
+            null,
+            "PR submitted for approval",
+            DateTimeOffset.UtcNow));
+        (await _maintainarrClient.SendAsync(callbackRequest)).EnsureSuccessStatusCode();
+
+        var statusEvents = await ListStatusEventsAsync(maintainarrToken, workOrderId);
+        Assert.Single(statusEvents);
+        Assert.Equal("pr_submitted", statusEvents[0].ProcurementStatus);
+        Assert.Equal("PR submitted for approval", statusEvents[0].Message);
+    }
+
+    [Fact]
+    public async Task Parts_demand_status_events_list_is_empty_before_publish()
+    {
+        var maintainarrToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(maintainarrToken);
+        var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
+
+        var events = await ListStatusEventsAsync(maintainarrToken, workOrderId);
+        Assert.Empty(events);
+    }
+
+    [Fact]
     public async Task Supplyarr_demand_status_callback_is_idempotent()
     {
         var maintainarrToken = await RedeemMaintainArrTokenAsync();
@@ -445,6 +506,19 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
         var listResponse = await _maintainarrClient.SendAsync(listRequest);
         listResponse.EnsureSuccessStatusCode();
         return (await listResponse.Content.ReadFromJsonAsync<List<WorkOrderPartsDemandLineResponse>>())!;
+    }
+
+    private async Task<IReadOnlyList<WorkOrderPartsDemandStatusEventResponse>> ListStatusEventsAsync(
+        string maintainarrToken,
+        Guid workOrderId)
+    {
+        var listRequest = Authorized(
+            HttpMethod.Get,
+            $"/api/work-orders/{workOrderId}/parts-demand/status-events",
+            maintainarrToken);
+        var listResponse = await _maintainarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        return (await listResponse.Content.ReadFromJsonAsync<List<WorkOrderPartsDemandStatusEventResponse>>())!;
     }
 
     private async Task<Guid> SeedSupplyArrPartAsync(string token)

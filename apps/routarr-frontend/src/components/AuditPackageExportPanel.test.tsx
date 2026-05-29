@@ -47,6 +47,7 @@ describe('AuditPackageExportPanel', () => {
       actions: ['trip.created'],
       results: ['success'],
       targetTypes: ['trip'],
+      actorUserIds: [],
     })
     vi.mocked(client.getAuditPackageExportSummary).mockResolvedValue({
       filters: {
@@ -84,6 +85,7 @@ describe('AuditPackageExportPanel', () => {
       actions: [],
       results: [],
       targetTypes: [],
+      actorUserIds: [],
     })
     vi.mocked(client.getAuditPackageExportSummary).mockResolvedValue({
       filters: {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { syncCompanionOfflineActions, validateCompanionFieldTask } from '../api/client'
+import { resolveDeniedReason } from '../lib/companionDeniedReasonCatalog'
 import { companionPlainReason } from '../lib/companionPlainReason'
 import {
   enqueueFieldInboxAcknowledge,
@@ -60,10 +61,15 @@ export function useOfflineQueue(
       const summary = summarizeOfflineSyncOutcome(response)
       const lastSyncError =
         response.rejected > 0 && retryableKeys.size > 0
-          ? response.rejectedItems.find((item) => retryableKeys.has(item.idempotencyKey))
-              ?.reasonMessage ?? 'Some acknowledgments could not sync yet.'
+          ? resolveDeniedReason(
+              response.rejectedItems.find((item) => retryableKeys.has(item.idempotencyKey)) ?? {},
+              'Some acknowledgments could not sync yet. They will retry automatically when the product inbox is available.',
+            )
           : response.rejected > 0
-            ? response.rejectedItems[0]?.reasonMessage ?? 'Some acknowledgments could not sync.'
+            ? resolveDeniedReason(
+                response.rejectedItems[0] ?? {},
+                'Some acknowledgments could not sync.',
+              )
             : null
 
       markSyncPartial({
@@ -88,7 +94,7 @@ export function useOfflineQueue(
               ?.taskKey ?? '',
           kind: 'acknowledge',
           phase: retryableKeys.has(item.idempotencyKey) ? 'queued' : 'failed',
-          message: item.reasonMessage,
+          message: resolveDeniedReason(item, 'Acknowledgment could not sync.'),
         })
       }
 
@@ -101,7 +107,10 @@ export function useOfflineQueue(
 
       for (const item of response.rejectedItems) {
         if (!retryableKeys.has(item.idempotencyKey)) {
-          pushSubmissionToast({ tone: 'error', message: item.reasonMessage })
+          pushSubmissionToast({
+            tone: 'error',
+            message: resolveDeniedReason(item, 'Acknowledgment could not sync.'),
+          })
         }
       }
 
@@ -156,8 +165,10 @@ export function useOfflineQueue(
           productKey: input.productKey,
         })
         if (!validation.allowed) {
-          const message =
-            validation.reasonMessage ?? 'This acknowledgment cannot be submitted right now.'
+          const message = resolveDeniedReason(
+            validation,
+            'This acknowledgment cannot be submitted right now.',
+          )
           pushSubmissionToast({ tone: 'error', message })
           throw new Error(message)
         }

@@ -37,6 +37,7 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<TenantLifecycleWorkerService>();
         builder.Services.AddScoped<PlatformLifecycleOverviewService>();
         builder.Services.AddScoped<PlatformWorkerHealthOrchestrationService>();
+        builder.Services.AddScoped<HybridDataPlaneService>();
         builder.Services.AddScoped<CompanionAuthService>();
         builder.Services.AddScoped<CompanionFieldInboxService>();
         builder.Services.AddScoped<CompanionProductClient>();
@@ -52,6 +53,10 @@ public static class NexArrServiceRegistration
         builder.Services.AddHttpClient(CompanionNotificationDispatchService.WebhookHttpClientName);
         builder.Services.AddScoped<CompanionOfflineSyncService>();
         builder.Services.AddScoped<CompanionFieldEvidenceService>();
+        builder.Services.AddScoped<CompanionFieldDvirService>();
+        builder.Services.AddScoped<CompanionFieldInspectionService>();
+        builder.Services.AddScoped<CompanionFieldWorkOrderService>();
+        builder.Services.AddScoped<CompanionFieldReceivingService>();
         builder.Services.AddScoped<CompanionFieldSubmissionService>();
         builder.Services.AddScoped<CompanionFieldTaskValidationService>();
         builder.Services.AddScoped<CompanionScanResolveService>();

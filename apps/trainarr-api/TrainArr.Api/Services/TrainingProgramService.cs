@@ -14,7 +14,10 @@ namespace TrainArr.Api.Services;
 
 
 
-public sealed class TrainingProgramService(TrainArrDbContext db, ITrainArrAuditService audit)
+public sealed class TrainingProgramService(
+    TrainArrDbContext db,
+    ITrainArrAuditService audit,
+    TrainingProgramVersionService programVersionService)
 
 {
 
@@ -57,6 +60,11 @@ public sealed class TrainingProgramService(TrainArrDbContext db, ITrainArrAuditS
                 x.Status,
 
                 x.ProgramDefinitions.Count,
+
+                db.TrainingProgramVersions.Count(v =>
+                    v.TenantId == x.TenantId &&
+                    v.TrainingProgramId == x.Id &&
+                    v.Status == "published"),
 
                 x.CreatedAt,
 
@@ -226,11 +234,10 @@ public sealed class TrainingProgramService(TrainArrDbContext db, ITrainArrAuditS
 
         var program = await LoadProgramAsync(tenantId, programId, cancellationToken, tracking: true);
 
+        var previousStatus = program.Status;
         var status = NormalizeStatus(request.Status);
 
         var definitions = await LoadActiveDefinitionsAsync(tenantId, request.TrainingDefinitionIds, cancellationToken);
-
-
 
         program.Name = NormalizeName(request.Name);
 
@@ -263,6 +270,17 @@ public sealed class TrainingProgramService(TrainArrDbContext db, ITrainArrAuditS
 
 
         await db.SaveChangesAsync(cancellationToken);
+
+        if (status == "published" &&
+            !string.Equals(previousStatus, "published", StringComparison.OrdinalIgnoreCase))
+        {
+            var publishedProgram = await LoadProgramAsync(tenantId, program.Id, cancellationToken);
+            await programVersionService.SnapshotPublishedVersionAsync(
+                tenantId,
+                actorUserId,
+                publishedProgram,
+                cancellationToken);
+        }
 
         await audit.WriteAsync(
 
@@ -395,6 +413,9 @@ public sealed class TrainingProgramService(TrainArrDbContext db, ITrainArrAuditS
     }
 
 
+
+    public static TrainingProgramDetailResponse MapDetailFromEntity(TrainingProgram program) =>
+        MapDetail(program);
 
     private static TrainingProgramDetailResponse MapDetail(TrainingProgram program) =>
 

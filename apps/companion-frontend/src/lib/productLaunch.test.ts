@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildCompanionProductCallbackUrl } from './productLaunch'
+import { buildCompanionProductCallbackUrl, formatProductLaunchError } from './productLaunch'
 
 describe('buildCompanionProductCallbackUrl', () => {
   const launchUrls = {
@@ -19,5 +19,9 @@ describe('buildCompanionProductCallbackUrl', () => {
     expect(
       buildCompanionProductCallbackUrl('nexarr', 'http://localhost:5174/app', launchUrls),
     ).toBe('http://localhost:5174/app')
+  })
+
+  it('formats launch denial codes into plain language', () => {
+    expect(formatProductLaunchError(new Error('not_entitled'))).toContain('entitled')
   })
 })

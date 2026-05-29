@@ -948,6 +948,57 @@ namespace NexArr.Api.Migrations
                     b.ToTable("tenant_memberships", (string)null);
                 });
 
+            modelBuilder.Entity("NexArr.Api.Entities.TenantProductDataPlaneProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DataEndpointUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("DeploymentMode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ModifiedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("ProductKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TrustStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductKey");
+
+                    b.HasIndex("TenantId", "ProductKey")
+                        .IsUnique();
+
+                    b.ToTable("nexarr_tenant_product_data_plane_profiles", (string)null);
+                });
+
             modelBuilder.Entity("NexArr.Api.Entities.TenantProductEntitlement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1220,6 +1271,25 @@ namespace NexArr.Api.Migrations
                     b.Navigation("Tenant");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NexArr.Api.Entities.TenantProductDataPlaneProfile", b =>
+                {
+                    b.HasOne("NexArr.Api.Entities.ProductCatalogItem", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductKey")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NexArr.Api.Entities.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("NexArr.Api.Entities.TenantProductEntitlement", b =>

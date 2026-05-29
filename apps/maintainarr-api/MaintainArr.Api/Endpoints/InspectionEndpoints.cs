@@ -93,5 +93,36 @@ public static class InspectionEndpoints
             return Results.Ok(completed);
         })
         .WithName("CompleteInspectionRun");
+
+        group.MapGet("/{inspectionRunId:guid}/voice-guidance", async (
+            Guid inspectionRunId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            InspectionRunService runService,
+            InspectionVoiceGuidanceService voiceService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInspectionsExecute(context.User);
+            var tenantId = context.User.GetTenantId();
+            var existing = await runService.GetAsync(tenantId, inspectionRunId, cancellationToken);
+            authorization.RequireInspectionRunAccess(context.User, existing.StartedByUserId);
+            return Results.Ok(await voiceService.GetGuidanceAsync(tenantId, inspectionRunId, cancellationToken));
+        })
+        .WithName("GetInspectionVoiceGuidance");
+
+        group.MapPost("/voice/normalize-numeric", (
+            NormalizeVoiceNumericRequest request,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            InspectionVoiceGuidanceService voiceService) =>
+        {
+            authorization.RequireInspectionsExecute(context.User);
+            var result = voiceService.NormalizeNumeric(request.Transcript);
+            return Results.Ok(new NormalizeVoiceNumericResponse(
+                result.Value,
+                result.NormalizedText,
+                result.Understood));
+        })
+        .WithName("NormalizeInspectionVoiceNumeric");
     }
 }

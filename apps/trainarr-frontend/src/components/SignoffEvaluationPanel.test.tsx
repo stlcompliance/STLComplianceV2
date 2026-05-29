@@ -34,6 +34,8 @@ const assignment: TrainingAssignmentDetailResponse = {
 }
 
 const baseProps = {
+  evaluationHistory: [],
+  isLoadingHistory: false,
   evaluationResult: 'pass',
   evaluationScore: '95',
   evaluationNotes: '',
@@ -66,9 +68,10 @@ describe('SignoffEvaluationPanel', () => {
     expect(screen.queryByText(/requirements met/i)).not.toBeInTheDocument()
   })
 
-  it('shows requirements met when assignment is ready', () => {
+  it('shows requirements met and evaluation history when assignment is ready', () => {
     render(
       <SignoffEvaluationPanel
+        {...baseProps}
         assignment={{
           ...assignment,
           evaluation: {
@@ -101,12 +104,59 @@ describe('SignoffEvaluationPanel', () => {
           completionRequirementsMet: true,
           qualificationIssue: null,
         }}
-        {...baseProps}
+        evaluationHistory={[
+          {
+            entryId: 'e1',
+            trainingAssignmentId: 'a1',
+            result: 'pass',
+            score: 100,
+            notes: null,
+            evaluatorUserId: 'u1',
+            evaluatedAt: '2026-05-27T13:00:00Z',
+            isCurrent: true,
+            supersededAt: null,
+          },
+        ]}
         canSubmitEvaluation={false}
         canSubmitTrainerSignoff={false}
       />,
     )
     expect(screen.getByText(/requirements met/i)).toBeInTheDocument()
-    expect(screen.getByText(/result: pass/i)).toBeInTheDocument()
+    expect(screen.getByTestId('evaluation-history-timeline')).toBeInTheDocument()
+    expect(screen.getByText('Current')).toBeInTheDocument()
+  })
+
+  it('shows revise evaluation form when evaluation exists and trainer can submit', () => {
+    render(
+      <SignoffEvaluationPanel
+        {...baseProps}
+        assignment={{
+          ...assignment,
+          evaluation: {
+            evaluationId: 'e1',
+            trainingAssignmentId: 'a1',
+            result: 'fail',
+            score: 40,
+            notes: 'Needs practice',
+            evaluatorUserId: 'u1',
+            evaluatedAt: '2026-05-27T13:00:00Z',
+          },
+        }}
+        evaluationHistory={[
+          {
+            entryId: 'e1',
+            trainingAssignmentId: 'a1',
+            result: 'fail',
+            score: 40,
+            notes: 'Needs practice',
+            evaluatorUserId: 'u1',
+            evaluatedAt: '2026-05-27T13:00:00Z',
+            isCurrent: true,
+            supersededAt: null,
+          },
+        ]}
+      />,
+    )
+    expect(screen.getByRole('button', { name: /submit revised evaluation/i })).toBeInTheDocument()
   })
 })

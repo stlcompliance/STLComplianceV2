@@ -1,3 +1,4 @@
+import type { PickerOption } from '@stl/shared-ui'
 import type { StaffarrIncidentRemediationResponse, TrainingDefinitionResponse } from '../api/types'
 import { QualificationCheckPanel } from './QualificationCheckPanel'
 import type { QualificationCheckResponse } from '../api/types'
@@ -17,6 +18,7 @@ interface RemediationAssignmentPanelProps {
   onRunQualificationCheck: () => void
   rulePackKey: string
   onRulePackKeyChange: (value: string) => void
+  rulePackOptions: PickerOption[]
 }
 
 export function RemediationAssignmentPanel({
@@ -34,6 +36,7 @@ export function RemediationAssignmentPanel({
   onRunQualificationCheck,
   rulePackKey,
   onRulePackKeyChange,
+  rulePackOptions,
 }: RemediationAssignmentPanelProps) {
   if (!canManage) {
     return null
@@ -44,6 +47,7 @@ export function RemediationAssignmentPanel({
   const selectedDefinition = definitions.find((d) => d.trainingDefinitionId === selectedDefinitionId)
   const canRunCheck = Boolean(selectedRemediation && selectedDefinition)
   const blockedByCheck = qualificationCheck?.outcome === 'block'
+  const missingCheck = !qualificationCheck
 
   return (
     <section className="rounded-xl border border-violet-800/60 bg-violet-950/20 p-4">
@@ -97,6 +101,7 @@ export function RemediationAssignmentPanel({
             canRun={canRunCheck}
             rulePackKey={rulePackKey}
             onRulePackKeyChange={onRulePackKeyChange}
+            rulePackOptions={rulePackOptions}
           />
 
           <button
@@ -106,7 +111,8 @@ export function RemediationAssignmentPanel({
               !selectedRemediationId ||
               !selectedDefinitionId ||
               isCreating ||
-              blockedByCheck
+              blockedByCheck ||
+              missingCheck
             }
             onClick={onCreateAssignment}
           >
@@ -117,6 +123,9 @@ export function RemediationAssignmentPanel({
               Assignment creation is blocked until the authorization check outcome is allow or warn.
             </p>
           )}
+          {missingCheck && selectedRemediationId && selectedDefinitionId ? (
+            <p className="text-xs text-amber-300">Run an authorization check before creating the assignment.</p>
+          ) : null}
         </div>
       )}
     </section>

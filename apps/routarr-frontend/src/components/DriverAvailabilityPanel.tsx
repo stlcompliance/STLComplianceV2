@@ -1,8 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { AdvancedReferenceField, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
-import { createDriverAvailability, getDriverAvailabilityPanel } from '../api/client'
+import {
+  createDriverAvailability,
+  deleteDriverAvailability,
+  getDriverAvailabilityPanel,
+  listDrivers,
+  updateDriverAvailability,
+} from '../api/client'
 import type { DriverAvailabilityPanelRow } from '../api/types'
+import { fromDatetimeLocalValue, toDatetimeLocalValue } from '../lib/availabilityDateTime'
+import { driverToPickerOption, findDriverLabel } from '../lib/referencePickers'
 
 type DriverAvailabilityPanelProps = {
   accessToken: string
@@ -20,29 +29,196 @@ function formatTimestamp(iso: string) {
   }
 }
 
-function AvailabilityRow({ record }: { record: DriverAvailabilityPanelRow }) {
+type DriverAvailabilityRecordRowProps = {
+  record: DriverAvailabilityPanelRow
+  canManage: boolean
+  accessToken: string
+  onChanged: () => Promise<void>
+  driverLabel?: string
+}
+
+function DriverAvailabilityRecordRow({
+  record,
+  canManage,
+  accessToken,
+  onChanged,
+  driverLabel,
+}: DriverAvailabilityRecordRowProps) {
+  const [editing, setEditing] = useState(false)
+  const [availabilityStatus, setAvailabilityStatus] = useState(record.availabilityStatus)
+  const [reason, setReason] = useState(record.reason ?? '')
+  const [startsAt, setStartsAt] = useState(toDatetimeLocalValue(record.startsAt))
+  const [endsAt, setEndsAt] = useState(toDatetimeLocalValue(record.endsAt))
+  const [actionError, setActionError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!editing) {
+      setAvailabilityStatus(record.availabilityStatus)
+      setReason(record.reason ?? '')
+      setStartsAt(toDatetimeLocalValue(record.startsAt))
+      setEndsAt(toDatetimeLocalValue(record.endsAt))
+    }
+  }, [record, editing])
+
+  const updateMutation = useMutation({
+    mutationFn: () =>
+      updateDriverAvailability(accessToken, record.availabilityId, {
+        availabilityStatus,
+        reason: reason || null,
+        startsAt: fromDatetimeLocalValue(startsAt),
+        endsAt: fromDatetimeLocalValue(endsAt),
+      }),
+    onSuccess: async () => {
+      setActionError(null)
+      setEditing(false)
+      await onChanged()
+    },
+    onError: (error: Error) => setActionError(error.message),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteDriverAvailability(accessToken, record.availabilityId),
+    onSuccess: async () => {
+      setActionError(null)
+      await onChanged()
+    },
+    onError: (error: Error) => setActionError(error.message),
+  })
+
   const highlightClass = record.hasConflict
     ? 'border-red-500/60 bg-red-950/30'
     : record.availabilityStatus === 'available'
       ? 'border-emerald-500/40 bg-emerald-950/20'
       : 'border-slate-700 bg-slate-900/40'
 
+  const isPending = updateMutation.isPending || deleteMutation.isPending
+
+  if (editing) {
+    return (
+      <li className={`rounded-lg border p-3 ${highlightClass}`}>
+        <form
+          className="grid gap-3 sm:grid-cols-2"
+          onSubmit={(event) => {
+            event.preventDefault()
+            updateMutation.mutate()
+          }}
+        >
+          <label className="block text-sm text-slate-300">
+            Status
+            <select
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
+              value={availabilityStatus}
+              onChange={(event) => setAvailabilityStatus(event.target.value)}
+            >
+              <option value="unavailable">Unavailable</option>
+              <option value="limited">Limited</option>
+              <option value="available">Available</option>
+            </select>
+          </label>
+          <label className="block text-sm text-slate-300">
+            Reason
+            <input
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+            />
+          </label>
+          <label className="block text-sm text-slate-300">
+            Starts at
+            <input
+              type="datetime-local"
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
+              value={startsAt}
+              onChange={(event) => setStartsAt(event.target.value)}
+              required
+            />
+          </label>
+          <label className="block text-sm text-slate-300">
+            Ends at
+            <input
+              type="datetime-local"
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
+              value={endsAt}
+              onChange={(event) => setEndsAt(event.target.value)}
+              required
+            />
+          </label>
+          <div className="flex flex-wrap gap-2 sm:col-span-2">
+            <button
+              type="submit"
+              disabled={isPending || !startsAt || !endsAt}
+              className="rounded bg-sky-700 px-3 py-1.5 text-sm text-white hover:bg-sky-600 disabled:opacity-50"
+            >
+              {updateMutation.isPending ? 'Saving…' : 'Save changes'}
+            </button>
+            <button
+              type="button"
+              disabled={isPending}
+              className="rounded border border-slate-600 px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-800 disabled:opacity-50"
+              onClick={() => {
+                setActionError(null)
+                setEditing(false)
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+        {actionError ? (
+          <p className="mt-2 text-xs text-red-300" role="alert">
+            {actionError}
+          </p>
+        ) : null}
+      </li>
+    )
+  }
+
   return (
     <li className={`rounded-lg border p-3 ${highlightClass}`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="text-sm font-medium text-slate-100">
-            {record.availabilityStatus.replace('_', ' ')} · driver {record.personId.slice(0, 8)}…
+            {record.availabilityStatus.replace('_', ' ')} · driver{' '}
+            {driverLabel ?? record.personId.slice(0, 8) + '…'}
           </p>
           {record.reason ? <p className="text-xs text-slate-400">{record.reason}</p> : null}
         </div>
-        {record.hasConflict ? (
-          <span className="text-xs font-medium text-red-300">
-            {record.conflictingTripCount} trip conflict(s)
-          </span>
-        ) : (
-          <span className="text-xs text-slate-500">No conflicts</span>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {record.hasConflict ? (
+            <span className="text-xs font-medium text-red-300">
+              {record.conflictingTripCount} trip conflict(s)
+            </span>
+          ) : (
+            <span className="text-xs text-slate-500">No conflicts</span>
+          )}
+          {canManage ? (
+            <>
+              <button
+                type="button"
+                className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"
+                onClick={() => setEditing(true)}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                disabled={isPending}
+                className="rounded border border-red-500/50 px-2 py-1 text-xs text-red-200 hover:bg-red-950/40 disabled:opacity-50"
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      'Delete this driver availability window? Dispatch may treat the driver as available again.',
+                    )
+                  ) {
+                    deleteMutation.mutate()
+                  }
+                }}
+              >
+                {deleteMutation.isPending ? 'Deleting…' : 'Delete'}
+              </button>
+            </>
+          ) : null}
+        </div>
       </div>
       <p className="mt-2 text-xs text-slate-400">
         {formatTimestamp(record.startsAt)} → {formatTimestamp(record.endsAt)}
@@ -55,6 +231,11 @@ function AvailabilityRow({ record }: { record: DriverAvailabilityPanelRow }) {
             </li>
           ))}
         </ul>
+      ) : null}
+      {actionError ? (
+        <p className="mt-2 text-xs text-red-300" role="alert">
+          {actionError}
+        </p>
       ) : null}
     </li>
   )
@@ -77,6 +258,23 @@ export function DriverAvailabilityPanel({
     queryFn: () => getDriverAvailabilityPanel(accessToken, scope),
   })
 
+  const driversQuery = useQuery({
+    queryKey: ['routarr-drivers-availability', accessToken],
+    queryFn: () => listDrivers(accessToken),
+    enabled: canManage,
+  })
+
+  const drivers = driversQuery.data?.items ?? []
+  const driverOptions = useMemo(() => drivers.map(driverToPickerOption), [drivers])
+  const selectedDriverOption = useMemo((): PickerOption | undefined => {
+    const label = findDriverLabel(drivers, personId)
+    return label ? { value: personId, label } : undefined
+  }, [drivers, personId])
+
+  const invalidatePanel = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['routarr-driver-availability'] })
+  }
+
   const createMutation = useMutation({
     mutationFn: () => {
       const now = new Date()
@@ -94,7 +292,7 @@ export function DriverAvailabilityPanel({
     },
     onSuccess: async () => {
       setReason('')
-      await queryClient.invalidateQueries({ queryKey: ['routarr-driver-availability'] })
+      await invalidatePanel()
     },
   })
 
@@ -166,14 +364,24 @@ export function DriverAvailabilityPanel({
             createMutation.mutate()
           }}
         >
-          <label className="block text-sm text-slate-300">
-            Person id
-            <input
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1.5 text-sm"
+          <div>
+            <StaticSearchPicker
+              label="Driver"
               value={personId}
-              onChange={(event) => setPersonId(event.target.value)}
+              onChange={setPersonId}
+              options={driverOptions}
+              selectedOption={selectedDriverOption}
+              placeholder="Search drivers…"
+              disabled={driversQuery.isLoading}
+              testId="driver-availability-person-picker"
             />
-          </label>
+            <AdvancedReferenceField
+              value={personId}
+              onChange={setPersonId}
+              label="Person id"
+              testId="driver-availability-person-advanced"
+            />
+          </div>
           <label className="block text-sm text-slate-300">
             Status
             <select
@@ -210,7 +418,14 @@ export function DriverAvailabilityPanel({
       ) : (
         <ul className="space-y-3">
           {panel.records.map((record) => (
-            <AvailabilityRow key={record.availabilityId} record={record} />
+            <DriverAvailabilityRecordRow
+              key={record.availabilityId}
+              record={record}
+              canManage={canManage}
+              accessToken={accessToken}
+              onChanged={invalidatePanel}
+              driverLabel={findDriverLabel(drivers, record.personId)}
+            />
           ))}
         </ul>
       )}

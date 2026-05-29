@@ -1,4 +1,8 @@
+import { ControlledSelect } from '@stl/shared-ui'
+
 import type { PartResponse, PurchaseRequestResponse } from '../api/types'
+import { toPartPickerOptions, toPartyPickerOptions } from '../forms/controlledFormHelpers'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface PurchaseRequestPanelProps {
   purchaseRequests: PurchaseRequestResponse[]
@@ -85,6 +89,7 @@ export function PurchaseRequestPanel({
   isRejecting,
 }: PurchaseRequestPanelProps) {
   const selected = purchaseRequests.find((pr) => pr.purchaseRequestId === selectedPurchaseRequestId)
+  const existingRequestKeys = purchaseRequests.map((pr) => pr.requestKey)
 
   return (
     <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg">
@@ -185,20 +190,21 @@ export function PurchaseRequestPanel({
       {canCreate ? (
         <div className="mt-6 space-y-3 border-t border-slate-800 pt-4">
           <h3 className="text-sm font-medium text-slate-300">New purchase request</h3>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <label className="block text-sm text-slate-400">
+            Title
             <input
-              className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
-              placeholder="Request key"
-              value={requestKey}
-              onChange={(e) => onRequestKeyChange(e.target.value)}
-            />
-            <input
-              className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
+              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
               placeholder="Title"
               value={title}
               onChange={(e) => onTitleChange(e.target.value)}
             />
-          </div>
+          </label>
+          <GeneratedKeyFieldGroup
+            sourceLabel={title}
+            existingKeys={existingRequestKeys}
+            onKeyChange={onRequestKeyChange}
+            label="Request key"
+          />
           <textarea
             className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
             placeholder="Notes"
@@ -206,31 +212,23 @@ export function PurchaseRequestPanel({
             value={notes}
             onChange={(e) => onNotesChange(e.target.value)}
           />
-          <select
-            className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
+          <ControlledSelect
+            label="Vendor (optional)"
             value={selectedVendorId}
-            onChange={(e) => onSelectedVendorIdChange(e.target.value)}
-          >
-            <option value="">Vendor (optional)</option>
-            {vendors.map((v) => (
-              <option key={v.partyId} value={v.partyId}>
-                {v.displayName} ({v.partyKey})
-              </option>
-            ))}
-          </select>
+            onChange={onSelectedVendorIdChange}
+            options={toPartyPickerOptions(vendors)}
+            emptyLabel="Vendor (optional)"
+          />
           <div className="grid gap-2 sm:grid-cols-3">
-            <select
-              className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 sm:col-span-2"
-              value={selectedPartId}
-              onChange={(e) => onSelectedPartIdChange(e.target.value)}
-            >
-              <option value="">Part for first line</option>
-              {parts.map((p) => (
-                <option key={p.partId} value={p.partId}>
-                  {p.displayName} ({p.partKey})
-                </option>
-              ))}
-            </select>
+            <div className="sm:col-span-2">
+              <ControlledSelect
+                label="Part for first line"
+                value={selectedPartId}
+                onChange={onSelectedPartIdChange}
+                options={toPartPickerOptions(parts)}
+                emptyLabel="Part for first line"
+              />
+            </div>
             <input
               className="rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200"
               placeholder="Qty"

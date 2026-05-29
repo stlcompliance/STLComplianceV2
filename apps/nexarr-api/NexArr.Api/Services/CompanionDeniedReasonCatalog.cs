@@ -18,6 +18,14 @@ public static class CompanionDeniedReasonCatalog
             "This task is not in your field inbox. Refresh your inbox or ask a supervisor to reassign the work.",
         [CompanionFieldValidationReasonCodes.EvidenceUnsupported] =
             "Evidence capture is not available for this task yet. Open the task in the owning product app.",
+        [CompanionFieldValidationReasonCodes.DvirUnsupported] =
+            "DVIR submission is not available for this task. Open the trip in RoutArr to complete inspection paperwork.",
+        [CompanionFieldValidationReasonCodes.InspectionUnsupported] =
+            "Inspection capture is not available for this task. Open the inspection in MaintainArr to continue.",
+        [CompanionFieldValidationReasonCodes.WorkOrderUnsupported] =
+            "Work order updates are not available for this task. Open the work order in MaintainArr to continue.",
+        [CompanionFieldValidationReasonCodes.ReceivingUnsupported] =
+            "Receiving updates are not available for this task. Open the receipt in SupplyArr to continue.",
         [CompanionFieldValidationReasonCodes.InboxUnavailable] =
             "We could not load the product inbox to verify this task. Try again when connectivity improves.",
         [CompanionScanReasonCodes.InvalidPayload] =
@@ -35,6 +43,13 @@ public static class CompanionDeniedReasonCatalog
             "Each offline action must include a task and product reference.",
         ["companion.offline_actions.unsupported_kind"] =
             "Only field inbox acknowledgments can be queued offline right now.",
+        ["launch.denied"] = "Product launch is not permitted.",
+        ["tenant_suspended"] = "This tenant is suspended. Contact your administrator.",
+        ["not_entitled"] = "Your account is not entitled to open this product.",
+        ["entitlement_inactive"] = "This product entitlement is inactive for your tenant.",
+        ["profile_missing"] = "Launch is not configured for this product yet.",
+        ["product_url_missing"] = "This product API is not configured for field inbox aggregation.",
+        ["upstream_unreachable"] = "Could not reach the product inbox. Try again when connectivity improves.",
     };
 
     public static string ToPlainMessage(string code, string? fallback = null) =>

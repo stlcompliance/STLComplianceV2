@@ -9,9 +9,11 @@ namespace TrainArr.Api.Services;
 public sealed class TrainingAssignmentService(
     TrainArrDbContext db,
     TrainingDefinitionService definitionService,
+    TrainingDefinitionStepService stepService,
     CertificationPublicationService publicationService,
     TrainingAcknowledgementPublicationService acknowledgementPublicationService,
     QualificationIssueService qualificationIssueService,
+    QualificationCheckService qualificationCheckService,
     TrainingNotificationEnqueueService notificationEnqueueService,
     TrainingEventEnqueueService trainingEventEnqueueService,
     ITrainArrAuditService audit)
@@ -86,6 +88,24 @@ public sealed class TrainingAssignmentService(
             request.TrainingDefinitionId,
             cancellationToken);
 
+        if (RequiresAuthorizationQualificationCheck(assignmentReason))
+        {
+            if (request.AuthorizationQualificationCheckId is not Guid checkId)
+            {
+                throw new StlApiException(
+                    "assignments.qualification_check_required",
+                    "Run an authorization qualification check before creating this assignment.",
+                    400);
+            }
+
+            await qualificationCheckService.ValidateForAssignmentAsync(
+                tenantId,
+                checkId,
+                request.StaffarrPersonId,
+                definition.QualificationKey,
+                cancellationToken);
+        }
+
         StaffarrIncidentRemediation? remediation = null;
         if (request.StaffarrIncidentRemediationId is Guid remediationId)
         {
@@ -140,6 +160,7 @@ public sealed class TrainingAssignmentService(
             TrainingDefinitionId = definition.Id,
             StaffarrIncidentRemediationId = remediation?.Id,
             AssignmentReason = assignmentReason,
+            AuthorizationQualificationCheckId = request.AuthorizationQualificationCheckId,
             Status = "assigned",
             DueAt = request.DueAt,
             AssignedByUserId = actorUserId,
@@ -176,6 +197,7 @@ public sealed class TrainingAssignmentService(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        await stepService.EnsureAssignmentProgressAsync(tenantId, assignment, cancellationToken);
         await audit.WriteAsync(
             "training_assignment.create",
             tenantId,
@@ -484,4 +506,8 @@ public sealed class TrainingAssignmentService(
 
         return normalized;
     }
+
+    private static bool RequiresAuthorizationQualificationCheck(string assignmentReason) =>
+        string.Equals(assignmentReason, "manual", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(assignmentReason, "incident_remediation", StringComparison.OrdinalIgnoreCase);
 }

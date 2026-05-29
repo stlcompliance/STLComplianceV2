@@ -50,6 +50,10 @@ vi.mock('../api/client', () => ({
       cancelledAt: null,
     },
   ]),
+  listDrivers: vi.fn().mockResolvedValue({
+    items: [{ personId: 'driver-bulk-1', displayName: 'Bulk Driver', mirroredAt: '2026-05-27T08:00:00Z' }],
+  }),
+  listVehicleRefs: vi.fn().mockResolvedValue({ items: [] }),
   previewBulkDispatch,
   applyBulkDispatch,
 }))
@@ -92,7 +96,8 @@ describe('BulkDispatchPanel', () => {
     expect(await screen.findByText('Bulk dispatch')).toBeTruthy()
 
     fireEvent.click(screen.getByTestId('bulk-trip-11111111-1111-1111-1111-111111111111'))
-    fireEvent.change(screen.getByLabelText(/Driver person id/i), {
+    fireEvent.click(screen.getByTestId('bulk-dispatch-driver-advanced-toggle'))
+    fireEvent.change(screen.getByTestId('bulk-dispatch-driver-advanced-input'), {
       target: { value: 'driver-bulk-1' },
     })
     fireEvent.click(screen.getByText('Preview conflicts'))
@@ -187,7 +192,8 @@ describe('BulkDispatchPanel', () => {
     )
 
     fireEvent.click(await screen.findByTestId('bulk-trip-11111111-1111-1111-1111-111111111111'))
-    fireEvent.change(screen.getByLabelText(/Driver person id/i), {
+    fireEvent.click(screen.getByTestId('bulk-dispatch-driver-advanced-toggle'))
+    fireEvent.change(screen.getByTestId('bulk-dispatch-driver-advanced-input'), {
       target: { value: 'driver-bulk-1' },
     })
     fireEvent.click(screen.getByText('Preview conflicts'))
@@ -195,7 +201,7 @@ describe('BulkDispatchPanel', () => {
     await vi.waitFor(() => {
       expect(
         screen.getByTestId('bulk-preview-summary-11111111-1111-1111-1111-111111111111'),
-      ).toHaveTextContent('workflow gate: Driver license invalid')
+      ).toHaveTextContent(/Driver license invalid/)
     })
 
     fireEvent.click(screen.getByTestId('bulk-dispatch-apply'))

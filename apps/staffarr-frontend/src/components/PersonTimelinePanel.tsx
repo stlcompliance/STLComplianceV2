@@ -1,10 +1,38 @@
 import type { PersonTimelineEntryResponse } from '../api/types'
 
+export type PersonTimelineCategoryFilter =
+  | ''
+  | PersonTimelineEntryResponse['category']
+
+export const PERSON_TIMELINE_CATEGORY_OPTIONS: Array<{
+  value: PersonTimelineCategoryFilter
+  label: string
+}> = [
+  { value: '', label: 'All categories' },
+  { value: 'incident', label: 'Incidents' },
+  { value: 'incident_routing', label: 'TrainArr routing' },
+  { value: 'readiness', label: 'Readiness' },
+  { value: 'certification', label: 'Certifications' },
+  { value: 'permission', label: 'Permissions' },
+  { value: 'training_blocker', label: 'Training blockers' },
+  { value: 'personnel_note', label: 'Personnel notes' },
+  { value: 'personnel_document', label: 'Personnel documents' },
+]
+
+export const PERSON_TIMELINE_PAGE_SIZE_OPTIONS = [10, 25, 50] as const
+
 interface PersonTimelinePanelProps {
   personDisplayName: string
   entries: PersonTimelineEntryResponse[]
   totalCount: number
+  page: number
+  pageSize: number
+  hasNextPage: boolean
+  categoryFilter: PersonTimelineCategoryFilter
   isLoading: boolean
+  onCategoryFilterChange: (value: PersonTimelineCategoryFilter) => void
+  onPageChange: (page: number) => void
+  onPageSizeChange: (pageSize: number) => void
 }
 
 function categoryLabel(category: PersonTimelineEntryResponse['category']): string {
@@ -65,8 +93,19 @@ export function PersonTimelinePanel({
   personDisplayName,
   entries,
   totalCount,
+  page,
+  pageSize,
+  hasNextPage,
+  categoryFilter,
   isLoading,
+  onCategoryFilterChange,
+  onPageChange,
+  onPageSizeChange,
 }: PersonTimelinePanelProps) {
+  const totalPages = totalCount === 0 ? 0 : Math.ceil(totalCount / pageSize)
+  const showingFrom = totalCount === 0 ? 0 : (page - 1) * pageSize + 1
+  const showingTo = totalCount === 0 ? 0 : Math.min(page * pageSize, totalCount)
+
   return (
     <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
       <h2 className="text-sm font-medium text-slate-300">Person history timeline</h2>
@@ -75,13 +114,53 @@ export function PersonTimelinePanel({
         training blockers, personnel notes, and documents.
       </p>
 
+      <div className="mt-4 flex flex-wrap items-end gap-3">
+        <label className="block text-sm text-slate-400">
+          Category
+          <select
+            className="mt-1 block w-full min-w-[12rem] rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
+            value={categoryFilter}
+            onChange={(e) => onCategoryFilterChange(e.target.value as PersonTimelineCategoryFilter)}
+            data-testid="person-timeline-category-filter"
+          >
+            {PERSON_TIMELINE_CATEGORY_OPTIONS.map((option) => (
+              <option key={option.value || 'all'} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-sm text-slate-400">
+          Page size
+          <select
+            className="mt-1 block w-full min-w-[6rem] rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            data-testid="person-timeline-page-size"
+          >
+            {PERSON_TIMELINE_PAGE_SIZE_OPTIONS.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
       {isLoading ? (
         <p className="mt-4 text-sm text-slate-400">Loading timeline…</p>
       ) : entries.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-400">No timeline events recorded yet.</p>
+        <p className="mt-4 text-sm text-slate-400">
+          {categoryFilter
+            ? 'No timeline events match this category filter.'
+            : 'No timeline events recorded yet.'}
+        </p>
       ) : (
         <>
-          <p className="mt-3 text-xs text-slate-500">{totalCount} event{totalCount === 1 ? '' : 's'} total</p>
+          <p className="mt-3 text-xs text-slate-500" data-testid="person-timeline-range">
+            Showing {showingFrom}–{showingTo} of {totalCount} event{totalCount === 1 ? '' : 's'}
+            {categoryFilter ? ` (${categoryLabel(categoryFilter)})` : ''}
+          </p>
           <ul className="mt-3 divide-y divide-slate-700 text-sm">
             {entries.map((entry) => (
               <li key={entry.entryId} className="py-3">
@@ -102,6 +181,32 @@ export function PersonTimelinePanel({
           </ul>
         </>
       )}
+
+      {totalCount > 0 ? (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={page <= 1 || isLoading}
+            onClick={() => onPageChange(page - 1)}
+            data-testid="person-timeline-prev-page"
+          >
+            Previous
+          </button>
+          <span className="text-xs text-slate-500" data-testid="person-timeline-page-indicator">
+            Page {page} of {totalPages}
+          </span>
+          <button
+            type="button"
+            className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-200 disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={!hasNextPage || isLoading}
+            onClick={() => onPageChange(page + 1)}
+            data-testid="person-timeline-next-page"
+          >
+            Next
+          </button>
+        </div>
+      ) : null}
     </section>
   )
 }

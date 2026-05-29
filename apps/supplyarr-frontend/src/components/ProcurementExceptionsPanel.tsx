@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
+import { ControlledSelect } from '@stl/shared-ui'
+
 import {
   approveProcurementExceptionWaive,
   assignProcurementException,
@@ -18,6 +20,7 @@ import {
   startProcurementExceptionInvestigation,
 } from '../api/client'
 import type { PurchaseOrderResponse, PurchaseRequestResponse } from '../api/types'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 const CATEGORIES = [
   'approval_delay',
@@ -33,6 +36,11 @@ const SUBJECT_TYPES = [
   { value: 'purchase_order', label: 'Purchase order' },
   { value: 'rfq', label: 'RFQ' },
 ] as const
+
+const CATEGORY_OPTIONS = CATEGORIES.map((value) => ({
+  value,
+  label: value.replace(/_/g, ' '),
+}))
 
 type SubjectType = (typeof SUBJECT_TYPES)[number]['value']
 
@@ -163,6 +171,23 @@ export function ProcurementExceptionsPanel({
     return pool.find((x) => x.exceptionId === selectedExceptionId) ?? null
   }, [selectedExceptionId, subjectExceptionsQuery.data, activeQuery.data])
 
+  const existingExceptionKeys = useMemo(() => {
+    const pool = [
+      ...(subjectExceptionsQuery.data ?? []),
+      ...(activeQuery.data ?? []),
+    ]
+    return pool.map((exception) => exception.exceptionKey)
+  }, [subjectExceptionsQuery.data, activeQuery.data])
+
+  const templateOptions = useMemo(
+    () =>
+      (templatesQuery.data ?? []).map((template) => ({
+        value: template.templateKey,
+        label: template.label,
+      })),
+    [templatesQuery.data],
+  )
+
   const invalidate = () => {
     void queryClient.invalidateQueries({
       queryKey: ['supplyarr-procurement-exceptions-active', accessToken],
@@ -284,74 +309,25 @@ export function ProcurementExceptionsPanel({
       )}
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <label className="block text-sm text-slate-400">
-          Subject type
-          <select
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
-            value={subjectType}
-            onChange={(event) => {
-              setSubjectType(event.target.value as SubjectType)
-              setSubjectId('')
-            }}
-          >
-            {SUBJECT_TYPES.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <ControlledSelect
+          label="Subject type"
+          value={subjectType}
+          onChange={(value) => {
+            setSubjectType(value as SubjectType)
+            setSubjectId('')
+          }}
+          options={SUBJECT_TYPES.map((option) => ({ value: option.value, label: option.label }))}
+          emptyLabel="Select type…"
+        />
 
-        <label className="block text-sm text-slate-400">
-          Subject record
-          <select
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
-            data-testid="procurement-exception-subject-record"
-            value={subjectId}
-            onChange={(event) => setSubjectId(event.target.value)}
-          >
-            <option value="">Select record…</option>
-            {subjectOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="block text-sm text-slate-400">
-          Exception key
-          <input
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
-            value={exceptionKey}
-            onChange={(event) => setExceptionKey(event.target.value)}
-            placeholder="PEX-001"
-          />
-        </label>
-
-        <label className="block text-sm text-slate-400">
-          Category
-          <select
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
-            value={category}
-            onChange={(event) => setCategory(event.target.value as (typeof CATEGORIES)[number])}
-          >
-            {CATEGORIES.map((value) => (
-              <option key={value} value={value}>
-                {value.replace('_', ' ')}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="flex items-center gap-2 text-sm text-slate-400 md:col-span-2">
-          <input
-            type="checkbox"
-            checked={assignOnCreate}
-            onChange={(event) => setAssignOnCreate(event.target.checked)}
-          />
-          Assign to me on create (category-based SLA applied automatically)
-        </label>
+        <ControlledSelect
+          label="Subject record"
+          value={subjectId}
+          onChange={setSubjectId}
+          options={subjectOptions.map((option) => ({ value: option.id, label: option.label }))}
+          emptyLabel="Select record…"
+          testId="procurement-exception-subject-record"
+        />
 
         <label className="block text-sm text-slate-400 md:col-span-2">
           Title
@@ -360,6 +336,32 @@ export function ProcurementExceptionsPanel({
             value={title}
             onChange={(event) => setTitle(event.target.value)}
           />
+        </label>
+
+        <div className="md:col-span-2">
+          <GeneratedKeyFieldGroup
+            sourceLabel={title}
+            existingKeys={existingExceptionKeys}
+            onKeyChange={setExceptionKey}
+            label="Exception key"
+          />
+        </div>
+
+        <ControlledSelect
+          label="Category"
+          value={category}
+          onChange={(value) => setCategory(value as (typeof CATEGORIES)[number])}
+          options={CATEGORY_OPTIONS}
+          testId="procurement-exception-category"
+        />
+
+        <label className="flex items-center gap-2 text-sm text-slate-400 md:col-span-2">
+          <input
+            type="checkbox"
+            checked={assignOnCreate}
+            onChange={(event) => setAssignOnCreate(event.target.checked)}
+          />
+          Assign to me on create (category-based SLA applied automatically)
         </label>
 
         <label className="block text-sm text-slate-400 md:col-span-2">
@@ -372,27 +374,20 @@ export function ProcurementExceptionsPanel({
           />
         </label>
 
-        <label className="block text-sm text-slate-400">
-          Resolution template
-          <select
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
-            data-testid="procurement-exception-resolution-template"
-            value={resolutionTemplateKey}
-            onChange={(event) => setResolutionTemplateKey(event.target.value)}
-          >
-            <option value="">Custom resolution notes</option>
-            {(templatesQuery.data ?? []).map((template) => (
-              <option key={template.templateKey} value={template.templateKey}>
-                {template.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <ControlledSelect
+          label="Resolution template"
+          value={resolutionTemplateKey}
+          onChange={setResolutionTemplateKey}
+          options={templateOptions}
+          emptyLabel="Custom resolution notes"
+          testId="procurement-exception-resolution-template"
+        />
 
-        <label className="block text-sm text-slate-400">
+        <label className="block text-sm text-slate-400 md:col-span-2">
           Resolution notes
-          <input
+          <textarea
             className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
+            rows={2}
             value={resolutionNotes}
             onChange={(event) => setResolutionNotes(event.target.value)}
           />

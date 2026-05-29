@@ -52,6 +52,8 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
     public DbSet<CompanionOfflineAction> CompanionOfflineActions => Set<CompanionOfflineAction>();
     public DbSet<CompanionFieldSubmission> CompanionFieldSubmissions => Set<CompanionFieldSubmission>();
 
+    public DbSet<TenantProductDataPlaneProfile> DataPlaneProfiles => Set<TenantProductDataPlaneProfile>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -326,6 +328,20 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.Property(x => x.ErrorMessage).HasMaxLength(2000);
             entity.HasIndex(x => x.CreatedAt);
             entity.HasIndex(x => new { x.ScopeTenantId, x.Status, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<TenantProductDataPlaneProfile>(entity =>
+        {
+            entity.ToTable("nexarr_tenant_product_data_plane_profiles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProductKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.DeploymentMode).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.DataEndpointUrl).HasMaxLength(512);
+            entity.Property(x => x.TrustStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(512);
+            entity.HasIndex(x => new { x.TenantId, x.ProductKey }).IsUnique();
+            entity.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
+            entity.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductKey);
         });
     }
 }

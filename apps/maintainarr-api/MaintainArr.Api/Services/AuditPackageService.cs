@@ -26,8 +26,14 @@ public sealed class AuditPackageService(
         var actions = await query.Select(x => x.Action).Distinct().OrderBy(x => x).ToListAsync(cancellationToken);
         var results = await query.Select(x => x.Result).Distinct().OrderBy(x => x).ToListAsync(cancellationToken);
         var targetTypes = await query.Select(x => x.TargetType).Distinct().OrderBy(x => x).ToListAsync(cancellationToken);
+        var actorUserIds = await query
+            .Where(x => x.ActorUserId != null)
+            .Select(x => x.ActorUserId!.Value)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToListAsync(cancellationToken);
 
-        return new AuditPackageFilterOptionsResponse(actions, results, targetTypes);
+        return new AuditPackageFilterOptionsResponse(actions, results, targetTypes, actorUserIds);
     }
 
     public async Task<AuditPackageExportSummaryResponse> GetExportSummaryAsync(

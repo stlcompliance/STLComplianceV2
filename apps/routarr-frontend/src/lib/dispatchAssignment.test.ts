@@ -111,6 +111,7 @@ describe('formatAssignmentConflictMessage', () => {
         ],
       }),
     )
-    expect(message).toContain('driver availability block')
+    expect(message).toContain('Driver availability')
+    expect(message).toContain('PTO')
   })
 })

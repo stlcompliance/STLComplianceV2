@@ -1,17 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
+import { AdvancedReferenceField, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import {
   assignDispatchException,
   bulkAssignDispatchExceptions,
   bulkResolveDispatchExceptions,
   createDispatchException,
+  getTrips,
   linkDispatchExceptionTrip,
   listDispatchExceptionResolutionTemplates,
   listDispatchExceptions,
   resolveDispatchException,
 } from '../api/client'
 import type { DispatchExceptionSummaryResponse } from '../api/types'
+import { tripToPickerOption } from '../lib/referencePickers'
 
 type Props = {
   accessToken: string
@@ -37,6 +40,8 @@ function ExceptionRow({
   onLinkTrip,
   isPending,
   resolutionTemplateKey,
+  tripOptions,
+  initialTripId,
 }: {
   item: DispatchExceptionSummaryResponse
   canTriage: boolean
@@ -48,9 +53,15 @@ function ExceptionRow({
   onLinkTrip: (id: string, tripId: string) => void
   isPending: boolean
   resolutionTemplateKey: string
+  tripOptions: PickerOption[]
+  initialTripId: string
 }) {
-  const [tripIdInput, setTripIdInput] = useState(item.tripId ?? '')
+  const [tripIdInput, setTripIdInput] = useState(initialTripId)
   const [resolveNotes, setResolveNotes] = useState('')
+
+  const selectedTripOption = useMemo((): PickerOption | undefined => {
+    return tripOptions.find((option) => option.value === tripIdInput)
+  }, [tripIdInput, tripOptions])
 
   return (
     <li
@@ -109,12 +120,22 @@ function ExceptionRow({
       </div>
       {canTriage ? (
         <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-800 pt-2">
-          <input
-            className="min-w-[12rem] flex-1 rounded border border-slate-600 bg-slate-900 px-2 py-1 text-xs text-slate-200"
-            placeholder="Trip id to link…"
-            value={tripIdInput}
-            onChange={(e) => setTripIdInput(e.target.value)}
-          />
+          <div className="min-w-[12rem] flex-1">
+            <StaticSearchPicker
+              value={tripIdInput}
+              onChange={setTripIdInput}
+              options={tripOptions}
+              selectedOption={selectedTripOption}
+              placeholder="Link trip…"
+              testId={`exception-link-trip-picker-${item.exceptionId}`}
+            />
+            <AdvancedReferenceField
+              value={tripIdInput}
+              onChange={setTripIdInput}
+              label="Trip id"
+              testId={`exception-link-trip-advanced-${item.exceptionId}`}
+            />
+          </div>
           <button
             type="button"
             className="rounded bg-sky-800 px-2 py-1 text-xs text-white disabled:opacity-50"
@@ -176,6 +197,21 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
     queryFn: () => listDispatchExceptionResolutionTemplates(accessToken),
     enabled: canTriage,
   })
+
+  const tripsQuery = useQuery({
+    queryKey: ['routarr-trips-exceptions', accessToken],
+    queryFn: () => getTrips(accessToken),
+    enabled: canTriage,
+  })
+
+  const tripOptions = useMemo(
+    () => (tripsQuery.data ?? []).map(tripToPickerOption),
+    [tripsQuery.data],
+  )
+
+  const createTripSelectedOption = useMemo((): PickerOption | undefined => {
+    return tripOptions.find((option) => option.value === createTripId)
+  }, [createTripId, tripOptions])
 
   const templates = templatesQuery.data ?? []
 
@@ -351,12 +387,24 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
               </option>
             ))}
           </select>
-          <input
-            className="rounded border border-slate-600 bg-slate-900 px-2 py-1 text-sm text-slate-200"
-            placeholder="Optional trip id"
-            value={createTripId}
-            onChange={(e) => setCreateTripId(e.target.value)}
-          />
+          <div>
+            <StaticSearchPicker
+              label="Optional trip"
+              value={createTripId}
+              onChange={setCreateTripId}
+              options={tripOptions}
+              selectedOption={createTripSelectedOption}
+              placeholder="Search trips…"
+              disabled={tripsQuery.isLoading}
+              testId="exception-create-trip-picker"
+            />
+            <AdvancedReferenceField
+              value={createTripId}
+              onChange={setCreateTripId}
+              label="Trip id"
+              testId="exception-create-trip-advanced"
+            />
+          </div>
           <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
             <input
               type="checkbox"
@@ -448,6 +496,8 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
               onToggleSelect={toggleSelect}
               isPending={isPending}
               resolutionTemplateKey={bulkTemplateKey || defaultTemplateKey}
+              tripOptions={tripOptions}
+              initialTripId={item.tripId ?? ''}
               onAssignSelf={(exceptionId) =>
                 triageMutation.mutate({ type: 'assign', exceptionId })
               }

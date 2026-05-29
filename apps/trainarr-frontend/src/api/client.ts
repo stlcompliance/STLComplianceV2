@@ -2,6 +2,8 @@ import type {
   CompleteTrainingAssignmentResponse,
   CreateTrainingAssignmentRequest,
   CreateTrainingDefinitionRequest,
+  CreateTrainingDefinitionStepRequest,
+  UpdateTrainingDefinitionStepRequest,
   CreateTrainingEvidenceRequest,
   CreateTrainingProgramRequest,
   HandoffSessionResponse,
@@ -15,12 +17,29 @@ import type {
   PublishTrainingAssignmentMaterialDemandResponse,
   TrainingAssignmentMaterialDemandStatusEventResponse,
   TrainingDefinitionResponse,
+  TrainingDefinitionStepResponse,
+  TrainingAssignmentStepProgressResponse,
+  SubmitTrainingAssignmentStepRequest,
   TrainingEvidenceResponse,
   TrainingProgramDetailResponse,
   TrainingProgramSummaryResponse,
+  TrainingProgramVersionSummaryResponse,
+  StartProgramRevisionRequest,
+  TrainingMatrixViewResponse,
+  CreateTrainingMatrixEntryRequest,
+  TrainingMatrixEntryResponse,
+  TrainingRequirementBuilderViewResponse,
+  CreateTrainingApplicabilityProfileRequest,
+  TrainingApplicabilityProfileResponse,
+  CreateTrainingRequirementRequest,
+  TrainingRequirementResponse,
+  SyncRequirementToMatrixResponse,
+  QualificationIssueListItemResponse,
   SubmitTrainingEvaluationRequest,
   SubmitTrainingSignoffRequest,
   TrainingEvaluationResponse,
+  TrainingEvaluationHistoryResponse,
+  TrainingEvaluationReviewTimelineResponse,
   TrainingSignoffResponse,
   QualificationIssueResponse,
   QualificationLifecycleActionRequest,
@@ -148,6 +167,81 @@ export async function createTrainingDefinition(
   return parseJsonResponse<TrainingDefinitionResponse>(response, 'Failed to create training definition')
 }
 
+export async function getTrainingDefinitionSteps(
+  accessToken: string,
+  trainingDefinitionId: string,
+): Promise<TrainingDefinitionStepResponse[]> {
+  const response = await fetch(`${apiBase}/api/training-definitions/${trainingDefinitionId}/steps`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TrainingDefinitionStepResponse[]>(response, 'Failed to load training definition steps')
+}
+
+export async function createTrainingDefinitionStep(
+  accessToken: string,
+  trainingDefinitionId: string,
+  payload: CreateTrainingDefinitionStepRequest,
+): Promise<TrainingDefinitionStepResponse> {
+  const response = await fetch(`${apiBase}/api/training-definitions/${trainingDefinitionId}/steps`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TrainingDefinitionStepResponse>(response, 'Failed to create training definition step')
+}
+
+export async function updateTrainingDefinitionStep(
+  accessToken: string,
+  trainingDefinitionId: string,
+  stepId: string,
+  payload: UpdateTrainingDefinitionStepRequest,
+): Promise<TrainingDefinitionStepResponse> {
+  const response = await fetch(`${apiBase}/api/training-definitions/${trainingDefinitionId}/steps/${stepId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TrainingDefinitionStepResponse>(response, 'Failed to update training definition step')
+}
+
+export async function deleteTrainingDefinitionStep(
+  accessToken: string,
+  trainingDefinitionId: string,
+  stepId: string,
+): Promise<void> {
+  const response = await fetch(`${apiBase}/api/training-definitions/${trainingDefinitionId}/steps/${stepId}`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    await parseJsonResponse(response, 'Failed to delete training definition step')
+  }
+}
+
+export async function getTrainingAssignmentSteps(
+  accessToken: string,
+  assignmentId: string,
+): Promise<TrainingAssignmentStepProgressResponse[]> {
+  const response = await fetch(`${apiBase}/api/training-assignments/${assignmentId}/steps`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TrainingAssignmentStepProgressResponse[]>(response, 'Failed to load assignment steps')
+}
+
+export async function submitTrainingAssignmentStep(
+  accessToken: string,
+  assignmentId: string,
+  stepId: string,
+  payload: SubmitTrainingAssignmentStepRequest,
+): Promise<TrainingAssignmentStepProgressResponse> {
+  const response = await fetch(`${apiBase}/api/training-assignments/${assignmentId}/steps/${stepId}/submit`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TrainingAssignmentStepProgressResponse>(response, 'Failed to submit assignment step')
+}
+
 export async function getTrainingAssignments(
   accessToken: string,
   params?: { staffarrPersonId?: string; staffarrIncidentRemediationId?: string; status?: string },
@@ -228,6 +322,155 @@ export async function updateTrainingProgram(
   return parseJsonResponse<TrainingProgramDetailResponse>(response, 'Failed to update training program')
 }
 
+export async function getTrainingProgram(
+  accessToken: string,
+  programId: string,
+): Promise<TrainingProgramDetailResponse> {
+  const response = await fetch(`${apiBase}/api/training-programs/${programId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TrainingProgramDetailResponse>(response, 'Failed to load training program')
+}
+
+export async function getTrainingProgramVersions(
+  accessToken: string,
+  programId: string,
+): Promise<TrainingProgramVersionSummaryResponse[]> {
+  const response = await fetch(
+    `${apiBase}/api/program-versions?programId=${encodeURIComponent(programId)}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse(response, 'Failed to load program versions')
+}
+
+export async function startTrainingProgramRevision(
+  accessToken: string,
+  payload: StartProgramRevisionRequest,
+): Promise<TrainingProgramDetailResponse> {
+  const response = await fetch(`${apiBase}/api/program-versions/start-revision`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<TrainingProgramDetailResponse>(response, 'Failed to start program revision')
+}
+
+export async function getTrainingMatrix(
+  accessToken: string,
+): Promise<TrainingMatrixViewResponse> {
+  const response = await fetch(`${apiBase}/api/training-matrix`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse(response, 'Failed to load training matrix')
+}
+
+export async function createTrainingMatrixEntry(
+  accessToken: string,
+  payload: CreateTrainingMatrixEntryRequest,
+): Promise<TrainingMatrixEntryResponse> {
+  const response = await fetch(`${apiBase}/api/training-matrix`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse(response, 'Failed to create training matrix entry')
+}
+
+export async function deleteTrainingMatrixEntry(
+  accessToken: string,
+  matrixEntryId: string,
+): Promise<void> {
+  const response = await fetch(`${apiBase}/api/training-matrix/${matrixEntryId}`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    throw new Error('Failed to delete training matrix entry')
+  }
+}
+
+export async function getTrainingRequirementBuilderView(
+  accessToken: string,
+): Promise<TrainingRequirementBuilderViewResponse> {
+  const response = await fetch(`${apiBase}/api/training-requirements/builder-view`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse(response, 'Failed to load requirement builder view')
+}
+
+export async function createTrainingApplicabilityProfile(
+  accessToken: string,
+  payload: CreateTrainingApplicabilityProfileRequest,
+): Promise<TrainingApplicabilityProfileResponse> {
+  const response = await fetch(`${apiBase}/api/applicability-profiles`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse(response, 'Failed to create applicability profile')
+}
+
+export async function deleteTrainingApplicabilityProfile(
+  accessToken: string,
+  profileId: string,
+): Promise<void> {
+  const response = await fetch(`${apiBase}/api/applicability-profiles/${profileId}`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    throw new Error('Failed to delete applicability profile')
+  }
+}
+
+export async function createTrainingRequirement(
+  accessToken: string,
+  payload: CreateTrainingRequirementRequest,
+): Promise<TrainingRequirementResponse> {
+  const response = await fetch(`${apiBase}/api/training-requirements`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse(response, 'Failed to create training requirement')
+}
+
+export async function deleteTrainingRequirement(
+  accessToken: string,
+  requirementId: string,
+): Promise<void> {
+  const response = await fetch(`${apiBase}/api/training-requirements/${requirementId}`, {
+    method: 'DELETE',
+    headers: authHeaders(accessToken),
+  })
+  if (!response.ok) {
+    throw new Error('Failed to delete training requirement')
+  }
+}
+
+export async function syncTrainingRequirementToMatrix(
+  accessToken: string,
+  requirementId: string,
+): Promise<SyncRequirementToMatrixResponse> {
+  const response = await fetch(`${apiBase}/api/training-requirements/sync-to-matrix`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ requirementId }),
+  })
+  return parseJsonResponse(response, 'Failed to sync requirement to training matrix')
+}
+
+export async function listQualificationIssues(
+  accessToken: string,
+  status?: string,
+): Promise<QualificationIssueListItemResponse[]> {
+  const query = status ? `?status=${encodeURIComponent(status)}` : ''
+  const response = await fetch(`${apiBase}/api/qualification-issues${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse(response, 'Failed to load qualification issues')
+}
+
 export async function getTrainingEvidence(
   accessToken: string,
   assignmentId: string,
@@ -262,6 +505,49 @@ export async function submitTrainingEvaluation(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<TrainingEvaluationResponse>(response, 'Failed to submit training evaluation')
+}
+
+export async function getTrainingEvaluationHistory(
+  accessToken: string,
+  assignmentId: string,
+): Promise<TrainingEvaluationHistoryResponse> {
+  const response = await fetch(
+    `${apiBase}/api/training-assignments/${assignmentId}/evaluations/history`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<TrainingEvaluationHistoryResponse>(
+    response,
+    'Failed to load training evaluation history',
+  )
+}
+
+export async function getTrainingEvaluationReviewTimeline(
+  accessToken: string,
+  options?: { staffarrPersonId?: string; result?: string; limit?: number },
+): Promise<TrainingEvaluationReviewTimelineResponse> {
+  const params = new URLSearchParams()
+  if (options?.staffarrPersonId) {
+    params.set('staffarrPersonId', options.staffarrPersonId)
+  }
+  if (options?.result) {
+    params.set('result', options.result)
+  }
+  if (options?.limit != null) {
+    params.set('limit', String(options.limit))
+  }
+  const query = params.toString()
+  const response = await fetch(
+    `${apiBase}/api/evaluations/review-timeline${query ? `?${query}` : ''}`,
+    {
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<TrainingEvaluationReviewTimelineResponse>(
+    response,
+    'Failed to load evaluation review timeline',
+  )
 }
 
 export async function submitTrainingSignoff(
@@ -403,6 +689,27 @@ export async function createQualificationCheck(
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<QualificationCheckResponse>(response, 'Failed to run qualification check')
+}
+
+export async function listQualificationChecks(
+  accessToken: string,
+  params?: { staffarrPersonId?: string; qualificationKey?: string; limit?: number },
+): Promise<import('./types').QualificationCheckHistoryItemResponse[]> {
+  const search = new URLSearchParams()
+  if (params?.staffarrPersonId) {
+    search.set('staffarrPersonId', params.staffarrPersonId)
+  }
+  if (params?.qualificationKey) {
+    search.set('qualificationKey', params.qualificationKey)
+  }
+  if (params?.limit != null) {
+    search.set('limit', String(params.limit))
+  }
+  const query = search.toString()
+  const response = await fetch(`${apiBase}/api/qualification-checks${query ? `?${query}` : ''}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse(response, 'Failed to load qualification check history')
 }
 
 export async function createBatchQualificationCheck(

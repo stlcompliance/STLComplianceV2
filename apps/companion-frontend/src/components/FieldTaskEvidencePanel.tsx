@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 
 import { submitCompanionFieldEvidence, validateCompanionFieldTask } from '../api/client'
+import { resolveDeniedReason } from '../lib/companionDeniedReasonCatalog'
 import { companionPlainReason } from '../lib/companionPlainReason'
 import type { FieldInboxTaskItem } from '../api/types'
 import {
@@ -38,7 +39,10 @@ export function FieldTaskEvidencePanel({
       })
       if (!validation.allowed) {
         throw new Error(
-          validation.reasonMessage ?? 'Evidence cannot be uploaded for this task right now.',
+          resolveDeniedReason(
+            validation,
+            'Evidence cannot be uploaded for this task right now.',
+          ),
         )
       }
 

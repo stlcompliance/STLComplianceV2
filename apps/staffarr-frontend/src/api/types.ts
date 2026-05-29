@@ -92,6 +92,16 @@ export interface PersonLookupResponse {
   lookedUpAt: string
 }
 
+export interface CreateStaffPersonRequest {
+  givenName: string
+  familyName: string
+  primaryEmail: string
+  employmentStatus: string
+  primaryOrgUnitId: string | null
+  managerPersonId: string | null
+  jobTitle: string | null
+}
+
 export interface UpdateStaffPersonRequest {
   givenName: string
   familyName: string
@@ -612,6 +622,27 @@ export interface ReadinessRollupSummaryResponse {
   computedAt: string
 }
 
+export interface ReadinessRollupMemberResponse {
+  personId: string
+  displayName: string
+  readinessStatus: 'ready' | 'not_ready'
+  readinessBasis: 'certifications' | 'manual_override' | 'training_blockers'
+  hasActiveOverride: boolean
+  blockerCount: number
+  primaryBlockerMessage: string | null
+}
+
+export interface ReadinessRollupMembersResponse {
+  rollup: ReadinessRollupSummaryResponse
+  members: ReadinessRollupMemberResponse[]
+}
+
+export type ReadinessRollupSelection = {
+  scopeType: 'team' | 'site'
+  orgUnitId: string
+  orgUnitName: string
+}
+
 export type PersonnelIncidentReasonCategory =
   | 'safety'
   | 'conduct'
@@ -831,6 +862,7 @@ export interface AuditPackageFilterOptions {
   actions: string[]
   results: string[]
   targetTypes: string[]
+  actorUserIds: string[]
 }
 
 export interface AuditPackageBreakdownItem {

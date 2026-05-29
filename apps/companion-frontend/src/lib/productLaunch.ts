@@ -1,5 +1,7 @@
 import { normalizeProductKey, resolveProductLaunchUrl, resolveSuiteHomeUrl } from '@stl/shared-ui'
 
+import { companionPlainReason } from './companionPlainReason'
+
 export function buildCompanionProductCallbackUrl(
   productKey: string,
   suiteHomeUrl: string,
@@ -17,10 +19,7 @@ export function buildCompanionProductCallbackUrl(
 }
 
 export function formatProductLaunchError(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message
-  }
-  return 'Product launch failed.'
+  return companionPlainReason(error, 'Product launch failed.')
 }
 
 export function resolveCompanionSuiteHomeUrl(env: Record<string, string | undefined>): string {

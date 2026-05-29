@@ -13,6 +13,7 @@ import {
   submitSupplierOnboarding,
 } from '../api/client'
 import type { ExternalPartyResponse } from '../api/types'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface SupplierOnboardingPanelProps {
   accessToken: string
@@ -237,7 +238,7 @@ export function SupplierOnboardingPanel({
           <h3 className="text-sm font-medium text-slate-300">Upload document (metadata)</h3>
           <div className="mt-2 grid gap-2 sm:grid-cols-3">
             <select
-              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               value={docTypeKey}
               onChange={(e) => setDocTypeKey(e.target.value)}
             >
@@ -247,17 +248,20 @@ export function SupplierOnboardingPanel({
                 </option>
               ))}
             </select>
-            <input
-              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              placeholder="Document key"
-              value={docKey}
-              onChange={(e) => setDocKey(e.target.value)}
-            />
-            <input
-              className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              placeholder="Title"
-              value={docTitle}
-              onChange={(e) => setDocTitle(e.target.value)}
+            <label className="block text-sm text-slate-400">
+              Title
+              <input
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                placeholder="Title"
+                value={docTitle}
+                onChange={(e) => setDocTitle(e.target.value)}
+              />
+            </label>
+            <GeneratedKeyFieldGroup
+              sourceLabel={docTitle || docTypeKey}
+              existingKeys={[]}
+              onKeyChange={setDocKey}
+              label="Document key"
             />
           </div>
           <button

@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { deleteDriverAvailability, updateDriverAvailability } from '../api/client'
 import { DriverAvailabilityPanel } from './DriverAvailabilityPanel'
 
 vi.mock('../api/client', () => ({
@@ -40,7 +41,18 @@ vi.mock('../api/client', () => ({
     ],
     generatedAt: '2026-05-27T12:00:00Z',
   }),
+  listDrivers: vi.fn().mockResolvedValue({
+    items: [
+      {
+        personId: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+        displayName: 'Alex Driver',
+        mirroredAt: '2026-05-27T08:00:00Z',
+      },
+    ],
+  }),
   createDriverAvailability: vi.fn(),
+  updateDriverAvailability: vi.fn().mockResolvedValue({}),
+  deleteDriverAvailability: vi.fn().mockResolvedValue(undefined),
 }))
 
 describe('DriverAvailabilityPanel', () => {
@@ -88,5 +100,48 @@ describe('DriverAvailabilityPanel', () => {
     await screen.findByText(/Driver availability/)
     fireEvent.click(screen.getByRole('button', { name: 'Weekly' }))
     expect(onScopeChange).toHaveBeenCalledWith('weekly')
+  })
+
+  it('edits and deletes availability when manager', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={client}>
+        <DriverAvailabilityPanel
+          accessToken="token"
+          scope="daily"
+          onScopeChange={vi.fn()}
+          canManage={true}
+          sessionPersonId="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        />
+      </QueryClientProvider>,
+    )
+
+    await screen.findByText(/PTO/)
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeInTheDocument()
+
+    fireEvent.change(screen.getByDisplayValue('PTO'), { target: { value: 'Vacation' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => {
+      expect(updateDriverAvailability).toHaveBeenCalledWith(
+        'token',
+        '44444444-4444-4444-4444-444444444444',
+        expect.objectContaining({
+          availabilityStatus: 'unavailable',
+          reason: 'Vacation',
+        }),
+      )
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    await waitFor(() => {
+      expect(deleteDriverAvailability).toHaveBeenCalledWith(
+        'token',
+        '44444444-4444-4444-4444-444444444444',
+      )
+    })
   })
 })

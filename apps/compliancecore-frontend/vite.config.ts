@@ -10,7 +10,7 @@ const complianceCoreApiTarget = process.env.VITE_COMPLIANCECORE_PROXY_TARGET ?? 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
-    dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+    dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query', 'lucide-react'],
     alias: {
       '@stl/shared-ui': path.resolve(appRoot, '../../packages/shared-ui/src'),
     },
