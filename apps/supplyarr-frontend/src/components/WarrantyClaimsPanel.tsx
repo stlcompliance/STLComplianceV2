@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
+import { ControlledSelect } from '@stl/shared-ui'
+
 import {
   cancelWarrantyClaim,
   closeWarrantyClaim,
@@ -15,6 +17,32 @@ import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 const CLAIM_TYPES = ['defective', 'doa', 'premature_failure', 'other'] as const
 const DISPOSITIONS = ['approved', 'partial_credit', 'replacement', 'denied'] as const
+const WARRANTY_DENIAL_REASON_OPTIONS = [
+  { value: 'outside_warranty_window', label: 'Outside warranty window' },
+  { value: 'insufficient_evidence', label: 'Insufficient evidence' },
+  { value: 'customer_damage', label: 'Customer damage' },
+  { value: 'vendor_policy_exclusion', label: 'Vendor policy exclusion' },
+  { value: 'duplicate_claim', label: 'Duplicate claim' },
+  { value: 'other', label: 'Other' },
+] as const
+const WARRANTY_CANCEL_REASON_OPTIONS = [
+  { value: 'opened_in_error', label: 'Opened in error' },
+  { value: 'duplicate_claim', label: 'Duplicate claim' },
+  { value: 'vendor_resolved_outside_claim', label: 'Vendor resolved outside claim' },
+  { value: 'part_no_longer_available', label: 'Part no longer available' },
+  { value: 'no_longer_needed', label: 'No longer needed' },
+  { value: 'other', label: 'Other' },
+] as const
+
+function formatWarrantyReason(
+  code: string,
+  notes: string,
+  options: readonly { value: string; label: string }[],
+): string {
+  const label = options.find((option) => option.value === code)?.label ?? code
+  const trimmedNotes = notes.trim()
+  return trimmedNotes ? `${label}: ${trimmedNotes}` : label
+}
 
 function statusClass(status: string): string {
   switch (status) {
@@ -63,8 +91,12 @@ export function WarrantyClaimsPanel({
     useState<(typeof DISPOSITIONS)[number]>('approved')
   const [vendorResponseNotes, setVendorResponseNotes] = useState('')
   const [closureNotes, setClosureNotes] = useState('')
-  const [denialReason, setDenialReason] = useState('')
-  const [cancelReason, setCancelReason] = useState('')
+  const [denialReasonCode, setDenialReasonCode] =
+    useState<(typeof WARRANTY_DENIAL_REASON_OPTIONS)[number]['value']>('insufficient_evidence')
+  const [denialNotes, setDenialNotes] = useState('')
+  const [cancelReasonCode, setCancelReasonCode] =
+    useState<(typeof WARRANTY_CANCEL_REASON_OPTIONS)[number]['value']>('opened_in_error')
+  const [cancelNotes, setCancelNotes] = useState('')
 
   const claimsQuery = useQuery({
     queryKey: ['supplyarr-warranty-claims', accessToken],
@@ -141,12 +173,22 @@ export function WarrantyClaimsPanel({
   })
 
   const denyMutation = useMutation({
-    mutationFn: (id: string) => denyWarrantyClaim(accessToken, id, { denialReason }),
+    mutationFn: (id: string) =>
+      denyWarrantyClaim(accessToken, id, {
+        denialReason: formatWarrantyReason(
+          denialReasonCode,
+          denialNotes,
+          WARRANTY_DENIAL_REASON_OPTIONS,
+        ),
+      }),
     onSuccess: invalidate,
   })
 
   const cancelMutation = useMutation({
-    mutationFn: (id: string) => cancelWarrantyClaim(accessToken, id, { reason: cancelReason }),
+    mutationFn: (id: string) =>
+      cancelWarrantyClaim(accessToken, id, {
+        reason: formatWarrantyReason(cancelReasonCode, cancelNotes, WARRANTY_CANCEL_REASON_OPTIONS),
+      }),
     onSuccess: invalidate,
   })
 
@@ -368,14 +410,30 @@ export function WarrantyClaimsPanel({
               >
                 Record vendor response
               </button>
-              <label htmlFor="warranty-denial-reason" className="mt-2 block text-slate-300">
-                Denial reason
+              <div className="mt-2">
+                <ControlledSelect
+                  id="warranty-denial-reason-code"
+                  label="Denial reason code"
+                  value={denialReasonCode}
+                  onChange={(value) =>
+                    setDenialReasonCode(
+                      value as (typeof WARRANTY_DENIAL_REASON_OPTIONS)[number]['value'],
+                    )
+                  }
+                  options={WARRANTY_DENIAL_REASON_OPTIONS}
+                  testId="warranty-denial-reason-code"
+                  className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
+                />
+              </div>
+              <label htmlFor="warranty-denial-notes" className="mt-2 block text-slate-300">
+                Denial notes
                 <textarea
-                  id="warranty-denial-reason"
+                  id="warranty-denial-notes"
                   className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
                   rows={2}
-                  value={denialReason}
-                  onChange={(e) => setDenialReason(e.target.value)}
+                  data-testid="warranty-denial-notes"
+                  value={denialNotes}
+                  onChange={(e) => setDenialNotes(e.target.value)}
                 />
               </label>
               <button
@@ -413,14 +471,30 @@ export function WarrantyClaimsPanel({
 
           {(selectedClaim.status === 'draft' || selectedClaim.status === 'submitted') && (
             <>
-              <label htmlFor="warranty-cancel-reason" className="mt-2 block text-slate-300">
-                Cancel reason
+              <div className="mt-2">
+                <ControlledSelect
+                  id="warranty-cancel-reason-code"
+                  label="Cancel reason code"
+                  value={cancelReasonCode}
+                  onChange={(value) =>
+                    setCancelReasonCode(
+                      value as (typeof WARRANTY_CANCEL_REASON_OPTIONS)[number]['value'],
+                    )
+                  }
+                  options={WARRANTY_CANCEL_REASON_OPTIONS}
+                  testId="warranty-cancel-reason-code"
+                  className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
+                />
+              </div>
+              <label htmlFor="warranty-cancel-notes" className="mt-2 block text-slate-300">
+                Cancel notes
                 <textarea
-                  id="warranty-cancel-reason"
+                  id="warranty-cancel-notes"
                   className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
                   rows={2}
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
+                  data-testid="warranty-cancel-notes"
+                  value={cancelNotes}
+                  onChange={(e) => setCancelNotes(e.target.value)}
                 />
               </label>
               <button

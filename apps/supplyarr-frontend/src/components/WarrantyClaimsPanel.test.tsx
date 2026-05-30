@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
+import * as client from '../api/client'
 import { WarrantyClaimsPanel } from './WarrantyClaimsPanel'
 
 vi.mock('../api/client', () => ({
@@ -53,10 +54,10 @@ vi.mock('../api/client', () => ({
 }))
 
 describe('WarrantyClaimsPanel', () => {
-  it('renders claims list when user can manage', async () => {
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  function renderPanel() {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
-      <QueryClientProvider client={client}>
+      <QueryClientProvider client={queryClient}>
         <WarrantyClaimsPanel
           accessToken="token"
           canManage
@@ -101,8 +102,57 @@ describe('WarrantyClaimsPanel', () => {
         />
       </QueryClientProvider>,
     )
+  }
+
+  it('renders claims list when user can manage', async () => {
+    renderPanel()
 
     expect(await screen.findByTestId('warranty-claims-panel')).toBeInTheDocument()
     expect(await screen.findByText('WC-001')).toBeInTheDocument()
+  })
+
+  it('splits denial and cancel reasons into controlled codes plus notes', async () => {
+    renderPanel()
+
+    fireEvent.click(await screen.findByText('WC-001'))
+
+    expect(await screen.findByLabelText(/Denial reason code/i)).toBeInTheDocument()
+    fireEvent.change(screen.getByTestId('warranty-denial-reason-code'), {
+      target: { value: 'vendor_policy_exclusion' },
+    })
+    fireEvent.change(screen.getByTestId('warranty-denial-notes'), {
+      target: { value: 'Vendor rejected due to published exclusion.' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Deny claim/i }))
+
+    await waitFor(() =>
+      expect(client.denyWarrantyClaim).toHaveBeenCalledWith(
+        'token',
+        '11111111-1111-1111-1111-111111111111',
+        {
+          denialReason:
+            'Vendor policy exclusion: Vendor rejected due to published exclusion.',
+        },
+      ),
+    )
+
+    expect(screen.getByLabelText(/Cancel reason code/i)).toBeInTheDocument()
+    fireEvent.change(screen.getByTestId('warranty-cancel-reason-code'), {
+      target: { value: 'duplicate_claim' },
+    })
+    fireEvent.change(screen.getByTestId('warranty-cancel-notes'), {
+      target: { value: 'Already tracked as WC-000.' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Cancel claim/i }))
+
+    await waitFor(() =>
+      expect(client.cancelWarrantyClaim).toHaveBeenCalledWith(
+        'token',
+        '11111111-1111-1111-1111-111111111111',
+        {
+          reason: 'Duplicate claim: Already tracked as WC-000.',
+        },
+      ),
+    )
   })
 })
