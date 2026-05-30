@@ -7,74 +7,92 @@ public static class PersonLookupEndpoints
 {
     public static void MapStaffArrPersonLookupEndpoints(this WebApplication app)
     {
-        var lookup = app.MapGroup("/api/person-lookup")
-            .WithTags("PersonLookup")
-            .RequireAuthorization();
-
-        lookup.MapGet("/", async (
-            Guid? personId,
-            string? email,
-            HttpContext context,
-            StaffArrAuthorizationService authorization,
-            PersonLookupService service,
-            CancellationToken cancellationToken) =>
+        var lookupGroups = new[]
         {
-            if (personId is null && string.IsNullOrWhiteSpace(email))
-            {
-                return Results.BadRequest(new
-                {
-                    code = "person_lookup.validation",
-                    message = "Provide personId or email query parameter."
-                });
-            }
+            (Route: "/api/person-lookup", Suffix: string.Empty),
+            (Route: "/api/v1/person-lookup", Suffix: "V1")
+        };
 
-            if (personId is Guid requestedPersonId)
+        foreach (var (route, suffix) in lookupGroups)
+        {
+            var lookup = app.MapGroup(route)
+                .WithTags("PersonLookup")
+                .RequireAuthorization();
+
+            lookup.MapGet("/", async (
+                Guid? personId,
+                string? email,
+                HttpContext context,
+                StaffArrAuthorizationService authorization,
+                PersonLookupService service,
+                CancellationToken cancellationToken) =>
             {
-                if (requestedPersonId == Guid.Empty)
+                if (personId is null && string.IsNullOrWhiteSpace(email))
                 {
                     return Results.BadRequest(new
                     {
                         code = "person_lookup.validation",
-                        message = "personId must be a valid identifier."
+                        message = "Provide personId or email query parameter."
                     });
                 }
 
-                authorization.RequirePersonLookupRead(context.User, requestedPersonId);
-            }
-            else
-            {
-                authorization.RequirePeopleRead(context.User);
-            }
+                if (personId is Guid requestedPersonId)
+                {
+                    if (requestedPersonId == Guid.Empty)
+                    {
+                        return Results.BadRequest(new
+                        {
+                            code = "person_lookup.validation",
+                            message = "personId must be a valid identifier."
+                        });
+                    }
 
-            var tenantId = context.User.GetTenantId();
-            var result = personId is Guid personGuid
-                ? await service.GetByPersonIdAsync(tenantId, personGuid, cancellationToken)
-                : await service.GetByEmailAsync(tenantId, email!, cancellationToken);
+                    authorization.RequirePersonLookupRead(context.User, requestedPersonId);
+                }
+                else
+                {
+                    authorization.RequirePeopleRead(context.User);
+                }
 
-            if (personId is null)
-            {
-                authorization.RequirePersonLookupRead(context.User, result.PersonId);
-            }
+                var tenantId = context.User.GetTenantId();
+                var result = personId is Guid personGuid
+                    ? await service.GetByPersonIdAsync(tenantId, personGuid, cancellationToken)
+                    : await service.GetByEmailAsync(tenantId, email!, cancellationToken);
 
-            return Results.Ok(result);
-        })
-        .WithName("GetPersonLookupByQuery");
+                if (personId is null)
+                {
+                    authorization.RequirePersonLookupRead(context.User, result.PersonId);
+                }
 
-        var personLookup = app.MapGroup("/api/people/{personId:guid}/lookup")
-            .WithTags("PersonLookup")
-            .RequireAuthorization();
+                return Results.Ok(result);
+            })
+            .WithName($"GetPersonLookupByQuery{suffix}");
+        }
 
-        personLookup.MapGet("/", async (
-            Guid personId,
-            HttpContext context,
-            StaffArrAuthorizationService authorization,
-            PersonLookupService service,
-            CancellationToken cancellationToken) =>
+        var personLookupGroups = new[]
         {
-            authorization.RequirePersonLookupRead(context.User, personId);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetByPersonIdAsync(tenantId, personId, cancellationToken));
-        })
-        .WithName("GetPersonLookup");
+            (Route: "/api/people/{personId:guid}/lookup", Suffix: string.Empty),
+            (Route: "/api/v1/people/{personId:guid}/lookup", Suffix: "V1")
+        };
+
+        foreach (var (route, suffix) in personLookupGroups)
+        {
+            var personLookup = app.MapGroup(route)
+                .WithTags("PersonLookup")
+                .RequireAuthorization();
+
+            personLookup.MapGet("/", async (
+                Guid personId,
+                HttpContext context,
+                StaffArrAuthorizationService authorization,
+                PersonLookupService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePersonLookupRead(context.User, personId);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await service.GetByPersonIdAsync(tenantId, personId, cancellationToken));
+            })
+            .WithName($"GetPersonLookup{suffix}");
+        }
     }
 }

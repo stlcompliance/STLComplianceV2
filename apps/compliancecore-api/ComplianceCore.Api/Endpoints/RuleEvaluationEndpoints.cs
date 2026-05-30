@@ -128,5 +128,141 @@ public static class RuleEvaluationEndpoints
                 cancellationToken));
         })
         .WithName("ExportRuleEvaluationAuditPackage");
+
+        var v1Evaluations = app.MapGroup("/api/v1/evaluations")
+            .WithTags("RuleEvaluation")
+            .RequireAuthorization();
+
+        v1Evaluations.MapPost("/run", async (
+            EvaluateRulePackRunRequest request,
+            ComplianceCoreAuthorizationService authorization,
+            RuleEvaluationService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRuleEvaluation(context.User);
+            var tenantId = context.User.GetTenantId();
+            var result = await service.EvaluateAsync(
+                tenantId,
+                context.User.GetUserId(),
+                request.RulePackId,
+                new EvaluateRulePackRequest(request.Facts, request.EmitFindings),
+                cancellationToken);
+            return Results.Created($"/api/v1/evaluations/{result.EvaluationRunId}", result);
+        })
+        .WithName("RunRuleEvaluationV1");
+
+        v1Evaluations.MapPost("/batch", async (
+            EvaluateRulePackBatchRequest request,
+            ComplianceCoreAuthorizationService authorization,
+            RulePackBatchEvaluationService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRuleEvaluation(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.EvaluateBatchForUserAsync(
+                tenantId,
+                context.User.GetUserId(),
+                request,
+                cancellationToken));
+        })
+        .WithName("EvaluateRulePackBatchV1");
+
+        v1Evaluations.MapGet("/", async (
+            Guid? rulePackId,
+            ComplianceCoreAuthorizationService authorization,
+            RuleEvaluationService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRulePacksRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListAsync(tenantId, rulePackId, cancellationToken));
+        })
+        .WithName("ListRuleEvaluationsV1");
+
+        v1Evaluations.MapGet("/{evaluationRunId:guid}", async (
+            Guid evaluationRunId,
+            ComplianceCoreAuthorizationService authorization,
+            RuleEvaluationService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRulePacksRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetAsync(tenantId, evaluationRunId, cancellationToken));
+        })
+        .WithName("GetRuleEvaluationV1");
+
+        v1Evaluations.MapGet("/{evaluationRunId:guid}/audit-export", async (
+            Guid evaluationRunId,
+            ComplianceCoreAuthorizationService authorization,
+            RuleEvaluationService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAuditPackageExport(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.BuildAuditExportAsync(
+                tenantId,
+                context.User.GetUserId(),
+                evaluationRunId,
+                cancellationToken));
+        })
+        .WithName("ExportRuleEvaluationAuditPackageV1");
+
+        v1Evaluations.MapPost("/simulate", async (
+            EvaluateRulePackSimulationRequest request,
+            ComplianceCoreAuthorizationService authorization,
+            RuleEvaluationService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRuleEvaluation(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.SimulateAsync(
+                tenantId,
+                request.RulePackId,
+                request.Facts,
+                cancellationToken));
+        })
+        .WithName("SimulateRuleEvaluationV1");
+
+        v1Evaluations.MapPost("/{evaluationRunId:guid}/re-evaluate", async (
+            Guid evaluationRunId,
+            ReEvaluateRuleEvaluationRequest request,
+            ComplianceCoreAuthorizationService authorization,
+            RuleEvaluationService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRuleEvaluation(context.User);
+            var tenantId = context.User.GetTenantId();
+            var result = await service.ReEvaluateAsync(
+                tenantId,
+                context.User.GetUserId(),
+                evaluationRunId,
+                request.EmitFindings,
+                cancellationToken);
+            return Results.Created($"/api/v1/evaluations/{result.EvaluationRunId}", result);
+        })
+        .WithName("ReEvaluateRuleEvaluationV1");
+
+        v1Evaluations.MapGet("/{evaluationRunId:guid}/explanation", async (
+            Guid evaluationRunId,
+            ComplianceCoreAuthorizationService authorization,
+            RuleEvaluationService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRulePacksRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.BuildExplanationAsync(
+                tenantId,
+                evaluationRunId,
+                cancellationToken));
+        })
+        .WithName("GetRuleEvaluationExplanationV1");
     }
 }

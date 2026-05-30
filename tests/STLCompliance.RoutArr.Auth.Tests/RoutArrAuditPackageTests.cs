@@ -201,6 +201,24 @@ public sealed class RoutArrAuditPackageTests : IAsyncLifetime
         Assert.Equal("application/zip", downloadResponse.Content.Headers.ContentType?.MediaType);
     }
 
+    [Fact]
+    public async Task Audit_v1_alias_matches_audit_package_timeline()
+    {
+        var legacyResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/audit-packages/timeline?action=w227.test.failure&pageSize=20", _managerToken));
+        legacyResponse.EnsureSuccessStatusCode();
+        var legacy = (await legacyResponse.Content.ReadFromJsonAsync<PagedResult<AuditEventExportItem>>())!;
+
+        var v1Response = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit?action=w227.test.failure&pageSize=20", _managerToken));
+        v1Response.EnsureSuccessStatusCode();
+        var v1 = (await v1Response.Content.ReadFromJsonAsync<PagedResult<AuditEventExportItem>>())!;
+
+        Assert.Equal(legacy.TotalCount, v1.TotalCount);
+        Assert.Equal(legacy.Items.Count, v1.Items.Count);
+        Assert.All(v1.Items, item => Assert.Equal("w227.test.failure", item.Action));
+    }
+
     private async Task SeedAuditEventsAsync()
     {
         using var scope = _routarrFactory.Services.CreateScope();

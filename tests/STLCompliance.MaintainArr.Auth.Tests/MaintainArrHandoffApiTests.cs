@@ -93,6 +93,8 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
 
                 services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
+                services.AddHttpClient<StlNexArrLaunchClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
             });
         });
 
@@ -128,6 +130,55 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
         var me = await meResponse.Content.ReadFromJsonAsync<MaintainArrMeResponse>();
         Assert.NotNull(me);
         Assert.True(me.HasMaintainArrEntitlement);
+    }
+
+    [Fact]
+    public async Task Handoff_redeem_nexarr_alias_happy_path_returns_session()
+    {
+        var handoffCode = await CreateHandoffAsync();
+        var redeemResponse = await _maintainarrClient.PostAsJsonAsync(
+            "/api/auth/nexarr/redeem",
+            new MaintainArrRedeemRequest(handoffCode));
+
+        redeemResponse.EnsureSuccessStatusCode();
+        var session = (await redeemResponse.Content.ReadFromJsonAsync<MaintainArrHandoffSessionResponse>())!;
+        Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
+        Assert.Contains("maintainarr", session.Entitlements);
+    }
+
+    [Fact]
+    public async Task V1_handoff_session_and_me_aliases_work()
+    {
+        var handoffCode = await CreateHandoffAsync();
+        var redeemResponse = await _maintainarrClient.PostAsJsonAsync(
+            "/api/v1/auth/handoff/redeem",
+            new MaintainArrRedeemRequest(handoffCode));
+
+        redeemResponse.EnsureSuccessStatusCode();
+        var session = (await redeemResponse.Content.ReadFromJsonAsync<MaintainArrHandoffSessionResponse>())!;
+        Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
+
+        var meResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/me", session.AccessToken));
+        meResponse.EnsureSuccessStatusCode();
+        var me = (await meResponse.Content.ReadFromJsonAsync<MaintainArrMeResponse>())!;
+        Assert.True(me.HasMaintainArrEntitlement);
+
+        var sessionResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/session", session.AccessToken));
+        sessionResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task V1_launch_handoff_proxy_returns_handoff_code()
+    {
+        var nexarrToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", nexarrToken);
+        request.Content = JsonContent.Create(new CreateHandoffRequest("maintainarr", "http://localhost:5178/launch"));
+        var response = await _maintainarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var handoff = (await response.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
+        Assert.False(string.IsNullOrWhiteSpace(handoff.HandoffCode));
     }
 
     [Fact]
@@ -182,6 +233,55 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Asset_registry_crud_v1_alias_happy_path()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+
+        var createClassRequest = Authorized(HttpMethod.Post, "/api/v1/asset-classes", token);
+        createClassRequest.Content = JsonContent.Create(new CreateAssetClassRequest(
+            "yard-equipment",
+            "Yard Equipment",
+            "Assets for yard operations"));
+        var createClassResponse = await _maintainarrClient.SendAsync(createClassRequest);
+        createClassResponse.EnsureSuccessStatusCode();
+        var assetClass = (await createClassResponse.Content.ReadFromJsonAsync<AssetClassResponse>())!;
+
+        var createTypeRequest = Authorized(HttpMethod.Post, "/api/v1/asset-types", token);
+        createTypeRequest.Content = JsonContent.Create(new CreateAssetTypeRequest(
+            assetClass.AssetClassId,
+            "loader",
+            "Loader",
+            "Wheel loaders"));
+        var createTypeResponse = await _maintainarrClient.SendAsync(createTypeRequest);
+        createTypeResponse.EnsureSuccessStatusCode();
+        var assetType = (await createTypeResponse.Content.ReadFromJsonAsync<AssetTypeResponse>())!;
+
+        var createAssetRequest = Authorized(HttpMethod.Post, "/api/v1/assets", token);
+        createAssetRequest.Content = JsonContent.Create(new CreateAssetRequest(
+            assetType.AssetTypeId,
+            "LD-2001",
+            "Loader 2001",
+            "Primary loader",
+            "site-yard-b"));
+        var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
+        createAssetResponse.EnsureSuccessStatusCode();
+        var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
+
+        var listAssetsRequest = Authorized(HttpMethod.Get, "/api/v1/assets", token);
+        var listAssetsResponse = await _maintainarrClient.SendAsync(listAssetsRequest);
+        listAssetsResponse.EnsureSuccessStatusCode();
+        var assets = (await listAssetsResponse.Content.ReadFromJsonAsync<List<AssetResponse>>())!;
+        Assert.Contains(assets, x => x.AssetId == asset.AssetId);
+
+        var getAssetRequest = Authorized(HttpMethod.Get, $"/api/v1/assets/{asset.AssetId}", token);
+        var getAssetResponse = await _maintainarrClient.SendAsync(getAssetRequest);
+        getAssetResponse.EnsureSuccessStatusCode();
+        var fetched = (await getAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
+        Assert.Equal("loader", fetched.TypeKey);
+        Assert.Equal("yard-equipment", fetched.ClassKey);
+    }
+
+    [Fact]
     public async Task Asset_create_denied_without_manage_role()
     {
         var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_technician");
@@ -220,7 +320,7 @@ public sealed class MaintainArrHandoffApiTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new CreateHandoffRequest("maintainarr", "http://localhost:5178/launch"));
         var response = await _nexarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();

@@ -8,9 +8,9 @@ public static class StockReservationEndpoints
 {
     public static void MapSupplyArrStockReservationEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/inventory/reservations")
-            .WithTags("StockReservations")
-            .RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("StockReservations").RequireAuthorization();
 
         group.MapGet("/", async (
             string? status,
@@ -30,7 +30,7 @@ public static class StockReservationEndpoints
                 binId,
                 cancellationToken));
         })
-        .WithName("ListStockReservations");
+        .WithName($"ListStockReservations{nameSuffix}");
 
         group.MapGet("/{reservationId:guid}", async (
             Guid reservationId,
@@ -43,7 +43,7 @@ public static class StockReservationEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, reservationId, cancellationToken));
         })
-        .WithName("GetStockReservation");
+        .WithName($"GetStockReservation{nameSuffix}");
 
         group.MapPost("/", async (
             CreateStockReservationRequest request,
@@ -58,7 +58,7 @@ public static class StockReservationEndpoints
             var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Created($"/api/inventory/reservations/{created.ReservationId}", created);
         })
-        .WithName("CreateStockReservation");
+        .WithName($"CreateStockReservation{nameSuffix}");
 
         group.MapPost("/{reservationId:guid}/release", async (
             Guid reservationId,
@@ -78,7 +78,7 @@ public static class StockReservationEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("ReleaseStockReservation");
+        .WithName($"ReleaseStockReservation{nameSuffix}");
 
         group.MapPost("/{reservationId:guid}/fulfill", async (
             Guid reservationId,
@@ -96,6 +96,10 @@ public static class StockReservationEndpoints
                 reservationId,
                 cancellationToken));
         })
-        .WithName("FulfillStockReservation");
+        .WithName($"FulfillStockReservation{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/inventory/reservations"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/inventory/reservations"), "V1");
     }
 }

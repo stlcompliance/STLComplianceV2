@@ -152,6 +152,54 @@ public sealed class MaintainArrDefectEscalationWorkerTests : IAsyncLifetime
         Assert.Contains(pending.Items, x => x.DefectId == defect.Id);
     }
 
+    [Fact]
+    public async Task Defect_escalation_settings_v1_put_get_pending_runs_and_events_work_for_admin()
+    {
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "tenant_admin");
+        var putRequest = Authorized(HttpMethod.Put, "/api/v1/defect-escalation-settings", token);
+        putRequest.Content = JsonContent.Create(new UpsertDefectEscalationSettingsRequest(
+            true,
+            200,
+            80,
+            30,
+            10,
+            true,
+            true,
+            true,
+            false));
+
+        var putResponse = await _maintainarrClient.SendAsync(putRequest);
+        putResponse.EnsureSuccessStatusCode();
+        var putBody = (await putResponse.Content.ReadFromJsonAsync<DefectEscalationSettingsResponse>())!;
+        Assert.Equal(200, putBody.LowThresholdHours);
+        Assert.Equal(80, putBody.MediumThresholdHours);
+
+        var getRequest = Authorized(HttpMethod.Get, "/api/v1/defect-escalation-settings", token);
+        var getResponse = await _maintainarrClient.SendAsync(getRequest);
+        getResponse.EnsureSuccessStatusCode();
+        var getBody = (await getResponse.Content.ReadFromJsonAsync<DefectEscalationSettingsResponse>())!;
+        Assert.Equal(200, getBody.LowThresholdHours);
+        Assert.Equal(80, getBody.MediumThresholdHours);
+
+        var pendingRequest = Authorized(HttpMethod.Get, "/api/v1/defect-escalation-settings/pending", token);
+        var pendingResponse = await _maintainarrClient.SendAsync(pendingRequest);
+        pendingResponse.EnsureSuccessStatusCode();
+        var pendingBody = (await pendingResponse.Content.ReadFromJsonAsync<PendingDefectEscalationsResponse>())!;
+        Assert.NotNull(pendingBody.Items);
+
+        var runsRequest = Authorized(HttpMethod.Get, "/api/v1/defect-escalation-settings/runs?limit=5", token);
+        var runsResponse = await _maintainarrClient.SendAsync(runsRequest);
+        runsResponse.EnsureSuccessStatusCode();
+        var runsBody = (await runsResponse.Content.ReadFromJsonAsync<DefectEscalationRunsResponse>())!;
+        Assert.NotNull(runsBody.Items);
+
+        var eventsRequest = Authorized(HttpMethod.Get, "/api/v1/defect-escalation-settings/events?limit=5", token);
+        var eventsResponse = await _maintainarrClient.SendAsync(eventsRequest);
+        eventsResponse.EnsureSuccessStatusCode();
+        var eventsBody = (await eventsResponse.Content.ReadFromJsonAsync<DefectEscalationEventsResponse>())!;
+        Assert.NotNull(eventsBody.Items);
+    }
+
     private async Task UpsertEscalationSettingsAsync()
     {
         var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");

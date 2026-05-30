@@ -125,6 +125,7 @@ public class StaffArrTrainArrQualificationBatchCheckTests : IAsyncLifetime
             adminToken,
             "hazmat_endorsement",
             "driver_qualification",
+            "/api/qualification-checks/batch",
             personAllow,
             personWarn);
 
@@ -153,6 +154,7 @@ public class StaffArrTrainArrQualificationBatchCheckTests : IAsyncLifetime
             adminToken,
             "hazmat_endorsement",
             "driver_qualification_fail",
+            "/api/qualification-checks/batch",
             personId);
 
         Assert.Equal(1, batch.Summary.Total);
@@ -169,6 +171,7 @@ public class StaffArrTrainArrQualificationBatchCheckTests : IAsyncLifetime
             adminToken,
             "hazmat_endorsement",
             "driver_qualification",
+            "/api/qualification-checks/batch",
             personId);
 
         using var scope = _trainarrFactory.Services.CreateScope();
@@ -216,13 +219,40 @@ public class StaffArrTrainArrQualificationBatchCheckTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Batch_qualification_check_v1_alias_matches_primary_endpoint()
+    {
+        var personId = Guid.NewGuid();
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+
+        var primary = await RunBatchQualificationCheckAsync(
+            adminToken,
+            "hazmat_endorsement",
+            "driver_qualification",
+            "/api/qualification-checks/batch",
+            personId);
+        var v1 = await RunBatchQualificationCheckAsync(
+            adminToken,
+            "hazmat_endorsement",
+            "driver_qualification",
+            "/api/v1/qualification-checks/batch",
+            personId);
+
+        Assert.Equal(primary.Summary.Total, v1.Summary.Total);
+        Assert.Equal(primary.Summary.WarnCount, v1.Summary.WarnCount);
+        Assert.Equal(primary.Summary.BlockCount, v1.Summary.BlockCount);
+        Assert.Equal(primary.Results[0].Outcome, v1.Results[0].Outcome);
+        Assert.Equal(primary.Results[0].ReasonCode, v1.Results[0].ReasonCode);
+    }
+
     private async Task<BatchQualificationCheckResponse> RunBatchQualificationCheckAsync(
         string trainarrToken,
         string qualificationKey,
         string rulePackKey,
+        string endpoint,
         params Guid[] personIds)
     {
-        var request = Authorized(HttpMethod.Post, "/api/qualification-checks/batch", trainarrToken);
+        var request = Authorized(HttpMethod.Post, endpoint, trainarrToken);
         request.Content = JsonContent.Create(new CreateBatchQualificationCheckRequest(
             qualificationKey,
             rulePackKey,

@@ -11,6 +11,7 @@ using NexArr.Api.Services;
 using TrainArr.Api.Contracts;
 using TrainArr.Api.Data;
 using TrainArr.Api.Endpoints;
+using TrainArr.Api.Entities;
 using TrainArr.Api.Services;
 
 namespace STLCompliance.StaffArr.Auth.Tests;
@@ -178,6 +179,124 @@ public sealed class TrainArrIntegrationSettingsTests : IAsyncLifetime
         Assert.Equal(2, probes.Items.Count);
         Assert.Contains(probes.Items, item => item.IntegrationKey == "staffarr");
         Assert.Contains(probes.Items, item => item.IntegrationKey == "compliancecore");
+    }
+
+    [Fact]
+    public async Task Events_v1_alias_matches_event_processing_settings_events()
+    {
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_admin");
+        await SeedTrainingDomainEventAsync();
+
+        var legacyResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/event-processing-settings/events?limit=10", adminToken));
+        legacyResponse.EnsureSuccessStatusCode();
+        var legacy = (await legacyResponse.Content.ReadFromJsonAsync<TrainingDomainEventsResponse>())!;
+
+        var v1Response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/events?limit=10", adminToken));
+        v1Response.EnsureSuccessStatusCode();
+        var v1 = (await v1Response.Content.ReadFromJsonAsync<TrainingDomainEventsResponse>())!;
+
+        Assert.Equal(legacy.Items.Count, v1.Items.Count);
+    }
+
+    [Fact]
+    public async Task Remediation_v1_alias_matches_incident_remediations_list()
+    {
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_admin");
+        var incidentId = Guid.NewGuid();
+        var remediationId = Guid.NewGuid();
+        var occurredAt = DateTimeOffset.UtcNow;
+
+        var ingestRequest = new HttpRequestMessage(HttpMethod.Post, "/api/integrations/incident-remediations");
+        ingestRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _staffarrToTrainarrToken);
+        ingestRequest.Content = JsonContent.Create(new IngestStaffarrIncidentRemediationRequest(
+            PlatformSeeder.DemoTenantId,
+            incidentId,
+            remediationId,
+            "training_compliance",
+            "high",
+            "Alias check remediation",
+            "Validate remediation alias parity.",
+            occurredAt,
+            occurredAt));
+        var ingestResponse = await _trainarrClient.SendAsync(ingestRequest);
+        ingestResponse.EnsureSuccessStatusCode();
+
+        var legacyResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/incident-remediations", adminToken));
+        legacyResponse.EnsureSuccessStatusCode();
+        var legacy = (await legacyResponse.Content.ReadFromJsonAsync<IReadOnlyList<StaffarrIncidentRemediationResponse>>())!;
+
+        var v1Response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/remediation", adminToken));
+        v1Response.EnsureSuccessStatusCode();
+        var v1 = (await v1Response.Content.ReadFromJsonAsync<IReadOnlyList<StaffarrIncidentRemediationResponse>>())!;
+
+        Assert.Equal(legacy.Count, v1.Count);
+        Assert.Contains(v1, x => x.StaffarrIncidentId == incidentId && x.ReasonCategoryKey == "training_compliance");
+    }
+
+    [Fact]
+    public async Task Recertification_v1_alias_matches_recertification_settings()
+    {
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_admin");
+
+        var legacyResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/recertification-settings", adminToken));
+        legacyResponse.EnsureSuccessStatusCode();
+        var legacy = (await legacyResponse.Content.ReadFromJsonAsync<RecertificationSettingsResponse>())!;
+
+        var v1Response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/recertification", adminToken));
+        v1Response.EnsureSuccessStatusCode();
+        var v1 = (await v1Response.Content.ReadFromJsonAsync<RecertificationSettingsResponse>())!;
+
+        Assert.Equal(legacy.IsEnabled, v1.IsEnabled);
+        Assert.Equal(legacy.LeadDays, v1.LeadDays);
+    }
+
+    [Fact]
+    public async Task Integrations_v1_alias_accepts_incident_remediation_ingest()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/integrations/incident-remediations");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _staffarrToTrainarrToken);
+        request.Content = JsonContent.Create(new IngestStaffarrIncidentRemediationRequest(
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "training_compliance",
+            "medium",
+            "V1 integration alias",
+            "Validate /api/v1/integrations alias.",
+            DateTimeOffset.UtcNow,
+            DateTimeOffset.UtcNow));
+
+        var response = await _trainarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+    }
+
+    private async Task SeedTrainingDomainEventAsync()
+    {
+        using var scope = _trainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TrainArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        db.TrainingDomainEvents.Add(new TrainingDomainEvent
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            EventKind = TrainingDomainEventKinds.AssignmentCreated,
+            IdempotencyKey = $"seed-{Guid.NewGuid():N}",
+            StaffarrPersonId = Guid.NewGuid(),
+            RelatedEntityType = "training_assignment",
+            RelatedEntityId = Guid.NewGuid(),
+            PayloadJson = "{}",
+            ProcessingStatus = TrainingDomainEventStatuses.Pending,
+            AttemptCount = 0,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+        await db.SaveChangesAsync();
     }
 
     private string CreateTrainArrAccessToken(

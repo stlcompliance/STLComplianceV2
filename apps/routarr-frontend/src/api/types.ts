@@ -27,6 +27,18 @@ export interface RoutArrMeResponse {
   entitlements: string[]
 }
 
+export interface RoutArrSessionBootstrapResponse {
+  userId: string
+  personId: string
+  tenantId: string
+  sessionId: string
+  tenantRoleKey: string
+  isPlatformAdmin: boolean
+  productKey: string
+  hasRoutArrEntitlement: boolean
+  entitlements: string[]
+}
+
 export interface TripLoadSummaryResponse {
   loadId: string
   loadKey: string

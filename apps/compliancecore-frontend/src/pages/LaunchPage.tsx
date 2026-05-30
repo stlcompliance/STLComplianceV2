@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ComplianceCoreApiError, redeemHandoff } from '../api/client'
+import { resolveNexArrLaunchFailureMessage } from '@stl/shared-ui'
+import { redeemHandoff } from '../api/client'
 import { saveSession, toStoredSession } from '../auth/sessionStorage'
 
 export function LaunchPage() {
@@ -27,15 +28,7 @@ export function LaunchPage() {
         navigate('/', { replace: true })
       } catch (err) {
         if (!cancelled) {
-          if (err instanceof ComplianceCoreApiError && err.status === 403) {
-            setError('Your account is not entitled to Compliance Core for this tenant.')
-            return
-          }
-          if (err instanceof ComplianceCoreApiError && err.status === 401) {
-            setError('The handoff code is invalid or expired. Relaunch from the suite.')
-            return
-          }
-          setError(err instanceof Error ? err.message : 'Handoff failed')
+          setError(resolveNexArrLaunchFailureMessage('Compliance Core', err))
         }
       }
     })()

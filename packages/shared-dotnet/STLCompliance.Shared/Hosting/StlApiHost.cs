@@ -93,7 +93,7 @@ public static class StlApiHost
                 await ApplyMigrationsAsync<TContext>(app);
             }
 
-            app.MapGet("/health", (ProductDescriptor descriptor, IServiceProvider services) =>
+            static IResult BuildLivenessResponse(ProductDescriptor descriptor, IServiceProvider services)
             {
                 RecordHealthMetric(services, descriptor, "liveness");
                 var response = new HealthResponse(
@@ -102,12 +102,21 @@ public static class StlApiHost
                     Version: GetVersion(),
                     TimestampUtc: DateTimeOffset.UtcNow);
                 return Results.Ok(response);
-            })
+            }
+
+            app.MapGet("/health", (ProductDescriptor descriptor, IServiceProvider services) =>
+                BuildLivenessResponse(descriptor, services))
             .WithName("GetHealth")
             .WithTags("Health")
             .AllowAnonymous();
 
-            app.MapHealthChecks("/health/ready", new HealthCheckOptions
+            app.MapGet("/api/v1/health", (ProductDescriptor descriptor, IServiceProvider services) =>
+                BuildLivenessResponse(descriptor, services))
+            .WithName("GetHealthV1")
+            .WithTags("Health")
+            .AllowAnonymous();
+
+            var readyOptions = new HealthCheckOptions
             {
                 ResponseWriter = async (context, report) =>
                 {
@@ -128,7 +137,10 @@ public static class StlApiHost
                             }));
                     await context.Response.WriteAsJsonAsync(payload);
                 }
-            }).AllowAnonymous();
+            };
+
+            app.MapHealthChecks("/health/ready", readyOptions).AllowAnonymous();
+            app.MapHealthChecks("/api/v1/health/ready", readyOptions).AllowAnonymous();
 
             app.MapGet("/health/observability", (ProductDescriptor descriptor, IConfiguration configuration) =>
             {

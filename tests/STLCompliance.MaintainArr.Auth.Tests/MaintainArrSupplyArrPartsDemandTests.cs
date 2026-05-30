@@ -394,6 +394,64 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Work_order_parts_demand_v1_alias_lists_lines_and_status_events()
+    {
+        var maintainarrToken = await RedeemMaintainArrTokenAsync();
+        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var partId = await SeedSupplyArrPartAsync(supplyarrToken);
+        var assetId = await SeedAssetOnlyAsync(maintainarrToken);
+        var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
+
+        var createLineRequest = Authorized(HttpMethod.Post, $"/api/v1/work-orders/{workOrderId}/parts-demand", maintainarrToken);
+        createLineRequest.Content = JsonContent.Create(new CreateWorkOrderPartsDemandLineRequest(
+            partId,
+            "V1-LIST-001",
+            "V1 list and status part",
+            1m,
+            "each",
+            null));
+        var createLineResponse = await _maintainarrClient.SendAsync(createLineRequest);
+        createLineResponse.EnsureSuccessStatusCode();
+
+        var publishRequest = Authorized(HttpMethod.Post, $"/api/v1/work-orders/{workOrderId}/parts-demand/publish", maintainarrToken);
+        publishRequest.Content = JsonContent.Create(new PublishWorkOrderPartsDemandRequest(false));
+        var publishResponse = await _maintainarrClient.SendAsync(publishRequest);
+        publishResponse.EnsureSuccessStatusCode();
+        var published = (await publishResponse.Content.ReadFromJsonAsync<PublishWorkOrderPartsDemandResponse>())!;
+
+        var callbackRequest = ServiceAuthorized(
+            HttpMethod.Post,
+            "/api/v1/integrations/supplyarr-demand-status",
+            _maintainarrStatusCallbackToken);
+        callbackRequest.Content = JsonContent.Create(new IngestSupplyarrDemandStatusRequest(
+            PlatformSeeder.DemoTenantId,
+            published.PublicationId,
+            published.SupplyarrDemandRefId,
+            Guid.NewGuid(),
+            "pr_submitted",
+            "pr_submitted",
+            null,
+            null,
+            null,
+            null,
+            "PR submitted through v1 flow",
+            DateTimeOffset.UtcNow));
+        (await _maintainarrClient.SendAsync(callbackRequest)).EnsureSuccessStatusCode();
+
+        var listRequest = Authorized(HttpMethod.Get, $"/api/v1/work-orders/{workOrderId}/parts-demand", maintainarrToken);
+        var listResponse = await _maintainarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var lines = (await listResponse.Content.ReadFromJsonAsync<List<WorkOrderPartsDemandLineResponse>>())!;
+        Assert.NotEmpty(lines);
+
+        var statusRequest = Authorized(HttpMethod.Get, $"/api/v1/work-orders/{workOrderId}/parts-demand/status-events", maintainarrToken);
+        var statusResponse = await _maintainarrClient.SendAsync(statusRequest);
+        statusResponse.EnsureSuccessStatusCode();
+        var statusEvents = (await statusResponse.Content.ReadFromJsonAsync<List<WorkOrderPartsDemandStatusEventResponse>>())!;
+        Assert.NotEmpty(statusEvents);
+    }
+
+    [Fact]
     public async Task Parts_demand_status_events_list_is_empty_before_publish()
     {
         var maintainarrToken = await RedeemMaintainArrTokenAsync();
@@ -475,6 +533,53 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
         var replay = (await replayResponse.Content.ReadFromJsonAsync<IngestSupplyarrDemandStatusResponse>())!;
         Assert.True(replay.IdempotentReplay);
         Assert.Equal(first.StatusEventId, replay.StatusEventId);
+    }
+
+    [Fact]
+    public async Task Supplyarr_demand_status_callback_v1_alias_accepts_service_token()
+    {
+        var maintainarrToken = await RedeemMaintainArrTokenAsync();
+        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var partId = await SeedSupplyArrPartAsync(supplyarrToken);
+        var assetId = await SeedAssetOnlyAsync(maintainarrToken);
+        var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
+
+        var createLineRequest = Authorized(HttpMethod.Post, $"/api/work-orders/{workOrderId}/parts-demand", maintainarrToken);
+        createLineRequest.Content = JsonContent.Create(new CreateWorkOrderPartsDemandLineRequest(
+            partId,
+            "V1-001",
+            "V1 callback part",
+            1m,
+            "each",
+            null));
+        await _maintainarrClient.SendAsync(createLineRequest);
+
+        var publishRequest = Authorized(HttpMethod.Post, $"/api/work-orders/{workOrderId}/parts-demand/publish", maintainarrToken);
+        publishRequest.Content = JsonContent.Create(new PublishWorkOrderPartsDemandRequest(false));
+        var publishResponse = await _maintainarrClient.SendAsync(publishRequest);
+        publishResponse.EnsureSuccessStatusCode();
+        var published = (await publishResponse.Content.ReadFromJsonAsync<PublishWorkOrderPartsDemandResponse>())!;
+
+        var callbackRequest = ServiceAuthorized(
+            HttpMethod.Post,
+            "/api/v1/integrations/supplyarr-demand-status",
+            _maintainarrStatusCallbackToken);
+        callbackRequest.Content = JsonContent.Create(new IngestSupplyarrDemandStatusRequest(
+            PlatformSeeder.DemoTenantId,
+            published.PublicationId,
+            published.SupplyarrDemandRefId,
+            Guid.NewGuid(),
+            "pr_submitted",
+            "pr_submitted",
+            null,
+            null,
+            null,
+            null,
+            "PR submitted via v1 endpoint",
+            DateTimeOffset.UtcNow));
+
+        var response = await _maintainarrClient.SendAsync(callbackRequest);
+        response.EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -620,7 +725,7 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync(string productKey, string callbackUrl)
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new CreateHandoffRequest(productKey, callbackUrl));
         var response = await _nexarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();

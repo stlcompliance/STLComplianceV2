@@ -174,6 +174,50 @@ public sealed class SupplyArrNotificationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Settings_manifest_v1_requires_admin_and_lists_setting_groups()
+    {
+        var buyerToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_buyer");
+        var forbiddenResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", buyerToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+
+        var adminToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_admin");
+        var manifestResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", adminToken));
+        manifestResponse.EnsureSuccessStatusCode();
+        var manifest = (await manifestResponse.Content.ReadFromJsonAsync<SupplyArrSettingsManifestResponse>())!;
+        Assert.Contains(manifest.Items, x => x.SettingKey == "notification_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "demand_processing_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "integration_event_settings");
+    }
+
+    [Fact]
+    public async Task Config_manifest_v1_requires_admin_and_matches_settings_manifest()
+    {
+        var buyerToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_buyer");
+        var forbiddenResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/config", buyerToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+
+        var adminToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_admin");
+        var configResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/config", adminToken));
+        configResponse.EnsureSuccessStatusCode();
+        var configManifest = (await configResponse.Content.ReadFromJsonAsync<SupplyArrSettingsManifestResponse>())!;
+
+        var settingsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", adminToken));
+        settingsResponse.EnsureSuccessStatusCode();
+        var settingsManifest = (await settingsResponse.Content.ReadFromJsonAsync<SupplyArrSettingsManifestResponse>())!;
+
+        Assert.Equal(settingsManifest.Items.Count, configManifest.Items.Count);
+        foreach (var item in settingsManifest.Items)
+        {
+            Assert.Contains(configManifest.Items, x => x.SettingKey == item.SettingKey);
+        }
+    }
+
+    [Fact]
     public async Task Process_batch_rejects_missing_service_token()
     {
         var response = await _supplyarrClient.PostAsJsonAsync(

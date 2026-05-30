@@ -215,6 +215,50 @@ public sealed class TrainArrTrainingNotificationTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Settings_manifest_v1_requires_admin_and_lists_setting_groups()
+    {
+        var memberToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_member");
+        var forbiddenResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", memberToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+        var manifestResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", adminToken));
+        manifestResponse.EnsureSuccessStatusCode();
+        var manifest = (await manifestResponse.Content.ReadFromJsonAsync<TrainArrSettingsManifestResponse>())!;
+        Assert.Contains(manifest.Items, x => x.SettingKey == "notification_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "recertification_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "integration_settings");
+    }
+
+    [Fact]
+    public async Task Config_manifest_v1_requires_admin_and_matches_settings_manifest()
+    {
+        var memberToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_member");
+        var forbiddenResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/config", memberToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+        var configResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/config", adminToken));
+        configResponse.EnsureSuccessStatusCode();
+        var configManifest = (await configResponse.Content.ReadFromJsonAsync<TrainArrSettingsManifestResponse>())!;
+
+        var settingsResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", adminToken));
+        settingsResponse.EnsureSuccessStatusCode();
+        var settingsManifest = (await settingsResponse.Content.ReadFromJsonAsync<TrainArrSettingsManifestResponse>())!;
+
+        Assert.Equal(settingsManifest.Items.Count, configManifest.Items.Count);
+        foreach (var item in settingsManifest.Items)
+        {
+            Assert.Contains(configManifest.Items, x => x.SettingKey == item.SettingKey);
+        }
+    }
+
     private async Task UpsertNotificationSettingsAsync(
         string webhookUrl,
         int maxAttempts = 10,

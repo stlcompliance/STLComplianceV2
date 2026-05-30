@@ -177,6 +177,11 @@ public static class PlatformSeeder
         NexArrDbContext db,
         CancellationToken cancellationToken)
     {
+        if (!db.Database.IsRelational())
+        {
+            return;
+        }
+
         // Keep startup resilient when a deployed DB has older `product_catalog` shape.
         await db.Database.ExecuteSqlRawAsync(
             """

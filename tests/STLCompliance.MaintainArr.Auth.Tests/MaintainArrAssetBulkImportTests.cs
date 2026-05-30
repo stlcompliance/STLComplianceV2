@@ -134,6 +134,28 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Asset_import_v1_validate_does_not_persist()
+    {
+        var tag = $"IMPV1-{Guid.NewGuid():N}".Substring(0, 12);
+        var request = Authorized(HttpMethod.Post, "/api/v1/imports/assets/validate", _managerToken);
+        request.Content = JsonContent.Create(new AssetBulkImportRequest(
+        [
+            new AssetImportRowRequest(_classKey, _typeKey, tag, "Import V1 Test Asset"),
+        ]));
+
+        var response = await _maintainarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<AssetBulkImportResponse>())!;
+        Assert.True(result.DryRun);
+        Assert.Equal(1, result.SuccessCount);
+        Assert.Equal("validated", result.Results[0].Status);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        Assert.False(await db.Assets.AnyAsync(x => x.AssetTag == tag));
+    }
+
+    [Fact]
     public async Task Asset_import_reports_duplicate_tag_in_batch()
     {
         var tag = $"DUP-{Guid.NewGuid():N}".Substring(0, 12);
@@ -196,7 +218,7 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new NexArr.Api.Contracts.CreateHandoffRequest(
             "maintainarr",
             "http://localhost:5178/launch"));

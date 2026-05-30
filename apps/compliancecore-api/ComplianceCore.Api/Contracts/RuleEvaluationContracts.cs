@@ -28,6 +28,18 @@ public sealed record EvaluateRulePackRequest(
     IReadOnlyDictionary<string, bool> Facts,
     bool EmitFindings = false);
 
+public sealed record EvaluateRulePackRunRequest(
+    Guid RulePackId,
+    IReadOnlyDictionary<string, bool> Facts,
+    bool EmitFindings = false);
+
+public sealed record ReEvaluateRuleEvaluationRequest(
+    bool EmitFindings = false);
+
+public sealed record EvaluateRulePackSimulationRequest(
+    Guid RulePackId,
+    IReadOnlyDictionary<string, bool> Facts);
+
 public sealed record RuleEvaluationRunResponse(
     Guid EvaluationRunId,
     Guid RulePackId,
@@ -90,3 +102,24 @@ public sealed record RuleEvaluationAuditExportResponse(
     IReadOnlyList<AuditPackageWorkflowGateCheckItem> WorkflowGateChecks,
     IReadOnlyList<AuditPackageFindingItem> Findings,
     IReadOnlyList<AuditPackageWaiverItem> Waivers);
+
+public sealed record RuleEvaluationSimulationResponse(
+    Guid RulePackId,
+    string PackKey,
+    string PackLabel,
+    int VersionNumber,
+    string OverallResult,
+    IReadOnlyDictionary<string, bool> FactInputs,
+    IReadOnlyList<RuleEvaluationItemResponse> RuleResults,
+    DateTimeOffset EvaluatedAt);
+
+public sealed record RuleEvaluationExplanationResponse(
+    Guid EvaluationRunId,
+    Guid RulePackId,
+    string PackKey,
+    string OverallResult,
+    string Summary,
+    IReadOnlyList<string> FailedRuleKeys,
+    IReadOnlyList<string> MissingFactKeys,
+    IReadOnlyList<RuleEvaluationItemResponse> RuleResults,
+    DateTimeOffset GeneratedAt);

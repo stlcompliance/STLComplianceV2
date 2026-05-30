@@ -7,7 +7,13 @@ public static class WorkOrderSupplyReadinessEndpoints
 {
     public static void MapMaintainArrWorkOrderSupplyReadinessEndpoints(this WebApplication app)
     {
-        app.MapGet("/api/work-orders/{workOrderId:guid}/supply-readiness", async (
+        MapRoute(app.MapGroup("/api/work-orders").WithTags("WorkOrderSupplyReadiness").RequireAuthorization(), string.Empty);
+        MapRoute(app.MapGroup("/api/v1/work-orders").WithTags("WorkOrderSupplyReadiness").RequireAuthorization(), "V1");
+    }
+
+    private static void MapRoute(RouteGroupBuilder group, string routeSuffix)
+    {
+        group.MapGet("/{workOrderId:guid}/supply-readiness", async (
             Guid workOrderId,
             HttpContext context,
             MaintainArrAuthorizationService authorization,
@@ -24,8 +30,6 @@ public static class WorkOrderSupplyReadinessEndpoints
                 detail.AssignedTechnicianPersonId);
             return Results.Ok(await supplyReadinessService.GetAsync(tenantId, workOrderId, cancellationToken));
         })
-        .WithTags("WorkOrderSupplyReadiness")
-        .RequireAuthorization()
-        .WithName("GetWorkOrderSupplyReadiness");
+        .WithName($"GetWorkOrderSupplyReadiness{routeSuffix}");
     }
 }

@@ -22,6 +22,7 @@ import type {
   ReleaseStockReservationRequest,
   PartVendorLinkResponse,
   SupplyArrMeResponse,
+  SupplyArrSessionBootstrapResponse,
   UpsertPartStockLevelRequest,
   CreatePurchaseOrderFromPurchaseRequestRequest,
   CreatePurchaseRequestRequest,
@@ -180,7 +181,7 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
 }
 
 export async function redeemHandoff(handoffCode: string): Promise<HandoffSessionResponse> {
-  const response = await fetch(`${apiBase}/api/auth/handoff/redeem`, {
+  const response = await fetch(`${apiBase}/api/auth/nexarr/redeem`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ handoffCode }),
@@ -193,6 +194,18 @@ export async function getMe(accessToken: string): Promise<SupplyArrMeResponse> {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<SupplyArrMeResponse>(response, 'Failed to load profile')
+}
+
+export async function getSessionBootstrap(
+  accessToken: string,
+): Promise<SupplyArrSessionBootstrapResponse> {
+  const response = await fetch(`${apiBase}/api/session`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<SupplyArrSessionBootstrapResponse>(
+    response,
+    'Failed to load session bootstrap',
+  )
 }
 
 export async function getVendors(accessToken: string): Promise<ExternalPartyResponse[]> {
@@ -369,7 +382,7 @@ export async function createPartVendorLink(
 export async function getInventoryLocations(
   accessToken: string,
 ): Promise<InventoryLocationResponse[]> {
-  const response = await fetch(`${apiBase}/api/inventory/locations`, {
+  const response = await fetch(`${apiBase}/api/v1/inventory/locations`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<InventoryLocationResponse[]>(response, 'Failed to load inventory locations')
@@ -379,7 +392,7 @@ export async function getInventoryBins(
   accessToken: string,
   locationId: string,
 ): Promise<InventoryBinResponse[]> {
-  const response = await fetch(`${apiBase}/api/inventory/locations/${locationId}/bins`, {
+  const response = await fetch(`${apiBase}/api/v1/inventory/locations/${locationId}/bins`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<InventoryBinResponse[]>(response, 'Failed to load inventory bins')
@@ -397,7 +410,7 @@ export async function getPartStockLevels(
     search.set('partId', params.partId)
   }
   const query = search.toString()
-  const url = query ? `${apiBase}/api/inventory/stock?${query}` : `${apiBase}/api/inventory/stock`
+  const url = query ? `${apiBase}/api/v1/inventory/stock?${query}` : `${apiBase}/api/v1/inventory/stock`
   const response = await fetch(url, {
     headers: authHeaders(accessToken),
   })
@@ -419,7 +432,7 @@ export async function getStockReservations(
     params.set('binId', options.binId)
   }
   const query = params.toString() ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/inventory/reservations${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/inventory/reservations${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<StockReservationResponse[]>(response, 'Failed to load stock reservations')
@@ -429,7 +442,7 @@ export async function createStockReservation(
   accessToken: string,
   request: CreateStockReservationRequest,
 ): Promise<StockReservationResponse> {
-  const response = await fetch(`${apiBase}/api/inventory/reservations`, {
+  const response = await fetch(`${apiBase}/api/v1/inventory/reservations`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -442,7 +455,7 @@ export async function releaseStockReservation(
   reservationId: string,
   request: ReleaseStockReservationRequest,
 ): Promise<StockReservationResponse> {
-  const response = await fetch(`${apiBase}/api/inventory/reservations/${reservationId}/release`, {
+  const response = await fetch(`${apiBase}/api/v1/inventory/reservations/${reservationId}/release`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -454,7 +467,7 @@ export async function fulfillStockReservation(
   accessToken: string,
   reservationId: string,
 ): Promise<StockReservationResponse> {
-  const response = await fetch(`${apiBase}/api/inventory/reservations/${reservationId}/fulfill`, {
+  const response = await fetch(`${apiBase}/api/v1/inventory/reservations/${reservationId}/fulfill`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
@@ -465,7 +478,7 @@ export async function createInventoryLocation(
   accessToken: string,
   request: CreateInventoryLocationRequest,
 ): Promise<InventoryLocationResponse> {
-  const response = await fetch(`${apiBase}/api/inventory/locations`, {
+  const response = await fetch(`${apiBase}/api/v1/inventory/locations`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -478,7 +491,7 @@ export async function createInventoryBin(
   locationId: string,
   request: CreateInventoryBinRequest,
 ): Promise<InventoryBinResponse> {
-  const response = await fetch(`${apiBase}/api/inventory/locations/${locationId}/bins`, {
+  const response = await fetch(`${apiBase}/api/v1/inventory/locations/${locationId}/bins`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -490,7 +503,7 @@ export async function upsertPartStockLevel(
   accessToken: string,
   request: UpsertPartStockLevelRequest,
 ): Promise<PartStockLevelResponse> {
-  const response = await fetch(`${apiBase}/api/inventory/stock`, {
+  const response = await fetch(`${apiBase}/api/v1/inventory/stock`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -503,7 +516,7 @@ export async function getPurchaseRequests(
   status?: string,
 ): Promise<PurchaseRequestResponse[]> {
   const query = status ? `?status=${encodeURIComponent(status)}` : ''
-  const response = await fetch(`${apiBase}/api/purchase-requests${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/purchase-requests${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PurchaseRequestResponse[]>(response, 'Failed to load purchase requests')
@@ -513,7 +526,7 @@ export async function createPurchaseRequest(
   accessToken: string,
   request: CreatePurchaseRequestRequest,
 ): Promise<PurchaseRequestResponse> {
-  const response = await fetch(`${apiBase}/api/purchase-requests`, {
+  const response = await fetch(`${apiBase}/api/v1/purchase-requests`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -523,14 +536,14 @@ export async function createPurchaseRequest(
 
 export async function getRfqs(accessToken: string, status?: string): Promise<RfqResponse[]> {
   const query = status ? `?status=${encodeURIComponent(status)}` : ''
-  const response = await fetch(`${apiBase}/api/rfqs${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/rfqs${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<RfqResponse[]>(response, 'Failed to load RFQs')
 }
 
 export async function getRfq(accessToken: string, rfqId: string): Promise<RfqResponse> {
-  const response = await fetch(`${apiBase}/api/rfqs/${rfqId}`, {
+  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<RfqResponse>(response, 'Failed to load RFQ')
@@ -545,7 +558,7 @@ export async function createRfq(
     lines?: { partId: string; quantityRequested: number; notes: string }[]
   },
 ): Promise<RfqResponse> {
-  const response = await fetch(`${apiBase}/api/rfqs`, {
+  const response = await fetch(`${apiBase}/api/v1/rfqs`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -554,7 +567,7 @@ export async function createRfq(
 }
 
 export async function submitRfq(accessToken: string, rfqId: string): Promise<RfqResponse> {
-  const response = await fetch(`${apiBase}/api/rfqs/${rfqId}/submit`, {
+  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/submit`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
@@ -566,7 +579,7 @@ export async function inviteRfqVendors(
   rfqId: string,
   vendorPartyIds: string[],
 ): Promise<RfqResponse> {
-  const response = await fetch(`${apiBase}/api/rfqs/${rfqId}/invite-vendors`, {
+  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/invite-vendors`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify({ vendorPartyIds }),
@@ -579,7 +592,7 @@ export async function createVendorQuote(
   rfqId: string,
   payload: { vendorPartyId: string; quoteKey: string; currencyCode: string; notes: string },
 ): Promise<VendorQuoteResponse> {
-  const response = await fetch(`${apiBase}/api/rfqs/${rfqId}/quotes`, {
+  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/quotes`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -599,7 +612,7 @@ export async function upsertVendorQuoteLine(
     notes: string
   },
 ): Promise<VendorQuoteResponse> {
-  const response = await fetch(`${apiBase}/api/rfqs/${rfqId}/quotes/${vendorQuoteId}/lines`, {
+  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/quotes/${vendorQuoteId}/lines`, {
     method: 'PUT',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -612,7 +625,7 @@ export async function submitVendorQuote(
   rfqId: string,
   vendorQuoteId: string,
 ): Promise<VendorQuoteResponse> {
-  const response = await fetch(`${apiBase}/api/rfqs/${rfqId}/quotes/${vendorQuoteId}/submit`, {
+  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/quotes/${vendorQuoteId}/submit`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
@@ -623,7 +636,7 @@ export async function getRfqQuoteComparison(
   accessToken: string,
   rfqId: string,
 ): Promise<RfqQuoteComparisonResponse> {
-  const response = await fetch(`${apiBase}/api/rfqs/${rfqId}/quote-comparison`, {
+  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/quote-comparison`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<RfqQuoteComparisonResponse>(response, 'Failed to load quote comparison')
@@ -634,7 +647,7 @@ export async function selectRfqVendorQuote(
   rfqId: string,
   vendorQuoteId: string,
 ): Promise<RfqResponse> {
-  const response = await fetch(`${apiBase}/api/rfqs/${rfqId}/select-quote`, {
+  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/select-quote`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify({ vendorQuoteId }),
@@ -647,7 +660,7 @@ export async function createPurchaseRequestFromRfq(
   rfqId: string,
   payload: { requestKey: string; title?: string; notes?: string },
 ): Promise<CreatePurchaseRequestFromRfqResponse> {
-  const response = await fetch(`${apiBase}/api/rfqs/${rfqId}/create-purchase-request`, {
+  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/create-purchase-request`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -662,7 +675,7 @@ export async function submitPurchaseRequest(
   accessToken: string,
   purchaseRequestId: string,
 ): Promise<PurchaseRequestResponse> {
-  const response = await fetch(`${apiBase}/api/purchase-requests/${purchaseRequestId}/submit`, {
+  const response = await fetch(`${apiBase}/api/v1/purchase-requests/${purchaseRequestId}/submit`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
@@ -673,7 +686,7 @@ export async function approvePurchaseRequest(
   accessToken: string,
   purchaseRequestId: string,
 ): Promise<PurchaseRequestResponse> {
-  const response = await fetch(`${apiBase}/api/purchase-requests/${purchaseRequestId}/approve`, {
+  const response = await fetch(`${apiBase}/api/v1/purchase-requests/${purchaseRequestId}/approve`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
@@ -685,7 +698,7 @@ export async function rejectPurchaseRequest(
   purchaseRequestId: string,
   request: RejectPurchaseRequestRequest,
 ): Promise<PurchaseRequestResponse> {
-  const response = await fetch(`${apiBase}/api/purchase-requests/${purchaseRequestId}/reject`, {
+  const response = await fetch(`${apiBase}/api/v1/purchase-requests/${purchaseRequestId}/reject`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -698,7 +711,7 @@ export async function getPurchaseOrders(
   status?: string,
 ): Promise<PurchaseOrderResponse[]> {
   const query = status ? `?status=${encodeURIComponent(status)}` : ''
-  const response = await fetch(`${apiBase}/api/purchase-orders${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/purchase-orders${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PurchaseOrderResponse[]>(response, 'Failed to load purchase orders')
@@ -710,7 +723,7 @@ export async function createPurchaseOrderFromPurchaseRequest(
   request: CreatePurchaseOrderFromPurchaseRequestRequest,
 ): Promise<PurchaseOrderResponse> {
   const response = await fetch(
-    `${apiBase}/api/purchase-orders/from-purchase-request/${purchaseRequestId}`,
+    `${apiBase}/api/v1/purchase-orders/from-purchase-request/${purchaseRequestId}`,
     {
       method: 'POST',
       headers: authHeaders(accessToken),
@@ -727,7 +740,7 @@ export async function approvePurchaseOrder(
   accessToken: string,
   purchaseOrderId: string,
 ): Promise<PurchaseOrderResponse> {
-  const response = await fetch(`${apiBase}/api/purchase-orders/${purchaseOrderId}/approve`, {
+  const response = await fetch(`${apiBase}/api/v1/purchase-orders/${purchaseOrderId}/approve`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
@@ -738,7 +751,7 @@ export async function issuePurchaseOrder(
   accessToken: string,
   purchaseOrderId: string,
 ): Promise<PurchaseOrderResponse> {
-  const response = await fetch(`${apiBase}/api/purchase-orders/${purchaseOrderId}/issue`, {
+  const response = await fetch(`${apiBase}/api/v1/purchase-orders/${purchaseOrderId}/issue`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
@@ -750,7 +763,7 @@ export async function cancelPurchaseOrder(
   purchaseOrderId: string,
   request: CancelPurchaseOrderRequest,
 ): Promise<PurchaseOrderResponse> {
-  const response = await fetch(`${apiBase}/api/purchase-orders/${purchaseOrderId}/cancel`, {
+  const response = await fetch(`${apiBase}/api/v1/purchase-orders/${purchaseOrderId}/cancel`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -762,7 +775,7 @@ export async function getReceivingReceipt(
   accessToken: string,
   receivingReceiptId: string,
 ): Promise<ReceivingReceiptResponse> {
-  const response = await fetch(`${apiBase}/api/receiving/${receivingReceiptId}`, {
+  const response = await fetch(`${apiBase}/api/v1/receiving/${receivingReceiptId}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ReceivingReceiptResponse>(response, 'Failed to load receiving receipt')
@@ -780,7 +793,7 @@ export async function getReceivingReceipts(
     params.set('purchaseOrderId', options.purchaseOrderId)
   }
   const query = params.toString() ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/receiving${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/receiving${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ReceivingReceiptResponse[]>(response, 'Failed to load receiving receipts')
@@ -792,7 +805,7 @@ export async function createReceivingReceiptFromPurchaseOrder(
   request: CreateReceivingReceiptFromPurchaseOrderRequest,
 ): Promise<ReceivingReceiptResponse> {
   const response = await fetch(
-    `${apiBase}/api/receiving/from-purchase-order/${purchaseOrderId}`,
+    `${apiBase}/api/v1/receiving/from-purchase-order/${purchaseOrderId}`,
     {
       method: 'POST',
       headers: authHeaders(accessToken),
@@ -809,7 +822,7 @@ export async function postReceivingReceipt(
   accessToken: string,
   receivingReceiptId: string,
 ): Promise<ReceivingReceiptResponse> {
-  const response = await fetch(`${apiBase}/api/receiving/${receivingReceiptId}/post`, {
+  const response = await fetch(`${apiBase}/api/v1/receiving/${receivingReceiptId}/post`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
@@ -823,7 +836,7 @@ export async function updateReceivingReceiptLine(
   request: UpdateReceivingReceiptLineRequest,
 ): Promise<ReceivingReceiptResponse> {
   const response = await fetch(
-    `${apiBase}/api/receiving/${receivingReceiptId}/lines/${lineId}`,
+    `${apiBase}/api/v1/receiving/${receivingReceiptId}/lines/${lineId}`,
     {
       method: 'PUT',
       headers: authHeaders(accessToken),
@@ -843,7 +856,7 @@ export async function createReceivingException(
   request: CreateReceivingExceptionRequest,
 ): Promise<ReceivingExceptionResponse> {
   const response = await fetch(
-    `${apiBase}/api/receiving/${receivingReceiptId}/lines/${lineId}/exceptions`,
+    `${apiBase}/api/v1/receiving/${receivingReceiptId}/lines/${lineId}/exceptions`,
     {
       method: 'POST',
       headers: authHeaders(accessToken),
@@ -861,7 +874,7 @@ export async function resolveReceivingException(
   receivingExceptionId: string,
 ): Promise<ReceivingExceptionResponse> {
   const response = await fetch(
-    `${apiBase}/api/receiving/exceptions/${receivingExceptionId}/resolve`,
+    `${apiBase}/api/v1/receiving/exceptions/${receivingExceptionId}/resolve`,
     {
       method: 'POST',
       headers: authHeaders(accessToken),
@@ -888,7 +901,7 @@ export async function getBackorders(
     params.set('partId', options.partId)
   }
   const query = params.toString() ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/backorders${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/backorders${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<BackorderResponse[]>(response, 'Failed to load backorders')
@@ -900,7 +913,7 @@ export async function createBackorderFromPurchaseOrderLine(
   request: CreateBackorderFromPurchaseOrderLineRequest,
 ): Promise<BackorderResponse> {
   const response = await fetch(
-    `${apiBase}/api/backorders/from-purchase-order-line/${purchaseOrderLineId}`,
+    `${apiBase}/api/v1/backorders/from-purchase-order-line/${purchaseOrderLineId}`,
     {
       method: 'POST',
       headers: authHeaders(accessToken),
@@ -914,7 +927,7 @@ export async function fulfillBackorder(
   accessToken: string,
   backorderId: string,
 ): Promise<BackorderResponse> {
-  const response = await fetch(`${apiBase}/api/backorders/${backorderId}/fulfill`, {
+  const response = await fetch(`${apiBase}/api/v1/backorders/${backorderId}/fulfill`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
@@ -926,7 +939,7 @@ export async function cancelBackorder(
   backorderId: string,
   request: CancelBackorderRequest,
 ): Promise<BackorderResponse> {
-  const response = await fetch(`${apiBase}/api/backorders/${backorderId}/cancel`, {
+  const response = await fetch(`${apiBase}/api/v1/backorders/${backorderId}/cancel`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -957,7 +970,7 @@ export async function getVendorReturns(
     params.set('partId', options.partId)
   }
   const query = params.toString() ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/returns${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/returns${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<VendorReturnResponse[]>(response, 'Failed to load vendor returns')
@@ -967,7 +980,7 @@ export async function createVendorReturnFromStock(
   accessToken: string,
   request: CreateVendorReturnFromStockRequest,
 ): Promise<VendorReturnResponse> {
-  const response = await fetch(`${apiBase}/api/returns/from-stock`, {
+  const response = await fetch(`${apiBase}/api/v1/returns/from-stock`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -981,7 +994,7 @@ export async function createVendorReturnFromPurchaseOrderLine(
   request: CreateVendorReturnFromPurchaseOrderLineRequest,
 ): Promise<VendorReturnResponse> {
   const response = await fetch(
-    `${apiBase}/api/returns/from-purchase-order-line/${purchaseOrderLineId}`,
+    `${apiBase}/api/v1/returns/from-purchase-order-line/${purchaseOrderLineId}`,
     {
       method: 'POST',
       headers: authHeaders(accessToken),
@@ -995,7 +1008,7 @@ export async function postVendorReturn(
   accessToken: string,
   returnId: string,
 ): Promise<VendorReturnResponse> {
-  const response = await fetch(`${apiBase}/api/returns/${returnId}/post`, {
+  const response = await fetch(`${apiBase}/api/v1/returns/${returnId}/post`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
@@ -1007,7 +1020,7 @@ export async function cancelVendorReturn(
   returnId: string,
   request: CancelVendorReturnRequest,
 ): Promise<VendorReturnResponse> {
-  const response = await fetch(`${apiBase}/api/returns/${returnId}/cancel`, {
+  const response = await fetch(`${apiBase}/api/v1/returns/${returnId}/cancel`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -1030,7 +1043,7 @@ export async function listWarrantyClaims(
   if (options?.partId) params.set('partId', options.partId)
   if (options?.purchaseOrderId) params.set('purchaseOrderId', options.purchaseOrderId)
   const query = params.toString() ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/warranty-claims${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/warranty-claims${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<WarrantyClaimResponse[]>(response, 'Failed to load warranty claims')
@@ -1040,7 +1053,7 @@ export async function createWarrantyClaim(
   accessToken: string,
   request: CreateWarrantyClaimRequest,
 ): Promise<WarrantyClaimResponse> {
-  const response = await fetch(`${apiBase}/api/warranty-claims`, {
+  const response = await fetch(`${apiBase}/api/v1/warranty-claims`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -1053,7 +1066,7 @@ export async function updateWarrantyClaim(
   warrantyClaimId: string,
   request: UpdateWarrantyClaimRequest,
 ): Promise<WarrantyClaimResponse> {
-  const response = await fetch(`${apiBase}/api/warranty-claims/${warrantyClaimId}`, {
+  const response = await fetch(`${apiBase}/api/v1/warranty-claims/${warrantyClaimId}`, {
     method: 'PUT',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -1066,7 +1079,7 @@ export async function submitWarrantyClaim(
   warrantyClaimId: string,
   request: SubmitWarrantyClaimRequest = {},
 ): Promise<WarrantyClaimResponse> {
-  const response = await fetch(`${apiBase}/api/warranty-claims/${warrantyClaimId}/submit`, {
+  const response = await fetch(`${apiBase}/api/v1/warranty-claims/${warrantyClaimId}/submit`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -1080,7 +1093,7 @@ export async function recordWarrantyClaimVendorResponse(
   request: RecordWarrantyClaimVendorResponseRequest,
 ): Promise<WarrantyClaimResponse> {
   const response = await fetch(
-    `${apiBase}/api/warranty-claims/${warrantyClaimId}/record-vendor-response`,
+    `${apiBase}/api/v1/warranty-claims/${warrantyClaimId}/record-vendor-response`,
     {
       method: 'POST',
       headers: authHeaders(accessToken),
@@ -1098,7 +1111,7 @@ export async function closeWarrantyClaim(
   warrantyClaimId: string,
   request: CloseWarrantyClaimRequest,
 ): Promise<WarrantyClaimResponse> {
-  const response = await fetch(`${apiBase}/api/warranty-claims/${warrantyClaimId}/close`, {
+  const response = await fetch(`${apiBase}/api/v1/warranty-claims/${warrantyClaimId}/close`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -1111,7 +1124,7 @@ export async function denyWarrantyClaim(
   warrantyClaimId: string,
   request: DenyWarrantyClaimRequest,
 ): Promise<WarrantyClaimResponse> {
-  const response = await fetch(`${apiBase}/api/warranty-claims/${warrantyClaimId}/deny`, {
+  const response = await fetch(`${apiBase}/api/v1/warranty-claims/${warrantyClaimId}/deny`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -1124,7 +1137,7 @@ export async function cancelWarrantyClaim(
   warrantyClaimId: string,
   request: CancelWarrantyClaimRequest,
 ): Promise<WarrantyClaimResponse> {
-  const response = await fetch(`${apiBase}/api/warranty-claims/${warrantyClaimId}/cancel`, {
+  const response = await fetch(`${apiBase}/api/v1/warranty-claims/${warrantyClaimId}/cancel`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -1155,7 +1168,7 @@ export async function getPricingSnapshots(
     params.set('asOf', options.asOf)
   }
   const query = params.toString() ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/pricing-snapshots${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/pricing-snapshots${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PricingSnapshotResponse[]>(response, 'Failed to load pricing snapshots')
@@ -1165,7 +1178,7 @@ export async function createPricingSnapshot(
   accessToken: string,
   request: CreatePricingSnapshotRequest,
 ): Promise<PricingSnapshotResponse> {
-  const response = await fetch(`${apiBase}/api/pricing-snapshots`, {
+  const response = await fetch(`${apiBase}/api/v1/pricing-snapshots`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -1196,7 +1209,7 @@ export async function getLeadTimeSnapshots(
     params.set('asOf', options.asOf)
   }
   const query = params.toString() ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/lead-time-snapshots${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/lead-time-snapshots${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<LeadTimeSnapshotResponse[]>(response, 'Failed to load lead-time snapshots')
@@ -1206,7 +1219,7 @@ export async function createLeadTimeSnapshot(
   accessToken: string,
   request: CreateLeadTimeSnapshotRequest,
 ): Promise<LeadTimeSnapshotResponse> {
-  const response = await fetch(`${apiBase}/api/lead-time-snapshots`, {
+  const response = await fetch(`${apiBase}/api/v1/lead-time-snapshots`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -1237,7 +1250,7 @@ export async function getAvailabilitySnapshots(
     params.set('asOf', options.asOf)
   }
   const query = params.toString() ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/availability-snapshots${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/availability-snapshots${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<AvailabilitySnapshotResponse[]>(
@@ -1250,7 +1263,7 @@ export async function createAvailabilitySnapshot(
   accessToken: string,
   request: CreateAvailabilitySnapshotRequest,
 ): Promise<AvailabilitySnapshotResponse> {
-  const response = await fetch(`${apiBase}/api/availability-snapshots`, {
+  const response = await fetch(`${apiBase}/api/v1/availability-snapshots`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -1262,7 +1275,7 @@ export async function createAvailabilitySnapshot(
 }
 
 export async function getReorderEvaluation(accessToken: string): Promise<ReorderEvaluationResponse> {
-  const response = await fetch(`${apiBase}/api/reorder-evaluation`, {
+  const response = await fetch(`${apiBase}/api/v1/reorder-evaluation`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ReorderEvaluationResponse>(response, 'Failed to load reorder evaluation')
@@ -1273,7 +1286,7 @@ export async function upsertPartReorderPolicy(
   partId: string,
   request: UpsertPartReorderPolicyRequest,
 ): Promise<PartReorderPolicyResponse> {
-  const response = await fetch(`${apiBase}/api/reorder-evaluation/parts/${partId}/policy`, {
+  const response = await fetch(`${apiBase}/api/v1/reorder-evaluation/parts/${partId}/policy`, {
     method: 'PUT',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -1285,7 +1298,7 @@ export async function createPurchaseRequestFromReorder(
   accessToken: string,
   request: CreatePurchaseRequestFromReorderRequest,
 ): Promise<PurchaseRequestResponse> {
-  const response = await fetch(`${apiBase}/api/reorder-evaluation/create-purchase-request`, {
+  const response = await fetch(`${apiBase}/api/v1/reorder-evaluation/create-purchase-request`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -1305,7 +1318,7 @@ export async function getDemandRefs(
     search.set('status', options.status)
   }
   const suffix = search.size > 0 ? `?${search.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/demand-refs${suffix}`, {
+  const response = await fetch(`${apiBase}/api/v1/demand-refs${suffix}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<MaintainArrDemandRefResponse[]>(response, 'Failed to load demand references')
@@ -1315,7 +1328,7 @@ export async function getDemandRef(
   accessToken: string,
   demandRefId: string,
 ): Promise<MaintainArrDemandRefResponse> {
-  const response = await fetch(`${apiBase}/api/demand-refs/${demandRefId}`, {
+  const response = await fetch(`${apiBase}/api/v1/demand-refs/${demandRefId}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<MaintainArrDemandRefResponse>(response, 'Failed to load demand reference')
@@ -1326,7 +1339,7 @@ export async function createPurchaseRequestFromDemandRef(
   demandRefId: string,
   request: CreatePurchaseRequestFromDemandRefRequest,
 ): Promise<PurchaseRequestResponse> {
-  const response = await fetch(`${apiBase}/api/demand-refs/${demandRefId}/create-purchase-request`, {
+  const response = await fetch(`${apiBase}/api/v1/demand-refs/${demandRefId}/create-purchase-request`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
@@ -1340,7 +1353,7 @@ export async function createPurchaseRequestFromDemandRef(
 export async function getProcurementNotificationSettings(
   accessToken: string,
 ): Promise<ProcurementNotificationSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/notification-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/notification-settings`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ProcurementNotificationSettingsResponse>(
@@ -1353,7 +1366,7 @@ export async function upsertProcurementNotificationSettings(
   accessToken: string,
   payload: UpsertProcurementNotificationSettingsRequest,
 ): Promise<ProcurementNotificationSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/notification-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/notification-settings`, {
     method: 'PUT',
     headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -1369,7 +1382,7 @@ export async function getProcurementNotificationDispatches(
   limit = 20,
 ): Promise<ProcurementNotificationDispatchesResponse> {
   const search = new URLSearchParams({ limit: String(limit) })
-  const response = await fetch(`${apiBase}/api/notification-settings/dispatches?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/notification-settings/dispatches?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ProcurementNotificationDispatchesResponse>(
@@ -1381,7 +1394,7 @@ export async function getProcurementNotificationDispatches(
 export async function getPriceSnapshotSettings(
   accessToken: string,
 ): Promise<PriceSnapshotSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/price-snapshot-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/price-snapshot-settings`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PriceSnapshotSettingsResponse>(
@@ -1394,7 +1407,7 @@ export async function upsertPriceSnapshotSettings(
   accessToken: string,
   payload: UpsertPriceSnapshotSettingsRequest,
 ): Promise<PriceSnapshotSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/price-snapshot-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/price-snapshot-settings`, {
     method: 'PUT',
     headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -1408,7 +1421,7 @@ export async function upsertPriceSnapshotSettings(
 export async function getPendingPriceSnapshotCaptures(
   accessToken: string,
 ): Promise<PendingPriceSnapshotCapturesResponse> {
-  const response = await fetch(`${apiBase}/api/price-snapshot-settings/pending`, {
+  const response = await fetch(`${apiBase}/api/v1/price-snapshot-settings/pending`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PendingPriceSnapshotCapturesResponse>(
@@ -1422,7 +1435,7 @@ export async function getPriceSnapshotRuns(
   limit = 5,
 ): Promise<PriceSnapshotRunsResponse> {
   const search = new URLSearchParams({ limit: String(limit) })
-  const response = await fetch(`${apiBase}/api/price-snapshot-settings/runs?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/price-snapshot-settings/runs?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PriceSnapshotRunsResponse>(
@@ -1434,7 +1447,7 @@ export async function getPriceSnapshotRuns(
 export async function getLeadTimeSnapshotSettings(
   accessToken: string,
 ): Promise<LeadTimeSnapshotSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/lead-time-snapshot-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/lead-time-snapshot-settings`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<LeadTimeSnapshotSettingsResponse>(
@@ -1447,7 +1460,7 @@ export async function upsertLeadTimeSnapshotSettings(
   accessToken: string,
   payload: UpsertLeadTimeSnapshotSettingsRequest,
 ): Promise<LeadTimeSnapshotSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/lead-time-snapshot-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/lead-time-snapshot-settings`, {
     method: 'PUT',
     headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -1461,7 +1474,7 @@ export async function upsertLeadTimeSnapshotSettings(
 export async function getPendingLeadTimeSnapshotCaptures(
   accessToken: string,
 ): Promise<PendingLeadTimeSnapshotCapturesResponse> {
-  const response = await fetch(`${apiBase}/api/lead-time-snapshot-settings/pending`, {
+  const response = await fetch(`${apiBase}/api/v1/lead-time-snapshot-settings/pending`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PendingLeadTimeSnapshotCapturesResponse>(
@@ -1475,7 +1488,7 @@ export async function getLeadTimeSnapshotRuns(
   limit = 5,
 ): Promise<LeadTimeSnapshotRunsResponse> {
   const search = new URLSearchParams({ limit: String(limit) })
-  const response = await fetch(`${apiBase}/api/lead-time-snapshot-settings/runs?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/lead-time-snapshot-settings/runs?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<LeadTimeSnapshotRunsResponse>(
@@ -1487,7 +1500,7 @@ export async function getLeadTimeSnapshotRuns(
 export async function getAvailabilitySnapshotSettings(
   accessToken: string,
 ): Promise<AvailabilitySnapshotSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/availability-snapshot-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/availability-snapshot-settings`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<AvailabilitySnapshotSettingsResponse>(
@@ -1500,7 +1513,7 @@ export async function upsertAvailabilitySnapshotSettings(
   accessToken: string,
   payload: UpsertAvailabilitySnapshotSettingsRequest,
 ): Promise<AvailabilitySnapshotSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/availability-snapshot-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/availability-snapshot-settings`, {
     method: 'PUT',
     headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -1514,7 +1527,7 @@ export async function upsertAvailabilitySnapshotSettings(
 export async function getPendingAvailabilitySnapshotCaptures(
   accessToken: string,
 ): Promise<PendingAvailabilitySnapshotCapturesResponse> {
-  const response = await fetch(`${apiBase}/api/availability-snapshot-settings/pending`, {
+  const response = await fetch(`${apiBase}/api/v1/availability-snapshot-settings/pending`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PendingAvailabilitySnapshotCapturesResponse>(
@@ -1528,7 +1541,7 @@ export async function getAvailabilitySnapshotRuns(
   limit = 10,
 ): Promise<AvailabilitySnapshotRunsResponse> {
   const search = new URLSearchParams({ limit: String(limit) })
-  const response = await fetch(`${apiBase}/api/availability-snapshot-settings/runs?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/availability-snapshot-settings/runs?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<AvailabilitySnapshotRunsResponse>(
@@ -1542,7 +1555,7 @@ export async function getProcurementCoordinationDashboard(
   activeOnly = true,
 ): Promise<ProcurementCoordinationDashboardResponse> {
   const search = new URLSearchParams({ activeOnly: String(activeOnly) })
-  const response = await fetch(`${apiBase}/api/procurement-coordination?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-coordination?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ProcurementCoordinationDashboardResponse>(
@@ -1554,7 +1567,7 @@ export async function getProcurementCoordinationDashboard(
 export async function getProcurementCoordinationSettings(
   accessToken: string,
 ): Promise<ProcurementCoordinationSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/procurement-coordination-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-coordination-settings`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ProcurementCoordinationSettingsResponse>(
@@ -1567,7 +1580,7 @@ export async function upsertProcurementCoordinationSettings(
   accessToken: string,
   payload: UpsertProcurementCoordinationSettingsRequest,
 ): Promise<ProcurementCoordinationSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/procurement-coordination-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-coordination-settings`, {
     method: 'PUT',
     headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -1581,7 +1594,7 @@ export async function upsertProcurementCoordinationSettings(
 export async function getPendingProcurementCoordination(
   accessToken: string,
 ): Promise<PendingProcurementCoordinationResponse> {
-  const response = await fetch(`${apiBase}/api/procurement-coordination-settings/pending`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-coordination-settings/pending`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PendingProcurementCoordinationResponse>(
@@ -1595,7 +1608,7 @@ export async function getProcurementCoordinationRuns(
   limit = 5,
 ): Promise<ProcurementCoordinationRunsResponse> {
   const search = new URLSearchParams({ limit: String(limit) })
-  const response = await fetch(`${apiBase}/api/procurement-coordination-settings/runs?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-coordination-settings/runs?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ProcurementCoordinationRunsResponse>(
@@ -1609,7 +1622,7 @@ export async function getApprovalRemindersDashboard(
   includeUpcoming = false,
 ): Promise<ApprovalRemindersDashboardResponse> {
   const search = new URLSearchParams({ includeUpcoming: String(includeUpcoming) })
-  const response = await fetch(`${apiBase}/api/approval-reminders?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/approval-reminders?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ApprovalRemindersDashboardResponse>(
@@ -1621,7 +1634,7 @@ export async function getApprovalRemindersDashboard(
 export async function getApprovalReminderSettings(
   accessToken: string,
 ): Promise<ApprovalReminderSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/approval-reminder-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/approval-reminder-settings`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ApprovalReminderSettingsResponse>(
@@ -1634,7 +1647,7 @@ export async function upsertApprovalReminderSettings(
   accessToken: string,
   payload: UpsertApprovalReminderSettingsRequest,
 ): Promise<ApprovalReminderSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/approval-reminder-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/approval-reminder-settings`, {
     method: 'PUT',
     headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -1648,7 +1661,7 @@ export async function upsertApprovalReminderSettings(
 export async function getPendingApprovalReminders(
   accessToken: string,
 ): Promise<PendingApprovalRemindersResponse> {
-  const response = await fetch(`${apiBase}/api/approval-reminder-settings/pending`, {
+  const response = await fetch(`${apiBase}/api/v1/approval-reminder-settings/pending`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PendingApprovalRemindersResponse>(
@@ -1662,7 +1675,7 @@ export async function getApprovalReminderRuns(
   limit = 5,
 ): Promise<ApprovalReminderRunsResponse> {
   const search = new URLSearchParams({ limit: String(limit) })
-  const response = await fetch(`${apiBase}/api/approval-reminder-settings/runs?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/approval-reminder-settings/runs?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ApprovalReminderRunsResponse>(
@@ -1674,7 +1687,7 @@ export async function getApprovalReminderRuns(
 export async function getProcurementExceptionEscalationSettings(
   accessToken: string,
 ): Promise<ProcurementExceptionEscalationSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/procurement-exception-escalation-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-exception-escalation-settings`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ProcurementExceptionEscalationSettingsResponse>(
@@ -1687,7 +1700,7 @@ export async function upsertProcurementExceptionEscalationSettings(
   accessToken: string,
   payload: UpsertProcurementExceptionEscalationSettingsRequest,
 ): Promise<ProcurementExceptionEscalationSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/procurement-exception-escalation-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-exception-escalation-settings`, {
     method: 'PUT',
     headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -1701,7 +1714,7 @@ export async function upsertProcurementExceptionEscalationSettings(
 export async function getPendingProcurementExceptionEscalations(
   accessToken: string,
 ): Promise<PendingProcurementExceptionEscalationsResponse> {
-  const response = await fetch(`${apiBase}/api/procurement-exception-escalation-settings/pending`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-exception-escalation-settings/pending`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PendingProcurementExceptionEscalationsResponse>(
@@ -1716,7 +1729,7 @@ export async function getProcurementExceptionEscalationRuns(
 ): Promise<ProcurementExceptionEscalationRunsResponse> {
   const search = new URLSearchParams({ limit: String(limit) })
   const response = await fetch(
-    `${apiBase}/api/procurement-exception-escalation-settings/runs?${search}`,
+    `${apiBase}/api/v1/procurement-exception-escalation-settings/runs?${search}`,
     {
       headers: authHeaders(accessToken),
     },
@@ -1733,7 +1746,7 @@ export async function getProcurementExceptionEscalationEvents(
 ): Promise<ProcurementExceptionEscalationEventsResponse> {
   const search = new URLSearchParams({ limit: String(limit) })
   const response = await fetch(
-    `${apiBase}/api/procurement-exception-escalation-settings/events?${search}`,
+    `${apiBase}/api/v1/procurement-exception-escalation-settings/events?${search}`,
     {
       headers: authHeaders(accessToken),
     },
@@ -1747,7 +1760,7 @@ export async function getProcurementExceptionEscalationEvents(
 export async function getDemandProcessingDashboard(
   accessToken: string,
 ): Promise<DemandProcessingDashboardResponse> {
-  const response = await fetch(`${apiBase}/api/demand-processing`, {
+  const response = await fetch(`${apiBase}/api/v1/demand-processing`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<DemandProcessingDashboardResponse>(
@@ -1760,7 +1773,7 @@ export async function getDemandProcessingDetail(
   accessToken: string,
   demandRefId: string,
 ): Promise<DemandProcessingDetailResponse> {
-  const response = await fetch(`${apiBase}/api/demand-processing/${demandRefId}`, {
+  const response = await fetch(`${apiBase}/api/v1/demand-processing/${demandRefId}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<DemandProcessingDetailResponse>(
@@ -1773,7 +1786,7 @@ export async function retryDemandProcessing(
   accessToken: string,
   demandRefId: string,
 ): Promise<DemandProcessingOperatorActionResponse> {
-  const response = await fetch(`${apiBase}/api/demand-processing/${demandRefId}/retry-processing`, {
+  const response = await fetch(`${apiBase}/api/v1/demand-processing/${demandRefId}/retry-processing`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
@@ -1787,7 +1800,7 @@ export async function createDemandProcessingPrDraft(
   accessToken: string,
   demandRefId: string,
 ): Promise<DemandProcessingOperatorActionResponse> {
-  const response = await fetch(`${apiBase}/api/demand-processing/${demandRefId}/create-pr-draft`, {
+  const response = await fetch(`${apiBase}/api/v1/demand-processing/${demandRefId}/create-pr-draft`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
@@ -1800,7 +1813,7 @@ export async function createDemandProcessingPrDraft(
 export async function getSupplyReadinessDashboard(
   accessToken: string,
 ): Promise<SupplyReadinessDashboardResponse> {
-  const response = await fetch(`${apiBase}/api/supply-readiness/dashboard`, {
+  const response = await fetch(`${apiBase}/api/v1/supply-readiness/dashboard`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<SupplyReadinessDashboardResponse>(
@@ -1820,7 +1833,7 @@ export async function getPartSupplyReadiness(
   }
   const query = params.toString()
   const response = await fetch(
-    `${apiBase}/api/supply-readiness/parts/${partId}${query ? `?${query}` : ''}`,
+    `${apiBase}/api/v1/supply-readiness/parts/${partId}${query ? `?${query}` : ''}`,
     { headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<PartSupplyReadinessResponse>(
@@ -1833,7 +1846,7 @@ export async function getVendorSupplyReadiness(
   accessToken: string,
   externalPartyId: string,
 ): Promise<VendorSupplyReadinessResponse> {
-  const response = await fetch(`${apiBase}/api/supply-readiness/vendors/${externalPartyId}`, {
+  const response = await fetch(`${apiBase}/api/v1/supply-readiness/vendors/${externalPartyId}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<VendorSupplyReadinessResponse>(
@@ -1852,7 +1865,7 @@ export async function getProcurementPathReadiness(
   if (quantity !== undefined) {
     params.set('quantity', String(quantity))
   }
-  const response = await fetch(`${apiBase}/api/supply-readiness/procurement-path?${params}`, {
+  const response = await fetch(`${apiBase}/api/v1/supply-readiness/procurement-path?${params}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ProcurementPathReadinessResponse>(
@@ -1864,7 +1877,7 @@ export async function getProcurementPathReadiness(
 export async function getDemandProcessingSettings(
   accessToken: string,
 ): Promise<DemandProcessingSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/demand-processing-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/demand-processing-settings`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<DemandProcessingSettingsResponse>(
@@ -1877,7 +1890,7 @@ export async function upsertDemandProcessingSettings(
   accessToken: string,
   payload: UpsertDemandProcessingSettingsRequest,
 ): Promise<DemandProcessingSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/demand-processing-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/demand-processing-settings`, {
     method: 'PUT',
     headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -1891,7 +1904,7 @@ export async function upsertDemandProcessingSettings(
 export async function getPendingDemandProcessing(
   accessToken: string,
 ): Promise<PendingDemandProcessingResponse> {
-  const response = await fetch(`${apiBase}/api/demand-processing-settings/pending`, {
+  const response = await fetch(`${apiBase}/api/v1/demand-processing-settings/pending`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PendingDemandProcessingResponse>(
@@ -1905,7 +1918,7 @@ export async function getDemandProcessingRuns(
   limit = 5,
 ): Promise<DemandProcessingRunsResponse> {
   const search = new URLSearchParams({ limit: String(limit) })
-  const response = await fetch(`${apiBase}/api/demand-processing-settings/runs?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/demand-processing-settings/runs?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<DemandProcessingRunsResponse>(
@@ -1917,7 +1930,7 @@ export async function getDemandProcessingRuns(
 export async function getIntegrationEventSettings(
   accessToken: string,
 ): Promise<IntegrationEventSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/integration-event-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/integration-event-settings`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<IntegrationEventSettingsResponse>(
@@ -1930,7 +1943,7 @@ export async function upsertIntegrationEventSettings(
   accessToken: string,
   payload: UpsertIntegrationEventSettingsRequest,
 ): Promise<IntegrationEventSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/integration-event-settings`, {
+  const response = await fetch(`${apiBase}/api/v1/integration-event-settings`, {
     method: 'PUT',
     headers: { ...authHeaders(accessToken), 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -1946,7 +1959,7 @@ export async function getIntegrationEventOutbox(
   limit = 25,
 ): Promise<IntegrationEventsListResponse> {
   const search = new URLSearchParams({ limit: String(limit) })
-  const response = await fetch(`${apiBase}/api/integration-event-settings/outbox?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/integration-event-settings/outbox?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<IntegrationEventsListResponse>(
@@ -1960,7 +1973,7 @@ export async function getIntegrationEventInbox(
   limit = 25,
 ): Promise<IntegrationEventsListResponse> {
   const search = new URLSearchParams({ limit: String(limit) })
-  const response = await fetch(`${apiBase}/api/integration-event-settings/inbox?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/integration-event-settings/inbox?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<IntegrationEventsListResponse>(
@@ -1982,7 +1995,7 @@ export async function getVendorReportSummary(
   }
   const query = search.toString()
   const response = await fetch(
-    `${apiBase}/api/reports/vendors/summary${query ? `?${query}` : ''}`,
+    `${apiBase}/api/v1/reports/vendors/summary${query ? `?${query}` : ''}`,
     { headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<VendorReportSummaryResponse>(
@@ -1995,7 +2008,7 @@ export async function getVendorReportDetail(
   accessToken: string,
   vendorPartyId: string,
 ): Promise<VendorReportDetailResponse> {
-  const response = await fetch(`${apiBase}/api/reports/vendors/${vendorPartyId}`, {
+  const response = await fetch(`${apiBase}/api/v1/reports/vendors/${vendorPartyId}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<VendorReportDetailResponse>(
@@ -2017,7 +2030,7 @@ export async function exportVendorReportSummaryCsv(
   }
   const query = search.toString()
   const response = await fetch(
-    `${apiBase}/api/reports/vendors/summary/export${query ? `?${query}` : ''}`,
+    `${apiBase}/api/v1/reports/vendors/summary/export${query ? `?${query}` : ''}`,
     { headers: authHeaders(accessToken) },
   )
   if (!response.ok) {
@@ -2046,7 +2059,7 @@ export async function getPartsInventoryReportSummary(
   }
   const query = search.toString()
   const response = await fetch(
-    `${apiBase}/api/reports/parts-inventory/summary${query ? `?${query}` : ''}`,
+    `${apiBase}/api/v1/reports/parts-inventory/summary${query ? `?${query}` : ''}`,
     { headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<PartsInventoryReportSummaryResponse>(
@@ -2059,7 +2072,7 @@ export async function getPartsInventoryPartDetail(
   accessToken: string,
   partId: string,
 ): Promise<PartsInventoryPartDetailResponse> {
-  const response = await fetch(`${apiBase}/api/reports/parts-inventory/parts/${partId}`, {
+  const response = await fetch(`${apiBase}/api/v1/reports/parts-inventory/parts/${partId}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PartsInventoryPartDetailResponse>(
@@ -2073,7 +2086,7 @@ export async function getPartsInventoryLocationDetail(
   inventoryLocationId: string,
 ): Promise<PartsInventoryLocationDetailResponse> {
   const response = await fetch(
-    `${apiBase}/api/reports/parts-inventory/locations/${inventoryLocationId}`,
+    `${apiBase}/api/v1/reports/parts-inventory/locations/${inventoryLocationId}`,
     { headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<PartsInventoryLocationDetailResponse>(
@@ -2102,7 +2115,7 @@ export async function exportPartsInventoryReportSummaryCsv(
   }
   const query = search.toString()
   const response = await fetch(
-    `${apiBase}/api/reports/parts-inventory/summary/export${query ? `?${query}` : ''}`,
+    `${apiBase}/api/v1/reports/parts-inventory/summary/export${query ? `?${query}` : ''}`,
     { headers: authHeaders(accessToken) },
   )
   if (!response.ok) {
@@ -2124,7 +2137,7 @@ export async function getPurchasingReportSummary(
   }
   const query = search.toString()
   const response = await fetch(
-    `${apiBase}/api/reports/purchasing/summary${query ? `?${query}` : ''}`,
+    `${apiBase}/api/v1/reports/purchasing/summary${query ? `?${query}` : ''}`,
     { headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<PurchasingReportSummaryResponse>(
@@ -2138,7 +2151,7 @@ export async function getPurchasingPurchaseRequestDetail(
   purchaseRequestId: string,
 ): Promise<PurchasingPurchaseRequestDetailResponse> {
   const response = await fetch(
-    `${apiBase}/api/reports/purchasing/purchase-requests/${purchaseRequestId}`,
+    `${apiBase}/api/v1/reports/purchasing/purchase-requests/${purchaseRequestId}`,
     { headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<PurchasingPurchaseRequestDetailResponse>(
@@ -2152,7 +2165,7 @@ export async function getPurchasingPurchaseOrderDetail(
   purchaseOrderId: string,
 ): Promise<PurchasingPurchaseOrderDetailResponse> {
   const response = await fetch(
-    `${apiBase}/api/reports/purchasing/purchase-orders/${purchaseOrderId}`,
+    `${apiBase}/api/v1/reports/purchasing/purchase-orders/${purchaseOrderId}`,
     { headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<PurchasingPurchaseOrderDetailResponse>(
@@ -2174,7 +2187,7 @@ export async function exportPurchasingReportSummaryCsv(
   }
   const query = search.toString()
   const response = await fetch(
-    `${apiBase}/api/reports/purchasing/summary/export${query ? `?${query}` : ''}`,
+    `${apiBase}/api/v1/reports/purchasing/summary/export${query ? `?${query}` : ''}`,
     { headers: authHeaders(accessToken) },
   )
   if (!response.ok) {
@@ -2199,7 +2212,7 @@ export async function getComplianceReportSummary(
   }
   const query = search.toString()
   const response = await fetch(
-    `${apiBase}/api/reports/compliance/summary${query ? `?${query}` : ''}`,
+    `${apiBase}/api/v1/reports/compliance/summary${query ? `?${query}` : ''}`,
     { headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<ComplianceReportSummaryResponse>(
@@ -2213,7 +2226,7 @@ export async function getCompliancePartyDetail(
   externalPartyId: string,
 ): Promise<CompliancePartyDetailResponse> {
   const response = await fetch(
-    `${apiBase}/api/reports/compliance/parties/${externalPartyId}`,
+    `${apiBase}/api/v1/reports/compliance/parties/${externalPartyId}`,
     { headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<CompliancePartyDetailResponse>(
@@ -2266,7 +2279,7 @@ export async function listAuditHistory(
   }
   const query = search.toString()
   const response = await fetch(
-    `${apiBase}/api/audit-history${query ? `?${query}` : ''}`,
+    `${apiBase}/api/v1/audit-history${query ? `?${query}` : ''}`,
     { headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<AuditHistoryListResponse>(response, 'Failed to load audit history')
@@ -2280,7 +2293,7 @@ export async function forgivingSearch(
   if (options.limit) {
     search.set('limit', String(options.limit))
   }
-  const response = await fetch(`${apiBase}/api/search/forgiving?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/search/forgiving?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ForgivingSearchResponse>(response, 'Failed to run forgiving search')
@@ -2291,7 +2304,7 @@ export async function getEmergencyPurchases(
   status?: string,
 ): Promise<EmergencyPurchaseResponse[]> {
   const query = status ? `?status=${encodeURIComponent(status)}` : ''
-  const response = await fetch(`${apiBase}/api/emergency-purchases${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/emergency-purchases${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<EmergencyPurchaseResponse[]>(response, 'Failed to load emergency purchases')
@@ -2300,7 +2313,7 @@ export async function getEmergencyPurchases(
 export async function listPendingEmergencyPurchases(
   accessToken: string,
 ): Promise<EmergencyPurchaseResponse[]> {
-  const response = await fetch(`${apiBase}/api/emergency-purchases/pending`, {
+  const response = await fetch(`${apiBase}/api/v1/emergency-purchases/pending`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<EmergencyPurchaseResponse[]>(
@@ -2320,7 +2333,7 @@ export async function createEmergencyPurchase(
     lines: { partId: string; quantityRequested: number; notes: string }[]
   },
 ): Promise<EmergencyPurchaseResponse> {
-  const response = await fetch(`${apiBase}/api/emergency-purchases`, {
+  const response = await fetch(`${apiBase}/api/v1/emergency-purchases`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -2334,7 +2347,7 @@ export async function expeditedSubmitEmergencyPurchase(
   notes?: string,
 ): Promise<EmergencyPurchaseResponse> {
   const response = await fetch(
-    `${apiBase}/api/emergency-purchases/${purchaseRequestId}/expedited-submit`,
+    `${apiBase}/api/v1/emergency-purchases/${purchaseRequestId}/expedited-submit`,
     {
       method: 'POST',
       headers: authHeaders(accessToken),
@@ -2353,7 +2366,7 @@ export async function managerOverrideApproveEmergencyPurchase(
   justification: string,
 ): Promise<EmergencyPurchaseResponse> {
   const response = await fetch(
-    `${apiBase}/api/emergency-purchases/${purchaseRequestId}/manager-override-approve`,
+    `${apiBase}/api/v1/emergency-purchases/${purchaseRequestId}/manager-override-approve`,
     {
       method: 'POST',
       headers: authHeaders(accessToken),
@@ -2372,7 +2385,7 @@ export async function issueEmergencyPurchaseOrder(
   orderKey: string,
 ): Promise<IssueEmergencyPurchaseOrderResponse> {
   const response = await fetch(
-    `${apiBase}/api/emergency-purchases/${purchaseRequestId}/issue-purchase-order`,
+    `${apiBase}/api/v1/emergency-purchases/${purchaseRequestId}/issue-purchase-order`,
     {
       method: 'POST',
       headers: authHeaders(accessToken),
@@ -2388,7 +2401,7 @@ export async function issueEmergencyPurchaseOrder(
 export async function getSupplierOnboardingDocumentRequirements(
   accessToken: string,
 ): Promise<SupplierOnboardingDocumentRequirementsResponse> {
-  const response = await fetch(`${apiBase}/api/supplier-onboarding/document-requirements`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/document-requirements`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<SupplierOnboardingDocumentRequirementsResponse>(
@@ -2400,7 +2413,7 @@ export async function getSupplierOnboardingDocumentRequirements(
 export async function listPendingSupplierOnboarding(
   accessToken: string,
 ): Promise<SupplierOnboardingResponse[]> {
-  const response = await fetch(`${apiBase}/api/supplier-onboarding/pending`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/pending`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<SupplierOnboardingResponse[]>(
@@ -2414,7 +2427,7 @@ export async function startSupplierOnboarding(
   externalPartyId: string,
   notes?: string,
 ): Promise<SupplierOnboardingResponse> {
-  const response = await fetch(`${apiBase}/api/supplier-onboarding/start`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/start`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify({ externalPartyId, notes: notes ?? null }),
@@ -2426,7 +2439,7 @@ export async function getSupplierOnboardingByParty(
   accessToken: string,
   partyId: string,
 ): Promise<SupplierOnboardingResponse> {
-  const response = await fetch(`${apiBase}/api/supplier-onboarding/parties/${partyId}`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/parties/${partyId}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<SupplierOnboardingResponse>(response, 'Failed to load supplier onboarding')
@@ -2437,7 +2450,7 @@ export async function submitSupplierOnboarding(
   partyId: string,
   notes?: string,
 ): Promise<SupplierOnboardingResponse> {
-  const response = await fetch(`${apiBase}/api/supplier-onboarding/parties/${partyId}/submit`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/parties/${partyId}/submit`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify({ notes: notes ?? null }),
@@ -2449,7 +2462,7 @@ export async function approveSupplierOnboarding(
   accessToken: string,
   partyId: string,
 ): Promise<SupplierOnboardingResponse> {
-  const response = await fetch(`${apiBase}/api/supplier-onboarding/parties/${partyId}/approve`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/parties/${partyId}/approve`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
@@ -2461,7 +2474,7 @@ export async function rejectSupplierOnboarding(
   partyId: string,
   reason: string,
 ): Promise<SupplierOnboardingResponse> {
-  const response = await fetch(`${apiBase}/api/supplier-onboarding/parties/${partyId}/reject`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/parties/${partyId}/reject`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify({ reason }),
@@ -2473,7 +2486,7 @@ export async function listPartyComplianceDocuments(
   accessToken: string,
   partyId: string,
 ): Promise<PartyComplianceDocumentResponse[]> {
-  const response = await fetch(`${apiBase}/api/parties/${partyId}/compliance-documents`, {
+  const response = await fetch(`${apiBase}/api/v1/parties/${partyId}/compliance-documents`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<PartyComplianceDocumentResponse[]>(
@@ -2497,7 +2510,7 @@ export async function registerPartyComplianceDocument(
     notes: string
   },
 ): Promise<PartyComplianceDocumentResponse> {
-  const response = await fetch(`${apiBase}/api/parties/${partyId}/compliance-documents`, {
+  const response = await fetch(`${apiBase}/api/v1/parties/${partyId}/compliance-documents`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -2514,7 +2527,7 @@ export async function approvePartyComplianceDocument(
   documentId: string,
 ): Promise<PartyComplianceDocumentResponse> {
   const response = await fetch(
-    `${apiBase}/api/parties/${partyId}/compliance-documents/${documentId}/approve`,
+    `${apiBase}/api/v1/parties/${partyId}/compliance-documents/${documentId}/approve`,
     { method: 'POST', headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<PartyComplianceDocumentResponse>(
@@ -2539,7 +2552,7 @@ export async function exportComplianceReportSummaryCsv(
   }
   const query = search.toString()
   const response = await fetch(
-    `${apiBase}/api/reports/compliance/summary/export${query ? `?${query}` : ''}`,
+    `${apiBase}/api/v1/reports/compliance/summary/export${query ? `?${query}` : ''}`,
     { headers: authHeaders(accessToken) },
   )
   if (!response.ok) {
@@ -2550,10 +2563,11 @@ export async function exportComplianceReportSummaryCsv(
 
 export async function listVendorRestrictions(
   accessToken: string,
-  status?: string,
+  options?: { status?: string } | string,
 ): Promise<VendorRestrictionResponse[]> {
+  const status = typeof options === 'string' ? options : options?.status
   const search = status ? `?status=${encodeURIComponent(status)}` : ''
-  const response = await fetch(`${apiBase}/api/vendor-restrictions${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/vendor-restrictions${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<VendorRestrictionResponse[]>(response, 'Failed to load vendor restrictions')
@@ -2563,7 +2577,7 @@ export async function listPartyVendorRestrictions(
   accessToken: string,
   partyId: string,
 ): Promise<VendorRestrictionResponse[]> {
-  const response = await fetch(`${apiBase}/api/parties/${partyId}/vendor-restrictions`, {
+  const response = await fetch(`${apiBase}/api/v1/parties/${partyId}/vendor-restrictions`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<VendorRestrictionResponse[]>(
@@ -2576,7 +2590,7 @@ export async function getPartyVendorRestrictionEnforcement(
   accessToken: string,
   partyId: string,
 ): Promise<VendorRestrictionEnforcementResponse> {
-  const response = await fetch(`${apiBase}/api/parties/${partyId}/vendor-restrictions/enforcement`, {
+  const response = await fetch(`${apiBase}/api/v1/parties/${partyId}/vendor-restrictions/enforcement`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<VendorRestrictionEnforcementResponse>(
@@ -2590,7 +2604,7 @@ export async function createPartyVendorRestriction(
   partyId: string,
   payload: CreateVendorRestrictionRequest,
 ): Promise<VendorRestrictionResponse> {
-  const response = await fetch(`${apiBase}/api/parties/${partyId}/vendor-restrictions`, {
+  const response = await fetch(`${apiBase}/api/v1/parties/${partyId}/vendor-restrictions`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -2603,7 +2617,7 @@ export async function liftVendorRestriction(
   restrictionId: string,
   payload: LiftVendorRestrictionRequest,
 ): Promise<VendorRestrictionResponse> {
-  const response = await fetch(`${apiBase}/api/vendor-restrictions/${restrictionId}/lift`, {
+  const response = await fetch(`${apiBase}/api/v1/vendor-restrictions/${restrictionId}/lift`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -2620,7 +2634,7 @@ export async function listSupplierIncidents(
   if (options?.externalPartyId) search.set('externalPartyId', options.externalPartyId)
   if (options?.severity) search.set('severity', options.severity)
   const query = search.toString()
-  const response = await fetch(`${apiBase}/api/supplier-incidents${query ? `?${query}` : ''}`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-incidents${query ? `?${query}` : ''}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<SupplierIncidentResponse[]>(response, 'Failed to load supplier incidents')
@@ -2630,7 +2644,7 @@ export async function listPartySupplierIncidents(
   accessToken: string,
   partyId: string,
 ): Promise<SupplierIncidentResponse[]> {
-  const response = await fetch(`${apiBase}/api/parties/${partyId}/supplier-incidents`, {
+  const response = await fetch(`${apiBase}/api/v1/parties/${partyId}/supplier-incidents`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<SupplierIncidentResponse[]>(
@@ -2643,7 +2657,7 @@ export async function createSupplierIncident(
   accessToken: string,
   payload: CreateSupplierIncidentRequest,
 ): Promise<SupplierIncidentResponse> {
-  const response = await fetch(`${apiBase}/api/supplier-incidents`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-incidents`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -2655,7 +2669,7 @@ export async function startSupplierIncidentInvestigation(
   accessToken: string,
   incidentId: string,
 ): Promise<SupplierIncidentResponse> {
-  const response = await fetch(`${apiBase}/api/supplier-incidents/${incidentId}/start-investigation`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-incidents/${incidentId}/start-investigation`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
@@ -2667,7 +2681,7 @@ export async function resolveSupplierIncident(
   incidentId: string,
   payload: ResolveSupplierIncidentRequest,
 ): Promise<SupplierIncidentResponse> {
-  const response = await fetch(`${apiBase}/api/supplier-incidents/${incidentId}/resolve`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-incidents/${incidentId}/resolve`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -2679,7 +2693,7 @@ export async function closeSupplierIncident(
   accessToken: string,
   incidentId: string,
 ): Promise<SupplierIncidentResponse> {
-  const response = await fetch(`${apiBase}/api/supplier-incidents/${incidentId}/close`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-incidents/${incidentId}/close`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify({ resolutionNotes: null }),
@@ -2692,7 +2706,7 @@ export async function cancelSupplierIncident(
   incidentId: string,
   payload: CancelSupplierIncidentRequest,
 ): Promise<SupplierIncidentResponse> {
-  const response = await fetch(`${apiBase}/api/supplier-incidents/${incidentId}/cancel`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-incidents/${incidentId}/cancel`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -2705,7 +2719,7 @@ export async function reopenSupplierIncident(
   incidentId: string,
   payload: ReopenSupplierIncidentRequest,
 ): Promise<SupplierIncidentResponse> {
-  const response = await fetch(`${apiBase}/api/supplier-incidents/${incidentId}/reopen`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-incidents/${incidentId}/reopen`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -2719,7 +2733,7 @@ export async function applySupplierIncidentProcurementRestriction(
   payload: ApplySupplierIncidentProcurementRestrictionRequest,
 ): Promise<SupplierIncidentResponse> {
   const response = await fetch(
-    `${apiBase}/api/supplier-incidents/${incidentId}/apply-procurement-restriction`,
+    `${apiBase}/api/v1/supplier-incidents/${incidentId}/apply-procurement-restriction`,
     {
       method: 'POST',
       headers: authHeaders(accessToken),
@@ -2735,7 +2749,7 @@ export async function applySupplierIncidentProcurementRestriction(
 export async function listProcurementExceptionResolutionTemplates(
   accessToken: string,
 ): Promise<ProcurementExceptionResolutionTemplateResponse[]> {
-  const response = await fetch(`${apiBase}/api/procurement-exceptions/resolution-templates`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-exceptions/resolution-templates`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ProcurementExceptionResolutionTemplateResponse[]>(
@@ -2759,7 +2773,7 @@ export async function listProcurementExceptions(
   if (options?.subjectId) search.set('subjectId', options.subjectId)
   if (options?.overdueOnly) search.set('overdueOnly', 'true')
   const query = search.toString()
-  const response = await fetch(`${apiBase}/api/procurement-exceptions${query ? `?${query}` : ''}`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-exceptions${query ? `?${query}` : ''}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ProcurementExceptionResponse[]>(
@@ -2775,10 +2789,10 @@ export async function listSubjectProcurementExceptions(
 ): Promise<ProcurementExceptionResponse[]> {
   const route =
     subjectType === 'purchase_request'
-      ? `/api/purchase-requests/${subjectId}/procurement-exceptions`
+      ? `/api/v1/purchase-requests/${subjectId}/procurement-exceptions`
       : subjectType === 'purchase_order'
-        ? `/api/purchase-orders/${subjectId}/procurement-exceptions`
-        : `/api/rfqs/${subjectId}/procurement-exceptions`
+        ? `/api/v1/purchase-orders/${subjectId}/procurement-exceptions`
+        : `/api/v1/rfqs/${subjectId}/procurement-exceptions`
   const response = await fetch(`${apiBase}${route}`, { headers: authHeaders(accessToken) })
   return parseJsonResponse<ProcurementExceptionResponse[]>(
     response,
@@ -2794,10 +2808,10 @@ export async function createSubjectProcurementException(
 ): Promise<ProcurementExceptionResponse> {
   const route =
     subjectType === 'purchase_request'
-      ? `/api/purchase-requests/${subjectId}/procurement-exceptions`
+      ? `/api/v1/purchase-requests/${subjectId}/procurement-exceptions`
       : subjectType === 'purchase_order'
-        ? `/api/purchase-orders/${subjectId}/procurement-exceptions`
-        : `/api/rfqs/${subjectId}/procurement-exceptions`
+        ? `/api/v1/purchase-orders/${subjectId}/procurement-exceptions`
+        : `/api/v1/rfqs/${subjectId}/procurement-exceptions`
   const response = await fetch(`${apiBase}${route}`, {
     method: 'POST',
     headers: authHeaders(accessToken),
@@ -2814,7 +2828,7 @@ export async function assignProcurementException(
   exceptionId: string,
   payload: AssignProcurementExceptionRequest,
 ): Promise<ProcurementExceptionResponse> {
-  const response = await fetch(`${apiBase}/api/procurement-exceptions/${exceptionId}/assign`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-exceptions/${exceptionId}/assign`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -2830,7 +2844,7 @@ export async function linkProcurementExceptionActions(
   exceptionId: string,
   payload: LinkProcurementExceptionActionsRequest,
 ): Promise<ProcurementExceptionResponse> {
-  const response = await fetch(`${apiBase}/api/procurement-exceptions/${exceptionId}/link-actions`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-exceptions/${exceptionId}/link-actions`, {
     method: 'PUT',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -2846,7 +2860,7 @@ export async function startProcurementExceptionInvestigation(
   exceptionId: string,
 ): Promise<ProcurementExceptionResponse> {
   const response = await fetch(
-    `${apiBase}/api/procurement-exceptions/${exceptionId}/start-investigation`,
+    `${apiBase}/api/v1/procurement-exceptions/${exceptionId}/start-investigation`,
     { method: 'POST', headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<ProcurementExceptionResponse>(
@@ -2860,7 +2874,7 @@ export async function resolveProcurementException(
   exceptionId: string,
   payload: ResolveProcurementExceptionRequest,
 ): Promise<ProcurementExceptionResponse> {
-  const response = await fetch(`${apiBase}/api/procurement-exceptions/${exceptionId}/resolve`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-exceptions/${exceptionId}/resolve`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -2877,7 +2891,7 @@ export async function requestProcurementExceptionWaive(
   payload: RequestProcurementExceptionWaiveRequest,
 ): Promise<ProcurementExceptionResponse> {
   const response = await fetch(
-    `${apiBase}/api/procurement-exceptions/${exceptionId}/request-waive`,
+    `${apiBase}/api/v1/procurement-exceptions/${exceptionId}/request-waive`,
     { method: 'POST', headers: authHeaders(accessToken), body: JSON.stringify(payload) },
   )
   return parseJsonResponse<ProcurementExceptionResponse>(
@@ -2891,7 +2905,7 @@ export async function approveProcurementExceptionWaive(
   exceptionId: string,
 ): Promise<ProcurementExceptionResponse> {
   const response = await fetch(
-    `${apiBase}/api/procurement-exceptions/${exceptionId}/approve-waive`,
+    `${apiBase}/api/v1/procurement-exceptions/${exceptionId}/approve-waive`,
     { method: 'POST', headers: authHeaders(accessToken) },
   )
   return parseJsonResponse<ProcurementExceptionResponse>(
@@ -2906,7 +2920,7 @@ export async function rejectProcurementExceptionWaive(
   payload: RejectProcurementExceptionWaiveRequest,
 ): Promise<ProcurementExceptionResponse> {
   const response = await fetch(
-    `${apiBase}/api/procurement-exceptions/${exceptionId}/reject-waive`,
+    `${apiBase}/api/v1/procurement-exceptions/${exceptionId}/reject-waive`,
     { method: 'POST', headers: authHeaders(accessToken), body: JSON.stringify(payload) },
   )
   return parseJsonResponse<ProcurementExceptionResponse>(
@@ -2920,7 +2934,7 @@ export async function closeProcurementException(
   exceptionId: string,
   payload?: CloseProcurementExceptionRequest,
 ): Promise<ProcurementExceptionResponse> {
-  const response = await fetch(`${apiBase}/api/procurement-exceptions/${exceptionId}/close`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-exceptions/${exceptionId}/close`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload ?? { resolutionNotes: null }),
@@ -2936,7 +2950,7 @@ export async function cancelProcurementException(
   exceptionId: string,
   payload: CancelProcurementExceptionRequest,
 ): Promise<ProcurementExceptionResponse> {
-  const response = await fetch(`${apiBase}/api/procurement-exceptions/${exceptionId}/cancel`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-exceptions/${exceptionId}/cancel`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -2952,7 +2966,7 @@ export async function reopenProcurementException(
   exceptionId: string,
   payload: ReopenProcurementExceptionRequest,
 ): Promise<ProcurementExceptionResponse> {
-  const response = await fetch(`${apiBase}/api/procurement-exceptions/${exceptionId}/reopen`, {
+  const response = await fetch(`${apiBase}/api/v1/procurement-exceptions/${exceptionId}/reopen`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),

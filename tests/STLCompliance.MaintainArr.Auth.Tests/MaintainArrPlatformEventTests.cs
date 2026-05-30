@@ -138,6 +138,58 @@ public sealed class MaintainArrPlatformEventTests : IAsyncLifetime
         Assert.Equal(outbox.Count, outboxCount);
     }
 
+    [Fact]
+    public async Task Platform_event_settings_v1_put_get_outbox_and_runs_work_for_admin()
+    {
+        await SeedAssetWithCriticalDefectAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+
+        var putRequest = Authorized(HttpMethod.Put, "/api/v1/platform-event-settings", token);
+        putRequest.Content = JsonContent.Create(new UpsertMaintenancePlatformEventSettingsRequest(true));
+        (await _maintainarrClient.SendAsync(putRequest)).EnsureSuccessStatusCode();
+
+        var getRequest = Authorized(HttpMethod.Get, "/api/v1/platform-event-settings", token);
+        var getResponse = await _maintainarrClient.SendAsync(getRequest);
+        getResponse.EnsureSuccessStatusCode();
+        var settings = (await getResponse.Content.ReadFromJsonAsync<MaintenancePlatformEventSettingsResponse>())!;
+        Assert.True(settings.IsEnabled);
+
+        var outboxRequest = Authorized(HttpMethod.Get, "/api/v1/platform-event-settings/outbox?limit=5", token);
+        var outboxResponse = await _maintainarrClient.SendAsync(outboxRequest);
+        outboxResponse.EnsureSuccessStatusCode();
+        var outbox = (await outboxResponse.Content.ReadFromJsonAsync<MaintenancePlatformOutboxEventsResponse>())!;
+        Assert.NotNull(outbox.Items);
+
+        var runsRequest = Authorized(HttpMethod.Get, "/api/v1/platform-event-settings/runs?limit=5", token);
+        var runsResponse = await _maintainarrClient.SendAsync(runsRequest);
+        runsResponse.EnsureSuccessStatusCode();
+        var runs = (await runsResponse.Content.ReadFromJsonAsync<MaintenancePlatformEventProcessingRunsResponse>())!;
+        Assert.NotNull(runs.Items);
+    }
+
+    [Fact]
+    public async Task Events_v1_alias_matches_platform_event_outbox_endpoint()
+    {
+        await SeedAssetWithCriticalDefectAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+
+        var putRequest = Authorized(HttpMethod.Put, "/api/v1/platform-event-settings", token);
+        putRequest.Content = JsonContent.Create(new UpsertMaintenancePlatformEventSettingsRequest(true));
+        (await _maintainarrClient.SendAsync(putRequest)).EnsureSuccessStatusCode();
+
+        var outboxResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/platform-event-settings/outbox?limit=5", token));
+        outboxResponse.EnsureSuccessStatusCode();
+        var outbox = (await outboxResponse.Content.ReadFromJsonAsync<MaintenancePlatformOutboxEventsResponse>())!;
+
+        var eventsResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/events?limit=5", token));
+        eventsResponse.EnsureSuccessStatusCode();
+        var eventsAlias = (await eventsResponse.Content.ReadFromJsonAsync<MaintenancePlatformOutboxEventsResponse>())!;
+
+        Assert.Equal(outbox.Items.Count, eventsAlias.Items.Count);
+    }
+
     private async Task UpsertRollupSettingsAsync()
     {
         var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");

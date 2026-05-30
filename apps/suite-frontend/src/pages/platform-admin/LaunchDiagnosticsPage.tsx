@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
 import * as nexarr from '../../api/nexarrClient'
 
 function readinessClass(readiness: string): string {
@@ -22,6 +23,9 @@ function resultClass(result: string): string {
 }
 
 export function LaunchDiagnosticsPage() {
+  const [selectedTenantId, setSelectedTenantId] = useState('')
+  const [selectedProductKey, setSelectedProductKey] = useState('')
+
   const diagnosticsQuery = useQuery({
     queryKey: ['platform-admin-launch-diagnostics'],
     queryFn: () => nexarr.getPlatformAdminLaunchDiagnostics({ page: 1, pageSize: 100 }),
@@ -30,6 +34,31 @@ export function LaunchDiagnosticsPage() {
     queryKey: ['platform-admin-launch-attempts'],
     queryFn: () => nexarr.getPlatformAdminLaunchAttempts({ page: 1, pageSize: 25 }),
   })
+
+  const validateLaunchMutation = useMutation({
+    mutationFn: nexarr.validatePlatformLaunch,
+  })
+
+  const data = diagnosticsQuery.data
+  const attempts = attemptsQuery.data?.items ?? []
+  const tenants = useMemo(
+    () =>
+      data
+        ? [...new Map(data.rows.map((row) => [row.tenantId, row])).values()].sort((a, b) =>
+            a.tenantDisplayName.localeCompare(b.tenantDisplayName),
+          )
+        : [],
+    [data],
+  )
+  const products = useMemo(
+    () =>
+      data
+        ? [...new Map(data.rows.map((row) => [row.productKey, row])).values()].sort((a, b) =>
+            a.productDisplayName.localeCompare(b.productDisplayName),
+          )
+        : [],
+    [data],
+  )
 
   if (diagnosticsQuery.isLoading || attemptsQuery.isLoading) {
     return <p className="text-sm text-slate-500">Loading launch diagnostics…</p>
@@ -43,16 +72,90 @@ export function LaunchDiagnosticsPage() {
     )
   }
 
-  const data = diagnosticsQuery.data!
-  const attempts = attemptsQuery.data?.items ?? []
+  const diagnostics = data!
 
   return (
     <div className="space-y-6">
-      {data.issues.length > 0 && (
+      <section className="rounded-lg border border-slate-200 bg-white p-4">
+        <h4 className="text-sm font-semibold text-stl-navy">Validate launch eligibility</h4>
+        <p className="mt-1 text-xs text-slate-500">
+          Check whether a tenant can launch a product right now and see the denial reason code.
+        </p>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <label className="text-xs font-medium text-slate-600">
+            Tenant
+            <select
+              className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+              value={selectedTenantId}
+              onChange={(event) => setSelectedTenantId(event.target.value)}
+            >
+              <option value="">Select tenant…</option>
+              {tenants.map((tenant) => (
+                <option key={tenant.tenantId} value={tenant.tenantId}>
+                  {tenant.tenantDisplayName} ({tenant.tenantSlug})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs font-medium text-slate-600">
+            Product
+            <select
+              className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm"
+              value={selectedProductKey}
+              onChange={(event) => setSelectedProductKey(event.target.value)}
+            >
+              <option value="">Select product…</option>
+              {products.map((product) => (
+                <option key={product.productKey} value={product.productKey}>
+                  {product.productDisplayName}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="flex items-end">
+            <button
+              type="button"
+              className="rounded-md bg-stl-navy px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={!selectedTenantId || !selectedProductKey || validateLaunchMutation.isPending}
+              onClick={() =>
+                validateLaunchMutation.mutate({
+                  tenantId: selectedTenantId,
+                  productKey: selectedProductKey,
+                })
+              }
+            >
+              {validateLaunchMutation.isPending ? 'Validating…' : 'Validate launch'}
+            </button>
+          </div>
+        </div>
+        {validateLaunchMutation.isError ? (
+          <p className="mt-3 text-sm text-red-700" role="alert">
+            Failed to validate launch: {(validateLaunchMutation.error as Error).message}
+          </p>
+        ) : null}
+        {validateLaunchMutation.data ? (
+          <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
+            <p>
+              <span className="font-medium text-stl-navy">Can launch:</span>{' '}
+              {validateLaunchMutation.data.canLaunch ? 'Yes' : 'No'}
+            </p>
+            <p>
+              <span className="font-medium text-stl-navy">Reason:</span>{' '}
+              {validateLaunchMutation.data.reasonCode ?? 'none'}
+            </p>
+            <p className="break-all">
+              <span className="font-medium text-stl-navy">Launch URL:</span>{' '}
+              {validateLaunchMutation.data.launchUrl ?? 'none'}
+            </p>
+          </div>
+        ) : null}
+      </section>
+
+      {diagnostics.issues.length > 0 && (
         <section className="rounded-lg border border-amber-200 bg-amber-50/50 p-4">
-          <h4 className="text-sm font-semibold text-stl-navy">Issues ({data.issues.length})</h4>
+          <h4 className="text-sm font-semibold text-stl-navy">Issues ({diagnostics.issues.length})</h4>
           <ul className="mt-2 space-y-1 text-sm text-slate-700">
-            {data.issues.map((issue, index) => (
+            {diagnostics.issues.map((issue, index) => (
               <li key={`${issue.issueCode}-${issue.tenantId ?? 'global'}-${issue.productKey ?? index}`}>
                 <span
                   className={
@@ -82,7 +185,7 @@ export function LaunchDiagnosticsPage() {
             </tr>
           </thead>
           <tbody>
-            {data.rows.map((row) => (
+            {diagnostics.rows.map((row) => (
               <tr key={`${row.tenantId}-${row.productKey}`} className="border-b border-slate-100">
                 <td className="px-3 py-2">
                   <span className="font-medium text-stl-navy">{row.tenantDisplayName}</span>
@@ -110,7 +213,7 @@ export function LaunchDiagnosticsPage() {
         <div>
           <h4 className="text-sm font-semibold text-stl-navy">Recent launch attempts</h4>
           <p className="mt-1 text-xs text-slate-500">
-            Updated {new Date(data.generatedAt).toLocaleString()}
+            Updated {new Date(diagnostics.generatedAt).toLocaleString()}
           </p>
         </div>
         {attemptsQuery.isError ? (

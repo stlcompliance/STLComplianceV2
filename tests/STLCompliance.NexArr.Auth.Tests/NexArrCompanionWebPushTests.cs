@@ -179,7 +179,7 @@ public sealed class NexArrCompanionWebPushTests : IAsyncLifetime
         var adminToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
         var handoffResponse = await _nexarrClient.SendAsync(Authorized(
             HttpMethod.Post,
-            "/api/launch/handoff",
+            "/api/v1/launch/handoff",
             adminToken,
             new CreateHandoffRequest("companion", null)));
         handoffResponse.EnsureSuccessStatusCode();

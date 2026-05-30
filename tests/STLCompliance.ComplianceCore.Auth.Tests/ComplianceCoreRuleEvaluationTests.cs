@@ -221,7 +221,7 @@ public class ComplianceCoreRuleEvaluationTests : IAsyncLifetime
         response.EnsureSuccessStatusCode();
         var batch = (await response.Content.ReadFromJsonAsync<EvaluateRulePackBatchResponse>())!;
         Assert.NotEqual(Guid.Empty, batch.BatchId);
-        Assert.Equal(1, batch.Results.Count);
+        Assert.Single(batch.Results);
         Assert.Equal(1, batch.Summary.Total);
         Assert.Equal(1, batch.Summary.AllowCount);
         Assert.Equal(0, batch.Summary.WarnCount);
@@ -289,6 +289,95 @@ public class ComplianceCoreRuleEvaluationTests : IAsyncLifetime
         response.EnsureSuccessStatusCode();
         var batch = (await response.Content.ReadFromJsonAsync<EvaluateRulePackBatchResponse>())!;
         Assert.Equal(1, batch.Summary.AllowCount);
+    }
+
+    [Fact]
+    public async Task V1_evaluations_alias_routes_run_list_get_and_export()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await CreateSampleRulePackWithContentAsync(adminToken);
+
+        var runRequest = Authorized(HttpMethod.Post, "/api/v1/evaluations/run", adminToken);
+        runRequest.Content = JsonContent.Create(new EvaluateRulePackRunRequest(
+            rulePackId,
+            new Dictionary<string, bool> { ["driver_license_valid"] = true }));
+        var runResponse = await _complianceCoreClient.SendAsync(runRequest);
+        runResponse.EnsureSuccessStatusCode();
+        var run = (await runResponse.Content.ReadFromJsonAsync<RuleEvaluationRunResponse>())!;
+        Assert.Equal("pass", run.OverallResult);
+
+        var listResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/evaluations?rulePackId={rulePackId}", adminToken));
+        listResponse.EnsureSuccessStatusCode();
+        var runs = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<RuleEvaluationRunResponse>>())!;
+        var listed = Assert.Single(runs);
+        Assert.Equal(run.EvaluationRunId, listed.EvaluationRunId);
+
+        var getResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/evaluations/{run.EvaluationRunId}", adminToken));
+        getResponse.EnsureSuccessStatusCode();
+        var loaded = (await getResponse.Content.ReadFromJsonAsync<RuleEvaluationRunResponse>())!;
+        Assert.Equal(run.EvaluationRunId, loaded.EvaluationRunId);
+
+        var exportResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/evaluations/{run.EvaluationRunId}/audit-export", adminToken));
+        exportResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task V1_evaluations_support_simulate_re_evaluate_and_explanation()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await CreateSampleRulePackWithContentAsync(adminToken);
+
+        var runRequest = Authorized(HttpMethod.Post, "/api/v1/evaluations/run", adminToken);
+        runRequest.Content = JsonContent.Create(new EvaluateRulePackRunRequest(
+            rulePackId,
+            new Dictionary<string, bool> { ["driver_license_valid"] = false }));
+        var runResponse = await _complianceCoreClient.SendAsync(runRequest);
+        runResponse.EnsureSuccessStatusCode();
+        var run = (await runResponse.Content.ReadFromJsonAsync<RuleEvaluationRunResponse>())!;
+        Assert.Equal("fail", run.OverallResult);
+
+        var explainResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/evaluations/{run.EvaluationRunId}/explanation", adminToken));
+        explainResponse.EnsureSuccessStatusCode();
+        var explanation = (await explainResponse.Content.ReadFromJsonAsync<RuleEvaluationExplanationResponse>())!;
+        Assert.Equal(run.EvaluationRunId, explanation.EvaluationRunId);
+        Assert.Equal("fail", explanation.OverallResult);
+        Assert.NotEmpty(explanation.FailedRuleKeys);
+
+        var reEvaluateRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/evaluations/{run.EvaluationRunId}/re-evaluate",
+            adminToken);
+        reEvaluateRequest.Content = JsonContent.Create(new ReEvaluateRuleEvaluationRequest());
+        var reEvaluateResponse = await _complianceCoreClient.SendAsync(reEvaluateRequest);
+        reEvaluateResponse.EnsureSuccessStatusCode();
+        var rerun = (await reEvaluateResponse.Content.ReadFromJsonAsync<RuleEvaluationRunResponse>())!;
+        Assert.NotEqual(run.EvaluationRunId, rerun.EvaluationRunId);
+        Assert.Equal(run.OverallResult, rerun.OverallResult);
+        Assert.Equal(run.FactInputs["driver_license_valid"], rerun.FactInputs["driver_license_valid"]);
+
+        var listBeforeSimResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/evaluations?rulePackId={rulePackId}", adminToken));
+        listBeforeSimResponse.EnsureSuccessStatusCode();
+        var runsBeforeSim = (await listBeforeSimResponse.Content.ReadFromJsonAsync<IReadOnlyList<RuleEvaluationRunResponse>>())!;
+
+        var simulateRequest = Authorized(HttpMethod.Post, "/api/v1/evaluations/simulate", adminToken);
+        simulateRequest.Content = JsonContent.Create(new EvaluateRulePackSimulationRequest(
+            rulePackId,
+            new Dictionary<string, bool> { ["driver_license_valid"] = true }));
+        var simulateResponse = await _complianceCoreClient.SendAsync(simulateRequest);
+        simulateResponse.EnsureSuccessStatusCode();
+        var simulation = (await simulateResponse.Content.ReadFromJsonAsync<RuleEvaluationSimulationResponse>())!;
+        Assert.Equal("pass", simulation.OverallResult);
+
+        var listAfterSimResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/evaluations?rulePackId={rulePackId}", adminToken));
+        listAfterSimResponse.EnsureSuccessStatusCode();
+        var runsAfterSim = (await listAfterSimResponse.Content.ReadFromJsonAsync<IReadOnlyList<RuleEvaluationRunResponse>>())!;
+        Assert.Equal(runsBeforeSim.Count, runsAfterSim.Count);
     }
 
     private async Task<Guid> CreateSampleRulePackAsync(string adminToken)

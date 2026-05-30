@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { redeemHandoff, SupplyArrApiError } from '../api/client'
+import { resolveNexArrLaunchFailureMessage } from '@stl/shared-ui'
+import { redeemHandoff } from '../api/client'
 import { saveSession, toStoredSession } from '../auth/sessionStorage'
 
 export function LaunchPage() {
@@ -27,15 +28,7 @@ export function LaunchPage() {
         navigate('/', { replace: true })
       } catch (err) {
         if (!cancelled) {
-          if (err instanceof SupplyArrApiError && err.status === 403) {
-            setError('Your account is not entitled to SupplyArr for this tenant.')
-            return
-          }
-          if (err instanceof SupplyArrApiError && err.status === 401) {
-            setError('The handoff code is invalid or expired. Relaunch from the suite.')
-            return
-          }
-          setError(err instanceof Error ? err.message : 'Handoff failed')
+          setError(resolveNexArrLaunchFailureMessage('SupplyArr', err))
         }
       }
     })()

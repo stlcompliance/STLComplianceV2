@@ -70,6 +70,7 @@ import type {
   HandoffSessionResponse,
   LinkRouteTripRequest,
   RoutArrMeResponse,
+  RoutArrSessionBootstrapResponse,
   RouteCalendarResponse,
   RouteDetailResponse,
   RouteStopSummaryResponse,
@@ -139,7 +140,7 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
 }
 
 export async function redeemHandoff(handoffCode: string): Promise<HandoffSessionResponse> {
-  const response = await fetch(`${apiBase}/api/auth/handoff/redeem`, {
+  const response = await fetch(`${apiBase}/api/auth/nexarr/redeem`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ handoffCode }),
@@ -152,6 +153,18 @@ export async function getMe(accessToken: string): Promise<RoutArrMeResponse> {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<RoutArrMeResponse>(response, 'Failed to load profile')
+}
+
+export async function getSessionBootstrap(
+  accessToken: string,
+): Promise<RoutArrSessionBootstrapResponse> {
+  const response = await fetch(`${apiBase}/api/session`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<RoutArrSessionBootstrapResponse>(
+    response,
+    'Failed to load session bootstrap',
+  )
 }
 
 export async function listDrivers(accessToken: string): Promise<DriverListResponse> {

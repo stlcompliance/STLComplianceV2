@@ -40,7 +40,7 @@ public static class StlM13ShipGateCatalog
     ];
 
     /// <summary>NexArr launch authority denial when the product is unknown or not entitled.</summary>
-    public const string NexArrLaunchContextPath = "/api/launch/context";
+    public const string NexArrLaunchContextPath = "/api/v1/launch/context";
 
     public const string NexArrDeniedLaunchProductKey = "nonexistent-product";
 

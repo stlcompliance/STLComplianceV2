@@ -293,7 +293,7 @@ public sealed class RoutArrAssetDispatchabilityTests : IAsyncLifetime
     private async Task<string> CreateRoutArrHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new CreateHandoffRequest("routarr", "http://localhost:5180/launch"));
         var response = await _nexarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
@@ -304,7 +304,7 @@ public sealed class RoutArrAssetDispatchabilityTests : IAsyncLifetime
     private async Task<string> CreateMaintainArrHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new CreateHandoffRequest("maintainarr", "http://localhost:5178/launch"));
         var response = await _nexarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();

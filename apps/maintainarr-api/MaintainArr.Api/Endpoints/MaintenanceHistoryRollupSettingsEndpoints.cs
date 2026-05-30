@@ -8,65 +8,68 @@ public static class MaintenanceHistoryRollupSettingsEndpoints
 {
     public static void MapMaintainArrMaintenanceHistoryRollupSettingsEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/maintenance-history-rollup-settings")
-            .WithTags("MaintenanceHistoryRollupSettings")
-            .RequireAuthorization();
-
-        group.MapGet("/", async (
-            MaintainArrAuthorizationService authorization,
-            MaintenanceHistoryRollupSettingsService settingsService,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        var groups = new[]
         {
-            authorization.RequireMaintenanceHistoryRollupSettingsManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await settingsService.GetAsync(tenantId, cancellationToken));
-        })
-        .WithName("GetMaintainArrMaintenanceHistoryRollupSettings");
+            app.MapGroup("/api/maintenance-history-rollup-settings"),
+            app.MapGroup("/api/v1/maintenance-history-rollup-settings"),
+        };
 
-        group.MapPut("/", async (
-            UpsertMaintenanceHistoryRollupSettingsRequest request,
-            MaintainArrAuthorizationService authorization,
-            MaintenanceHistoryRollupSettingsService settingsService,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        foreach (var group in groups)
         {
-            authorization.RequireMaintenanceHistoryRollupSettingsManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var result = await settingsService.UpsertAsync(
-                tenantId,
-                actorUserId,
-                request,
-                cancellationToken);
-            return Results.Ok(result);
-        })
-        .WithName("UpsertMaintainArrMaintenanceHistoryRollupSettings");
+            group.WithTags("MaintenanceHistoryRollupSettings").RequireAuthorization();
 
-        group.MapGet("/pending", async (
-            MaintainArrAuthorizationService authorization,
-            MaintenanceHistoryRollupWorkerService workerService,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireMaintenanceHistoryRollupSettingsManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            var result = await workerService.ListPendingAsync(tenantId, null, 25, null, cancellationToken);
-            return Results.Ok(result);
-        })
-        .WithName("ListMaintainArrPendingMaintenanceHistoryRollups");
+            group.MapGet("/", async (
+                MaintainArrAuthorizationService authorization,
+                MaintenanceHistoryRollupSettingsService settingsService,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireMaintenanceHistoryRollupSettingsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await settingsService.GetAsync(tenantId, cancellationToken));
+            });
 
-        group.MapGet("/runs", async (
-            int? limit,
-            MaintainArrAuthorizationService authorization,
-            MaintenanceHistoryRollupWorkerService workerService,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireMaintenanceHistoryRollupSettingsManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await workerService.ListRecentRunsAsync(tenantId, limit, cancellationToken));
-        })
-        .WithName("ListMaintainArrMaintenanceHistoryRollupRuns");
+            group.MapPut("/", async (
+                UpsertMaintenanceHistoryRollupSettingsRequest request,
+                MaintainArrAuthorizationService authorization,
+                MaintenanceHistoryRollupSettingsService settingsService,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireMaintenanceHistoryRollupSettingsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var result = await settingsService.UpsertAsync(
+                    tenantId,
+                    actorUserId,
+                    request,
+                    cancellationToken);
+                return Results.Ok(result);
+            });
+
+            group.MapGet("/pending", async (
+                MaintainArrAuthorizationService authorization,
+                MaintenanceHistoryRollupWorkerService workerService,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireMaintenanceHistoryRollupSettingsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var result = await workerService.ListPendingAsync(tenantId, null, 25, null, cancellationToken);
+                return Results.Ok(result);
+            });
+
+            group.MapGet("/runs", async (
+                int? limit,
+                MaintainArrAuthorizationService authorization,
+                MaintenanceHistoryRollupWorkerService workerService,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireMaintenanceHistoryRollupSettingsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await workerService.ListRecentRunsAsync(tenantId, limit, cancellationToken));
+            });
+        }
     }
 }

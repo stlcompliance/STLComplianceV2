@@ -8,10 +8,25 @@ public static class QualificationCheckEndpoints
 {
     public static void MapTrainArrQualificationCheckEndpoints(this WebApplication app)
     {
-        var checks = app.MapGroup("/api/qualification-checks")
-            .WithTags("QualificationChecks")
-            .RequireAuthorization();
+        var routes = new[]
+        {
+            (Route: "/api/qualification-checks", Suffix: string.Empty),
+            (Route: "/api/v1/qualification-checks", Suffix: "V1QualificationChecks"),
+            (Route: "/api/v1/authorization-checks", Suffix: "V1AuthorizationChecks")
+        };
 
+        foreach (var (route, suffix) in routes)
+        {
+            MapRoutes(
+                app.MapGroup(route)
+                    .WithTags("QualificationChecks")
+                    .RequireAuthorization(),
+                suffix);
+        }
+    }
+
+    private static void MapRoutes(RouteGroupBuilder checks, string nameSuffix)
+    {
         checks.MapPost("/", async (
             CreateQualificationCheckRequest request,
             HttpContext context,
@@ -25,7 +40,7 @@ public static class QualificationCheckEndpoints
             var result = await service.CheckAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("CreateQualificationCheck");
+        .WithName($"CreateQualificationCheck{nameSuffix}");
 
         checks.MapGet("/", async (
             Guid? staffarrPersonId,
@@ -54,7 +69,7 @@ public static class QualificationCheckEndpoints
                 cancellationToken);
             return Results.Ok(history);
         })
-        .WithName("ListQualificationChecks");
+        .WithName($"ListQualificationChecks{nameSuffix}");
 
         checks.MapPost("/batch", async (
             CreateBatchQualificationCheckRequest request,
@@ -69,6 +84,6 @@ public static class QualificationCheckEndpoints
             var result = await service.CheckBatchAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("CreateBatchQualificationCheck");
+        .WithName($"CreateBatchQualificationCheck{nameSuffix}");
     }
 }

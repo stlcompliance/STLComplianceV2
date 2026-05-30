@@ -7,33 +7,33 @@ public static class MaintenanceReportEndpoints
 {
     public static void MapMaintainArrMaintenanceReportEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/reports/maintenance")
-            .WithTags("MaintenanceReports")
-            .RequireAuthorization();
-
-        group.MapGet("/summary", async (
-            string? lifecycleStatus,
-            MaintainArrAuthorizationService authorization,
-            MaintenanceReportService reportService,
-            IMaintainArrAuditService audit,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
         {
-            authorization.RequireMaintenanceReportRead(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var summary = await reportService.GetSummaryAsync(tenantId, lifecycleStatus, cancellationToken);
-            await audit.WriteAsync(
-                "maintainarr.reports.maintenance.summary",
-                tenantId,
-                actorUserId,
-                "maintenance_report",
-                null,
-                "success",
-                cancellationToken: cancellationToken);
-            return Results.Ok(summary);
-        })
-        .WithName("GetMaintainArrMaintenanceReportSummary");
+            group = group.WithTags("MaintenanceReports").RequireAuthorization();
+
+            group.MapGet("/summary", async (
+                string? lifecycleStatus,
+                MaintainArrAuthorizationService authorization,
+                MaintenanceReportService reportService,
+                IMaintainArrAuditService audit,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireMaintenanceReportRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var summary = await reportService.GetSummaryAsync(tenantId, lifecycleStatus, cancellationToken);
+                await audit.WriteAsync(
+                    "maintainarr.reports.maintenance.summary",
+                    tenantId,
+                    actorUserId,
+                    "maintenance_report",
+                    null,
+                    "success",
+                    cancellationToken: cancellationToken);
+                return Results.Ok(summary);
+            })
+            .WithName($"GetMaintainArrMaintenanceReportSummary{nameSuffix}");
 
         group.MapGet("/summary/export", async (
             string? lifecycleStatus,
@@ -57,7 +57,7 @@ public static class MaintenanceReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportMaintainArrMaintenanceReportSummary");
+        .WithName($"ExportMaintainArrMaintenanceReportSummary{nameSuffix}");
 
         group.MapGet("/assets/{assetId:guid}", async (
             Guid assetId,
@@ -81,7 +81,7 @@ public static class MaintenanceReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(detail);
         })
-        .WithName("GetMaintainArrMaintenanceReportAssetDetail");
+        .WithName($"GetMaintainArrMaintenanceReportAssetDetail{nameSuffix}");
 
         group.MapGet("/work-orders/{workOrderId:guid}", async (
             Guid workOrderId,
@@ -105,7 +105,7 @@ public static class MaintenanceReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(detail);
         })
-        .WithName("GetMaintainArrMaintenanceReportWorkOrderDetail");
+        .WithName($"GetMaintainArrMaintenanceReportWorkOrderDetail{nameSuffix}");
 
         group.MapGet("/defects/{defectId:guid}", async (
             Guid defectId,
@@ -129,7 +129,7 @@ public static class MaintenanceReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(detail);
         })
-        .WithName("GetMaintainArrMaintenanceReportDefectDetail");
+        .WithName($"GetMaintainArrMaintenanceReportDefectDetail{nameSuffix}");
 
         group.MapGet("/inspection-runs/{inspectionRunId:guid}", async (
             Guid inspectionRunId,
@@ -153,7 +153,7 @@ public static class MaintenanceReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(detail);
         })
-        .WithName("GetMaintainArrMaintenanceReportInspectionRunDetail");
+        .WithName($"GetMaintainArrMaintenanceReportInspectionRunDetail{nameSuffix}");
 
         group.MapGet("/pm-schedules/{pmScheduleId:guid}", async (
             Guid pmScheduleId,
@@ -177,6 +177,10 @@ public static class MaintenanceReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(detail);
         })
-        .WithName("GetMaintainArrMaintenanceReportPmScheduleDetail");
+        .WithName($"GetMaintainArrMaintenanceReportPmScheduleDetail{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/reports/maintenance"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/reports/maintenance"), "V1");
     }
 }

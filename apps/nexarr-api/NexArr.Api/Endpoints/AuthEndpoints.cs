@@ -10,12 +10,13 @@ public static class AuthEndpoints
     public static void MapAuthEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/auth").WithTags("Auth");
+        var v1 = app.MapGroup("/api/v1/auth").WithTags("Auth");
 
-        group.MapPost("/login", async (
+        static async Task<IResult> LoginEndpoint(
             LoginRequest request,
             HttpContext httpContext,
             AuthService auth,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             var response = await auth.LoginAsync(
                 request,
@@ -23,57 +24,88 @@ public static class AuthEndpoints
                 httpContext.Connection.RemoteIpAddress?.ToString(),
                 cancellationToken);
             return Results.Ok(response);
-        })
+        }
+
+        group.MapPost("/login", LoginEndpoint)
         .AllowAnonymous()
         .WithName("AuthLogin");
 
-        group.MapPost("/renew", async (
+        v1.MapPost("/login", LoginEndpoint)
+        .AllowAnonymous()
+        .WithName("AuthLoginV1");
+
+        static async Task<IResult> RenewEndpoint(
             RenewSessionRequest request,
             AuthService auth,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             var response = await auth.RenewAsync(request, cancellationToken);
             return Results.Ok(response);
-        })
+        }
+
+        group.MapPost("/renew", RenewEndpoint)
         .AllowAnonymous()
         .WithName("AuthRenew");
 
-        group.MapPost("/logout", async (
+        v1.MapPost("/refresh", RenewEndpoint)
+        .AllowAnonymous()
+        .WithName("AuthRefreshV1");
+
+        static async Task<IResult> LogoutEndpoint(
             LogoutRequest request,
             AuthService auth,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             await auth.LogoutAsync(request, cancellationToken);
             return Results.NoContent();
-        })
+        }
+
+        group.MapPost("/logout", LogoutEndpoint)
         .AllowAnonymous()
         .WithName("AuthLogout");
 
-        group.MapPost("/password/forgot", async (
+        v1.MapPost("/logout", LogoutEndpoint)
+        .AllowAnonymous()
+        .WithName("AuthLogoutV1");
+
+        static async Task<IResult> ForgotPasswordEndpoint(
             ForgotPasswordRequest request,
             PasswordResetService passwordReset,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             var response = await passwordReset.RequestForgotAsync(request, cancellationToken);
             return Results.Ok(response);
-        })
+        }
+
+        group.MapPost("/password/forgot", ForgotPasswordEndpoint)
         .AllowAnonymous()
         .WithName("AuthPasswordForgot");
 
-        group.MapPost("/password/reset", async (
+        v1.MapPost("/password/forgot", ForgotPasswordEndpoint)
+        .AllowAnonymous()
+        .WithName("AuthPasswordForgotV1");
+
+        static async Task<IResult> ResetPasswordEndpoint(
             ResetPasswordRequest request,
             PasswordResetService passwordReset,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             await passwordReset.ResetPasswordAsync(request, cancellationToken);
             return Results.NoContent();
-        })
+        }
+
+        group.MapPost("/password/reset", ResetPasswordEndpoint)
         .AllowAnonymous()
         .WithName("AuthPasswordReset");
 
-        var me = app.MapGroup("/api/me").WithTags("Me").RequireAuthorization();
+        v1.MapPost("/password/reset", ResetPasswordEndpoint)
+        .AllowAnonymous()
+        .WithName("AuthPasswordResetV1");
 
-        me.MapGet("/", async (AuthService auth, HttpContext context, CancellationToken cancellationToken) =>
+        var me = app.MapGroup("/api/me").WithTags("Me").RequireAuthorization();
+        var v1Me = v1.RequireAuthorization();
+
+        static async Task<IResult> GetMeEndpoint(AuthService auth, HttpContext context, CancellationToken cancellationToken)
         {
             var user = context.User;
             if (user.Identity?.IsAuthenticated != true)
@@ -82,8 +114,13 @@ public static class AuthEndpoints
             }
 
             return Results.Ok(await auth.GetMeAsync(user, cancellationToken));
-        })
+        }
+
+        me.MapGet("/", GetMeEndpoint)
         .WithName("GetMe");
+
+        v1Me.MapGet("/me", GetMeEndpoint)
+        .WithName("GetMeV1");
 
         me.MapGet("/tenants", async (AuthService auth, HttpContext context, CancellationToken cancellationToken) =>
         {
@@ -109,21 +146,31 @@ public static class AuthEndpoints
         })
         .WithName("GetMyNavigation");
 
-        me.MapGet("/sessions", async (AuthService auth, HttpContext context, CancellationToken cancellationToken) =>
+        static async Task<IResult> GetSessionsEndpoint(AuthService auth, HttpContext context, CancellationToken cancellationToken)
         {
             return Results.Ok(await auth.GetMySessionsAsync(context.User, cancellationToken));
-        })
+        }
+
+        me.MapGet("/sessions", GetSessionsEndpoint)
         .WithName("GetMySessions");
 
-        me.MapDelete("/sessions/{sessionId:guid}", async (
+        v1Me.MapGet("/sessions", GetSessionsEndpoint)
+        .WithName("GetMySessionsV1");
+
+        static async Task<IResult> RevokeSessionEndpoint(
             Guid sessionId,
             AuthService auth,
             HttpContext context,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             await auth.RevokeMySessionAsync(context.User, sessionId, cancellationToken);
             return Results.NoContent();
-        })
+        }
+
+        me.MapDelete("/sessions/{sessionId:guid}", RevokeSessionEndpoint)
         .WithName("RevokeMySession");
+
+        v1Me.MapDelete("/sessions/{sessionId:guid}", RevokeSessionEndpoint)
+        .WithName("RevokeMySessionV1");
     }
 }

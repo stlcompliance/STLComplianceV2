@@ -8,9 +8,9 @@ public static class SupplierIncidentEndpoints
 {
     public static void MapSupplyArrSupplierIncidentEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/supplier-incidents")
-            .WithTags("SupplierIncidents")
-            .RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("SupplierIncidents").RequireAuthorization();
 
         group.MapGet("/", async (
             string? status,
@@ -30,7 +30,7 @@ public static class SupplierIncidentEndpoints
                 severity,
                 cancellationToken));
         })
-        .WithName("ListSupplierIncidents");
+        .WithName($"ListSupplierIncidents{nameSuffix}");
 
         group.MapGet("/{incidentId:guid}", async (
             Guid incidentId,
@@ -43,7 +43,7 @@ public static class SupplierIncidentEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, incidentId, cancellationToken));
         })
-        .WithName("GetSupplierIncident");
+        .WithName($"GetSupplierIncident{nameSuffix}");
 
         group.MapPost("/", async (
             CreateSupplierIncidentRequest request,
@@ -57,7 +57,7 @@ public static class SupplierIncidentEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.CreateAsync(tenantId, actorUserId, request, cancellationToken));
         })
-        .WithName("CreateSupplierIncident");
+        .WithName($"CreateSupplierIncident{nameSuffix}");
 
         group.MapPut("/{incidentId:guid}", async (
             Guid incidentId,
@@ -77,7 +77,7 @@ public static class SupplierIncidentEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdateSupplierIncident");
+        .WithName($"UpdateSupplierIncident{nameSuffix}");
 
         group.MapPost("/{incidentId:guid}/start-investigation", async (
             Guid incidentId,
@@ -95,7 +95,7 @@ public static class SupplierIncidentEndpoints
                 incidentId,
                 cancellationToken));
         })
-        .WithName("StartSupplierIncidentInvestigation");
+        .WithName($"StartSupplierIncidentInvestigation{nameSuffix}");
 
         group.MapPost("/{incidentId:guid}/resolve", async (
             Guid incidentId,
@@ -115,7 +115,7 @@ public static class SupplierIncidentEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("ResolveSupplierIncident");
+        .WithName($"ResolveSupplierIncident{nameSuffix}");
 
         group.MapPost("/{incidentId:guid}/close", async (
             Guid incidentId,
@@ -135,7 +135,7 @@ public static class SupplierIncidentEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("CloseSupplierIncident");
+        .WithName($"CloseSupplierIncident{nameSuffix}");
 
         group.MapPost("/{incidentId:guid}/cancel", async (
             Guid incidentId,
@@ -155,7 +155,7 @@ public static class SupplierIncidentEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("CancelSupplierIncident");
+        .WithName($"CancelSupplierIncident{nameSuffix}");
 
         group.MapPost("/{incidentId:guid}/reopen", async (
             Guid incidentId,
@@ -175,7 +175,7 @@ public static class SupplierIncidentEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("ReopenSupplierIncident");
+        .WithName($"ReopenSupplierIncident{nameSuffix}");
 
         group.MapPost("/{incidentId:guid}/apply-procurement-restriction", async (
             Guid incidentId,
@@ -195,12 +195,15 @@ public static class SupplierIncidentEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("ApplySupplierIncidentProcurementRestriction");
+        .WithName($"ApplySupplierIncidentProcurementRestriction{nameSuffix}");
+        }
 
-        var partyGroup = app.MapGroup("/api/parties/{partyId:guid}/supplier-incidents")
-            .WithTags("SupplierIncidents")
-            .RequireAuthorization();
+        MapRoutes(app.MapGroup("/api/supplier-incidents"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/supplier-incidents"), "V1");
 
+        static void MapPartyRoutes(RouteGroupBuilder partyGroup, string nameSuffix)
+        {
+        partyGroup = partyGroup.WithTags("SupplierIncidents").RequireAuthorization();
         partyGroup.MapGet("/", async (
             Guid partyId,
             HttpContext context,
@@ -212,6 +215,10 @@ public static class SupplierIncidentEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListByPartyAsync(tenantId, partyId, cancellationToken));
         })
-        .WithName("ListSupplierIncidentsByParty");
+        .WithName($"ListSupplierIncidentsByParty{nameSuffix}");
+        }
+
+        MapPartyRoutes(app.MapGroup("/api/parties/{partyId:guid}/supplier-incidents"), string.Empty);
+        MapPartyRoutes(app.MapGroup("/api/v1/parties/{partyId:guid}/supplier-incidents"), "V1");
     }
 }

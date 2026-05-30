@@ -7,9 +7,9 @@ public static class ProcurementCoordinationEndpoints
 {
     public static void MapSupplyArrProcurementCoordinationEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/procurement-coordination")
-            .WithTags("ProcurementCoordination")
-            .RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("ProcurementCoordination").RequireAuthorization();
 
         group.MapGet("/", async (
             string? coordinationStage,
@@ -27,7 +27,7 @@ public static class ProcurementCoordinationEndpoints
                 activeOnly,
                 cancellationToken));
         })
-        .WithName("GetSupplyArrProcurementCoordinationDashboard");
+        .WithName($"GetSupplyArrProcurementCoordinationDashboard{nameSuffix}");
 
         group.MapGet("/{subjectType}/{subjectId:guid}", async (
             string subjectType,
@@ -45,6 +45,10 @@ public static class ProcurementCoordinationEndpoints
                 subjectId,
                 cancellationToken));
         })
-        .WithName("GetSupplyArrProcurementCoordinationDetail");
+        .WithName($"GetSupplyArrProcurementCoordinationDetail{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/procurement-coordination"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/procurement-coordination"), "V1");
     }
 }

@@ -8,52 +8,16 @@ public static class TrainingSignoffEndpoints
 {
     public static void MapTrainArrTrainingSignoffEndpoints(this WebApplication app)
     {
-        var signoffs = app.MapGroup("/api/signoffs")
-            .WithTags("Signoffs")
-            .RequireAuthorization();
-
-        signoffs.MapGet("/", async (
-            Guid? trainingAssignmentId,
-            HttpContext context,
-            TrainArrAuthorizationService authorization,
-            TrainingAssignmentService assignmentService,
-            TrainingSignoffService signoffService,
-            CancellationToken cancellationToken) =>
-        {
-            var tenantId = context.User.GetTenantId();
-            if (trainingAssignmentId is Guid assignmentId)
-            {
-                var assignment = await assignmentService.GetAsync(tenantId, assignmentId, cancellationToken);
-                authorization.RequireSignoffsRead(context.User, assignment.StaffarrPersonId);
-            }
-            else
-            {
-                authorization.RequireTrainArrEntitlement(context.User);
-            }
-
-            return Results.Ok(await signoffService.ListForAssignmentAsync(
-                tenantId,
-                trainingAssignmentId,
-                cancellationToken));
-        })
-        .WithName("ListTrainingSignoffs");
-
-        signoffs.MapPost("/", async (
-            SubmitTrainingSignoffRequest request,
-            HttpContext context,
-            TrainArrAuthorizationService authorization,
-            TrainingAssignmentService assignmentService,
-            TrainingSignoffService signoffService,
-            CancellationToken cancellationToken) =>
-        {
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var assignment = await assignmentService.GetAsync(tenantId, request.TrainingAssignmentId, cancellationToken);
-            authorization.RequireSignoffSubmit(context.User, assignment.StaffarrPersonId, request.SignoffRole);
-            var created = await signoffService.SubmitAsync(tenantId, actorUserId, request, cancellationToken);
-            return Results.Created($"/api/signoffs?trainingAssignmentId={created.TrainingAssignmentId}", created);
-        })
-        .WithName("SubmitTrainingSignoff");
+        MapTopLevelRoutes(
+            app.MapGroup("/api/signoffs")
+                .WithTags("Signoffs")
+                .RequireAuthorization(),
+            string.Empty);
+        MapTopLevelRoutes(
+            app.MapGroup("/api/v1/signoffs")
+                .WithTags("Signoffs")
+                .RequireAuthorization(),
+            "V1Signoffs");
 
         var nested = app.MapGroup("/api/training-assignments/{assignmentId:guid}/signoffs")
             .WithTags("Signoffs")
@@ -96,5 +60,51 @@ public static class TrainingSignoffEndpoints
             return Results.Created($"/api/training-assignments/{assignmentId}/signoffs", created);
         })
         .WithName("SubmitTrainingSignoffForAssignment");
+    }
+
+    private static void MapTopLevelRoutes(RouteGroupBuilder signoffs, string nameSuffix)
+    {
+        signoffs.MapGet("/", async (
+            Guid? trainingAssignmentId,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingAssignmentService assignmentService,
+            TrainingSignoffService signoffService,
+            CancellationToken cancellationToken) =>
+        {
+            var tenantId = context.User.GetTenantId();
+            if (trainingAssignmentId is Guid assignmentId)
+            {
+                var assignment = await assignmentService.GetAsync(tenantId, assignmentId, cancellationToken);
+                authorization.RequireSignoffsRead(context.User, assignment.StaffarrPersonId);
+            }
+            else
+            {
+                authorization.RequireTrainArrEntitlement(context.User);
+            }
+
+            return Results.Ok(await signoffService.ListForAssignmentAsync(
+                tenantId,
+                trainingAssignmentId,
+                cancellationToken));
+        })
+        .WithName($"ListTrainingSignoffs{nameSuffix}");
+
+        signoffs.MapPost("/", async (
+            SubmitTrainingSignoffRequest request,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingAssignmentService assignmentService,
+            TrainingSignoffService signoffService,
+            CancellationToken cancellationToken) =>
+        {
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var assignment = await assignmentService.GetAsync(tenantId, request.TrainingAssignmentId, cancellationToken);
+            authorization.RequireSignoffSubmit(context.User, assignment.StaffarrPersonId, request.SignoffRole);
+            var created = await signoffService.SubmitAsync(tenantId, actorUserId, request, cancellationToken);
+            return Results.Created($"/api/signoffs?trainingAssignmentId={created.TrainingAssignmentId}", created);
+        })
+        .WithName($"SubmitTrainingSignoff{nameSuffix}");
     }
 }

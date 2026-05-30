@@ -130,6 +130,40 @@ public sealed class MaintainArrDefectEvidenceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Defect_evidence_v1_alias_upload_and_list()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(token);
+
+        var createDefectRequest = Authorized(HttpMethod.Post, "/api/v1/defects", token);
+        createDefectRequest.Content = JsonContent.Create(new CreateDefectRequest(
+            assetId,
+            "V1 evidence defect",
+            "Uses v1 defect evidence routes",
+            "medium"));
+        var createDefectResponse = await _maintainarrClient.SendAsync(createDefectRequest);
+        createDefectResponse.EnsureSuccessStatusCode();
+        var defect = (await createDefectResponse.Content.ReadFromJsonAsync<DefectDetailResponse>())!;
+
+        var uploadRequest = Authorized(HttpMethod.Post, $"/api/v1/defects/{defect.DefectId}/evidence", token);
+        uploadRequest.Content = JsonContent.Create(new CreateMaintainArrEvidenceRequest(
+            "defect_photo",
+            "v1.jpg",
+            "image/jpeg",
+            Convert.ToBase64String(Encoding.UTF8.GetBytes("v1-photo")),
+            "v1 upload"));
+        var uploadResponse = await _maintainarrClient.SendAsync(uploadRequest);
+        uploadResponse.EnsureSuccessStatusCode();
+
+        var listRequest = Authorized(HttpMethod.Get, $"/api/v1/defects/{defect.DefectId}/evidence", token);
+        var listResponse = await _maintainarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var evidence = (await listResponse.Content.ReadFromJsonAsync<List<DefectEvidenceResponse>>())!;
+
+        Assert.Single(evidence);
+    }
+
+    [Fact]
     public async Task Inspection_run_evidence_upload_while_in_progress()
     {
         var token = await RedeemMaintainArrTokenAsync();
@@ -309,7 +343,7 @@ public sealed class MaintainArrDefectEvidenceTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new NexArr.Api.Contracts.CreateHandoffRequest(
             "maintainarr",
             "http://localhost:5178/launch"));

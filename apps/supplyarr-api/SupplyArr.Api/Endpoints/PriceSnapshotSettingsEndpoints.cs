@@ -8,9 +8,9 @@ public static class PriceSnapshotSettingsEndpoints
 {
     public static void MapSupplyArrPriceSnapshotSettingsEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/price-snapshot-settings")
-            .WithTags("PriceSnapshotSettings")
-            .RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("PriceSnapshotSettings").RequireAuthorization();
 
         group.MapGet("/", async (
             SupplyArrAuthorizationService authorization,
@@ -22,7 +22,7 @@ public static class PriceSnapshotSettingsEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await settingsService.GetAsync(tenantId, cancellationToken));
         })
-        .WithName("GetSupplyArrPriceSnapshotSettings");
+        .WithName($"GetSupplyArrPriceSnapshotSettings{nameSuffix}");
 
         group.MapPut("/", async (
             UpsertPriceSnapshotSettingsRequest request,
@@ -40,7 +40,7 @@ public static class PriceSnapshotSettingsEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpsertSupplyArrPriceSnapshotSettings");
+        .WithName($"UpsertSupplyArrPriceSnapshotSettings{nameSuffix}");
 
         group.MapGet("/pending", async (
             SupplyArrAuthorizationService authorization,
@@ -52,7 +52,7 @@ public static class PriceSnapshotSettingsEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await workerService.ListPendingAsync(tenantId, null, 25, null, cancellationToken));
         })
-        .WithName("ListSupplyArrPendingPriceSnapshotCaptures");
+        .WithName($"ListSupplyArrPendingPriceSnapshotCaptures{nameSuffix}");
 
         group.MapGet("/runs", async (
             int? limit,
@@ -65,6 +65,10 @@ public static class PriceSnapshotSettingsEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await workerService.ListRecentRunsAsync(tenantId, limit, cancellationToken));
         })
-        .WithName("ListSupplyArrPriceSnapshotRuns");
+        .WithName($"ListSupplyArrPriceSnapshotRuns{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/price-snapshot-settings"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/price-snapshot-settings"), "V1");
     }
 }

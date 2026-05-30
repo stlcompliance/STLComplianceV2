@@ -8,7 +8,9 @@ public static class PricingSnapshotEndpoints
 {
     public static void MapSupplyArrPricingSnapshotEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/pricing-snapshots").WithTags("PricingSnapshots").RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("PricingSnapshots").RequireAuthorization();
 
         group.MapGet("/", async (
             Guid? partVendorLinkId,
@@ -30,7 +32,7 @@ public static class PricingSnapshotEndpoints
                 asOf,
                 cancellationToken));
         })
-        .WithName("ListPricingSnapshots");
+        .WithName($"ListPricingSnapshots{nameSuffix}");
 
         group.MapGet("/{pricingSnapshotId:guid}", async (
             Guid pricingSnapshotId,
@@ -43,7 +45,7 @@ public static class PricingSnapshotEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, pricingSnapshotId, cancellationToken));
         })
-        .WithName("GetPricingSnapshot");
+        .WithName($"GetPricingSnapshot{nameSuffix}");
 
         group.MapPost("/", async (
             CreatePricingSnapshotRequest request,
@@ -62,6 +64,10 @@ public static class PricingSnapshotEndpoints
                 cancellationToken);
             return Results.Created($"/api/pricing-snapshots/{created.PricingSnapshotId}", created);
         })
-        .WithName("CreatePricingSnapshot");
+        .WithName($"CreatePricingSnapshot{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/pricing-snapshots"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/pricing-snapshots"), "V1");
     }
 }

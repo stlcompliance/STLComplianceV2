@@ -8,70 +8,79 @@ public static class IncidentSupplyDemandEndpoints
 {
     public static void MapStaffArrIncidentSupplyDemandEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/incidents/{incidentId:guid}/supply-demand")
-            .WithTags("IncidentSupplyDemand")
-            .RequireAuthorization();
-
-        group.MapGet("/", async (
-            Guid incidentId,
-            HttpContext context,
-            StaffArrAuthorizationService authorization,
-            IncidentService incidentService,
-            IncidentSupplyDemandService supplyDemandService,
-            CancellationToken cancellationToken) =>
+        var groups = new[]
         {
-            var tenantId = context.User.GetTenantId();
-            var detail = await incidentService.GetIncidentAsync(tenantId, incidentId, cancellationToken);
-            authorization.RequireIncidentsRead(context.User, detail.PersonId);
-            return Results.Ok(await supplyDemandService.ListAsync(tenantId, incidentId, cancellationToken));
-        })
-        .WithName("ListIncidentSupplyDemand");
+            (Route: "/api/incidents/{incidentId:guid}/supply-demand", Suffix: string.Empty),
+            (Route: "/api/v1/incidents/{incidentId:guid}/supply-demand", Suffix: "V1")
+        };
 
-        group.MapPost("/", async (
-            Guid incidentId,
-            CreateIncidentSupplyDemandLineRequest request,
-            HttpContext context,
-            StaffArrAuthorizationService authorization,
-            IncidentService incidentService,
-            IncidentSupplyDemandService supplyDemandService,
-            CancellationToken cancellationToken) =>
+        foreach (var (route, suffix) in groups)
         {
-            authorization.RequireIncidentsManageWrite(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var detail = await incidentService.GetIncidentAsync(tenantId, incidentId, cancellationToken);
-            authorization.RequireIncidentsRead(context.User, detail.PersonId);
-            var created = await supplyDemandService.CreateAsync(
-                tenantId,
-                actorUserId,
-                incidentId,
-                request,
-                cancellationToken);
-            return Results.Created($"/api/incidents/{incidentId}/supply-demand/{created.DemandLineId}", created);
-        })
-        .WithName("CreateIncidentSupplyDemandLine");
+            var group = app.MapGroup(route)
+                .WithTags("IncidentSupplyDemand")
+                .RequireAuthorization();
 
-        group.MapPost("/publish", async (
-            Guid incidentId,
-            PublishIncidentSupplyDemandRequest request,
-            HttpContext context,
-            StaffArrAuthorizationService authorization,
-            IncidentService incidentService,
-            IncidentSupplyDemandService supplyDemandService,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireIncidentsManageWrite(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var detail = await incidentService.GetIncidentAsync(tenantId, incidentId, cancellationToken);
-            authorization.RequireIncidentsRead(context.User, detail.PersonId);
-            return Results.Ok(await supplyDemandService.PublishAsync(
-                tenantId,
-                actorUserId,
-                incidentId,
-                request,
-                cancellationToken));
-        })
-        .WithName("PublishIncidentSupplyDemand");
+            group.MapGet("/", async (
+                Guid incidentId,
+                HttpContext context,
+                StaffArrAuthorizationService authorization,
+                IncidentService incidentService,
+                IncidentSupplyDemandService supplyDemandService,
+                CancellationToken cancellationToken) =>
+            {
+                var tenantId = context.User.GetTenantId();
+                var detail = await incidentService.GetIncidentAsync(tenantId, incidentId, cancellationToken);
+                authorization.RequireIncidentsRead(context.User, detail.PersonId);
+                return Results.Ok(await supplyDemandService.ListAsync(tenantId, incidentId, cancellationToken));
+            })
+            .WithName($"ListIncidentSupplyDemand{suffix}");
+
+            group.MapPost("/", async (
+                Guid incidentId,
+                CreateIncidentSupplyDemandLineRequest request,
+                HttpContext context,
+                StaffArrAuthorizationService authorization,
+                IncidentService incidentService,
+                IncidentSupplyDemandService supplyDemandService,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireIncidentsManageWrite(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var detail = await incidentService.GetIncidentAsync(tenantId, incidentId, cancellationToken);
+                authorization.RequireIncidentsRead(context.User, detail.PersonId);
+                var created = await supplyDemandService.CreateAsync(
+                    tenantId,
+                    actorUserId,
+                    incidentId,
+                    request,
+                    cancellationToken);
+                return Results.Created($"{route.Replace("{incidentId:guid}", incidentId.ToString())}/{created.DemandLineId}", created);
+            })
+            .WithName($"CreateIncidentSupplyDemandLine{suffix}");
+
+            group.MapPost("/publish", async (
+                Guid incidentId,
+                PublishIncidentSupplyDemandRequest request,
+                HttpContext context,
+                StaffArrAuthorizationService authorization,
+                IncidentService incidentService,
+                IncidentSupplyDemandService supplyDemandService,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireIncidentsManageWrite(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var detail = await incidentService.GetIncidentAsync(tenantId, incidentId, cancellationToken);
+                authorization.RequireIncidentsRead(context.User, detail.PersonId);
+                return Results.Ok(await supplyDemandService.PublishAsync(
+                    tenantId,
+                    actorUserId,
+                    incidentId,
+                    request,
+                    cancellationToken));
+            })
+            .WithName($"PublishIncidentSupplyDemand{suffix}");
+        }
     }
 }

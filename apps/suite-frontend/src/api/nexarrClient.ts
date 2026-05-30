@@ -12,6 +12,8 @@ import type {
   AuthTokenResponse,
   HandoffCreatedResponse,
   LaunchAttemptTimelineItem,
+  ValidateLaunchRequest,
+  ValidateLaunchResponse,
   LaunchContextResponse,
   LaunchDiagnosticsResponse,
   ForgotPasswordResponse,
@@ -283,7 +285,7 @@ export async function getMyTenants(): Promise<TenantSummary[]> {
 export async function getLaunchContext(productKey: string): Promise<LaunchContextResponse> {
   await ensureValidAccessToken()
   const response = await fetchWithAuth(
-    `/api/launch/context?productKey=${encodeURIComponent(productKey)}`,
+    `/api/v1/launch/context?productKey=${encodeURIComponent(productKey)}`,
   )
   if (!response.ok) {
     throw await parseError(response)
@@ -296,7 +298,7 @@ export async function createHandoff(
   callbackUrl: string,
 ): Promise<HandoffCreatedResponse> {
   await ensureValidAccessToken()
-  const response = await fetchWithAuth('/api/launch/handoff', {
+  const response = await fetchWithAuth('/api/v1/launch/handoff', {
     method: 'POST',
     body: JSON.stringify({ productKey, callbackUrl }),
   })
@@ -511,6 +513,20 @@ export async function getPlatformAdminLaunchAttempts(
     throw await parseError(response)
   }
   return (await response.json()) as PagedResult<LaunchAttemptTimelineItem>
+}
+
+export async function validatePlatformLaunch(
+  request: ValidateLaunchRequest,
+): Promise<ValidateLaunchResponse> {
+  await ensureValidAccessToken()
+  const response = await fetchWithAuth('/api/v1/launch/validate', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+  return (await response.json()) as ValidateLaunchResponse
 }
 
 export async function getPlatformAdminTenantOverview(

@@ -108,7 +108,7 @@ public sealed class ProductGateEvaluationService(
             gateCheck.AppliedWaiverKey,
             gateCheck.RuleEvaluationRunId is null
                 ? null
-                : $"/api/rule-evaluations/{gateCheck.RuleEvaluationRunId}/audit-export",
+                : $"/api/v1/evaluations/{gateCheck.RuleEvaluationRunId}/audit-export",
             gateCheck.CheckedAt);
     }
 

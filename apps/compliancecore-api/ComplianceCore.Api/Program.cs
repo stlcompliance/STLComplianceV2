@@ -15,6 +15,7 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
     {
         app.MapComplianceCoreAuthEndpoints();
         app.MapStlProductLaunchEndpoints();
+        app.MapComplianceCoreSettingsEndpoints();
         app.MapComplianceCoreVocabularyEndpoints();
         app.MapComplianceCoreComplianceKeyEndpoints();
         app.MapComplianceCoreMaterialKeyEndpoints();

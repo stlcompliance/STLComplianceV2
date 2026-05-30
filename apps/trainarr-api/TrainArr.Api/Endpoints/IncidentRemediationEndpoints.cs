@@ -7,10 +7,25 @@ public static class IncidentRemediationEndpoints
 {
     public static void MapTrainArrIncidentRemediationEndpoints(this WebApplication app)
     {
-        var remediations = app.MapGroup("/api/incident-remediations")
-            .WithTags("IncidentRemediations")
-            .RequireAuthorization();
+        MapRoutes(
+            app.MapGroup("/api/incident-remediations")
+                .WithTags("IncidentRemediations")
+                .RequireAuthorization(),
+            string.Empty);
+        MapRoutes(
+            app.MapGroup("/api/v1/incident-remediations")
+                .WithTags("IncidentRemediations")
+                .RequireAuthorization(),
+            "V1IncidentRemediations");
+        MapRoutes(
+            app.MapGroup("/api/v1/remediation")
+                .WithTags("IncidentRemediations")
+                .RequireAuthorization(),
+            "V1Remediation");
+    }
 
+    private static void MapRoutes(RouteGroupBuilder remediations, string nameSuffix)
+    {
         remediations.MapGet("/", async (
             string? status,
             HttpContext context,
@@ -22,7 +37,7 @@ public static class IncidentRemediationEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(tenantId, status, cancellationToken));
         })
-        .WithName("ListStaffarrIncidentRemediations");
+        .WithName($"ListStaffarrIncidentRemediations{nameSuffix}");
 
         remediations.MapGet("/{remediationId:guid}", async (
             Guid remediationId,
@@ -35,6 +50,6 @@ public static class IncidentRemediationEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, remediationId, cancellationToken));
         })
-        .WithName("GetStaffarrIncidentRemediation");
+        .WithName($"GetStaffarrIncidentRemediation{nameSuffix}");
     }
 }

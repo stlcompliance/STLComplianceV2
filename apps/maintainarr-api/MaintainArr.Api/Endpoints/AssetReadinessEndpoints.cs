@@ -7,14 +7,12 @@ public static class AssetReadinessEndpoints
 {
     public static void MapMaintainArrAssetReadinessEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/asset-readiness").WithTags("AssetReadiness").RequireAuthorization();
-
-        group.MapGet("/", async (
+        static async Task<IResult> HandleAssetReadinessAsync(
             Guid? assetId,
             HttpContext context,
             MaintainArrAuthorizationService authorization,
             AssetReadinessService service,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             authorization.RequireAssetReadinessRead(context.User);
             var tenantId = context.User.GetTenantId();
@@ -34,7 +32,13 @@ public static class AssetReadinessEndpoints
             }
 
             return Results.Ok(await service.ListFleetAsync(tenantId, cancellationToken));
-        })
-        .WithName("GetAssetReadiness");
+        }
+
+        var legacyGroup = app.MapGroup("/api/asset-readiness").WithTags("AssetReadiness").RequireAuthorization();
+        legacyGroup.MapGet("/", HandleAssetReadinessAsync).WithName("GetAssetReadiness");
+
+        // v1 alias for documented MaintainArr readiness contract.
+        var v1Group = app.MapGroup("/api/v1/readiness").WithTags("AssetReadiness").RequireAuthorization();
+        v1Group.MapGet("/", HandleAssetReadinessAsync).WithName("GetAssetReadinessV1");
     }
 }

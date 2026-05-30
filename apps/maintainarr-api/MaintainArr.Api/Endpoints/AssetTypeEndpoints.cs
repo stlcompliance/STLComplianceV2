@@ -8,8 +8,12 @@ public static class AssetTypeEndpoints
 {
     public static void MapMaintainArrAssetTypeEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/asset-types").WithTags("AssetTypes").RequireAuthorization();
+        MapRoutes(app.MapGroup("/api/asset-types").WithTags("AssetTypes").RequireAuthorization(), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/asset-types").WithTags("AssetTypes").RequireAuthorization(), "V1");
+    }
 
+    private static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+    {
         group.MapGet("/", async (
             HttpContext context,
             MaintainArrAuthorizationService authorization,
@@ -20,7 +24,7 @@ public static class AssetTypeEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(tenantId, cancellationToken));
         })
-        .WithName("ListAssetTypes");
+        .WithName($"ListAssetTypes{nameSuffix}");
 
         group.MapPost("/", async (
             CreateAssetTypeRequest request,
@@ -35,7 +39,7 @@ public static class AssetTypeEndpoints
             var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Created($"/api/asset-types/{created.AssetTypeId}", created);
         })
-        .WithName("CreateAssetType");
+        .WithName($"CreateAssetType{nameSuffix}");
 
         group.MapPut("/{assetTypeId:guid}", async (
             Guid assetTypeId,
@@ -51,7 +55,7 @@ public static class AssetTypeEndpoints
             var updated = await service.UpdateAsync(tenantId, actorUserId, assetTypeId, request, cancellationToken);
             return Results.Ok(updated);
         })
-        .WithName("UpdateAssetType");
+        .WithName($"UpdateAssetType{nameSuffix}");
 
         group.MapPatch("/{assetTypeId:guid}/status", async (
             Guid assetTypeId,
@@ -67,6 +71,6 @@ public static class AssetTypeEndpoints
             var updated = await service.UpdateStatusAsync(tenantId, actorUserId, assetTypeId, request, cancellationToken);
             return Results.Ok(updated);
         })
-        .WithName("UpdateAssetTypeStatus");
+        .WithName($"UpdateAssetTypeStatus{nameSuffix}");
     }
 }

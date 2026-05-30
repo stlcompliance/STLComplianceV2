@@ -133,6 +133,31 @@ public sealed class MaintainArrDefectTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Manual_defect_v1_alias_create_and_fetch()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/defects", managerToken);
+        createRequest.Content = JsonContent.Create(new CreateDefectRequest(
+            assetId,
+            "V1 alias defect",
+            "Verifies /api/v1/defects alias",
+            "medium"));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<DefectDetailResponse>())!;
+
+        var getRequest = Authorized(HttpMethod.Get, $"/api/v1/defects/{created.DefectId}", managerToken);
+        var getResponse = await _maintainarrClient.SendAsync(getRequest);
+        getResponse.EnsureSuccessStatusCode();
+        var fetched = (await getResponse.Content.ReadFromJsonAsync<DefectDetailResponse>())!;
+
+        Assert.Equal(created.DefectId, fetched.DefectId);
+        Assert.Equal("open", fetched.Status);
+    }
+
+    [Fact]
     public async Task Critical_manual_defect_marks_asset_oos_and_returns_downtime_follow_up()
     {
         var managerToken = await RedeemMaintainArrTokenAsync();
@@ -373,7 +398,7 @@ public sealed class MaintainArrDefectTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new NexArr.Api.Contracts.CreateHandoffRequest(
             "maintainarr",
             "http://localhost:5178/launch"));

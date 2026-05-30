@@ -83,7 +83,7 @@ export async function getLaunchContext(
   productKey: string,
 ): Promise<LaunchContextResponse> {
   const search = new URLSearchParams({ productKey })
-  const response = await fetch(`${apiBase}/api/launch/context?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/launch/context?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<LaunchContextResponse>(response, 'Failed to load launch context')
@@ -94,7 +94,7 @@ export async function createHandoff(
   productKey: string,
   callbackUrl: string,
 ): Promise<HandoffCreatedResponse> {
-  const response = await fetch(`${apiBase}/api/launch/handoff`, {
+  const response = await fetch(`${apiBase}/api/v1/launch/handoff`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify({ productKey, callbackUrl }),

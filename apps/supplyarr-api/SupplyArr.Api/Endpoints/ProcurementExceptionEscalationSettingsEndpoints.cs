@@ -8,9 +8,9 @@ public static class ProcurementExceptionEscalationSettingsEndpoints
 {
     public static void MapSupplyArrProcurementExceptionEscalationSettingsEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/procurement-exception-escalation-settings")
-            .WithTags("ProcurementExceptionEscalationSettings")
-            .RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("ProcurementExceptionEscalationSettings").RequireAuthorization();
 
         group.MapGet("/", async (
             SupplyArrAuthorizationService authorization,
@@ -22,7 +22,7 @@ public static class ProcurementExceptionEscalationSettingsEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await settingsService.GetAsync(tenantId, cancellationToken));
         })
-        .WithName("GetSupplyArrProcurementExceptionEscalationSettings");
+        .WithName($"GetSupplyArrProcurementExceptionEscalationSettings{nameSuffix}");
 
         group.MapPut("/", async (
             UpsertProcurementExceptionEscalationSettingsRequest request,
@@ -40,7 +40,7 @@ public static class ProcurementExceptionEscalationSettingsEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpsertSupplyArrProcurementExceptionEscalationSettings");
+        .WithName($"UpsertSupplyArrProcurementExceptionEscalationSettings{nameSuffix}");
 
         group.MapGet("/pending", async (
             SupplyArrAuthorizationService authorization,
@@ -52,7 +52,7 @@ public static class ProcurementExceptionEscalationSettingsEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await workerService.ListPendingAsync(tenantId, null, 25, cancellationToken));
         })
-        .WithName("ListSupplyArrPendingProcurementExceptionEscalations");
+        .WithName($"ListSupplyArrPendingProcurementExceptionEscalations{nameSuffix}");
 
         group.MapGet("/runs", async (
             int? limit,
@@ -65,7 +65,7 @@ public static class ProcurementExceptionEscalationSettingsEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await workerService.ListRecentRunsAsync(tenantId, limit, cancellationToken));
         })
-        .WithName("ListSupplyArrProcurementExceptionEscalationRuns");
+        .WithName($"ListSupplyArrProcurementExceptionEscalationRuns{nameSuffix}");
 
         group.MapGet("/events", async (
             int? limit,
@@ -78,6 +78,10 @@ public static class ProcurementExceptionEscalationSettingsEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await workerService.ListRecentEventsAsync(tenantId, limit, cancellationToken));
         })
-        .WithName("ListSupplyArrProcurementExceptionEscalationEvents");
+        .WithName($"ListSupplyArrProcurementExceptionEscalationEvents{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/procurement-exception-escalation-settings"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/procurement-exception-escalation-settings"), "V1");
     }
 }

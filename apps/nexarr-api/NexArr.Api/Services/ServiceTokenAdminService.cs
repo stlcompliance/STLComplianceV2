@@ -373,6 +373,76 @@ public sealed class ServiceTokenAdminService(
         }
     }
 
+    public async Task RotateClientAsync(
+        ClaimsPrincipal principal,
+        Guid serviceClientId,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+
+        var client = await db.ServiceClients.FirstOrDefaultAsync(c => c.Id == serviceClientId, cancellationToken)
+            ?? throw new StlApiException("service_client.not_found", "Service client was not found.", 404);
+
+        if (!client.IsActive)
+        {
+            throw new StlApiException("service_client.inactive", "Service client is inactive.", 409);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var activeTokens = await db.ServiceTokens
+            .Where(t => t.ServiceClientId == client.Id && t.RevokedAt == null && t.ExpiresAt > now)
+            .ToListAsync(cancellationToken);
+
+        foreach (var token in activeTokens)
+        {
+            token.RevokedAt = now;
+        }
+
+        client.ModifiedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "service_client.rotate",
+            "service_client",
+            client.Id.ToString(),
+            "Success",
+            actorUserId: principal.GetUserId(),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task RevokeClientAsync(
+        ClaimsPrincipal principal,
+        Guid serviceClientId,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+
+        var client = await db.ServiceClients.FirstOrDefaultAsync(c => c.Id == serviceClientId, cancellationToken)
+            ?? throw new StlApiException("service_client.not_found", "Service client was not found.", 404);
+
+        var now = DateTimeOffset.UtcNow;
+        var activeTokens = await db.ServiceTokens
+            .Where(t => t.ServiceClientId == client.Id && t.RevokedAt == null && t.ExpiresAt > now)
+            .ToListAsync(cancellationToken);
+
+        foreach (var token in activeTokens)
+        {
+            token.RevokedAt = now;
+        }
+
+        client.IsActive = false;
+        client.ModifiedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "service_client.revoke",
+            "service_client",
+            client.Id.ToString(),
+            "Success",
+            actorUserId: principal.GetUserId(),
+            cancellationToken: cancellationToken);
+    }
+
     private (string Token, DateTimeOffset ExpiresAt) CreateServiceToken(
         ServiceClient client,
         Guid tokenId,

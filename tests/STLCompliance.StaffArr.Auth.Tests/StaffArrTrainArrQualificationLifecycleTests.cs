@@ -220,6 +220,26 @@ public class StaffArrTrainArrQualificationLifecycleTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Qualifications_v1_alias_matches_primary_qualification_issues_endpoint()
+    {
+        var issue = await IssueQualificationAsync("lifecycle_alias", "Lifecycle Alias Subject");
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+
+        var primaryListResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/qualification-issues", adminToken));
+        primaryListResponse.EnsureSuccessStatusCode();
+        var primaryIssues = (await primaryListResponse.Content.ReadFromJsonAsync<IReadOnlyList<QualificationIssueResponse>>())!;
+
+        var v1ListResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/qualifications", adminToken));
+        v1ListResponse.EnsureSuccessStatusCode();
+        var v1Issues = (await v1ListResponse.Content.ReadFromJsonAsync<IReadOnlyList<QualificationIssueResponse>>())!;
+
+        Assert.Equal(primaryIssues.Count, v1Issues.Count);
+        Assert.Contains(v1Issues, x => x.QualificationIssueId == issue.QualificationIssueId);
+    }
+
+    [Fact]
     public async Task Certification_lifecycle_ingest_rejects_missing_service_token()
     {
         var personId = Guid.NewGuid();

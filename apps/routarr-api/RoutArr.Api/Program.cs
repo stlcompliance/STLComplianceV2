@@ -13,6 +13,7 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
     {
         app.MapRoutArrAuthEndpoints();
         app.MapStlProductLaunchEndpoints();
+        app.MapRoutArrSettingsEndpoints();
         app.MapRoutArrTripEndpoints();
         app.MapRoutArrTripProofDvirEndpoints();
         app.MapRoutArrTripCaptureAttachmentEndpoints();
@@ -29,6 +30,7 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
         app.MapRoutArrDispatchOverrideReportEndpoints();
         app.MapRoutArrEntityExportEndpoints();
         app.MapRoutArrAuditPackageEndpoints();
+        app.MapRoutArrEventAndAuditEndpoints();
         app.MapRoutArrInternalAuditPackageGenerationEndpoints();
         app.MapRoutArrDriverAvailabilityEndpoints();
         app.MapRoutArrEquipmentAvailabilityEndpoints();

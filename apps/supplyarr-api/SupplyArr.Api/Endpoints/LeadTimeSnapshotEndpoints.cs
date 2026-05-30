@@ -8,7 +8,9 @@ public static class LeadTimeSnapshotEndpoints
 {
     public static void MapSupplyArrLeadTimeSnapshotEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/lead-time-snapshots").WithTags("LeadTimeSnapshots").RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("LeadTimeSnapshots").RequireAuthorization();
 
         group.MapGet("/", async (
             Guid? partVendorLinkId,
@@ -30,7 +32,7 @@ public static class LeadTimeSnapshotEndpoints
                 asOf,
                 cancellationToken));
         })
-        .WithName("ListLeadTimeSnapshots");
+        .WithName($"ListLeadTimeSnapshots{nameSuffix}");
 
         group.MapGet("/{leadTimeSnapshotId:guid}", async (
             Guid leadTimeSnapshotId,
@@ -43,7 +45,7 @@ public static class LeadTimeSnapshotEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, leadTimeSnapshotId, cancellationToken));
         })
-        .WithName("GetLeadTimeSnapshot");
+        .WithName($"GetLeadTimeSnapshot{nameSuffix}");
 
         group.MapPost("/", async (
             CreateLeadTimeSnapshotRequest request,
@@ -62,6 +64,10 @@ public static class LeadTimeSnapshotEndpoints
                 cancellationToken);
             return Results.Created($"/api/lead-time-snapshots/{created.LeadTimeSnapshotId}", created);
         })
-        .WithName("CreateLeadTimeSnapshot");
+        .WithName($"CreateLeadTimeSnapshot{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/lead-time-snapshots"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/lead-time-snapshots"), "V1");
     }
 }

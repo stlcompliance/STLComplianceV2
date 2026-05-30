@@ -7,9 +7,9 @@ public static class ComplianceReportEndpoints
 {
     public static void MapMaintainArrComplianceReportEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/reports/compliance")
-            .WithTags("ComplianceReports")
-            .RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+            group = group.WithTags("ComplianceReports").RequireAuthorization();
 
         group.MapGet("/summary", async (
             bool? attentionOnly,
@@ -38,7 +38,7 @@ public static class ComplianceReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(summary);
         })
-        .WithName("GetMaintainArrComplianceReportSummary");
+        .WithName($"GetMaintainArrComplianceReportSummary{nameSuffix}");
 
         group.MapGet("/inspection-templates/{inspectionTemplateId:guid}", async (
             Guid inspectionTemplateId,
@@ -65,7 +65,7 @@ public static class ComplianceReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(detail);
         })
-        .WithName("GetMaintainArrComplianceReportTemplateDetail");
+        .WithName($"GetMaintainArrComplianceReportTemplateDetail{nameSuffix}");
 
         group.MapGet("/summary/export", async (
             bool? attentionOnly,
@@ -94,6 +94,10 @@ public static class ComplianceReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.File(content, contentType, fileName);
         })
-        .WithName("ExportMaintainArrComplianceReportSummary");
+        .WithName($"ExportMaintainArrComplianceReportSummary{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/reports/compliance"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/reports/compliance"), "V1");
     }
 }

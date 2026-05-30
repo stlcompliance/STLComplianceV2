@@ -224,6 +224,55 @@ public sealed class MaintainArrPmProgramTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.BadRequest, replaceSchedulesResponse.StatusCode);
     }
 
+    [Fact]
+    public async Task Pm_programs_v1_alias_crud_happy_path()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var (assetTypeId, _, scheduleId) = await SeedAssetWithPmScheduleAsync(token);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/pm-programs", token);
+        createRequest.Content = JsonContent.Create(new CreatePmProgramRequest(
+            "v1-forklift-pm",
+            "V1 Forklift PM Program",
+            "v1 alias path",
+            "asset_type",
+            assetTypeId,
+            null,
+            null));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var program = (await createResponse.Content.ReadFromJsonAsync<PmProgramDetailResponse>())!;
+
+        var replaceSchedulesRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/v1/pm-programs/{program.PmProgramId}/schedules",
+            token);
+        replaceSchedulesRequest.Content = JsonContent.Create(new ReplacePmProgramSchedulesRequest([scheduleId]));
+        (await _maintainarrClient.SendAsync(replaceSchedulesRequest)).EnsureSuccessStatusCode();
+
+        var activateRequest = Authorized(
+            HttpMethod.Patch,
+            $"/api/v1/pm-programs/{program.PmProgramId}/status",
+            token);
+        activateRequest.Content = JsonContent.Create(new UpdatePmProgramStatusRequest("active"));
+        var activateResponse = await _maintainarrClient.SendAsync(activateRequest);
+        activateResponse.EnsureSuccessStatusCode();
+        var activated = (await activateResponse.Content.ReadFromJsonAsync<PmProgramDetailResponse>())!;
+        Assert.Equal("active", activated.Status);
+
+        var getRequest = Authorized(HttpMethod.Get, $"/api/v1/pm-programs/{program.PmProgramId}", token);
+        var getResponse = await _maintainarrClient.SendAsync(getRequest);
+        getResponse.EnsureSuccessStatusCode();
+        var detail = (await getResponse.Content.ReadFromJsonAsync<PmProgramDetailResponse>())!;
+        Assert.Equal(program.PmProgramId, detail.PmProgramId);
+
+        var listRequest = Authorized(HttpMethod.Get, "/api/v1/pm-programs", token);
+        var listResponse = await _maintainarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var summaries = (await listResponse.Content.ReadFromJsonAsync<List<PmProgramSummaryResponse>>())!;
+        Assert.Contains(summaries, x => x.PmProgramId == program.PmProgramId);
+    }
+
     private async Task<(Guid AssetTypeId, Guid AssetId, Guid ScheduleId)> SeedAssetWithPmScheduleAsync(string token)
     {
         var assetTypeId = await SeedAssetTypeAsync(token);
@@ -294,7 +343,7 @@ public sealed class MaintainArrPmProgramTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new NexArr.Api.Contracts.CreateHandoffRequest(
             "maintainarr",
             "http://localhost:5178/launch"));

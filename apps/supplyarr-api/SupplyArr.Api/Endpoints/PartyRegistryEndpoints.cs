@@ -9,9 +9,13 @@ public static class PartyRegistryEndpoints
     public static void MapSupplyArrPartyRegistryEndpoints(this WebApplication app)
     {
         MapPartyGroup(app, "/api/parties", null);
+        MapPartyGroup(app, "/api/v1/parties", null);
         MapPartyGroup(app, "/api/vendors", "vendor");
+        MapPartyGroup(app, "/api/v1/vendors", "vendor");
         MapPartyGroup(app, "/api/dealers", "dealer");
+        MapPartyGroup(app, "/api/v1/dealers", "dealer");
         MapPartyGroup(app, "/api/suppliers", "supplier");
+        MapPartyGroup(app, "/api/v1/suppliers", "supplier");
     }
 
     private static void MapPartyGroup(WebApplication app, string routePrefix, string? fixedPartyType)
@@ -200,8 +204,12 @@ public static class PartyRegistryEndpoints
         routePrefix switch
         {
             "/api/vendors" => "Vendors",
+            "/api/v1/vendors" => "VendorsV1",
             "/api/dealers" => "Dealers",
+            "/api/v1/dealers" => "DealersV1",
             "/api/suppliers" => "Suppliers",
+            "/api/v1/suppliers" => "SuppliersV1",
+            "/api/v1/parties" => "AllV1",
             _ => "All"
         };
 }

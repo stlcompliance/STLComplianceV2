@@ -190,6 +190,34 @@ public sealed class MaintainArrAssetStatusRollupWorkerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Asset_status_rollup_v1_aliases_fleet_and_pending_work()
+    {
+        await SeedAssetWithCriticalDefectAsync();
+        await UpsertRollupSettingsAsync();
+
+        var processRequest = Authorized(
+            HttpMethod.Post,
+            "/api/internal/asset-status-rollups/process-batch",
+            _sharedWorkerToMaintainArrToken);
+        processRequest.Content = JsonContent.Create(new ProcessAssetStatusRollupsRequest(
+            PlatformSeeder.DemoTenantId,
+            DateTimeOffset.UtcNow,
+            25,
+            1));
+        var processResponse = await _maintainarrClient.SendAsync(processRequest);
+        processResponse.EnsureSuccessStatusCode();
+
+        var adminToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+        var fleetResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/asset-status-rollups/fleet", adminToken));
+        fleetResponse.EnsureSuccessStatusCode();
+
+        var pendingResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/asset-status-rollup-settings/pending", adminToken));
+        pendingResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
     public async Task Fleet_rollup_read_requires_authentication()
     {
         var response = await _maintainarrClient.GetAsync("/api/asset-status-rollups/fleet");

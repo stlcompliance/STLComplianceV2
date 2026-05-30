@@ -22,6 +22,23 @@ export interface HandoffCreatedResponse {
   launchUrl: string
 }
 
+export interface LaunchCatalogItemResponse {
+  productKey: string
+  displayName: string
+  productStatus: string
+  launchUrl: string
+  isCurrentProduct: boolean
+}
+
+export interface LaunchCatalogResponse {
+  tenantId: string
+  tenantSlug: string
+  tenantDisplayName: string
+  currentProductKey: string | null
+  products: LaunchCatalogItemResponse[]
+  generatedAt: string
+}
+
 export class ProductLaunchError extends Error {
   readonly status: number
 
@@ -54,7 +71,7 @@ export async function getLaunchContext(
   productKey: string,
 ): Promise<LaunchContextResponse> {
   const search = new URLSearchParams({ productKey })
-  const response = await fetch(`${apiBase}/api/launch/context?${search}`, {
+  const response = await fetch(`${apiBase}/api/v1/launch/context?${search}`, {
     headers: authHeaders(accessToken),
   })
   return parseLaunchResponse<LaunchContextResponse>(response, 'Failed to load launch context')
@@ -66,12 +83,24 @@ export async function createProductHandoff(
   productKey: string,
   callbackUrl: string,
 ): Promise<HandoffCreatedResponse> {
-  const response = await fetch(`${apiBase}/api/launch/handoff`, {
+  const response = await fetch(`${apiBase}/api/v1/launch/handoff`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify({ productKey, callbackUrl }),
   })
   return parseLaunchResponse<HandoffCreatedResponse>(response, 'Failed to create product handoff')
+}
+
+export async function getLaunchCatalog(
+  apiBase: string,
+  accessToken: string,
+  currentProductKey: string,
+): Promise<LaunchCatalogResponse> {
+  const search = new URLSearchParams({ currentProductKey })
+  const response = await fetch(`${apiBase}/api/v1/launch/catalog?${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseLaunchResponse<LaunchCatalogResponse>(response, 'Failed to load launch catalog')
 }
 
 export function buildProductWorkspaceCallbackUrl(

@@ -63,6 +63,30 @@ public class StaffArrPersonExportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task People_export_v1_manifest_and_json_aliases_work()
+    {
+        var leadId = Guid.NewGuid();
+        var memberId = Guid.NewGuid();
+        await SeedPersonAsync(leadId, "V1 Lead", "Person", "v1.lead.person@example.com");
+        await SeedPersonAsync(memberId, "V1 Team", "Member", "v1.team.member@example.com", leadId);
+
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var manifestResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/people/export/manifest", token));
+        manifestResponse.EnsureSuccessStatusCode();
+        var manifest = (await manifestResponse.Content.ReadFromJsonAsync<PersonExportManifestResponse>())!;
+        Assert.Equal("1", manifest.PackageVersion);
+        Assert.Contains(manifest.Formats, x => x.Key == "json");
+
+        var jsonResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/people/export?format=json", token));
+        jsonResponse.EnsureSuccessStatusCode();
+        var payload = (await jsonResponse.Content.ReadFromJsonAsync<PersonExportResponse>())!;
+        var member = payload.People.Single(x => x.PersonId == memberId);
+        Assert.Equal("v1.lead.person@example.com", member.ManagerEmail);
+    }
+
+    [Fact]
     public async Task People_export_json_includes_manager_email()
     {
         var leadId = Guid.NewGuid();

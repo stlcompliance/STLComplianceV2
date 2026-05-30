@@ -8,159 +8,168 @@ public static class PeopleExportEndpoints
 {
     public static void MapStaffArrPeopleExportEndpoints(this WebApplication app)
     {
-        var exports = app.MapGroup("/api/people/export")
-            .WithTags("People")
-            .RequireAuthorization();
-
-        exports.MapGet("/manifest", (
-            StaffArrAuthorizationService authorization,
-            PeopleExportService service,
-            HttpContext context) =>
+        var routes = new[]
         {
-            authorization.RequirePeopleWrite(context.User);
-            return Results.Ok(service.GetManifest());
-        })
-        .WithName("GetStaffArrPeopleExportManifest");
+            (Route: "/api/people/export", Suffix: string.Empty),
+            (Route: "/api/v1/people/export", Suffix: "V1")
+        };
 
-        exports.MapGet("/", async (
-            string? format,
-            string? employmentStatus,
-            Guid? orgUnitId,
-            StaffArrAuthorizationService authorization,
-            PeopleExportService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        foreach (var (route, suffix) in routes)
         {
-            authorization.RequirePeopleWrite(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
+            var exports = app.MapGroup(route)
+                .WithTags("People")
+                .RequireAuthorization();
 
-            if (string.Equals(format, "json", StringComparison.OrdinalIgnoreCase))
+            exports.MapGet("/manifest", (
+                StaffArrAuthorizationService authorization,
+                PeopleExportService service,
+                HttpContext context) =>
             {
-                return Results.Ok(await service.BuildExportAsync(
-                    tenantId,
-                    actorUserId,
-                    employmentStatus,
-                    orgUnitId,
-                    cancellationToken));
-            }
+                authorization.RequirePeopleWrite(context.User);
+                return Results.Ok(service.GetManifest());
+            })
+            .WithName($"GetStaffArrPeopleExportManifest{suffix}");
 
-            if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
+            exports.MapGet("/", async (
+                string? format,
+                string? employmentStatus,
+                Guid? orgUnitId,
+                StaffArrAuthorizationService authorization,
+                PeopleExportService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
             {
-                var csv = await service.ExportCsvAsync(
+                authorization.RequirePeopleWrite(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+
+                if (string.Equals(format, "json", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Results.Ok(await service.BuildExportAsync(
+                        tenantId,
+                        actorUserId,
+                        employmentStatus,
+                        orgUnitId,
+                        cancellationToken));
+                }
+
+                if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
+                {
+                    var csv = await service.ExportCsvAsync(
+                        tenantId,
+                        actorUserId,
+                        employmentStatus,
+                        orgUnitId,
+                        cancellationToken);
+                    return Results.Text(csv, "text/csv");
+                }
+
+                var zipBytes = await service.ExportZipAsync(
                     tenantId,
                     actorUserId,
                     employmentStatus,
                     orgUnitId,
                     cancellationToken);
-                return Results.Text(csv, "text/csv");
-            }
+                return Results.File(
+                    zipBytes,
+                    "application/zip",
+                    $"staffarr-people-export-{DateTime.UtcNow:yyyyMMddHHmmss}.zip");
+            })
+            .WithName($"ExportStaffArrPeople{suffix}");
 
-            var zipBytes = await service.ExportZipAsync(
-                tenantId,
-                actorUserId,
-                employmentStatus,
-                orgUnitId,
-                cancellationToken);
-            return Results.File(
-                zipBytes,
-                "application/zip",
-                $"staffarr-people-export-{DateTime.UtcNow:yyyyMMddHHmmss}.zip");
-        })
-        .WithName("ExportStaffArrPeople");
+            exports.MapGet("/preset", async (
+                StaffArrAuthorizationService authorization,
+                PersonExportPresetService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePeopleWrite(context.User);
+                var tenantId = context.User.GetTenantId();
+                var preset = await service.GetAsync(tenantId, cancellationToken);
+                return preset is null ? Results.NotFound() : Results.Ok(preset);
+            })
+            .WithName($"GetStaffArrPeopleExportPreset{suffix}");
 
-        exports.MapGet("/preset", async (
-            StaffArrAuthorizationService authorization,
-            PersonExportPresetService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePeopleWrite(context.User);
-            var tenantId = context.User.GetTenantId();
-            var preset = await service.GetAsync(tenantId, cancellationToken);
-            return preset is null ? Results.NotFound() : Results.Ok(preset);
-        })
-        .WithName("GetStaffArrPeopleExportPreset");
+            exports.MapPut("/preset", async (
+                UpsertPersonExportPresetRequest request,
+                StaffArrAuthorizationService authorization,
+                PersonExportPresetService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePeopleWrite(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var preset = await service.UpsertAsync(tenantId, actorUserId, request, cancellationToken);
+                return Results.Ok(preset);
+            })
+            .WithName($"UpsertStaffArrPeopleExportPreset{suffix}");
 
-        exports.MapPut("/preset", async (
-            UpsertPersonExportPresetRequest request,
-            StaffArrAuthorizationService authorization,
-            PersonExportPresetService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePeopleWrite(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var preset = await service.UpsertAsync(tenantId, actorUserId, request, cancellationToken);
-            return Results.Ok(preset);
-        })
-        .WithName("UpsertStaffArrPeopleExportPreset");
+            exports.MapGet("/schedule", async (
+                StaffArrAuthorizationService authorization,
+                PersonExportScheduleService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePeopleWrite(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await service.GetAsync(tenantId, cancellationToken));
+            })
+            .WithName($"GetStaffArrPeopleExportSchedule{suffix}");
 
-        exports.MapGet("/schedule", async (
-            StaffArrAuthorizationService authorization,
-            PersonExportScheduleService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePeopleWrite(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetAsync(tenantId, cancellationToken));
-        })
-        .WithName("GetStaffArrPeopleExportSchedule");
+            exports.MapPut("/schedule", async (
+                UpsertPersonExportScheduleRequest request,
+                StaffArrAuthorizationService authorization,
+                PersonExportScheduleService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePeopleWrite(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var schedule = await service.UpsertAsync(tenantId, actorUserId, request, cancellationToken);
+                return Results.Ok(schedule);
+            })
+            .WithName($"UpsertStaffArrPeopleExportSchedule{suffix}");
 
-        exports.MapPut("/schedule", async (
-            UpsertPersonExportScheduleRequest request,
-            StaffArrAuthorizationService authorization,
-            PersonExportScheduleService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePeopleWrite(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var schedule = await service.UpsertAsync(tenantId, actorUserId, request, cancellationToken);
-            return Results.Ok(schedule);
-        })
-        .WithName("UpsertStaffArrPeopleExportSchedule");
+            exports.MapGet("/delivery-notifications", async (
+                int? limit,
+                StaffArrAuthorizationService authorization,
+                PersonExportDeliveryNotificationService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePeopleWrite(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await service.ListRecentAsync(tenantId, limit, cancellationToken));
+            })
+            .WithName($"ListStaffArrPeopleExportDeliveryNotifications{suffix}");
 
-        exports.MapGet("/delivery-notifications", async (
-            int? limit,
-            StaffArrAuthorizationService authorization,
-            PersonExportDeliveryNotificationService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePeopleWrite(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListRecentAsync(tenantId, limit, cancellationToken));
-        })
-        .WithName("ListStaffArrPeopleExportDeliveryNotifications");
+            exports.MapGet("/delivery-pending", async (
+                StaffArrAuthorizationService authorization,
+                PersonExportDeliveryService deliveryService,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireWorkerAdminSettingsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var batchSize = PersonExportDeliveryRules.NormalizeBatchSize(null);
+                return Results.Ok(await deliveryService.ListPendingAsync(tenantId, null, batchSize, cancellationToken));
+            })
+            .WithName($"ListStaffArrPeopleExportDeliveryPending{suffix}");
 
-        exports.MapGet("/delivery-pending", async (
-            StaffArrAuthorizationService authorization,
-            PersonExportDeliveryService deliveryService,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireWorkerAdminSettingsManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            var batchSize = PersonExportDeliveryRules.NormalizeBatchSize(null);
-            return Results.Ok(await deliveryService.ListPendingAsync(tenantId, null, batchSize, cancellationToken));
-        })
-        .WithName("ListStaffArrPeopleExportDeliveryPending");
-
-        exports.MapGet("/delivery-runs", async (
-            int? limit,
-            StaffArrAuthorizationService authorization,
-            PersonExportDeliveryService deliveryService,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireWorkerAdminSettingsManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await deliveryService.ListRecentRunsAsync(tenantId, limit, cancellationToken));
-        })
-        .WithName("ListStaffArrPeopleExportDeliveryRuns");
+            exports.MapGet("/delivery-runs", async (
+                int? limit,
+                StaffArrAuthorizationService authorization,
+                PersonExportDeliveryService deliveryService,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireWorkerAdminSettingsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await deliveryService.ListRecentRunsAsync(tenantId, limit, cancellationToken));
+            })
+            .WithName($"ListStaffArrPeopleExportDeliveryRuns{suffix}");
+        }
     }
 }

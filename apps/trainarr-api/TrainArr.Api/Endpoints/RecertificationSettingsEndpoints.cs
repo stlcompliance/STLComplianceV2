@@ -8,10 +8,25 @@ public static class RecertificationSettingsEndpoints
 {
     public static void MapTrainArrRecertificationSettingsEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/recertification-settings")
-            .WithTags("RecertificationSettings")
-            .RequireAuthorization();
+        MapRoutes(
+            app.MapGroup("/api/recertification-settings")
+                .WithTags("RecertificationSettings")
+                .RequireAuthorization(),
+            string.Empty);
+        MapRoutes(
+            app.MapGroup("/api/v1/recertification-settings")
+                .WithTags("RecertificationSettings")
+                .RequireAuthorization(),
+            "V1RecertificationSettings");
+        MapRoutes(
+            app.MapGroup("/api/v1/recertification")
+                .WithTags("RecertificationSettings")
+                .RequireAuthorization(),
+            "V1Recertification");
+    }
 
+    private static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+    {
         group.MapGet("/", async (
             TrainArrAuthorizationService authorization,
             RecertificationSettingsService settingsService,
@@ -22,7 +37,7 @@ public static class RecertificationSettingsEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await settingsService.GetAsync(tenantId, cancellationToken));
         })
-        .WithName("GetTrainArrRecertificationSettings");
+        .WithName($"GetTrainArrRecertificationSettings{nameSuffix}");
 
         group.MapPut("/", async (
             UpsertRecertificationSettingsRequest request,
@@ -41,7 +56,7 @@ public static class RecertificationSettingsEndpoints
                 cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("UpsertTrainArrRecertificationSettings");
+        .WithName($"UpsertTrainArrRecertificationSettings{nameSuffix}");
 
         group.MapGet("/runs", async (
             int? limit,
@@ -54,6 +69,6 @@ public static class RecertificationSettingsEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await assignmentService.ListRecentRunsAsync(tenantId, limit, cancellationToken));
         })
-        .WithName("ListTrainArrRecertificationAssignmentRuns");
+        .WithName($"ListTrainArrRecertificationAssignmentRuns{nameSuffix}");
     }
 }

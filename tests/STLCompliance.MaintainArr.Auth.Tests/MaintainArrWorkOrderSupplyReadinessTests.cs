@@ -224,6 +224,46 @@ public sealed class MaintainArrWorkOrderSupplyReadinessTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Work_order_supply_readiness_v1_alias_matches_legacy_route()
+    {
+        var maintainarrToken = await RedeemMaintainArrTokenAsync();
+        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var partId = await SeedSupplyArrPartWithStockAsync(supplyarrToken, quantityOnHand: 0m, reorderPoint: 10m);
+        var assetId = await SeedAssetOnlyAsync(maintainarrToken);
+        var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
+
+        var createLineRequest = Authorized(HttpMethod.Post, $"/api/work-orders/{workOrderId}/parts-demand", maintainarrToken);
+        createLineRequest.Content = JsonContent.Create(new CreateWorkOrderPartsDemandLineRequest(
+            partId,
+            "BRK-001",
+            "Front brake pads",
+            2m,
+            "each",
+            null));
+        (await _maintainarrClient.SendAsync(createLineRequest)).EnsureSuccessStatusCode();
+
+        var legacyResponse = await _maintainarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/work-orders/{workOrderId}/supply-readiness",
+            maintainarrToken));
+        legacyResponse.EnsureSuccessStatusCode();
+        var legacy = (await legacyResponse.Content.ReadFromJsonAsync<WorkOrderSupplyReadinessResponse>())!;
+
+        var v1Response = await _maintainarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/v1/work-orders/{workOrderId}/supply-readiness",
+            maintainarrToken));
+        v1Response.EnsureSuccessStatusCode();
+        var v1 = (await v1Response.Content.ReadFromJsonAsync<WorkOrderSupplyReadinessResponse>())!;
+
+        Assert.Equal(legacy.OverallReadinessStatus, v1.OverallReadinessStatus);
+        Assert.Equal(legacy.LinesChecked, v1.LinesChecked);
+        Assert.Equal(legacy.LinesReady, v1.LinesReady);
+        Assert.Equal(legacy.LinesBlocked, v1.LinesBlocked);
+        Assert.Equal(legacy.LinesSkipped, v1.LinesSkipped);
+    }
+
+    [Fact]
     public async Task Work_order_supply_readiness_requires_authorization()
     {
         var response = await _maintainarrClient.GetAsync($"/api/work-orders/{Guid.NewGuid()}/supply-readiness");
@@ -350,7 +390,7 @@ public sealed class MaintainArrWorkOrderSupplyReadinessTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync(string productKey, string callbackUrl)
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new CreateHandoffRequest(productKey, callbackUrl));
         var response = await _nexarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();

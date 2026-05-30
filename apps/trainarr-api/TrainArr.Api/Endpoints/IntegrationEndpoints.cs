@@ -16,9 +16,12 @@ public static class IntegrationEndpoints
 
     public static void MapTrainArrIntegrationEndpoints(this WebApplication app)
     {
-        var integrations = app.MapGroup("/api/integrations").WithTags("Integrations");
+        var routes = new[] { "/api/integrations", "/api/v1/integrations" };
+        foreach (var route in routes)
+        {
+            var integrations = app.MapGroup(route).WithTags("Integrations");
 
-        integrations.MapPost("/incident-remediations", async (
+            integrations.MapPost("/incident-remediations", async (
             IngestStaffarrIncidentRemediationRequest request,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
@@ -38,9 +41,9 @@ public static class IntegrationEndpoints
             var result = await service.IngestAsync(request, cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("IngestStaffarrIncidentRemediation");
+        .WithName($"IngestStaffarrIncidentRemediation{(route.Contains("/v1/") ? "V1" : string.Empty)}");
 
-        integrations.MapPost("/routarr-qualification-check", async (
+            integrations.MapPost("/routarr-qualification-check", async (
             RoutarrQualificationCheckRequest request,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
@@ -73,9 +76,9 @@ public static class IntegrationEndpoints
                 cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("RoutarrQualificationCheck");
+        .WithName($"RoutarrQualificationCheck{(route.Contains("/v1/") ? "V1" : string.Empty)}");
 
-        integrations.MapPost("/supplyarr-demand-status", async (
+            integrations.MapPost("/supplyarr-demand-status", async (
             IngestSupplyarrDemandStatusRequest request,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
@@ -95,9 +98,9 @@ public static class IntegrationEndpoints
             var result = await service.IngestAsync(request, cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("IngestSupplyarrDemandStatus");
+        .WithName($"IngestSupplyarrDemandStatus{(route.Contains("/v1/") ? "V1" : string.Empty)}");
 
-        integrations.MapGet("/person-training-history", async (
+            integrations.MapGet("/person-training-history", async (
             Guid tenantId,
             Guid staffarrPersonId,
             int? limit,
@@ -122,6 +125,7 @@ public static class IntegrationEndpoints
                 limit,
                 cancellationToken));
         })
-        .WithName("GetTrainArrPersonTrainingHistoryIntegration");
+        .WithName($"GetTrainArrPersonTrainingHistoryIntegration{(route.Contains("/v1/") ? "V1" : string.Empty)}");
+        }
     }
 }

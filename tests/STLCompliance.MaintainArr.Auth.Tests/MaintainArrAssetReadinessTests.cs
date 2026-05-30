@@ -232,6 +232,35 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Asset_readiness_v1_detail_returns_asset_status()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(token);
+
+        var response = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/readiness?assetId={assetId}", token));
+        response.EnsureSuccessStatusCode();
+        var readiness = (await response.Content.ReadFromJsonAsync<AssetReadinessResponse>())!;
+
+        Assert.Equal(assetId, readiness.AssetId);
+        Assert.Equal("ready", readiness.ReadinessStatus);
+    }
+
+    [Fact]
+    public async Task Asset_readiness_v1_fleet_list_returns_assets()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(token);
+
+        var response = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/readiness", token));
+        response.EnsureSuccessStatusCode();
+        var fleet = (await response.Content.ReadFromJsonAsync<List<AssetReadinessSummaryResponse>>())!;
+
+        Assert.Contains(fleet, item => item.AssetId == assetId);
+    }
+
+    [Fact]
     public async Task Asset_readiness_missing_asset_returns_not_found()
     {
         var token = await RedeemMaintainArrTokenAsync();
@@ -312,7 +341,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new NexArr.Api.Contracts.CreateHandoffRequest(
             "maintainarr",
             "http://localhost:5178/launch"));

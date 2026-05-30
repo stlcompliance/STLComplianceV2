@@ -8,7 +8,9 @@ public static class BackorderEndpoints
 {
     public static void MapSupplyArrBackorderEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/backorders").WithTags("Backorders").RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("Backorders").RequireAuthorization();
 
         group.MapGet("/", async (
             string? status,
@@ -28,7 +30,7 @@ public static class BackorderEndpoints
                 partId,
                 cancellationToken));
         })
-        .WithName("ListBackorders");
+        .WithName($"ListBackorders{nameSuffix}");
 
         group.MapGet("/{backorderId:guid}", async (
             Guid backorderId,
@@ -41,7 +43,7 @@ public static class BackorderEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, backorderId, cancellationToken));
         })
-        .WithName("GetBackorder");
+        .WithName($"GetBackorder{nameSuffix}");
 
         group.MapPost("/from-purchase-order-line/{purchaseOrderLineId:guid}", async (
             Guid purchaseOrderLineId,
@@ -62,7 +64,7 @@ public static class BackorderEndpoints
                 cancellationToken);
             return Results.Created($"/api/backorders/{created.BackorderId}", created);
         })
-        .WithName("CreateBackorderFromPurchaseOrderLine");
+        .WithName($"CreateBackorderFromPurchaseOrderLine{nameSuffix}");
 
         group.MapPost("/{backorderId:guid}/fulfill", async (
             Guid backorderId,
@@ -80,7 +82,7 @@ public static class BackorderEndpoints
                 backorderId,
                 cancellationToken));
         })
-        .WithName("FulfillBackorder");
+        .WithName($"FulfillBackorder{nameSuffix}");
 
         group.MapPost("/{backorderId:guid}/cancel", async (
             Guid backorderId,
@@ -100,6 +102,10 @@ public static class BackorderEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("CancelBackorder");
+        .WithName($"CancelBackorder{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/backorders"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/backorders"), "V1");
     }
 }

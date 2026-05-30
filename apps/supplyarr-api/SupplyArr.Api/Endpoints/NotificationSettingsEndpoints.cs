@@ -8,9 +8,9 @@ public static class NotificationSettingsEndpoints
 {
     public static void MapSupplyArrNotificationSettingsEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/notification-settings")
-            .WithTags("NotificationSettings")
-            .RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("NotificationSettings").RequireAuthorization();
 
         group.MapGet("/", async (
             SupplyArrAuthorizationService authorization,
@@ -22,7 +22,7 @@ public static class NotificationSettingsEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await settingsService.GetAsync(tenantId, cancellationToken));
         })
-        .WithName("GetSupplyArrNotificationSettings");
+        .WithName($"GetSupplyArrNotificationSettings{nameSuffix}");
 
         group.MapPut("/", async (
             UpsertProcurementNotificationSettingsRequest request,
@@ -41,7 +41,7 @@ public static class NotificationSettingsEndpoints
                 cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("UpsertSupplyArrNotificationSettings");
+        .WithName($"UpsertSupplyArrNotificationSettings{nameSuffix}");
 
         group.MapGet("/dispatches", async (
             int? limit,
@@ -54,6 +54,10 @@ public static class NotificationSettingsEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await dispatchService.ListRecentAsync(tenantId, limit, cancellationToken));
         })
-        .WithName("ListSupplyArrNotificationDispatches");
+        .WithName($"ListSupplyArrNotificationDispatches{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/notification-settings"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/notification-settings"), "V1");
     }
 }

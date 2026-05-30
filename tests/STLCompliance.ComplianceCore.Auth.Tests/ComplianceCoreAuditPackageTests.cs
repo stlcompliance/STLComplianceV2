@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NexArr.Api.Services;
+using STLCompliance.Shared.Contracts;
 
 namespace STLCompliance.ComplianceCore.Auth.Tests;
 
@@ -161,6 +162,75 @@ public class ComplianceCoreAuditPackageTests : IAsyncLifetime
         var package = (await response.Content.ReadFromJsonAsync<AuditPackageExportResponse>())!;
         Assert.Equal(1, package.Counts.AuditEvents);
         Assert.Equal("rule_pack.evaluate", package.AuditEvents[0].Action);
+    }
+
+    [Fact]
+    public async Task V1_audit_events_returns_paged_results()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        await SeedAuditEventsWithDatesAsync();
+
+        var response = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit/events?page=1&pageSize=10", adminToken));
+
+        response.EnsureSuccessStatusCode();
+        var page = await response.Content.ReadFromJsonAsync<PagedResult<AuditEventExportItem>>();
+        Assert.NotNull(page);
+        Assert.NotEmpty(page.Items);
+        Assert.Contains(page.Items, x => x.Action == "rule_pack.evaluate");
+    }
+
+    [Fact]
+    public async Task Canonical_events_aliases_match_v1_audit_events()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        await SeedAuditEventsWithDatesAsync();
+
+        var auditV1Response = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit/events?page=1&pageSize=10", adminToken));
+        auditV1Response.EnsureSuccessStatusCode();
+        var auditV1Page = (await auditV1Response.Content.ReadFromJsonAsync<PagedResult<AuditEventExportItem>>())!;
+
+        var eventsV1Response = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/events?page=1&pageSize=10", adminToken));
+        eventsV1Response.EnsureSuccessStatusCode();
+        var eventsV1Page = (await eventsV1Response.Content.ReadFromJsonAsync<PagedResult<AuditEventExportItem>>())!;
+
+        var eventsLegacyResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/events?page=1&pageSize=10", adminToken));
+        eventsLegacyResponse.EnsureSuccessStatusCode();
+        var eventsLegacyPage = (await eventsLegacyResponse.Content.ReadFromJsonAsync<PagedResult<AuditEventExportItem>>())!;
+
+        Assert.Equal(auditV1Page.TotalCount, eventsV1Page.TotalCount);
+        Assert.Equal(auditV1Page.TotalCount, eventsLegacyPage.TotalCount);
+        Assert.Equal(auditV1Page.Items.Count, eventsV1Page.Items.Count);
+        Assert.Equal(auditV1Page.Items.Count, eventsLegacyPage.Items.Count);
+    }
+
+    [Fact]
+    public async Task V1_audit_packages_create_list_and_get_job()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/audit/packages", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateAuditPackageGenerationJobRequest("zip", null, null));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Accepted, createResponse.StatusCode);
+        var created = (await createResponse.Content.ReadFromJsonAsync<AuditPackageGenerationJobResponse>())!;
+
+        var listResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit/packages?page=1&pageSize=10", adminToken));
+        listResponse.EnsureSuccessStatusCode();
+        var listPage = await listResponse.Content.ReadFromJsonAsync<PagedResult<AuditPackageGenerationJobResponse>>();
+        Assert.NotNull(listPage);
+        Assert.Contains(listPage.Items, x => x.JobId == created.JobId);
+
+        var getResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/audit/packages/{created.JobId}", adminToken));
+        getResponse.EnsureSuccessStatusCode();
+        var loaded = await getResponse.Content.ReadFromJsonAsync<AuditPackageGenerationJobResponse>();
+        Assert.NotNull(loaded);
+        Assert.Equal(created.JobId, loaded.JobId);
     }
 
     private async Task SeedEvaluationDataAsync(string adminToken)

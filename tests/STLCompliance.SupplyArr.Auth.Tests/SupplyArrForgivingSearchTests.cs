@@ -271,7 +271,7 @@ public sealed class SupplyArrForgivingSearchTests : IAsyncLifetime
 
     private async Task<string> CreateHandoffAsync(string token)
     {
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new CreateHandoffRequest("supplyarr", "http://localhost:5179/launch"));
         var response = await _nexarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();

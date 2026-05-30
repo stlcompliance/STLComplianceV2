@@ -53,9 +53,34 @@ public abstract class ApiHealthEndpointTests<TProgram>(
     }
 
     [Fact]
+    public async Task Health_v1_liveness_returns_ok_with_product_key()
+    {
+        var response = await _client.GetAsync("/api/v1/health");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<HealthResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal("Healthy", payload.Status);
+        Assert.Equal(expectedProductKey, payload.Product);
+    }
+
+    [Fact]
     public async Task Health_ready_returns_json_without_database()
     {
         var response = await _client.GetAsync("/health/ready");
+        Assert.True(response.IsSuccessStatusCode);
+
+        var payload = await response.Content.ReadFromJsonAsync<HealthResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal(expectedProductKey, payload.Product);
+        Assert.NotNull(payload.Checks);
+        Assert.Contains("self", payload.Checks.Keys);
+    }
+
+    [Fact]
+    public async Task Health_v1_ready_returns_json_without_database()
+    {
+        var response = await _client.GetAsync("/api/v1/health/ready");
         Assert.True(response.IsSuccessStatusCode);
 
         var payload = await response.Content.ReadFromJsonAsync<HealthResponse>();

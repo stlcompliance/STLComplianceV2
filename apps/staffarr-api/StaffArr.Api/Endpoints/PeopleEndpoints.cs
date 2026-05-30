@@ -9,8 +9,12 @@ public static class PeopleEndpoints
 {
     public static void MapStaffArrPeopleEndpoints(this WebApplication app)
     {
-        var people = app.MapGroup("/api/people").WithTags("People").RequireAuthorization();
+        MapRoutes(app.MapGroup("/api/people").WithTags("People").RequireAuthorization(), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/people").WithTags("People").RequireAuthorization(), "V1");
+    }
 
+    private static void MapRoutes(RouteGroupBuilder people, string nameSuffix)
+    {
         people.MapGet("/", async (
             string? query,
             Guid? orgUnitId,
@@ -25,7 +29,7 @@ public static class PeopleEndpoints
             var result = await service.ListAsync(tenantId, query, orgUnitId, limit ?? 50, cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("ListStaffPeople");
+        .WithName($"ListStaffPeople{nameSuffix}");
 
         people.MapGet("/{personId:guid}", async (
             Guid personId,
@@ -44,7 +48,7 @@ public static class PeopleEndpoints
 
             return Results.Ok(await service.GetByIdAsync(tenantId, personId, cancellationToken));
         })
-        .WithName("GetStaffPerson");
+        .WithName($"GetStaffPerson{nameSuffix}");
 
         people.MapGet("/{personId:guid}/timeline", async (
             Guid personId,
@@ -66,7 +70,7 @@ public static class PeopleEndpoints
                 category,
                 cancellationToken));
         })
-        .WithName("GetPersonTimeline");
+        .WithName($"GetPersonTimeline{nameSuffix}");
 
         people.MapGet("/{personId:guid}/trainarr-training-history", async (
             Guid personId,
@@ -86,7 +90,7 @@ public static class PeopleEndpoints
                 limit,
                 cancellationToken));
         })
-        .WithName("GetStaffPersonTrainarrTrainingHistory");
+        .WithName($"GetStaffPersonTrainarrTrainingHistory{nameSuffix}");
 
         people.MapGet("/{personId:guid}/workforce-onboarding-journey", async (
             Guid personId,
@@ -114,7 +118,7 @@ public static class PeopleEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(journey);
         })
-        .WithName("GetWorkforceOnboardingJourney");
+        .WithName($"GetWorkforceOnboardingJourney{nameSuffix}");
 
         people.MapPost("/", async (
             CreateStaffPersonRequest request,
@@ -129,7 +133,7 @@ public static class PeopleEndpoints
             var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Created($"/api/people/{created.PersonId}", created);
         })
-        .WithName("CreateStaffPerson");
+        .WithName($"CreateStaffPerson{nameSuffix}");
 
         people.MapPut("/{personId:guid}", async (
             Guid personId,
@@ -149,7 +153,7 @@ public static class PeopleEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdateStaffPerson");
+        .WithName($"UpdateStaffPerson{nameSuffix}");
 
         people.MapPatch("/{personId:guid}/employment-status", async (
             Guid personId,
@@ -169,7 +173,7 @@ public static class PeopleEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdateStaffPersonEmploymentStatus");
+        .WithName($"UpdateStaffPersonEmploymentStatus{nameSuffix}");
 
         people.MapPost("/import", async (
             BulkPersonImportRequest request,
@@ -183,6 +187,6 @@ public static class PeopleEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.ImportAsync(tenantId, actorUserId, request, cancellationToken));
         })
-        .WithName("BulkImportStaffPeople");
+        .WithName($"BulkImportStaffPeople{nameSuffix}");
     }
 }

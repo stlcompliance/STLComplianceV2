@@ -8,7 +8,9 @@ public static class DemandRefEndpoints
 {
     public static void MapSupplyArrDemandRefEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/demand-refs").WithTags("DemandRefs").RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("DemandRefs").RequireAuthorization();
 
         group.MapGet("/", async (
             string? status,
@@ -21,7 +23,7 @@ public static class DemandRefEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(tenantId, status, cancellationToken));
         })
-        .WithName("ListDemandRefs");
+        .WithName($"ListDemandRefs{nameSuffix}");
 
         group.MapGet("/{demandRefId:guid}", async (
             Guid demandRefId,
@@ -34,7 +36,7 @@ public static class DemandRefEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, demandRefId, cancellationToken));
         })
-        .WithName("GetDemandRef");
+        .WithName($"GetDemandRef{nameSuffix}");
 
         group.MapPost("/{demandRefId:guid}/create-purchase-request", async (
             Guid demandRefId,
@@ -55,6 +57,10 @@ public static class DemandRefEndpoints
                 cancellationToken);
             return Results.Created($"/api/purchase-requests/{created.PurchaseRequestId}", created);
         })
-        .WithName("CreatePurchaseRequestFromDemandRef");
+        .WithName($"CreatePurchaseRequestFromDemandRef{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/demand-refs"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/demand-refs"), "V1");
     }
 }

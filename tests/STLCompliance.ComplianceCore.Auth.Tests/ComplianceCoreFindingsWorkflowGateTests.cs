@@ -399,6 +399,32 @@ public class ComplianceCoreFindingsWorkflowGateTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Product_gate_can_action_alias_evaluates_with_service_token()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await GetDriverQualificationRulePackIdAsync(adminToken);
+        await CreateWorkflowGateAsync(adminToken, rulePackId, "can_dispatch_route");
+
+        var request = ServiceAuthorized(HttpMethod.Post, "/api/v1/gates/can_dispatch_route", _trainarrProductGateToken);
+        request.Content = JsonContent.Create(new ProductGateCompatibilityRequest(
+            PlatformSeeder.DemoTenantId,
+            "dispatch",
+            [new ProductGateSubjectReference("person", Guid.NewGuid().ToString(), "staffarr")],
+            new Dictionary<string, string>
+            {
+                ["driver_license_valid"] = "true",
+                ["medical_cert_on_file"] = "true",
+            }));
+
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<ProductGateEvaluationResponse>())!;
+        Assert.Equal(ComplianceEvaluationOutcomes.Allow, result.Outcome);
+        Assert.Equal("can_dispatch_route", result.ActionKey);
+        Assert.Equal("can_dispatch_route", result.WorkflowKey);
+    }
+
+    [Fact]
     public async Task Findings_manage_denies_tenant_member_create()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");

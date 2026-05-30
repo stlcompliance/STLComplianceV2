@@ -1,6 +1,48 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  getApprovalReminderSettings,
+  getApprovalRemindersDashboard,
+  listVendorRestrictions,
+  listPartyVendorRestrictions,
+  getPartyVendorRestrictionEnforcement,
+  createPartyVendorRestriction,
+  liftVendorRestriction,
+  getSupplierOnboardingDocumentRequirements,
+  listPendingSupplierOnboarding,
+  listPartyComplianceDocuments,
+  approvePartyComplianceDocument,
+  getEmergencyPurchases,
+  listPendingEmergencyPurchases,
+  expeditedSubmitEmergencyPurchase,
+  managerOverrideApproveEmergencyPurchase,
+  issueEmergencyPurchaseOrder,
+  getVendorReportSummary,
+  getPartsInventoryReportSummary,
+  getPurchasingReportSummary,
+  getComplianceReportSummary,
+  forgivingSearch,
+  listAuditHistory,
+  listSupplierIncidents,
+  listPartySupplierIncidents,
+  createSupplierIncident,
+  startSupplierIncidentInvestigation,
+  applySupplierIncidentProcurementRestriction,
+  getProcurementExceptionEscalationSettings,
+  listProcurementExceptionResolutionTemplates,
+  getProcurementCoordinationDashboard,
+  getProcurementCoordinationSettings,
+  getAvailabilitySnapshotSettings,
+  getIntegrationEventSettings,
+  getLeadTimeSnapshotSettings,
+  getPriceSnapshotSettings,
+  getProcurementNotificationSettings,
+  getDemandProcessingSettings,
+  getDemandProcessingDashboard,
+  getDemandRefs,
+  getRfqs,
   getInventoryLocations,
+  getReorderEvaluation,
+  listWarrantyClaims,
   getParts,
   getPurchaseOrders,
   getBackorders,
@@ -10,6 +52,7 @@ import {
   getReceivingReceipts,
   getPurchaseRequests,
   getVendors,
+  getSupplyReadinessDashboard,
   SupplyArrApiError,
 } from './client'
 
@@ -80,11 +123,9 @@ describe('supplyarr api client', () => {
   })
 
   it('loads inventory locations on success', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => [
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [
           {
             locationId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
             locationKey: 'main-wh',
@@ -97,56 +138,54 @@ describe('supplyarr api client', () => {
             updatedAt: '2026-05-27T00:00:00Z',
           },
         ],
-      }),
-    )
+    })
+    vi.stubGlobal('fetch', fetchMock)
 
     const locations = await getInventoryLocations('token')
     expect(locations).toHaveLength(1)
     expect(locations[0].locationKey).toBe('main-wh')
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/inventory/locations', expect.any(Object))
   })
 
   it('loads purchase requests on success', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => [
-          {
-            purchaseRequestId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-            requestKey: 'pr-001',
-            title: 'Restock',
-            notes: '',
-            status: 'draft',
-            vendorPartyId: null,
-            vendorPartyKey: null,
-            vendorDisplayName: null,
-            requestedByUserId: '11111111-1111-1111-1111-111111111111',
-            submittedAt: null,
-            submittedByUserId: null,
-            approvedAt: null,
-            approvedByUserId: null,
-            rejectedAt: null,
-            rejectedByUserId: null,
-            rejectionReason: '',
-            lines: [],
-            createdAt: '2026-05-27T00:00:00Z',
-            updatedAt: '2026-05-27T00:00:00Z',
-          },
-        ],
-      }),
-    )
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [
+        {
+          purchaseRequestId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+          requestKey: 'pr-001',
+          title: 'Restock',
+          notes: '',
+          status: 'draft',
+          vendorPartyId: null,
+          vendorPartyKey: null,
+          vendorDisplayName: null,
+          requestedByUserId: '11111111-1111-1111-1111-111111111111',
+          submittedAt: null,
+          submittedByUserId: null,
+          approvedAt: null,
+          approvedByUserId: null,
+          rejectedAt: null,
+          rejectedByUserId: null,
+          rejectionReason: '',
+          lines: [],
+          createdAt: '2026-05-27T00:00:00Z',
+          updatedAt: '2026-05-27T00:00:00Z',
+        },
+      ],
+    })
+    vi.stubGlobal('fetch', fetchMock)
 
     const requests = await getPurchaseRequests('token')
     expect(requests).toHaveLength(1)
     expect(requests[0].requestKey).toBe('pr-001')
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/purchase-requests', expect.any(Object))
   })
 
   it('loads purchase orders on success', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => [
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [
           {
             purchaseOrderId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
             orderKey: 'po-001',
@@ -171,20 +210,19 @@ describe('supplyarr api client', () => {
             updatedAt: '2026-05-27T00:00:00Z',
           },
         ],
-      }),
-    )
+    })
+    vi.stubGlobal('fetch', fetchMock)
 
     const orders = await getPurchaseOrders('token')
     expect(orders).toHaveLength(1)
     expect(orders[0].orderKey).toBe('po-001')
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/purchase-orders', expect.any(Object))
   })
 
   it('loads receiving receipts on success', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => [
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [
           {
             receivingReceiptId: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
             receiptKey: 'rcpt-001',
@@ -207,19 +245,18 @@ describe('supplyarr api client', () => {
             updatedAt: '2026-05-27T00:00:00Z',
           },
         ],
-      }),
-    )
+    })
+    vi.stubGlobal('fetch', fetchMock)
 
     const receipts = await getReceivingReceipts('token')
     expect(receipts).toHaveLength(1)
     expect(receipts[0].receiptKey).toBe('rcpt-001')
     expect(receipts[0].exceptions).toEqual([])
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/receiving', expect.any(Object))
   })
 
   it('loads backorders on success', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
+    const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => [
           {
@@ -255,18 +292,17 @@ describe('supplyarr api client', () => {
             updatedAt: '2026-05-27T00:00:00Z',
           },
         ],
-      }),
-    )
+      })
+    vi.stubGlobal('fetch', fetchMock)
 
     const backorders = await getBackorders('token', { status: 'open' })
     expect(backorders).toHaveLength(1)
     expect(backorders[0].purchaseRequestKey).toBe('pr-001')
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/backorders?status=open', expect.any(Object))
   })
 
   it('loads vendor returns on success', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
+    const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => [
           {
@@ -300,18 +336,17 @@ describe('supplyarr api client', () => {
             updatedAt: '2026-05-27T00:00:00Z',
           },
         ],
-      }),
-    )
+      })
+    vi.stubGlobal('fetch', fetchMock)
 
     const returns = await getVendorReturns('token', { status: 'posted' })
     expect(returns).toHaveLength(1)
     expect(returns[0].rmaNumber).toBe('RMA-42')
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/returns?status=posted', expect.any(Object))
   })
 
   it('loads pricing snapshots on success', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
+    const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => [
           {
@@ -338,18 +373,17 @@ describe('supplyarr api client', () => {
             updatedAt: '2026-05-27T00:00:00Z',
           },
         ],
-      }),
-    )
+      })
+    vi.stubGlobal('fetch', fetchMock)
 
     const snapshots = await getPricingSnapshots('token')
     expect(snapshots).toHaveLength(1)
     expect(snapshots[0].isCurrent).toBe(true)
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/pricing-snapshots', expect.any(Object))
   })
 
   it('loads lead-time snapshots on success', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
+    const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => [
           {
@@ -374,18 +408,17 @@ describe('supplyarr api client', () => {
             updatedAt: '2026-05-27T00:00:00Z',
           },
         ],
-      }),
-    )
+      })
+    vi.stubGlobal('fetch', fetchMock)
 
     const snapshots = await getLeadTimeSnapshots('token')
     expect(snapshots).toHaveLength(1)
     expect(snapshots[0].leadTimeDays).toBe(7)
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/lead-time-snapshots', expect.any(Object))
   })
 
   it('loads availability snapshots on success', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
+    const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => [
           {
@@ -411,19 +444,18 @@ describe('supplyarr api client', () => {
             updatedAt: '2026-05-27T00:00:00Z',
           },
         ],
-      }),
-    )
+      })
+    vi.stubGlobal('fetch', fetchMock)
 
     const { getAvailabilitySnapshots } = await import('./client')
     const snapshots = await getAvailabilitySnapshots('token')
     expect(snapshots).toHaveLength(1)
     expect(snapshots[0].availabilityStatus).toBe('in_stock')
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/availability-snapshots', expect.any(Object))
   })
 
   it('parses reorder evaluation response', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
+    const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => ({
@@ -448,13 +480,13 @@ describe('supplyarr api client', () => {
             },
           ],
         }),
-      }),
-    )
+      })
+    vi.stubGlobal('fetch', fetchMock)
 
-    const { getReorderEvaluation } = await import('./client')
     const evaluation = await getReorderEvaluation('token')
     expect(evaluation.suggestions).toHaveLength(1)
     expect(evaluation.suggestions[0].suggestedOrderQuantity).toBe(24)
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/reorder-evaluation', expect.any(Object))
   })
 
   it('throws SupplyArrApiError on forbidden', async () => {
@@ -468,5 +500,636 @@ describe('supplyarr api client', () => {
     )
 
     await expect(getVendors('token')).rejects.toBeInstanceOf(SupplyArrApiError)
+  })
+
+  it('loads supply readiness dashboard from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        generatedAt: '2026-05-29T00:00:00Z',
+        totals: {
+          activePartsCount: 1,
+          partsBelowReorderCount: 0,
+          openBackorderCount: 0,
+          openPurchaseRequestCount: 0,
+          openDemandRefCount: 0,
+        },
+        demandRefsBySource: [],
+        attentionItems: [],
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const dashboard = await getSupplyReadinessDashboard('token')
+    expect(dashboard.totals.activePartsCount).toBe(1)
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/supply-readiness/dashboard', expect.any(Object))
+  })
+
+  it('loads stock reservations from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { getStockReservations } = await import('./client')
+    const reservations = await getStockReservations('token')
+    expect(reservations).toEqual([])
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/inventory/reservations', expect.any(Object))
+  })
+
+  it('loads rfqs from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const rfqs = await getRfqs('token')
+    expect(rfqs).toEqual([])
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/rfqs', expect.any(Object))
+  })
+
+  it('loads warranty claims from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const claims = await listWarrantyClaims('token')
+    expect(claims).toEqual([])
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/warranty-claims', expect.any(Object))
+  })
+
+  it('loads demand refs from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const refs = await getDemandRefs('token')
+    expect(refs).toEqual([])
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/demand-refs', expect.any(Object))
+  })
+
+  it('loads demand processing dashboard from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        generatedAt: '2026-05-29T00:00:00Z',
+        totals: {
+          pendingCount: 0,
+          failedCount: 0,
+          blockedCount: 0,
+          draftCreatedCount: 0,
+        },
+        demandRefs: [],
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const dashboard = await getDemandProcessingDashboard('token')
+    expect(dashboard.totals.pendingCount).toBe(0)
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/demand-processing', expect.any(Object))
+  })
+
+  it('loads demand processing settings from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        enabled: true,
+        checkIntervalMinutes: 5,
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const settings = await getDemandProcessingSettings('token')
+    expect(settings.enabled).toBe(true)
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/demand-processing-settings', expect.any(Object))
+  })
+
+  it('loads integration event settings from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        enabled: true,
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const settings = await getIntegrationEventSettings('token')
+    expect(settings.enabled).toBe(true)
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/integration-event-settings', expect.any(Object))
+  })
+
+  it('loads notification settings from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        enabled: true,
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const settings = await getProcurementNotificationSettings('token')
+    expect(settings.enabled).toBe(true)
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/notification-settings', expect.any(Object))
+  })
+
+  it('loads price snapshot settings from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        enabled: true,
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const settings = await getPriceSnapshotSettings('token')
+    expect(settings.enabled).toBe(true)
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/price-snapshot-settings', expect.any(Object))
+  })
+
+  it('loads lead-time snapshot settings from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        enabled: true,
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const settings = await getLeadTimeSnapshotSettings('token')
+    expect(settings.enabled).toBe(true)
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/lead-time-snapshot-settings', expect.any(Object))
+  })
+
+  it('loads availability snapshot settings from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        enabled: true,
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const settings = await getAvailabilitySnapshotSettings('token')
+    expect(settings.enabled).toBe(true)
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/availability-snapshot-settings', expect.any(Object))
+  })
+
+  it('loads procurement coordination dashboard from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        generatedAt: '2026-05-29T00:00:00Z',
+        totals: {
+          activeCount: 0,
+          blockedCount: 0,
+          exceptionCount: 0,
+        },
+        items: [],
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await getProcurementCoordinationDashboard('token')
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/procurement-coordination?activeOnly=true', expect.any(Object))
+  })
+
+  it('loads procurement coordination settings from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        enabled: true,
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const settings = await getProcurementCoordinationSettings('token')
+    expect(settings.enabled).toBe(true)
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/procurement-coordination-settings', expect.any(Object))
+  })
+
+  it('loads approval reminders dashboard from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        generatedAt: '2026-05-29T00:00:00Z',
+        totals: {
+          pendingCount: 0,
+          overdueCount: 0,
+          upcomingCount: 0,
+        },
+        items: [],
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await getApprovalRemindersDashboard('token')
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/approval-reminders?includeUpcoming=false', expect.any(Object))
+  })
+
+  it('loads approval reminder settings from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        enabled: true,
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const settings = await getApprovalReminderSettings('token')
+    expect(settings.enabled).toBe(true)
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/approval-reminder-settings', expect.any(Object))
+  })
+
+  it('loads procurement exception escalation settings from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        enabled: true,
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const settings = await getProcurementExceptionEscalationSettings('token')
+    expect(settings.enabled).toBe(true)
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/procurement-exception-escalation-settings',
+      expect.any(Object),
+    )
+  })
+
+  it('loads procurement exception resolution templates from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const templates = await listProcurementExceptionResolutionTemplates('token')
+    expect(templates).toEqual([])
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/procurement-exceptions/resolution-templates',
+      expect.any(Object),
+    )
+  })
+
+  it('loads supplier incidents from v1 endpoint with filters', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await listSupplierIncidents('token', {
+      status: 'open',
+      externalPartyId: '11111111-1111-1111-1111-111111111111',
+      severity: 'high',
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/supplier-incidents?status=open&externalPartyId=11111111-1111-1111-1111-111111111111&severity=high',
+      expect.any(Object),
+    )
+  })
+
+  it('loads party supplier incidents from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await listPartySupplierIncidents('token', '22222222-2222-2222-2222-222222222222')
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/parties/22222222-2222-2222-2222-222222222222/supplier-incidents',
+      expect.any(Object),
+    )
+  })
+
+  it('creates and updates supplier incident workflow on v1 endpoints', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ incidentId: '33333333-3333-3333-3333-333333333333' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ incidentId: '33333333-3333-3333-3333-333333333333' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ incidentId: '33333333-3333-3333-3333-333333333333' }),
+      })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const incidentId = '33333333-3333-3333-3333-333333333333'
+    await createSupplierIncident('token', {
+      incidentKey: 'inc-001',
+      externalPartyId: '44444444-4444-4444-4444-444444444444',
+      title: 'Quality deviation',
+      description: 'Batch mismatch',
+      incidentType: 'quality',
+      severity: 'high',
+    })
+    await startSupplierIncidentInvestigation('token', incidentId)
+    await applySupplierIncidentProcurementRestriction('token', incidentId, {
+      restrictionKey: 'hold-vendor',
+      scopes: ['purchase_requests'],
+      reason: 'Safety review',
+    })
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/v1/supplier-incidents',
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/supplier-incidents/33333333-3333-3333-3333-333333333333/start-investigation',
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      '/api/v1/supplier-incidents/33333333-3333-3333-3333-333333333333/apply-procurement-restriction',
+      expect.any(Object),
+    )
+  })
+
+  it('loads vendor restrictions from v1 endpoint with status filter', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await listVendorRestrictions('token', { status: 'active' })
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/vendor-restrictions?status=active',
+      expect.any(Object),
+    )
+  })
+
+  it('loads party vendor restrictions and enforcement from v1 endpoints', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          externalPartyId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          isBlocked: false,
+          blockReason: null,
+          activeScopes: [],
+        }),
+      })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const partyId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+    await listPartyVendorRestrictions('token', partyId)
+    await getPartyVendorRestrictionEnforcement('token', partyId)
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/v1/parties/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/vendor-restrictions',
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/parties/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/vendor-restrictions/enforcement',
+      expect.any(Object),
+    )
+  })
+
+  it('creates and lifts vendor restrictions on v1 endpoints', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ restrictionId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ restrictionId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' }),
+      })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const partyId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+    const restrictionId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+    await createPartyVendorRestriction('token', partyId, {
+      restrictionKey: 'hold-vendor',
+      scopes: ['purchase_orders'],
+      reason: 'Pending insurance renewal',
+      effectiveFrom: null,
+      effectiveUntil: null,
+    })
+    await liftVendorRestriction('token', restrictionId, {
+      liftNotes: 'Insurance completed',
+    })
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/v1/parties/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/vendor-restrictions',
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/vendor-restrictions/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/lift',
+      expect.any(Object),
+    )
+  })
+
+  it('loads supplier onboarding endpoints from v1 routes', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ requiredDocuments: [] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
+      })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await getSupplierOnboardingDocumentRequirements('token')
+    await listPendingSupplierOnboarding('token')
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/v1/supplier-onboarding/document-requirements',
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/supplier-onboarding/pending',
+      expect.any(Object),
+    )
+  })
+
+  it('loads and approves party compliance documents on v1 routes', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ documentId: 'cccccccc-cccc-cccc-cccc-cccccccccccc' }),
+      })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const partyId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+    const documentId = 'cccccccc-cccc-cccc-cccc-cccccccccccc'
+    await listPartyComplianceDocuments('token', partyId)
+    await approvePartyComplianceDocument('token', partyId, documentId)
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/v1/parties/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/compliance-documents',
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/parties/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/compliance-documents/cccccccc-cccc-cccc-cccc-cccccccccccc/approve',
+      expect.any(Object),
+    )
+  })
+
+  it('loads emergency purchases from v1 endpoints', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
+      })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await getEmergencyPurchases('token', 'pending')
+    await listPendingEmergencyPurchases('token')
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/v1/emergency-purchases?status=pending',
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/emergency-purchases/pending',
+      expect.any(Object),
+    )
+  })
+
+  it('runs emergency purchase workflow actions on v1 endpoints', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ purchaseRequestId: 'dddddddd-dddd-dddd-dddd-dddddddddddd' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ purchaseRequestId: 'dddddddd-dddd-dddd-dddd-dddddddddddd' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ purchaseOrderId: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee' }),
+      })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const purchaseRequestId = 'dddddddd-dddd-dddd-dddd-dddddddddddd'
+    await expeditedSubmitEmergencyPurchase('token', purchaseRequestId, 'urgent')
+    await managerOverrideApproveEmergencyPurchase('token', purchaseRequestId, 'manager approved')
+    await issueEmergencyPurchaseOrder('token', purchaseRequestId, 'epo-001')
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/v1/emergency-purchases/dddddddd-dddd-dddd-dddd-dddddddddddd/expedited-submit',
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/emergency-purchases/dddddddd-dddd-dddd-dddd-dddddddddddd/manager-override-approve',
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      '/api/v1/emergency-purchases/dddddddd-dddd-dddd-dddd-dddddddddddd/issue-purchase-order',
+      expect.any(Object),
+    )
+  })
+
+  it('loads report summaries from v1 report endpoints', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ items: [] }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ parts: [] }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ totals: {} }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ generatedAt: '2026-05-29T00:00:00Z' }) })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await getVendorReportSummary('token')
+    await getPartsInventoryReportSummary('token')
+    await getPurchasingReportSummary('token')
+    await getComplianceReportSummary('token')
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/v1/reports/vendors/summary',
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/reports/parts-inventory/summary',
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      '/api/v1/reports/purchasing/summary',
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      '/api/v1/reports/compliance/summary',
+      expect.any(Object),
+    )
+  })
+
+  it('runs forgiving search on v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ query: 'oil', totalCount: 0, buckets: [], results: [] }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await forgivingSearch('token', { q: 'oil', limit: 5 })
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/search/forgiving?q=oil&limit=5', expect.any(Object))
+  })
+
+  it('loads audit history from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ items: [], nextCursor: null }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await listAuditHistory('token', { limit: 10, action: 'test.action' })
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/audit-history?limit=10&action=test.action',
+      expect.any(Object),
+    )
   })
 })

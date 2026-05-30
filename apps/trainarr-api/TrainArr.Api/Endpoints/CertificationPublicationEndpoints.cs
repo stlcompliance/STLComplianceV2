@@ -10,10 +10,19 @@ public static class CertificationPublicationEndpoints
 
     public static void MapTrainArrCertificationPublicationEndpoints(this WebApplication app)
     {
-        var publications = app.MapGroup("/api/certification-publications")
-            .WithTags("CertificationPublications");
+        var routes = new[]
+        {
+            (Route: "/api/certification-publications", Suffix: string.Empty),
+            (Route: "/api/v1/certification-publications", Suffix: "V1CertificationPublications"),
+            (Route: "/api/v1/certificates", Suffix: "V1Certificates"),
+        };
 
-        publications.MapPost("/", async (
+        foreach (var (route, suffix) in routes)
+        {
+            var publications = app.MapGroup(route)
+                .WithTags("CertificationPublications");
+
+            publications.MapPost("/", async (
             CreateCertificationPublicationRequest request,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
@@ -33,6 +42,7 @@ public static class CertificationPublicationEndpoints
             var created = await service.PublishTrainingBlockerAsync(request, cancellationToken);
             return Results.Created($"/api/certification-publications/{created.PublicationId}", created);
         })
-        .WithName("CreateCertificationPublication");
+        .WithName($"CreateCertificationPublication{suffix}");
+        }
     }
 }

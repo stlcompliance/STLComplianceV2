@@ -14,6 +14,9 @@ import {
   recordMeterReading,
   getInspectionRuns,
   getInspectionTemplates,
+  getMaintenanceReportSummary,
+  getComplianceReportSummary,
+  getExecutiveReportSummary,
   MaintainArrApiError,
 } from './client'
 
@@ -407,7 +410,7 @@ describe('maintainarr api client', () => {
     const result = await getAssetReadiness('token-123', assetId)
     expect(result.readinessStatus).toBe('ready')
     expect(fetchMock).toHaveBeenCalledWith(
-      `/api/asset-readiness?assetId=${assetId}`,
+      `/api/v1/readiness?assetId=${assetId}`,
       expect.any(Object),
     )
   })
@@ -433,6 +436,41 @@ describe('maintainarr api client', () => {
     const result = await getAssetReadinessFleet('token-123')
     expect(result).toHaveLength(1)
     expect(result[0]?.readinessStatus).toBe('not_ready')
-    expect(fetchMock).toHaveBeenCalledWith('/api/asset-readiness', expect.any(Object))
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/readiness', expect.any(Object))
+  })
+
+  it('loads maintenance and compliance report summaries from v1 endpoints', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ totalAssetCount: 0, assets: [], workOrderStatusCounts: [] }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ regulatoryKeyMirrorCount: 0, regulatoryKeyGroups: [], templateSummaries: [] }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      )
+
+    await getMaintenanceReportSummary('token-123')
+    await getComplianceReportSummary('token-123')
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/v1/reports/maintenance/summary', expect.any(Object))
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/v1/reports/compliance/summary', expect.any(Object))
+  })
+
+  it('loads executive report summary from v1 endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({}), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await getExecutiveReportSummary('token-123')
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/reports/executive/summary', expect.any(Object))
   })
 })

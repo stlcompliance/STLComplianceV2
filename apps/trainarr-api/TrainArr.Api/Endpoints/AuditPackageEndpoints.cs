@@ -8,9 +8,17 @@ public static class AuditPackageEndpoints
 {
     public static void MapTrainArrAuditPackageEndpoints(this WebApplication app)
     {
-        var packages = app.MapGroup("/api/audit-packages")
-            .WithTags("AuditPackages")
-            .RequireAuthorization();
+        var routes = new[]
+        {
+            (Route: "/api/audit-packages", Suffix: string.Empty),
+            (Route: "/api/v1/audit-packages", Suffix: "V1"),
+        };
+
+        foreach (var (route, suffix) in routes)
+        {
+            var packages = app.MapGroup(route)
+                .WithTags("AuditPackages")
+                .RequireAuthorization();
 
         packages.MapGet("/manifest", (
             TrainArrAuthorizationService authorization,
@@ -20,7 +28,7 @@ public static class AuditPackageEndpoints
             authorization.RequireAuditPackageRead(context.User);
             return Results.Ok(service.GetManifest());
         })
-        .WithName("GetTrainArrAuditPackageManifest");
+        .WithName($"GetTrainArrAuditPackageManifest{suffix}");
 
         packages.MapGet("/export", async (
             string? format,
@@ -57,7 +65,7 @@ public static class AuditPackageEndpoints
                 "application/zip",
                 $"trainarr-audit-package-{DateTime.UtcNow:yyyyMMddHHmmss}.zip");
         })
-        .WithName("ExportTrainArrAuditPackage");
+        .WithName($"ExportTrainArrAuditPackage{suffix}");
 
         packages.MapPost("/jobs", async (
             CreateAuditPackageGenerationJobRequest request,
@@ -74,9 +82,9 @@ public static class AuditPackageEndpoints
                 actorUserId,
                 request,
                 cancellationToken);
-            return Results.Accepted($"/api/audit-packages/jobs/{job.JobId}", job);
+            return Results.Accepted($"{route}/jobs/{job.JobId}", job);
         })
-        .WithName("CreateTrainArrAuditPackageGenerationJob");
+        .WithName($"CreateTrainArrAuditPackageGenerationJob{suffix}");
 
         packages.MapGet("/jobs/{jobId:guid}", async (
             Guid jobId,
@@ -90,7 +98,7 @@ public static class AuditPackageEndpoints
             var job = await generationService.GetJobAsync(tenantId, jobId, cancellationToken);
             return Results.Ok(job);
         })
-        .WithName("GetTrainArrAuditPackageGenerationJob");
+        .WithName($"GetTrainArrAuditPackageGenerationJob{suffix}");
 
         packages.MapGet("/jobs/{jobId:guid}/download", async (
             Guid jobId,
@@ -115,6 +123,7 @@ public static class AuditPackageEndpoints
                 cancellationToken);
             return Results.File(content, contentType, fileName);
         })
-        .WithName("DownloadTrainArrAuditPackageGenerationJob");
+        .WithName($"DownloadTrainArrAuditPackageGenerationJob{suffix}");
+        }
     }
 }

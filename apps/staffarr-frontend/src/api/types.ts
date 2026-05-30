@@ -29,6 +29,18 @@ export interface StaffArrMeResponse {
   entitlements: string[]
 }
 
+export interface StaffArrSessionBootstrapResponse {
+  userId: string
+  personId: string
+  tenantId: string
+  sessionId: string
+  tenantRoleKey: string
+  isPlatformAdmin: boolean
+  productKey: string
+  hasStaffArrEntitlement: boolean
+  entitlements: string[]
+}
+
 export interface MePortalPermissionSummaryResponse {
   permissionCount: number
   permissionSummaries: string[]

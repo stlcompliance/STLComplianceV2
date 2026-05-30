@@ -168,6 +168,36 @@ public sealed class MaintainArrStaffarrTechnicianSyncTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Staffarr_person_sync_ingest_v1_alias_updates_technician_ref()
+    {
+        var personId = Guid.NewGuid();
+        var request = ServiceAuthorized(
+            HttpMethod.Post,
+            "/api/v1/integrations/staffarr-person-sync",
+            _staffarrToMaintainarrToken);
+        request.Content = JsonContent.Create(new IngestStaffarrPersonSyncRequest(
+            PlatformSeeder.DemoTenantId,
+            personId,
+            "Jordan Tech V1",
+            "active",
+            "yard-c",
+            "staffarr.person.updated",
+            DateTimeOffset.UtcNow,
+            $"staffarr.person.updated:{personId:D}:v1"));
+
+        var response = await _maintainarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var mirror = await db.StaffPersonRefs
+            .AsNoTracking()
+            .SingleAsync(x => x.TenantId == PlatformSeeder.DemoTenantId && x.StaffarrPersonId == personId.ToString("D"));
+        Assert.Equal("Jordan Tech V1", mirror.DisplayNameSnapshot);
+        Assert.Equal("yard-c", mirror.PrimarySiteSnapshot);
+    }
+
+    [Fact]
     public async Task Staffarr_person_create_pushes_mirror_to_maintainarr()
     {
         using var staffarrScope = _staffarrFactory.Services.CreateScope();

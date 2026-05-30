@@ -112,6 +112,35 @@ public sealed class MaintainArrFieldInboxTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Field_inbox_v1_alias_returns_assigned_open_work_order_for_technician()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetAsync(token);
+
+        var createResponse = await _maintainarrClient.SendAsync(Authorized(
+            HttpMethod.Post,
+            "/api/work-orders",
+            token,
+            new CreateWorkOrderRequest(
+                assetId,
+                "Replace pump belt",
+                "Field task for v1 inbox",
+                WorkOrderPriorities.High,
+                PlatformSeeder.DemoAdminUserId.ToString(),
+                null)));
+        createResponse.EnsureSuccessStatusCode();
+
+        var inboxResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/field-inbox", token));
+        inboxResponse.EnsureSuccessStatusCode();
+
+        var inbox = (await inboxResponse.Content.ReadFromJsonAsync<FieldInboxResponse>())!;
+        Assert.Equal(1, inbox.Summary.TotalCount);
+        Assert.Equal("work_order", inbox.Items[0].TaskType);
+        Assert.Contains("Replace pump belt", inbox.Items[0].Title, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Field_inbox_requires_authentication()
     {
         var response = await _maintainarrClient.GetAsync("/api/field-inbox");
@@ -162,7 +191,7 @@ public sealed class MaintainArrFieldInboxTests : IAsyncLifetime
     {
         var handoffResponse = await _nexarrClient.SendAsync(Authorized(
             HttpMethod.Post,
-            "/api/launch/handoff",
+            "/api/v1/launch/handoff",
             await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail),
             new CreateHandoffRequest("maintainarr", null)));
         handoffResponse.EnsureSuccessStatusCode();

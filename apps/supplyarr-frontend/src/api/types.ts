@@ -27,6 +27,18 @@ export interface SupplyArrMeResponse {
   entitlements: string[]
 }
 
+export interface SupplyArrSessionBootstrapResponse {
+  userId: string
+  personId: string
+  tenantId: string
+  sessionId: string
+  tenantRoleKey: string
+  isPlatformAdmin: boolean
+  productKey: string
+  hasSupplyArrEntitlement: boolean
+  entitlements: string[]
+}
+
 export interface PartyContactResponse {
   contactId: string
   contactName: string

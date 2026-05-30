@@ -113,7 +113,7 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         await SeedDatabaseAsync();
         var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
 
-        var handoffRequest = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest(
             "staffarr",
             "https://evil.example/callback"));

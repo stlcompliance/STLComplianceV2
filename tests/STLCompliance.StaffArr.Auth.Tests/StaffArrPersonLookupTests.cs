@@ -167,6 +167,34 @@ public sealed class StaffArrPersonLookupTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Person_lookup_v1_aliases_match_nested_and_email_lookup()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "hr_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "V1 Query Lookup User", "v1.query.lookup@example.com");
+
+        var nestedResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/people/{personId}/lookup", token));
+        nestedResponse.EnsureSuccessStatusCode();
+        var nested = (await nestedResponse.Content.ReadFromJsonAsync<PersonLookupResponse>())!;
+
+        var queryResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/person-lookup?personId={personId}", token));
+        queryResponse.EnsureSuccessStatusCode();
+        var query = (await queryResponse.Content.ReadFromJsonAsync<PersonLookupResponse>())!;
+
+        Assert.Equal(nested.PersonId, query.PersonId);
+        Assert.Equal(nested.DisplayName, query.DisplayName);
+        Assert.Equal(nested.Placement.ManagerPersonId, query.Placement.ManagerPersonId);
+
+        var emailResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/person-lookup?email=v1.query.lookup@example.com", token));
+        emailResponse.EnsureSuccessStatusCode();
+        var emailLookup = (await emailResponse.Content.ReadFromJsonAsync<PersonLookupResponse>())!;
+        Assert.Equal(personId, emailLookup.PersonId);
+    }
+
+    [Fact]
     public async Task Person_lookup_denies_unrelated_tenant_member_reads()
     {
         var targetPersonId = Guid.NewGuid();

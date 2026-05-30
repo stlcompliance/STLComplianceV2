@@ -8,10 +8,25 @@ public static class QualificationIssueEndpoints
 {
     public static void MapTrainArrQualificationIssueEndpoints(this WebApplication app)
     {
-        var qualifications = app.MapGroup("/api/qualification-issues")
-            .WithTags("QualificationIssues")
-            .RequireAuthorization();
+        MapRoutes(
+            app.MapGroup("/api/qualification-issues")
+                .WithTags("QualificationIssues")
+                .RequireAuthorization(),
+            string.Empty);
+        MapRoutes(
+            app.MapGroup("/api/v1/qualification-issues")
+                .WithTags("QualificationIssues")
+                .RequireAuthorization(),
+            "V1QualificationIssues");
+        MapRoutes(
+            app.MapGroup("/api/v1/qualifications")
+                .WithTags("QualificationIssues")
+                .RequireAuthorization(),
+            "V1Qualifications");
+    }
 
+    private static void MapRoutes(RouteGroupBuilder qualifications, string nameSuffix)
+    {
         qualifications.MapGet("/", async (
             string? status,
             HttpContext context,
@@ -23,7 +38,7 @@ public static class QualificationIssueEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(tenantId, status, cancellationToken));
         })
-        .WithName("ListQualificationIssues");
+        .WithName($"ListQualificationIssues{nameSuffix}");
 
         qualifications.MapGet("/{qualificationIssueId:guid}", async (
             Guid qualificationIssueId,
@@ -36,7 +51,7 @@ public static class QualificationIssueEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetByIdAsync(tenantId, qualificationIssueId, cancellationToken));
         })
-        .WithName("GetQualificationIssue");
+        .WithName($"GetQualificationIssue{nameSuffix}");
 
         qualifications.MapPost("/{qualificationIssueId:guid}/suspend", async (
             Guid qualificationIssueId,
@@ -57,7 +72,7 @@ public static class QualificationIssueEndpoints
                 cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("SuspendQualificationIssue");
+        .WithName($"SuspendQualificationIssue{nameSuffix}");
 
         qualifications.MapPost("/{qualificationIssueId:guid}/revoke", async (
             Guid qualificationIssueId,
@@ -78,7 +93,7 @@ public static class QualificationIssueEndpoints
                 cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("RevokeQualificationIssue");
+        .WithName($"RevokeQualificationIssue{nameSuffix}");
 
         qualifications.MapPost("/{qualificationIssueId:guid}/expire", async (
             Guid qualificationIssueId,
@@ -99,6 +114,6 @@ public static class QualificationIssueEndpoints
                 cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("ExpireQualificationIssue");
+        .WithName($"ExpireQualificationIssue{nameSuffix}");
     }
 }

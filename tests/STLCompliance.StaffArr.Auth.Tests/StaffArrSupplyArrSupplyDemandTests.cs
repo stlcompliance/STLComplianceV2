@@ -168,6 +168,29 @@ public sealed class StaffArrSupplyArrSupplyDemandTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Supply_demand_publish_v1_alias_creates_supplyarr_mirror()
+    {
+        var staffarrToken = CreateStaffArrAccessToken(["staffarr"]);
+        var supplyarrToken = CreateSupplyArrAccessToken(["supplyarr"]);
+        var partId = await SeedSupplyArrPartAsync(supplyarrToken);
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId);
+        var incidentId = await CreateIncidentAsync(staffarrToken, personId);
+
+        var createLineRequest = Authorized(HttpMethod.Post, $"/api/v1/incidents/{incidentId}/supply-demand", staffarrToken);
+        createLineRequest.Content = JsonContent.Create(new CreateIncidentSupplyDemandLineRequest(
+            partId, "SUP-V1-001", "Incident supplies v1", 2m, "each", null));
+        (await _staffarrClient.SendAsync(createLineRequest)).EnsureSuccessStatusCode();
+
+        var publishRequest = Authorized(HttpMethod.Post, $"/api/v1/incidents/{incidentId}/supply-demand/publish", staffarrToken);
+        publishRequest.Content = JsonContent.Create(new PublishIncidentSupplyDemandRequest(false));
+        var publishResponse = await _staffarrClient.SendAsync(publishRequest);
+        publishResponse.EnsureSuccessStatusCode();
+        var published = (await publishResponse.Content.ReadFromJsonAsync<PublishIncidentSupplyDemandResponse>())!;
+        Assert.NotEqual(Guid.Empty, published.DemandRefId);
+    }
+
+    [Fact]
     public async Task Staffarr_demand_ingest_is_idempotent()
     {
         var staffarrToken = CreateStaffArrAccessToken(["staffarr"]);

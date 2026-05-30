@@ -113,6 +113,32 @@ public sealed class MaintainArrTechnicianRefTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Technician_refs_v1_alias_list_and_upsert()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+
+        var upsertRequest = Authorized(HttpMethod.Put, "/api/v1/technician-refs", token);
+        upsertRequest.Content = JsonContent.Create(new UpsertTechnicianRefRequest(
+            "person-tech-v1-001",
+            "V1 Alex Technician",
+            "active",
+            "yard-a",
+            null,
+            "staffarr-sync-v1"));
+        var upsertResponse = await _maintainarrClient.SendAsync(upsertRequest);
+        upsertResponse.EnsureSuccessStatusCode();
+        var upserted = (await upsertResponse.Content.ReadFromJsonAsync<TechnicianRefResponse>())!;
+        Assert.Equal("person-tech-v1-001", upserted.PersonId);
+        Assert.Equal("V1 Alex Technician", upserted.DisplayName);
+
+        var listRequest = Authorized(HttpMethod.Get, "/api/v1/technician-refs", token);
+        var listResponse = await _maintainarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var list = (await listResponse.Content.ReadFromJsonAsync<TechnicianRefListResponse>())!;
+        Assert.Contains(list.Items, x => x.PersonId == "person-tech-v1-001" && x.DisplayName == "V1 Alex Technician");
+    }
+
+    [Fact]
     public async Task Work_order_assignment_mirrors_technician_ref()
     {
         var token = await RedeemMaintainArrTokenAsync();
@@ -278,7 +304,7 @@ public sealed class MaintainArrTechnicianRefTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new NexArr.Api.Contracts.CreateHandoffRequest(
             "maintainarr",
             "http://localhost:5178/launch"));

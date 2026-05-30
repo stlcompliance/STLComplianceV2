@@ -27,6 +27,18 @@ export interface TrainArrMeResponse {
   entitlements: string[]
 }
 
+export interface TrainArrSessionBootstrapResponse {
+  userId: string
+  personId: string
+  tenantId: string
+  sessionId: string
+  tenantRoleKey: string
+  isPlatformAdmin: boolean
+  productKey: string
+  hasTrainArrEntitlement: boolean
+  entitlements: string[]
+}
+
 export interface TrainingDefinitionResponse {
   trainingDefinitionId: string
   definitionKey: string

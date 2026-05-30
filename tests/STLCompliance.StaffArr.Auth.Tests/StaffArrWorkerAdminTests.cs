@@ -104,6 +104,48 @@ public sealed class StaffArrWorkerAdminTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Settings_manifest_v1_requires_admin_and_lists_worker_groups()
+    {
+        var supervisorToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
+        var forbiddenResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", supervisorToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+
+        var adminResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", _adminToken));
+        adminResponse.EnsureSuccessStatusCode();
+        var manifest = (await adminResponse.Content.ReadFromJsonAsync<StaffArrSettingsManifestResponse>())!;
+        Assert.Contains(manifest.Items, x => x.SettingKey == "readiness_rollup_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "permission_projection_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "audit_package_generation_settings");
+    }
+
+    [Fact]
+    public async Task Config_manifest_v1_requires_admin_and_matches_settings_manifest()
+    {
+        var supervisorToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
+        var forbiddenResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/config", supervisorToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+
+        var configResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/config", _adminToken));
+        configResponse.EnsureSuccessStatusCode();
+        var configManifest = (await configResponse.Content.ReadFromJsonAsync<StaffArrSettingsManifestResponse>())!;
+
+        var settingsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", _adminToken));
+        settingsResponse.EnsureSuccessStatusCode();
+        var settingsManifest = (await settingsResponse.Content.ReadFromJsonAsync<StaffArrSettingsManifestResponse>())!;
+
+        Assert.Equal(settingsManifest.Items.Count, configManifest.Items.Count);
+        foreach (var item in settingsManifest.Items)
+        {
+            Assert.Contains(configManifest.Items, x => x.SettingKey == item.SettingKey);
+        }
+    }
+
     private string CreateStaffArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",

@@ -7,11 +7,18 @@ public static class TrainArrReportEndpoints
 {
     public static void MapTrainArrAssignmentReportEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/reports/assignments")
-            .WithTags("AssignmentReports")
-            .RequireAuthorization();
+        var routes = new[]
+        {
+            (Route: "/api/reports/assignments", Suffix: string.Empty),
+            (Route: "/api/v1/reports/assignments", Suffix: "V1"),
+        };
+        foreach (var (route, suffix) in routes)
+        {
+            var group = app.MapGroup(route)
+                .WithTags("AssignmentReports")
+                .RequireAuthorization();
 
-        group.MapGet("/summary", async (
+            group.MapGet("/summary", async (
             string? status,
             bool? overdueOnly,
             TrainArrAuthorizationService authorization,
@@ -38,9 +45,9 @@ public static class TrainArrReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(summary);
         })
-        .WithName("GetTrainArrAssignmentReportSummary");
+        .WithName($"GetTrainArrAssignmentReportSummary{suffix}");
 
-        group.MapGet("/summary/export", async (
+            group.MapGet("/summary/export", async (
             string? status,
             bool? overdueOnly,
             TrainArrAuthorizationService authorization,
@@ -67,16 +74,24 @@ public static class TrainArrReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportTrainArrAssignmentReportSummary");
+        .WithName($"ExportTrainArrAssignmentReportSummary{suffix}");
+        }
     }
 
     public static void MapTrainArrQualificationReportEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/reports/qualifications")
-            .WithTags("QualificationReports")
-            .RequireAuthorization();
+        var routes = new[]
+        {
+            (Route: "/api/reports/qualifications", Suffix: string.Empty),
+            (Route: "/api/v1/reports/qualifications", Suffix: "V1"),
+        };
+        foreach (var (route, suffix) in routes)
+        {
+            var group = app.MapGroup(route)
+                .WithTags("QualificationReports")
+                .RequireAuthorization();
 
-        group.MapGet("/summary", async (
+            group.MapGet("/summary", async (
             string? status,
             TrainArrAuthorizationService authorization,
             QualificationReportService reportService,
@@ -98,9 +113,9 @@ public static class TrainArrReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(summary);
         })
-        .WithName("GetTrainArrQualificationReportSummary");
+        .WithName($"GetTrainArrQualificationReportSummary{suffix}");
 
-        group.MapGet("/summary/export", async (
+            group.MapGet("/summary/export", async (
             string? status,
             TrainArrAuthorizationService authorization,
             QualificationReportService reportService,
@@ -122,16 +137,24 @@ public static class TrainArrReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportTrainArrQualificationReportSummary");
+        .WithName($"ExportTrainArrQualificationReportSummary{suffix}");
+        }
     }
 
     public static void MapTrainArrComplianceReportEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/reports/compliance")
-            .WithTags("ComplianceReports")
-            .RequireAuthorization();
+        var routes = new[]
+        {
+            (Route: "/api/reports/compliance", Suffix: string.Empty),
+            (Route: "/api/v1/reports/compliance", Suffix: "V1"),
+        };
+        foreach (var (route, suffix) in routes)
+        {
+            var group = app.MapGroup(route)
+                .WithTags("ComplianceReports")
+                .RequireAuthorization();
 
-        group.MapGet("/summary", async (
+            group.MapGet("/summary", async (
             bool? attentionOnly,
             TrainArrAuthorizationService authorization,
             ComplianceReportService reportService,
@@ -156,9 +179,9 @@ public static class TrainArrReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(summary);
         })
-        .WithName("GetTrainArrComplianceReportSummary");
+        .WithName($"GetTrainArrComplianceReportSummary{suffix}");
 
-        group.MapGet("/summary/export", async (
+            group.MapGet("/summary/export", async (
             bool? attentionOnly,
             TrainArrAuthorizationService authorization,
             ComplianceReportService reportService,
@@ -183,7 +206,8 @@ public static class TrainArrReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportTrainArrComplianceReportSummary");
+        .WithName($"ExportTrainArrComplianceReportSummary{suffix}");
+        }
     }
 
     public static void MapTrainArrEntityExportEndpoints(this WebApplication app)

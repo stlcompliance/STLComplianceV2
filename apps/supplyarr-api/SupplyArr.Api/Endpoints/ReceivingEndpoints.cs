@@ -8,8 +8,8 @@ public static class ReceivingEndpoints
 {
     public static void MapSupplyArrReceivingEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/receiving").WithTags("Receiving").RequireAuthorization();
-
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
         group.MapGet("/", async (
             string? status,
             Guid? purchaseOrderId,
@@ -22,7 +22,7 @@ public static class ReceivingEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(tenantId, status, purchaseOrderId, cancellationToken));
         })
-        .WithName("ListReceivingReceipts");
+        .WithName($"ListReceivingReceipts{nameSuffix}");
 
         group.MapGet("/{receivingReceiptId:guid}", async (
             Guid receivingReceiptId,
@@ -35,7 +35,7 @@ public static class ReceivingEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, receivingReceiptId, cancellationToken));
         })
-        .WithName("GetReceivingReceipt");
+        .WithName($"GetReceivingReceipt{nameSuffix}");
 
         group.MapPost("/from-purchase-order/{purchaseOrderId:guid}", async (
             Guid purchaseOrderId,
@@ -56,7 +56,7 @@ public static class ReceivingEndpoints
                 cancellationToken);
             return Results.Created($"/api/receiving/{created.ReceivingReceiptId}", created);
         })
-        .WithName("CreateReceivingReceiptFromPurchaseOrder");
+        .WithName($"CreateReceivingReceiptFromPurchaseOrder{nameSuffix}");
 
         group.MapPut("/{receivingReceiptId:guid}/lines/{lineId:guid}", async (
             Guid receivingReceiptId,
@@ -78,7 +78,7 @@ public static class ReceivingEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdateReceivingReceiptLine");
+        .WithName($"UpdateReceivingReceiptLine{nameSuffix}");
 
         group.MapPost("/{receivingReceiptId:guid}/post", async (
             Guid receivingReceiptId,
@@ -96,7 +96,7 @@ public static class ReceivingEndpoints
                 receivingReceiptId,
                 cancellationToken));
         })
-        .WithName("PostReceivingReceipt");
+        .WithName($"PostReceivingReceipt{nameSuffix}");
 
         group.MapGet("/{receivingReceiptId:guid}/exceptions", async (
             Guid receivingReceiptId,
@@ -112,7 +112,7 @@ public static class ReceivingEndpoints
                 receivingReceiptId,
                 cancellationToken));
         })
-        .WithName("ListReceivingExceptions");
+        .WithName($"ListReceivingExceptions{nameSuffix}");
 
         group.MapPost("/{receivingReceiptId:guid}/lines/{lineId:guid}/exceptions", async (
             Guid receivingReceiptId,
@@ -137,7 +137,7 @@ public static class ReceivingEndpoints
                 $"/api/receiving/exceptions/{created.ReceivingExceptionId}",
                 created);
         })
-        .WithName("CreateReceivingException");
+        .WithName($"CreateReceivingException{nameSuffix}");
 
         group.MapPost("/exceptions/{receivingExceptionId:guid}/resolve", async (
             Guid receivingExceptionId,
@@ -155,6 +155,13 @@ public static class ReceivingEndpoints
                 receivingExceptionId,
                 cancellationToken));
         })
-        .WithName("ResolveReceivingException");
+        .WithName($"ResolveReceivingException{nameSuffix}");
+        }
+
+        var legacyGroup = app.MapGroup("/api/receiving").WithTags("Receiving").RequireAuthorization();
+        MapRoutes(legacyGroup, string.Empty);
+
+        var v1Group = app.MapGroup("/api/v1/receiving").WithTags("Receiving").RequireAuthorization();
+        MapRoutes(v1Group, "V1");
     }
 }

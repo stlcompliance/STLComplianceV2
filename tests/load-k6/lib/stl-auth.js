@@ -56,7 +56,7 @@ export function getAuthorizedMe(baseUrl, accessToken, productKey) {
 
 export function createHandoff(nexarrBaseUrl, accessToken, productKey, callbackUrl = null) {
   const response = http.post(
-    `${normalizeBaseUrl(nexarrBaseUrl)}/api/launch/handoff`,
+    `${normalizeBaseUrl(nexarrBaseUrl)}/api/v1/launch/handoff`,
     JSON.stringify({ productKey, callbackUrl }),
     {
       headers: {

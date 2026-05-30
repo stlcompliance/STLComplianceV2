@@ -9,55 +9,64 @@ public static class AssetImportEndpoints
 {
     public static void MapMaintainArrAssetImportEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/imports")
-            .WithTags("Imports")
-            .RequireAuthorization();
-
-        group.MapPost("/assets/validate", async (
-            AssetBulkImportRequest? request,
-            HttpRequest httpRequest,
-            AssetBulkImportService importService,
-            MaintainArrAuthorizationService authorization,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        var groups = new[]
         {
-            authorization.RequireAssetImportManage(context.User);
-            var rows = await ResolveAssetRowsAsync(httpRequest, request, cancellationToken);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            return Results.Ok(await importService.ImportAsync(
-                tenantId,
-                actorUserId,
-                rows,
-                dryRun: true,
-                MaintainArrImportPhases.Validate,
-                cancellationToken));
-        })
-        .WithName("ValidateMaintainArrAssetImport")
-        .DisableAntiforgery();
+            (Route: "/api/imports", Suffix: string.Empty),
+            (Route: "/api/v1/imports", Suffix: "V1")
+        };
 
-        group.MapPost("/assets/commit", async (
-            AssetBulkImportRequest? request,
-            HttpRequest httpRequest,
-            AssetBulkImportService importService,
-            MaintainArrAuthorizationService authorization,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        foreach (var (route, suffix) in groups)
         {
-            authorization.RequireAssetImportManage(context.User);
-            var rows = await ResolveAssetRowsAsync(httpRequest, request, cancellationToken);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            return Results.Ok(await importService.ImportAsync(
-                tenantId,
-                actorUserId,
-                rows,
-                dryRun: false,
-                MaintainArrImportPhases.Commit,
-                cancellationToken));
-        })
-        .WithName("CommitMaintainArrAssetImport")
-        .DisableAntiforgery();
+            var group = app.MapGroup(route)
+                .WithTags("Imports")
+                .RequireAuthorization();
+
+            group.MapPost("/assets/validate", async (
+                AssetBulkImportRequest? request,
+                HttpRequest httpRequest,
+                AssetBulkImportService importService,
+                MaintainArrAuthorizationService authorization,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireAssetImportManage(context.User);
+                var rows = await ResolveAssetRowsAsync(httpRequest, request, cancellationToken);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                return Results.Ok(await importService.ImportAsync(
+                    tenantId,
+                    actorUserId,
+                    rows,
+                    dryRun: true,
+                    MaintainArrImportPhases.Validate,
+                    cancellationToken));
+            })
+            .WithName($"ValidateMaintainArrAssetImport{suffix}")
+            .DisableAntiforgery();
+
+            group.MapPost("/assets/commit", async (
+                AssetBulkImportRequest? request,
+                HttpRequest httpRequest,
+                AssetBulkImportService importService,
+                MaintainArrAuthorizationService authorization,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireAssetImportManage(context.User);
+                var rows = await ResolveAssetRowsAsync(httpRequest, request, cancellationToken);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                return Results.Ok(await importService.ImportAsync(
+                    tenantId,
+                    actorUserId,
+                    rows,
+                    dryRun: false,
+                    MaintainArrImportPhases.Commit,
+                    cancellationToken));
+            })
+            .WithName($"CommitMaintainArrAssetImport{suffix}")
+            .DisableAntiforgery();
+        }
     }
 
     private static async Task<IReadOnlyList<AssetImportRowRequest>> ResolveAssetRowsAsync(

@@ -8,14 +8,15 @@ public static class PartCatalogEndpoints
 {
     public static void MapSupplyArrPartCatalogEndpoints(this WebApplication app)
     {
-        MapCatalogs(app);
-        MapParts(app);
+        MapCatalogs(app.MapGroup("/api/catalogs").WithTags("PartCatalog").RequireAuthorization(), string.Empty);
+        MapCatalogs(app.MapGroup("/api/v1/catalogs").WithTags("PartCatalog").RequireAuthorization(), "V1");
+
+        MapParts(app.MapGroup("/api/parts").WithTags("PartCatalog").RequireAuthorization(), string.Empty);
+        MapParts(app.MapGroup("/api/v1/parts").WithTags("PartCatalog").RequireAuthorization(), "V1");
     }
 
-    private static void MapCatalogs(WebApplication app)
+    private static void MapCatalogs(RouteGroupBuilder group, string nameSuffix)
     {
-        var group = app.MapGroup("/api/catalogs").WithTags("PartCatalog").RequireAuthorization();
-
         group.MapGet("/", async (
             HttpContext context,
             SupplyArrAuthorizationService authorization,
@@ -26,7 +27,7 @@ public static class PartCatalogEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(tenantId, cancellationToken));
         })
-        .WithName("ListPartCatalogs");
+        .WithName($"ListPartCatalogs{nameSuffix}");
 
         group.MapGet("/{catalogId:guid}", async (
             Guid catalogId,
@@ -39,7 +40,7 @@ public static class PartCatalogEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, catalogId, cancellationToken));
         })
-        .WithName("GetPartCatalog");
+        .WithName($"GetPartCatalog{nameSuffix}");
 
         group.MapPost("/", async (
             CreatePartCatalogRequest request,
@@ -54,7 +55,7 @@ public static class PartCatalogEndpoints
             var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Created($"/api/catalogs/{created.CatalogId}", created);
         })
-        .WithName("CreatePartCatalog");
+        .WithName($"CreatePartCatalog{nameSuffix}");
 
         group.MapPut("/{catalogId:guid}", async (
             Guid catalogId,
@@ -69,7 +70,7 @@ public static class PartCatalogEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.UpdateAsync(tenantId, actorUserId, catalogId, request, cancellationToken));
         })
-        .WithName("UpdatePartCatalog");
+        .WithName($"UpdatePartCatalog{nameSuffix}");
 
         group.MapPatch("/{catalogId:guid}/status", async (
             Guid catalogId,
@@ -89,13 +90,11 @@ public static class PartCatalogEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdatePartCatalogStatus");
+        .WithName($"UpdatePartCatalogStatus{nameSuffix}");
     }
 
-    private static void MapParts(WebApplication app)
+    private static void MapParts(RouteGroupBuilder group, string nameSuffix)
     {
-        var group = app.MapGroup("/api/parts").WithTags("PartCatalog").RequireAuthorization();
-
         group.MapGet("/", async (
             Guid? catalogId,
             HttpContext context,
@@ -107,7 +106,7 @@ public static class PartCatalogEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(tenantId, catalogId, cancellationToken));
         })
-        .WithName("ListParts");
+        .WithName($"ListParts{nameSuffix}");
 
         group.MapGet("/{partId:guid}", async (
             Guid partId,
@@ -120,7 +119,7 @@ public static class PartCatalogEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, partId, cancellationToken));
         })
-        .WithName("GetPart");
+        .WithName($"GetPart{nameSuffix}");
 
         group.MapPost("/", async (
             CreatePartRequest request,
@@ -135,7 +134,7 @@ public static class PartCatalogEndpoints
             var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Created($"/api/parts/{created.PartId}", created);
         })
-        .WithName("CreatePart");
+        .WithName($"CreatePart{nameSuffix}");
 
         group.MapPut("/{partId:guid}", async (
             Guid partId,
@@ -150,7 +149,7 @@ public static class PartCatalogEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.UpdateAsync(tenantId, actorUserId, partId, request, cancellationToken));
         })
-        .WithName("UpdatePart");
+        .WithName($"UpdatePart{nameSuffix}");
 
         group.MapPatch("/{partId:guid}/status", async (
             Guid partId,
@@ -170,7 +169,7 @@ public static class PartCatalogEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdatePartStatus");
+        .WithName($"UpdatePartStatus{nameSuffix}");
 
         group.MapPost("/{partId:guid}/manufacturer-aliases", async (
             Guid partId,
@@ -191,7 +190,7 @@ public static class PartCatalogEndpoints
                 cancellationToken);
             return Results.Created($"/api/parts/{partId}/manufacturer-aliases/{alias.AliasId}", alias);
         })
-        .WithName("CreatePartManufacturerAlias");
+        .WithName($"CreatePartManufacturerAlias{nameSuffix}");
 
         group.MapPost("/{partId:guid}/vendor-links", async (
             Guid partId,
@@ -212,7 +211,7 @@ public static class PartCatalogEndpoints
                 cancellationToken);
             return Results.Created($"/api/parts/{partId}/vendor-links/{link.LinkId}", link);
         })
-        .WithName("CreatePartVendorLink");
+        .WithName($"CreatePartVendorLink{nameSuffix}");
 
         group.MapPut("/{partId:guid}/vendor-links/{linkId:guid}/catalog-price", async (
             Guid partId,
@@ -234,7 +233,7 @@ public static class PartCatalogEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpsertPartVendorLinkCatalogPrice");
+        .WithName($"UpsertPartVendorLinkCatalogPrice{nameSuffix}");
 
         group.MapPut("/{partId:guid}/vendor-links/{linkId:guid}/catalog-lead-time", async (
             Guid partId,
@@ -256,7 +255,7 @@ public static class PartCatalogEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpsertPartVendorLinkCatalogLeadTime");
+        .WithName($"UpsertPartVendorLinkCatalogLeadTime{nameSuffix}");
 
         group.MapPut("/{partId:guid}/vendor-links/{linkId:guid}/catalog-availability", async (
             Guid partId,
@@ -278,6 +277,6 @@ public static class PartCatalogEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpsertPartVendorLinkCatalogAvailability");
+        .WithName($"UpsertPartVendorLinkCatalogAvailability{nameSuffix}");
     }
 }

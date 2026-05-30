@@ -8,73 +8,21 @@ public static class TrainingEvaluationEndpoints
 {
     public static void MapTrainArrTrainingEvaluationEndpoints(this WebApplication app)
     {
-        var evaluations = app.MapGroup("/api/evaluations")
-            .WithTags("Evaluations")
-            .RequireAuthorization();
-
-        evaluations.MapGet("/", async (
-            Guid? trainingAssignmentId,
-            HttpContext context,
-            TrainArrAuthorizationService authorization,
-            TrainingAssignmentService assignmentService,
-            TrainingEvaluationService evaluationService,
-            CancellationToken cancellationToken) =>
-        {
-            var tenantId = context.User.GetTenantId();
-            if (trainingAssignmentId is Guid assignmentId)
-            {
-                var assignment = await assignmentService.GetAsync(tenantId, assignmentId, cancellationToken);
-                authorization.RequireEvaluationsRead(context.User, assignment.StaffarrPersonId);
-            }
-            else
-            {
-                authorization.RequireTrainArrEntitlement(context.User);
-            }
-
-            return Results.Ok(await evaluationService.ListForAssignmentAsync(
-                tenantId,
-                trainingAssignmentId,
-                cancellationToken));
-        })
-        .WithName("ListTrainingEvaluations");
-
-        evaluations.MapGet("/review-timeline", async (
-            Guid? staffarrPersonId,
-            string? result,
-            int? limit,
-            HttpContext context,
-            TrainArrAuthorizationService authorization,
-            TrainingEvaluationService evaluationService,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireEvaluationSubmit(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await evaluationService.ListReviewTimelineAsync(
-                tenantId,
-                staffarrPersonId,
-                result,
-                limit ?? 50,
-                cancellationToken));
-        })
-        .WithName("ListTrainingEvaluationReviewTimeline");
-
-        evaluations.MapPost("/", async (
-            SubmitTrainingEvaluationRequest request,
-            HttpContext context,
-            TrainArrAuthorizationService authorization,
-            TrainingAssignmentService assignmentService,
-            TrainingEvaluationService evaluationService,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireEvaluationSubmit(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var assignment = await assignmentService.GetAsync(tenantId, request.TrainingAssignmentId, cancellationToken);
-            authorization.RequireEvaluationsRead(context.User, assignment.StaffarrPersonId);
-            var created = await evaluationService.SubmitAsync(tenantId, actorUserId, request, cancellationToken);
-            return Results.Created($"/api/evaluations?trainingAssignmentId={created.TrainingAssignmentId}", created);
-        })
-        .WithName("SubmitTrainingEvaluation");
+        MapTopLevelRoutes(
+            app.MapGroup("/api/evaluations")
+                .WithTags("Evaluations")
+                .RequireAuthorization(),
+            string.Empty);
+        MapTopLevelRoutes(
+            app.MapGroup("/api/v1/evaluations")
+                .WithTags("Evaluations")
+                .RequireAuthorization(),
+            "V1Evaluations");
+        MapTopLevelRoutes(
+            app.MapGroup("/api/v1/attempts")
+                .WithTags("Evaluations")
+                .RequireAuthorization(),
+            "V1Attempts");
 
         var nested = app.MapGroup("/api/training-assignments/{assignmentId:guid}/evaluations")
             .WithTags("Evaluations")
@@ -137,5 +85,72 @@ public static class TrainingEvaluationEndpoints
             return Results.Created($"/api/training-assignments/{assignmentId}/evaluations", created);
         })
         .WithName("SubmitTrainingEvaluationForAssignment");
+    }
+
+    private static void MapTopLevelRoutes(RouteGroupBuilder evaluations, string nameSuffix)
+    {
+        evaluations.MapGet("/", async (
+            Guid? trainingAssignmentId,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingAssignmentService assignmentService,
+            TrainingEvaluationService evaluationService,
+            CancellationToken cancellationToken) =>
+        {
+            var tenantId = context.User.GetTenantId();
+            if (trainingAssignmentId is Guid assignmentId)
+            {
+                var assignment = await assignmentService.GetAsync(tenantId, assignmentId, cancellationToken);
+                authorization.RequireEvaluationsRead(context.User, assignment.StaffarrPersonId);
+            }
+            else
+            {
+                authorization.RequireTrainArrEntitlement(context.User);
+            }
+
+            return Results.Ok(await evaluationService.ListForAssignmentAsync(
+                tenantId,
+                trainingAssignmentId,
+                cancellationToken));
+        })
+        .WithName($"ListTrainingEvaluations{nameSuffix}");
+
+        evaluations.MapGet("/review-timeline", async (
+            Guid? staffarrPersonId,
+            string? result,
+            int? limit,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingEvaluationService evaluationService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireEvaluationSubmit(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await evaluationService.ListReviewTimelineAsync(
+                tenantId,
+                staffarrPersonId,
+                result,
+                limit ?? 50,
+                cancellationToken));
+        })
+        .WithName($"ListTrainingEvaluationReviewTimeline{nameSuffix}");
+
+        evaluations.MapPost("/", async (
+            SubmitTrainingEvaluationRequest request,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingAssignmentService assignmentService,
+            TrainingEvaluationService evaluationService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireEvaluationSubmit(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var assignment = await assignmentService.GetAsync(tenantId, request.TrainingAssignmentId, cancellationToken);
+            authorization.RequireEvaluationsRead(context.User, assignment.StaffarrPersonId);
+            var created = await evaluationService.SubmitAsync(tenantId, actorUserId, request, cancellationToken);
+            return Results.Created($"/api/evaluations?trainingAssignmentId={created.TrainingAssignmentId}", created);
+        })
+        .WithName($"SubmitTrainingEvaluation{nameSuffix}");
     }
 }

@@ -130,6 +130,59 @@ public sealed class MaintainArrAuditPackageTests : IAsyncLifetime
         Assert.Equal(1, timeline.TotalCount);
     }
 
+    [Fact]
+    public async Task Audit_package_v1_aliases_manifest_summary_timeline_and_export_work()
+    {
+        var token = CreateMaintainArrAccessToken(["maintainarr"], tenantRoleKey: "maintainarr_admin");
+        await SeedAuditEventAsync("work_order.create", "success");
+        await SeedAuditEventAsync("defect.create", "failed");
+
+        var manifestResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit-packages/manifest", token));
+        manifestResponse.EnsureSuccessStatusCode();
+        var manifest = (await manifestResponse.Content.ReadFromJsonAsync<AuditPackageManifestResponse>())!;
+        Assert.Equal("2", manifest.PackageVersion);
+
+        var summaryResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit-packages/summary?action=work_order.create", token));
+        summaryResponse.EnsureSuccessStatusCode();
+        var summary = (await summaryResponse.Content.ReadFromJsonAsync<AuditPackageExportSummaryResponse>())!;
+        Assert.Equal(1, summary.Counts.AuditEvents);
+
+        var timelineResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit-packages/timeline?action=defect.create&pageSize=20", token));
+        timelineResponse.EnsureSuccessStatusCode();
+        var timeline = (await timelineResponse.Content.ReadFromJsonAsync<PagedResult<AuditEventExportItem>>())!;
+        Assert.All(timeline.Items, item => Assert.Equal("defect.create", item.Action));
+
+        var exportResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit-packages/export?format=csv", token));
+        exportResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", exportResponse.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Audit_v1_alias_matches_audit_package_timeline()
+    {
+        var token = CreateMaintainArrAccessToken(["maintainarr"], tenantRoleKey: "maintainarr_admin");
+        await SeedAuditEventAsync("work_order.create", "success");
+        await SeedAuditEventAsync("defect.create", "failed");
+
+        var timelineResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit-packages/timeline?action=defect.create&pageSize=20", token));
+        timelineResponse.EnsureSuccessStatusCode();
+        var timeline = (await timelineResponse.Content.ReadFromJsonAsync<PagedResult<AuditEventExportItem>>())!;
+
+        var auditAliasResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit?action=defect.create&pageSize=20", token));
+        auditAliasResponse.EnsureSuccessStatusCode();
+        var auditAlias = (await auditAliasResponse.Content.ReadFromJsonAsync<PagedResult<AuditEventExportItem>>())!;
+
+        Assert.Equal(timeline.TotalCount, auditAlias.TotalCount);
+        Assert.Equal(timeline.Items.Count, auditAlias.Items.Count);
+        Assert.All(auditAlias.Items, item => Assert.Equal("defect.create", item.Action));
+    }
+
     private async Task SeedAuditEventAsync(string action, string result)
     {
         using var scope = _maintainarrFactory.Services.CreateScope();

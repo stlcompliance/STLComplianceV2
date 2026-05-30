@@ -8,10 +8,25 @@ public static class TrainingRequirementEndpoints
 {
     public static void MapTrainArrTrainingRequirementEndpoints(this WebApplication app)
     {
-        var requirements = app.MapGroup("/api/training-requirements")
-            .WithTags("TrainingRequirements")
-            .RequireAuthorization();
+        MapRoutes(
+            app.MapGroup("/api/training-requirements")
+                .WithTags("TrainingRequirements")
+                .RequireAuthorization(),
+            string.Empty);
+        MapRoutes(
+            app.MapGroup("/api/v1/training-requirements")
+                .WithTags("TrainingRequirements")
+                .RequireAuthorization(),
+            "V1TrainingRequirements");
+        MapRoutes(
+            app.MapGroup("/api/v1/requirements")
+                .WithTags("TrainingRequirements")
+                .RequireAuthorization(),
+            "V1Requirements");
+    }
 
+    private static void MapRoutes(RouteGroupBuilder requirements, string nameSuffix)
+    {
         requirements.MapGet("/", async (
             HttpContext context,
             TrainArrAuthorizationService authorization,
@@ -22,7 +37,7 @@ public static class TrainingRequirementEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(tenantId, cancellationToken));
         })
-        .WithName("ListTrainingRequirements");
+        .WithName($"ListTrainingRequirements{nameSuffix}");
 
         requirements.MapGet("/builder-view", async (
             HttpContext context,
@@ -34,7 +49,7 @@ public static class TrainingRequirementEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetBuilderViewAsync(tenantId, cancellationToken));
         })
-        .WithName("GetTrainingRequirementBuilderView");
+        .WithName($"GetTrainingRequirementBuilderView{nameSuffix}");
 
         requirements.MapPost("/", async (
             CreateTrainingRequirementRequest request,
@@ -49,7 +64,7 @@ public static class TrainingRequirementEndpoints
             var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Created($"/api/training-requirements/{created.RequirementId}", created);
         })
-        .WithName("CreateTrainingRequirement");
+        .WithName($"CreateTrainingRequirement{nameSuffix}");
 
         requirements.MapPut("/{requirementId:guid}", async (
             Guid requirementId,
@@ -65,7 +80,7 @@ public static class TrainingRequirementEndpoints
             return Results.Ok(
                 await service.UpdateAsync(tenantId, actorUserId, requirementId, request, cancellationToken));
         })
-        .WithName("UpdateTrainingRequirement");
+        .WithName($"UpdateTrainingRequirement{nameSuffix}");
 
         requirements.MapDelete("/{requirementId:guid}", async (
             Guid requirementId,
@@ -80,7 +95,7 @@ public static class TrainingRequirementEndpoints
             await service.DeleteAsync(tenantId, actorUserId, requirementId, cancellationToken);
             return Results.NoContent();
         })
-        .WithName("DeleteTrainingRequirement");
+        .WithName($"DeleteTrainingRequirement{nameSuffix}");
 
         requirements.MapPost("/sync-to-matrix", async (
             SyncRequirementToMatrixRequest request,
@@ -95,6 +110,6 @@ public static class TrainingRequirementEndpoints
             return Results.Ok(
                 await service.SyncToMatrixAsync(tenantId, actorUserId, request.RequirementId, cancellationToken));
         })
-        .WithName("SyncTrainingRequirementToMatrix");
+        .WithName($"SyncTrainingRequirementToMatrix{nameSuffix}");
     }
 }

@@ -42,6 +42,14 @@ public sealed record EntitlementDetailResponse(
     DateTimeOffset GrantedAt,
     DateTimeOffset? RevokedAt);
 
+public sealed record UpdateTenantEntitlementRequest(string Status);
+
+public sealed record EntitlementCheckResponse(
+    Guid TenantId,
+    string ProductKey,
+    bool IsEntitled,
+    string? ReasonCode);
+
 public sealed record RegisterServiceClientRequest(
     string ClientKey,
     string DisplayName,

@@ -84,6 +84,31 @@ public class StaffArrPersonExportPresetTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task People_export_preset_v1_put_and_get_round_trip()
+    {
+        var northSiteId = Guid.NewGuid();
+        await SeedOrgUnitAsync(northSiteId, "site", "North Site V1");
+
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "hr_admin");
+        var upsert = new UpsertPersonExportPresetRequest("active", northSiteId, "active-at-org-unit");
+
+        var putResponse = await _staffarrClient.SendAsync(
+            AuthorizedJson(HttpMethod.Put, "/api/v1/people/export/preset", token, upsert));
+        putResponse.EnsureSuccessStatusCode();
+        var saved = (await putResponse.Content.ReadFromJsonAsync<PersonExportPresetResponse>())!;
+        Assert.Equal("active", saved.EmploymentStatus);
+        Assert.Equal(northSiteId, saved.OrgUnitId);
+
+        var getResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/people/export/preset", token));
+        getResponse.EnsureSuccessStatusCode();
+        var loaded = (await getResponse.Content.ReadFromJsonAsync<PersonExportPresetResponse>())!;
+        Assert.Equal(saved.EmploymentStatus, loaded.EmploymentStatus);
+        Assert.Equal(saved.OrgUnitId, loaded.OrgUnitId);
+        Assert.Equal(saved.PresetKey, loaded.PresetKey);
+    }
+
+    [Fact]
     public async Task People_export_preset_put_rejects_invalid_employment_status()
     {
         var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");

@@ -111,6 +111,47 @@ public class NexArrServiceTokenTrustTests : IClassFixture<WebApplicationFactory<
         Assert.Equal(PlatformSeeder.DemoTenantId, validation.TenantId);
     }
 
+    [Fact]
+    public async Task V1_service_client_and_token_endpoints_issue_and_validate()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var registerRequest = Authorized(HttpMethod.Post, "/api/v1/service-clients", token);
+        registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
+            "v1-staffarr-worker",
+            "V1 StaffArr Worker",
+            "staffarr",
+            ["staffarr"]));
+        var registerResponse = await _client.SendAsync(registerRequest);
+        registerResponse.EnsureSuccessStatusCode();
+        var client = (await registerResponse.Content.ReadFromJsonAsync<ServiceClientResponse>())!;
+
+        var listRequest = Authorized(HttpMethod.Get, "/api/v1/service-clients?page=1&pageSize=10", token);
+        var listResponse = await _client.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+
+        var issueRequest = Authorized(HttpMethod.Post, "/api/v1/service-token", token);
+        issueRequest.Content = JsonContent.Create(new IssueServiceTokenRequest(
+            client.ServiceClientId,
+            PlatformSeeder.DemoTenantId,
+            null,
+            "read",
+            30));
+        var issueResponse = await _client.SendAsync(issueRequest);
+        issueResponse.EnsureSuccessStatusCode();
+        var issued = (await issueResponse.Content.ReadFromJsonAsync<ServiceTokenIssueResponse>())!;
+
+        var validateRequest = Authorized(HttpMethod.Post, "/api/service-tokens/validate", token);
+        validateRequest.Content = JsonContent.Create(new ValidateServiceTokenRequest(issued.AccessToken));
+        var validateResponse = await _client.SendAsync(validateRequest);
+        validateResponse.EnsureSuccessStatusCode();
+        var validation = await validateResponse.Content.ReadFromJsonAsync<ServiceTokenValidationResponse>();
+
+        Assert.NotNull(validation);
+        Assert.True(validation.IsValid);
+    }
+
     private static HttpRequestMessage Authorized(HttpMethod method, string url, string accessToken)
     {
         var request = new HttpRequestMessage(method, url);

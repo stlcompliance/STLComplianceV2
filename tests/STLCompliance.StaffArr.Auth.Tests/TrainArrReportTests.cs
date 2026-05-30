@@ -107,6 +107,34 @@ public sealed class TrainArrReportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Reports_v1_aliases_match_assignment_and_qualification_summaries()
+    {
+        var assignmentLegacyResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/reports/assignments/summary", _adminToken));
+        assignmentLegacyResponse.EnsureSuccessStatusCode();
+        var assignmentLegacy = (await assignmentLegacyResponse.Content.ReadFromJsonAsync<AssignmentReportSummaryResponse>())!;
+
+        var assignmentV1Response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/assignments/summary", _adminToken));
+        assignmentV1Response.EnsureSuccessStatusCode();
+        var assignmentV1 = (await assignmentV1Response.Content.ReadFromJsonAsync<AssignmentReportSummaryResponse>())!;
+        Assert.Equal(assignmentLegacy.TotalAssignments, assignmentV1.TotalAssignments);
+        Assert.Equal(assignmentLegacy.OpenAssignments, assignmentV1.OpenAssignments);
+
+        var qualificationLegacyResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/reports/qualifications/summary", _adminToken));
+        qualificationLegacyResponse.EnsureSuccessStatusCode();
+        var qualificationLegacy = (await qualificationLegacyResponse.Content.ReadFromJsonAsync<QualificationReportSummaryResponse>())!;
+
+        var qualificationV1Response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/qualifications/summary", _adminToken));
+        qualificationV1Response.EnsureSuccessStatusCode();
+        var qualificationV1 = (await qualificationV1Response.Content.ReadFromJsonAsync<QualificationReportSummaryResponse>())!;
+        Assert.Equal(qualificationLegacy.TotalQualifications, qualificationV1.TotalQualifications);
+        Assert.Equal(qualificationLegacy.IssuedCount, qualificationV1.IssuedCount);
+    }
+
+    [Fact]
     public async Task Assignment_report_summary_denies_unauthorized_role()
     {
         var token = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "supplyarr_admin");

@@ -8,118 +8,127 @@ public static class AssetDowntimeEndpoints
 {
     public static void MapMaintainArrAssetDowntimeEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/downtime")
-            .WithTags("Downtime")
-            .RequireAuthorization();
-
-        group.MapGet("/events", async (
-            Guid? assetId,
-            bool? activeOnly,
-            int? limit,
-            MaintainArrAuthorizationService authorization,
-            AssetDowntimeService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        var groups = new[]
         {
-            authorization.RequireDowntimeRead(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListEventsAsync(
-                tenantId,
-                assetId,
-                activeOnly,
-                limit,
-                cancellationToken));
-        })
-        .WithName("ListMaintainArrDowntimeEvents");
+            (Route: "/api/downtime", Suffix: string.Empty),
+            (Route: "/api/v1/downtime", Suffix: "V1")
+        };
 
-        group.MapGet("/events/{eventId:guid}", async (
-            Guid eventId,
-            MaintainArrAuthorizationService authorization,
-            AssetDowntimeService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        foreach (var (route, suffix) in groups)
         {
-            authorization.RequireDowntimeRead(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetEventAsync(tenantId, eventId, cancellationToken));
-        })
-        .WithName("GetMaintainArrDowntimeEvent");
+            var group = app.MapGroup(route)
+                .WithTags("Downtime")
+                .RequireAuthorization();
 
-        group.MapPost("/events", async (
-            CreateManualDowntimeEventRequest request,
-            MaintainArrAuthorizationService authorization,
-            AssetDowntimeService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireDowntimeManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var result = await service.CreateManualEventAsync(
-                tenantId,
-                actorUserId,
-                request,
-                cancellationToken);
-            return Results.Created($"/api/downtime/events/{result.EventId}", result);
-        })
-        .WithName("CreateMaintainArrManualDowntimeEvent");
+            group.MapGet("/events", async (
+                Guid? assetId,
+                bool? activeOnly,
+                int? limit,
+                MaintainArrAuthorizationService authorization,
+                AssetDowntimeService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireDowntimeRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await service.ListEventsAsync(
+                    tenantId,
+                    assetId,
+                    activeOnly,
+                    limit,
+                    cancellationToken));
+            })
+            .WithName($"ListMaintainArrDowntimeEvents{suffix}");
 
-        group.MapPost("/events/{eventId:guid}/close", async (
-            Guid eventId,
-            CloseDowntimeEventRequest request,
-            MaintainArrAuthorizationService authorization,
-            AssetDowntimeService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireDowntimeManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            return Results.Ok(await service.CloseEventAsync(
-                tenantId,
-                eventId,
-                actorUserId,
-                request,
-                cancellationToken));
-        })
-        .WithName("CloseMaintainArrDowntimeEvent");
+            group.MapGet("/events/{eventId:guid}", async (
+                Guid eventId,
+                MaintainArrAuthorizationService authorization,
+                AssetDowntimeService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireDowntimeRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await service.GetEventAsync(tenantId, eventId, cancellationToken));
+            })
+            .WithName($"GetMaintainArrDowntimeEvent{suffix}");
 
-        group.MapGet("/availability/assets/{assetId:guid}", async (
-            Guid assetId,
-            DateTimeOffset? periodStart,
-            DateTimeOffset? periodEnd,
-            MaintainArrAuthorizationService authorization,
-            AssetDowntimeService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireDowntimeRead(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetAssetAvailabilityAsync(
-                tenantId,
-                assetId,
-                periodStart,
-                periodEnd,
-                cancellationToken));
-        })
-        .WithName("GetMaintainArrAssetAvailability");
+            group.MapPost("/events", async (
+                CreateManualDowntimeEventRequest request,
+                MaintainArrAuthorizationService authorization,
+                AssetDowntimeService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireDowntimeManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var result = await service.CreateManualEventAsync(
+                    tenantId,
+                    actorUserId,
+                    request,
+                    cancellationToken);
+                return Results.Created($"{route}/events/{result.EventId}", result);
+            })
+            .WithName($"CreateMaintainArrManualDowntimeEvent{suffix}");
 
-        group.MapGet("/availability/fleet", async (
-            DateTimeOffset? periodStart,
-            DateTimeOffset? periodEnd,
-            MaintainArrAuthorizationService authorization,
-            AssetDowntimeService service,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireDowntimeRead(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetFleetAvailabilityAsync(
-                tenantId,
-                periodStart,
-                periodEnd,
-                cancellationToken));
-        })
-        .WithName("GetMaintainArrFleetAvailability");
+            group.MapPost("/events/{eventId:guid}/close", async (
+                Guid eventId,
+                CloseDowntimeEventRequest request,
+                MaintainArrAuthorizationService authorization,
+                AssetDowntimeService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireDowntimeManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                return Results.Ok(await service.CloseEventAsync(
+                    tenantId,
+                    eventId,
+                    actorUserId,
+                    request,
+                    cancellationToken));
+            })
+            .WithName($"CloseMaintainArrDowntimeEvent{suffix}");
+
+            group.MapGet("/availability/assets/{assetId:guid}", async (
+                Guid assetId,
+                DateTimeOffset? periodStart,
+                DateTimeOffset? periodEnd,
+                MaintainArrAuthorizationService authorization,
+                AssetDowntimeService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireDowntimeRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await service.GetAssetAvailabilityAsync(
+                    tenantId,
+                    assetId,
+                    periodStart,
+                    periodEnd,
+                    cancellationToken));
+            })
+            .WithName($"GetMaintainArrAssetAvailability{suffix}");
+
+            group.MapGet("/availability/fleet", async (
+                DateTimeOffset? periodStart,
+                DateTimeOffset? periodEnd,
+                MaintainArrAuthorizationService authorization,
+                AssetDowntimeService service,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireDowntimeRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await service.GetFleetAvailabilityAsync(
+                    tenantId,
+                    periodStart,
+                    periodEnd,
+                    cancellationToken));
+            })
+            .WithName($"GetMaintainArrFleetAvailability{suffix}");
+        }
     }
 }

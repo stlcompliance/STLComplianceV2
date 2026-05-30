@@ -13,6 +13,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
     {
         app.MapMaintainArrAuthEndpoints();
         app.MapStlProductLaunchEndpoints();
+        app.MapMaintainArrSettingsEndpoints();
         app.MapMaintainArrAssetClassEndpoints();
         app.MapMaintainArrAssetTypeEndpoints();
         app.MapMaintainArrAssetEndpoints();
@@ -31,6 +32,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrMeterEndpoints();
         app.MapMaintainArrMaintenanceHistoryEndpoints();
         app.MapMaintainArrAssetReadinessEndpoints();
+        app.MapMaintainArrEventAndAuditEndpoints();
         app.MapMaintainArrFieldInboxEndpoints();
         app.MapMaintainArrInternalPmDueScanEndpoints();
         app.MapMaintainArrInternalTechnicianRefSyncEndpoints();

@@ -92,7 +92,7 @@ export async function createHandoff(
   productKey: string,
   callbackUrl: string,
 ): Promise<string> {
-  const response = await fetch(`${nexarrApiUrl()}/api/launch/handoff`, {
+  const response = await fetch(`${nexarrApiUrl()}/api/v1/launch/handoff`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${accessToken}`,

@@ -233,6 +233,49 @@ public sealed class ComplianceWaiverService(
         return MapResponse(entity);
     }
 
+    public async Task<ComplianceWaiverResponse> RenewAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid waiverId,
+        RenewComplianceWaiverRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadAsync(tenantId, waiverId, cancellationToken);
+        if (!string.Equals(entity.Status, WaiverStatuses.Expired, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(entity.Status, WaiverStatuses.Approved, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "waivers.invalid_status",
+                "Only approved or expired waivers can be renewed.",
+                409);
+        }
+
+        ValidateEffectiveWindow(request.EffectiveAt, request.ExpiresAt);
+
+        var now = DateTimeOffset.UtcNow;
+        entity.Status = WaiverStatuses.Approved;
+        entity.EffectiveAt = request.EffectiveAt;
+        entity.ExpiresAt = request.ExpiresAt;
+        entity.RevokedByUserId = null;
+        entity.RevokedAt = null;
+        entity.ApprovedByUserId = actorUserId;
+        entity.ApprovedAt = now;
+        entity.UpdatedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await auditService.WriteAsync(
+            "waiver.renew",
+            tenantId,
+            actorUserId,
+            "compliance_waiver",
+            entity.Id.ToString(),
+            entity.Status,
+            reasonCode: request.Notes ?? entity.WaiverKey,
+            cancellationToken: cancellationToken);
+
+        return MapResponse(entity);
+    }
+
     public async Task<ProcessExpiredWaiversResponse> ProcessExpiredBatchAsync(
         ProcessExpiredWaiversRequest request,
         CancellationToken cancellationToken = default)

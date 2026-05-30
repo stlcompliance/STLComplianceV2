@@ -70,9 +70,31 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
     }
 
     [Fact]
+    public async Task Login_v1_with_demo_credentials_returns_tokens()
+    {
+        await SeedDatabaseAsync();
+        var response = await _client.PostAsJsonAsync(
+            "/api/v1/auth/login",
+            new LoginRequest(PlatformSeeder.DemoAdminEmail, PlatformSeeder.DemoAdminPassword, PlatformSeeder.DemoTenantId));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var payload = await response.Content.ReadFromJsonAsync<AuthTokenResponse>();
+        Assert.NotNull(payload);
+        Assert.False(string.IsNullOrWhiteSpace(payload.AccessToken));
+        Assert.False(string.IsNullOrWhiteSpace(payload.RefreshToken));
+    }
+
+    [Fact]
     public async Task Me_requires_authentication()
     {
         var response = await _client.GetAsync("/api/me");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Me_v1_requires_authentication()
+    {
+        var response = await _client.GetAsync("/api/v1/auth/me");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
@@ -164,10 +186,60 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
     }
 
     [Fact]
+    public async Task Revoke_session_v1_invalidates_refresh_token()
+    {
+        await SeedDatabaseAsync();
+        var tokens = await LoginAsync();
+
+        var revokeRequest = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/auth/sessions/{tokens.SessionId}");
+        revokeRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        var revokeResponse = await _client.SendAsync(revokeRequest);
+        Assert.Equal(HttpStatusCode.NoContent, revokeResponse.StatusCode);
+
+        var renewResponse = await _client.PostAsJsonAsync(
+            "/api/v1/auth/refresh",
+            new RenewSessionRequest(tokens.RefreshToken));
+        Assert.Equal(HttpStatusCode.Unauthorized, renewResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Sessions_requires_authentication()
     {
         var response = await _client.GetAsync("/api/me/sessions");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sessions_v1_lists_active_session_after_login()
+    {
+        await SeedDatabaseAsync();
+        var tokens = await LoginAsync();
+
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/auth/sessions");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var payload = await response.Content.ReadFromJsonAsync<UserSessionsResponse>();
+        Assert.NotNull(payload);
+        Assert.NotEmpty(payload.Sessions);
+        Assert.Contains(payload.Sessions, s => s.SessionId == tokens.SessionId);
+    }
+
+    [Fact]
+    public async Task Refresh_v1_renews_tokens()
+    {
+        await SeedDatabaseAsync();
+        var tokens = await LoginAsync();
+
+        var response = await _client.PostAsJsonAsync(
+            "/api/v1/auth/refresh",
+            new RenewSessionRequest(tokens.RefreshToken));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var payload = await response.Content.ReadFromJsonAsync<AuthTokenResponse>();
+        Assert.NotNull(payload);
+        Assert.False(string.IsNullOrWhiteSpace(payload.AccessToken));
     }
 
     private async Task<AuthTokenResponse> LoginAsync()

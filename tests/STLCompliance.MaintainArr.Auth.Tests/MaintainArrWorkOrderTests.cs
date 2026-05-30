@@ -138,6 +138,32 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Manual_work_order_v1_alias_create_and_get()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/work-orders", managerToken);
+        createRequest.Content = JsonContent.Create(new CreateWorkOrderRequest(
+            assetId,
+            "V1 work order",
+            "Alias verification",
+            "medium",
+            null,
+            null));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+
+        var getRequest = Authorized(HttpMethod.Get, $"/api/v1/work-orders/{created.WorkOrderId}", managerToken);
+        var getResponse = await _maintainarrClient.SendAsync(getRequest);
+        getResponse.EnsureSuccessStatusCode();
+        var fetched = (await getResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+
+        Assert.Equal(created.WorkOrderId, fetched.WorkOrderId);
+    }
+
+    [Fact]
     public async Task Create_work_order_from_defect_is_idempotent()
     {
         var managerToken = await RedeemMaintainArrTokenAsync();
@@ -166,6 +192,37 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         var secondResponse = await _maintainarrClient.SendAsync(secondRequest);
         secondResponse.EnsureSuccessStatusCode();
         var second = (await secondResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+        Assert.Equal(first.WorkOrderId, second.WorkOrderId);
+    }
+
+    [Fact]
+    public async Task Create_work_order_from_defect_v1_alias_is_idempotent()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+
+        var defectRequest = Authorized(HttpMethod.Post, "/api/v1/defects", managerToken);
+        defectRequest.Content = JsonContent.Create(new CreateDefectRequest(
+            assetId,
+            "V1 bearing noise",
+            "v1 defect route",
+            "high"));
+        var defectResponse = await _maintainarrClient.SendAsync(defectRequest);
+        defectResponse.EnsureSuccessStatusCode();
+        var defect = (await defectResponse.Content.ReadFromJsonAsync<DefectDetailResponse>())!;
+
+        var firstRequest = Authorized(HttpMethod.Post, $"/api/v1/defects/{defect.DefectId}/work-orders", managerToken);
+        firstRequest.Content = JsonContent.Create(new CreateWorkOrderFromDefectRequest(null, null, null, null));
+        var firstResponse = await _maintainarrClient.SendAsync(firstRequest);
+        firstResponse.EnsureSuccessStatusCode();
+        var first = (await firstResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+
+        var secondRequest = Authorized(HttpMethod.Post, $"/api/v1/defects/{defect.DefectId}/work-orders", managerToken);
+        secondRequest.Content = JsonContent.Create(new CreateWorkOrderFromDefectRequest(null, null, null, null));
+        var secondResponse = await _maintainarrClient.SendAsync(secondRequest);
+        secondResponse.EnsureSuccessStatusCode();
+        var second = (await secondResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+
         Assert.Equal(first.WorkOrderId, second.WorkOrderId);
     }
 
@@ -318,7 +375,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new NexArr.Api.Contracts.CreateHandoffRequest(
             "maintainarr",
             "http://localhost:5178/launch"));

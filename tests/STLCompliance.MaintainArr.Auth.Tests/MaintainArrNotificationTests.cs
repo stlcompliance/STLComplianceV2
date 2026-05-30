@@ -166,6 +166,80 @@ public sealed class MaintainArrNotificationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Notification_settings_v1_put_get_and_dispatches_work_for_admin()
+    {
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+        var putRequest = Authorized(HttpMethod.Put, "/api/v1/notification-settings", token);
+        putRequest.Content = JsonContent.Create(new UpsertMaintenanceNotificationSettingsRequest(
+            true,
+            "https://hooks.example.test/maintainarr-v1",
+            true,
+            false,
+            true,
+            false));
+        var putResponse = await _maintainarrClient.SendAsync(putRequest);
+        putResponse.EnsureSuccessStatusCode();
+        var putBody = (await putResponse.Content.ReadFromJsonAsync<MaintenanceNotificationSettingsResponse>())!;
+        Assert.Equal("https://hooks.example.test/maintainarr-v1", putBody.NotificationWebhookUrl);
+
+        var getResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/notification-settings", token));
+        getResponse.EnsureSuccessStatusCode();
+        var getBody = (await getResponse.Content.ReadFromJsonAsync<MaintenanceNotificationSettingsResponse>())!;
+        Assert.Equal("https://hooks.example.test/maintainarr-v1", getBody.NotificationWebhookUrl);
+
+        var dispatchesResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/notification-settings/dispatches?limit=5", token));
+        dispatchesResponse.EnsureSuccessStatusCode();
+        var dispatchesBody = (await dispatchesResponse.Content.ReadFromJsonAsync<MaintenanceNotificationDispatchesResponse>())!;
+        Assert.NotNull(dispatchesBody.Items);
+    }
+
+    [Fact]
+    public async Task Settings_manifest_v1_requires_admin_and_lists_setting_groups()
+    {
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
+        var forbiddenResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", managerToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+
+        var adminToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+        var manifestResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", adminToken));
+        manifestResponse.EnsureSuccessStatusCode();
+        var manifest = (await manifestResponse.Content.ReadFromJsonAsync<MaintainArrSettingsManifestResponse>())!;
+        Assert.Contains(manifest.Items, x => x.SettingKey == "notification_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "pm_due_scan_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "platform_event_settings");
+    }
+
+    [Fact]
+    public async Task Config_manifest_v1_requires_admin_and_matches_settings_manifest()
+    {
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
+        var forbiddenResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/config", managerToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+
+        var adminToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+        var configResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/config", adminToken));
+        configResponse.EnsureSuccessStatusCode();
+        var configManifest = (await configResponse.Content.ReadFromJsonAsync<MaintainArrSettingsManifestResponse>())!;
+
+        var settingsResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", adminToken));
+        settingsResponse.EnsureSuccessStatusCode();
+        var settingsManifest = (await settingsResponse.Content.ReadFromJsonAsync<MaintainArrSettingsManifestResponse>())!;
+
+        Assert.Equal(settingsManifest.Items.Count, configManifest.Items.Count);
+        foreach (var item in settingsManifest.Items)
+        {
+            Assert.Contains(configManifest.Items, x => x.SettingKey == item.SettingKey);
+        }
+    }
+
+    [Fact]
     public async Task Process_batch_rejects_missing_service_token()
     {
         var response = await _maintainarrClient.PostAsJsonAsync(

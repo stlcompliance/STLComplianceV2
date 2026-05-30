@@ -69,6 +69,8 @@ public sealed class RoutArrHandoffApiTests : IAsyncLifetime
 
                 services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
+                services.AddHttpClient<StlNexArrLaunchClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
             });
         });
 
@@ -105,6 +107,54 @@ public sealed class RoutArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Handoff_redeem_nexarr_alias_happy_path()
+    {
+        var handoffCode = await CreateHandoffAsync();
+        var redeemResponse = await _routarrClient.PostAsJsonAsync(
+            "/api/auth/nexarr/redeem",
+            new RoutArrRedeemRequest(handoffCode));
+        redeemResponse.EnsureSuccessStatusCode();
+        var session = (await redeemResponse.Content.ReadFromJsonAsync<RoutArrHandoffSessionResponse>())!;
+        Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
+        Assert.Contains("routarr", session.Entitlements);
+    }
+
+    [Fact]
+    public async Task V1_handoff_session_and_me_aliases_work()
+    {
+        var handoffCode = await CreateHandoffAsync();
+        var redeemResponse = await _routarrClient.PostAsJsonAsync(
+            "/api/v1/auth/handoff/redeem",
+            new RoutArrRedeemRequest(handoffCode));
+        redeemResponse.EnsureSuccessStatusCode();
+        var session = (await redeemResponse.Content.ReadFromJsonAsync<RoutArrHandoffSessionResponse>())!;
+        Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
+
+        var meResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/me", session.AccessToken));
+        meResponse.EnsureSuccessStatusCode();
+        var me = await meResponse.Content.ReadFromJsonAsync<RoutArrMeResponse>();
+        Assert.NotNull(me);
+        Assert.True(me.HasRoutArrEntitlement);
+
+        var sessionResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/session", session.AccessToken));
+        sessionResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task V1_launch_handoff_proxy_returns_handoff_code()
+    {
+        var nexarrToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", nexarrToken);
+        request.Content = JsonContent.Create(new CreateHandoffRequest("routarr", "http://localhost:5180/launch"));
+        var response = await _routarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var handoff = (await response.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
+        Assert.False(string.IsNullOrWhiteSpace(handoff.HandoffCode));
+    }
+
+    [Fact]
     public async Task Me_forbids_users_without_routarr_entitlement_claim()
     {
         var token = CreateRoutArrAccessToken(["nexarr"]);
@@ -116,7 +166,7 @@ public sealed class RoutArrHandoffApiTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new CreateHandoffRequest("routarr", "http://localhost:5180/launch"));
         var response = await _nexarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();

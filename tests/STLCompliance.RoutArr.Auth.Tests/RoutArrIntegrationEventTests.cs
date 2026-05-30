@@ -237,6 +237,44 @@ public sealed class RoutArrIntegrationEventTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Events_v1_alias_matches_integration_event_outbox()
+    {
+        var adminToken = CreateRoutArrAccessToken(["routarr"], "routarr_admin");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/trips", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateTripRequest(
+            "Events alias trip",
+            string.Empty,
+            null,
+            null,
+            null,
+            null));
+        var createResponse = await _routarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        var assignRequest = Authorized(HttpMethod.Patch, $"/api/trips/{created.TripId}/assign-driver", adminToken);
+        assignRequest.Content = JsonContent.Create(new AssignTripDriverRequest(
+            Guid.NewGuid().ToString(),
+            IgnoreAvailabilityConflicts: false,
+            IgnoreEligibilityBlocks: false,
+            IgnoreWorkflowGateBlocks: false));
+        (await _routarrClient.SendAsync(assignRequest)).EnsureSuccessStatusCode();
+
+        var outboxResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/integration-event-settings/outbox?limit=10", adminToken));
+        outboxResponse.EnsureSuccessStatusCode();
+        var outbox = (await outboxResponse.Content.ReadFromJsonAsync<IntegrationOutboxEventListResponse>())!;
+
+        var eventsV1Response = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/events?limit=10", adminToken));
+        eventsV1Response.EnsureSuccessStatusCode();
+        var eventsV1 = (await eventsV1Response.Content.ReadFromJsonAsync<IntegrationOutboxEventListResponse>())!;
+
+        Assert.Equal(outbox.Items.Count, eventsV1.Items.Count);
+    }
+
     private string CreateRoutArrAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member",

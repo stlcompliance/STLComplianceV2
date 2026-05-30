@@ -115,6 +115,49 @@ public sealed class LaunchService(
             DateTimeOffset.UtcNow);
     }
 
+    public async Task<ValidateLaunchResponse> ValidateLaunchAsync(
+        ClaimsPrincipal principal,
+        ValidateLaunchRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequireNexArrAccessAsync(principal, cancellationToken);
+
+        var productKey = request.ProductKey.Trim().ToLowerInvariant();
+        var tenantId = request.TenantId ?? principal.GetTenantId();
+
+        if (!principal.IsPlatformAdmin())
+        {
+            await authorization.RequireTenantAccessAsync(principal, tenantId, allowTenantAdmin: true, cancellationToken);
+        }
+
+        var tenant = await db.Tenants.AsNoTracking().FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken);
+        if (tenant is null)
+        {
+            return new ValidateLaunchResponse(tenantId, productKey, false, "tenant_not_found", null);
+        }
+
+        var product = await db.ProductCatalog.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.ProductKey == productKey && p.IsActive, cancellationToken);
+        if (product is null)
+        {
+            return new ValidateLaunchResponse(tenantId, productKey, false, "product_not_found", null);
+        }
+
+        var denial = await ResolveLaunchDenialAsync(principal, tenant, productKey, cancellationToken);
+        var profile = await db.LaunchProfiles.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.ProductKey == productKey && p.IsActive, cancellationToken);
+        var launchUrl = profile is null || string.IsNullOrWhiteSpace(profile.BaseUrl)
+            ? null
+            : ComposeLaunchUrl(profile.BaseUrl, profile.LaunchPath, null);
+
+        return new ValidateLaunchResponse(
+            tenant.Id,
+            productKey,
+            denial is null,
+            denial,
+            launchUrl);
+    }
+
     public async Task<HandoffCreatedResponse> CreateHandoffAsync(
         ClaimsPrincipal principal,
         CreateHandoffRequest request,

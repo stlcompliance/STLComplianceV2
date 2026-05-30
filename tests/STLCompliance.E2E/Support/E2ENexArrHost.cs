@@ -137,7 +137,7 @@ internal sealed class E2ENexArrHost : IAsyncDisposable
     public async Task<string> CreateHandoffAsync(string productKey, string callbackUrl)
     {
         var token = await LoginAsync();
-        var request = HttpTestClient.Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = HttpTestClient.Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new CreateHandoffRequest(productKey, callbackUrl));
         var response = await Client.SendAsync(request);
         response.EnsureSuccessStatusCode();

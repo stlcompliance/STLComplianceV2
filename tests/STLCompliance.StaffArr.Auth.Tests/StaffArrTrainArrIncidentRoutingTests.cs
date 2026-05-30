@@ -194,6 +194,38 @@ public class StaffArrTrainArrIncidentRoutingTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Training_compliance_incident_routes_to_trainarr_v1_alias()
+    {
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Routing V1 Subject", "routing.v1.subject@example.com");
+        var adminToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/incidents", adminToken);
+        createRequest.Content = JsonContent.Create(new CreatePersonnelIncidentRequest(
+            personId,
+            "training_compliance",
+            "high",
+            "Missed annual compliance training v1",
+            "Employee missed required annual compliance training in v1 flow and must complete remediation before assignment.",
+            DateTimeOffset.UtcNow.AddHours(-2)));
+
+        var createResponse = await _staffarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<PersonnelIncidentDetailResponse>())!;
+
+        var routeRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/incidents/{created.IncidentId}/route-to-trainarr",
+            adminToken);
+        var routeResponse = await _staffarrClient.SendAsync(routeRequest);
+        routeResponse.EnsureSuccessStatusCode();
+        var routed = (await routeResponse.Content.ReadFromJsonAsync<RouteIncidentToTrainarrResponse>())!;
+
+        Assert.Equal("routed", routed.TrainarrRouting.RoutingStatus);
+        Assert.NotEqual(Guid.Empty, routed.TrainarrRouting.TrainarrRemediationId);
+    }
+
+    [Fact]
     public async Task Incident_remediation_ingest_rejects_missing_service_token()
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/integrations/incident-remediations");

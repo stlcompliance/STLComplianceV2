@@ -9,75 +9,77 @@ public static class PmDueScanSettingsEndpoints
 {
     public static void MapMaintainArrPmDueScanSettingsEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/pm-due-scan-settings")
-            .WithTags("PmDueScanSettings")
-            .RequireAuthorization();
-
-        group.MapGet("/", async (
-            MaintainArrAuthorizationService authorization,
-            PmDueScanSettingsService settingsService,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        var groups = new[]
         {
-            authorization.RequirePmDueScanSettingsManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await settingsService.GetAsync(tenantId, cancellationToken));
-        })
-        .WithName("GetMaintainArrPmDueScanSettings");
+            app.MapGroup("/api/pm-due-scan-settings"),
+            app.MapGroup("/api/v1/pm-due-scan-settings"),
+        };
 
-        group.MapPut("/", async (
-            UpsertPmDueScanSettingsRequest request,
-            MaintainArrAuthorizationService authorization,
-            PmDueScanSettingsService settingsService,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
+        foreach (var group in groups)
         {
-            authorization.RequirePmDueScanSettingsManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            return Results.Ok(await settingsService.UpsertAsync(tenantId, actorUserId, request, cancellationToken));
-        })
-        .WithName("UpsertMaintainArrPmDueScanSettings");
+            group.WithTags("PmDueScanSettings").RequireAuthorization();
 
-        group.MapGet("/pending", async (
-            MaintainArrAuthorizationService authorization,
-            PmDueScanService workerService,
-            PmDueScanSettingsService settingsService,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePmDueScanSettingsManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            var snapshot = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
-            var batchSize = snapshot?.BatchSize ?? PmDueScanSettingsDefaults.BatchSize;
-            return Results.Ok(await workerService.ListPendingAsync(tenantId, null, batchSize, cancellationToken));
-        })
-        .WithName("ListMaintainArrPendingPmDueScan");
+            group.MapGet("/", async (
+                MaintainArrAuthorizationService authorization,
+                PmDueScanSettingsService settingsService,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePmDueScanSettingsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await settingsService.GetAsync(tenantId, cancellationToken));
+            });
 
-        group.MapGet("/runs", async (
-            int? limit,
-            MaintainArrAuthorizationService authorization,
-            PmDueScanService workerService,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePmDueScanSettingsManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await workerService.ListRecentRunsAsync(tenantId, limit, cancellationToken));
-        })
-        .WithName("ListMaintainArrPmDueScanRuns");
+            group.MapPut("/", async (
+                UpsertPmDueScanSettingsRequest request,
+                MaintainArrAuthorizationService authorization,
+                PmDueScanSettingsService settingsService,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePmDueScanSettingsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                return Results.Ok(await settingsService.UpsertAsync(tenantId, actorUserId, request, cancellationToken));
+            });
 
-        group.MapPost("/trigger", async (
-            MaintainArrAuthorizationService authorization,
-            PmDueScanSettingsService settingsService,
-            HttpContext context,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePmDueScanSettingsManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            return Results.Ok(await settingsService.TriggerManualScanAsync(tenantId, actorUserId, cancellationToken));
-        })
-        .WithName("TriggerMaintainArrPmDueScan");
+            group.MapGet("/pending", async (
+                MaintainArrAuthorizationService authorization,
+                PmDueScanService workerService,
+                PmDueScanSettingsService settingsService,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePmDueScanSettingsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var snapshot = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+                var batchSize = snapshot?.BatchSize ?? PmDueScanSettingsDefaults.BatchSize;
+                return Results.Ok(await workerService.ListPendingAsync(tenantId, null, batchSize, cancellationToken));
+            });
+
+            group.MapGet("/runs", async (
+                int? limit,
+                MaintainArrAuthorizationService authorization,
+                PmDueScanService workerService,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePmDueScanSettingsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await workerService.ListRecentRunsAsync(tenantId, limit, cancellationToken));
+            });
+
+            group.MapPost("/trigger", async (
+                MaintainArrAuthorizationService authorization,
+                PmDueScanSettingsService settingsService,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePmDueScanSettingsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                return Results.Ok(await settingsService.TriggerManualScanAsync(tenantId, actorUserId, cancellationToken));
+            });
+        }
     }
 }

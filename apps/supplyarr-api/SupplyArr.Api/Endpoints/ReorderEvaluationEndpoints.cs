@@ -8,7 +8,9 @@ public static class ReorderEvaluationEndpoints
 {
     public static void MapSupplyArrReorderEvaluationEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/reorder-evaluation").WithTags("ReorderEvaluation").RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("ReorderEvaluation").RequireAuthorization();
 
         group.MapGet("/", async (
             HttpContext context,
@@ -20,7 +22,7 @@ public static class ReorderEvaluationEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.EvaluateAsync(tenantId, cancellationToken));
         })
-        .WithName("EvaluateReorderSuggestions");
+        .WithName($"EvaluateReorderSuggestions{nameSuffix}");
 
         group.MapGet("/parts/{partId:guid}/policy", async (
             Guid partId,
@@ -33,7 +35,7 @@ public static class ReorderEvaluationEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetPolicyAsync(tenantId, partId, cancellationToken));
         })
-        .WithName("GetPartReorderPolicy");
+        .WithName($"GetPartReorderPolicy{nameSuffix}");
 
         group.MapPut("/parts/{partId:guid}/policy", async (
             Guid partId,
@@ -53,7 +55,7 @@ public static class ReorderEvaluationEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpsertPartReorderPolicy");
+        .WithName($"UpsertPartReorderPolicy{nameSuffix}");
 
         group.MapPost("/create-purchase-request", async (
             CreatePurchaseRequestFromReorderRequest request,
@@ -72,6 +74,10 @@ public static class ReorderEvaluationEndpoints
                 cancellationToken);
             return Results.Created($"/api/purchase-requests/{created.PurchaseRequestId}", created);
         })
-        .WithName("CreatePurchaseRequestFromReorderSuggestions");
+        .WithName($"CreatePurchaseRequestFromReorderSuggestions{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/reorder-evaluation"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/reorder-evaluation"), "V1");
     }
 }

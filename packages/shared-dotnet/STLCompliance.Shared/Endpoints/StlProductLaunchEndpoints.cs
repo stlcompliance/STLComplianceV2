@@ -9,13 +9,11 @@ public static class StlProductLaunchEndpoints
 {
     public static void MapStlProductLaunchEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/launch").WithTags("Launch").RequireAuthorization();
-
-        group.MapGet("/context", async (
+        static async Task<IResult> GetLaunchContextAsync(
             string productKey,
             HttpContext context,
             StlNexArrLaunchClient client,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             var (statusCode, body, _) = await client.ForwardAsync(
                 HttpMethod.Get,
@@ -25,13 +23,12 @@ public static class StlProductLaunchEndpoints
                 cancellationToken);
 
             return Results.Content(body, "application/json", statusCode: statusCode);
-        })
-        .WithName("GetProductLaunchContext");
+        }
 
-        group.MapPost("/handoff", async (
+        static async Task<IResult> CreateLaunchHandoffAsync(
             HttpContext context,
             StlNexArrLaunchClient client,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             using var reader = new StreamReader(context.Request.Body);
             var jsonBody = await reader.ReadToEndAsync(cancellationToken);
@@ -44,7 +41,22 @@ public static class StlProductLaunchEndpoints
                 cancellationToken);
 
             return Results.Content(body, "application/json", statusCode: statusCode);
-        })
+        }
+
+        var group = app.MapGroup("/api/launch").WithTags("Launch").RequireAuthorization();
+
+        group.MapGet("/context", GetLaunchContextAsync)
+        .WithName("GetProductLaunchContext");
+
+        group.MapPost("/handoff", CreateLaunchHandoffAsync)
         .WithName("CreateProductLaunchHandoff");
+
+        var v1Group = app.MapGroup("/api/v1/launch").WithTags("Launch").RequireAuthorization();
+
+        v1Group.MapGet("/context", GetLaunchContextAsync)
+            .WithName("GetProductLaunchContextV1");
+
+        v1Group.MapPost("/handoff", CreateLaunchHandoffAsync)
+            .WithName("CreateProductLaunchHandoffV1");
     }
 }

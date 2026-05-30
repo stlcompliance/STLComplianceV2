@@ -14,7 +14,9 @@ public static class IntegrationEndpoints
 
     public static void MapMaintainArrIntegrationEndpoints(this WebApplication app)
     {
-        var integrations = app.MapGroup("/api/integrations").WithTags("Integrations");
+        static void MapRoutes(RouteGroupBuilder integrations, string nameSuffix)
+        {
+            integrations = integrations.WithTags("Integrations");
 
         integrations.MapGet("/routarr-asset-readiness", async (
             Guid tenantId,
@@ -42,7 +44,7 @@ public static class IntegrationEndpoints
                 cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("RoutarrAssetReadinessCheck");
+        .WithName($"RoutarrAssetReadinessCheck{nameSuffix}");
 
         integrations.MapPost("/supplyarr-demand-status", async (
             IngestSupplyarrDemandStatusRequest request,
@@ -64,7 +66,7 @@ public static class IntegrationEndpoints
             var result = await service.IngestAsync(request, cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("IngestSupplyarrDemandStatus");
+        .WithName($"IngestSupplyarrDemandStatus{nameSuffix}");
 
         integrations.MapPost("/staffarr-person-sync", async (
             IngestStaffarrPersonSyncRequest request,
@@ -86,6 +88,10 @@ public static class IntegrationEndpoints
             var result = await service.IngestAsync(request, cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("IngestStaffarrPersonSync");
+        .WithName($"IngestStaffarrPersonSync{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/integrations"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/integrations"), "V1");
     }
 }

@@ -8,96 +8,98 @@ public static class PmProgramEndpoints
 {
     public static void MapMaintainArrPmProgramEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/preventive-maintenance/programs")
-            .WithTags("PmPrograms")
-            .RequireAuthorization();
-
-        group.MapGet("/", async (
-            HttpContext context,
-            MaintainArrAuthorizationService authorization,
-            PmProgramService service,
-            CancellationToken cancellationToken) =>
+        var groups = new[]
         {
-            authorization.RequirePmRead(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListAsync(tenantId, cancellationToken));
-        })
-        .WithName("ListPmPrograms");
+            app.MapGroup("/api/preventive-maintenance/programs"),
+            app.MapGroup("/api/v1/preventive-maintenance/programs"),
+            app.MapGroup("/api/v1/pm-programs"),
+        };
 
-        group.MapGet("/{pmProgramId:guid}", async (
-            Guid pmProgramId,
-            HttpContext context,
-            MaintainArrAuthorizationService authorization,
-            PmProgramService service,
-            CancellationToken cancellationToken) =>
+        foreach (var group in groups)
         {
-            authorization.RequirePmRead(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetAsync(tenantId, pmProgramId, cancellationToken));
-        })
-        .WithName("GetPmProgram");
+            group.WithTags("PmPrograms").RequireAuthorization();
 
-        group.MapPost("/", async (
-            CreatePmProgramRequest request,
-            HttpContext context,
-            MaintainArrAuthorizationService authorization,
-            PmProgramService service,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePmManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
-            return Results.Created($"/api/preventive-maintenance/programs/{created.PmProgramId}", created);
-        })
-        .WithName("CreatePmProgram");
+            group.MapGet("/", async (
+                HttpContext context,
+                MaintainArrAuthorizationService authorization,
+                PmProgramService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePmRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await service.ListAsync(tenantId, cancellationToken));
+            });
 
-        group.MapPut("/{pmProgramId:guid}", async (
-            Guid pmProgramId,
-            UpdatePmProgramRequest request,
-            HttpContext context,
-            MaintainArrAuthorizationService authorization,
-            PmProgramService service,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePmManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var updated = await service.UpdateAsync(tenantId, actorUserId, pmProgramId, request, cancellationToken);
-            return Results.Ok(updated);
-        })
-        .WithName("UpdatePmProgram");
+            group.MapGet("/{pmProgramId:guid}", async (
+                Guid pmProgramId,
+                HttpContext context,
+                MaintainArrAuthorizationService authorization,
+                PmProgramService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePmRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await service.GetAsync(tenantId, pmProgramId, cancellationToken));
+            });
 
-        group.MapPatch("/{pmProgramId:guid}/status", async (
-            Guid pmProgramId,
-            UpdatePmProgramStatusRequest request,
-            HttpContext context,
-            MaintainArrAuthorizationService authorization,
-            PmProgramService service,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePmManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var updated = await service.UpdateStatusAsync(tenantId, actorUserId, pmProgramId, request, cancellationToken);
-            return Results.Ok(updated);
-        })
-        .WithName("UpdatePmProgramStatus");
+            group.MapPost("/", async (
+                CreatePmProgramRequest request,
+                HttpContext context,
+                MaintainArrAuthorizationService authorization,
+                PmProgramService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePmManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
+                return Results.Created($"/api/preventive-maintenance/programs/{created.PmProgramId}", created);
+            });
 
-        group.MapPut("/{pmProgramId:guid}/schedules", async (
-            Guid pmProgramId,
-            ReplacePmProgramSchedulesRequest request,
-            HttpContext context,
-            MaintainArrAuthorizationService authorization,
-            PmProgramService service,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePmManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var updated = await service.ReplaceSchedulesAsync(tenantId, actorUserId, pmProgramId, request, cancellationToken);
-            return Results.Ok(updated);
-        })
-        .WithName("ReplacePmProgramSchedules");
+            group.MapPut("/{pmProgramId:guid}", async (
+                Guid pmProgramId,
+                UpdatePmProgramRequest request,
+                HttpContext context,
+                MaintainArrAuthorizationService authorization,
+                PmProgramService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePmManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var updated = await service.UpdateAsync(tenantId, actorUserId, pmProgramId, request, cancellationToken);
+                return Results.Ok(updated);
+            });
+
+            group.MapPatch("/{pmProgramId:guid}/status", async (
+                Guid pmProgramId,
+                UpdatePmProgramStatusRequest request,
+                HttpContext context,
+                MaintainArrAuthorizationService authorization,
+                PmProgramService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePmManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var updated = await service.UpdateStatusAsync(tenantId, actorUserId, pmProgramId, request, cancellationToken);
+                return Results.Ok(updated);
+            });
+
+            group.MapPut("/{pmProgramId:guid}/schedules", async (
+                Guid pmProgramId,
+                ReplacePmProgramSchedulesRequest request,
+                HttpContext context,
+                MaintainArrAuthorizationService authorization,
+                PmProgramService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequirePmManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var updated = await service.ReplaceSchedulesAsync(tenantId, actorUserId, pmProgramId, request, cancellationToken);
+                return Results.Ok(updated);
+            });
+        }
     }
 }

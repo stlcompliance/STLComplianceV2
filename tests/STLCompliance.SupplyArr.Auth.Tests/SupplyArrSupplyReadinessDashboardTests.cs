@@ -104,6 +104,21 @@ public sealed class SupplyArrSupplyReadinessDashboardTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Supply_readiness_dashboard_v1_aggregates_tenant_scoped_totals()
+    {
+        await SeedReadinessScenarioAsync();
+
+        var buyerToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_buyer");
+        var response = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/supply-readiness/dashboard", buyerToken));
+        response.EnsureSuccessStatusCode();
+
+        var dashboard = (await response.Content.ReadFromJsonAsync<SupplyReadinessDashboardResponse>())!;
+        Assert.Equal(1, dashboard.Totals.ActivePartsCount);
+        Assert.Equal(1, dashboard.Totals.PartsBelowReorderCount);
+    }
+
     private async Task SeedReadinessScenarioAsync()
     {
         using var scope = _supplyarrFactory.Services.CreateScope();

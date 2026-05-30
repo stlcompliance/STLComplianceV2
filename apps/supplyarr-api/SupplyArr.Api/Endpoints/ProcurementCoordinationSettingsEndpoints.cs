@@ -8,9 +8,9 @@ public static class ProcurementCoordinationSettingsEndpoints
 {
     public static void MapSupplyArrProcurementCoordinationSettingsEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/procurement-coordination-settings")
-            .WithTags("ProcurementCoordinationSettings")
-            .RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("ProcurementCoordinationSettings").RequireAuthorization();
 
         group.MapGet("/", async (
             SupplyArrAuthorizationService authorization,
@@ -22,7 +22,7 @@ public static class ProcurementCoordinationSettingsEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await settingsService.GetAsync(tenantId, cancellationToken));
         })
-        .WithName("GetSupplyArrProcurementCoordinationSettings");
+        .WithName($"GetSupplyArrProcurementCoordinationSettings{nameSuffix}");
 
         group.MapPut("/", async (
             UpsertProcurementCoordinationSettingsRequest request,
@@ -40,7 +40,7 @@ public static class ProcurementCoordinationSettingsEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpsertSupplyArrProcurementCoordinationSettings");
+        .WithName($"UpsertSupplyArrProcurementCoordinationSettings{nameSuffix}");
 
         group.MapGet("/pending", async (
             SupplyArrAuthorizationService authorization,
@@ -52,7 +52,7 @@ public static class ProcurementCoordinationSettingsEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await workerService.ListPendingAsync(tenantId, null, 25, null, cancellationToken));
         })
-        .WithName("ListSupplyArrPendingProcurementCoordination");
+        .WithName($"ListSupplyArrPendingProcurementCoordination{nameSuffix}");
 
         group.MapGet("/runs", async (
             int? limit,
@@ -65,6 +65,10 @@ public static class ProcurementCoordinationSettingsEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await workerService.ListRecentRunsAsync(tenantId, limit, cancellationToken));
         })
-        .WithName("ListSupplyArrProcurementCoordinationRuns");
+        .WithName($"ListSupplyArrProcurementCoordinationRuns{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/procurement-coordination-settings"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/procurement-coordination-settings"), "V1");
     }
 }

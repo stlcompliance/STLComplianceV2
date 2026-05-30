@@ -143,6 +143,39 @@ public sealed class MaintainArrAssetDowntimeTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Manual_downtime_v1_create_and_close_round_trip()
+    {
+        var assetId = await SeedActiveAssetAsync();
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/downtime/events", managerToken);
+        createRequest.Content = JsonContent.Create(new CreateManualDowntimeEventRequest(
+            assetId,
+            AssetDowntimeReasons.InRepair,
+            IsPlanned: true,
+            DateTimeOffset.UtcNow.AddHours(-2),
+            "Shop bay maintenance v1",
+            null,
+            null));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<AssetDowntimeEventResponse>())!;
+        Assert.Equal(AssetDowntimeSources.Manual, created.Source);
+        Assert.True(created.IsActive);
+
+        var closeRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/downtime/events/{created.EventId}/close",
+            managerToken);
+        closeRequest.Content = JsonContent.Create(new CloseDowntimeEventRequest(DateTimeOffset.UtcNow, "Returned to service v1"));
+        var closeResponse = await _maintainarrClient.SendAsync(closeRequest);
+        closeResponse.EnsureSuccessStatusCode();
+        var closed = (await closeResponse.Content.ReadFromJsonAsync<AssetDowntimeEventResponse>())!;
+        Assert.False(closed.IsActive);
+        Assert.NotNull(closed.EndedAt);
+    }
+
+    [Fact]
     public async Task Fleet_availability_requires_authenticated_user()
     {
         var response = await _maintainarrClient.GetAsync("/api/downtime/availability/fleet");
@@ -161,6 +194,33 @@ public sealed class MaintainArrAssetDowntimeTests : IAsyncLifetime
             30));
         var response = await _maintainarrClient.SendAsync(request);
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Downtime_tracking_settings_v1_put_get_pending_and_runs_work_for_admin()
+    {
+        var adminToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+
+        var putRequest = Authorized(HttpMethod.Put, "/api/v1/downtime-tracking-settings", adminToken);
+        putRequest.Content = JsonContent.Create(new UpsertDowntimeTrackingSettingsRequest(
+            true,
+            true,
+            true,
+            45));
+        var putResponse = await _maintainarrClient.SendAsync(putRequest);
+        putResponse.EnsureSuccessStatusCode();
+
+        var getResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/downtime-tracking-settings", adminToken));
+        getResponse.EnsureSuccessStatusCode();
+
+        var pendingResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/downtime-tracking-settings/pending", adminToken));
+        pendingResponse.EnsureSuccessStatusCode();
+
+        var runsResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/downtime-tracking-settings/runs?limit=5", adminToken));
+        runsResponse.EnsureSuccessStatusCode();
     }
 
     private async Task UpsertDowntimeSettingsAsync()

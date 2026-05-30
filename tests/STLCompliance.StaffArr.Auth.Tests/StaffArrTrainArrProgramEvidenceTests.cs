@@ -209,6 +209,12 @@ public class StaffArrTrainArrProgramEvidenceTests : IAsyncLifetime
         var evidenceItems = (await listEvidenceResponse.Content.ReadFromJsonAsync<IReadOnlyList<TrainingEvidenceResponse>>())!;
         Assert.Single(evidenceItems);
 
+        var v1ListEvidenceResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/evidence?trainingAssignmentId={assignment.AssignmentId}", adminToken));
+        v1ListEvidenceResponse.EnsureSuccessStatusCode();
+        var v1EvidenceItems = (await v1ListEvidenceResponse.Content.ReadFromJsonAsync<IReadOnlyList<TrainingEvidenceResponse>>())!;
+        Assert.Equal(evidenceItems.Count, v1EvidenceItems.Count);
+
         var detailResponse = await _trainarrClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/training-assignments/{assignment.AssignmentId}", adminToken));
         detailResponse.EnsureSuccessStatusCode();
@@ -276,6 +282,19 @@ public class StaffArrTrainArrProgramEvidenceTests : IAsyncLifetime
             null));
         var evidenceResponse = await _trainarrClient.SendAsync(evidenceRequest);
         evidenceResponse.EnsureSuccessStatusCode();
+
+        var v1EvidenceRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/evidence/{assignment.AssignmentId}",
+            memberToken);
+        v1EvidenceRequest.Content = JsonContent.Create(new CreateTrainingEvidenceRequest(
+            "quiz_result",
+            "quiz-2.pdf",
+            "application/pdf",
+            Convert.ToBase64String("quiz-pass-2"u8.ToArray()),
+            null));
+        var v1EvidenceResponse = await _trainarrClient.SendAsync(v1EvidenceRequest);
+        v1EvidenceResponse.EnsureSuccessStatusCode();
     }
 
     private async Task<Guid> CreateTrainingDefinitionAsync(string trainarrAdminToken)

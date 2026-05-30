@@ -175,6 +175,19 @@ export interface LaunchAttemptTimelineItem {
   remediationHint: string | null
 }
 
+export interface ValidateLaunchRequest {
+  productKey: string
+  tenantId?: string | null
+}
+
+export interface ValidateLaunchResponse {
+  tenantId: string
+  productKey: string
+  canLaunch: boolean
+  reasonCode: string | null
+  launchUrl: string | null
+}
+
 export interface TenantOverviewRow {
   tenantId: string
   slug: string

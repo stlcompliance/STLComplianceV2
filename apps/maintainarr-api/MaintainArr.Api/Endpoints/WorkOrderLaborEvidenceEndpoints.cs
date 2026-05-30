@@ -8,10 +8,18 @@ public static class WorkOrderLaborEvidenceEndpoints
 {
     public static void MapMaintainArrWorkOrderLaborEvidenceEndpoints(this WebApplication app)
     {
-        var tasks = app.MapGroup("/api/work-orders/{workOrderId:guid}/tasks")
-            .WithTags("WorkOrderTasks")
-            .RequireAuthorization();
+        MapTaskRoutes(app.MapGroup("/api/work-orders/{workOrderId:guid}/tasks").WithTags("WorkOrderTasks").RequireAuthorization(), string.Empty);
+        MapTaskRoutes(app.MapGroup("/api/v1/work-orders/{workOrderId:guid}/tasks").WithTags("WorkOrderTasks").RequireAuthorization(), "V1");
 
+        MapLaborRoutes(app.MapGroup("/api/work-orders/{workOrderId:guid}/labor").WithTags("WorkOrderLabor").RequireAuthorization(), string.Empty);
+        MapLaborRoutes(app.MapGroup("/api/v1/work-orders/{workOrderId:guid}/labor").WithTags("WorkOrderLabor").RequireAuthorization(), "V1");
+
+        MapEvidenceRoutes(app.MapGroup("/api/work-orders/{workOrderId:guid}/evidence").WithTags("WorkOrderEvidence").RequireAuthorization(), string.Empty);
+        MapEvidenceRoutes(app.MapGroup("/api/v1/work-orders/{workOrderId:guid}/evidence").WithTags("WorkOrderEvidence").RequireAuthorization(), "V1");
+    }
+
+    private static void MapTaskRoutes(RouteGroupBuilder tasks, string nameSuffix)
+    {
         tasks.MapGet("/", async (
             Guid workOrderId,
             HttpContext context,
@@ -29,7 +37,7 @@ public static class WorkOrderLaborEvidenceEndpoints
                 detail.AssignedTechnicianPersonId);
             return Results.Ok(await laborEvidenceService.ListTasksAsync(tenantId, workOrderId, cancellationToken));
         })
-        .WithName("ListWorkOrderTasks");
+        .WithName($"ListWorkOrderTasks{nameSuffix}");
 
         tasks.MapPost("/", async (
             Guid workOrderId,
@@ -56,12 +64,11 @@ public static class WorkOrderLaborEvidenceEndpoints
                 cancellationToken);
             return Results.Created($"/api/work-orders/{workOrderId}/tasks/{created.TaskLineId}", created);
         })
-        .WithName("CreateWorkOrderTask");
+        .WithName($"CreateWorkOrderTask{nameSuffix}");
+    }
 
-        var labor = app.MapGroup("/api/work-orders/{workOrderId:guid}/labor")
-            .WithTags("WorkOrderLabor")
-            .RequireAuthorization();
-
+    private static void MapLaborRoutes(RouteGroupBuilder labor, string nameSuffix)
+    {
         labor.MapGet("/", async (
             Guid workOrderId,
             HttpContext context,
@@ -79,7 +86,7 @@ public static class WorkOrderLaborEvidenceEndpoints
                 detail.AssignedTechnicianPersonId);
             return Results.Ok(await laborEvidenceService.ListLaborAsync(tenantId, workOrderId, cancellationToken));
         })
-        .WithName("ListWorkOrderLabor");
+        .WithName($"ListWorkOrderLabor{nameSuffix}");
 
         labor.MapPost("/", async (
             Guid workOrderId,
@@ -106,12 +113,11 @@ public static class WorkOrderLaborEvidenceEndpoints
                 cancellationToken);
             return Results.Created($"/api/work-orders/{workOrderId}/labor/{created.LaborEntryId}", created);
         })
-        .WithName("LogWorkOrderLabor");
+        .WithName($"LogWorkOrderLabor{nameSuffix}");
+    }
 
-        var evidence = app.MapGroup("/api/work-orders/{workOrderId:guid}/evidence")
-            .WithTags("WorkOrderEvidence")
-            .RequireAuthorization();
-
+    private static void MapEvidenceRoutes(RouteGroupBuilder evidence, string nameSuffix)
+    {
         evidence.MapGet("/", async (
             Guid workOrderId,
             HttpContext context,
@@ -129,7 +135,7 @@ public static class WorkOrderLaborEvidenceEndpoints
                 detail.AssignedTechnicianPersonId);
             return Results.Ok(await laborEvidenceService.ListEvidenceAsync(tenantId, workOrderId, cancellationToken));
         })
-        .WithName("ListWorkOrderEvidence");
+        .WithName($"ListWorkOrderEvidence{nameSuffix}");
 
         evidence.MapPost("/", async (
             Guid workOrderId,
@@ -156,6 +162,6 @@ public static class WorkOrderLaborEvidenceEndpoints
                 cancellationToken);
             return Results.Created($"/api/work-orders/{workOrderId}/evidence/{created.EvidenceId}", created);
         })
-        .WithName("UploadWorkOrderEvidence");
+        .WithName($"UploadWorkOrderEvidence{nameSuffix}");
     }
 }

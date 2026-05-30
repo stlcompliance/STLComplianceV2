@@ -1,5 +1,6 @@
 import type {
   ComplianceCoreMeResponse,
+  ComplianceCoreSessionBootstrapResponse,
   ComplianceKeyResponse,
   CreateComplianceKeyRequest,
   CreateGoverningBodyRequest,
@@ -120,7 +121,7 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
 }
 
 export async function redeemHandoff(handoffCode: string): Promise<HandoffSessionResponse> {
-  const response = await fetch(`${apiBase}/api/auth/handoff/redeem`, {
+  const response = await fetch(`${apiBase}/api/auth/nexarr/redeem`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ handoffCode }),
@@ -133,6 +134,18 @@ export async function getMe(accessToken: string): Promise<ComplianceCoreMeRespon
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ComplianceCoreMeResponse>(response, 'Failed to load profile')
+}
+
+export async function getSessionBootstrap(
+  accessToken: string,
+): Promise<ComplianceCoreSessionBootstrapResponse> {
+  const response = await fetch(`${apiBase}/api/session`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ComplianceCoreSessionBootstrapResponse>(
+    response,
+    'Failed to load session bootstrap',
+  )
 }
 
 export async function getVocabularyTypes(accessToken: string): Promise<VocabularyTypeResponse[]> {

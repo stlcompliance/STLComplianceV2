@@ -143,6 +143,34 @@ public sealed class MaintainArrEntityBulkExportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Entity_export_v1_alias_manifest_and_csv_endpoints_work()
+    {
+        var manifestResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports/manifest", _managerToken));
+        manifestResponse.EnsureSuccessStatusCode();
+        var manifest = (await manifestResponse.Content.ReadFromJsonAsync<EntityExportManifestResponse>())!;
+        Assert.Contains(manifest.Entities, x => x.EntityKey == "assets");
+
+        var assetsResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports/assets", _managerToken));
+        assetsResponse.EnsureSuccessStatusCode();
+        var assetsCsv = await assetsResponse.Content.ReadAsStringAsync();
+        Assert.Contains(EntityBulkExportService.AssetsCsvHeader, assetsCsv, StringComparison.Ordinal);
+
+        var workOrdersResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports/work-orders", _managerToken));
+        workOrdersResponse.EnsureSuccessStatusCode();
+        var workOrdersCsv = await workOrdersResponse.Content.ReadAsStringAsync();
+        Assert.Contains(EntityBulkExportService.WorkOrdersCsvHeader, workOrdersCsv, StringComparison.Ordinal);
+
+        var inspectionRunsResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports/inspection-runs", _managerToken));
+        inspectionRunsResponse.EnsureSuccessStatusCode();
+        var inspectionRunsCsv = await inspectionRunsResponse.Content.ReadAsStringAsync();
+        Assert.Contains(EntityBulkExportService.InspectionRunsCsvHeader, inspectionRunsCsv, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Entity_export_denies_unauthenticated()
     {
         var response = await _maintainarrClient.SendAsync(
@@ -214,7 +242,7 @@ public sealed class MaintainArrEntityBulkExportTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new NexArr.Api.Contracts.CreateHandoffRequest(
             "maintainarr",
             "http://localhost:5178/launch"));

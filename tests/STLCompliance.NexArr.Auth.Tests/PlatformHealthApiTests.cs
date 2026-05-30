@@ -37,4 +37,27 @@ public class PlatformHealthApiTests : IClassFixture<WebApplicationFactory<global
         Assert.Contains(payload.Products, p => p.ProductKey == "staffarr");
         Assert.Contains(payload.Products, p => p.ProductKey == "compliancecore");
     }
+
+    [Fact]
+    public async Task System_status_v1_alias_returns_platform_health_payload()
+    {
+        var response = await _client.GetAsync("/api/v1/system/status");
+
+        Assert.True(
+            response.StatusCode is HttpStatusCode.OK or HttpStatusCode.ServiceUnavailable,
+            $"Unexpected status: {response.StatusCode}");
+
+        var payload = await response.Content.ReadFromJsonAsync<PlatformHealthResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal(6, payload.Products.Count);
+    }
+
+    [Fact]
+    public async Task Ready_shortcut_is_available()
+    {
+        var response = await _client.GetAsync("/ready");
+        Assert.True(
+            response.StatusCode is HttpStatusCode.OK or HttpStatusCode.ServiceUnavailable,
+            $"Unexpected status: {response.StatusCode}");
+    }
 }

@@ -8,8 +8,12 @@ public static class AssetEndpoints
 {
     public static void MapMaintainArrAssetEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/assets").WithTags("Assets").RequireAuthorization();
+        MapRoutes(app.MapGroup("/api/assets").WithTags("Assets").RequireAuthorization(), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/assets").WithTags("Assets").RequireAuthorization(), "V1");
+    }
 
+    private static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+    {
         group.MapGet("/", async (
             HttpContext context,
             MaintainArrAuthorizationService authorization,
@@ -20,7 +24,7 @@ public static class AssetEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(tenantId, cancellationToken));
         })
-        .WithName("ListAssets");
+        .WithName($"ListAssets{nameSuffix}");
 
         group.MapGet("/{assetId:guid}", async (
             Guid assetId,
@@ -33,7 +37,7 @@ public static class AssetEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, assetId, cancellationToken));
         })
-        .WithName("GetAsset");
+        .WithName($"GetAsset{nameSuffix}");
 
         group.MapPost("/", async (
             CreateAssetRequest request,
@@ -48,7 +52,7 @@ public static class AssetEndpoints
             var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Created($"/api/assets/{created.AssetId}", created);
         })
-        .WithName("CreateAsset");
+        .WithName($"CreateAsset{nameSuffix}");
 
         group.MapPut("/{assetId:guid}", async (
             Guid assetId,
@@ -64,7 +68,7 @@ public static class AssetEndpoints
             var updated = await service.UpdateAsync(tenantId, actorUserId, assetId, request, cancellationToken);
             return Results.Ok(updated);
         })
-        .WithName("UpdateAsset");
+        .WithName($"UpdateAsset{nameSuffix}");
 
         group.MapPatch("/{assetId:guid}/lifecycle-status", async (
             Guid assetId,
@@ -80,6 +84,6 @@ public static class AssetEndpoints
             var updated = await service.UpdateLifecycleStatusAsync(tenantId, actorUserId, assetId, request, cancellationToken);
             return Results.Ok(updated);
         })
-        .WithName("UpdateAssetLifecycleStatus");
+        .WithName($"UpdateAssetLifecycleStatus{nameSuffix}");
     }
 }

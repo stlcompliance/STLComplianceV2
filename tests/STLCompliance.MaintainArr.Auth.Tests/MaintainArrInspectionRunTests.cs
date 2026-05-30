@@ -131,6 +131,35 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Inspection_run_v1_alias_happy_path_passes()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var (assetId, templateId, checklistItemId) = await SeedActiveTemplateWithAssetAsync(managerToken);
+
+        var technicianToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_technician");
+
+        var startRequest = Authorized(HttpMethod.Post, "/api/v1/inspections", technicianToken);
+        startRequest.Content = JsonContent.Create(new StartInspectionRunRequest(assetId, templateId));
+        var startResponse = await _maintainarrClient.SendAsync(startRequest);
+        startResponse.EnsureSuccessStatusCode();
+        var started = (await startResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+
+        var submitRequest = Authorized(HttpMethod.Put, $"/api/v1/inspections/{started.InspectionRunId}/answers", technicianToken);
+        submitRequest.Content = JsonContent.Create(new SubmitInspectionRunAnswersRequest([
+            new InspectionRunAnswerInput(checklistItemId, "pass", null, null),
+        ]));
+        var submitResponse = await _maintainarrClient.SendAsync(submitRequest);
+        submitResponse.EnsureSuccessStatusCode();
+
+        var completeRequest = Authorized(HttpMethod.Post, $"/api/v1/inspections/{started.InspectionRunId}/complete", technicianToken);
+        var completeResponse = await _maintainarrClient.SendAsync(completeRequest);
+        completeResponse.EnsureSuccessStatusCode();
+        var completed = (await completeResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+        Assert.Equal("completed", completed.Status);
+        Assert.Equal("passed", completed.Result);
+    }
+
+    [Fact]
     public async Task Inspection_run_fail_answer_marks_run_failed()
     {
         var token = await RedeemMaintainArrTokenAsync();
@@ -316,7 +345,7 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new NexArr.Api.Contracts.CreateHandoffRequest(
             "maintainarr",
             "http://localhost:5178/launch"));

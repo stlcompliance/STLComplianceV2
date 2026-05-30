@@ -157,6 +157,58 @@ public sealed class MaintainArrInspectionTemplateTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Inspection_template_builder_crud_v1_alias_happy_path()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetTypeId = await SeedAssetTypeAsync(token);
+
+        var createTemplateRequest = Authorized(HttpMethod.Post, "/api/v1/inspection-templates", token);
+        createTemplateRequest.Content = JsonContent.Create(new CreateInspectionTemplateRequest(
+            "daily-v1-walkaround",
+            "Daily V1 Walkaround",
+            "Pre-shift v1 walkaround"));
+        var createTemplateResponse = await _maintainarrClient.SendAsync(createTemplateRequest);
+        createTemplateResponse.EnsureSuccessStatusCode();
+        var template = (await createTemplateResponse.Content.ReadFromJsonAsync<InspectionTemplateDetailResponse>())!;
+
+        var createCategoryRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/inspection-templates/{template.InspectionTemplateId}/categories",
+            token);
+        createCategoryRequest.Content = JsonContent.Create(new CreateInspectionTemplateCategoryRequest(
+            "safety-v1",
+            "Safety V1",
+            10));
+        var createCategoryResponse = await _maintainarrClient.SendAsync(createCategoryRequest);
+        createCategoryResponse.EnsureSuccessStatusCode();
+        var category = (await createCategoryResponse.Content.ReadFromJsonAsync<InspectionTemplateCategoryResponse>())!;
+
+        var createItemRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/inspection-templates/{template.InspectionTemplateId}/checklist-items",
+            token);
+        createItemRequest.Content = JsonContent.Create(new CreateInspectionChecklistItemRequest(
+            "lights-work-v1",
+            "Lights operate correctly",
+            "pass_fail",
+            true,
+            10,
+            category.CategoryId));
+        var createItemResponse = await _maintainarrClient.SendAsync(createItemRequest);
+        createItemResponse.EnsureSuccessStatusCode();
+
+        var replaceAssetTypesRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/v1/inspection-templates/{template.InspectionTemplateId}/asset-types",
+            token);
+        replaceAssetTypesRequest.Content = JsonContent.Create(new ReplaceInspectionTemplateAssetTypesRequest([assetTypeId]));
+        var replaceAssetTypesResponse = await _maintainarrClient.SendAsync(replaceAssetTypesRequest);
+        replaceAssetTypesResponse.EnsureSuccessStatusCode();
+        var linked = (await replaceAssetTypesResponse.Content.ReadFromJsonAsync<InspectionTemplateDetailResponse>())!;
+        Assert.Single(linked.LinkedAssetTypes);
+    }
+
+    [Fact]
     public async Task Activate_template_without_checklist_items_returns_bad_request()
     {
         var token = await RedeemMaintainArrTokenAsync();
@@ -230,7 +282,7 @@ public sealed class MaintainArrInspectionTemplateTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new NexArr.Api.Contracts.CreateHandoffRequest(
             "maintainarr",
             "http://localhost:5178/launch"));

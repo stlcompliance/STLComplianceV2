@@ -197,6 +197,33 @@ public class StaffArrTrainArrPublicationRetryWorkerTests : IAsyncLifetime
         Assert.Equal(StaffarrPublicationDeliveryStatuses.Delivered, delivery.DeliveryStatus);
     }
 
+    [Fact]
+    public async Task Certificates_v1_alias_accepts_publication_payload()
+    {
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "V1 Certificate User", "v1.certificate@example.com");
+
+        var publishRequest = Authorized(HttpMethod.Post, "/api/v1/certificates", _trainarrPublicationToken);
+        publishRequest.Content = JsonContent.Create(new CreateCertificationPublicationRequest(
+            PlatformSeeder.DemoTenantId,
+            personId,
+            "qual.v1_certificate",
+            "V1 Certificate Qualification",
+            "missing_assignment",
+            "V1 certificate alias test.",
+            null));
+
+        var publishResponse = await _trainarrClient.SendAsync(publishRequest);
+        publishResponse.EnsureSuccessStatusCode();
+        var publication = (await publishResponse.Content.ReadFromJsonAsync<CertificationPublicationResponse>())!;
+
+        using var scope = _trainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TrainArrDbContext>();
+        var delivery = await db.StaffarrPublicationDeliveries.SingleAsync(
+            x => x.CertificationPublicationId == publication.PublicationId);
+        Assert.Equal(StaffarrPublicationDeliveryStatuses.Delivered, delivery.DeliveryStatus);
+    }
+
     private async Task SeedPendingBlockerDeliveryAsync(Guid personId, Guid publicationId)
     {
         using var scope = _trainarrFactory.Services.CreateScope();

@@ -191,13 +191,61 @@ public class StaffArrTrainArrQualificationCheckTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Qualification_check_v1_alias_matches_primary_endpoint()
+    {
+        var personId = Guid.NewGuid();
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+
+        var primary = await RunQualificationCheckAsync(
+            adminToken,
+            personId,
+            "hazmat_endorsement",
+            "driver_qualification");
+        var v1 = await RunQualificationCheckAsync(
+            adminToken,
+            personId,
+            "hazmat_endorsement",
+            "driver_qualification",
+            "/api/v1/qualification-checks");
+
+        Assert.Equal(primary.Outcome, v1.Outcome);
+        Assert.Equal(primary.ReasonCode, v1.ReasonCode);
+        Assert.Equal(primary.ComplianceCore?.Outcome, v1.ComplianceCore?.Outcome);
+    }
+
+    [Fact]
+    public async Task Authorization_check_v1_alias_matches_qualification_check_endpoint()
+    {
+        var personId = Guid.NewGuid();
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+
+        var qualificationCheck = await RunQualificationCheckAsync(
+            adminToken,
+            personId,
+            "hazmat_endorsement",
+            "driver_qualification",
+            "/api/v1/qualification-checks");
+        var authorizationCheck = await RunQualificationCheckAsync(
+            adminToken,
+            personId,
+            "hazmat_endorsement",
+            "driver_qualification",
+            "/api/v1/authorization-checks");
+
+        Assert.Equal(qualificationCheck.Outcome, authorizationCheck.Outcome);
+        Assert.Equal(qualificationCheck.ReasonCode, authorizationCheck.ReasonCode);
+        Assert.Equal(qualificationCheck.ComplianceCore?.Outcome, authorizationCheck.ComplianceCore?.Outcome);
+    }
+
     private async Task<QualificationCheckResponse> RunQualificationCheckAsync(
         string trainarrToken,
         Guid personId,
         string qualificationKey,
-        string rulePackKey)
+        string rulePackKey,
+        string endpoint = "/api/qualification-checks")
     {
-        var request = Authorized(HttpMethod.Post, "/api/qualification-checks", trainarrToken);
+        var request = Authorized(HttpMethod.Post, endpoint, trainarrToken);
         request.Content = JsonContent.Create(new CreateQualificationCheckRequest(
             personId,
             qualificationKey,

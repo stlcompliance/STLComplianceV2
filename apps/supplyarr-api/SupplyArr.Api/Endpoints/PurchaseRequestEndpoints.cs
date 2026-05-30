@@ -8,9 +8,9 @@ public static class PurchaseRequestEndpoints
 {
     public static void MapSupplyArrPurchaseRequestEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/purchase-requests").WithTags("PurchaseRequests").RequireAuthorization();
-
-        group.MapGet("/", async (
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+            group.MapGet("/", async (
             string? status,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
@@ -21,7 +21,7 @@ public static class PurchaseRequestEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(tenantId, status, cancellationToken));
         })
-        .WithName("ListPurchaseRequests");
+        .WithName($"ListPurchaseRequests{nameSuffix}");
 
         group.MapGet("/{purchaseRequestId:guid}", async (
             Guid purchaseRequestId,
@@ -34,7 +34,7 @@ public static class PurchaseRequestEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, purchaseRequestId, cancellationToken));
         })
-        .WithName("GetPurchaseRequest");
+        .WithName($"GetPurchaseRequest{nameSuffix}");
 
         group.MapPost("/", async (
             CreatePurchaseRequestRequest request,
@@ -49,7 +49,7 @@ public static class PurchaseRequestEndpoints
             var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Created($"/api/purchase-requests/{created.PurchaseRequestId}", created);
         })
-        .WithName("CreatePurchaseRequest");
+        .WithName($"CreatePurchaseRequest{nameSuffix}");
 
         group.MapPut("/{purchaseRequestId:guid}", async (
             Guid purchaseRequestId,
@@ -69,7 +69,7 @@ public static class PurchaseRequestEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdatePurchaseRequest");
+        .WithName($"UpdatePurchaseRequest{nameSuffix}");
 
         group.MapPost("/{purchaseRequestId:guid}/lines", async (
             Guid purchaseRequestId,
@@ -89,7 +89,7 @@ public static class PurchaseRequestEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("AddPurchaseRequestLine");
+        .WithName($"AddPurchaseRequestLine{nameSuffix}");
 
         group.MapPut("/{purchaseRequestId:guid}/lines/{lineId:guid}", async (
             Guid purchaseRequestId,
@@ -111,7 +111,7 @@ public static class PurchaseRequestEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdatePurchaseRequestLine");
+        .WithName($"UpdatePurchaseRequestLine{nameSuffix}");
 
         group.MapDelete("/{purchaseRequestId:guid}/lines/{lineId:guid}", async (
             Guid purchaseRequestId,
@@ -131,7 +131,7 @@ public static class PurchaseRequestEndpoints
                 lineId,
                 cancellationToken));
         })
-        .WithName("RemovePurchaseRequestLine");
+        .WithName($"RemovePurchaseRequestLine{nameSuffix}");
 
         group.MapPost("/{purchaseRequestId:guid}/submit", async (
             Guid purchaseRequestId,
@@ -150,7 +150,7 @@ public static class PurchaseRequestEndpoints
                 purchaseRequestId,
                 cancellationToken));
         })
-        .WithName("SubmitPurchaseRequest");
+        .WithName($"SubmitPurchaseRequest{nameSuffix}");
 
         group.MapPost("/{purchaseRequestId:guid}/approve", async (
             Guid purchaseRequestId,
@@ -169,7 +169,7 @@ public static class PurchaseRequestEndpoints
                 purchaseRequestId,
                 cancellationToken));
         })
-        .WithName("ApprovePurchaseRequest");
+        .WithName($"ApprovePurchaseRequest{nameSuffix}");
 
         group.MapPost("/{purchaseRequestId:guid}/reject", async (
             Guid purchaseRequestId,
@@ -189,6 +189,13 @@ public static class PurchaseRequestEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("RejectPurchaseRequest");
+        .WithName($"RejectPurchaseRequest{nameSuffix}");
+        }
+
+        var legacyGroup = app.MapGroup("/api/purchase-requests").WithTags("PurchaseRequests").RequireAuthorization();
+        MapRoutes(legacyGroup, string.Empty);
+
+        var v1Group = app.MapGroup("/api/v1/purchase-requests").WithTags("PurchaseRequests").RequireAuthorization();
+        MapRoutes(v1Group, "V1");
     }
 }

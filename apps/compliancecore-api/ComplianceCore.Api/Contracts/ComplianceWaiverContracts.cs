@@ -36,6 +36,17 @@ public sealed record RejectComplianceWaiverRequest(string? Notes = null);
 
 public sealed record RevokeComplianceWaiverRequest(string? Notes = null);
 
+public sealed record RenewComplianceWaiverRequest(
+    DateTimeOffset EffectiveAt,
+    DateTimeOffset? ExpiresAt,
+    string? Notes = null);
+
+public sealed record UpdateComplianceWaiverRequest(
+    string Status,
+    DateTimeOffset? EffectiveAt = null,
+    DateTimeOffset? ExpiresAt = null,
+    string? Notes = null);
+
 public sealed record ProcessExpiredWaiversRequest(
     Guid? TenantId = null,
     DateTimeOffset? AsOfUtc = null,

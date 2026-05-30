@@ -8,10 +8,13 @@ public static class TrainingProgramEndpoints
 {
     public static void MapTrainArrTrainingProgramEndpoints(this WebApplication app)
     {
-        var programs = app.MapGroup("/api/training-programs")
-            .WithTags("TrainingPrograms")
-            .RequireAuthorization();
+        MapRoutes(app.MapGroup("/api/training-programs").WithTags("TrainingPrograms").RequireAuthorization(), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/training-programs").WithTags("TrainingPrograms").RequireAuthorization(), "V1TrainingPrograms");
+        MapRoutes(app.MapGroup("/api/v1/programs").WithTags("TrainingPrograms").RequireAuthorization(), "V1Programs");
+    }
 
+    private static void MapRoutes(RouteGroupBuilder programs, string nameSuffix)
+    {
         programs.MapGet("/", async (
             HttpContext context,
             TrainArrAuthorizationService authorization,
@@ -22,7 +25,7 @@ public static class TrainingProgramEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(tenantId, cancellationToken));
         })
-        .WithName("ListTrainingPrograms");
+        .WithName($"ListTrainingPrograms{nameSuffix}");
 
         programs.MapPost("/", async (
             CreateTrainingProgramRequest request,
@@ -37,7 +40,7 @@ public static class TrainingProgramEndpoints
             var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Created($"/api/training-programs/{created.ProgramId}", created);
         })
-        .WithName("CreateTrainingProgram");
+        .WithName($"CreateTrainingProgram{nameSuffix}");
 
         programs.MapGet("/{programId:guid}", async (
             Guid programId,
@@ -50,7 +53,7 @@ public static class TrainingProgramEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, programId, cancellationToken));
         })
-        .WithName("GetTrainingProgram");
+        .WithName($"GetTrainingProgram{nameSuffix}");
 
         programs.MapPut("/{programId:guid}", async (
             Guid programId,
@@ -66,6 +69,6 @@ public static class TrainingProgramEndpoints
             var updated = await service.UpdateAsync(tenantId, actorUserId, programId, request, cancellationToken);
             return Results.Ok(updated);
         })
-        .WithName("UpdateTrainingProgram");
+        .WithName($"UpdateTrainingProgram{nameSuffix}");
     }
 }

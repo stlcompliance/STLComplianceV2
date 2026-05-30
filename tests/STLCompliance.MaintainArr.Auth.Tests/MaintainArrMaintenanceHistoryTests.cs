@@ -226,6 +226,17 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Maintenance_history_v1_alias_missing_asset_returns_not_found()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var missingAssetId = Guid.NewGuid();
+
+        var response = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/maintenance-history?assetId={missingAssetId}", token));
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Maintenance_history_requires_maintainarr_entitlement()
     {
         var token = await RedeemMaintainArrTokenAsync();
@@ -347,7 +358,7 @@ public sealed class MaintainArrMaintenanceHistoryTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new NexArr.Api.Contracts.CreateHandoffRequest(
             "maintainarr",
             "http://localhost:5178/launch"));

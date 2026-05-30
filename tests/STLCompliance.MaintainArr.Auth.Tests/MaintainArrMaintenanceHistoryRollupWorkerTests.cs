@@ -175,6 +175,36 @@ public sealed class MaintainArrMaintenanceHistoryRollupWorkerTests : IAsyncLifet
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Maintenance_history_rollup_settings_v1_put_get_pending_and_runs_work_for_admin()
+    {
+        await SeedAssetWithDefectAsync();
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+
+        var putRequest = Authorized(HttpMethod.Put, "/api/v1/maintenance-history-rollup-settings", token);
+        putRequest.Content = JsonContent.Create(new UpsertMaintenanceHistoryRollupSettingsRequest(true, 2));
+        (await _maintainarrClient.SendAsync(putRequest)).EnsureSuccessStatusCode();
+
+        var getRequest = Authorized(HttpMethod.Get, "/api/v1/maintenance-history-rollup-settings", token);
+        var getResponse = await _maintainarrClient.SendAsync(getRequest);
+        getResponse.EnsureSuccessStatusCode();
+        var settings = (await getResponse.Content.ReadFromJsonAsync<MaintenanceHistoryRollupSettingsResponse>())!;
+        Assert.True(settings.IsEnabled);
+        Assert.Equal(2, settings.StalenessHours);
+
+        var pendingRequest = Authorized(HttpMethod.Get, "/api/v1/maintenance-history-rollup-settings/pending", token);
+        var pendingResponse = await _maintainarrClient.SendAsync(pendingRequest);
+        pendingResponse.EnsureSuccessStatusCode();
+        var pending = (await pendingResponse.Content.ReadFromJsonAsync<PendingMaintenanceHistoryRollupsResponse>())!;
+        Assert.NotNull(pending.Items);
+
+        var runsRequest = Authorized(HttpMethod.Get, "/api/v1/maintenance-history-rollup-settings/runs?limit=5", token);
+        var runsResponse = await _maintainarrClient.SendAsync(runsRequest);
+        runsResponse.EnsureSuccessStatusCode();
+        var runs = (await runsResponse.Content.ReadFromJsonAsync<MaintenanceHistoryRollupRunsResponse>())!;
+        Assert.NotNull(runs.Items);
+    }
+
     private async Task UpsertRollupSettingsAsync()
     {
         var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");

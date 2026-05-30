@@ -5,11 +5,12 @@ import {
   ProductWorkspaceFrame,
   buildProductLaunchUrlMap,
   formatProductLaunchError,
+  getLaunchCatalog,
   resolveProductWorkspaceBootstrapError,
   resolveSuiteHomeUrl,
   useProductWorkspaceLaunch,
 } from '@stl/shared-ui'
-import { getMe } from '../api/client'
+import { getSessionBootstrap } from '../api/client'
 import { clearSession, loadSession } from '../auth/sessionStorage'
 import { maintainarrNavItems } from '../navigation/productNav'
 
@@ -22,18 +23,31 @@ export function ProductWorkspaceLayout() {
   const handoff = searchParams.get('handoff')
   const session = loadSession()
 
-  const meQuery = useQuery({
-    queryKey: ['maintainarr-me', session?.accessToken],
-    queryFn: () => getMe(session!.accessToken),
+  const sessionQuery = useQuery({
+    queryKey: ['maintainarr-session', session?.accessToken],
+    queryFn: () => getSessionBootstrap(session!.accessToken),
+    enabled: Boolean(session?.accessToken),
+    retry: false,
+  })
+
+  const launchCatalogQuery = useQuery({
+    queryKey: ['maintainarr-launch-catalog', session?.accessToken],
+    queryFn: () => getLaunchCatalog(apiBase, session!.accessToken, 'maintainarr'),
     enabled: Boolean(session?.accessToken),
     retry: false,
   })
 
   useEffect(() => {
-    if (meQuery.isError && resolveProductWorkspaceBootstrapError(meQuery.error)) {
+    if (sessionQuery.isError && resolveProductWorkspaceBootstrapError(sessionQuery.error)) {
       clearSession()
     }
-  }, [meQuery.isError, meQuery.error])
+  }, [sessionQuery.isError, sessionQuery.error])
+
+  useEffect(() => {
+    if (launchCatalogQuery.isError && resolveProductWorkspaceBootstrapError(launchCatalogQuery.error)) {
+      clearSession()
+    }
+  }, [launchCatalogQuery.isError, launchCatalogQuery.error])
 
   const productLaunch = useProductWorkspaceLaunch({
     apiBase,
@@ -47,18 +61,23 @@ export function ProductWorkspaceLayout() {
     return <Navigate to={`/launch?handoff=${encodeURIComponent(handoff)}`} replace />
   }
 
-  const bootstrapError = meQuery.isError
-    ? resolveProductWorkspaceBootstrapError(meQuery.error)
+  const bootstrapError = sessionQuery.isError
+    ? resolveProductWorkspaceBootstrapError(sessionQuery.error)
     : null
 
   const workspaceSession =
-    session && meQuery.data && !bootstrapError
+    session && sessionQuery.data && !bootstrapError
       ? {
-          userDisplayName: meQuery.data.displayName,
+          userDisplayName: session.displayName,
           tenantDisplayName: session.tenantDisplayName,
           tenantSlug: session.tenantSlug,
         }
       : null
+
+  const switcherEntitlements =
+    launchCatalogQuery.data?.products.map((product) => product.productKey) ??
+    sessionQuery.data?.entitlements ??
+    []
 
   return (
     <ProductWorkspaceFrame
@@ -66,7 +85,7 @@ export function ProductWorkspaceLayout() {
       productKey="maintainarr"
       workspaceSubtitle="Assets, inspections, and work orders"
       navItems={maintainarrNavItems}
-      entitlements={meQuery.data?.entitlements ?? []}
+      entitlements={switcherEntitlements}
       suiteHomeUrl={suiteHomeUrl}
       productLaunchUrls={productLaunchUrls}
       onSelectProduct={(productKey) => {
@@ -79,7 +98,7 @@ export function ProductWorkspaceLayout() {
         productLaunch.isError ? formatProductLaunchError(productLaunch.error) : null
       }
       workspaceSession={workspaceSession}
-      isBootstrapping={Boolean(session?.accessToken) && meQuery.isLoading}
+      isBootstrapping={Boolean(session?.accessToken) && sessionQuery.isLoading}
       bootstrapError={bootstrapError}
     >
       <Outlet />

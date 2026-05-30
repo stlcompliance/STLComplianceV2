@@ -7,8 +7,12 @@ public static class MaintenanceHistoryEndpoints
 {
     public static void MapMaintainArrMaintenanceHistoryEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/maintenance-history").WithTags("MaintenanceHistory").RequireAuthorization();
+        MapRoutes(app.MapGroup("/api/maintenance-history").WithTags("MaintenanceHistory").RequireAuthorization(), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/maintenance-history").WithTags("MaintenanceHistory").RequireAuthorization(), "V1");
+    }
 
+    private static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+    {
         group.MapGet("/", async (
             Guid assetId,
             int? page,
@@ -32,7 +36,7 @@ public static class MaintenanceHistoryEndpoints
                 pageSize ?? 50,
                 cancellationToken));
         })
-        .WithName("ListMaintenanceHistory");
+        .WithName($"ListMaintenanceHistory{nameSuffix}");
 
         group.MapGet("/summary", async (
             Guid assetId,
@@ -50,6 +54,6 @@ public static class MaintenanceHistoryEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetSummaryAsync(tenantId, assetId, cancellationToken));
         })
-        .WithName("GetMaintenanceHistorySummary");
+        .WithName($"GetMaintenanceHistorySummary{nameSuffix}");
     }
 }

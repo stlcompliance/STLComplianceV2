@@ -27,6 +27,33 @@ public static class ProductGateEndpoints
             return Results.Ok(result);
         })
         .WithName("EvaluateProductGate");
+
+        gates.MapPost("/{actionKey:regex(^can_[a-z0-9_]+$)}", async (
+            string actionKey,
+            ProductGateCompatibilityRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            ProductGateEvaluationService service,
+            CancellationToken cancellationToken) =>
+        {
+            var normalizedActionKey = actionKey.Trim().ToLowerInvariant();
+            var evaluationRequest = new ProductGateEvaluationRequest(
+                request.TenantId,
+                request.WorkflowKey ?? normalizedActionKey,
+                normalizedActionKey,
+                request.ActivityContextKey,
+                request.SubjectReferences,
+                request.RuleContext,
+                request.FactSnapshotReferences,
+                request.EmitFindings);
+            var validated = ValidateServiceToken(tokenValidator, context, evaluationRequest.TenantId);
+            var result = await service.EvaluateAsync(
+                evaluationRequest,
+                validated.SourceProductKey,
+                cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("EvaluateProductGateByActionKey");
     }
 
     private static ValidatedServiceToken ValidateServiceToken(

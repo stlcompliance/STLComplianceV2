@@ -17,7 +17,9 @@ public static class IntegrationEndpoints
 
     public static void MapSupplyArrIntegrationEndpoints(this WebApplication app)
     {
-        var integrations = app.MapGroup("/api/integrations").WithTags("Integrations");
+        static void MapRoutes(RouteGroupBuilder integrations, string nameSuffix)
+        {
+            integrations = integrations.WithTags("Integrations");
 
         integrations.MapPost("/maintainarr-demand", async (
             IngestMaintainarrDemandRequest request,
@@ -39,7 +41,7 @@ public static class IntegrationEndpoints
             var result = await service.IngestAsync(request, cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("IngestMaintainarrDemand");
+        .WithName($"IngestMaintainarrDemand{nameSuffix}");
 
         integrations.MapPost("/routarr-demand", async (
             IngestRoutarrDemandRequest request,
@@ -61,7 +63,7 @@ public static class IntegrationEndpoints
             var result = await service.IngestAsync(request, cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("IngestRoutarrDemand");
+        .WithName($"IngestRoutarrDemand{nameSuffix}");
 
         integrations.MapPost("/trainarr-demand", async (
             IngestTrainarrDemandRequest request,
@@ -83,7 +85,7 @@ public static class IntegrationEndpoints
             var result = await service.IngestAsync(request, cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("IngestTrainarrDemand");
+        .WithName($"IngestTrainarrDemand{nameSuffix}");
 
         integrations.MapPost("/staffarr-demand", async (
             IngestStaffarrDemandRequest request,
@@ -105,7 +107,7 @@ public static class IntegrationEndpoints
             var result = await service.IngestAsync(request, cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("IngestStaffarrDemand");
+        .WithName($"IngestStaffarrDemand{nameSuffix}");
 
         integrations.MapGet("/part-supply-readiness", async (
             Guid tenantId,
@@ -119,7 +121,7 @@ public static class IntegrationEndpoints
             ValidateReadinessServiceToken(tokenValidator, context, tenantId);
             return Results.Ok(await service.GetPartReadinessAsync(tenantId, partId, quantity, cancellationToken));
         })
-        .WithName("IntegrationGetPartSupplyReadiness");
+        .WithName($"IntegrationGetPartSupplyReadiness{nameSuffix}");
 
         integrations.MapGet("/vendor-supply-readiness", async (
             Guid tenantId,
@@ -132,7 +134,7 @@ public static class IntegrationEndpoints
             ValidateReadinessServiceToken(tokenValidator, context, tenantId);
             return Results.Ok(await service.GetVendorReadinessAsync(tenantId, externalPartyId, cancellationToken));
         })
-        .WithName("IntegrationGetVendorSupplyReadiness");
+        .WithName($"IntegrationGetVendorSupplyReadiness{nameSuffix}");
 
         integrations.MapGet("/procurement-path-readiness", async (
             Guid tenantId,
@@ -152,7 +154,7 @@ public static class IntegrationEndpoints
                 quantity,
                 cancellationToken));
         })
-        .WithName("IntegrationGetProcurementPathReadiness");
+        .WithName($"IntegrationGetProcurementPathReadiness{nameSuffix}");
 
         integrations.MapGet("/references/{referenceType}/{referenceId:guid}", async (
             Guid tenantId,
@@ -170,7 +172,7 @@ public static class IntegrationEndpoints
                 referenceId,
                 cancellationToken));
         })
-        .WithName("IntegrationResolveSupplyReferenceById");
+        .WithName($"IntegrationResolveSupplyReferenceById{nameSuffix}");
 
         integrations.MapGet("/references/by-key", async (
             Guid tenantId,
@@ -188,7 +190,11 @@ public static class IntegrationEndpoints
                 referenceKey,
                 cancellationToken));
         })
-        .WithName("IntegrationResolveSupplyReferenceByKey");
+        .WithName($"IntegrationResolveSupplyReferenceByKey{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/integrations"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/integrations"), "V1");
     }
 
     public const string SupplyReadinessReadActionScope = "supplyarr.readiness.read";

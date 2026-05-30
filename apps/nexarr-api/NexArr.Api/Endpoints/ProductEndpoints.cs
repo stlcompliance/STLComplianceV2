@@ -8,49 +8,82 @@ public static class ProductEndpoints
     public static void MapProductEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/products").WithTags("Products").RequireAuthorization();
+        var v1 = app.MapGroup("/api/v1/products").WithTags("Products").RequireAuthorization();
 
-        group.MapGet("/", async (
+        static async Task<IResult> ListProductsEndpoint(
             HttpContext context,
             ProductCatalogService service,
             int page,
             int pageSize,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             var result = await service.ListAsync(context.User, page == 0 ? 1 : page, pageSize == 0 ? 50 : pageSize, cancellationToken);
             return Results.Ok(result);
-        })
+        }
+
+        group.MapGet("/", ListProductsEndpoint)
         .WithName("ListProducts");
 
-        group.MapGet("/{productKey}", async (
+        v1.MapGet("/", ListProductsEndpoint)
+        .WithName("ListProductsV1");
+
+        static async Task<IResult> GetProductEndpoint(
             string productKey,
             HttpContext context,
             ProductCatalogService service,
             CancellationToken cancellationToken) =>
-        {
-            return Results.Ok(await service.GetAsync(context.User, productKey, cancellationToken));
-        })
+            Results.Ok(await service.GetAsync(context.User, productKey, cancellationToken));
+
+        group.MapGet("/{productKey}", GetProductEndpoint)
         .WithName("GetProduct");
 
-        group.MapPost("/", async (
+        v1.MapGet("/{productKey}", GetProductEndpoint)
+        .WithName("GetProductV1");
+
+        static async Task<IResult> CreateProductEndpoint(
             CreateProductRequest request,
             HttpContext context,
             ProductCatalogService service,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             var created = await service.CreateAsync(context.User, request, cancellationToken);
             return Results.Created($"/api/products/{created.ProductKey}", created);
-        })
+        }
+
+        group.MapPost("/", CreateProductEndpoint)
         .WithName("CreateProduct");
 
-        group.MapPut("/{productKey}", async (
+        v1.MapPost("/", CreateProductEndpoint)
+        .WithName("CreateProductV1");
+
+        static async Task<IResult> UpdateProductEndpoint(
             string productKey,
             UpdateProductRequest request,
             HttpContext context,
             ProductCatalogService service,
             CancellationToken cancellationToken) =>
-        {
-            return Results.Ok(await service.UpdateAsync(context.User, productKey, request, cancellationToken));
-        })
+            Results.Ok(await service.UpdateAsync(context.User, productKey, request, cancellationToken));
+
+        group.MapPut("/{productKey}", UpdateProductEndpoint)
         .WithName("UpdateProduct");
+
+        v1.MapPatch("/{productKey}", UpdateProductEndpoint)
+        .WithName("UpdateProductV1");
+
+        v1.MapPost("/{productKey}/disable", async (
+            string productKey,
+            HttpContext context,
+            ProductCatalogService service,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await service.SetActiveAsync(context.User, productKey, false, cancellationToken)))
+        .WithName("DisableProductV1");
+
+        v1.MapPost("/{productKey}/enable", async (
+            string productKey,
+            HttpContext context,
+            ProductCatalogService service,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await service.SetActiveAsync(context.User, productKey, true, cancellationToken)))
+        .WithName("EnableProductV1");
     }
 }

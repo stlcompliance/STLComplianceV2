@@ -186,12 +186,23 @@ public class StaffArrTrainArrProgramVersionMatrixTests : IAsyncLifetime
         Assert.Contains(builderView.Profiles, p => p.ApplicabilityProfileId == profile.ApplicabilityProfileId);
         Assert.Contains(builderView.Requirements, r => r.RequirementId == requirement.RequirementId);
 
+        var v1BuilderViewResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/requirements/builder-view", adminToken));
+        v1BuilderViewResponse.EnsureSuccessStatusCode();
+        var v1BuilderView = (await v1BuilderViewResponse.Content.ReadFromJsonAsync<TrainingRequirementBuilderViewResponse>())!;
+        Assert.Contains(v1BuilderView.Requirements, r => r.RequirementId == requirement.RequirementId);
+
         var syncRequest = Authorized(HttpMethod.Post, "/api/training-requirements/sync-to-matrix", adminToken);
         syncRequest.Content = JsonContent.Create(new SyncRequirementToMatrixRequest(requirement.RequirementId));
         var syncResponse = await _trainarrClient.SendAsync(syncRequest);
         syncResponse.EnsureSuccessStatusCode();
         var syncResult = (await syncResponse.Content.ReadFromJsonAsync<SyncRequirementToMatrixResponse>())!;
         Assert.Equal("driver", syncResult.ApplicabilityKey);
+
+        var v1SyncRequest = Authorized(HttpMethod.Post, "/api/v1/requirements/sync-to-matrix", adminToken);
+        v1SyncRequest.Content = JsonContent.Create(new SyncRequirementToMatrixRequest(requirement.RequirementId));
+        var v1SyncResponse = await _trainarrClient.SendAsync(v1SyncRequest);
+        v1SyncResponse.EnsureSuccessStatusCode();
 
         var deleteRequirementResponse = await _trainarrClient.SendAsync(
             Authorized(HttpMethod.Delete, $"/api/training-requirements/{requirement.RequirementId}", adminToken));

@@ -9,9 +9,9 @@ public static class ProcurementExceptionEndpoints
 {
     public static void MapSupplyArrProcurementExceptionEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/procurement-exceptions")
-            .WithTags("ProcurementExceptions")
-            .RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("ProcurementExceptions").RequireAuthorization();
 
         group.MapGet("/resolution-templates", (
             SupplyArrAuthorizationService authorization,
@@ -21,13 +21,13 @@ public static class ProcurementExceptionEndpoints
             authorization.RequirePurchaseRequestRead(context.User);
             return Results.Ok(service.ListResolutionTemplates());
         })
-        .WithName("ListProcurementExceptionResolutionTemplates");
+        .WithName($"ListProcurementExceptionResolutionTemplates{nameSuffix}");
 
         group.MapGet("/", async (
             string? status,
             string? subjectType,
             Guid? subjectId,
-            bool overdueOnly,
+            bool? overdueOnly,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             ProcurementExceptionService service,
@@ -40,10 +40,10 @@ public static class ProcurementExceptionEndpoints
                 status,
                 subjectType,
                 subjectId,
-                overdueOnly,
+                overdueOnly ?? false,
                 cancellationToken));
         })
-        .WithName("ListProcurementExceptions");
+        .WithName($"ListProcurementExceptions{nameSuffix}");
 
         group.MapGet("/{exceptionId:guid}", async (
             Guid exceptionId,
@@ -56,7 +56,7 @@ public static class ProcurementExceptionEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, exceptionId, cancellationToken));
         })
-        .WithName("GetProcurementException");
+        .WithName($"GetProcurementException{nameSuffix}");
 
         group.MapPut("/{exceptionId:guid}", async (
             Guid exceptionId,
@@ -71,7 +71,7 @@ public static class ProcurementExceptionEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.UpdateAsync(tenantId, actorUserId, exceptionId, request, cancellationToken));
         })
-        .WithName("UpdateProcurementException");
+        .WithName($"UpdateProcurementException{nameSuffix}");
 
         group.MapPost("/{exceptionId:guid}/assign", async (
             Guid exceptionId,
@@ -86,7 +86,7 @@ public static class ProcurementExceptionEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.AssignAsync(tenantId, actorUserId, exceptionId, request, cancellationToken));
         })
-        .WithName("AssignProcurementException");
+        .WithName($"AssignProcurementException{nameSuffix}");
 
         group.MapPut("/{exceptionId:guid}/link-actions", async (
             Guid exceptionId,
@@ -101,7 +101,7 @@ public static class ProcurementExceptionEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.LinkActionsAsync(tenantId, actorUserId, exceptionId, request, cancellationToken));
         })
-        .WithName("LinkProcurementExceptionActions");
+        .WithName($"LinkProcurementExceptionActions{nameSuffix}");
 
         group.MapPost("/{exceptionId:guid}/start-investigation", async (
             Guid exceptionId,
@@ -115,7 +115,7 @@ public static class ProcurementExceptionEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.StartInvestigationAsync(tenantId, actorUserId, exceptionId, cancellationToken));
         })
-        .WithName("StartProcurementExceptionInvestigation");
+        .WithName($"StartProcurementExceptionInvestigation{nameSuffix}");
 
         group.MapPost("/{exceptionId:guid}/resolve", async (
             Guid exceptionId,
@@ -130,7 +130,7 @@ public static class ProcurementExceptionEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.ResolveAsync(tenantId, actorUserId, exceptionId, request, cancellationToken));
         })
-        .WithName("ResolveProcurementException");
+        .WithName($"ResolveProcurementException{nameSuffix}");
 
         group.MapPost("/{exceptionId:guid}/request-waive", async (
             Guid exceptionId,
@@ -145,7 +145,7 @@ public static class ProcurementExceptionEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.RequestWaiveAsync(tenantId, actorUserId, exceptionId, request, cancellationToken));
         })
-        .WithName("RequestProcurementExceptionWaive");
+        .WithName($"RequestProcurementExceptionWaive{nameSuffix}");
 
         group.MapPost("/{exceptionId:guid}/approve-waive", async (
             Guid exceptionId,
@@ -159,7 +159,7 @@ public static class ProcurementExceptionEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.ApproveWaiveAsync(tenantId, actorUserId, exceptionId, cancellationToken));
         })
-        .WithName("ApproveProcurementExceptionWaive");
+        .WithName($"ApproveProcurementExceptionWaive{nameSuffix}");
 
         group.MapPost("/{exceptionId:guid}/reject-waive", async (
             Guid exceptionId,
@@ -174,7 +174,7 @@ public static class ProcurementExceptionEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.RejectWaiveAsync(tenantId, actorUserId, exceptionId, request, cancellationToken));
         })
-        .WithName("RejectProcurementExceptionWaive");
+        .WithName($"RejectProcurementExceptionWaive{nameSuffix}");
 
         group.MapPost("/{exceptionId:guid}/close", async (
             Guid exceptionId,
@@ -189,7 +189,7 @@ public static class ProcurementExceptionEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.CloseAsync(tenantId, actorUserId, exceptionId, request, cancellationToken));
         })
-        .WithName("CloseProcurementException");
+        .WithName($"CloseProcurementException{nameSuffix}");
 
         group.MapPost("/{exceptionId:guid}/cancel", async (
             Guid exceptionId,
@@ -204,7 +204,7 @@ public static class ProcurementExceptionEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.CancelAsync(tenantId, actorUserId, exceptionId, request, cancellationToken));
         })
-        .WithName("CancelProcurementException");
+        .WithName($"CancelProcurementException{nameSuffix}");
 
         group.MapPost("/{exceptionId:guid}/reopen", async (
             Guid exceptionId,
@@ -219,7 +219,11 @@ public static class ProcurementExceptionEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.ReopenAsync(tenantId, actorUserId, exceptionId, request, cancellationToken));
         })
-        .WithName("ReopenProcurementException");
+        .WithName($"ReopenProcurementException{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/procurement-exceptions"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/procurement-exceptions"), "V1");
 
         MapSubjectCreateEndpoint(
             app,
@@ -249,6 +253,36 @@ public static class ProcurementExceptionEndpoints
         MapSubjectListEndpoint(
             app,
             "/api/rfqs/{subjectId:guid}/procurement-exceptions",
+            ProcurementExceptionSubjectTypes.Rfq);
+
+        MapSubjectCreateEndpoint(
+            app,
+            "/api/v1/purchase-requests/{subjectId:guid}/procurement-exceptions",
+            ProcurementExceptionSubjectTypes.PurchaseRequest);
+
+        MapSubjectCreateEndpoint(
+            app,
+            "/api/v1/purchase-orders/{subjectId:guid}/procurement-exceptions",
+            ProcurementExceptionSubjectTypes.PurchaseOrder);
+
+        MapSubjectCreateEndpoint(
+            app,
+            "/api/v1/rfqs/{subjectId:guid}/procurement-exceptions",
+            ProcurementExceptionSubjectTypes.Rfq);
+
+        MapSubjectListEndpoint(
+            app,
+            "/api/v1/purchase-requests/{subjectId:guid}/procurement-exceptions",
+            ProcurementExceptionSubjectTypes.PurchaseRequest);
+
+        MapSubjectListEndpoint(
+            app,
+            "/api/v1/purchase-orders/{subjectId:guid}/procurement-exceptions",
+            ProcurementExceptionSubjectTypes.PurchaseOrder);
+
+        MapSubjectListEndpoint(
+            app,
+            "/api/v1/rfqs/{subjectId:guid}/procurement-exceptions",
             ProcurementExceptionSubjectTypes.Rfq);
     }
 

@@ -8,10 +8,13 @@ public static class TrainingAssignmentEndpoints
 {
     public static void MapTrainArrTrainingAssignmentEndpoints(this WebApplication app)
     {
-        var assignments = app.MapGroup("/api/training-assignments")
-            .WithTags("TrainingAssignments")
-            .RequireAuthorization();
+        MapRoutes(app.MapGroup("/api/training-assignments").WithTags("TrainingAssignments").RequireAuthorization(), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/training-assignments").WithTags("TrainingAssignments").RequireAuthorization(), "V1TrainingAssignments");
+        MapRoutes(app.MapGroup("/api/v1/assignments").WithTags("TrainingAssignments").RequireAuthorization(), "V1Assignments");
+    }
 
+    private static void MapRoutes(RouteGroupBuilder assignments, string nameSuffix)
+    {
         assignments.MapGet("/", async (
             Guid? staffarrPersonId,
             Guid? staffarrIncidentRemediationId,
@@ -38,7 +41,7 @@ public static class TrainingAssignmentEndpoints
                 status,
                 cancellationToken));
         })
-        .WithName("ListTrainingAssignments");
+        .WithName($"ListTrainingAssignments{nameSuffix}");
 
         assignments.MapPost("/", async (
             CreateTrainingAssignmentRequest request,
@@ -53,7 +56,7 @@ public static class TrainingAssignmentEndpoints
             var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Created($"/api/training-assignments/{created.AssignmentId}", created);
         })
-        .WithName("CreateTrainingAssignment");
+        .WithName($"CreateTrainingAssignment{nameSuffix}");
 
         assignments.MapGet("/{assignmentId:guid}", async (
             Guid assignmentId,
@@ -67,7 +70,7 @@ public static class TrainingAssignmentEndpoints
             authorization.RequireAssignmentsRead(context.User, detail.StaffarrPersonId);
             return Results.Ok(detail);
         })
-        .WithName("GetTrainingAssignment");
+        .WithName($"GetTrainingAssignment{nameSuffix}");
 
         assignments.MapPost("/{assignmentId:guid}/complete", async (
             Guid assignmentId,
@@ -83,6 +86,6 @@ public static class TrainingAssignmentEndpoints
             var completed = await service.CompleteAsync(tenantId, actorUserId, assignmentId, cancellationToken);
             return Results.Ok(completed);
         })
-        .WithName("CompleteTrainingAssignment");
+        .WithName($"CompleteTrainingAssignment{nameSuffix}");
     }
 }

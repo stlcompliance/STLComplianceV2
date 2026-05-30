@@ -319,6 +319,105 @@ public sealed class RuleEvaluationService(
         return export;
     }
 
+    public async Task<RuleEvaluationSimulationResponse> SimulateAsync(
+        Guid tenantId,
+        Guid rulePackId,
+        IReadOnlyDictionary<string, bool> facts,
+        CancellationToken cancellationToken = default)
+    {
+        var rulePack = await db.RulePacks.AsNoTracking().FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == rulePackId && x.IsActive,
+            cancellationToken);
+
+        if (rulePack is null)
+        {
+            throw new StlApiException("rule_packs.not_found", "Rule pack was not found.", 404);
+        }
+
+        if (string.IsNullOrWhiteSpace(rulePack.RuleContentJson))
+        {
+            throw new StlApiException(
+                "rule_evaluation.no_content",
+                "Rule pack has no rule content to evaluate.",
+                409);
+        }
+
+        var content = RuleEvaluator.ParseContent(rulePack.RuleContentJson);
+        var normalizedFacts = facts ?? new Dictionary<string, bool>();
+        var (overallResult, ruleResults) = RuleEvaluator.Evaluate(content, normalizedFacts);
+        return new RuleEvaluationSimulationResponse(
+            rulePack.Id,
+            rulePack.PackKey,
+            rulePack.Label,
+            rulePack.VersionNumber,
+            overallResult,
+            normalizedFacts,
+            ruleResults,
+            DateTimeOffset.UtcNow);
+    }
+
+    public async Task<RuleEvaluationRunResponse> ReEvaluateAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        Guid evaluationRunId,
+        bool emitFindings = false,
+        CancellationToken cancellationToken = default)
+    {
+        var priorRun = await db.RuleEvaluationRuns
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Id == evaluationRunId)
+            .Select(x => new
+            {
+                x.RulePackId,
+                x.FactInputsJson,
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (priorRun is null)
+        {
+            throw new StlApiException("rule_evaluation.not_found", "Rule evaluation run was not found.", 404);
+        }
+
+        return await EvaluateAsync(
+            tenantId,
+            actorUserId,
+            priorRun.RulePackId,
+            new EvaluateRulePackRequest(DeserializeFacts(priorRun.FactInputsJson), emitFindings),
+            cancellationToken);
+    }
+
+    public async Task<RuleEvaluationExplanationResponse> BuildExplanationAsync(
+        Guid tenantId,
+        Guid evaluationRunId,
+        CancellationToken cancellationToken = default)
+    {
+        var run = await GetAsync(tenantId, evaluationRunId, cancellationToken);
+        var failedRuleKeys = run.RuleResults
+            .Where(item => !string.Equals(item.Result, RuleEvaluationResults.Pass, StringComparison.OrdinalIgnoreCase))
+            .Select(item => item.RuleKey)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(item => item)
+            .ToList();
+        var missingFactKeys = run.RuleResults
+            .Where(item => item.Message.Contains("was not provided", StringComparison.OrdinalIgnoreCase))
+            .Select(item => item.RuleKey)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(item => item)
+            .ToList();
+
+        var summary = $"{run.OverallResult}: {failedRuleKeys.Count} failed rule(s), {missingFactKeys.Count} missing fact-derived failure(s).";
+        return new RuleEvaluationExplanationResponse(
+            run.EvaluationRunId,
+            run.RulePackId,
+            run.PackKey,
+            run.OverallResult,
+            summary,
+            failedRuleKeys,
+            missingFactKeys,
+            run.RuleResults,
+            DateTimeOffset.UtcNow);
+    }
+
     private static RuleEvaluationRunResponse MapResponse(
         RuleEvaluationRun run,
         RulePack pack,

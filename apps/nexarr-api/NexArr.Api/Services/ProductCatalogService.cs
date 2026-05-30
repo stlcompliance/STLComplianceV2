@@ -122,4 +122,30 @@ public sealed class ProductCatalogService(
 
         return new ProductDetailResponse(product.ProductKey, product.DisplayName, product.SortOrder, product.IsActive);
     }
+
+    public async Task<ProductDetailResponse> SetActiveAsync(
+        ClaimsPrincipal principal,
+        string productKey,
+        bool isActive,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+
+        var product = await db.ProductCatalog.FirstOrDefaultAsync(p => p.ProductKey == productKey, cancellationToken)
+            ?? throw new StlApiException("product.not_found", "Product was not found.", 404);
+
+        product.IsActive = isActive;
+        product.ProductStatus = isActive ? "available" : "disabled";
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            isActive ? "product.enable" : "product.disable",
+            "product",
+            product.ProductKey,
+            "Success",
+            actorUserId: principal.GetUserId(),
+            cancellationToken: cancellationToken);
+
+        return new ProductDetailResponse(product.ProductKey, product.DisplayName, product.SortOrder, product.IsActive);
+    }
 }

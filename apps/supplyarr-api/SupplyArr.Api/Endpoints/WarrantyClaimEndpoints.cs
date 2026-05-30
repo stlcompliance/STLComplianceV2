@@ -8,9 +8,9 @@ public static class WarrantyClaimEndpoints
 {
     public static void MapSupplyArrWarrantyClaimEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/warranty-claims")
-            .WithTags("WarrantyClaims")
-            .RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("WarrantyClaims").RequireAuthorization();
 
         group.MapGet("/", async (
             string? status,
@@ -32,7 +32,7 @@ public static class WarrantyClaimEndpoints
                 purchaseOrderId,
                 cancellationToken));
         })
-        .WithName("ListWarrantyClaims");
+        .WithName($"ListWarrantyClaims{nameSuffix}");
 
         group.MapGet("/{warrantyClaimId:guid}", async (
             Guid warrantyClaimId,
@@ -45,7 +45,7 @@ public static class WarrantyClaimEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, warrantyClaimId, cancellationToken));
         })
-        .WithName("GetWarrantyClaim");
+        .WithName($"GetWarrantyClaim{nameSuffix}");
 
         group.MapPost("/", async (
             CreateWarrantyClaimRequest request,
@@ -59,7 +59,7 @@ public static class WarrantyClaimEndpoints
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.CreateAsync(tenantId, actorUserId, request, cancellationToken));
         })
-        .WithName("CreateWarrantyClaim");
+        .WithName($"CreateWarrantyClaim{nameSuffix}");
 
         group.MapPut("/{warrantyClaimId:guid}", async (
             Guid warrantyClaimId,
@@ -79,7 +79,7 @@ public static class WarrantyClaimEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdateWarrantyClaim");
+        .WithName($"UpdateWarrantyClaim{nameSuffix}");
 
         group.MapPost("/{warrantyClaimId:guid}/submit", async (
             Guid warrantyClaimId,
@@ -99,7 +99,7 @@ public static class WarrantyClaimEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("SubmitWarrantyClaim");
+        .WithName($"SubmitWarrantyClaim{nameSuffix}");
 
         group.MapPost("/{warrantyClaimId:guid}/record-vendor-response", async (
             Guid warrantyClaimId,
@@ -119,7 +119,7 @@ public static class WarrantyClaimEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("RecordWarrantyClaimVendorResponse");
+        .WithName($"RecordWarrantyClaimVendorResponse{nameSuffix}");
 
         group.MapPost("/{warrantyClaimId:guid}/close", async (
             Guid warrantyClaimId,
@@ -139,7 +139,7 @@ public static class WarrantyClaimEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("CloseWarrantyClaim");
+        .WithName($"CloseWarrantyClaim{nameSuffix}");
 
         group.MapPost("/{warrantyClaimId:guid}/deny", async (
             Guid warrantyClaimId,
@@ -159,7 +159,7 @@ public static class WarrantyClaimEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("DenyWarrantyClaim");
+        .WithName($"DenyWarrantyClaim{nameSuffix}");
 
         group.MapPost("/{warrantyClaimId:guid}/cancel", async (
             Guid warrantyClaimId,
@@ -179,6 +179,10 @@ public static class WarrantyClaimEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("CancelWarrantyClaim");
+        .WithName($"CancelWarrantyClaim{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/warranty-claims"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/warranty-claims"), "V1");
     }
 }

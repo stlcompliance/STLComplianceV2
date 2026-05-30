@@ -56,6 +56,17 @@ public sealed record LaunchCatalogItemResponse(
     string LaunchUrl,
     bool IsCurrentProduct);
 
+public sealed record ValidateLaunchRequest(
+    string ProductKey,
+    Guid? TenantId);
+
+public sealed record ValidateLaunchResponse(
+    Guid TenantId,
+    string ProductKey,
+    bool CanLaunch,
+    string? ReasonCode,
+    string? LaunchUrl);
+
 public sealed record CreateCallbackAllowlistEntryRequest(
     string ProductKey,
     Guid? TenantId,

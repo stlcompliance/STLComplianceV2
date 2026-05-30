@@ -22,6 +22,15 @@ public sealed record ProductGateEvaluationRequest(
     IReadOnlyList<ProductGateFactSnapshotReference>? FactSnapshotReferences = null,
     bool EmitFindings = false);
 
+public sealed record ProductGateCompatibilityRequest(
+    Guid TenantId,
+    string ActivityContextKey,
+    IReadOnlyList<ProductGateSubjectReference> SubjectReferences,
+    IReadOnlyDictionary<string, string>? RuleContext = null,
+    IReadOnlyList<ProductGateFactSnapshotReference>? FactSnapshotReferences = null,
+    bool EmitFindings = false,
+    string? WorkflowKey = null);
+
 public sealed record ProductGateAppliedRuleVersion(
     string RuleKey,
     string Label,

@@ -8,7 +8,9 @@ public static class AvailabilitySnapshotEndpoints
 {
     public static void MapSupplyArrAvailabilitySnapshotEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/availability-snapshots").WithTags("AvailabilitySnapshots").RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("AvailabilitySnapshots").RequireAuthorization();
 
         group.MapGet("/", async (
             Guid? partVendorLinkId,
@@ -30,7 +32,7 @@ public static class AvailabilitySnapshotEndpoints
                 asOf,
                 cancellationToken));
         })
-        .WithName("ListAvailabilitySnapshots");
+        .WithName($"ListAvailabilitySnapshots{nameSuffix}");
 
         group.MapGet("/{availabilitySnapshotId:guid}", async (
             Guid availabilitySnapshotId,
@@ -43,7 +45,7 @@ public static class AvailabilitySnapshotEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, availabilitySnapshotId, cancellationToken));
         })
-        .WithName("GetAvailabilitySnapshot");
+        .WithName($"GetAvailabilitySnapshot{nameSuffix}");
 
         group.MapPost("/", async (
             CreateAvailabilitySnapshotRequest request,
@@ -62,6 +64,10 @@ public static class AvailabilitySnapshotEndpoints
                 cancellationToken);
             return Results.Created($"/api/availability-snapshots/{created.AvailabilitySnapshotId}", created);
         })
-        .WithName("CreateAvailabilitySnapshot");
+        .WithName($"CreateAvailabilitySnapshot{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/availability-snapshots"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/availability-snapshots"), "V1");
     }
 }

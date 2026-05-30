@@ -60,6 +60,65 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
     }
 
     [Fact]
+    public async Task Launch_catalog_v1_requires_authentication()
+    {
+        var response = await _client.GetAsync("/api/v1/launch/catalog");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Launch_context_v1_requires_authentication()
+    {
+        var response = await _client.GetAsync("/api/v1/launch/context?productKey=staffarr");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Settings_manifest_v1_requires_platform_admin()
+    {
+        await SeedDatabaseAsync();
+        var tenantAdminToken = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var forbiddenResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", tenantAdminToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+
+        var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var manifestResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", platformAdminToken));
+        manifestResponse.EnsureSuccessStatusCode();
+
+        var manifest = await manifestResponse.Content.ReadFromJsonAsync<NexArrSettingsManifestResponse>();
+        Assert.NotNull(manifest);
+        Assert.Contains(manifest.Items, x => x.SettingKey == "platform_service_token_cleanup_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "platform_outbox_publisher_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "platform_entitlement_reconciliation_settings");
+    }
+
+    [Fact]
+    public async Task Config_manifest_v1_matches_settings_manifest_for_platform_admin()
+    {
+        await SeedDatabaseAsync();
+        var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var configResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/config", platformAdminToken));
+        configResponse.EnsureSuccessStatusCode();
+        var configManifest = (await configResponse.Content.ReadFromJsonAsync<NexArrSettingsManifestResponse>())!;
+
+        var settingsResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", platformAdminToken));
+        settingsResponse.EnsureSuccessStatusCode();
+        var settingsManifest = (await settingsResponse.Content.ReadFromJsonAsync<NexArrSettingsManifestResponse>())!;
+
+        Assert.Equal(settingsManifest.Items.Count, configManifest.Items.Count);
+        foreach (var item in settingsManifest.Items)
+        {
+            Assert.Contains(configManifest.Items, x => x.SettingKey == item.SettingKey);
+        }
+    }
+
+    [Fact]
     public async Task Platform_admin_gets_launch_context_for_entitled_product()
     {
         await SeedDatabaseAsync();
@@ -67,6 +126,23 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
 
         var response = await _client.SendAsync(
             Authorized(HttpMethod.Get, "/api/launch/context?productKey=staffarr", token));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var context = await response.Content.ReadFromJsonAsync<LaunchContextResponse>();
+        Assert.NotNull(context);
+        Assert.True(context.CanLaunch);
+        Assert.Equal("staffarr", context.ProductKey);
+        Assert.Contains("5175", context.BaseLaunchUrl);
+    }
+
+    [Fact]
+    public async Task Platform_admin_gets_launch_context_v1_for_entitled_product()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/launch/context?productKey=staffarr", token));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var context = await response.Content.ReadFromJsonAsync<LaunchContextResponse>();
@@ -114,13 +190,35 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
     }
 
     [Fact]
+    public async Task Launch_catalog_v1_returns_entitled_launchable_products_with_current_indicator()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/launch/catalog?currentProductKey=staffarr", token));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var catalog = await response.Content.ReadFromJsonAsync<LaunchCatalogResponse>();
+        Assert.NotNull(catalog);
+        Assert.Equal(PlatformSeeder.DemoTenantId, catalog.TenantId);
+        Assert.Equal("staffarr", catalog.CurrentProductKey);
+        Assert.NotEmpty(catalog.Products);
+
+        var staffarr = catalog.Products.FirstOrDefault(x => x.ProductKey == "staffarr");
+        Assert.NotNull(staffarr);
+        Assert.True(staffarr.IsCurrentProduct);
+        Assert.Equal("/launch/staffarr", staffarr.LaunchUrl);
+    }
+
+    [Fact]
     public async Task Handoff_create_and_redeem_with_service_token_succeeds()
     {
         await SeedDatabaseAsync();
         var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
         const string callbackUrl = "http://localhost:5173/app/staffarr";
 
-        var handoffRequest = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest("staffarr", callbackUrl));
         var handoffResponse = await _client.SendAsync(handoffRequest);
         handoffResponse.EnsureSuccessStatusCode();
@@ -130,7 +228,7 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
 
         var serviceToken = await IssueServiceTokenAsync(token, "staffarr");
 
-        var redeemRequest = Authorized(HttpMethod.Post, "/api/launch/handoff/redeem", token);
+        var redeemRequest = Authorized(HttpMethod.Post, "/api/v1/handoff/redeem", token);
         redeemRequest.Content = JsonContent.Create(new RedeemHandoffRequest(handoff.HandoffCode, serviceToken));
         var redeemResponse = await _client.SendAsync(redeemRequest);
         redeemResponse.EnsureSuccessStatusCode();
@@ -144,12 +242,88 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
     }
 
     [Fact]
+    public async Task Handoff_create_v1_and_redeem_with_service_token_succeeds()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        const string callbackUrl = "http://localhost:5173/app/staffarr";
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest("staffarr", callbackUrl));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+        handoffResponse.EnsureSuccessStatusCode();
+        var handoff = (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
+        Assert.False(string.IsNullOrWhiteSpace(handoff.HandoffCode));
+
+        var serviceToken = await IssueServiceTokenAsync(token, "staffarr");
+
+        var redeemRequest = Authorized(HttpMethod.Post, "/api/v1/handoff/redeem", token);
+        redeemRequest.Content = JsonContent.Create(new RedeemHandoffRequest(handoff.HandoffCode, serviceToken));
+        var redeemResponse = await _client.SendAsync(redeemRequest);
+        redeemResponse.EnsureSuccessStatusCode();
+        var redeemed = await redeemResponse.Content.ReadFromJsonAsync<HandoffRedeemedResponse>();
+        Assert.NotNull(redeemed);
+        Assert.Equal(PlatformSeeder.DemoAdminUserId, redeemed.UserId);
+        Assert.Equal("staffarr", redeemed.TargetProductKey);
+    }
+
+    [Fact]
+    public async Task Handoff_redeem_v1_with_service_token_succeeds()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        const string callbackUrl = "http://localhost:5173/app/staffarr";
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest("staffarr", callbackUrl));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+        handoffResponse.EnsureSuccessStatusCode();
+        var handoff = (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
+
+        var serviceToken = await IssueServiceTokenAsync(token, "staffarr");
+
+        var redeemRequest = Authorized(HttpMethod.Post, "/api/v1/handoff/redeem", token);
+        redeemRequest.Content = JsonContent.Create(new RedeemHandoffRequest(handoff.HandoffCode, serviceToken));
+        var redeemResponse = await _client.SendAsync(redeemRequest);
+        redeemResponse.EnsureSuccessStatusCode();
+        var redeemed = await redeemResponse.Content.ReadFromJsonAsync<HandoffRedeemedResponse>();
+        Assert.NotNull(redeemed);
+        Assert.Equal(PlatformSeeder.DemoAdminUserId, redeemed.UserId);
+        Assert.Equal("staffarr", redeemed.TargetProductKey);
+    }
+
+    [Fact]
+    public async Task Handoff_redeem_launch_v1_alias_with_service_token_succeeds()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        const string callbackUrl = "http://localhost:5173/app/staffarr";
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest("staffarr", callbackUrl));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+        handoffResponse.EnsureSuccessStatusCode();
+        var handoff = (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
+
+        var serviceToken = await IssueServiceTokenAsync(token, "staffarr");
+
+        var redeemRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff/redeem", token);
+        redeemRequest.Content = JsonContent.Create(new RedeemHandoffRequest(handoff.HandoffCode, serviceToken));
+        var redeemResponse = await _client.SendAsync(redeemRequest);
+        redeemResponse.EnsureSuccessStatusCode();
+        var redeemed = await redeemResponse.Content.ReadFromJsonAsync<HandoffRedeemedResponse>();
+        Assert.NotNull(redeemed);
+        Assert.Equal(PlatformSeeder.DemoAdminUserId, redeemed.UserId);
+        Assert.Equal("staffarr", redeemed.TargetProductKey);
+    }
+
+    [Fact]
     public async Task Handoff_create_rejects_disallowed_callback()
     {
         await SeedDatabaseAsync();
         var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
 
-        var handoffRequest = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest("staffarr", "https://evil.example/callback"));
         var handoffResponse = await _client.SendAsync(handoffRequest);
 
@@ -162,14 +336,14 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         await SeedDatabaseAsync();
         var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
 
-        var handoffRequest = Authorized(HttpMethod.Post, "/api/launch/handoff", adminToken);
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", adminToken);
         handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest("staffarr", "http://localhost:5173/app/staffarr"));
         var handoffResponse = await _client.SendAsync(handoffRequest);
         handoffResponse.EnsureSuccessStatusCode();
         var handoff = (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
 
         var tenantAdminToken = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
-        var redeemRequest = Authorized(HttpMethod.Post, "/api/launch/handoff/redeem", tenantAdminToken);
+        var redeemRequest = Authorized(HttpMethod.Post, "/api/v1/handoff/redeem", tenantAdminToken);
         redeemRequest.Content = JsonContent.Create(new RedeemHandoffRequest(handoff.HandoffCode, null));
         var redeemResponse = await _client.SendAsync(redeemRequest);
 
@@ -216,6 +390,62 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
     }
 
     [Fact]
+    public async Task Callback_validate_v1_returns_allowed_for_seeded_origin()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/callback/validate", token);
+        request.Content = JsonContent.Create(new ValidateCallbackRequest(
+            "staffarr",
+            "http://localhost:5173/app/staffarr",
+            PlatformSeeder.DemoTenantId));
+        var response = await _client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var validation = await response.Content.ReadFromJsonAsync<ValidateCallbackResponse>();
+
+        Assert.NotNull(validation);
+        Assert.True(validation.IsAllowed);
+    }
+
+    [Fact]
+    public async Task Launch_validate_v1_returns_launchable_result_for_entitled_product()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/validate", token);
+        request.Content = JsonContent.Create(new ValidateLaunchRequest("staffarr", PlatformSeeder.DemoTenantId));
+        var response = await _client.SendAsync(request);
+
+        response.EnsureSuccessStatusCode();
+        var validation = await response.Content.ReadFromJsonAsync<ValidateLaunchResponse>();
+        Assert.NotNull(validation);
+        Assert.Equal("staffarr", validation.ProductKey);
+        Assert.True(validation.CanLaunch);
+        Assert.Null(validation.ReasonCode);
+        Assert.NotNull(validation.LaunchUrl);
+    }
+
+    [Fact]
+    public async Task Launch_validate_returns_reason_for_missing_product()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var request = Authorized(HttpMethod.Post, "/api/launch/validate", token);
+        request.Content = JsonContent.Create(new ValidateLaunchRequest("missing-product", PlatformSeeder.DemoTenantId));
+        var response = await _client.SendAsync(request);
+
+        response.EnsureSuccessStatusCode();
+        var validation = await response.Content.ReadFromJsonAsync<ValidateLaunchResponse>();
+        Assert.NotNull(validation);
+        Assert.False(validation.CanLaunch);
+        Assert.Equal("product_not_found", validation.ReasonCode);
+        Assert.Null(validation.LaunchUrl);
+    }
+
+    [Fact]
     public async Task Tenant_admin_cannot_create_callback_allowlist_entry()
     {
         await SeedDatabaseAsync();
@@ -230,6 +460,67 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         var response = await _client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Tenant_admin_cannot_create_callback_allowlist_entry_v1()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/callback-allowlist", token);
+        request.Content = JsonContent.Create(new CreateCallbackAllowlistEntryRequest(
+            "staffarr",
+            null,
+            "https://blocked.example",
+            "origin"));
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Tenant_admin_can_list_callback_allowlist_v1_for_product()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/launch/callback-allowlist?productKey=staffarr", token));
+        response.EnsureSuccessStatusCode();
+
+        var entries = await response.Content.ReadFromJsonAsync<IReadOnlyList<CallbackAllowlistEntryResponse>>();
+        Assert.NotNull(entries);
+        Assert.NotEmpty(entries);
+        Assert.Contains(entries, x => x.ProductKey == "staffarr");
+    }
+
+    [Fact]
+    public async Task Platform_admin_can_delete_callback_allowlist_entry_v1()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var urlPattern = $"https://temp-delete-{Guid.NewGuid():N}.example";
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/launch/callback-allowlist", token);
+        createRequest.Content = JsonContent.Create(new CreateCallbackAllowlistEntryRequest(
+            "staffarr",
+            null,
+            urlPattern,
+            "origin"));
+        var createResponse = await _client.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<CallbackAllowlistEntryResponse>())!;
+
+        var deleteResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Delete, $"/api/v1/launch/callback-allowlist/{created.EntryId}", token));
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+
+        var listResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/launch/callback-allowlist?productKey=staffarr", token));
+        listResponse.EnsureSuccessStatusCode();
+        var entries = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<CallbackAllowlistEntryResponse>>())!;
+        Assert.DoesNotContain(entries, x => x.EntryId == created.EntryId);
     }
 
     private async Task<string> IssueServiceTokenAsync(string adminToken, string productKey)

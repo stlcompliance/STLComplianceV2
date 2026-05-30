@@ -143,6 +143,44 @@ public sealed class MaintainArrWorkOrderLaborEvidenceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Work_order_tasks_labor_and_evidence_v1_alias_lifecycle()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+        var workOrderId = await CreateOpenWorkOrderAsync(managerToken, assetId);
+
+        var taskRequest = Authorized(HttpMethod.Post, $"/api/v1/work-orders/{workOrderId}/tasks", managerToken);
+        taskRequest.Content = JsonContent.Create(new CreateWorkOrderTaskLineRequest("V1 task", "Alias coverage", 0));
+        var taskResponse = await _maintainarrClient.SendAsync(taskRequest);
+        taskResponse.EnsureSuccessStatusCode();
+        var task = (await taskResponse.Content.ReadFromJsonAsync<WorkOrderTaskLineResponse>())!;
+
+        var laborRequest = Authorized(HttpMethod.Post, $"/api/v1/work-orders/{workOrderId}/labor", managerToken);
+        laborRequest.Content = JsonContent.Create(new CreateWorkOrderLaborEntryRequest(
+            PlatformSeeder.DemoAdminUserId.ToString(),
+            1.5m,
+            "regular",
+            task.TaskLineId,
+            "v1 labor"));
+        var laborResponse = await _maintainarrClient.SendAsync(laborRequest);
+        laborResponse.EnsureSuccessStatusCode();
+
+        var evidenceRequest = Authorized(HttpMethod.Post, $"/api/v1/work-orders/{workOrderId}/evidence", managerToken);
+        evidenceRequest.Content = JsonContent.Create(new CreateWorkOrderEvidenceRequest(
+            "before_photo",
+            "v1-before.jpg",
+            "image/jpeg",
+            Convert.ToBase64String(Encoding.UTF8.GetBytes("v1-before-photo")),
+            "v1 evidence"));
+        var evidenceResponse = await _maintainarrClient.SendAsync(evidenceRequest);
+        evidenceResponse.EnsureSuccessStatusCode();
+
+        var detailRequest = Authorized(HttpMethod.Get, $"/api/v1/work-orders/{workOrderId}", managerToken);
+        var detailResponse = await _maintainarrClient.SendAsync(detailRequest);
+        detailResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
     public async Task Cannot_add_labor_to_completed_work_order()
     {
         var managerToken = await RedeemMaintainArrTokenAsync();
@@ -296,7 +334,7 @@ public sealed class MaintainArrWorkOrderLaborEvidenceTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new NexArr.Api.Contracts.CreateHandoffRequest(
             "maintainarr",
             "http://localhost:5178/launch"));

@@ -8,8 +8,12 @@ public static class InspectionEndpoints
 {
     public static void MapMaintainArrInspectionEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/inspections").WithTags("Inspections").RequireAuthorization();
+        MapRoutes(app.MapGroup("/api/inspections").WithTags("Inspections").RequireAuthorization(), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/inspections").WithTags("Inspections").RequireAuthorization(), "V1");
+    }
 
+    private static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+    {
         group.MapGet("/", async (
             HttpContext context,
             MaintainArrAuthorizationService authorization,
@@ -22,7 +26,7 @@ public static class InspectionEndpoints
             var viewAll = authorization.CanViewAllInspectionRuns(context.User);
             return Results.Ok(await service.ListAsync(tenantId, actorUserId, viewAll, cancellationToken));
         })
-        .WithName("ListInspectionRuns");
+        .WithName($"ListInspectionRuns{nameSuffix}");
 
         group.MapGet("/{inspectionRunId:guid}", async (
             Guid inspectionRunId,
@@ -37,7 +41,7 @@ public static class InspectionEndpoints
             authorization.RequireInspectionRunAccess(context.User, detail.StartedByUserId);
             return Results.Ok(detail);
         })
-        .WithName("GetInspectionRun");
+        .WithName($"GetInspectionRun{nameSuffix}");
 
         group.MapPost("/", async (
             StartInspectionRunRequest request,
@@ -52,7 +56,7 @@ public static class InspectionEndpoints
             var created = await service.StartAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Created($"/api/inspections/{created.InspectionRunId}", created);
         })
-        .WithName("StartInspectionRun");
+        .WithName($"StartInspectionRun{nameSuffix}");
 
         group.MapPut("/{inspectionRunId:guid}/answers", async (
             Guid inspectionRunId,
@@ -75,7 +79,7 @@ public static class InspectionEndpoints
                 cancellationToken);
             return Results.Ok(updated);
         })
-        .WithName("SubmitInspectionRunAnswers");
+        .WithName($"SubmitInspectionRunAnswers{nameSuffix}");
 
         group.MapPost("/{inspectionRunId:guid}/complete", async (
             Guid inspectionRunId,
@@ -92,7 +96,7 @@ public static class InspectionEndpoints
             var completed = await service.CompleteAsync(tenantId, actorUserId, inspectionRunId, cancellationToken);
             return Results.Ok(completed);
         })
-        .WithName("CompleteInspectionRun");
+        .WithName($"CompleteInspectionRun{nameSuffix}");
 
         group.MapGet("/{inspectionRunId:guid}/voice-guidance", async (
             Guid inspectionRunId,
@@ -108,7 +112,7 @@ public static class InspectionEndpoints
             authorization.RequireInspectionRunAccess(context.User, existing.StartedByUserId);
             return Results.Ok(await voiceService.GetGuidanceAsync(tenantId, inspectionRunId, cancellationToken));
         })
-        .WithName("GetInspectionVoiceGuidance");
+        .WithName($"GetInspectionVoiceGuidance{nameSuffix}");
 
         group.MapPost("/voice/normalize-numeric", (
             NormalizeVoiceNumericRequest request,
@@ -123,6 +127,6 @@ public static class InspectionEndpoints
                 result.NormalizedText,
                 result.Understood));
         })
-        .WithName("NormalizeInspectionVoiceNumeric");
+        .WithName($"NormalizeInspectionVoiceNumeric{nameSuffix}");
     }
 }

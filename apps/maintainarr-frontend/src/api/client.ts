@@ -27,6 +27,7 @@ import type {
   InspectionTemplateDetailResponse,
   InspectionTemplateSummaryResponse,
   MaintainArrMeResponse,
+  MaintainArrSessionBootstrapResponse,
   AssetReadinessResponse,
   AssetReadinessSummaryResponse,
   AuditPackageExportResponse,
@@ -140,7 +141,7 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
 }
 
 export async function redeemHandoff(handoffCode: string): Promise<HandoffSessionResponse> {
-  const response = await fetch(`${apiBase}/api/auth/handoff/redeem`, {
+  const response = await fetch(`${apiBase}/api/auth/nexarr/redeem`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ handoffCode }),
@@ -153,6 +154,18 @@ export async function getMe(accessToken: string): Promise<MaintainArrMeResponse>
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<MaintainArrMeResponse>(response, 'Failed to load profile')
+}
+
+export async function getSessionBootstrap(
+  accessToken: string,
+): Promise<MaintainArrSessionBootstrapResponse> {
+  const response = await fetch(`${apiBase}/api/session`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MaintainArrSessionBootstrapResponse>(
+    response,
+    'Failed to load session bootstrap',
+  )
 }
 
 export async function getAssetClasses(accessToken: string): Promise<AssetClassResponse[]> {
@@ -885,7 +898,7 @@ export async function getAssetReadiness(
   assetId: string,
 ): Promise<AssetReadinessResponse> {
   const search = new URLSearchParams({ assetId })
-  const response = await fetch(`${apiBase}/api/asset-readiness?${search.toString()}`, {
+  const response = await fetch(`${apiBase}/api/v1/readiness?${search.toString()}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<AssetReadinessResponse>(response, 'Failed to load asset readiness')
@@ -894,7 +907,7 @@ export async function getAssetReadiness(
 export async function getAssetReadinessFleet(
   accessToken: string,
 ): Promise<AssetReadinessSummaryResponse[]> {
-  const response = await fetch(`${apiBase}/api/asset-readiness`, {
+  const response = await fetch(`${apiBase}/api/v1/readiness`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<AssetReadinessSummaryResponse[]>(response, 'Failed to load asset readiness fleet')
@@ -1363,7 +1376,7 @@ export async function getMaintenanceReportSummary(
     params.set('lifecycleStatus', options.lifecycleStatus)
   }
   const query = params.size > 0 ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/reports/maintenance/summary${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/reports/maintenance/summary${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<MaintenanceReportSummaryResponse>(
@@ -1376,7 +1389,7 @@ export async function getMaintenanceReportAssetDetail(
   accessToken: string,
   assetId: string,
 ): Promise<MaintenanceReportAssetDetailResponse> {
-  const response = await fetch(`${apiBase}/api/reports/maintenance/assets/${assetId}`, {
+  const response = await fetch(`${apiBase}/api/v1/reports/maintenance/assets/${assetId}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<MaintenanceReportAssetDetailResponse>(
@@ -1389,7 +1402,7 @@ export async function getMaintenanceReportWorkOrderDetail(
   accessToken: string,
   workOrderId: string,
 ): Promise<MaintenanceReportWorkOrderDetailResponse> {
-  const response = await fetch(`${apiBase}/api/reports/maintenance/work-orders/${workOrderId}`, {
+  const response = await fetch(`${apiBase}/api/v1/reports/maintenance/work-orders/${workOrderId}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<MaintenanceReportWorkOrderDetailResponse>(
@@ -1407,7 +1420,7 @@ export async function exportMaintenanceReportSummaryCsv(
     params.set('lifecycleStatus', options.lifecycleStatus)
   }
   const query = params.size > 0 ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/reports/maintenance/summary/export${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/reports/maintenance/summary/export${query}`, {
     headers: authHeaders(accessToken),
   })
   if (!response.ok) {
@@ -1424,7 +1437,7 @@ export async function exportMaintenanceReportSummaryCsv(
 export async function getExecutiveReportSummary(
   accessToken: string,
 ): Promise<ExecutiveReportSummaryResponse> {
-  const response = await fetch(`${apiBase}/api/reports/executive/summary`, {
+  const response = await fetch(`${apiBase}/api/v1/reports/executive/summary`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ExecutiveReportSummaryResponse>(
@@ -1434,7 +1447,7 @@ export async function getExecutiveReportSummary(
 }
 
 export async function exportExecutiveReportSummaryCsv(accessToken: string): Promise<Blob> {
-  const response = await fetch(`${apiBase}/api/reports/executive/summary/export`, {
+  const response = await fetch(`${apiBase}/api/v1/reports/executive/summary/export`, {
     headers: authHeaders(accessToken),
   })
   if (!response.ok) {
@@ -1460,7 +1473,7 @@ export async function getComplianceReportSummary(
     params.set('siteRef', options.siteRef)
   }
   const query = params.size > 0 ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/reports/compliance/summary${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/reports/compliance/summary${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ComplianceReportSummaryResponse>(
@@ -1481,7 +1494,7 @@ export async function exportComplianceReportSummaryCsv(
     params.set('siteRef', options.siteRef)
   }
   const query = params.size > 0 ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/reports/compliance/summary/export${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/reports/compliance/summary/export${query}`, {
     headers: authHeaders(accessToken),
   })
   if (!response.ok) {

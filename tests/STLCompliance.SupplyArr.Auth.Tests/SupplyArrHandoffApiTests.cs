@@ -26,6 +26,11 @@ using InventoryBinResponse = SupplyArr.Api.Contracts.InventoryBinResponse;
 using CreateInventoryBinRequest = SupplyArr.Api.Contracts.CreateInventoryBinRequest;
 using PartStockLevelResponse = SupplyArr.Api.Contracts.PartStockLevelResponse;
 using UpsertPartStockLevelRequest = SupplyArr.Api.Contracts.UpsertPartStockLevelRequest;
+using StockReservationResponse = SupplyArr.Api.Contracts.StockReservationResponse;
+using CreateStockReservationRequest = SupplyArr.Api.Contracts.CreateStockReservationRequest;
+using ReleaseStockReservationRequest = SupplyArr.Api.Contracts.ReleaseStockReservationRequest;
+using RfqResponse = SupplyArr.Api.Contracts.RfqResponse;
+using WarrantyClaimResponse = SupplyArr.Api.Contracts.WarrantyClaimResponse;
 using PurchaseRequestResponse = SupplyArr.Api.Contracts.PurchaseRequestResponse;
 using CreatePurchaseRequestRequest = SupplyArr.Api.Contracts.CreatePurchaseRequestRequest;
 using CreatePurchaseRequestLineRequest = SupplyArr.Api.Contracts.CreatePurchaseRequestLineRequest;
@@ -50,6 +55,10 @@ using LeadTimeSnapshotResponse = SupplyArr.Api.Contracts.LeadTimeSnapshotRespons
 using CreateLeadTimeSnapshotRequest = SupplyArr.Api.Contracts.CreateLeadTimeSnapshotRequest;
 using AvailabilitySnapshotResponse = SupplyArr.Api.Contracts.AvailabilitySnapshotResponse;
 using CreateAvailabilitySnapshotRequest = SupplyArr.Api.Contracts.CreateAvailabilitySnapshotRequest;
+using VendorRestrictionResponse = SupplyArr.Api.Contracts.VendorRestrictionResponse;
+using CreateVendorRestrictionRequest = SupplyArr.Api.Contracts.CreateVendorRestrictionRequest;
+using SupplierIncidentResponse = SupplyArr.Api.Contracts.SupplierIncidentResponse;
+using CreateSupplierIncidentRequest = SupplyArr.Api.Contracts.CreateSupplierIncidentRequest;
 using ReorderEvaluationResponse = SupplyArr.Api.Contracts.ReorderEvaluationResponse;
 using UpsertPartReorderPolicyRequest = SupplyArr.Api.Contracts.UpsertPartReorderPolicyRequest;
 using CreatePurchaseRequestFromReorderRequest = SupplyArr.Api.Contracts.CreatePurchaseRequestFromReorderRequest;
@@ -129,6 +138,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
                 services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
+                services.AddHttpClient<StlNexArrLaunchClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
             });
         });
 
@@ -163,6 +174,55 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var me = await meResponse.Content.ReadFromJsonAsync<SupplyArrMeResponse>();
         Assert.NotNull(me);
         Assert.True(me.HasSupplyArrEntitlement);
+    }
+
+    [Fact]
+    public async Task Handoff_redeem_nexarr_alias_happy_path_returns_session()
+    {
+        var handoffCode = await CreateHandoffAsync();
+        var redeemResponse = await _supplyarrClient.PostAsJsonAsync(
+            "/api/auth/nexarr/redeem",
+            new SupplyArrRedeemRequest(handoffCode));
+
+        redeemResponse.EnsureSuccessStatusCode();
+        var session = (await redeemResponse.Content.ReadFromJsonAsync<SupplyArrHandoffSessionResponse>())!;
+        Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
+        Assert.Contains("supplyarr", session.Entitlements);
+    }
+
+    [Fact]
+    public async Task V1_handoff_session_and_me_aliases_work()
+    {
+        var handoffCode = await CreateHandoffAsync();
+        var redeemResponse = await _supplyarrClient.PostAsJsonAsync(
+            "/api/v1/auth/handoff/redeem",
+            new SupplyArrRedeemRequest(handoffCode));
+
+        redeemResponse.EnsureSuccessStatusCode();
+        var session = (await redeemResponse.Content.ReadFromJsonAsync<SupplyArrHandoffSessionResponse>())!;
+        Assert.False(string.IsNullOrWhiteSpace(session.AccessToken));
+
+        var meResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/me", session.AccessToken));
+        meResponse.EnsureSuccessStatusCode();
+        var me = (await meResponse.Content.ReadFromJsonAsync<SupplyArrMeResponse>())!;
+        Assert.True(me.HasSupplyArrEntitlement);
+
+        var sessionResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/session", session.AccessToken));
+        sessionResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task V1_launch_handoff_proxy_returns_handoff_code()
+    {
+        var nexarrToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", nexarrToken);
+        request.Content = JsonContent.Create(new CreateHandoffRequest("supplyarr", "http://localhost:5179/launch"));
+        var response = await _supplyarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var handoff = (await response.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
+        Assert.False(string.IsNullOrWhiteSpace(handoff.HandoffCode));
     }
 
     [Fact]
@@ -211,6 +271,48 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         contactResponse.EnsureSuccessStatusCode();
 
         var approveRequest = Authorized(HttpMethod.Patch, $"/api/vendors/{vendor.PartyId}/approval-status", token);
+        approveRequest.Content = JsonContent.Create(new UpdateExternalPartyApprovalStatusRequest("approved"));
+        var approveResponse = await _supplyarrClient.SendAsync(approveRequest);
+        approveResponse.EnsureSuccessStatusCode();
+        var approved = (await approveResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+        Assert.Equal("approved", approved.ApprovalStatus);
+        Assert.Single(approved.Contacts);
+    }
+
+    [Fact]
+    public async Task Party_registry_v1_vendor_alias_crud_happy_path()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var createVendorRequest = Authorized(HttpMethod.Post, "/api/v1/vendors", token);
+        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+            "acme-parts-v1",
+            "Acme Parts Co V1",
+            "Acme Parts Company V1 LLC",
+            "98-7654321",
+            "Preferred OEM vendor v1"));
+        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
+        createVendorResponse.EnsureSuccessStatusCode();
+        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+        Assert.Equal("vendor", vendor.PartyType);
+
+        var listVendorsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/vendors", token));
+        listVendorsResponse.EnsureSuccessStatusCode();
+        var vendors = (await listVendorsResponse.Content.ReadFromJsonAsync<List<ExternalPartyResponse>>())!;
+        Assert.Contains(vendors, x => x.PartyId == vendor.PartyId);
+
+        var contactRequest = Authorized(HttpMethod.Post, $"/api/v1/vendors/{vendor.PartyId}/contacts", token);
+        contactRequest.Content = JsonContent.Create(new CreatePartyContactRequest(
+            "Taylor Reed",
+            "taylor@acmepartsv1.example",
+            "555-0199",
+            "V1 account manager",
+            true));
+        var contactResponse = await _supplyarrClient.SendAsync(contactRequest);
+        contactResponse.EnsureSuccessStatusCode();
+
+        var approveRequest = Authorized(HttpMethod.Patch, $"/api/v1/vendors/{vendor.PartyId}/approval-status", token);
         approveRequest.Content = JsonContent.Create(new UpdateExternalPartyApprovalStatusRequest("approved"));
         var approveResponse = await _supplyarrClient.SendAsync(approveRequest);
         approveResponse.EnsureSuccessStatusCode();
@@ -299,6 +401,66 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.Single(loaded.VendorLinks);
         Assert.Equal(vendor.PartyKey, loaded.VendorLinks[0].PartyKey);
         Assert.True(loaded.VendorLinks[0].IsPreferred);
+    }
+
+    [Fact]
+    public async Task Part_catalog_crud_with_vendor_link_v1_alias_happy_path()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
+        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+            "parts-vendor-v1",
+            "Parts Vendor V1 Inc.",
+            string.Empty,
+            null,
+            string.Empty));
+        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
+        createVendorResponse.EnsureSuccessStatusCode();
+        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+
+        var createCatalogRequest = Authorized(HttpMethod.Post, "/api/v1/catalogs", token);
+        createCatalogRequest.Content = JsonContent.Create(new CreatePartCatalogRequest(
+            "oem-filters-v1",
+            "OEM Filters V1",
+            "Standard filter catalog v1"));
+        var createCatalogResponse = await _supplyarrClient.SendAsync(createCatalogRequest);
+        createCatalogResponse.EnsureSuccessStatusCode();
+        var catalog = (await createCatalogResponse.Content.ReadFromJsonAsync<PartCatalogResponse>())!;
+
+        var createPartRequest = Authorized(HttpMethod.Post, "/api/v1/parts", token);
+        createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
+            "filter-v1-001",
+            catalog.CatalogId,
+            "Primary Oil Filter V1",
+            "OEM oil filter for fleet vehicles v1",
+            "filters",
+            "each",
+            "Fleet OEM",
+            "FLT-V1-001"));
+        var createPartResponse = await _supplyarrClient.SendAsync(createPartRequest);
+        createPartResponse.EnsureSuccessStatusCode();
+        var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
+
+        var linkRequest = Authorized(HttpMethod.Post, $"/api/v1/parts/{part.PartId}/vendor-links", token);
+        linkRequest.Content = JsonContent.Create(new CreatePartVendorLinkRequest(
+            vendor.PartyId,
+            "V-FLT-V1-001",
+            true));
+        var linkResponse = await _supplyarrClient.SendAsync(linkRequest);
+        linkResponse.EnsureSuccessStatusCode();
+
+        var listPartsRequest = Authorized(HttpMethod.Get, "/api/v1/parts", token);
+        var listPartsResponse = await _supplyarrClient.SendAsync(listPartsRequest);
+        listPartsResponse.EnsureSuccessStatusCode();
+        var parts = (await listPartsResponse.Content.ReadFromJsonAsync<List<PartResponse>>())!;
+        Assert.Contains(parts, x => x.PartId == part.PartId);
+
+        var getPartRequest = Authorized(HttpMethod.Get, $"/api/v1/parts/{part.PartId}", token);
+        var getPartResponse = await _supplyarrClient.SendAsync(getPartRequest);
+        getPartResponse.EnsureSuccessStatusCode();
+        var loaded = (await getPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
+        Assert.Single(loaded.VendorLinks);
     }
 
     [Fact]
@@ -391,6 +553,624 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Inventory_v1_locations_bins_and_stock_happy_path()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
+        createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
+            "stock-v1-part-001",
+            null,
+            "Stock v1 Test Part",
+            string.Empty,
+            "general",
+            "each",
+            string.Empty,
+            string.Empty));
+        var createPartResponse = await _supplyarrClient.SendAsync(createPartRequest);
+        createPartResponse.EnsureSuccessStatusCode();
+        var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
+
+        var createLocationRequest = Authorized(HttpMethod.Post, "/api/v1/inventory/locations", token);
+        createLocationRequest.Content = JsonContent.Create(new CreateInventoryLocationRequest(
+            "v1-main-wh",
+            "v1 Main Warehouse",
+            "warehouse",
+            "100 Dock St"));
+        var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
+        createLocationResponse.EnsureSuccessStatusCode();
+        var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
+
+        var createBinRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/inventory/locations/{location.LocationId}/bins",
+            token);
+        createBinRequest.Content = JsonContent.Create(new CreateInventoryBinRequest("v1-a-01", "v1 Aisle 01"));
+        var createBinResponse = await _supplyarrClient.SendAsync(createBinRequest);
+        createBinResponse.EnsureSuccessStatusCode();
+        var bin = (await createBinResponse.Content.ReadFromJsonAsync<InventoryBinResponse>())!;
+
+        var upsertStockRequest = Authorized(HttpMethod.Post, "/api/v1/inventory/stock", token);
+        upsertStockRequest.Content = JsonContent.Create(new UpsertPartStockLevelRequest(
+            part.PartId,
+            bin.BinId,
+            12m));
+        var upsertStockResponse = await _supplyarrClient.SendAsync(upsertStockRequest);
+        upsertStockResponse.EnsureSuccessStatusCode();
+        var stock = (await upsertStockResponse.Content.ReadFromJsonAsync<PartStockLevelResponse>())!;
+        Assert.Equal(12m, stock.QuantityOnHand);
+
+        var listStockRequest = Authorized(
+            HttpMethod.Get,
+            $"/api/v1/inventory/stock?locationId={location.LocationId}",
+            token);
+        var listStockResponse = await _supplyarrClient.SendAsync(listStockRequest);
+        listStockResponse.EnsureSuccessStatusCode();
+        var stockLevels = (await listStockResponse.Content.ReadFromJsonAsync<List<PartStockLevelResponse>>())!;
+        Assert.Single(stockLevels);
+    }
+
+    [Fact]
+    public async Task Inventory_v1_stock_reservations_happy_path()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
+        createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
+            "reservation-part-001",
+            null,
+            "Reservation Test Part",
+            string.Empty,
+            "general",
+            "each",
+            string.Empty,
+            string.Empty));
+        var createPartResponse = await _supplyarrClient.SendAsync(createPartRequest);
+        createPartResponse.EnsureSuccessStatusCode();
+        var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
+
+        var createLocationRequest = Authorized(HttpMethod.Post, "/api/v1/inventory/locations", token);
+        createLocationRequest.Content = JsonContent.Create(new CreateInventoryLocationRequest(
+            "reservation-wh",
+            "Reservation warehouse",
+            "warehouse",
+            "300 Dock St"));
+        var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
+        createLocationResponse.EnsureSuccessStatusCode();
+        var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
+
+        var createBinRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/inventory/locations/{location.LocationId}/bins",
+            token);
+        createBinRequest.Content = JsonContent.Create(new CreateInventoryBinRequest("reservation-bin", "B-01"));
+        var createBinResponse = await _supplyarrClient.SendAsync(createBinRequest);
+        createBinResponse.EnsureSuccessStatusCode();
+        var bin = (await createBinResponse.Content.ReadFromJsonAsync<InventoryBinResponse>())!;
+
+        var stockRequest = Authorized(HttpMethod.Post, "/api/v1/inventory/stock", token);
+        stockRequest.Content = JsonContent.Create(new UpsertPartStockLevelRequest(part.PartId, bin.BinId, 20m));
+        (await _supplyarrClient.SendAsync(stockRequest)).EnsureSuccessStatusCode();
+
+        var createReservationRequest = Authorized(HttpMethod.Post, "/api/v1/inventory/reservations", token);
+        createReservationRequest.Content = JsonContent.Create(new CreateStockReservationRequest(
+            "reservation-001",
+            part.PartId,
+            bin.BinId,
+            5m,
+            "work_order",
+            null,
+            "reserve stock for job"));
+        var createReservationResponse = await _supplyarrClient.SendAsync(createReservationRequest);
+        createReservationResponse.EnsureSuccessStatusCode();
+        var reservation = (await createReservationResponse.Content.ReadFromJsonAsync<StockReservationResponse>())!;
+        Assert.Equal("active", reservation.Status);
+        Assert.Equal(5m, reservation.QuantityReserved);
+
+        var listReservationsRequest = Authorized(HttpMethod.Get, "/api/v1/inventory/reservations", token);
+        var listReservationsResponse = await _supplyarrClient.SendAsync(listReservationsRequest);
+        listReservationsResponse.EnsureSuccessStatusCode();
+        var reservations = (await listReservationsResponse.Content.ReadFromJsonAsync<List<StockReservationResponse>>())!;
+        Assert.Contains(reservations, x => x.ReservationId == reservation.ReservationId);
+
+        var releaseReservationRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/inventory/reservations/{reservation.ReservationId}/release",
+            token);
+        releaseReservationRequest.Content = JsonContent.Create(new ReleaseStockReservationRequest("cancelled work"));
+        var releaseReservationResponse = await _supplyarrClient.SendAsync(releaseReservationRequest);
+        releaseReservationResponse.EnsureSuccessStatusCode();
+        var released = (await releaseReservationResponse.Content.ReadFromJsonAsync<StockReservationResponse>())!;
+        Assert.Equal("released", released.Status);
+        Assert.Equal("cancelled work", released.ReleaseReason);
+    }
+
+    [Fact]
+    public async Task Backorders_and_returns_v1_list_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var listBackordersRequest = Authorized(HttpMethod.Get, "/api/v1/backorders", token);
+        var listBackordersResponse = await _supplyarrClient.SendAsync(listBackordersRequest);
+        listBackordersResponse.EnsureSuccessStatusCode();
+        var backorders = await listBackordersResponse.Content.ReadFromJsonAsync<List<BackorderResponse>>();
+        Assert.NotNull(backorders);
+
+        var listReturnsRequest = Authorized(HttpMethod.Get, "/api/v1/returns", token);
+        var listReturnsResponse = await _supplyarrClient.SendAsync(listReturnsRequest);
+        listReturnsResponse.EnsureSuccessStatusCode();
+        var returns = await listReturnsResponse.Content.ReadFromJsonAsync<List<VendorReturnResponse>>();
+        Assert.NotNull(returns);
+    }
+
+    [Fact]
+    public async Task Rfqs_v1_list_alias_works()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var listRfqsRequest = Authorized(HttpMethod.Get, "/api/v1/rfqs", token);
+        var listRfqsResponse = await _supplyarrClient.SendAsync(listRfqsRequest);
+        listRfqsResponse.EnsureSuccessStatusCode();
+        var rfqs = await listRfqsResponse.Content.ReadFromJsonAsync<List<RfqResponse>>();
+        Assert.NotNull(rfqs);
+    }
+
+    [Fact]
+    public async Task Warranty_claims_v1_list_alias_works()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var listClaimsRequest = Authorized(HttpMethod.Get, "/api/v1/warranty-claims", token);
+        var listClaimsResponse = await _supplyarrClient.SendAsync(listClaimsRequest);
+        listClaimsResponse.EnsureSuccessStatusCode();
+        var claims = await listClaimsResponse.Content.ReadFromJsonAsync<List<WarrantyClaimResponse>>();
+        Assert.NotNull(claims);
+    }
+
+    [Fact]
+    public async Task Snapshot_v1_list_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var pricingResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/pricing-snapshots", token));
+        pricingResponse.EnsureSuccessStatusCode();
+        Assert.NotNull(await pricingResponse.Content.ReadFromJsonAsync<List<PricingSnapshotResponse>>());
+
+        var leadTimeResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/lead-time-snapshots", token));
+        leadTimeResponse.EnsureSuccessStatusCode();
+        Assert.NotNull(await leadTimeResponse.Content.ReadFromJsonAsync<List<LeadTimeSnapshotResponse>>());
+
+        var availabilityResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/availability-snapshots", token));
+        availabilityResponse.EnsureSuccessStatusCode();
+        Assert.NotNull(await availabilityResponse.Content.ReadFromJsonAsync<List<AvailabilitySnapshotResponse>>());
+    }
+
+    [Fact]
+    public async Task Demand_and_reorder_v1_list_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var demandRefsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/demand-refs", token));
+        demandRefsResponse.EnsureSuccessStatusCode();
+
+        var demandProcessingResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/demand-processing", token));
+        demandProcessingResponse.EnsureSuccessStatusCode();
+
+        var reorderResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reorder-evaluation", token));
+        reorderResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Demand_processing_settings_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var settingsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/demand-processing-settings", token));
+        settingsResponse.EnsureSuccessStatusCode();
+
+        var pendingResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/demand-processing-settings/pending", token));
+        pendingResponse.EnsureSuccessStatusCode();
+
+        var runsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/demand-processing-settings/runs?limit=5", token));
+        runsResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Integration_event_settings_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var settingsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/integration-event-settings", token));
+        settingsResponse.EnsureSuccessStatusCode();
+
+        var outboxResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/integration-event-settings/outbox?limit=5", token));
+        outboxResponse.EnsureSuccessStatusCode();
+
+        var inboxResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/integration-event-settings/inbox?limit=5", token));
+        inboxResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Notification_settings_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var settingsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/notification-settings", token));
+        settingsResponse.EnsureSuccessStatusCode();
+
+        var dispatchesResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/notification-settings/dispatches?limit=5", token));
+        dispatchesResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Price_snapshot_settings_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var settingsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/price-snapshot-settings", token));
+        settingsResponse.EnsureSuccessStatusCode();
+
+        var pendingResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/price-snapshot-settings/pending", token));
+        pendingResponse.EnsureSuccessStatusCode();
+
+        var runsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/price-snapshot-settings/runs?limit=5", token));
+        runsResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Lead_time_and_availability_snapshot_settings_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var leadTimeSettingsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/lead-time-snapshot-settings", token));
+        leadTimeSettingsResponse.EnsureSuccessStatusCode();
+
+        var leadTimePendingResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/lead-time-snapshot-settings/pending", token));
+        leadTimePendingResponse.EnsureSuccessStatusCode();
+
+        var leadTimeRunsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/lead-time-snapshot-settings/runs?limit=5", token));
+        leadTimeRunsResponse.EnsureSuccessStatusCode();
+
+        var availabilitySettingsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/availability-snapshot-settings", token));
+        availabilitySettingsResponse.EnsureSuccessStatusCode();
+
+        var availabilityPendingResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/availability-snapshot-settings/pending", token));
+        availabilityPendingResponse.EnsureSuccessStatusCode();
+
+        var availabilityRunsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/availability-snapshot-settings/runs?limit=5", token));
+        availabilityRunsResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Procurement_coordination_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var dashboardResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/procurement-coordination?activeOnly=true", token));
+        dashboardResponse.EnsureSuccessStatusCode();
+
+        var settingsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/procurement-coordination-settings", token));
+        settingsResponse.EnsureSuccessStatusCode();
+
+        var pendingResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/procurement-coordination-settings/pending", token));
+        pendingResponse.EnsureSuccessStatusCode();
+
+        var runsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/procurement-coordination-settings/runs?limit=5", token));
+        runsResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Approval_reminder_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var dashboardResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/approval-reminders?includeUpcoming=false", token));
+        dashboardResponse.EnsureSuccessStatusCode();
+
+        var settingsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/approval-reminder-settings", token));
+        settingsResponse.EnsureSuccessStatusCode();
+
+        var pendingResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/approval-reminder-settings/pending", token));
+        pendingResponse.EnsureSuccessStatusCode();
+
+        var runsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/approval-reminder-settings/runs?limit=5", token));
+        runsResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Procurement_exception_escalation_settings_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var settingsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/procurement-exception-escalation-settings", token));
+        settingsResponse.EnsureSuccessStatusCode();
+
+        var pendingResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/procurement-exception-escalation-settings/pending", token));
+        pendingResponse.EnsureSuccessStatusCode();
+
+        var runsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/procurement-exception-escalation-settings/runs?limit=5", token));
+        runsResponse.EnsureSuccessStatusCode();
+
+        var eventsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/procurement-exception-escalation-settings/events?limit=5", token));
+        eventsResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Procurement_exceptions_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var templatesResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/procurement-exceptions/resolution-templates", token));
+        templatesResponse.EnsureSuccessStatusCode();
+
+        var listResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/procurement-exceptions", token));
+        listResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Supplier_incidents_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
+        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+            "incident-vendor",
+            "Incident Vendor",
+            string.Empty,
+            null,
+            string.Empty));
+        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
+        createVendorResponse.EnsureSuccessStatusCode();
+        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+
+        var createIncidentRequest = Authorized(HttpMethod.Post, "/api/v1/supplier-incidents", token);
+        createIncidentRequest.Content = JsonContent.Create(new CreateSupplierIncidentRequest(
+            vendor.PartyId,
+            "incident-001",
+            "Shipment quality issue",
+            "Observed defects in received batch",
+            "quality",
+            "high",
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createIncidentResponse = await _supplyarrClient.SendAsync(createIncidentRequest);
+        createIncidentResponse.EnsureSuccessStatusCode();
+        var incident = (await createIncidentResponse.Content.ReadFromJsonAsync<SupplierIncidentResponse>())!;
+        Assert.Equal(vendor.PartyId, incident.ExternalPartyId);
+
+        var listResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/supplier-incidents", token));
+        listResponse.EnsureSuccessStatusCode();
+
+        var byPartyResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/parties/{vendor.PartyId}/supplier-incidents", token));
+        byPartyResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Vendor_restrictions_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
+        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+            "restricted-vendor",
+            "Restricted Vendor",
+            string.Empty,
+            null,
+            string.Empty));
+        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
+        createVendorResponse.EnsureSuccessStatusCode();
+        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+
+        var createRestrictionRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/parties/{vendor.PartyId}/vendor-restrictions",
+            token);
+        createRestrictionRequest.Content = JsonContent.Create(new CreateVendorRestrictionRequest(
+            "hold-vendor",
+            ["purchase_orders"],
+            "Open compliance hold",
+            null,
+            null));
+        var createRestrictionResponse = await _supplyarrClient.SendAsync(createRestrictionRequest);
+        createRestrictionResponse.EnsureSuccessStatusCode();
+        var restriction = (await createRestrictionResponse.Content.ReadFromJsonAsync<VendorRestrictionResponse>())!;
+        Assert.Equal(vendor.PartyId, restriction.ExternalPartyId);
+
+        var listResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/vendor-restrictions", token));
+        listResponse.EnsureSuccessStatusCode();
+
+        var byPartyResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/parties/{vendor.PartyId}/vendor-restrictions", token));
+        byPartyResponse.EnsureSuccessStatusCode();
+
+        var enforcementResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/parties/{vendor.PartyId}/vendor-restrictions/enforcement", token));
+        enforcementResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Supplier_onboarding_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
+        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+            "onboarding-vendor",
+            "Onboarding Vendor",
+            string.Empty,
+            null,
+            string.Empty));
+        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
+        createVendorResponse.EnsureSuccessStatusCode();
+        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+
+        var requirementsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/supplier-onboarding/document-requirements", token));
+        requirementsResponse.EnsureSuccessStatusCode();
+
+        var pendingResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/supplier-onboarding/pending", token));
+        pendingResponse.EnsureSuccessStatusCode();
+
+        var partyDocsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/parties/{vendor.PartyId}/compliance-documents", token));
+        partyDocsResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Emergency_purchases_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var listResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/emergency-purchases", token));
+        listResponse.EnsureSuccessStatusCode();
+
+        var pendingResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/emergency-purchases/pending", token));
+        pendingResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Reports_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var vendorResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/vendors/summary", token));
+        vendorResponse.EnsureSuccessStatusCode();
+
+        var partsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/parts-inventory/summary", token));
+        partsResponse.EnsureSuccessStatusCode();
+
+        var purchasingResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/purchasing/summary", token));
+        purchasingResponse.EnsureSuccessStatusCode();
+
+        var complianceResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/compliance/summary", token));
+        complianceResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Forgiving_search_v1_alias_works()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var response = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/search/forgiving?q=oil&limit=5", token));
+        response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Audit_history_v1_alias_works()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var response = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit-history?limit=5", token));
+        response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Events_and_audit_v1_aliases_match_existing_endpoints()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var outboxResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/integration-event-settings/outbox?limit=5", token));
+        outboxResponse.EnsureSuccessStatusCode();
+        var outbox = (await outboxResponse.Content.ReadFromJsonAsync<global::SupplyArr.Api.Contracts.IntegrationEventsListResponse>())!;
+
+        var eventsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/events?limit=5", token));
+        eventsResponse.EnsureSuccessStatusCode();
+        var eventsAlias = (await eventsResponse.Content.ReadFromJsonAsync<global::SupplyArr.Api.Contracts.IntegrationEventsListResponse>())!;
+        Assert.Equal(outbox.Items.Count, eventsAlias.Items.Count);
+
+        const string actionFilter = "alias-test-no-match";
+        var auditHistoryResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/audit-history?limit=5&action={actionFilter}", token));
+        auditHistoryResponse.EnsureSuccessStatusCode();
+        var auditHistory = (await auditHistoryResponse.Content.ReadFromJsonAsync<global::SupplyArr.Api.Contracts.AuditHistoryListResponse>())!;
+
+        var auditResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/audit?limit=5&action={actionFilter}", token));
+        auditResponse.EnsureSuccessStatusCode();
+        var auditAlias = (await auditResponse.Content.ReadFromJsonAsync<global::SupplyArr.Api.Contracts.AuditHistoryListResponse>())!;
+        Assert.Equal(auditHistory.Items.Count, auditAlias.Items.Count);
+    }
+
+    [Fact]
+    public async Task Field_inbox_v1_alias_works()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var response = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/field-inbox", token));
+        response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Demand_ref_v1_aliases_work()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var routarrResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/routarr-demand-refs", token));
+        routarrResponse.EnsureSuccessStatusCode();
+
+        var staffarrResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/staffarr-demand-refs", token));
+        staffarrResponse.EnsureSuccessStatusCode();
+
+        var trainarrResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/trainarr-demand-refs", token));
+        trainarrResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
     public async Task Inventory_location_create_denied_without_manage_role()
     {
         var token = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_clerk");
@@ -472,6 +1252,62 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.NotNull(approved.ApprovedAt);
 
         var listRequest = Authorized(HttpMethod.Get, "/api/purchase-requests?status=approved", token);
+        var listResponse = await _supplyarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var listed = (await listResponse.Content.ReadFromJsonAsync<List<PurchaseRequestResponse>>())!;
+        Assert.Contains(listed, x => x.PurchaseRequestId == purchaseRequest.PurchaseRequestId);
+    }
+
+    [Fact]
+    public async Task Purchase_request_v1_submit_approve_and_list_happy_path()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
+        createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
+            "pr-v1-part-001",
+            null,
+            "PR v1 Test Part",
+            string.Empty,
+            "general",
+            "each",
+            string.Empty,
+            string.Empty));
+        var createPartResponse = await _supplyarrClient.SendAsync(createPartRequest);
+        createPartResponse.EnsureSuccessStatusCode();
+        var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
+
+        var createPrRequest = Authorized(HttpMethod.Post, "/api/v1/purchase-requests", token);
+        createPrRequest.Content = JsonContent.Create(new CreatePurchaseRequestRequest(
+            "pr-v1-2026-001",
+            "v1 restock",
+            string.Empty,
+            null,
+            [new CreatePurchaseRequestLineRequest(part.PartId, 3m, "v1 line")]));
+        var createPrResponse = await _supplyarrClient.SendAsync(createPrRequest);
+        createPrResponse.EnsureSuccessStatusCode();
+        var purchaseRequest = (await createPrResponse.Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+        Assert.Equal("draft", purchaseRequest.Status);
+
+        var submitRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/purchase-requests/{purchaseRequest.PurchaseRequestId}/submit",
+            token);
+        var submitResponse = await _supplyarrClient.SendAsync(submitRequest);
+        submitResponse.EnsureSuccessStatusCode();
+        var submitted = (await submitResponse.Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+        Assert.Equal("submitted", submitted.Status);
+
+        var approveRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/purchase-requests/{purchaseRequest.PurchaseRequestId}/approve",
+            token);
+        var approveResponse = await _supplyarrClient.SendAsync(approveRequest);
+        approveResponse.EnsureSuccessStatusCode();
+        var approved = (await approveResponse.Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+        Assert.Equal("approved", approved.Status);
+
+        var listRequest = Authorized(HttpMethod.Get, "/api/v1/purchase-requests?status=approved", token);
         var listResponse = await _supplyarrClient.SendAsync(listRequest);
         listResponse.EnsureSuccessStatusCode();
         var listed = (await listResponse.Content.ReadFromJsonAsync<List<PurchaseRequestResponse>>())!;
@@ -676,6 +1512,95 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.NotNull(issuedPo.IssuedAt);
 
         var listRequest = Authorized(HttpMethod.Get, "/api/purchase-orders?status=issued", token);
+        var listResponse = await _supplyarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var listed = (await listResponse.Content.ReadFromJsonAsync<List<PurchaseOrderResponse>>())!;
+        Assert.Contains(listed, x => x.PurchaseOrderId == purchaseOrder.PurchaseOrderId);
+    }
+
+    [Fact]
+    public async Task Purchase_order_v1_from_approved_pr_approve_issue_happy_path()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
+        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+            "po-v1-vendor-001",
+            "PO v1 Vendor",
+            "PO v1 Vendor LLC",
+            null,
+            string.Empty));
+        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
+        createVendorResponse.EnsureSuccessStatusCode();
+        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+
+        var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
+        createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
+            "po-v1-part-001",
+            null,
+            "PO v1 Test Part",
+            string.Empty,
+            "general",
+            "each",
+            string.Empty,
+            string.Empty));
+        var createPartResponse = await _supplyarrClient.SendAsync(createPartRequest);
+        createPartResponse.EnsureSuccessStatusCode();
+        var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
+
+        var createPrRequest = Authorized(HttpMethod.Post, "/api/v1/purchase-requests", token);
+        createPrRequest.Content = JsonContent.Create(new CreatePurchaseRequestRequest(
+            "pr-po-v1-2026-001",
+            "PO v1 source request",
+            string.Empty,
+            vendor.PartyId,
+            [new CreatePurchaseRequestLineRequest(part.PartId, 2m, "v1 po line")]));
+        var createPrResponse = await _supplyarrClient.SendAsync(createPrRequest);
+        createPrResponse.EnsureSuccessStatusCode();
+        var purchaseRequest = (await createPrResponse.Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+
+        var submitRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/purchase-requests/{purchaseRequest.PurchaseRequestId}/submit",
+            token);
+        (await _supplyarrClient.SendAsync(submitRequest)).EnsureSuccessStatusCode();
+
+        var approvePrRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/purchase-requests/{purchaseRequest.PurchaseRequestId}/approve",
+            token);
+        (await _supplyarrClient.SendAsync(approvePrRequest)).EnsureSuccessStatusCode();
+
+        var createPoRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/purchase-orders/from-purchase-request/{purchaseRequest.PurchaseRequestId}",
+            token);
+        createPoRequest.Content = JsonContent.Create(
+            new CreatePurchaseOrderFromPurchaseRequestRequest("po-v1-2026-001", null, null));
+        var createPoResponse = await _supplyarrClient.SendAsync(createPoRequest);
+        createPoResponse.EnsureSuccessStatusCode();
+        var purchaseOrder = (await createPoResponse.Content.ReadFromJsonAsync<PurchaseOrderResponse>())!;
+        Assert.Equal("draft", purchaseOrder.Status);
+
+        var approvePoRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/purchase-orders/{purchaseOrder.PurchaseOrderId}/approve",
+            token);
+        var approvePoResponse = await _supplyarrClient.SendAsync(approvePoRequest);
+        approvePoResponse.EnsureSuccessStatusCode();
+        var approvedPo = (await approvePoResponse.Content.ReadFromJsonAsync<PurchaseOrderResponse>())!;
+        Assert.Equal("approved", approvedPo.Status);
+
+        var issueRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/purchase-orders/{purchaseOrder.PurchaseOrderId}/issue",
+            token);
+        var issueResponse = await _supplyarrClient.SendAsync(issueRequest);
+        issueResponse.EnsureSuccessStatusCode();
+        var issuedPo = (await issueResponse.Content.ReadFromJsonAsync<PurchaseOrderResponse>())!;
+        Assert.Equal("issued", issuedPo.Status);
+
+        var listRequest = Authorized(HttpMethod.Get, "/api/v1/purchase-orders?status=issued", token);
         var listResponse = await _supplyarrClient.SendAsync(listRequest);
         listResponse.EnsureSuccessStatusCode();
         var listed = (await listResponse.Content.ReadFromJsonAsync<List<PurchaseOrderResponse>>())!;
@@ -905,6 +1830,54 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var stockLevels = (await listStockResponse.Content.ReadFromJsonAsync<List<PartStockLevelResponse>>())!;
         Assert.Single(stockLevels);
         Assert.Equal(5m, stockLevels[0].QuantityOnHand);
+    }
+
+    [Fact]
+    public async Task Receiving_v1_against_issued_po_posts_stock_happy_path()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (part, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-v1-001",
+            "po-rcv-v1-001",
+            "rcv-v1",
+            4m);
+
+        var createReceiptRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/receiving/from-purchase-order/{purchaseOrder.PurchaseOrderId}",
+            token);
+        createReceiptRequest.Content = JsonContent.Create(
+            new CreateReceivingReceiptFromPurchaseOrderRequest("rcpt-v1-001", bin.BinId, "Dock delivery"));
+        var createReceiptResponse = await _supplyarrClient.SendAsync(createReceiptRequest);
+        createReceiptResponse.EnsureSuccessStatusCode();
+        var receipt = (await createReceiptResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
+        Assert.Equal("draft", receipt.Status);
+
+        var postReceiptRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/receiving/{receipt.ReceivingReceiptId}/post",
+            token);
+        var postReceiptResponse = await _supplyarrClient.SendAsync(postReceiptRequest);
+        postReceiptResponse.EnsureSuccessStatusCode();
+        var posted = (await postReceiptResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
+        Assert.Equal("posted", posted.Status);
+
+        var listRequest = Authorized(HttpMethod.Get, "/api/v1/receiving?status=posted", token);
+        var listResponse = await _supplyarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var receipts = (await listResponse.Content.ReadFromJsonAsync<List<ReceivingReceiptResponse>>())!;
+        Assert.Contains(receipts, x => x.ReceivingReceiptId == receipt.ReceivingReceiptId);
+
+        var listStockRequest = Authorized(
+            HttpMethod.Get,
+            $"/api/inventory/stock?partId={part.PartId}&binId={bin.BinId}",
+            token);
+        var listStockResponse = await _supplyarrClient.SendAsync(listStockRequest);
+        listStockResponse.EnsureSuccessStatusCode();
+        var stockLevels = (await listStockResponse.Content.ReadFromJsonAsync<List<PartStockLevelResponse>>())!;
+        Assert.Single(stockLevels);
+        Assert.Equal(4m, stockLevels[0].QuantityOnHand);
     }
 
     [Fact]
@@ -1901,7 +2874,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new CreateHandoffRequest("supplyarr", "http://localhost:5179/launch"));
         var response = await _nexarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();

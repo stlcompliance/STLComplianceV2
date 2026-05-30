@@ -23,15 +23,21 @@ export {
   buildProductWorkspaceCallbackUrl,
   createProductHandoff,
   formatProductLaunchError,
+  getLaunchCatalog,
   getLaunchContext,
   ProductLaunchError,
 } from './productLaunchHandoff'
-export type { HandoffCreatedResponse, LaunchContextResponse } from './productLaunchHandoff'
+export type {
+  HandoffCreatedResponse,
+  LaunchCatalogResponse,
+  LaunchContextResponse,
+} from './productLaunchHandoff'
 export { useProductWorkspaceLaunch } from './useProductWorkspaceLaunch'
 export {
   isProductWorkspaceAuthError,
   resolveProductWorkspaceBootstrapError,
 } from './productWorkspaceAuth'
+export { resolveNexArrLaunchFailureMessage } from './launchFailure'
 export {
   AdvancedReferenceField,
   AsyncMultiPicker,

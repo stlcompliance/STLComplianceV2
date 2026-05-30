@@ -162,12 +162,22 @@ public class StaffArrTrainArrSignoffsEvaluationsTests : IAsyncLifetime
         listEvaluationsResponse.EnsureSuccessStatusCode();
         var evaluations = (await listEvaluationsResponse.Content.ReadFromJsonAsync<IReadOnlyList<TrainingEvaluationResponse>>())!;
         Assert.Single(evaluations);
+        var v1EvaluationsResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/evaluations?trainingAssignmentId={assignmentId}", adminToken));
+        v1EvaluationsResponse.EnsureSuccessStatusCode();
+        var v1Evaluations = (await v1EvaluationsResponse.Content.ReadFromJsonAsync<IReadOnlyList<TrainingEvaluationResponse>>())!;
+        Assert.Equal(evaluations.Count, v1Evaluations.Count);
 
         var listSignoffsResponse = await _trainarrClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/signoffs?trainingAssignmentId={assignmentId}", adminToken));
         listSignoffsResponse.EnsureSuccessStatusCode();
         var signoffs = (await listSignoffsResponse.Content.ReadFromJsonAsync<IReadOnlyList<TrainingSignoffResponse>>())!;
         Assert.Equal(2, signoffs.Count);
+        var v1SignoffsResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/signoffs?trainingAssignmentId={assignmentId}", adminToken));
+        v1SignoffsResponse.EnsureSuccessStatusCode();
+        var v1Signoffs = (await v1SignoffsResponse.Content.ReadFromJsonAsync<IReadOnlyList<TrainingSignoffResponse>>())!;
+        Assert.Equal(signoffs.Count, v1Signoffs.Count);
     }
 
     [Fact]

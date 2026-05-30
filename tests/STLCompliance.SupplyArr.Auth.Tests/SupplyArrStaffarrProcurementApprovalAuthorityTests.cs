@@ -170,6 +170,17 @@ public sealed class SupplyArrStaffarrProcurementApprovalAuthorityTests : IAsyncL
     }
 
     [Fact]
+    public async Task V1_procurement_approval_authority_alias_returns_staffarr_mirror()
+    {
+        var authorityResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/me/procurement-approval-authority", _userToken));
+        authorityResponse.EnsureSuccessStatusCode();
+        var authority = (await authorityResponse.Content.ReadFromJsonAsync<ProcurementApprovalAuthorityMirrorResponse>())!;
+        Assert.True(authority.CanSubmitPurchaseRequests);
+        Assert.StartsWith("staffarr_", authority.AuthoritySource, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Purchase_request_submit_denied_without_staffarr_submit_permission()
     {
         using (var staffScope = _staffarrFactory.Services.CreateScope())
@@ -402,7 +413,7 @@ public sealed class SupplyArrStaffarrProcurementApprovalAuthorityTests : IAsyncL
 
     private async Task<string> CreateHandoffAsync(string adminToken)
     {
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", adminToken);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", adminToken);
         request.Content = JsonContent.Create(new CreateHandoffRequest("supplyarr", "http://localhost:5179/launch"));
         var response = await _nexarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();

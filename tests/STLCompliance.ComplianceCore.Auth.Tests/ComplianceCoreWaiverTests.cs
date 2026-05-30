@@ -336,6 +336,81 @@ public sealed class ComplianceCoreWaiverTests : IAsyncLifetime
         Assert.Equal("expired", loaded.Status);
     }
 
+    [Fact]
+    public async Task V1_waiver_routes_create_patch_and_get_round_trip()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await GetDriverQualificationRulePackIdAsync(adminToken);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/waivers", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateComplianceWaiverRequest(
+            "v1-driver-waiver",
+            rulePackId,
+            "tenant",
+            "temporary_ops_override",
+            "Created through v1 waiver route.",
+            DateTimeOffset.UtcNow.AddMinutes(-5),
+            DateTimeOffset.UtcNow.AddDays(3)));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<ComplianceWaiverResponse>())!;
+        Assert.Equal("pending", created.Status);
+
+        var approveRequest = Authorized(HttpMethod.Patch, $"/api/v1/waivers/{created.WaiverId}", adminToken);
+        approveRequest.Content = JsonContent.Create(new UpdateComplianceWaiverRequest("approved"));
+        var approveResponse = await _complianceCoreClient.SendAsync(approveRequest);
+        approveResponse.EnsureSuccessStatusCode();
+        var approved = (await approveResponse.Content.ReadFromJsonAsync<ComplianceWaiverResponse>())!;
+        Assert.Equal("approved", approved.Status);
+
+        var getResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/waivers/{created.WaiverId}", adminToken));
+        getResponse.EnsureSuccessStatusCode();
+        var loaded = (await getResponse.Content.ReadFromJsonAsync<ComplianceWaiverResponse>())!;
+        Assert.Equal("approved", loaded.Status);
+    }
+
+    [Fact]
+    public async Task V1_waiver_renew_reactivates_expired_waiver()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await GetDriverQualificationRulePackIdAsync(adminToken);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/waivers", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateComplianceWaiverRequest(
+            "v1-expiring-waiver",
+            rulePackId,
+            "tenant",
+            "temporary_ops_override",
+            "Expires then renewed via v1 endpoint.",
+            DateTimeOffset.UtcNow.AddDays(-3),
+            DateTimeOffset.UtcNow.AddDays(-1)));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<ComplianceWaiverResponse>())!;
+
+        (await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/waivers/{created.WaiverId}/approve", adminToken))).EnsureSuccessStatusCode();
+
+        var expireRequest = ServiceAuthorized(HttpMethod.Post, "/api/internal/waivers/expire-batch", _workerExpireToken);
+        expireRequest.Content = JsonContent.Create(new ProcessExpiredWaiversRequest(
+            PlatformSeeder.DemoTenantId,
+            DateTimeOffset.UtcNow,
+            50));
+        (await _complianceCoreClient.SendAsync(expireRequest)).EnsureSuccessStatusCode();
+
+        var renewRequest = Authorized(HttpMethod.Post, $"/api/v1/waivers/{created.WaiverId}/renew", adminToken);
+        renewRequest.Content = JsonContent.Create(new RenewComplianceWaiverRequest(
+            DateTimeOffset.UtcNow.AddMinutes(-1),
+            DateTimeOffset.UtcNow.AddDays(5),
+            "renew-after-expiry"));
+        var renewResponse = await _complianceCoreClient.SendAsync(renewRequest);
+        renewResponse.EnsureSuccessStatusCode();
+        var renewed = (await renewResponse.Content.ReadFromJsonAsync<ComplianceWaiverResponse>())!;
+        Assert.Equal("approved", renewed.Status);
+        Assert.True(renewed.ExpiresAt > DateTimeOffset.UtcNow);
+    }
+
     private async Task<Guid> GetDriverQualificationRulePackIdAsync(string adminToken)
     {
         var response = await _complianceCoreClient.SendAsync(

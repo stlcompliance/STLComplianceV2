@@ -121,6 +121,33 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Supply_readiness_v1_endpoints_return_expected_responses()
+    {
+        var buyerToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_buyer");
+
+        var partResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/supply-readiness/parts/{_partId}", buyerToken));
+        partResponse.EnsureSuccessStatusCode();
+        var partReadiness = (await partResponse.Content.ReadFromJsonAsync<PartSupplyReadinessResponse>())!;
+        Assert.Equal("not_ready", partReadiness.ReadinessStatus);
+
+        var vendorResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/supply-readiness/vendors/{_vendorId}", buyerToken));
+        vendorResponse.EnsureSuccessStatusCode();
+        var vendorReadiness = (await vendorResponse.Content.ReadFromJsonAsync<VendorSupplyReadinessResponse>())!;
+        Assert.Equal("not_ready", vendorReadiness.ReadinessStatus);
+
+        var pathResponse = await _supplyarrClient.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/v1/supply-readiness/procurement-path?partId={_partId}&externalPartyId={_vendorId}&quantity=5",
+                buyerToken));
+        pathResponse.EnsureSuccessStatusCode();
+        var pathReadiness = (await pathResponse.Content.ReadFromJsonAsync<ProcurementPathReadinessResponse>())!;
+        Assert.Equal("not_ready", pathReadiness.ReadinessStatus);
+    }
+
+    [Fact]
     public async Task Procurement_path_readiness_combines_part_vendor_and_link_blockers()
     {
         var buyerToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_buyer");
@@ -150,6 +177,24 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
 
         var readiness = (await response.Content.ReadFromJsonAsync<PartSupplyReadinessResponse>())!;
         Assert.Equal("not_ready", readiness.ReadinessStatus);
+    }
+
+    [Fact]
+    public async Task Integration_v1_aliases_allow_service_token_reads()
+    {
+        var readinessRequest = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"/api/v1/integrations/part-supply-readiness?tenantId={PlatformSeeder.DemoTenantId}&partId={_partId}");
+        readinessRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _maintainarrServiceToken);
+        var readinessResponse = await _supplyarrClient.SendAsync(readinessRequest);
+        readinessResponse.EnsureSuccessStatusCode();
+
+        var referenceRequest = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"/api/v1/integrations/references/by-key?tenantId={PlatformSeeder.DemoTenantId}&referenceType=item&referenceKey=CHECK-PART");
+        referenceRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _referenceServiceToken);
+        var referenceResponse = await _supplyarrClient.SendAsync(referenceRequest);
+        referenceResponse.EnsureSuccessStatusCode();
     }
 
     [Fact]

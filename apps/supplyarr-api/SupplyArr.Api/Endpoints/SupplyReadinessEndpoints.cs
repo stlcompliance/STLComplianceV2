@@ -7,16 +7,12 @@ public static class SupplyReadinessEndpoints
 {
     public static void MapSupplyArrSupplyReadinessEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/supply-readiness")
-            .WithTags("SupplyReadiness")
-            .RequireAuthorization();
-
-        group.MapGet("/dashboard", async (
+        static async Task<IResult> GetDashboardAsync(
             SupplyArrAuthorizationService authorization,
             SupplyReadinessService service,
             ISupplyArrAuditService audit,
             HttpContext context,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             authorization.RequireSupplyReadinessRead(context.User);
             var tenantId = context.User.GetTenantId();
@@ -31,17 +27,16 @@ public static class SupplyReadinessEndpoints
                 "success",
                 cancellationToken: cancellationToken);
             return Results.Ok(dashboard);
-        })
-        .WithName("GetSupplyArrSupplyReadinessDashboard");
+        }
 
-        group.MapGet("/parts/{partId:guid}", async (
+        static async Task<IResult> GetPartReadinessAsync(
             Guid partId,
             decimal? quantity,
             SupplyArrAuthorizationService authorization,
             SupplyReadinessService service,
             ISupplyArrAuditService audit,
             HttpContext context,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             authorization.RequireSupplyReadinessRead(context.User);
             var tenantId = context.User.GetTenantId();
@@ -56,16 +51,15 @@ public static class SupplyReadinessEndpoints
                 "success",
                 cancellationToken: cancellationToken);
             return Results.Ok(result);
-        })
-        .WithName("GetSupplyArrPartSupplyReadiness");
+        }
 
-        group.MapGet("/vendors/{externalPartyId:guid}", async (
+        static async Task<IResult> GetVendorReadinessAsync(
             Guid externalPartyId,
             SupplyArrAuthorizationService authorization,
             SupplyReadinessService service,
             ISupplyArrAuditService audit,
             HttpContext context,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             authorization.RequireSupplyReadinessRead(context.User);
             var tenantId = context.User.GetTenantId();
@@ -80,10 +74,9 @@ public static class SupplyReadinessEndpoints
                 "success",
                 cancellationToken: cancellationToken);
             return Results.Ok(result);
-        })
-        .WithName("GetSupplyArrVendorSupplyReadiness");
+        }
 
-        group.MapGet("/procurement-path", async (
+        static async Task<IResult> GetProcurementPathReadinessAsync(
             Guid partId,
             Guid externalPartyId,
             decimal? quantity,
@@ -91,7 +84,7 @@ public static class SupplyReadinessEndpoints
             SupplyReadinessService service,
             ISupplyArrAuditService audit,
             HttpContext context,
-            CancellationToken cancellationToken) =>
+            CancellationToken cancellationToken)
         {
             authorization.RequireSupplyReadinessRead(context.User);
             var tenantId = context.User.GetTenantId();
@@ -111,7 +104,30 @@ public static class SupplyReadinessEndpoints
                 "success",
                 cancellationToken: cancellationToken);
             return Results.Ok(result);
-        })
-        .WithName("GetSupplyArrProcurementPathReadiness");
+        }
+
+        var legacyGroup = app.MapGroup("/api/supply-readiness")
+            .WithTags("SupplyReadiness")
+            .RequireAuthorization();
+        legacyGroup.MapGet("/dashboard", GetDashboardAsync)
+            .WithName("GetSupplyArrSupplyReadinessDashboard");
+        legacyGroup.MapGet("/parts/{partId:guid}", GetPartReadinessAsync)
+            .WithName("GetSupplyArrPartSupplyReadiness");
+        legacyGroup.MapGet("/vendors/{externalPartyId:guid}", GetVendorReadinessAsync)
+            .WithName("GetSupplyArrVendorSupplyReadiness");
+        legacyGroup.MapGet("/procurement-path", GetProcurementPathReadinessAsync)
+            .WithName("GetSupplyArrProcurementPathReadiness");
+
+        var v1Group = app.MapGroup("/api/v1/supply-readiness")
+            .WithTags("SupplyReadiness")
+            .RequireAuthorization();
+        v1Group.MapGet("/dashboard", GetDashboardAsync)
+            .WithName("GetSupplyArrSupplyReadinessDashboardV1");
+        v1Group.MapGet("/parts/{partId:guid}", GetPartReadinessAsync)
+            .WithName("GetSupplyArrPartSupplyReadinessV1");
+        v1Group.MapGet("/vendors/{externalPartyId:guid}", GetVendorReadinessAsync)
+            .WithName("GetSupplyArrVendorSupplyReadinessV1");
+        v1Group.MapGet("/procurement-path", GetProcurementPathReadinessAsync)
+            .WithName("GetSupplyArrProcurementPathReadinessV1");
     }
 }

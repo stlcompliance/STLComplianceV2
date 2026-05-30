@@ -216,4 +216,66 @@ public sealed class EntitlementAdminService(
             entitlement.GrantedAt,
             entitlement.RevokedAt);
     }
+
+    public Task<PagedResult<EntitlementDetailResponse>> ListByTenantAsync(
+        ClaimsPrincipal principal,
+        Guid tenantId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default) =>
+        ListAsync(principal, tenantId, page, pageSize, cancellationToken);
+
+    public Task<EntitlementDetailResponse> GrantForTenantProductAsync(
+        ClaimsPrincipal principal,
+        Guid tenantId,
+        string productKey,
+        CancellationToken cancellationToken = default) =>
+        GrantAsync(principal, new GrantEntitlementRequest(tenantId, productKey), cancellationToken);
+
+    public async Task<EntitlementDetailResponse> RevokeForTenantProductAsync(
+        ClaimsPrincipal principal,
+        Guid tenantId,
+        string productKey,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequireTenantAccessAsync(principal, tenantId, allowTenantAdmin: true, cancellationToken);
+        var normalizedProductKey = productKey.Trim().ToLowerInvariant();
+
+        var entitlement = await db.Entitlements.AsNoTracking()
+            .FirstOrDefaultAsync(e => e.TenantId == tenantId && e.ProductKey == normalizedProductKey, cancellationToken)
+            ?? throw new StlApiException("entitlement.not_found", "Entitlement was not found.", 404);
+
+        return await RevokeAsync(principal, entitlement.Id, cancellationToken);
+    }
+
+    public async Task<EntitlementCheckResponse> CheckAsync(
+        ClaimsPrincipal principal,
+        Guid tenantId,
+        string productKey,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequireTenantAccessAsync(principal, tenantId, allowTenantAdmin: true, cancellationToken);
+        var normalizedProductKey = productKey.Trim().ToLowerInvariant();
+
+        var tenant = await db.Tenants.AsNoTracking().FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken);
+        if (tenant is null)
+        {
+            return new EntitlementCheckResponse(tenantId, normalizedProductKey, false, "tenant_not_found");
+        }
+
+        if (tenant.Status != TenantStatuses.Active)
+        {
+            return new EntitlementCheckResponse(tenantId, normalizedProductKey, false, "tenant_inactive");
+        }
+
+        var hasEntitlement = await db.Entitlements.AsNoTracking().AnyAsync(
+            e => e.TenantId == tenantId
+                && e.ProductKey == normalizedProductKey
+                && e.Status == EntitlementStatuses.Active,
+            cancellationToken);
+
+        return hasEntitlement
+            ? new EntitlementCheckResponse(tenantId, normalizedProductKey, true, null)
+            : new EntitlementCheckResponse(tenantId, normalizedProductKey, false, "entitlement_missing");
+    }
 }

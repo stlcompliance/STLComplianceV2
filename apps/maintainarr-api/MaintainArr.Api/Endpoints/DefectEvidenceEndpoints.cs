@@ -8,10 +8,15 @@ public static class DefectEvidenceEndpoints
 {
     public static void MapMaintainArrDefectEvidenceEndpoints(this WebApplication app)
     {
-        var defectEvidence = app.MapGroup("/api/defects/{defectId:guid}/evidence")
-            .WithTags("DefectEvidence")
-            .RequireAuthorization();
+        MapDefectEvidenceRoutes(app.MapGroup("/api/defects/{defectId:guid}/evidence").WithTags("DefectEvidence").RequireAuthorization(), string.Empty);
+        MapDefectEvidenceRoutes(app.MapGroup("/api/v1/defects/{defectId:guid}/evidence").WithTags("DefectEvidence").RequireAuthorization(), "V1");
 
+        MapInspectionEvidenceRoutes(app.MapGroup("/api/inspections/{inspectionRunId:guid}/evidence").WithTags("InspectionRunEvidence").RequireAuthorization(), string.Empty);
+        MapInspectionEvidenceRoutes(app.MapGroup("/api/v1/inspections/{inspectionRunId:guid}/evidence").WithTags("InspectionRunEvidence").RequireAuthorization(), "V1");
+    }
+
+    private static void MapDefectEvidenceRoutes(RouteGroupBuilder defectEvidence, string nameSuffix)
+    {
         defectEvidence.MapGet("/", async (
             Guid defectId,
             HttpContext context,
@@ -26,7 +31,7 @@ public static class DefectEvidenceEndpoints
             authorization.RequireDefectAccess(context.User, detail.ReportedByUserId);
             return Results.Ok(await evidenceService.ListDefectEvidenceAsync(tenantId, defectId, cancellationToken));
         })
-        .WithName("ListDefectEvidence");
+        .WithName($"ListDefectEvidence{nameSuffix}");
 
         defectEvidence.MapPost("/", async (
             Guid defectId,
@@ -50,12 +55,11 @@ public static class DefectEvidenceEndpoints
                 cancellationToken);
             return Results.Created($"/api/defects/{defectId}/evidence/{created.EvidenceId}", created);
         })
-        .WithName("UploadDefectEvidence");
+        .WithName($"UploadDefectEvidence{nameSuffix}");
+    }
 
-        var inspectionEvidence = app.MapGroup("/api/inspections/{inspectionRunId:guid}/evidence")
-            .WithTags("InspectionRunEvidence")
-            .RequireAuthorization();
-
+    private static void MapInspectionEvidenceRoutes(RouteGroupBuilder inspectionEvidence, string nameSuffix)
+    {
         inspectionEvidence.MapGet("/", async (
             Guid inspectionRunId,
             HttpContext context,
@@ -71,7 +75,7 @@ public static class DefectEvidenceEndpoints
             return Results.Ok(
                 await evidenceService.ListInspectionRunEvidenceAsync(tenantId, inspectionRunId, cancellationToken));
         })
-        .WithName("ListInspectionRunEvidence");
+        .WithName($"ListInspectionRunEvidence{nameSuffix}");
 
         inspectionEvidence.MapPost("/", async (
             Guid inspectionRunId,
@@ -97,6 +101,6 @@ public static class DefectEvidenceEndpoints
                 $"/api/inspections/{inspectionRunId}/evidence/{created.EvidenceId}",
                 created);
         })
-        .WithName("UploadInspectionRunEvidence");
+        .WithName($"UploadInspectionRunEvidence{nameSuffix}");
     }
 }

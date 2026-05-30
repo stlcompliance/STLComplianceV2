@@ -243,6 +243,50 @@ public sealed class RoutArrNotificationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Settings_manifest_v1_requires_admin_and_lists_setting_groups()
+    {
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "routarr_dispatcher");
+        var forbiddenResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", dispatcherToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+
+        var adminToken = CreateRoutArrAccessToken(["routarr"], "routarr_admin");
+        var manifestResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", adminToken));
+        manifestResponse.EnsureSuccessStatusCode();
+        var manifest = (await manifestResponse.Content.ReadFromJsonAsync<RoutArrSettingsManifestResponse>())!;
+        Assert.Contains(manifest.Items, x => x.SettingKey == "notification_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "integration_event_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "trip_completion_rollup_settings");
+    }
+
+    [Fact]
+    public async Task Config_manifest_v1_requires_admin_and_matches_settings_manifest()
+    {
+        var dispatcherToken = CreateRoutArrAccessToken(["routarr"], "routarr_dispatcher");
+        var forbiddenResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/config", dispatcherToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+
+        var adminToken = CreateRoutArrAccessToken(["routarr"], "routarr_admin");
+        var configResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/config", adminToken));
+        configResponse.EnsureSuccessStatusCode();
+        var configManifest = (await configResponse.Content.ReadFromJsonAsync<RoutArrSettingsManifestResponse>())!;
+
+        var settingsResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", adminToken));
+        settingsResponse.EnsureSuccessStatusCode();
+        var settingsManifest = (await settingsResponse.Content.ReadFromJsonAsync<RoutArrSettingsManifestResponse>())!;
+
+        Assert.Equal(settingsManifest.Items.Count, configManifest.Items.Count);
+        foreach (var item in settingsManifest.Items)
+        {
+            Assert.Contains(configManifest.Items, x => x.SettingKey == item.SettingKey);
+        }
+    }
+
+    [Fact]
     public async Task Process_batch_rejects_missing_service_token()
     {
         var response = await _routarrClient.PostAsJsonAsync(

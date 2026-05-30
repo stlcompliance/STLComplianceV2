@@ -115,6 +115,49 @@ public sealed class ComplianceCoreFactSourceSyncWorkerTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Settings_manifest_v1_requires_admin_and_lists_setting_groups()
+    {
+        var reviewerToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_reviewer");
+        var forbiddenResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", reviewerToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var manifestResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", adminToken));
+        manifestResponse.EnsureSuccessStatusCode();
+        var manifest = (await manifestResponse.Content.ReadFromJsonAsync<ComplianceCoreSettingsManifestResponse>())!;
+        Assert.Contains(manifest.Items, x => x.SettingKey == "fact_source_sync_worker_settings");
+        Assert.Contains(manifest.Items, x => x.SettingKey == "m12_analytics_worker_settings");
+    }
+
+    [Fact]
+    public async Task Config_manifest_v1_requires_admin_and_matches_settings_manifest()
+    {
+        var reviewerToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_reviewer");
+        var forbiddenResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/config", reviewerToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var configResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/config", adminToken));
+        configResponse.EnsureSuccessStatusCode();
+        var configManifest = (await configResponse.Content.ReadFromJsonAsync<ComplianceCoreSettingsManifestResponse>())!;
+
+        var settingsResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/settings", adminToken));
+        settingsResponse.EnsureSuccessStatusCode();
+        var settingsManifest = (await settingsResponse.Content.ReadFromJsonAsync<ComplianceCoreSettingsManifestResponse>())!;
+
+        Assert.Equal(settingsManifest.Items.Count, configManifest.Items.Count);
+        foreach (var item in settingsManifest.Items)
+        {
+            Assert.Contains(configManifest.Items, x => x.SettingKey == item.SettingKey);
+        }
+    }
+
+    [Fact]
     public async Task Snapshot_sync_caches_product_api_fact_and_internal_resolve_uses_cache()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");

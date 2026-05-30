@@ -8,8 +8,8 @@ public static class InventoryEndpoints
 {
     public static void MapSupplyArrInventoryEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/inventory").WithTags("Inventory").RequireAuthorization();
-
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
         group.MapGet("/locations", async (
             HttpContext context,
             SupplyArrAuthorizationService authorization,
@@ -20,7 +20,7 @@ public static class InventoryEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListLocationsAsync(tenantId, cancellationToken));
         })
-        .WithName("ListInventoryLocations");
+        .WithName($"ListInventoryLocations{nameSuffix}");
 
         group.MapGet("/locations/{locationId:guid}", async (
             Guid locationId,
@@ -33,7 +33,7 @@ public static class InventoryEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetLocationAsync(tenantId, locationId, cancellationToken));
         })
-        .WithName("GetInventoryLocation");
+        .WithName($"GetInventoryLocation{nameSuffix}");
 
         group.MapPost("/locations", async (
             CreateInventoryLocationRequest request,
@@ -48,7 +48,7 @@ public static class InventoryEndpoints
             var created = await service.CreateLocationAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Created($"/api/inventory/locations/{created.LocationId}", created);
         })
-        .WithName("CreateInventoryLocation");
+        .WithName($"CreateInventoryLocation{nameSuffix}");
 
         group.MapPut("/locations/{locationId:guid}", async (
             Guid locationId,
@@ -68,7 +68,7 @@ public static class InventoryEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdateInventoryLocation");
+        .WithName($"UpdateInventoryLocation{nameSuffix}");
 
         group.MapPatch("/locations/{locationId:guid}/status", async (
             Guid locationId,
@@ -88,7 +88,7 @@ public static class InventoryEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdateInventoryLocationStatus");
+        .WithName($"UpdateInventoryLocationStatus{nameSuffix}");
 
         group.MapGet("/locations/{locationId:guid}/bins", async (
             Guid locationId,
@@ -101,7 +101,7 @@ public static class InventoryEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListBinsAsync(tenantId, locationId, cancellationToken));
         })
-        .WithName("ListInventoryBins");
+        .WithName($"ListInventoryBins{nameSuffix}");
 
         group.MapPost("/locations/{locationId:guid}/bins", async (
             Guid locationId,
@@ -122,7 +122,7 @@ public static class InventoryEndpoints
                 cancellationToken);
             return Results.Created($"/api/inventory/bins/{created.BinId}", created);
         })
-        .WithName("CreateInventoryBin");
+        .WithName($"CreateInventoryBin{nameSuffix}");
 
         group.MapPut("/bins/{binId:guid}", async (
             Guid binId,
@@ -142,7 +142,7 @@ public static class InventoryEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdateInventoryBin");
+        .WithName($"UpdateInventoryBin{nameSuffix}");
 
         group.MapPatch("/bins/{binId:guid}/status", async (
             Guid binId,
@@ -162,7 +162,7 @@ public static class InventoryEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName("UpdateInventoryBinStatus");
+        .WithName($"UpdateInventoryBinStatus{nameSuffix}");
 
         group.MapGet("/stock", async (
             Guid? locationId,
@@ -182,7 +182,7 @@ public static class InventoryEndpoints
                 partId,
                 cancellationToken));
         })
-        .WithName("ListPartStockLevels");
+        .WithName($"ListPartStockLevels{nameSuffix}");
 
         group.MapPost("/stock", async (
             UpsertPartStockLevelRequest request,
@@ -197,6 +197,13 @@ public static class InventoryEndpoints
             var upserted = await service.UpsertAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Ok(upserted);
         })
-        .WithName("UpsertPartStockLevel");
+        .WithName($"UpsertPartStockLevel{nameSuffix}");
+        }
+
+        var legacyGroup = app.MapGroup("/api/inventory").WithTags("Inventory").RequireAuthorization();
+        MapRoutes(legacyGroup, string.Empty);
+
+        var v1Group = app.MapGroup("/api/v1/inventory").WithTags("Inventory").RequireAuthorization();
+        MapRoutes(v1Group, "V1");
     }
 }

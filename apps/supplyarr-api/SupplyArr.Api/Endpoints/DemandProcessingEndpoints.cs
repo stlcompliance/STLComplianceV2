@@ -7,9 +7,9 @@ public static class DemandProcessingEndpoints
 {
     public static void MapSupplyArrDemandProcessingEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/demand-processing")
-            .WithTags("DemandProcessing")
-            .RequireAuthorization();
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+        group = group.WithTags("DemandProcessing").RequireAuthorization();
 
         group.MapGet("/", async (
             SupplyArrAuthorizationService authorization,
@@ -21,7 +21,7 @@ public static class DemandProcessingEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetDashboardAsync(tenantId, cancellationToken));
         })
-        .WithName("GetSupplyArrDemandProcessingDashboard");
+        .WithName($"GetSupplyArrDemandProcessingDashboard{nameSuffix}");
 
         group.MapGet("/{demandRefId:guid}", async (
             Guid demandRefId,
@@ -34,7 +34,7 @@ public static class DemandProcessingEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetDetailAsync(tenantId, demandRefId, cancellationToken));
         })
-        .WithName("GetSupplyArrDemandProcessingDetail");
+        .WithName($"GetSupplyArrDemandProcessingDetail{nameSuffix}");
 
         group.MapPost("/{demandRefId:guid}/retry-processing", async (
             Guid demandRefId,
@@ -52,7 +52,7 @@ public static class DemandProcessingEndpoints
                 demandRefId,
                 cancellationToken));
         })
-        .WithName("RetrySupplyArrDemandProcessing");
+        .WithName($"RetrySupplyArrDemandProcessing{nameSuffix}");
 
         group.MapPost("/{demandRefId:guid}/create-pr-draft", async (
             Guid demandRefId,
@@ -70,6 +70,10 @@ public static class DemandProcessingEndpoints
                 demandRefId,
                 cancellationToken));
         })
-        .WithName("CreateSupplyArrDemandProcessingPrDraft");
+        .WithName($"CreateSupplyArrDemandProcessingPrDraft{nameSuffix}");
+        }
+
+        MapRoutes(app.MapGroup("/api/demand-processing"), string.Empty);
+        MapRoutes(app.MapGroup("/api/v1/demand-processing"), "V1");
     }
 }

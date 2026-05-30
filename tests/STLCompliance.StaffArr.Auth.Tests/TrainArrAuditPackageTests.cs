@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -155,6 +156,60 @@ public sealed class TrainArrAuditPackageTests : IAsyncLifetime
         var package = (await response.Content.ReadFromJsonAsync<AuditPackageExportResponse>())!;
         Assert.Equal(1, package.Counts.TrainingAssignments);
         Assert.Equal("assigned", package.TrainingAssignments[0].Status);
+    }
+
+    [Fact]
+    public async Task Audit_package_v1_aliases_manifest_and_export_work()
+    {
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_admin");
+        await SeedTrainingDataAsync();
+
+        var manifestResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit-packages/manifest", adminToken));
+        manifestResponse.EnsureSuccessStatusCode();
+        var manifest = (await manifestResponse.Content.ReadFromJsonAsync<AuditPackageManifestResponse>())!;
+        Assert.Equal("1", manifest.PackageVersion);
+
+        var exportResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit-packages/export?format=json", adminToken));
+        exportResponse.EnsureSuccessStatusCode();
+        var package = (await exportResponse.Content.ReadFromJsonAsync<AuditPackageExportResponse>())!;
+        Assert.Equal(PlatformSeeder.DemoTenantId, package.TenantId);
+        Assert.True(package.Counts.TrainingDefinitions >= 1);
+    }
+
+    [Fact]
+    public async Task Audit_v1_alias_matches_primary_audit_timeline()
+    {
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_admin");
+
+        var exportResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/audit-packages/export?format=json", adminToken));
+        exportResponse.EnsureSuccessStatusCode();
+
+        var primaryResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/audit?page=1&pageSize=10", adminToken));
+        primaryResponse.EnsureSuccessStatusCode();
+        var primaryJson = await primaryResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        var v1Response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit?page=1&pageSize=10", adminToken));
+        v1Response.EnsureSuccessStatusCode();
+        var v1Json = await v1Response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(
+            primaryJson.GetProperty("totalCount").GetInt32(),
+            v1Json.GetProperty("totalCount").GetInt32());
+
+        var primaryItems = primaryJson.GetProperty("items");
+        var v1Items = v1Json.GetProperty("items");
+        Assert.Equal(primaryItems.GetArrayLength(), v1Items.GetArrayLength());
+        Assert.True(primaryItems.GetArrayLength() >= 1);
+        var primaryFirst = primaryItems.EnumerateArray().First();
+        var v1First = v1Items.EnumerateArray().First();
+        Assert.Equal(
+            primaryFirst.GetProperty("action").GetString(),
+            v1First.GetProperty("action").GetString());
     }
 
     private async Task SeedTrainingDataAsync()

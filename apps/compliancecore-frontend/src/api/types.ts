@@ -27,6 +27,18 @@ export interface ComplianceCoreMeResponse {
   entitlements: string[]
 }
 
+export interface ComplianceCoreSessionBootstrapResponse {
+  userId: string
+  personId: string
+  tenantId: string
+  sessionId: string
+  tenantRoleKey: string
+  isPlatformAdmin: boolean
+  productKey: string
+  hasComplianceCoreEntitlement: boolean
+  entitlements: string[]
+}
+
 export interface VocabularyTypeResponse {
   typeKey: string
   label: string

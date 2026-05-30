@@ -45,6 +45,14 @@ vi.mock('@stl/shared-ui', () => ({
   },
   resolveSuiteHomeUrl: (url?: string) => url ?? 'http://localhost:5174/app',
   buildProductLaunchUrlMap: () => ({}),
+  getLaunchCatalog: vi.fn().mockResolvedValue({
+    tenantId: 'tenant',
+    tenantSlug: 'demo-stl',
+    tenantDisplayName: 'STL Demo Tenant',
+    currentProductKey: 'staffarr',
+    products: [{ productKey: 'staffarr', displayName: 'StaffArr', productStatus: 'available', launchUrl: '/launch/staffarr', isCurrentProduct: true }],
+    generatedAt: new Date().toISOString(),
+  }),
   useProductWorkspaceLaunch: () => ({
     mutate: vi.fn(),
     isPending: false,
@@ -55,7 +63,7 @@ vi.mock('@stl/shared-ui', () => ({
 }))
 
 vi.mock('../api/client', () => ({
-  getMe: vi.fn(),
+  getSessionBootstrap: vi.fn(),
 }))
 
 vi.mock('../auth/sessionStorage', () => ({
@@ -92,7 +100,7 @@ describe('ProductWorkspaceLayout', () => {
     expect(screen.getByText('Launch page')).toBeTruthy()
   })
 
-  it('bootstraps session context from /api/me', async () => {
+  it('bootstraps session context from /api/session', async () => {
     vi.mocked(sessionStorage.loadSession).mockReturnValue({
       accessToken: 'token',
       accessTokenExpiresAt: new Date().toISOString(),
@@ -104,18 +112,15 @@ describe('ProductWorkspaceLayout', () => {
       displayName: 'Demo Admin',
       email: 'admin@demo.stl',
     })
-    vi.mocked(client.getMe).mockResolvedValue({
+    vi.mocked(client.getSessionBootstrap).mockResolvedValue({
       userId: 'user',
       personId: 'person',
-      email: 'admin@demo.stl',
-      displayName: 'Demo Admin',
       tenantId: 'tenant',
+      sessionId: 'session-1',
       tenantRoleKey: 'tenant_admin',
       isPlatformAdmin: false,
       productKey: 'staffarr',
       hasStaffArrEntitlement: true,
-      primaryOrgUnitName: null,
-      jobTitle: null,
       entitlements: ['staffarr'],
     })
 

@@ -130,6 +130,25 @@ public sealed class MaintainArrComplianceReportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Compliance_report_v1_aliases_work()
+    {
+        var summaryResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/compliance/summary", _managerToken));
+        summaryResponse.EnsureSuccessStatusCode();
+
+        var detailResponse = await _maintainarrClient.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/v1/reports/compliance/inspection-templates/{_templateId:D}",
+                _managerToken));
+        detailResponse.EnsureSuccessStatusCode();
+
+        var exportResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/compliance/summary/export", _managerToken));
+        exportResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
     public async Task Compliance_report_summary_denies_unauthenticated()
     {
         var response = await _maintainarrClient.SendAsync(
@@ -221,7 +240,7 @@ public sealed class MaintainArrComplianceReportTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new NexArr.Api.Contracts.CreateHandoffRequest(
             "maintainarr",
             "http://localhost:5178/launch"));

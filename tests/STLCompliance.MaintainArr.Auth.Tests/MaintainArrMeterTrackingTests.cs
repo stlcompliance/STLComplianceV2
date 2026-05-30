@@ -127,6 +127,35 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Create_meter_record_reading_and_list_history_v1_alias()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetAsync(token);
+
+        var createMeterRequest = Authorized(HttpMethod.Post, $"/api/v1/assets/{assetId}/meters", token);
+        createMeterRequest.Content = JsonContent.Create(new CreateAssetMeterRequest(
+            "engine-hours-v1",
+            "Engine hours v1",
+            "Primary hour meter",
+            "hours",
+            2000m));
+        var createMeterResponse = await _maintainarrClient.SendAsync(createMeterRequest);
+        createMeterResponse.EnsureSuccessStatusCode();
+        var meter = (await createMeterResponse.Content.ReadFromJsonAsync<AssetMeterResponse>())!;
+
+        var recordRequest = Authorized(HttpMethod.Post, $"/api/v1/meters/{meter.AssetMeterId}/readings", token);
+        recordRequest.Content = JsonContent.Create(new RecordMeterReadingRequest(2050m, null, "v1 monthly", false));
+        var recordResponse = await _maintainarrClient.SendAsync(recordRequest);
+        recordResponse.EnsureSuccessStatusCode();
+
+        var listRequest = Authorized(HttpMethod.Get, $"/api/v1/meters/{meter.AssetMeterId}/readings", token);
+        var listResponse = await _maintainarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var readings = (await listResponse.Content.ReadFromJsonAsync<List<MeterReadingResponse>>())!;
+        Assert.Single(readings);
+    }
+
+    [Fact]
     public async Task Meter_reading_marks_linked_pm_schedule_due_from_usage()
     {
         var token = await RedeemMaintainArrTokenAsync();
@@ -260,7 +289,7 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
     private async Task<string> CreateHandoffAsync()
     {
         var token = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
-        var request = Authorized(HttpMethod.Post, "/api/launch/handoff", token);
+        var request = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
         request.Content = JsonContent.Create(new NexArr.Api.Contracts.CreateHandoffRequest(
             "maintainarr",
             "http://localhost:5178/launch"));

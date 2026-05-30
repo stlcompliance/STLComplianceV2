@@ -27,6 +27,18 @@ export interface MaintainArrMeResponse {
   entitlements: string[]
 }
 
+export interface MaintainArrSessionBootstrapResponse {
+  userId: string
+  personId: string
+  tenantId: string
+  sessionId: string
+  tenantRoleKey: string
+  isPlatformAdmin: boolean
+  productKey: string
+  hasMaintainArrEntitlement: boolean
+  entitlements: string[]
+}
+
 export interface AssetClassResponse {
   assetClassId: string
   classKey: string

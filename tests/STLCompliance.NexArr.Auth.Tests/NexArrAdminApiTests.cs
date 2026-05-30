@@ -303,6 +303,213 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task V1_rotate_service_client_revokes_existing_tokens_but_allows_new_issue()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var registerRequest = Authorized(HttpMethod.Post, "/api/v1/service-clients", token);
+        registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
+            "rotate-worker",
+            "Rotate Worker",
+            "staffarr",
+            ["staffarr"]));
+        var registerResponse = await _client.SendAsync(registerRequest);
+        registerResponse.EnsureSuccessStatusCode();
+        var client = (await registerResponse.Content.ReadFromJsonAsync<ServiceClientResponse>())!;
+
+        var issueRequest = Authorized(HttpMethod.Post, "/api/v1/service-token", token);
+        issueRequest.Content = JsonContent.Create(new IssueServiceTokenRequest(
+            client.ServiceClientId,
+            PlatformSeeder.DemoTenantId,
+            null,
+            "read",
+            30));
+        var issueResponse = await _client.SendAsync(issueRequest);
+        issueResponse.EnsureSuccessStatusCode();
+        var issuedBeforeRotate = (await issueResponse.Content.ReadFromJsonAsync<ServiceTokenIssueResponse>())!;
+
+        var rotateRequest = Authorized(HttpMethod.Post, $"/api/v1/service-clients/{client.ServiceClientId}/rotate", token);
+        var rotateResponse = await _client.SendAsync(rotateRequest);
+        Assert.Equal(HttpStatusCode.NoContent, rotateResponse.StatusCode);
+
+        var validateOldRequest = Authorized(HttpMethod.Post, "/api/service-tokens/validate", token);
+        validateOldRequest.Content = JsonContent.Create(new ValidateServiceTokenRequest(issuedBeforeRotate.AccessToken));
+        var validateOldResponse = await _client.SendAsync(validateOldRequest);
+        validateOldResponse.EnsureSuccessStatusCode();
+        var oldValidation = await validateOldResponse.Content.ReadFromJsonAsync<ServiceTokenValidationResponse>();
+        Assert.NotNull(oldValidation);
+        Assert.False(oldValidation.IsValid);
+        Assert.Equal("token_revoked", oldValidation.ReasonCode);
+
+        var issueAfterRotateRequest = Authorized(HttpMethod.Post, "/api/v1/service-token", token);
+        issueAfterRotateRequest.Content = JsonContent.Create(new IssueServiceTokenRequest(
+            client.ServiceClientId,
+            PlatformSeeder.DemoTenantId,
+            null,
+            "read",
+            30));
+        var issueAfterRotateResponse = await _client.SendAsync(issueAfterRotateRequest);
+        issueAfterRotateResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task V1_revoke_service_client_disables_client_and_blocks_new_issue()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var registerRequest = Authorized(HttpMethod.Post, "/api/v1/service-clients", token);
+        registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
+            "revoke-worker",
+            "Revoke Worker",
+            "staffarr",
+            ["staffarr"]));
+        var registerResponse = await _client.SendAsync(registerRequest);
+        registerResponse.EnsureSuccessStatusCode();
+        var client = (await registerResponse.Content.ReadFromJsonAsync<ServiceClientResponse>())!;
+
+        var revokeRequest = Authorized(HttpMethod.Post, $"/api/v1/service-clients/{client.ServiceClientId}/revoke", token);
+        var revokeResponse = await _client.SendAsync(revokeRequest);
+        Assert.Equal(HttpStatusCode.NoContent, revokeResponse.StatusCode);
+
+        var issueAfterRevokeRequest = Authorized(HttpMethod.Post, "/api/v1/service-token", token);
+        issueAfterRevokeRequest.Content = JsonContent.Create(new IssueServiceTokenRequest(
+            client.ServiceClientId,
+            PlatformSeeder.DemoTenantId,
+            null,
+            "read",
+            30));
+        var issueAfterRevokeResponse = await _client.SendAsync(issueAfterRevokeRequest);
+        Assert.Equal(HttpStatusCode.NotFound, issueAfterRevokeResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task V1_tenant_disable_and_enable_updates_status()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var disableResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/tenants/{PlatformSeeder.DemoTenantId}/disable", token));
+        disableResponse.EnsureSuccessStatusCode();
+        var disabled = (await disableResponse.Content.ReadFromJsonAsync<TenantDetailResponse>())!;
+        Assert.Equal("Suspended", disabled.Status);
+
+        var enableResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/tenants/{PlatformSeeder.DemoTenantId}/enable", token));
+        enableResponse.EnsureSuccessStatusCode();
+        var enabled = (await enableResponse.Content.ReadFromJsonAsync<TenantDetailResponse>())!;
+        Assert.Equal("Active", enabled.Status);
+    }
+
+    [Fact]
+    public async Task V1_product_disable_and_enable_updates_active_flag()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var disableResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Post, "/api/v1/products/staffarr/disable", token));
+        disableResponse.EnsureSuccessStatusCode();
+        var disabled = (await disableResponse.Content.ReadFromJsonAsync<ProductDetailResponse>())!;
+        Assert.False(disabled.IsActive);
+
+        var enableResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Post, "/api/v1/products/staffarr/enable", token));
+        enableResponse.EnsureSuccessStatusCode();
+        var enabled = (await enableResponse.Content.ReadFromJsonAsync<ProductDetailResponse>())!;
+        Assert.True(enabled.IsActive);
+    }
+
+    [Fact]
+    public async Task V1_tenant_entitlement_routes_grant_check_and_revoke()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var grantRequest = Authorized(HttpMethod.Post, $"/api/v1/tenants/{PlatformSeeder.DemoTenantId}/entitlements", token);
+        grantRequest.Content = JsonContent.Create(new GrantEntitlementRequest(PlatformSeeder.DemoTenantId, "trainarr"));
+        var grantResponse = await _client.SendAsync(grantRequest);
+        grantResponse.EnsureSuccessStatusCode();
+
+        var checkGrantedResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/v1/entitlements/check?tenantId={PlatformSeeder.DemoTenantId}&productCode=trainarr",
+                token));
+        checkGrantedResponse.EnsureSuccessStatusCode();
+        var granted = (await checkGrantedResponse.Content.ReadFromJsonAsync<EntitlementCheckResponse>())!;
+        Assert.True(granted.IsEntitled);
+
+        var revokeResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Delete, $"/api/v1/tenants/{PlatformSeeder.DemoTenantId}/entitlements/trainarr", token));
+        revokeResponse.EnsureSuccessStatusCode();
+
+        var checkRevokedResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/v1/entitlements/check?tenantId={PlatformSeeder.DemoTenantId}&productCode=trainarr",
+                token));
+        checkRevokedResponse.EnsureSuccessStatusCode();
+        var revoked = (await checkRevokedResponse.Content.ReadFromJsonAsync<EntitlementCheckResponse>())!;
+        Assert.False(revoked.IsEntitled);
+    }
+
+    [Fact]
+    public async Task V1_audit_events_and_event_by_id_routes_return_data()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var eventsResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit/events?page=1&pageSize=10", token));
+        eventsResponse.EnsureSuccessStatusCode();
+        var eventsPage = await eventsResponse.Content.ReadFromJsonAsync<PagedResult<PlatformAuditEventExportItem>>();
+        Assert.NotNull(eventsPage);
+        Assert.NotEmpty(eventsPage.Items);
+
+        var eventId = eventsPage.Items[0].AuditEventId;
+        var eventResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/audit/events/{eventId}", token));
+        eventResponse.EnsureSuccessStatusCode();
+        var item = await eventResponse.Content.ReadFromJsonAsync<PlatformAuditEventExportItem>();
+        Assert.NotNull(item);
+        Assert.Equal(eventId, item.AuditEventId);
+    }
+
+    [Fact]
+    public async Task V1_audit_tenant_user_and_product_routes_filter_data()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var disableProductResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Post, "/api/v1/products/staffarr/disable", token));
+        disableProductResponse.EnsureSuccessStatusCode();
+
+        var tenantResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/audit/tenants/{PlatformSeeder.DemoTenantId}?page=1&pageSize=20", token));
+        tenantResponse.EnsureSuccessStatusCode();
+        var tenantPage = await tenantResponse.Content.ReadFromJsonAsync<PagedResult<PlatformAuditEventExportItem>>();
+        Assert.NotNull(tenantPage);
+
+        var userResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/audit/users/{PlatformSeeder.DemoAdminUserId}?page=1&pageSize=20", token));
+        userResponse.EnsureSuccessStatusCode();
+        var userPage = await userResponse.Content.ReadFromJsonAsync<PagedResult<PlatformAuditEventExportItem>>();
+        Assert.NotNull(userPage);
+        Assert.Contains(userPage.Items, x => x.ActorUserId == PlatformSeeder.DemoAdminUserId);
+
+        var productResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit/products/staffarr?page=1&pageSize=20", token));
+        productResponse.EnsureSuccessStatusCode();
+        var productPage = await productResponse.Content.ReadFromJsonAsync<PagedResult<PlatformAuditEventExportItem>>();
+        Assert.NotNull(productPage);
+        Assert.Contains(productPage.Items, x => string.Equals(x.TargetId, "staffarr", StringComparison.OrdinalIgnoreCase));
+    }
+
     private static HttpRequestMessage Authorized(HttpMethod method, string url, string accessToken)
     {
         var request = new HttpRequestMessage(method, url);
