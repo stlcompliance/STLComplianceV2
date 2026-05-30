@@ -11,6 +11,7 @@ public static class CsvBundleFiles
     public const string RuleFactRequirements = "rule_fact_requirements.csv";
     public const string RegulatoryMappings = "regulatory_mappings.csv";
     public const string SdsReferences = "sds_references.csv";
+    public const string ExceptionExemptions = "exception_exemptions.csv";
 
     public static readonly IReadOnlyList<string> All =
     [
@@ -22,7 +23,8 @@ public static class CsvBundleFiles
         RuleRequirements,
         RuleFactRequirements,
         RegulatoryMappings,
-        SdsReferences
+        SdsReferences,
+        ExceptionExemptions
     ];
 
     public static bool IsKnownFile(string fileName) =>

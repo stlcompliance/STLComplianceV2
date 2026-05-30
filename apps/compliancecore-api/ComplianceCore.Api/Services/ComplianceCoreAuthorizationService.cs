@@ -6,6 +6,26 @@ namespace ComplianceCore.Api.Services;
 
 public sealed class ComplianceCoreAuthorizationService
 {
+    public static class ImportPermissions
+    {
+        public const string Create = "compliancecore.import.create";
+        public const string Read = "compliancecore.import.read";
+        public const string Validate = "compliancecore.import.validate";
+        public const string Map = "compliancecore.import.map";
+        public const string Override = "compliancecore.import.override";
+        public const string Commit = "compliancecore.import.commit";
+        public const string Reject = "compliancecore.import.reject";
+    }
+
+    public static class SimulationPermissions
+    {
+        public const string Create = "compliancecore.simulation.create";
+        public const string Read = "compliancecore.simulation.read";
+        public const string Evaluate = "compliancecore.simulation.evaluate";
+        public const string TemplateCreate = "compliancecore.simulation.template.create";
+        public const string TemplateManage = "compliancecore.simulation.template.manage";
+    }
+
     public void RequireAuthenticated(ClaimsPrincipal principal)
     {
         if (principal.Identity?.IsAuthenticated != true)
@@ -218,6 +238,170 @@ public sealed class ComplianceCoreAuthorizationService
     public void RequireCsvBundleManage(ClaimsPrincipal principal)
     {
         RequirePlatformAdmin(principal, "CSV bundle import and rule-pack publication require server-side platform-admin validation.");
+    }
+
+    public void RequireImportCreate(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            $"Import creation requires {ImportPermissions.Create} or delegated Compliance Core admin validation.",
+            403);
+    }
+
+    public void RequireImportRead(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin() ||
+            MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin", "compliance_reviewer", "tenant_member"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            $"Import read access requires {ImportPermissions.Read}.",
+            403);
+    }
+
+    public void RequireImportValidate(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            $"Import validation requires {ImportPermissions.Validate}.",
+            403);
+    }
+
+    public void RequireImportMap(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin() ||
+            MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin", "compliance_reviewer"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            $"Import mapping requires {ImportPermissions.Map}.",
+            403);
+    }
+
+    public void RequireImportOverride(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            $"Force-map override requires {ImportPermissions.Override}.",
+            403);
+    }
+
+    public void RequireImportCommit(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            $"Import commit requires {ImportPermissions.Commit}.",
+            403);
+    }
+
+    public void RequireImportReject(ClaimsPrincipal principal)
+    {
+        RequireImportCommit(principal);
+    }
+
+    public void RequireSimulationCreate(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin() ||
+            MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin", "compliance_reviewer"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            $"Theoretical situation creation requires {SimulationPermissions.Create}.",
+            403);
+    }
+
+    public void RequireSimulationRead(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin() ||
+            MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin", "compliance_reviewer", "tenant_member"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            $"Theoretical situation read access requires {SimulationPermissions.Read}.",
+            403);
+    }
+
+    public void RequireSimulationEvaluate(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin() ||
+            MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin", "compliance_reviewer"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            $"Theoretical situation evaluation requires {SimulationPermissions.Evaluate}.",
+            403);
+    }
+
+    public void RequireSimulationTemplateCreate(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            $"Template creation requires {SimulationPermissions.TemplateCreate}.",
+            403);
+    }
+
+    public void RequireSimulationTemplateManage(ClaimsPrincipal principal)
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin"))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "auth.forbidden",
+            $"Template management requires {SimulationPermissions.TemplateManage}.",
+            403);
     }
 
     public void RequirePlatformAdmin(ClaimsPrincipal principal, string message = "Platform administrator access is required.")

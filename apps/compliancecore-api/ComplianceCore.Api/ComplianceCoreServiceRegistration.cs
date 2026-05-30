@@ -40,6 +40,7 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<RuleCatalogService>();
         builder.Services.AddScoped<ComplianceFindingService>();
         builder.Services.AddScoped<ComplianceWaiverService>();
+        builder.Services.AddScoped<ComplianceExceptionExemptionService>();
         builder.Services.AddScoped<RuleEvaluationService>();
         builder.Services.AddScoped<RulePackBatchEvaluationService>();
         builder.Services.AddScoped<FactSourceService>();
@@ -68,6 +69,8 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<DispatchWorkflowGateSeedService>();
         builder.Services.AddScoped<LoadTestJourneySeedService>();
         builder.Services.AddScoped<CsvImportExportService>();
+        builder.Services.AddScoped<StagedImportService>();
+        builder.Services.AddScoped<TheoreticalSituationService>();
         builder.Services.AddScoped<AuditPackageService>();
         builder.Services.AddScoped<AuditPackageGenerationService>();
         builder.Services.AddScoped<OperatorDashboardService>();

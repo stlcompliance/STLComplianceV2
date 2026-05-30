@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Globalization;
 using System.Text;
 using ComplianceCore.Api.Contracts;
 using ComplianceCore.Api.Csv;
@@ -97,6 +98,29 @@ public sealed class CsvImportExportService(
                 "document_url",
                 "revision_date",
                 "active"
+            ],
+            [CsvBundleFiles.ExceptionExemptions] =
+            [
+                "key",
+                "label",
+                "type",
+                "governing_body",
+                "program_key",
+                "pack_key",
+                "citation_key",
+                "applicability_key",
+                "applies_to_subject_kind",
+                "applies_to_source_product",
+                "applies_to_source_entity",
+                "effect_type",
+                "condition_logic_json",
+                "required_evidence_option_group_key",
+                "issuing_authority",
+                "authorization_number",
+                "effective_at",
+                "expires_at",
+                "active",
+                "description"
             ]
         };
 
@@ -235,6 +259,7 @@ public sealed class CsvImportExportService(
         summaries.Add(await ApplyRuleFactRequirementsAsync(tenantId, parsed.RuleFactRequirements, context, issues, cancellationToken));
         summaries.Add(await ApplyRegulatoryMappingsAsync(tenantId, parsed.RegulatoryMappings, context, issues, cancellationToken));
         summaries.Add(await ApplySdsReferencesAsync(tenantId, parsed.SdsReferences, context, issues, cancellationToken));
+        summaries.Add(await ApplyExceptionExemptionsAsync(tenantId, parsed.ExceptionExemptions, context, issues, cancellationToken));
 
         if (issues.Count > 0 || dryRun)
         {
@@ -327,6 +352,12 @@ public sealed class CsvImportExportService(
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId)
             .OrderBy(x => x.SdsKey)
+            .ToListAsync(cancellationToken);
+
+        var exceptionExemptions = await db.ComplianceExceptionExemptions
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .OrderBy(x => x.Key)
             .ToListAsync(cancellationToken);
 
         return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -497,6 +528,31 @@ public sealed class CsvImportExportService(
                     reference.DocumentUrl,
                     reference.RevisionDate?.ToString("yyyy-MM-dd") ?? string.Empty,
                     reference.IsActive.ToString().ToLowerInvariant()
+                })),
+            [CsvBundleFiles.ExceptionExemptions] = CsvText.BuildTable(
+                FileHeaders[CsvBundleFiles.ExceptionExemptions],
+                exceptionExemptions.Select(item => new string?[]
+                {
+                    item.Key,
+                    item.Label,
+                    item.Type,
+                    item.GoverningBody,
+                    item.ProgramKey,
+                    item.PackKey,
+                    item.CitationKey,
+                    item.ApplicabilityKey,
+                    item.AppliesToSubjectKind,
+                    item.AppliesToSourceProduct,
+                    item.AppliesToSourceEntity,
+                    item.EffectType,
+                    item.ConditionLogicJson,
+                    item.RequiredEvidenceOptionGroupId?.ToString() ?? string.Empty,
+                    item.IssuingAuthority,
+                    item.AuthorizationNumber,
+                    item.EffectiveAt?.ToString("O") ?? string.Empty,
+                    item.ExpiresAt?.ToString("O") ?? string.Empty,
+                    item.Active.ToString().ToLowerInvariant(),
+                    item.Description
                 }))
         };
     }
@@ -517,7 +573,8 @@ public sealed class CsvImportExportService(
             ReadFile(CsvBundleFiles.RuleRequirements),
             ReadFile(CsvBundleFiles.RuleFactRequirements),
             ReadFile(CsvBundleFiles.RegulatoryMappings),
-            ReadFile(CsvBundleFiles.SdsReferences));
+            ReadFile(CsvBundleFiles.SdsReferences),
+            ReadFile(CsvBundleFiles.ExceptionExemptions));
     }
 
     private async Task<ImportContext> BuildImportContextAsync(Guid tenantId, CancellationToken cancellationToken)
@@ -536,6 +593,7 @@ public sealed class CsvImportExportService(
             await db.FactRequirements.Where(x => x.TenantId == tenantId).ToListAsync(cancellationToken),
             await db.RegulatoryMappings.Where(x => x.TenantId == tenantId).ToListAsync(cancellationToken),
             await db.SdsReferences.Where(x => x.TenantId == tenantId).ToListAsync(cancellationToken),
+            await db.ComplianceExceptionExemptions.Where(x => x.TenantId == tenantId).ToListAsync(cancellationToken),
             (await db.VocabularyTypes.AsNoTracking().Select(x => x.TypeKey).ToListAsync(cancellationToken))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase));
     }
@@ -1627,6 +1685,92 @@ public sealed class CsvImportExportService(
         return new CsvImportFileSummary(CsvBundleFiles.SdsReferences, rows.Count, created, updated, deactivated);
     }
 
+    private async Task<CsvImportFileSummary> ApplyExceptionExemptionsAsync(
+        Guid tenantId,
+        IReadOnlyList<IReadOnlyDictionary<string, string>> rows,
+        ImportContext context,
+        List<CsvImportIssue> issues,
+        CancellationToken cancellationToken)
+    {
+        var created = 0;
+        var updated = 0;
+        var deactivated = 0;
+        var lineNumber = 1;
+
+        foreach (var row in rows)
+        {
+            lineNumber++;
+            var key = RequireKey(row, "key", CsvBundleFiles.ExceptionExemptions, lineNumber, issues);
+            var label = RequireLabel(row, "label", CsvBundleFiles.ExceptionExemptions, lineNumber, issues);
+            var type = RequireKey(row, "type", CsvBundleFiles.ExceptionExemptions, lineNumber, issues);
+            var effectType = RequireKey(row, "effect_type", CsvBundleFiles.ExceptionExemptions, lineNumber, issues);
+            if (key is null || label is null || type is null || effectType is null)
+            {
+                continue;
+            }
+
+            if (!ComplianceExceptionExemptionTypes.All.Contains(type))
+            {
+                issues.Add(new CsvImportIssue(CsvBundleFiles.ExceptionExemptions, lineNumber, "exception.invalid_type", $"Unsupported exception/exemption type '{type}'."));
+                continue;
+            }
+
+            if (!ComplianceExceptionExemptionEffectTypes.All.Contains(effectType))
+            {
+                issues.Add(new CsvImportIssue(CsvBundleFiles.ExceptionExemptions, lineNumber, "exception.invalid_effect", $"Unsupported exception/exemption effect_type '{effectType}'."));
+                continue;
+            }
+
+            var active = CsvText.ParseBool(row["active"], CsvBundleFiles.ExceptionExemptions, lineNumber, "active");
+            var existing = context.ExceptionExemptions.FirstOrDefault(x => x.Key == key);
+            var now = DateTimeOffset.UtcNow;
+            if (existing is null)
+            {
+                existing = new ComplianceExceptionExemption
+                {
+                    ExceptionExemptionId = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    Key = key,
+                    CreatedAt = now
+                };
+                context.ExceptionExemptions.Add(existing);
+                db.ComplianceExceptionExemptions.Add(existing);
+                created++;
+            }
+            else
+            {
+                updated++;
+                if (!active)
+                {
+                    deactivated++;
+                }
+            }
+
+            existing.Label = label;
+            existing.Type = type;
+            existing.GoverningBody = row["governing_body"].Trim();
+            existing.ProgramKey = row["program_key"].Trim();
+            existing.PackKey = row["pack_key"].Trim();
+            existing.CitationKey = row["citation_key"].Trim();
+            existing.ApplicabilityKey = row["applicability_key"].Trim();
+            existing.AppliesToSubjectKind = row["applies_to_subject_kind"].Trim();
+            existing.AppliesToSourceProduct = row["applies_to_source_product"].Trim();
+            existing.AppliesToSourceEntity = row["applies_to_source_entity"].Trim();
+            existing.EffectType = effectType;
+            existing.ConditionLogicJson = string.IsNullOrWhiteSpace(row["condition_logic_json"]) ? "{}" : row["condition_logic_json"].Trim();
+            existing.IssuingAuthority = row["issuing_authority"].Trim();
+            existing.AuthorizationNumber = row["authorization_number"].Trim();
+            existing.EffectiveAt = ParseDateTime(row["effective_at"]);
+            existing.ExpiresAt = ParseDateTime(row["expires_at"]);
+            existing.Active = active;
+            existing.Description = row["description"].Trim();
+            existing.UpdatedAt = now;
+        }
+
+        await Task.CompletedTask;
+        return new CsvImportFileSummary(CsvBundleFiles.ExceptionExemptions, rows.Count, created, updated, deactivated);
+    }
+
     private static string? RequireKey(
         IReadOnlyDictionary<string, string> row,
         string column,
@@ -1659,6 +1803,11 @@ public sealed class CsvImportExportService(
         return value.Trim();
     }
 
+    private static DateTimeOffset? ParseDateTime(string? value) =>
+        DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsed)
+            ? parsed
+            : null;
+
     private sealed record ParsedCsvBundle(
         IReadOnlyList<IReadOnlyDictionary<string, string>> ControlledVocabulary,
         IReadOnlyList<IReadOnlyDictionary<string, string>> VocabularyAliases,
@@ -1668,7 +1817,8 @@ public sealed class CsvImportExportService(
         IReadOnlyList<IReadOnlyDictionary<string, string>> RuleRequirements,
         IReadOnlyList<IReadOnlyDictionary<string, string>> RuleFactRequirements,
         IReadOnlyList<IReadOnlyDictionary<string, string>> RegulatoryMappings,
-        IReadOnlyList<IReadOnlyDictionary<string, string>> SdsReferences);
+        IReadOnlyList<IReadOnlyDictionary<string, string>> SdsReferences,
+        IReadOnlyList<IReadOnlyDictionary<string, string>> ExceptionExemptions);
 
     private sealed class ImportContext(
         List<VocabularyTerm> terms,
@@ -1682,6 +1832,7 @@ public sealed class CsvImportExportService(
         List<FactRequirement> factRequirements,
         List<RegulatoryMapping> mappings,
         List<SdsReference> sdsReferences,
+        List<ComplianceExceptionExemption> exceptionExemptions,
         HashSet<string> vocabularyTypeKeys)
     {
         public List<VocabularyTerm> Terms { get; } = terms;
@@ -1705,6 +1856,8 @@ public sealed class CsvImportExportService(
         public List<RegulatoryMapping> Mappings { get; } = mappings;
 
         public List<SdsReference> SdsReferences { get; } = sdsReferences;
+
+        public List<ComplianceExceptionExemption> ExceptionExemptions { get; } = exceptionExemptions;
 
         public HashSet<string> VocabularyTypeKeys { get; } = vocabularyTypeKeys;
     }

@@ -120,7 +120,7 @@ test.describe('Compliance Core settings admin workspace @requires-live', () => {
     const csvPanel = workspace.getByTestId('csv-import-export-panel')
     await csvPanel.scrollIntoViewIfNeeded()
     await expect(csvPanel).toBeVisible()
-    await expect(csvPanel.getByRole('heading', { name: '9-CSV import / export' })).toBeVisible()
+    await expect(csvPanel.getByRole('heading', { name: '10-CSV import / export' })).toBeVisible()
     await expect(csvPanel.getByTestId('csv-import-export-manifest')).toBeVisible()
     await expect(csvPanel.getByTestId('csv-import-export-download')).toBeVisible()
   })

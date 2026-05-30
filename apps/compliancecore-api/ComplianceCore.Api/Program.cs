@@ -47,10 +47,13 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
         app.MapComplianceCoreInternalScheduledEvaluationEndpoints();
         app.MapComplianceCoreFindingEndpoints();
         app.MapComplianceCoreWaiverEndpoints();
+        app.MapComplianceCoreExceptionExemptionEndpoints();
         app.MapComplianceCoreWorkflowGateEndpoints();
         app.MapComplianceCoreProductGateEndpoints();
         app.MapComplianceCoreAuditRequirementEndpoints();
         app.MapComplianceCoreCsvImportExportEndpoints();
+        app.MapComplianceCoreStagedImportEndpoints();
+        app.MapComplianceCoreTheoreticalSituationEndpoints();
         app.MapComplianceCoreAuditPackageEndpoints();
         app.MapComplianceCoreInternalAuditPackageGenerationEndpoints();
         app.MapComplianceCoreInternalWaiverEndpoints();

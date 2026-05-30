@@ -50,7 +50,7 @@ Sources:
 - title49.motorcarrier.safety_fitness_proceedings_reference: Parts 384-386 are reference mapped until product workflows own state CDL compliance, safety fitness scoring, and FMCSA proceeding operations.
 - Numeric thresholds, exception applicability, route-specific approvals, and document-retention windows need legal/product review before enforcement beyond boolean gate checks.
 - HMR table row enumeration is modeled as lookup verification against 49 CFR 172.101, not as a row-per-material material-key catalog.
-- The 9-CSV bundle intentionally has no separate fact-definition CSV; Compliance Core imports fact definitions and audit contracts from rule_fact_requirements.csv.
+- The 10-CSV bundle intentionally has no separate fact-definition CSV; Compliance Core imports fact definitions and audit contracts from rule_fact_requirements.csv and legal relief records from exception_exemptions.csv.
 
 ## Metadata-retained parts
 

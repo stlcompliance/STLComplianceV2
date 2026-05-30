@@ -53,9 +53,9 @@ Compliance Core is complete when a platform admin can:
 10. Provide audit-ready exports that prove what the platform knew, when it knew it, which rules applied, and why the outcome was reached.
 11. Keep Compliance Core platform-admin-only, with no product frontend or local role spoofing capable of bypassing rule authority.
 
-## Core Rule Model: 14 Keys + 9 CSVs
+## Core Rule Model: 14 Keys + 10 CSVs
 
-Compliance Core should standardize most rule logic around **14 controlled vocabulary keys** and a **9-CSV rule-pack import/export model**.
+Compliance Core should standardize most rule logic around **14 controlled vocabulary keys** and a **10-CSV rule-pack import/export model**.
 
 The purpose is to make laws, regulations, customer requirements, insurance requirements, and internal policy reviewable as deterministic data instead of embedded code or AI interpretation.
 
@@ -120,37 +120,39 @@ COMBUSTIBLE + LIQUID -> DOT_COMBUSTIBLE_LIQUID
 
 The engine may derive broad facets from exact approved classes, but it should not infer exact legal classifications from broad facets unless an approved, versioned material profile or regulatory mapping explicitly allows it.
 
-### Nine Core CSVs
+### Ten Core CSVs
 
-The canonical rule-pack import/export bundle should use these nine CSVs:
+The canonical rule-pack import/export bundle should use these ten CSVs:
 
 ```text
-1. rule_packs.csv
-2. citations.csv
-3. facts.csv
-4. rules.csv
-5. rule_citations.csv
-6. logic_groups.csv
-7. conditions.csv
-8. outcomes.csv
-9. tests.csv
+1. controlled_vocabulary.csv
+2. vocabulary_aliases.csv
+3. compliance_keys.csv
+4. material_keys.csv
+5. rule_packs.csv
+6. rule_requirements.csv
+7. rule_fact_requirements.csv
+8. regulatory_mappings.csv
+9. sds_references.csv
+10. exception_exemptions.csv
 ```
 
-Optional supporting reference CSVs may seed vocabulary registries, but the executable rule core should be expressible through these nine documents.
+Optional supporting reference CSVs may seed vocabulary registries, but the audit contract remains anchored in `rule_fact_requirements.csv`. Legal relief is represented by `exception_exemptions.csv` and must not be modeled as an internal override list.
 
 ### CSV Responsibility Split
 
 | CSV | Purpose |
 | --- | --- |
-| `rule_packs.csv` | Versioned package, domain, scope, owner, lifecycle, effective dates |
-| `citations.csv` | Legal, policy, customer, insurance, or internal authority references |
-| `facts.csv` | Product-owned or derived facts available to the evaluator |
-| `rules.csv` | Rule identity, workflow, subject, outcome defaults, blocking behavior |
-| `rule_citations.csv` | Many-to-many link between rules and citations |
-| `logic_groups.csv` | Nested `all`, `any`, and `none` groups |
-| `conditions.csv` | Fact/operator/value comparisons and missing/stale behavior |
-| `outcomes.csv` | Pass/fail/unknown/stale/missing result mapping |
-| `tests.csv` | Golden test cases proving intended behavior before publishing |
+| `controlled_vocabulary.csv` | Controlled compliance terms, enums, subject kinds, evidence states, and regulatory facets |
+| `vocabulary_aliases.csv` | Synonyms, acronyms, and product-local terms that map into controlled vocabulary |
+| `compliance_keys.csv` | Compliance domains and deterministic keys used across rules and evaluations |
+| `material_keys.csv` | Material and hazard keys used by SupplyArr, RoutArr, and hazmat rule logic |
+| `rule_packs.csv` | Versioned package, domain, scope, owner, lifecycle, and effective dates |
+| `rule_requirements.csv` | Requirement-level labels, citations, applicability, and remediation metadata |
+| `rule_fact_requirements.csv` | Source-of-truth audit contract for required facts, evidence kinds, operators, expected values, severity, and retention |
+| `regulatory_mappings.csv` | Citation, requirement, and compliance-key mappings used for traceability and reporting |
+| `sds_references.csv` | SDS and material reference records that support hazmat evidence paths |
+| `exception_exemptions.csv` | First-class regulatory exceptions, exemptions, waivers, variances, special permits, approvals, alternate compliance paths, and conditional exclusions |
 
 ### Runtime Evaluation Pattern
 
@@ -202,7 +204,7 @@ Compliance Core does not decide what the law means at runtime. A compliance auth
 - Compliance dashboards
 - Product integration contracts for compliance evaluation
 - Controlled vocabulary registries for compliance keys
-- 9-CSV rule-pack import/export schema
+- 10-CSV rule-pack import/export schema
 - Regulatory-class-to-facet derivation mappings
 - Material, hazard, activity context, subject type, evidence type, and record-retention vocabulary used by rules
 
@@ -1019,7 +1021,7 @@ Potential domains:
 
 - Create new rule pack
 - Clone existing rule pack
-- Import rule pack through the 9-CSV bundle
+- Import rule pack through the 10-CSV bundle
 - Validate controlled vocabulary keys
 - Run golden tests from `tests.csv`
 - Assign owner
@@ -1218,8 +1220,8 @@ Granular features:
 - Rule pack compare
 - Rule pack clone
 - Rule pack import/export
-- 9-CSV import validation and round-trip export
-- 9-CSV bundle validation
+- 10-CSV import validation and round-trip export
+- 10-CSV bundle validation
 - Import preview and dry-run
 - CSV round-trip export
 - Approval workflow
@@ -1792,8 +1794,8 @@ Granular features:
 - Unit tests for date/expiration logic
 - Unit tests for unknown/stale fact behavior
 - Rule validation tests
-- 9-CSV import validation tests
-- 9-CSV round-trip export/import tests
+- 10-CSV import validation tests
+- 10-CSV round-trip export/import tests
 - Controlled vocabulary key validation tests
 - Derived fact mapping tests
 - Rule pack publishing tests
@@ -1843,7 +1845,7 @@ Granular features:
 - Governing body/jurisdiction/domain references
 - Initial 14-key controlled vocabulary registry
 - Basic fact catalog
-- 9-CSV import/export skeleton
+- 10-CSV import/export skeleton
 - Any/all/none rule builder
 - Basic operators
 - Evaluation API
@@ -1878,8 +1880,8 @@ Granular features:
 - Change impact analysis
 - Backfill evaluation jobs
 - Rule pack import/export
-- 9-CSV import validation and round-trip export
-- 9-CSV bundle validation
+- 10-CSV import validation and round-trip export
+- 10-CSV bundle validation
 - Import preview and dry-run
 - CSV round-trip export
 

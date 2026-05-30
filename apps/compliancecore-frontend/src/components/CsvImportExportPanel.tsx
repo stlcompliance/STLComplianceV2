@@ -44,10 +44,10 @@ export function CsvImportExportPanel({ accessToken, canManage }: CsvImportExport
       className="space-y-4 rounded-xl border border-slate-700 bg-slate-900/80 p-5"
     >
       <header>
-        <h2 className="text-lg font-semibold text-slate-50">9-CSV import / export</h2>
+        <h2 className="text-lg font-semibold text-slate-50">10-CSV import / export</h2>
         <p className="mt-1 text-sm text-slate-400">
-          Bundle covers controlled vocabulary, keys, rule packs, citations, fact requirements, mappings, and SDS
-          references per Compliance Core featureset.
+          Bundle covers controlled vocabulary, keys, rule packs, fact requirements, mappings, SDS references, and
+          legal exception/exemption records per Compliance Core featureset.
         </p>
       </header>
 

@@ -73,7 +73,7 @@ export const PROGRAM_MILESTONES: ProgramMilestoneRow[] = [
     id: 'M5',
     title: 'Compliance Core vocabulary and rules',
     posture: 'partial',
-    summary: 'Vocabulary, keys, mappings, rule packs, evaluations, findings, gates, and 9-CSV import/export.',
+    summary: 'Vocabulary, keys, mappings, rule packs, evaluations, findings, gates, and 10-CSV import/export.',
     primaryProducts: 'Compliance Core',
   },
   {

@@ -79,7 +79,30 @@ public class ComplianceCoreTitle49RulePackCsvTests
                 "description",
                 "active"
             ],
-            ["sds_references.csv"] = ["sds_key", "material_key", "product_name", "manufacturer", "document_url", "revision_date", "active"]
+            ["sds_references.csv"] = ["sds_key", "material_key", "product_name", "manufacturer", "document_url", "revision_date", "active"],
+            ["exception_exemptions.csv"] =
+            [
+                "key",
+                "label",
+                "type",
+                "governing_body",
+                "program_key",
+                "pack_key",
+                "citation_key",
+                "applicability_key",
+                "applies_to_subject_kind",
+                "applies_to_source_product",
+                "applies_to_source_entity",
+                "effect_type",
+                "condition_logic_json",
+                "required_evidence_option_group_key",
+                "issuing_authority",
+                "authorization_number",
+                "effective_at",
+                "expires_at",
+                "active",
+                "description"
+            ]
         };
 
     private static readonly HashSet<string> AllowedProducts =
@@ -153,7 +176,7 @@ public class ComplianceCoreTitle49RulePackCsvTests
         };
 
     [Fact]
-    public void Title49_rulepacks_use_existing_nine_csv_headers()
+    public void Title49_rulepacks_use_current_csv_headers()
     {
         var packDirectories = GetPackDirectories();
 
@@ -184,6 +207,7 @@ public class ComplianceCoreTitle49RulePackCsvTests
         var factKeys = new HashSet<string>(StringComparer.Ordinal);
         var requirementKeys = new HashSet<string>(StringComparer.Ordinal);
         var mappingKeys = new HashSet<string>(StringComparer.Ordinal);
+        var exceptionKeys = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var (_, files) in bundle)
         {
@@ -241,6 +265,38 @@ public class ComplianceCoreTitle49RulePackCsvTests
             {
                 Assert.True(mappingKeys.Add(row["mapping_key"]), $"Duplicate mapping_key {row["mapping_key"]}");
                 AssertKey(row["mapping_key"], "mapping_key");
+            }
+
+            foreach (var row in files["exception_exemptions.csv"])
+            {
+                Assert.True(exceptionKeys.Add(row["key"]), $"Duplicate exception/exemption key {row["key"]}");
+                AssertKey(row["key"], "exception/exemption key");
+                Assert.Contains(row["type"], new[]
+                {
+                    "regulatory_exception",
+                    "regulatory_exemption",
+                    "waiver",
+                    "variance",
+                    "special_permit",
+                    "approval",
+                    "alternate_compliance_path",
+                    "conditional_exclusion",
+                    "grandfathering",
+                    "temporary_relief"
+                });
+                Assert.Contains(row["effect_type"], new[]
+                {
+                    "makes_requirement_not_applicable",
+                    "changes_expected_value",
+                    "changes_required_evidence",
+                    "allows_alternate_evidence",
+                    "reduces_requirement",
+                    "extends_deadline",
+                    "authorizes_otherwise_blocked_action",
+                    "changes_frequency",
+                    "requires_additional_conditions",
+                    "reference_only"
+                });
             }
         }
 
@@ -373,6 +429,17 @@ public class ComplianceCoreTitle49RulePackCsvTests
     }
 
     [Fact]
+    public void Title49_special_permits_pack_has_first_class_exception_exemption_rows()
+    {
+        var files = LoadBundle().Single(item => Path.GetFileName(item.Key) == "title49.hazmat.special_permits_exceptions").Value;
+        var rows = files["exception_exemptions.csv"];
+
+        Assert.Contains(rows, row => row["type"] == "regulatory_exception" && row["key"] == "t49_hazmat_material_of_trade_exception");
+        Assert.Contains(rows, row => row["type"] == "special_permit" && row["effect_type"] == "authorizes_otherwise_blocked_action");
+        Assert.Contains(rows, row => row["type"] == "alternate_compliance_path" && row["effect_type"] == "allows_alternate_evidence");
+    }
+
+    [Fact]
     public void Title49_reference_packs_have_citation_coverage_and_docs_exist()
     {
         var bundle = LoadBundle();
@@ -395,7 +462,7 @@ public class ComplianceCoreTitle49RulePackCsvTests
                  {
                      "title49_coverage_report.md",
                      "title49_rulepack_index.md",
-                     "title49_9_csv_alignment.md",
+                     "title49_10_csv_alignment.md",
                      "title49_product_workflow_map.md",
                      "title49_remaining_gaps.md"
                  })

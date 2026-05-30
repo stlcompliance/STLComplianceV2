@@ -22,6 +22,75 @@ namespace ComplianceCore.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.AssetReference", b =>
+                {
+                    b.Property<Guid>("ReferenceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("ExternalRecordId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset?>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MetadataJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ObjectKind")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SourceProduct")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("StableKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ReferenceId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "StableKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "SourceProduct", "ExternalRecordId");
+
+                    b.HasIndex("TenantId", "SourceProduct", "ObjectKind");
+
+                    b.ToTable("compliancecore_asset_references", (string)null);
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.AuditPackageGenerationJob", b =>
                 {
                     b.Property<Guid>("Id")
@@ -100,6 +169,16 @@ namespace ComplianceCore.Api.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<string>("ClaimedExceptionExemptionKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ClaimedExceptionExemptionType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<DateTimeOffset>("EvaluatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -107,6 +186,35 @@ namespace ComplianceCore.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(1024)
                         .HasColumnType("character varying(1024)");
+
+                    b.Property<bool>("ExceptionExemptionApplied")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ExceptionExemptionEffectiveResult")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ExceptionExemptionLegalBasis")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("ExceptionExemptionProofKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<bool>("ExceptionExemptionProofRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ExceptionExemptionProofValid")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ExceptionExemptionScopeResult")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("ExpectedValue")
                         .IsRequired()
@@ -122,6 +230,11 @@ namespace ComplianceCore.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("FinalComplianceResult")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("Operator")
                         .IsRequired()
@@ -152,6 +265,16 @@ namespace ComplianceCore.Api.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<string>("ResultAfterException")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ResultBeforeException")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("SubjectId")
                         .IsRequired()
                         .HasMaxLength(128)
@@ -173,6 +296,8 @@ namespace ComplianceCore.Api.Migrations
                         .IsUnique();
 
                     b.HasIndex("TenantId", "CitationKey");
+
+                    b.HasIndex("TenantId", "ClaimedExceptionExemptionKey");
 
                     b.HasIndex("TenantId", "FactKey");
 
@@ -229,6 +354,315 @@ namespace ComplianceCore.Api.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("compliancecore_audit_events", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ComplianceEvidenceOption", b =>
+                {
+                    b.Property<Guid>("EvidenceOptionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("AssetKind")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<decimal?>("ConfidenceHint")
+                        .HasPrecision(5, 3)
+                        .HasColumnType("numeric(5,3)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DocumentTypeKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("EvidenceKind")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("EvidenceOptionGroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ExternalRegistryKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("FactKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("MaterialKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("OptionKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("OptionLabel")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PartKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Required")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SourceEntity")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("SourceFieldOrRecordType")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("SourceProduct")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SystemKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("TargetKind")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("EvidenceOptionId");
+
+                    b.HasIndex("EvidenceOptionGroupId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "OptionKey")
+                        .IsUnique();
+
+                    b.ToTable("compliancecore_evidence_options", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ComplianceEvidenceOptionGroup", b =>
+                {
+                    b.Property<Guid>("EvidenceOptionGroupId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ApplicabilityKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("CitationKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("FactKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("LogicType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("PackKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RequirementKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("EvidenceOptionGroupId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "CitationKey");
+
+                    b.HasIndex("TenantId", "PackKey");
+
+                    b.HasIndex("TenantId", "RequirementKey", "FactKey")
+                        .IsUnique();
+
+                    b.ToTable("compliancecore_evidence_option_groups", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ComplianceExceptionExemption", b =>
+                {
+                    b.Property<Guid>("ExceptionExemptionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ApplicabilityKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("AppliesToSourceEntity")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("AppliesToSourceProduct")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("AppliesToSubjectKind")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("AuthorizationNumber")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("CitationKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ConditionLogicJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("EffectType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("EffectiveAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("GoverningBody")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("IssuingAuthority")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PackKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ProgramKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid?>("RequiredEvidenceOptionGroupId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ExceptionExemptionId");
+
+                    b.HasIndex("RequiredEvidenceOptionGroupId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "Type");
+
+                    b.HasIndex("TenantId", "Active", "ExpiresAt");
+
+                    b.HasIndex("TenantId", "ProgramKey", "PackKey", "CitationKey");
+
+                    b.ToTable("compliance_exception_exemption", (string)null);
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.ComplianceFinding", b =>
@@ -566,6 +1000,75 @@ namespace ComplianceCore.Api.Migrations
                     b.ToTable("compliancecore_control_effectiveness_runs", (string)null);
                 });
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.DocumentReference", b =>
+                {
+                    b.Property<Guid>("ReferenceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("ExternalRecordId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset?>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MetadataJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ObjectKind")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SourceProduct")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("StableKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ReferenceId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "StableKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "SourceProduct", "ExternalRecordId");
+
+                    b.HasIndex("TenantId", "SourceProduct", "ObjectKind");
+
+                    b.ToTable("compliancecore_document_references", (string)null);
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.EvidenceReference", b =>
                 {
                     b.Property<Guid>("Id")
@@ -665,6 +1168,76 @@ namespace ComplianceCore.Api.Migrations
                     b.HasIndex("TenantId", "SourceProduct", "SourceEntity");
 
                     b.ToTable("compliancecore_evidence_references", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ExternalObjectReference", b =>
+                {
+                    b.Property<Guid>("ReferenceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("ExternalRecordId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset?>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MetadataJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ObjectKind")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SourceProduct")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("StableKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ReferenceId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "StableKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "SourceProduct", "ExternalRecordId");
+
+                    b.HasIndex("TenantId", "SourceProduct", "ObjectKind")
+                        .HasDatabaseName("IX_compliancecore_external_object_references_TenantId_SourceP~1");
+
+                    b.ToTable("compliancecore_external_object_references", (string)null);
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.FactAssertion", b =>
@@ -1158,6 +1731,1063 @@ namespace ComplianceCore.Api.Migrations
                     b.ToTable("compliancecore_hazcom_references", (string)null);
                 });
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportSession", b =>
+                {
+                    b.Property<Guid>("ImportSessionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CommitStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("CommittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ImportType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("MappedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MappingStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset?>("RejectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SourceFilename")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("SourceHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UploadedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ValidatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("ImportSessionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "SourceHash");
+
+                    b.HasIndex("TenantId", "Status", "CreatedAt");
+
+                    b.ToTable("compliancecore_import_sessions", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportSessionSourceFile", b =>
+                {
+                    b.Property<Guid>("ImportSessionSourceFileId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("ByteLength")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("ImportSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("OriginalFilename")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("SourceFile")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationErrorsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("ImportSessionSourceFileId");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("ImportSessionId", "SourceFile")
+                        .IsUnique();
+
+                    b.ToTable("compliancecore_import_session_source_files", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedComplianceKey", b =>
+                {
+                    b.Property<Guid>("StagedRowId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CanonicalKeyCandidate")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ImportSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NormalizedRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RawRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RowHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceFile")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationErrorsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("StagedRowId");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("ImportSessionId", "CanonicalKeyCandidate");
+
+                    b.HasIndex("ImportSessionId", "SourceFile", "RowNumber")
+                        .HasDatabaseName("IX_compliancecore_import_staged_compliance_keys_ImportSession~1");
+
+                    b.ToTable("compliancecore_import_staged_compliance_keys", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedControlledVocabulary", b =>
+                {
+                    b.Property<Guid>("StagedRowId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CanonicalKeyCandidate")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ImportSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NormalizedRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RawRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RowHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceFile")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationErrorsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("StagedRowId");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("ImportSessionId", "CanonicalKeyCandidate")
+                        .HasDatabaseName("IX_compliancecore_import_staged_controlled_vocabulary_ImportS~1");
+
+                    b.HasIndex("ImportSessionId", "SourceFile", "RowNumber")
+                        .HasDatabaseName("IX_compliancecore_import_staged_controlled_vocabulary_ImportS~2");
+
+                    b.ToTable("compliancecore_import_staged_controlled_vocabulary", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedEvidenceReference", b =>
+                {
+                    b.Property<Guid>("StagedRowId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CanonicalKeyCandidate")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ImportSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NormalizedRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RawRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RowHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceFile")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationErrorsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("StagedRowId");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("ImportSessionId", "CanonicalKeyCandidate")
+                        .HasDatabaseName("IX_compliancecore_import_staged_evidence_references_ImportSes~1");
+
+                    b.HasIndex("ImportSessionId", "SourceFile", "RowNumber")
+                        .HasDatabaseName("IX_compliancecore_import_staged_evidence_references_ImportSes~2");
+
+                    b.ToTable("compliancecore_import_staged_evidence_references", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedExceptionExemption", b =>
+                {
+                    b.Property<Guid>("StagedRowId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CanonicalKeyCandidate")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ImportSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NormalizedRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RawRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RowHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceFile")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationErrorsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("StagedRowId");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("ImportSessionId", "CanonicalKeyCandidate")
+                        .HasDatabaseName("IX_compliancecore_import_staged_exception_exemptions_ImportSe~1");
+
+                    b.HasIndex("ImportSessionId", "SourceFile", "RowNumber")
+                        .HasDatabaseName("IX_compliancecore_import_staged_exception_exemptions_ImportSe~2");
+
+                    b.ToTable("compliancecore_import_staged_exception_exemptions", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedFactRequirement", b =>
+                {
+                    b.Property<Guid>("StagedRowId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CanonicalKeyCandidate")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ImportSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NormalizedRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RawRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RowHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceFile")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationErrorsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("StagedRowId");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("ImportSessionId", "CanonicalKeyCandidate")
+                        .HasDatabaseName("IX_compliancecore_import_staged_fact_requirements_ImportSessi~1");
+
+                    b.HasIndex("ImportSessionId", "SourceFile", "RowNumber")
+                        .HasDatabaseName("IX_compliancecore_import_staged_fact_requirements_ImportSessi~2");
+
+                    b.ToTable("compliancecore_import_staged_fact_requirements", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedMappingCandidate", b =>
+                {
+                    b.Property<Guid>("MappingCandidateId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConfidenceBand")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<decimal>("ConfidenceScore")
+                        .HasPrecision(5, 3)
+                        .HasColumnType("numeric(5,3)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("EvidenceOptionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EvidenceOptionKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("EvidenceOptionLabel")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("ImportSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MatchReasonsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("OptionLogicGroup")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ProposedAction")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("RequiresAdditionalSupportingEvidence")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequiresConfirmation")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RiskFlagsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<bool>("SatisfiesRequirementIfConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SourceKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("SourceLabel")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("StagedRowId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("StagedRowNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StagedSourceFile")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("TargetId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("TargetKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("TargetKind")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("TargetLabel")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("MappingCandidateId");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.HasIndex("StagedRowId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("ImportSessionId", "ConfidenceBand")
+                        .HasDatabaseName("IX_compliancecore_import_staged_mapping_candidates_ImportSess~1");
+
+                    b.ToTable("compliancecore_import_staged_mapping_candidates", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedMappingDecision", b =>
+                {
+                    b.Property<Guid>("MappingDecisionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CreateNewPayloadJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset>("DecidedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DecidedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Decision")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("EvidenceMappingPurpose")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ExceptionExemptionKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("ImportSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("MappingCandidateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("OverrideReason")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("OverrideUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ResidualRequirementsJson")
+                        .IsRequired()
+                        .HasDefaultValue("[]")
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid?>("SelectedEvidenceOptionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SelectedEvidenceOptionKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("SelectedTargetId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("SelectedTargetKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("SelectedTargetKind")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("StagedRowId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("MappingDecisionId");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.HasIndex("MappingCandidateId");
+
+                    b.HasIndex("StagedRowId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("compliancecore_import_staged_mapping_decisions", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedMaterialKey", b =>
+                {
+                    b.Property<Guid>("StagedRowId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CanonicalKeyCandidate")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ImportSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NormalizedRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RawRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RowHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceFile")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationErrorsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("StagedRowId");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("ImportSessionId", "CanonicalKeyCandidate");
+
+                    b.HasIndex("ImportSessionId", "SourceFile", "RowNumber")
+                        .HasDatabaseName("IX_compliancecore_import_staged_material_keys_ImportSessionId~1");
+
+                    b.ToTable("compliancecore_import_staged_material_keys", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedRegulatoryMapping", b =>
+                {
+                    b.Property<Guid>("StagedRowId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CanonicalKeyCandidate")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ImportSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NormalizedRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RawRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RowHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceFile")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationErrorsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("StagedRowId");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("ImportSessionId", "CanonicalKeyCandidate")
+                        .HasDatabaseName("IX_compliancecore_import_staged_regulatory_mappings_ImportSes~1");
+
+                    b.HasIndex("ImportSessionId", "SourceFile", "RowNumber")
+                        .HasDatabaseName("IX_compliancecore_import_staged_regulatory_mappings_ImportSes~2");
+
+                    b.ToTable("compliancecore_import_staged_regulatory_mappings", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedRulePack", b =>
+                {
+                    b.Property<Guid>("StagedRowId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CanonicalKeyCandidate")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ImportSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NormalizedRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RawRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RowHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceFile")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationErrorsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("StagedRowId");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("ImportSessionId", "CanonicalKeyCandidate");
+
+                    b.HasIndex("ImportSessionId", "SourceFile", "RowNumber");
+
+                    b.ToTable("compliancecore_import_staged_rule_packs", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedRuleRequirement", b =>
+                {
+                    b.Property<Guid>("StagedRowId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CanonicalKeyCandidate")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ImportSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NormalizedRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RawRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RowHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceFile")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationErrorsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("StagedRowId");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("ImportSessionId", "CanonicalKeyCandidate")
+                        .HasDatabaseName("IX_compliancecore_import_staged_rule_requirements_ImportSessi~1");
+
+                    b.HasIndex("ImportSessionId", "SourceFile", "RowNumber")
+                        .HasDatabaseName("IX_compliancecore_import_staged_rule_requirements_ImportSessi~2");
+
+                    b.ToTable("compliancecore_import_staged_rule_requirements", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedSdsReference", b =>
+                {
+                    b.Property<Guid>("StagedRowId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CanonicalKeyCandidate")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ImportSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NormalizedRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RawRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RowHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceFile")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationErrorsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("StagedRowId");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("ImportSessionId", "CanonicalKeyCandidate");
+
+                    b.HasIndex("ImportSessionId", "SourceFile", "RowNumber")
+                        .HasDatabaseName("IX_compliancecore_import_staged_sds_references_ImportSessionI~1");
+
+                    b.ToTable("compliancecore_import_staged_sds_references", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedVocabularyAlias", b =>
+                {
+                    b.Property<Guid>("StagedRowId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CanonicalKeyCandidate")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ImportSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("NormalizedRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RawRowJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("RowHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SourceFile")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValidationErrorsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ValidationStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("StagedRowId");
+
+                    b.HasIndex("ImportSessionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("ImportSessionId", "CanonicalKeyCandidate")
+                        .HasDatabaseName("IX_compliancecore_import_staged_vocabulary_aliases_ImportSess~1");
+
+                    b.HasIndex("ImportSessionId", "SourceFile", "RowNumber")
+                        .HasDatabaseName("IX_compliancecore_import_staged_vocabulary_aliases_ImportSess~2");
+
+                    b.ToTable("compliancecore_import_staged_vocabulary_aliases", (string)null);
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.Jurisdiction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1323,6 +2953,75 @@ namespace ComplianceCore.Api.Migrations
                     b.ToTable("compliancecore_material_keys", (string)null);
                 });
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.MaterialReference", b =>
+                {
+                    b.Property<Guid>("ReferenceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("ExternalRecordId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset?>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MetadataJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ObjectKind")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SourceProduct")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("StableKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ReferenceId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "StableKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "SourceProduct", "ExternalRecordId");
+
+                    b.HasIndex("TenantId", "SourceProduct", "ObjectKind");
+
+                    b.ToTable("compliancecore_material_references", (string)null);
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.MissingEvidenceWarning", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1437,6 +3136,75 @@ namespace ComplianceCore.Api.Migrations
                     b.HasIndex("TenantId", "EvaluatedAt");
 
                     b.ToTable("compliancecore_missing_evidence_warning_runs", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.PartReference", b =>
+                {
+                    b.Property<Guid>("ReferenceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("ExternalRecordId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset?>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MetadataJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ObjectKind")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SourceProduct")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("StableKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ReferenceId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "StableKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "SourceProduct", "ExternalRecordId");
+
+                    b.HasIndex("TenantId", "SourceProduct", "ObjectKind");
+
+                    b.ToTable("compliancecore_part_references", (string)null);
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.ProductFactMirror", b =>
@@ -2472,6 +4240,75 @@ namespace ComplianceCore.Api.Migrations
                     b.ToTable("compliancecore_source_ingestion_jobs", (string)null);
                 });
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.SystemReference", b =>
+                {
+                    b.Property<Guid>("ReferenceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("ExternalRecordId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset?>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MetadataJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("ObjectKind")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SourceProduct")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("StableKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ReferenceId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "StableKey")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "SourceProduct", "ExternalRecordId");
+
+                    b.HasIndex("TenantId", "SourceProduct", "ObjectKind");
+
+                    b.ToTable("compliancecore_system_references", (string)null);
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.TenantFactSourceSyncWorkerSettings", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2580,6 +4417,558 @@ namespace ComplianceCore.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("compliancecore_tenant_m12_analytics_worker_settings", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TheoreticalApplicabilityResult", b =>
+                {
+                    b.Property<Guid>("ApplicabilityResultId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ApplicabilityBand")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<decimal>("ApplicabilityScore")
+                        .HasPrecision(5, 3)
+                        .HasColumnType("numeric(5,3)");
+
+                    b.Property<string>("CitationKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("EdgeCase")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("EdgeCaseReason")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("ExclusionReasonsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("MatchReasonsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("MissingContextJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("PackKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ProgramKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("SituationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("UserVisiblePriority")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ApplicabilityResultId");
+
+                    b.HasIndex("SituationId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("SituationId", "ApplicabilityBand", "UserVisiblePriority");
+
+                    b.ToTable("compliancecore_theoretical_applicability_results", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TheoreticalSituation", b =>
+                {
+                    b.Property<Guid>("SituationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EvaluationMode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<bool>("SavedAsTemplate")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SituationKind")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("SituationId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "SituationKind");
+
+                    b.HasIndex("TenantId", "Status", "UpdatedAt");
+
+                    b.ToTable("compliancecore_theoretical_situations", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TheoreticalSituationContext", b =>
+                {
+                    b.Property<Guid>("ContextId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Confidence")
+                        .HasPrecision(5, 3)
+                        .HasColumnType("numeric(5,3)");
+
+                    b.Property<string>("ContextKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ContextLabel")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("ContextValueKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ContextValueLabel")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("ControlledVocabularyType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SituationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ContextId");
+
+                    b.HasIndex("SituationId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("SituationId", "ContextKey")
+                        .IsUnique();
+
+                    b.ToTable("compliancecore_theoretical_situation_contexts", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TheoreticalSituationEvaluation", b =>
+                {
+                    b.Property<Guid>("EvaluationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("BlockedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EdgeCasesJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset>("EvaluatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("EvaluatedByPersonId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("FailCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LikelyProgramsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("NotApplicableCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("OverrideAvailableCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("OverrideBlockedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PassCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PrimaryProgramsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Result")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("SituationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("UnknownCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("WarningCount")
+                        .HasColumnType("integer");
+
+                    b.HasKey("EvaluationId");
+
+                    b.HasIndex("SituationId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("SituationId", "EvaluatedAt");
+
+                    b.ToTable("compliancecore_theoretical_situation_evaluations", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TheoreticalSituationEvaluationDetail", b =>
+                {
+                    b.Property<Guid>("DetailId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActualValue")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("AuditQuestion")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<bool>("AutomaticFailureFlag")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CitationKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("EvaluationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("ExceptionExemptionApplies")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ExceptionExemptionConsidered")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ExceptionExemptionKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("ExceptionExemptionLabel")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<bool>("ExceptionExemptionProofRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ExceptionExemptionProofValid")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ExceptionExemptionType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ExpectedValue")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("FactKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("FailureSeverity")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("FinalComplianceResult")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("NormalRuleResult")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Operator")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<bool>("OverrideAllowed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("OverridePermission")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("PackKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<bool>("RemediationRequired")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RequirementKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("Result")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ResultAfterException")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ResultBeforeException")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SimulatedState")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SuggestedNextAction")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("VisiblePriority")
+                        .HasColumnType("integer");
+
+                    b.HasKey("DetailId");
+
+                    b.HasIndex("EvaluationId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("EvaluationId", "VisiblePriority")
+                        .HasDatabaseName("IX_compliancecore_theoretical_situation_evaluation_details_Ev~1");
+
+                    b.ToTable("compliancecore_theoretical_situation_evaluation_details", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TheoreticalSituationFact", b =>
+                {
+                    b.Property<Guid>("SituationFactId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CitationKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EvidenceKind")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("EvidenceOptionKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("FactKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("PackKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("RequirementKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SimulatedState")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SimulatedValue")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<Guid>("SituationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TargetKind")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ValueType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("SituationFactId");
+
+                    b.HasIndex("SituationId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("SituationId", "FactKey", "RequirementKey", "EvidenceOptionKey");
+
+                    b.ToTable("compliancecore_theoretical_situation_facts", (string)null);
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TheoreticalSituationIncident", b =>
+                {
+                    b.Property<Guid>("SituationIncidentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IncidentTypeKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("InvolvedSubjectKind")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("InvolvedSubjectState")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("RemediationState")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ReportabilityState")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SeverityKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("SituationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TriggerKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("TriggerValue")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("SituationIncidentId");
+
+                    b.HasIndex("SituationId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("compliancecore_theoretical_situation_incidents", (string)null);
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.VocabularyAlias", b =>
@@ -2866,6 +5255,27 @@ namespace ComplianceCore.Api.Migrations
                     b.ToTable("platform_metadata", (string)null);
                 });
 
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ComplianceEvidenceOption", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ComplianceEvidenceOptionGroup", "EvidenceOptionGroup")
+                        .WithMany()
+                        .HasForeignKey("EvidenceOptionGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EvidenceOptionGroup");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ComplianceExceptionExemption", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ComplianceEvidenceOptionGroup", "RequiredEvidenceOptionGroup")
+                        .WithMany()
+                        .HasForeignKey("RequiredEvidenceOptionGroupId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("RequiredEvidenceOptionGroup");
+                });
+
             modelBuilder.Entity("ComplianceCore.Api.Entities.ComplianceFinding", b =>
                 {
                     b.HasOne("ComplianceCore.Api.Entities.RuleEvaluationRun", "RuleEvaluationRun")
@@ -2961,6 +5371,168 @@ namespace ComplianceCore.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("FactSource");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportSessionSourceFile", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ImportSession", "ImportSession")
+                        .WithMany()
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportSession");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedComplianceKey", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ImportSession", "ImportSession")
+                        .WithMany()
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportSession");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedControlledVocabulary", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ImportSession", "ImportSession")
+                        .WithMany()
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportSession");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedEvidenceReference", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ImportSession", "ImportSession")
+                        .WithMany()
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportSession");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedExceptionExemption", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ImportSession", "ImportSession")
+                        .WithMany()
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportSession");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedFactRequirement", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ImportSession", "ImportSession")
+                        .WithMany()
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportSession");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedMappingCandidate", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ImportSession", "ImportSession")
+                        .WithMany()
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportSession");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedMappingDecision", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ImportSession", "ImportSession")
+                        .WithMany()
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ComplianceCore.Api.Entities.ImportStagedMappingCandidate", "MappingCandidate")
+                        .WithMany()
+                        .HasForeignKey("MappingCandidateId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_compliancecore_import_staged_mapping_decisions_compliancec~1");
+
+                    b.Navigation("ImportSession");
+
+                    b.Navigation("MappingCandidate");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedMaterialKey", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ImportSession", "ImportSession")
+                        .WithMany()
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportSession");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedRegulatoryMapping", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ImportSession", "ImportSession")
+                        .WithMany()
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportSession");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedRulePack", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ImportSession", "ImportSession")
+                        .WithMany()
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportSession");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedRuleRequirement", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ImportSession", "ImportSession")
+                        .WithMany()
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportSession");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedSdsReference", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ImportSession", "ImportSession")
+                        .WithMany()
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportSession");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.ImportStagedVocabularyAlias", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.ImportSession", "ImportSession")
+                        .WithMany()
+                        .HasForeignKey("ImportSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ImportSession");
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.Jurisdiction", b =>
@@ -3149,6 +5721,72 @@ namespace ComplianceCore.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Batch");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TheoreticalApplicabilityResult", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.TheoreticalSituation", "Situation")
+                        .WithMany()
+                        .HasForeignKey("SituationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Situation");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TheoreticalSituationContext", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.TheoreticalSituation", "Situation")
+                        .WithMany()
+                        .HasForeignKey("SituationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Situation");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TheoreticalSituationEvaluation", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.TheoreticalSituation", "Situation")
+                        .WithMany()
+                        .HasForeignKey("SituationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Situation");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TheoreticalSituationEvaluationDetail", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.TheoreticalSituationEvaluation", "Evaluation")
+                        .WithMany()
+                        .HasForeignKey("EvaluationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Evaluation");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TheoreticalSituationFact", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.TheoreticalSituation", "Situation")
+                        .WithMany()
+                        .HasForeignKey("SituationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Situation");
+                });
+
+            modelBuilder.Entity("ComplianceCore.Api.Entities.TheoreticalSituationIncident", b =>
+                {
+                    b.HasOne("ComplianceCore.Api.Entities.TheoreticalSituation", "Situation")
+                        .WithMany()
+                        .HasForeignKey("SituationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Situation");
                 });
 
             modelBuilder.Entity("ComplianceCore.Api.Entities.VocabularyAlias", b =>

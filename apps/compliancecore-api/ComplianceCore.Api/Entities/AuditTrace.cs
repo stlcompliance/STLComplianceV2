@@ -40,5 +40,29 @@ public sealed class AuditTrace : IHasTenant
 
     public bool RemediationRequired { get; set; }
 
+    public string ClaimedExceptionExemptionKey { get; set; } = string.Empty;
+
+    public string ClaimedExceptionExemptionType { get; set; } = string.Empty;
+
+    public string ExceptionExemptionLegalBasis { get; set; } = string.Empty;
+
+    public string ExceptionExemptionProofKey { get; set; } = string.Empty;
+
+    public string ExceptionExemptionScopeResult { get; set; } = string.Empty;
+
+    public string ExceptionExemptionEffectiveResult { get; set; } = string.Empty;
+
+    public string ResultBeforeException { get; set; } = string.Empty;
+
+    public string ResultAfterException { get; set; } = string.Empty;
+
+    public string FinalComplianceResult { get; set; } = string.Empty;
+
+    public bool ExceptionExemptionApplied { get; set; }
+
+    public bool ExceptionExemptionProofRequired { get; set; }
+
+    public bool ExceptionExemptionProofValid { get; set; }
+
     public DateTimeOffset EvaluatedAt { get; set; }
 }

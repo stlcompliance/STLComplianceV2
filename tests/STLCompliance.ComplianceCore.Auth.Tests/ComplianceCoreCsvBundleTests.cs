@@ -61,9 +61,10 @@ public class ComplianceCoreCsvBundleTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/csv-bundle/manifest", token));
         response.EnsureSuccessStatusCode();
         var manifest = (await response.Content.ReadFromJsonAsync<CsvBundleManifestResponse>())!;
-        Assert.Equal(9, manifest.Files.Count);
+        Assert.Equal(10, manifest.Files.Count);
         Assert.Contains(manifest.Files, file => file.FileName == CsvBundleFiles.ControlledVocabulary);
         Assert.Contains(manifest.Files, file => file.FileName == CsvBundleFiles.SdsReferences);
+        Assert.Contains(manifest.Files, file => file.FileName == CsvBundleFiles.ExceptionExemptions);
     }
 
     [Fact]
@@ -77,8 +78,9 @@ public class ComplianceCoreCsvBundleTests : IAsyncLifetime
         response.EnsureSuccessStatusCode();
         var zipBytes = await response.Content.ReadAsByteArrayAsync();
         using var archive = new ZipArchive(new MemoryStream(zipBytes), ZipArchiveMode.Read);
-        Assert.Equal(9, archive.Entries.Count);
+        Assert.Equal(10, archive.Entries.Count);
         Assert.Contains(archive.Entries, entry => entry.Name == CsvBundleFiles.ComplianceKeys);
+        Assert.Contains(archive.Entries, entry => entry.Name == CsvBundleFiles.ExceptionExemptions);
     }
 
     [Fact]
@@ -338,6 +340,7 @@ public class ComplianceCoreCsvBundleTests : IAsyncLifetime
             + $"req_t49_dq_application_present_t49_391_21,t49_dq_application_present,driver_qualification,1,t49_391_21,1,motor_carrier_driver,StaffArr,driver,driver_qualification_application,{valueType},equals,true,product_record,driver_qualification_application,49_cfr_391_51,Is the driver qualification application present?,major,false,true,compliance.override.title49,true,DQ application present,Driver qualification application is present,true,true\n");
         AddCsv(form, CsvBundleFiles.RegulatoryMappings, "mapping_key,target_kind,program_key,pack_key,pack_version,citation_key,compliance_key,material_key,fact_key,label,description,active\n");
         AddCsv(form, CsvBundleFiles.SdsReferences, "sds_key,material_key,product_name,manufacturer,document_url,revision_date,active\n");
+        AddCsv(form, CsvBundleFiles.ExceptionExemptions, "key,label,type,governing_body,program_key,pack_key,citation_key,applicability_key,applies_to_subject_kind,applies_to_source_product,applies_to_source_entity,effect_type,condition_logic_json,required_evidence_option_group_key,issuing_authority,authorization_number,effective_at,expires_at,active,description\n");
         return form;
     }
 

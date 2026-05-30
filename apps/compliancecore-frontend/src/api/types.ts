@@ -571,6 +571,240 @@ export interface CsvImportResultResponse {
   issues: CsvImportIssue[]
 }
 
+export interface ImportSessionResponse {
+  importSessionId: string
+  tenantId: string
+  uploadedByPersonId: string | null
+  sourceFilename: string
+  sourceHash: string
+  importType: string
+  status: string
+  validationStatus: string
+  mappingStatus: string
+  commitStatus: string
+  createdAt: string
+  validatedAt: string | null
+  mappedAt: string | null
+  committedAt: string | null
+  rejectedAt: string | null
+  notes: string
+}
+
+export interface ImportSessionSourceFileResponse {
+  sourceFileId: string
+  sourceFile: string
+  originalFilename: string
+  fileHash: string
+  byteLength: number
+  validationStatus: string
+  validationErrors: string[]
+}
+
+export interface ImportUploadResponse {
+  session: ImportSessionResponse
+  files: ImportSessionSourceFileResponse[]
+}
+
+export interface ImportStagedFileSummaryResponse {
+  sourceFile: string
+  rowCount: number
+  validationStatus: string
+  validationErrors: string[]
+}
+
+export interface ImportParseResponse {
+  session: ImportSessionResponse
+  files: ImportStagedFileSummaryResponse[]
+}
+
+export interface ImportStagedRowResultResponse {
+  stagedRowId: string
+  sourceFile: string
+  rowNumber: number
+  canonicalKeyCandidate: string
+  validationStatus: string
+  validationErrors: string[]
+}
+
+export interface ImportValidationResultsResponse {
+  importSessionId: string
+  validationStatus: string
+  totalRows: number
+  validRows: number
+  invalidRows: number
+  files: ImportSessionSourceFileResponse[]
+  rows: ImportStagedRowResultResponse[]
+}
+
+export interface MappingCandidateResponse {
+  mappingCandidateId: string
+  stagedRowId: string
+  stagedSourceFile: string
+  stagedRowNumber: number
+  sourceKey: string
+  sourceLabel: string
+  evidenceOptionId: string | null
+  evidenceOptionKey: string
+  evidenceOptionLabel: string
+  optionLogicGroup: string
+  targetKind: string
+  targetId: string
+  targetKey: string
+  targetLabel: string
+  confidenceScore: number
+  confidenceBand: string
+  matchReasons: string[]
+  riskFlags: string[]
+  proposedAction: string
+  satisfiesRequirementIfConfirmed: boolean
+  requiresAdditionalSupportingEvidence: boolean
+  requiresConfirmation: boolean
+}
+
+export interface EvidenceOptionProposalResponse {
+  evidenceOptionId: string
+  evidenceOptionKey: string
+  evidenceOptionLabel: string
+  logicType: string
+  evidenceKind: string
+  targetKind: string
+  sourceProduct: string
+  sourceEntity: string
+  sourceFieldOrRecordType: string
+  documentTypeKey: string
+  materialKey: string
+  partKey: string
+  systemKey: string
+  assetKind: string
+  externalRegistryKey: string
+  factKey: string
+  required: boolean
+  priority: number
+  confidenceHint: number | null
+}
+
+export interface WizardSummaryResponse {
+  importSessionId: string
+  sessionStatus: string
+  mappingStatus: string
+  totalItems: number
+  pendingItems: number
+  confirmedItems: number
+  changedItems: number
+  skippedItems: number
+  rejectedItems: number
+  blockedItems: number
+  exactNoRiskItems: number
+  highNoRiskItems: number
+  riskFlaggedItems: number
+}
+
+export interface WizardItemResponse {
+  itemId: string
+  stagedRowId: string
+  status: string
+  requirementKey: string
+  evidenceKey: string
+  label: string
+  auditQuestion: string
+  citationKey: string
+  rulePackKey: string
+  complianceKeyOrDomain: string
+  requiredEvidenceKind: string
+  evidenceLogic: string
+  suggestedEvidencePath: EvidenceOptionProposalResponse
+  otherAcceptableEvidencePaths: EvidenceOptionProposalResponse[]
+  sourceProduct: string
+  sourceEntity: string
+  sourceFieldOrRecordType: string
+  suggestedTarget: string
+  targetKind: string
+  confidenceScore: number
+  confidenceBand: string
+  matchReasons: string[]
+  riskFlags: string[]
+  confirmationPrompt: string
+  whatWillHappenIfConfirmed: string
+  overrideAllowed: boolean
+  remediationRequired: boolean
+  exceptionProofPrompt: string
+  sourceRow: Record<string, string>
+  targetRecord: Record<string, string>
+}
+
+export interface MappingDecisionResponse {
+  mappingDecisionId: string
+  importSessionId: string
+  stagedRowId: string
+  mappingCandidateId: string | null
+  decision: string
+  selectedEvidenceOptionId: string | null
+  selectedEvidenceOptionKey: string
+  selectedTargetKind: string
+  selectedTargetId: string
+  selectedTargetKey: string
+  evidenceMappingPurpose: string
+  exceptionExemptionKey: string
+  residualRequirements: string[]
+  overrideUsed: boolean
+  overrideReason: string
+  decidedByPersonId: string
+  decidedAt: string
+}
+
+export interface CommitPreviewActionResponse {
+  action: string
+  sourceKey: string
+  targetKind: string
+  targetKey: string
+  summary: string
+  evidenceMappingPurpose: string
+  exceptionExemptionKey: string
+  residualRequirements: string[]
+  overrideUsed: boolean
+}
+
+export interface CommitPreviewResponse {
+  importSessionId: string
+  totalDecisions: number
+  existingDocumentsMapped: number
+  newDocumentsToCreate: number
+  existingMaterialsMapped: number
+  newMaterialsToCreate: number
+  existingPartsMapped: number
+  newPartsToCreate: number
+  existingSystemsOrAssetsMapped: number
+  newSystemsAssetsOrReferencesToCreate: number
+  factDefinitionsToCreateOrUpdate: number
+  factRequirementsToCreateOrUpdate: number
+  evidenceOptionGroupsToCreateOrUpdate: number
+  evidenceOptionsToCreateOrUpdate: number
+  evidenceReferencesToCreateOrUpdate: number
+  exceptionProofMappings: number
+  exceptionExemptionRecordsToCreateOrUpdate: number
+  overridesUsed: number
+  skippedRows: number
+  rejectedRows: number
+  unresolvedBlockers: string[]
+  actions: CommitPreviewActionResponse[]
+}
+
+export interface ImportCompletionReportResponse {
+  importSessionId: string
+  status: string
+  createdCount: number
+  updatedCount: number
+  skippedCount: number
+  rejectedCount: number
+  overrideCount: number
+  evidenceMappingsCreated: number
+  newDocumentsMaterialsPartsSystemsCreated: number
+  existingDocumentsMaterialsPartsSystemsMapped: number
+  warnings: string[]
+  errors: string[]
+  auditLogReference: string
+}
+
 export interface WorkflowGateCheckResponse {
   checkResultId: string
   gateKey: string
@@ -1268,4 +1502,220 @@ export interface CreateComplianceWaiverRequest {
   expiresAt?: string | null
   ruleKey?: string | null
   gateKey?: string | null
+}
+
+export interface TheoreticalOptionResponse {
+  key: string
+  label: string
+  description: string
+  category: string
+  edgeCase: boolean
+}
+
+export interface TheoreticalContextFieldResponse {
+  contextKey: string
+  label: string
+  controlType: string
+  controlledVocabularyType: string
+  required: boolean
+  situationKinds: string[]
+  values: TheoreticalOptionResponse[]
+}
+
+export interface TheoreticalSituationContextResponse {
+  contextId: string
+  contextKey: string
+  contextLabel: string
+  contextValueKey: string
+  contextValueLabel: string
+  controlledVocabularyType: string
+  confidence: number
+  createdAt: string
+}
+
+export interface TheoreticalSituationFactResponse {
+  situationFactId: string
+  factKey: string
+  requirementKey: string
+  citationKey: string
+  packKey: string
+  simulatedValue: string
+  valueType: string
+  simulatedState: string
+  evidenceOptionKey: string
+  evidenceKind: string
+  targetKind: string
+  active: boolean
+  createdAt: string
+}
+
+export interface TheoreticalSituationIncidentResponse {
+  situationIncidentId: string
+  incidentTypeKey: string
+  severityKey: string
+  involvedSubjectKind: string
+  involvedSubjectState: string
+  triggerKey: string
+  triggerValue: string
+  reportabilityState: string
+  remediationState: string
+  createdAt: string
+}
+
+export interface TheoreticalSituationEvaluationDetailResponse {
+  detailId: string
+  requirementKey: string
+  factKey: string
+  citationKey: string
+  packKey: string
+  auditQuestion: string
+  simulatedState: string
+  expectedValue: string
+  actualValue: string
+  operator: string
+  result: string
+  failureSeverity: string
+  automaticFailureFlag: boolean
+  overrideAllowed: boolean
+  overridePermission: string
+  remediationRequired: boolean
+  normalRuleResult: string
+  exceptionExemptionKey: string
+  exceptionExemptionType: string
+  exceptionExemptionLabel: string
+  exceptionExemptionConsidered: boolean
+  exceptionExemptionApplies: boolean
+  exceptionExemptionProofRequired: boolean
+  exceptionExemptionProofValid: boolean
+  resultBeforeException: string
+  resultAfterException: string
+  finalComplianceResult: string
+  explanation: string
+  suggestedNextAction: string
+  visiblePriority: number
+}
+
+export interface TheoreticalSituationEvaluationResponse {
+  evaluationId: string
+  situationId: string
+  evaluatedAt: string
+  evaluatedByPersonId: string
+  result: string
+  summary: string
+  primaryPrograms: string[]
+  likelyPrograms: string[]
+  edgeCases: string[]
+  passCount: number
+  failCount: number
+  warningCount: number
+  blockedCount: number
+  notApplicableCount: number
+  unknownCount: number
+  overrideAvailableCount: number
+  overrideBlockedCount: number
+  details: TheoreticalSituationEvaluationDetailResponse[]
+}
+
+export interface TheoreticalSituationResponse {
+  situationId: string
+  tenantId: string
+  createdByPersonId: string
+  title: string
+  situationKind: string
+  status: string
+  evaluationMode: string
+  savedAsTemplate: boolean
+  createdAt: string
+  updatedAt: string
+  context: TheoreticalSituationContextResponse[]
+  facts: TheoreticalSituationFactResponse[]
+  incidents: TheoreticalSituationIncidentResponse[]
+  latestEvaluation: TheoreticalSituationEvaluationResponse | null
+}
+
+export interface TheoreticalSituationListItemResponse {
+  situationId: string
+  title: string
+  situationKind: string
+  status: string
+  savedAsTemplate: boolean
+  createdAt: string
+  updatedAt: string
+  latestResult: string | null
+}
+
+export interface TheoreticalApplicabilityResultResponse {
+  applicabilityResultId: string
+  programKey: string
+  packKey: string
+  citationKey: string
+  applicabilityScore: number
+  applicabilityBand: string
+  matchReasons: string[]
+  missingContext: string[]
+  exclusionReasons: string[]
+  edgeCase: boolean
+  edgeCaseReason: string
+  userVisiblePriority: number
+  createdAt: string
+}
+
+export interface TheoreticalNextContextResponse {
+  questions: TheoreticalContextFieldResponse[]
+  readyForApplicability: boolean
+  summary: string
+}
+
+export interface TheoreticalEvidenceOptionResponse {
+  evidenceOptionId: string
+  evidenceOptionKey: string
+  evidenceOptionLabel: string
+  logicType: string
+  requirementKey: string
+  factKey: string
+  evidenceKind: string
+  targetKind: string
+  sourceProduct: string
+  sourceEntity: string
+  required: boolean
+}
+
+export interface CreateTheoreticalSituationRequest {
+  situationKind: string
+  title?: string | null
+}
+
+export interface TheoreticalSituationContextRequest {
+  values: Array<{
+    contextKey: string
+    contextValueKey: string
+  }>
+}
+
+export interface TheoreticalSituationFactRequest {
+  facts: Array<{
+    factKey: string
+    simulatedState: string
+    requirementKey?: string | null
+    citationKey?: string | null
+    packKey?: string | null
+    simulatedValue?: string | null
+    valueType?: string | null
+    evidenceOptionKey?: string | null
+    evidenceKind?: string | null
+    targetKind?: string | null
+  }>
+}
+
+export interface TheoreticalSituationIncidentRequest {
+  incidents: Array<{
+    incidentTypeKey: string
+    severityKey: string
+    involvedSubjectKind: string
+    involvedSubjectState: string
+    triggerKey: string
+    triggerValue: string
+    reportabilityState: string
+    remediationState: string
+  }>
 }

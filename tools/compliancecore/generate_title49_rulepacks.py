@@ -100,6 +100,28 @@ CSV_HEADERS: dict[str, list[str]] = {
         "active",
     ],
     "sds_references.csv": ["sds_key", "material_key", "product_name", "manufacturer", "document_url", "revision_date", "active"],
+    "exception_exemptions.csv": [
+        "key",
+        "label",
+        "type",
+        "governing_body",
+        "program_key",
+        "pack_key",
+        "citation_key",
+        "applicability_key",
+        "applies_to_subject_kind",
+        "applies_to_source_product",
+        "applies_to_source_entity",
+        "effect_type",
+        "condition_logic_json",
+        "required_evidence_option_group_key",
+        "issuing_authority",
+        "authorization_number",
+        "effective_at",
+        "expires_at",
+        "active",
+        "description",
+    ],
 }
 
 PROGRAMS = {
@@ -147,6 +169,27 @@ class FactSpec:
 
 
 @dataclass
+class ExceptionSpec:
+    key: str
+    label: str
+    type: str
+    effect_type: str
+    citations: list[str]
+    applicability_key: str
+    subject_kind: str
+    products: list[str]
+    entities: list[str]
+    condition_logic: dict[str, Any]
+    required_evidence_option_group_key: str = ""
+    issuing_authority: str = ""
+    authorization_number: str = ""
+    effective_at: str = ""
+    expires_at: str = ""
+    active: bool = True
+    description: str = ""
+
+
+@dataclass
 class PackSpec:
     key: str
     label: str
@@ -163,6 +206,7 @@ class PackSpec:
     exclude_subparts: set[str] = field(default_factory=set)
     exclude_sections: set[str] = field(default_factory=set)
     facts: list[FactSpec] = field(default_factory=list)
+    exceptions: list[ExceptionSpec] = field(default_factory=list)
     manual_review: list[str] = field(default_factory=list)
 
 
@@ -256,6 +300,47 @@ def fact(
         override_permission=override_permission,
         remediation_required=remediation_required,
         derived=derived,
+    )
+
+
+def exception(
+    key: str,
+    label: str,
+    type: str,
+    effect_type: str,
+    citations: list[str],
+    applicability_key: str,
+    subject_kind: str,
+    products: list[str],
+    entities: list[str],
+    condition_logic: dict[str, Any],
+    *,
+    required_evidence_option_group_key: str = "",
+    issuing_authority: str = "",
+    authorization_number: str = "",
+    effective_at: str = "",
+    expires_at: str = "",
+    active: bool = True,
+    description: str = "",
+) -> ExceptionSpec:
+    return ExceptionSpec(
+        key=key,
+        label=label,
+        type=type,
+        effect_type=effect_type,
+        citations=citations,
+        applicability_key=applicability_key,
+        subject_kind=subject_kind,
+        products=products,
+        entities=entities,
+        condition_logic=condition_logic,
+        required_evidence_option_group_key=required_evidence_option_group_key,
+        issuing_authority=issuing_authority,
+        authorization_number=authorization_number,
+        effective_at=effective_at,
+        expires_at=expires_at,
+        active=active,
+        description=description,
     )
 
 
@@ -1007,8 +1092,77 @@ FACTS: dict[str, list[FactSpec]] = {
     ],
 }
 
+EXCEPTIONS: dict[str, list[ExceptionSpec]] = {
+    "title49.hazmat.special_permits_exceptions": [
+        exception(
+            "t49_hazmat_material_of_trade_exception",
+            "Material-of-trade exception",
+            "regulatory_exception",
+            "changes_required_evidence",
+            ["t49_sec_173_6"],
+            "ck_t49_hazmat_special_permits_exceptions",
+            "shipment",
+            ["SupplyArr", "RoutArr"],
+            ["shipment", "material"],
+            {
+                "all": [
+                    "quantity_within_material_of_trade_limit",
+                    "package_marked_as_required",
+                    "operator_informs_driver_of_material",
+                ]
+            },
+            required_evidence_option_group_key="t49_hazmat_exception_conditions_met",
+            issuing_authority="PHMSA",
+            description="Material-of-trade qualification may alter normal hazardous materials shipping requirements when all regulatory conditions are met.",
+        ),
+        exception(
+            "t49_hazmat_limited_quantity_path",
+            "Limited quantity alternate compliance path",
+            "alternate_compliance_path",
+            "allows_alternate_evidence",
+            ["t49_part_173", "t49_part_172"],
+            "ck_t49_hazmat_special_permits_exceptions",
+            "shipment",
+            ["SupplyArr", "RoutArr"],
+            ["shipment", "material", "package"],
+            {
+                "all": [
+                    "limited_quantity_classification_supported",
+                    "packaging_within_quantity_limit",
+                    "marking_selected_if_required",
+                ]
+            },
+            required_evidence_option_group_key="t49_hazmat_exception_conditions_met",
+            issuing_authority="PHMSA",
+            description="Limited quantity classification can satisfy selected packaging, marking, and shipping-paper paths when proof and scope are valid.",
+        ),
+        exception(
+            "t49_hazmat_special_permit_authorization",
+            "PHMSA special permit or approval authorization",
+            "special_permit",
+            "authorizes_otherwise_blocked_action",
+            ["t49_sec_107_105"],
+            "ck_t49_hazmat_special_permits_exceptions",
+            "shipment",
+            ["SupplyArr", "RoutArr"],
+            ["special_permit", "shipment", "material"],
+            {
+                "all": [
+                    "special_permit_number_current",
+                    "material_operation_equipment_route_within_scope",
+                    "permit_copy_or_approval_available",
+                ]
+            },
+            required_evidence_option_group_key="t49_hazmat_special_permit_valid",
+            issuing_authority="PHMSA",
+            description="A current PHMSA special permit or approval can authorize a specific alternate compliance path only within its stated scope.",
+        ),
+    ]
+}
+
 for spec in PACKS:
     spec.facts = FACTS.get(spec.key, [])
+    spec.exceptions = EXCEPTIONS.get(spec.key, [])
 
 
 def load_structure(path_arg: str | None = None) -> dict[str, Any]:
@@ -1367,6 +1521,32 @@ def rows_for_pack(spec: PackSpec, citations: list[dict[str, Any]]) -> dict[str, 
                 "true",
             ]
         )
+    for item in spec.exceptions:
+        citation_key = next((key for key in item.citations if key in citation_keys), fallback_citation)
+        rows["exception_exemptions.csv"].append(
+            [
+                item.key,
+                trim(item.label, 128),
+                item.type,
+                "DOT/PHMSA" if spec.program_key == "phmsa_hmr" else "DOT",
+                spec.program_key,
+                spec.key,
+                citation_key,
+                item.applicability_key,
+                item.subject_kind,
+                ",".join(item.products),
+                ",".join(item.entities),
+                item.effect_type,
+                json.dumps(item.condition_logic, separators=(",", ":"), sort_keys=True),
+                item.required_evidence_option_group_key,
+                item.issuing_authority,
+                item.authorization_number,
+                item.effective_at,
+                item.expires_at,
+                str(item.active).lower(),
+                trim(item.description, 2000),
+            ]
+        )
     return rows
 
 
@@ -1438,7 +1618,7 @@ def build_summary(
         [
             "Numeric thresholds, exception applicability, route-specific approvals, and document-retention windows need legal/product review before enforcement beyond boolean gate checks.",
             "HMR table row enumeration is modeled as lookup verification against 49 CFR 172.101, not as a row-per-material material-key catalog.",
-            "The 9-CSV bundle intentionally has no separate fact-definition CSV; Compliance Core imports fact definitions and audit contracts from rule_fact_requirements.csv.",
+            "The 10-CSV bundle intentionally has no separate fact-definition CSV; Compliance Core imports fact definitions and audit contracts from rule_fact_requirements.csv and legal relief records from exception_exemptions.csv.",
         ]
     )
     return {
@@ -1533,8 +1713,8 @@ Sources:
         )
     (docs / "title49_rulepack_index.md").write_text(index, encoding="utf-8")
 
-    alignment = "# Title 49 9-CSV alignment\n\n"
-    alignment += "The repo already defines the Compliance Core CSV bundle as these nine files. Title 49 uses that existing import shape instead of the fallback names.\n\n"
+    alignment = "# Title 49 10-CSV alignment\n\n"
+    alignment += "The Compliance Core CSV bundle includes first-class exception/exemption records alongside the core rule, citation, fact, mapping, vocabulary, material, and SDS files.\n\n"
     alignment += "| CSV | Title 49 use |\n| --- | --- |\n"
     for file_name, headers in CSV_HEADERS.items():
         use = {
@@ -1547,11 +1727,12 @@ Sources:
             "rule_fact_requirements.csv": "Defines the audit-fact contract for each pack/citation: fact key, applicability, source product/entity/record, value semantics, evidence kind, document type, retention, audit question, severity, override, and remediation metadata.",
             "regulatory_mappings.csv": "Maps packs, citations, compliance keys, and fact keys.",
             "sds_references.csv": "Reserved; products own SDS documents and publish facts.",
+            "exception_exemptions.csv": "Defines legal exceptions, exemptions, waivers, variances, special permits, approvals, alternate compliance paths, and conditional exclusions as first-class records.",
         }[file_name]
         alignment += f"| `{file_name}` | {use} Headers: `{','.join(headers)}` |\n"
-    alignment += "\nFact definitions are not represented by a separate CSV. The Compliance Core importer upserts fact definitions directly from `rule_fact_requirements.csv`, including `value_type`, before it persists pack-specific fact requirement metadata. `tools/compliancecore/import-title49-rulepacks.ps1` still posts exactly the 9 CSV files per bundle.\n"
+    alignment += "\nFact definitions are not represented by a separate CSV. The Compliance Core importer upserts fact definitions directly from `rule_fact_requirements.csv`, including `value_type`, before it persists pack-specific fact requirement metadata. `exception_exemptions.csv` is the legal-relief contract and must not be treated as an internal override list.\n"
     alignment += "\nCompliance Core owns rule packs, citations, fact requirements, audit contracts, rule evaluation, evidence references, audit traces, and report surfaces. Product apps own operational records and publish facts and evidence references. The CSVs contain deterministic keys only; no cross-product database foreign keys are introduced.\n"
-    (docs / "title49_9_csv_alignment.md").write_text(alignment, encoding="utf-8")
+    (docs / "title49_10_csv_alignment.md").write_text(alignment, encoding="utf-8")
 
     workflows = "# Title 49 product workflow map\n\n"
     workflow_rows = [
@@ -1569,7 +1750,7 @@ Sources:
     (docs / "title49_product_workflow_map.md").write_text(workflows, encoding="utf-8")
 
     gaps = "# Title 49 remaining gaps\n\n"
-    gaps += "- The current Compliance Core 9-CSV bundle has no separate fact-definition CSV; Compliance Core derives canonical fact definitions from `rule_fact_requirements.csv` during import.\n"
+    gaps += "- The current Compliance Core 10-CSV bundle has no separate fact-definition CSV; Compliance Core derives canonical fact definitions from `rule_fact_requirements.csv` during import.\n"
     gaps += "- Numeric thresholds, route approvals, hazmat quantity tables, insurance amount tables, and retention durations are represented as audit fact requirements with source/evidence/retention metadata; product-specific calculators should publish those facts deterministically.\n"
     gaps += "- 49 CFR 172.101 Hazardous Materials Table is mapped as citation and lookup-verification control, not material-key enumeration.\n"
     gaps += "- FMCSA Parts 384-386 and HMR Parts 174-176/179 are reference mapped unless a product workflow currently owns direct operational facts.\n"
@@ -1610,7 +1791,7 @@ def validate_generated(repo_root: Path) -> list[str]:
     for pack_dir in pack_dirs:
         actual_files = {path.name for path in pack_dir.glob("*.csv")}
         if actual_files != expected_files:
-            issues.append(f"{pack_dir.name}: expected 9 CSV files, found {sorted(actual_files)}")
+            issues.append(f"{pack_dir.name}: expected 10 CSV files, found {sorted(actual_files)}")
         rows_by_dir[pack_dir.name] = {}
         for file_name, headers in CSV_HEADERS.items():
             path = pack_dir / file_name
@@ -1745,7 +1926,7 @@ def validate_generated(repo_root: Path) -> list[str]:
     for doc in [
         "title49_coverage_report.md",
         "title49_rulepack_index.md",
-        "title49_9_csv_alignment.md",
+        "title49_10_csv_alignment.md",
         "title49_product_workflow_map.md",
         "title49_remaining_gaps.md",
     ]:

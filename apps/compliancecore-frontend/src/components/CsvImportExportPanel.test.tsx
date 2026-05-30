@@ -30,7 +30,7 @@ describe('CsvImportExportPanel', () => {
       </QueryClientProvider>,
     )
 
-    expect(await screen.findByText(/9-CSV import \/ export/)).toBeInTheDocument()
+    expect(await screen.findByText(/10-CSV import \/ export/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Download ZIP export/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Validate import/i })).toBeInTheDocument()
   })

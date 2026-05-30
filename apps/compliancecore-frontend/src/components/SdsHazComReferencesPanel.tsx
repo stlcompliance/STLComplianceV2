@@ -122,7 +122,7 @@ export function SdsHazComReferencesPanel({
     >
       <h2 className="text-lg font-semibold text-slate-50">SDS / HazCom references</h2>
       <p className="mt-1 text-sm text-slate-400">
-        First-class /api/sds and /api/hazcom surfaces per docs/18 — complements 9-CSV import.
+        First-class /api/sds and /api/hazcom surfaces per docs/18 — complements 10-CSV import.
       </p>
 
       <div className="mt-4 grid gap-6 lg:grid-cols-2">

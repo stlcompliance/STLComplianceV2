@@ -89,6 +89,32 @@ import type {
   VocabularyTypeResponse,
   ComplianceWaiverResponse,
   CreateComplianceWaiverRequest,
+  CommitPreviewResponse,
+  EvidenceOptionProposalResponse,
+  ImportCompletionReportResponse,
+  ImportParseResponse,
+  ImportSessionResponse,
+  ImportUploadResponse,
+  ImportValidationResultsResponse,
+  MappingCandidateResponse,
+  MappingDecisionResponse,
+  CreateTheoreticalSituationRequest,
+  TheoreticalApplicabilityResultResponse,
+  TheoreticalContextFieldResponse,
+  TheoreticalEvidenceOptionResponse,
+  TheoreticalNextContextResponse,
+  TheoreticalOptionResponse,
+  TheoreticalSituationContextRequest,
+  TheoreticalSituationContextResponse,
+  TheoreticalSituationEvaluationResponse,
+  TheoreticalSituationFactRequest,
+  TheoreticalSituationFactResponse,
+  TheoreticalSituationIncidentRequest,
+  TheoreticalSituationIncidentResponse,
+  TheoreticalSituationListItemResponse,
+  TheoreticalSituationResponse,
+  WizardItemResponse,
+  WizardSummaryResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_COMPLIANCECORE_API_BASE ?? ''
@@ -614,6 +640,337 @@ export async function importCsvBundle(
     body: form,
   })
   return parseJsonResponse<CsvImportResultResponse>(response, 'Failed to import CSV bundle')
+}
+
+export async function createImportSession(
+  accessToken: string,
+  notes?: string,
+): Promise<ImportSessionResponse> {
+  const response = await fetch(`${apiBase}/api/v1/import-sessions`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ notes: notes ?? 'Import Wizard session' }),
+  })
+  return parseJsonResponse<ImportSessionResponse>(response, 'Failed to create import session')
+}
+
+export async function uploadImportSessionBundle(
+  accessToken: string,
+  importSessionId: string,
+  files: FileList,
+): Promise<ImportUploadResponse> {
+  const form = new FormData()
+  Array.from(files).forEach((file) => form.append('file', file, file.name))
+  const response = await fetch(`${apiBase}/api/v1/import-sessions/${importSessionId}/upload`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: form,
+  })
+  return parseJsonResponse<ImportUploadResponse>(response, 'Failed to upload import bundle')
+}
+
+export async function parseImportSession(
+  accessToken: string,
+  importSessionId: string,
+): Promise<ImportParseResponse> {
+  const response = await fetch(`${apiBase}/api/v1/import-sessions/${importSessionId}/parse`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ImportParseResponse>(response, 'Failed to parse import session')
+}
+
+export async function validateImportSession(
+  accessToken: string,
+  importSessionId: string,
+): Promise<ImportValidationResultsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/import-sessions/${importSessionId}/validate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ImportValidationResultsResponse>(response, 'Failed to validate import session')
+}
+
+export async function generateImportMappingCandidates(
+  accessToken: string,
+  importSessionId: string,
+): Promise<MappingCandidateResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/import-sessions/${importSessionId}/generate-mapping-candidates`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<MappingCandidateResponse[]>(response, 'Failed to generate mapping candidates')
+}
+
+export async function getImportWizardSummary(
+  accessToken: string,
+  importSessionId: string,
+): Promise<WizardSummaryResponse> {
+  const response = await fetch(`${apiBase}/api/v1/import-sessions/${importSessionId}/wizard/summary`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<WizardSummaryResponse>(response, 'Failed to load wizard summary')
+}
+
+export async function getNextImportWizardItem(
+  accessToken: string,
+  importSessionId: string,
+): Promise<WizardItemResponse | null> {
+  const response = await fetch(`${apiBase}/api/v1/import-sessions/${importSessionId}/wizard/next`, {
+    headers: authHeaders(accessToken),
+  })
+  if (response.status === 204) {
+    return null
+  }
+  return parseJsonResponse<WizardItemResponse>(response, 'Failed to load next wizard item')
+}
+
+export async function getImportWizardItem(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+): Promise<WizardItemResponse> {
+  const response = await fetch(`${apiBase}/api/v1/import-sessions/${importSessionId}/wizard/items/${itemId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<WizardItemResponse>(response, 'Failed to load wizard item')
+}
+
+export async function getImportWizardEvidenceOptions(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+): Promise<EvidenceOptionProposalResponse[]> {
+  const response = await fetch(
+    `${apiBase}/api/v1/import-sessions/${importSessionId}/wizard/items/${itemId}/evidence-options`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<EvidenceOptionProposalResponse[]>(response, 'Failed to load evidence options')
+}
+
+async function postImportWizardDecision(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+  action: string,
+  payload?: unknown,
+): Promise<MappingDecisionResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/import-sessions/${importSessionId}/wizard/items/${itemId}/${action}`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+      body: payload === undefined ? undefined : JSON.stringify(payload),
+    },
+  )
+  return parseJsonResponse<MappingDecisionResponse>(response, 'Failed to save mapping decision')
+}
+
+export function confirmImportWizardItem(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'confirm')
+}
+
+export function selectImportWizardEvidenceOption(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+  evidenceOptionKey: string,
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'select-evidence-option', {
+    evidenceOptionKey,
+  })
+}
+
+export function selectImportWizardTarget(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+  payload: { targetKind: string; targetId: string; targetKey: string; targetLabel: string },
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'select-target', payload)
+}
+
+export function createImportWizardTarget(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+  payload: { targetKind: string; payload: Record<string, string> },
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'create-target', payload)
+}
+
+export function markImportWizardNoDocumentRequired(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'mark-no-document-required')
+}
+
+export function addImportWizardSupportingEvidence(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+  payload: { targetKind: string; targetKey: string; targetLabel: string; payload?: Record<string, string> },
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'add-supporting-evidence', payload)
+}
+
+type ExceptionProofPayload = {
+  exceptionExemptionKey: string
+  targetKind: string
+  targetKey: string
+  targetLabel: string
+  payload?: Record<string, string>
+  residualRequirements?: string[]
+}
+
+export function mapImportWizardAsNormalEvidence(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'map-as-normal-evidence')
+}
+
+export function mapImportWizardAsExceptionProof(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+  payload: ExceptionProofPayload,
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'map-as-exception-proof', payload)
+}
+
+export function mapImportWizardAsExemptionProof(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+  payload: ExceptionProofPayload,
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'map-as-exemption-proof', payload)
+}
+
+export function mapImportWizardAsSpecialPermitApprovalProof(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+  payload: ExceptionProofPayload,
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'map-as-special-permit-approval-proof', payload)
+}
+
+export function createImportWizardExceptionExemption(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+  payload: ExceptionProofPayload,
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'create-exception-exemption', payload)
+}
+
+export function selectImportWizardExceptionExemption(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+  payload: ExceptionProofPayload,
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'select-exception-exemption', payload)
+}
+
+export function markImportWizardExceptionNotApplicable(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'mark-exception-not-applicable')
+}
+
+export function markImportWizardNotApplicable(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'not-applicable')
+}
+
+export function markImportWizardReferenceOnly(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'reference-only')
+}
+
+export function skipImportWizardItem(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'skip')
+}
+
+export function rejectImportWizardItem(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'reject')
+}
+
+export function forceMapImportWizardItem(
+  accessToken: string,
+  importSessionId: string,
+  itemId: string,
+  payload: {
+    targetKind: string
+    targetId: string
+    targetKey: string
+    targetLabel: string
+    overrideReason: string
+    riskAcknowledged: boolean
+  },
+): Promise<MappingDecisionResponse> {
+  return postImportWizardDecision(accessToken, importSessionId, itemId, 'force-map', payload)
+}
+
+export async function bulkConfirmImportWizardMappings(
+  accessToken: string,
+  importSessionId: string,
+  confidenceBand: string,
+  summaryConfirmed = false,
+): Promise<MappingDecisionResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/import-sessions/${importSessionId}/wizard/bulk-confirm`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ confidenceBand, summaryConfirmed }),
+  })
+  return parseJsonResponse<MappingDecisionResponse[]>(response, 'Failed to bulk confirm mappings')
+}
+
+export async function getImportCommitPreview(
+  accessToken: string,
+  importSessionId: string,
+): Promise<CommitPreviewResponse> {
+  const response = await fetch(`${apiBase}/api/v1/import-sessions/${importSessionId}/wizard/commit-preview`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CommitPreviewResponse>(response, 'Failed to load commit preview')
+}
+
+export async function commitImportWizard(
+  accessToken: string,
+  importSessionId: string,
+): Promise<ImportCompletionReportResponse> {
+  const response = await fetch(`${apiBase}/api/v1/import-sessions/${importSessionId}/wizard/commit`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ImportCompletionReportResponse>(response, 'Failed to commit import session')
 }
 
 function buildAuditPackageQuery(options?: { from?: string; to?: string; format?: string }): string {
@@ -1455,4 +1812,239 @@ export async function revokeComplianceWaiver(
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ComplianceWaiverResponse>(response, 'Failed to revoke compliance waiver')
+}
+
+export async function getTheoreticalSituationKinds(
+  accessToken: string,
+): Promise<TheoreticalOptionResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/theoretical-situations/options/situation-kinds`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TheoreticalOptionResponse[]>(response, 'Failed to load situation kinds')
+}
+
+export async function getTheoreticalContextFields(
+  accessToken: string,
+  situationKind?: string,
+): Promise<TheoreticalContextFieldResponse[]> {
+  const query = situationKind ? `?situationKind=${encodeURIComponent(situationKind)}` : ''
+  const response = await fetch(
+    `${apiBase}/api/v1/theoretical-situations/options/context-fields${query}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<TheoreticalContextFieldResponse[]>(
+    response,
+    'Failed to load context fields',
+  )
+}
+
+export async function getTheoreticalEvidenceStates(
+  accessToken: string,
+): Promise<TheoreticalOptionResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/theoretical-situations/options/evidence-states`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TheoreticalOptionResponse[]>(response, 'Failed to load evidence states')
+}
+
+export async function getTheoreticalMaterialClasses(
+  accessToken: string,
+): Promise<TheoreticalOptionResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/theoretical-situations/options/material-classes`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TheoreticalOptionResponse[]>(response, 'Failed to load material classes')
+}
+
+export async function getTheoreticalIncidentOptions(
+  accessToken: string,
+): Promise<TheoreticalOptionResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/theoretical-situations/options/incidents`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TheoreticalOptionResponse[]>(response, 'Failed to load incident options')
+}
+
+export async function getTheoreticalEvidenceOptions(
+  accessToken: string,
+  requirementKey?: string,
+): Promise<TheoreticalEvidenceOptionResponse[]> {
+  const query = requirementKey ? `?requirementKey=${encodeURIComponent(requirementKey)}` : ''
+  const response = await fetch(
+    `${apiBase}/api/v1/theoretical-situations/options/evidence-options${query}`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<TheoreticalEvidenceOptionResponse[]>(
+    response,
+    'Failed to load theoretical evidence options',
+  )
+}
+
+export async function createTheoreticalSituation(
+  accessToken: string,
+  request: CreateTheoreticalSituationRequest,
+): Promise<TheoreticalSituationResponse> {
+  const response = await fetch(`${apiBase}/api/v1/theoretical-situations`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<TheoreticalSituationResponse>(
+    response,
+    'Failed to create theoretical situation',
+  )
+}
+
+export async function listTheoreticalSituations(
+  accessToken: string,
+): Promise<TheoreticalSituationListItemResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/theoretical-situations`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TheoreticalSituationListItemResponse[]>(
+    response,
+    'Failed to list theoretical situations',
+  )
+}
+
+export async function getTheoreticalSituation(
+  accessToken: string,
+  situationId: string,
+): Promise<TheoreticalSituationResponse> {
+  const response = await fetch(`${apiBase}/api/v1/theoretical-situations/${situationId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<TheoreticalSituationResponse>(
+    response,
+    'Failed to load theoretical situation',
+  )
+}
+
+export async function getTheoreticalNextContext(
+  accessToken: string,
+  situationId: string,
+): Promise<TheoreticalNextContextResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/theoretical-situations/${situationId}/options/next-context`,
+    { headers: authHeaders(accessToken) },
+  )
+  return parseJsonResponse<TheoreticalNextContextResponse>(
+    response,
+    'Failed to load next context',
+  )
+}
+
+export async function setTheoreticalSituationContext(
+  accessToken: string,
+  situationId: string,
+  request: TheoreticalSituationContextRequest,
+): Promise<TheoreticalSituationContextResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/theoretical-situations/${situationId}/context`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<TheoreticalSituationContextResponse[]>(
+    response,
+    'Failed to save theoretical situation context',
+  )
+}
+
+export async function setTheoreticalSituationFacts(
+  accessToken: string,
+  situationId: string,
+  request: TheoreticalSituationFactRequest,
+): Promise<TheoreticalSituationFactResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/theoretical-situations/${situationId}/facts`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<TheoreticalSituationFactResponse[]>(
+    response,
+    'Failed to save theoretical situation facts',
+  )
+}
+
+export async function setTheoreticalSituationIncidents(
+  accessToken: string,
+  situationId: string,
+  request: TheoreticalSituationIncidentRequest,
+): Promise<TheoreticalSituationIncidentResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/theoretical-situations/${situationId}/incidents`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<TheoreticalSituationIncidentResponse[]>(
+    response,
+    'Failed to save theoretical situation incidents',
+  )
+}
+
+export async function resolveTheoreticalApplicability(
+  accessToken: string,
+  situationId: string,
+): Promise<TheoreticalApplicabilityResultResponse[]> {
+  const response = await fetch(
+    `${apiBase}/api/v1/theoretical-situations/${situationId}/resolve-applicability`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<TheoreticalApplicabilityResultResponse[]>(
+    response,
+    'Failed to resolve theoretical applicability',
+  )
+}
+
+export async function evaluateTheoreticalSituation(
+  accessToken: string,
+  situationId: string,
+  includePossible = false,
+): Promise<TheoreticalSituationEvaluationResponse> {
+  const response = await fetch(`${apiBase}/api/v1/theoretical-situations/${situationId}/evaluate`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ includePossible }),
+  })
+  return parseJsonResponse<TheoreticalSituationEvaluationResponse>(
+    response,
+    'Failed to evaluate theoretical situation',
+  )
+}
+
+export async function saveTheoreticalSituationTemplate(
+  accessToken: string,
+  situationId: string,
+): Promise<TheoreticalSituationResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/theoretical-situations/${situationId}/save-template`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<TheoreticalSituationResponse>(
+    response,
+    'Failed to save theoretical situation template',
+  )
+}
+
+export async function duplicateTheoreticalSituationFromTemplate(
+  accessToken: string,
+  templateId: string,
+): Promise<TheoreticalSituationResponse> {
+  const response = await fetch(
+    `${apiBase}/api/v1/theoretical-situations/from-template/${templateId}`,
+    {
+      method: 'POST',
+      headers: authHeaders(accessToken),
+    },
+  )
+  return parseJsonResponse<TheoreticalSituationResponse>(
+    response,
+    'Failed to duplicate theoretical situation template',
+  )
 }

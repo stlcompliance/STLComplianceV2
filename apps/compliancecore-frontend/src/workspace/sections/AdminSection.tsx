@@ -8,6 +8,7 @@ import { AuditDeliveryOrchestrationPanel } from '../../components/AuditDeliveryO
 import { M12AnalyticsWorkerSettingsPanel } from '../../components/M12AnalyticsWorkerSettingsPanel'
 import { RuleChangeMonitoringPanel } from '../../components/RuleChangeMonitoringPanel'
 import { SourceIngestionPanel } from '../../components/SourceIngestionPanel'
+import { ImportWizardPanel } from '../../components/ImportWizardPanel'
 import type { ComplianceCoreWorkspaceState } from '../useComplianceCoreWorkspaceState'
 
 type Props = { state: ComplianceCoreWorkspaceState }
@@ -47,6 +48,7 @@ export function AdminSection({ state }: Props) {
           <RiskScoringPanel accessToken={s.accessToken} canEvaluate={s.canEvaluateRisk} />
           <RuleChangeMonitoringPanel accessToken={s.accessToken} />
           <SourceIngestionPanel accessToken={s.accessToken} canManage={s.canManage} />
+          <ImportWizardPanel accessToken={s.accessToken} canManage={s.canManage} />
           <CsvImportExportPanel accessToken={s.accessToken} canManage={s.canManage} />
         </div>
       ) : null}
