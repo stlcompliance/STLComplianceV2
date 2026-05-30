@@ -96,10 +96,10 @@ describe('BulkDispatchPanel', () => {
     expect(await screen.findByText('Bulk dispatch')).toBeTruthy()
 
     fireEvent.click(screen.getByTestId('bulk-trip-11111111-1111-1111-1111-111111111111'))
-    fireEvent.click(screen.getByTestId('bulk-dispatch-driver-advanced-toggle'))
-    fireEvent.change(screen.getByTestId('bulk-dispatch-driver-advanced-input'), {
-      target: { value: 'driver-bulk-1' },
-    })
+    const driverInput = screen.getByLabelText('Driver person')
+    fireEvent.focus(driverInput)
+    fireEvent.change(driverInput, { target: { value: 'Bulk' } })
+    fireEvent.click(await screen.findByRole('button', { name: 'Bulk Driver' }))
     fireEvent.click(screen.getByText('Preview conflicts'))
 
     await vi.waitFor(() => {
@@ -192,10 +192,10 @@ describe('BulkDispatchPanel', () => {
     )
 
     fireEvent.click(await screen.findByTestId('bulk-trip-11111111-1111-1111-1111-111111111111'))
-    fireEvent.click(screen.getByTestId('bulk-dispatch-driver-advanced-toggle'))
-    fireEvent.change(screen.getByTestId('bulk-dispatch-driver-advanced-input'), {
-      target: { value: 'driver-bulk-1' },
-    })
+    const driverInput = screen.getByLabelText('Driver person')
+    fireEvent.focus(driverInput)
+    fireEvent.change(driverInput, { target: { value: 'Bulk' } })
+    fireEvent.click(await screen.findByRole('button', { name: 'Bulk Driver' }))
     fireEvent.click(screen.getByText('Preview conflicts'))
 
     await vi.waitFor(() => {

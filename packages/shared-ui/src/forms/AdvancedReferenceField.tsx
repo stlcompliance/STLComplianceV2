@@ -7,6 +7,8 @@ export type AdvancedReferenceFieldProps = {
   id?: string
   placeholder?: string
   followUpId?: string
+  allowManualEntry?: boolean
+  manualEntryDisabledMessage?: string
   disabled?: boolean
   testId?: string
 }
@@ -18,11 +20,14 @@ export function AdvancedReferenceField({
   id,
   placeholder = 'Paste GUID or key…',
   followUpId,
+  allowManualEntry = false,
+  manualEntryDisabledMessage = 'Manual entry is disabled. Select from the owning product picker.',
   disabled = false,
   testId,
 }: AdvancedReferenceFieldProps) {
   const [open, setOpen] = useState(false)
   const inputId = id ?? (testId ? `${testId}-input` : 'advanced-reference-input')
+  const inputDisabled = disabled
 
   return (
     <div data-testid={testId}>
@@ -41,12 +46,24 @@ export function AdvancedReferenceField({
             id={inputId}
             type="text"
             value={value}
-            onChange={(event) => onChange(event.target.value)}
+            onChange={(event) => {
+              if (!allowManualEntry || disabled) {
+                return
+              }
+              onChange(event.target.value)
+            }}
             placeholder={placeholder}
-            disabled={disabled}
+            disabled={inputDisabled}
+            readOnly={!allowManualEntry}
+            aria-readonly={!allowManualEntry}
             data-testid={testId ? `${testId}-input` : 'advanced-reference-input'}
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100"
           />
+          {!allowManualEntry ? (
+            <span className="mt-1 block text-xs text-slate-600" data-testid={testId ? `${testId}-manual-disabled` : 'advanced-reference-manual-disabled'}>
+              {manualEntryDisabledMessage}
+            </span>
+          ) : null}
           {followUpId ? (
             <span className="mt-1 block text-xs text-slate-600" data-follow-up-id={followUpId}>
               Picker API pending ({followUpId}).

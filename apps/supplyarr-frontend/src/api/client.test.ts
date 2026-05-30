@@ -578,20 +578,18 @@ describe('supplyarr api client', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        generatedAt: '2026-05-29T00:00:00Z',
-        totals: {
-          pendingCount: 0,
-          failedCount: 0,
-          blockedCount: 0,
-          draftCreatedCount: 0,
-        },
-        demandRefs: [],
+        pendingCount: 0,
+        stockShortCount: 0,
+        stockAvailableCount: 0,
+        prDraftedCount: 0,
+        processedItems: [],
+        pendingItems: [],
       }),
     })
     vi.stubGlobal('fetch', fetchMock)
 
     const dashboard = await getDemandProcessingDashboard('token')
-    expect(dashboard.totals.pendingCount).toBe(0)
+    expect(dashboard.pendingCount).toBe(0)
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/demand-processing', expect.any(Object))
   })
 
@@ -599,14 +597,14 @@ describe('supplyarr api client', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        enabled: true,
+        isEnabled: true,
         checkIntervalMinutes: 5,
       }),
     })
     vi.stubGlobal('fetch', fetchMock)
 
     const settings = await getDemandProcessingSettings('token')
-    expect(settings.enabled).toBe(true)
+    expect(settings.isEnabled).toBe(true)
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/demand-processing-settings', expect.any(Object))
   })
 
@@ -614,13 +612,13 @@ describe('supplyarr api client', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        enabled: true,
+        isEnabled: true,
       }),
     })
     vi.stubGlobal('fetch', fetchMock)
 
     const settings = await getIntegrationEventSettings('token')
-    expect(settings.enabled).toBe(true)
+    expect(settings.isEnabled).toBe(true)
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/integration-event-settings', expect.any(Object))
   })
 
@@ -628,13 +626,13 @@ describe('supplyarr api client', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        enabled: true,
+        isEnabled: true,
       }),
     })
     vi.stubGlobal('fetch', fetchMock)
 
     const settings = await getProcurementNotificationSettings('token')
-    expect(settings.enabled).toBe(true)
+    expect(settings.isEnabled).toBe(true)
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/notification-settings', expect.any(Object))
   })
 
@@ -642,13 +640,13 @@ describe('supplyarr api client', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        enabled: true,
+        isEnabled: true,
       }),
     })
     vi.stubGlobal('fetch', fetchMock)
 
     const settings = await getPriceSnapshotSettings('token')
-    expect(settings.enabled).toBe(true)
+    expect(settings.isEnabled).toBe(true)
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/price-snapshot-settings', expect.any(Object))
   })
 
@@ -656,13 +654,13 @@ describe('supplyarr api client', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        enabled: true,
+        isEnabled: true,
       }),
     })
     vi.stubGlobal('fetch', fetchMock)
 
     const settings = await getLeadTimeSnapshotSettings('token')
-    expect(settings.enabled).toBe(true)
+    expect(settings.isEnabled).toBe(true)
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/lead-time-snapshot-settings', expect.any(Object))
   })
 
@@ -670,13 +668,13 @@ describe('supplyarr api client', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        enabled: true,
+        isEnabled: true,
       }),
     })
     vi.stubGlobal('fetch', fetchMock)
 
     const settings = await getAvailabilitySnapshotSettings('token')
-    expect(settings.enabled).toBe(true)
+    expect(settings.isEnabled).toBe(true)
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/availability-snapshot-settings', expect.any(Object))
   })
 
@@ -703,13 +701,13 @@ describe('supplyarr api client', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        enabled: true,
+        isEnabled: true,
       }),
     })
     vi.stubGlobal('fetch', fetchMock)
 
     const settings = await getProcurementCoordinationSettings('token')
-    expect(settings.enabled).toBe(true)
+    expect(settings.isEnabled).toBe(true)
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/procurement-coordination-settings', expect.any(Object))
   })
 
@@ -736,13 +734,13 @@ describe('supplyarr api client', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        enabled: true,
+        isEnabled: true,
       }),
     })
     vi.stubGlobal('fetch', fetchMock)
 
     const settings = await getApprovalReminderSettings('token')
-    expect(settings.enabled).toBe(true)
+    expect(settings.isEnabled).toBe(true)
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/approval-reminder-settings', expect.any(Object))
   })
 
@@ -750,13 +748,13 @@ describe('supplyarr api client', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        enabled: true,
+        isEnabled: true,
       }),
     })
     vi.stubGlobal('fetch', fetchMock)
 
     const settings = await getProcurementExceptionEscalationSettings('token')
-    expect(settings.enabled).toBe(true)
+    expect(settings.isEnabled).toBe(true)
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/procurement-exception-escalation-settings',
       expect.any(Object),

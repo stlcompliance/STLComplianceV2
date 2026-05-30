@@ -1,6 +1,11 @@
 export type { PickerOption } from './pickerTypes'
 export { formatPickerLabel, mergePickerOptions } from './pickerTypes'
 export { slugifyKey, withKeySuffix } from './slugifyKey'
+export {
+  buildSemanticKey,
+  chooseSemanticAlias,
+  compactSemanticSlug,
+} from './semanticKey'
 export { normalizeUom } from './normalizeUom'
 export { GeneratedKeyField } from './GeneratedKeyField'
 export type { GeneratedKeyFieldProps } from './GeneratedKeyField'

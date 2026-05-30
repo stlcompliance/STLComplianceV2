@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { mergePickerOptions } from './pickerTypes'
+import { buildSemanticKey, chooseSemanticAlias } from './semanticKey'
 import { slugifyKey, withKeySuffix } from './slugifyKey'
 import { normalizeUom } from './normalizeUom'
 
@@ -39,5 +40,32 @@ describe('mergePickerOptions', () => {
       { value: 'gone', label: 'Former driver', inactive: true },
     )
     expect(merged[0]).toEqual({ value: 'gone', label: 'Former driver', inactive: true })
+  })
+})
+
+describe('semantic keys', () => {
+  it('uses known aliases when available', () => {
+    expect(
+      buildSemanticKey({
+        domain: 'docs',
+        kind: 'req',
+        title: 'Driver Qualification File Required Documents',
+      }),
+    ).toBe('docs.req.dqf')
+  })
+
+  it('falls back to compact semantic slug and appends deterministic suffixes', () => {
+    expect(
+      buildSemanticKey({
+        domain: 'inspection',
+        kind: 'req',
+        title: 'Pre Trip Inspection Required',
+        existingKeys: ['inspection.req.pretripinspectionrequired'],
+      }),
+    ).toBe('inspection.req.pretripinspectionrequired.2')
+  })
+
+  it('supports explicit alias hints', () => {
+    expect(chooseSemanticAlias('Internal Label', ['Loto'])).toBe('loto')
   })
 })

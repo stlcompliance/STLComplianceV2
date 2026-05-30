@@ -6,20 +6,18 @@ public static class PlatformAdminEndpoints
 {
     public static void MapPlatformAdminEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/platform-admin")
-            .WithTags("PlatformAdmin")
-            .RequireAuthorization();
-
-        group.MapGet("/dashboard", async (
+        static void MapRoutes(RouteGroupBuilder group, string suffix)
+        {
+            group.MapGet("/dashboard", async (
             HttpContext context,
             PlatformAdminService service,
             CancellationToken cancellationToken) =>
         {
             return Results.Ok(await service.GetDashboardAsync(context.User, cancellationToken));
         })
-        .WithName("PlatformAdminDashboard");
+        .WithName($"PlatformAdminDashboard{suffix}");
 
-        group.MapGet("/launch-diagnostics", async (
+            group.MapGet("/launch-diagnostics", async (
             HttpContext context,
             PlatformAdminService service,
             Guid? tenantId,
@@ -37,9 +35,9 @@ public static class PlatformAdminEndpoints
                 cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("PlatformAdminLaunchDiagnostics");
+        .WithName($"PlatformAdminLaunchDiagnostics{suffix}");
 
-        group.MapGet("/launch-attempts", async (
+            group.MapGet("/launch-attempts", async (
             HttpContext context,
             PlatformAdminService service,
             Guid? tenantId,
@@ -67,9 +65,9 @@ public static class PlatformAdminEndpoints
                 cancellationToken);
             return Results.Ok(attempts);
         })
-        .WithName("PlatformAdminLaunchAttempts");
+        .WithName($"PlatformAdminLaunchAttempts{suffix}");
 
-        group.MapGet("/overview/tenants", async (
+            group.MapGet("/overview/tenants", async (
             HttpContext context,
             PlatformAdminService service,
             int? page,
@@ -83,18 +81,18 @@ public static class PlatformAdminEndpoints
                 cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("PlatformAdminTenantOverview");
+        .WithName($"PlatformAdminTenantOverview{suffix}");
 
-        group.MapGet("/overview/products", async (
+            group.MapGet("/overview/products", async (
             HttpContext context,
             PlatformAdminService service,
             CancellationToken cancellationToken) =>
         {
             return Results.Ok(await service.GetProductOverviewAsync(context.User, cancellationToken));
         })
-        .WithName("PlatformAdminProductOverview");
+        .WithName($"PlatformAdminProductOverview{suffix}");
 
-        group.MapGet("/product-manifests", async (
+            group.MapGet("/product-manifests", async (
             HttpContext context,
             ProductManifestService service,
             Guid? tenantId,
@@ -112,9 +110,9 @@ public static class PlatformAdminEndpoints
                 cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("PlatformAdminProductManifests");
+        .WithName($"PlatformAdminProductManifests{suffix}");
 
-        group.MapPost("/users/{userId:guid}/enable", async (
+            group.MapPost("/users/{userId:guid}/enable", async (
             Guid userId,
             HttpContext context,
             PlatformUserAdminService service,
@@ -122,6 +120,19 @@ public static class PlatformAdminEndpoints
         {
             return Results.Ok(await service.EnableUserAsync(context.User, userId, cancellationToken));
         })
-        .WithName("PlatformAdminEnableUser");
+        .WithName($"PlatformAdminEnableUser{suffix}");
+        }
+
+        MapRoutes(
+            app.MapGroup("/api/platform-admin")
+                .WithTags("PlatformAdmin")
+                .RequireAuthorization(),
+            string.Empty);
+
+        MapRoutes(
+            app.MapGroup("/api/v1/platform-admin")
+                .WithTags("PlatformAdmin")
+                .RequireAuthorization(),
+            "V1");
     }
 }

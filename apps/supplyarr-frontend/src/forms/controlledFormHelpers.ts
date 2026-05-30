@@ -1,4 +1,4 @@
-import { slugifyKey, type PickerOption } from '@stl/shared-ui'
+import { buildSemanticKey, slugifyKey, type PickerOption } from '@stl/shared-ui'
 
 export const CURRENCY_OPTIONS: PickerOption[] = [
   { value: 'USD', label: 'USD — US Dollar' },
@@ -72,11 +72,28 @@ export function formatProcurementReason(code: string, notes: string): string {
   return `${trimmedCode}: ${trimmedNotes}`
 }
 
-export function resolveGeneratedKey(sourceLabel: string, manualOverride: string): string {
-  const manual = manualOverride.trim()
-  if (manual) {
-    return manual
+type ResolveGeneratedKeyOptions = {
+  domain?: string
+  kind?: string
+  aliases?: readonly string[]
+  existingKeys?: readonly string[]
+}
+
+export function resolveGeneratedKey(
+  sourceLabel: string,
+  options: ResolveGeneratedKeyOptions = {},
+): string {
+  const { domain, kind, aliases, existingKeys } = options
+  if (domain && kind) {
+    return buildSemanticKey({
+      domain,
+      kind,
+      title: sourceLabel,
+      aliases,
+      existingKeys: existingKeys ?? [],
+    })
   }
+
   return slugifyKey(sourceLabel)
 }
 

@@ -117,7 +117,7 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
     [Fact]
     public async Task List_pending_returns_team_and_site_org_units_before_processing()
     {
-        var (teamId, _) = await SeedOrgHierarchyWithAssignmentAsync();
+        var (teamId, departmentId, _) = await SeedOrgHierarchyWithAssignmentAsync();
 
         var listRequest = new HttpRequestMessage(
             HttpMethod.Get,
@@ -130,13 +130,16 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
         listResponse.EnsureSuccessStatusCode();
         var pending = (await listResponse.Content.ReadFromJsonAsync<PendingReadinessRollupsResponse>())!;
         Assert.Contains(pending.Items, x => x.ScopeType == ReadinessRollupRules.TeamScope && x.OrgUnitId == teamId);
+        Assert.Contains(
+            pending.Items,
+            x => x.ScopeType == ReadinessRollupRules.DepartmentScope && x.OrgUnitId == departmentId);
         Assert.Contains(pending.Items, x => x.ScopeType == ReadinessRollupRules.SiteScope);
     }
 
     [Fact]
     public async Task Process_batch_refreshes_team_readiness_rollup_and_supervisor_can_read_it()
     {
-        var (teamId, readyPersonId) = await SeedOrgHierarchyWithAssignmentAsync();
+        var (teamId, departmentId, readyPersonId) = await SeedOrgHierarchyWithAssignmentAsync();
         await GrantBaselineCertificationsAsync(readyPersonId);
 
         var processRequest = new HttpRequestMessage(
@@ -158,6 +161,11 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
         Assert.Contains(
             body.RefreshedRollups,
             x => x.ScopeType == ReadinessRollupRules.TeamScope && x.OrgUnitId == teamId && x.ReadyCount >= 1);
+        Assert.Contains(
+            body.RefreshedRollups,
+            x => x.ScopeType == ReadinessRollupRules.DepartmentScope
+                && x.OrgUnitId == departmentId
+                && x.ReadyCount >= 1);
 
         var teamRollupRequest = Authorized(
             HttpMethod.Get,
@@ -210,6 +218,64 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
         var v1MembersBody = (await v1MembersResponse.Content.ReadFromJsonAsync<ReadinessRollupMembersResponse>())!;
         Assert.Equal(membersBody.Members.Count, v1MembersBody.Members.Count);
         Assert.Equal(membersBody.Members[0].PersonId, v1MembersBody.Members[0].PersonId);
+
+        var departmentRollupResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/readiness-rollups/departments/{departmentId}",
+            _supervisorToken));
+        departmentRollupResponse.EnsureSuccessStatusCode();
+        var departmentRollup =
+            (await departmentRollupResponse.Content.ReadFromJsonAsync<ReadinessRollupSummaryResponse>())!;
+        Assert.Equal(1, departmentRollup.TotalMembers);
+        Assert.Equal(1, departmentRollup.ReadyCount);
+
+        var departmentMembersResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/readiness-rollups/departments/{departmentId}/members",
+            _supervisorToken));
+        departmentMembersResponse.EnsureSuccessStatusCode();
+        var departmentMembers =
+            (await departmentMembersResponse.Content.ReadFromJsonAsync<ReadinessRollupMembersResponse>())!;
+        Assert.Single(departmentMembers.Members);
+        Assert.Equal(readyPersonId, departmentMembers.Members[0].PersonId);
+
+        var v1DepartmentRollupResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/v1/readiness-rollups/departments/{departmentId}",
+            _supervisorToken));
+        v1DepartmentRollupResponse.EnsureSuccessStatusCode();
+        var v1DepartmentRollup =
+            (await v1DepartmentRollupResponse.Content.ReadFromJsonAsync<ReadinessRollupSummaryResponse>())!;
+        Assert.Equal(departmentRollup.TotalMembers, v1DepartmentRollup.TotalMembers);
+        Assert.Equal(departmentRollup.ReadyCount, v1DepartmentRollup.ReadyCount);
+
+        var v1DepartmentMembersResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/v1/readiness-rollups/departments/{departmentId}/members",
+            _supervisorToken));
+        v1DepartmentMembersResponse.EnsureSuccessStatusCode();
+        var v1DepartmentMembers =
+            (await v1DepartmentMembersResponse.Content.ReadFromJsonAsync<ReadinessRollupMembersResponse>())!;
+        Assert.Equal(departmentMembers.Members.Count, v1DepartmentMembers.Members.Count);
+        Assert.Equal(departmentMembers.Members[0].PersonId, v1DepartmentMembers.Members[0].PersonId);
+
+        var departmentListResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            "/api/readiness-rollups/departments",
+            _supervisorToken));
+        departmentListResponse.EnsureSuccessStatusCode();
+        var departmentList =
+            (await departmentListResponse.Content.ReadFromJsonAsync<IReadOnlyList<ReadinessRollupSummaryResponse>>())!;
+        Assert.Contains(departmentList, x => x.OrgUnitId == departmentId);
+
+        var v1DepartmentListResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            "/api/v1/readiness-rollups/departments",
+            _supervisorToken));
+        v1DepartmentListResponse.EnsureSuccessStatusCode();
+        var v1DepartmentList =
+            (await v1DepartmentListResponse.Content.ReadFromJsonAsync<IReadOnlyList<ReadinessRollupSummaryResponse>>())!;
+        Assert.Contains(v1DepartmentList, x => x.OrgUnitId == departmentId);
     }
 
     [Fact]
@@ -229,7 +295,7 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, v1Response.StatusCode);
     }
 
-    private async Task<(Guid TeamId, Guid ReadyPersonId)> SeedOrgHierarchyWithAssignmentAsync()
+    private async Task<(Guid TeamId, Guid DepartmentId, Guid ReadyPersonId)> SeedOrgHierarchyWithAssignmentAsync()
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
@@ -314,7 +380,7 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
         });
 
         await db.SaveChangesAsync();
-        return (teamId, readyPersonId);
+        return (teamId, deptId, readyPersonId);
     }
 
     private async Task GrantBaselineCertificationsAsync(Guid personId)

@@ -93,6 +93,13 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         var diagnostics = await response.Content.ReadFromJsonAsync<LaunchDiagnosticsResponse>();
         Assert.NotNull(diagnostics);
         Assert.NotEmpty(diagnostics.Rows);
+
+        var v1Response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/platform-admin/launch-diagnostics", token));
+        Assert.Equal(HttpStatusCode.OK, v1Response.StatusCode);
+        var v1Diagnostics = await v1Response.Content.ReadFromJsonAsync<LaunchDiagnosticsResponse>();
+        Assert.NotNull(v1Diagnostics);
+        Assert.NotEmpty(v1Diagnostics.Rows);
     }
 
     [Fact]
@@ -105,6 +112,10 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
             Authorized(HttpMethod.Get, "/api/platform-admin/launch-diagnostics", token));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+
+        var v1Response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/platform-admin/launch-diagnostics", token));
+        Assert.Equal(HttpStatusCode.Forbidden, v1Response.StatusCode);
     }
 
     [Fact]
@@ -138,6 +149,16 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         Assert.Equal(PlatformSeeder.DemoTenantId, attempt.TenantId);
         Assert.Equal(PlatformSeeder.DemoAdminEmail, attempt.ActorEmail);
         Assert.Contains("callback allowlist", attempt.RemediationHint);
+
+        var v1Response = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/v1/platform-admin/launch-attempts?productKey=staffarr&result=Denied",
+                token));
+        Assert.Equal(HttpStatusCode.OK, v1Response.StatusCode);
+        var v1Attempts = await v1Response.Content.ReadFromJsonAsync<PagedResult<LaunchAttemptTimelineItemResponse>>();
+        Assert.NotNull(v1Attempts);
+        Assert.NotEmpty(v1Attempts.Items);
     }
 
     [Fact]

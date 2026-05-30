@@ -60,6 +60,39 @@ public sealed class ReadinessRollupService(
         return rollups.Select(MapSummary).ToList();
     }
 
+    public async Task<IReadOnlyList<ReadinessRollupSummaryResponse>> ListDepartmentRollupsAsync(
+        Guid tenantId,
+        Guid? siteOrgUnitId,
+        CancellationToken cancellationToken = default)
+    {
+        var query = db.ReadinessRollups.AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.ScopeType == ReadinessRollupRules.DepartmentScope);
+
+        if (siteOrgUnitId is Guid siteId)
+        {
+            var departmentIds = await db.OrgUnitAssignments.AsNoTracking()
+                .Where(x => x.TenantId == tenantId
+                    && x.Status == "active"
+                    && x.SiteOrgUnitId == siteId)
+                .Select(x => x.DepartmentOrgUnitId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            if (departmentIds.Count == 0)
+            {
+                return [];
+            }
+
+            query = query.Where(x => departmentIds.Contains(x.OrgUnitId));
+        }
+
+        var rollups = await query
+            .OrderBy(x => x.OrgUnitName)
+            .ToListAsync(cancellationToken);
+
+        return rollups.Select(MapSummary).ToList();
+    }
+
     public async Task<ReadinessRollupSummaryResponse> GetRollupAsync(
         Guid tenantId,
         string scopeType,
@@ -70,7 +103,7 @@ public sealed class ReadinessRollupService(
         {
             throw new StlApiException(
                 "readiness_rollup.invalid_scope",
-                "Readiness rollup scope must be team or site.",
+                "Readiness rollup scope must be team, site, or department.",
                 400);
         }
 
@@ -101,7 +134,7 @@ public sealed class ReadinessRollupService(
         {
             throw new StlApiException(
                 "readiness_rollup.invalid_scope",
-                "Readiness rollup scope must be team or site.",
+                "Readiness rollup scope must be team, site, or department.",
                 400);
         }
 
@@ -329,7 +362,10 @@ public sealed class ReadinessRollupService(
     {
         var orgUnitQuery = db.OrgUnits.AsNoTracking()
             .Where(x => x.Status == "active")
-            .Where(x => x.UnitType == ReadinessRollupRules.TeamScope || x.UnitType == ReadinessRollupRules.SiteScope);
+            .Where(x =>
+                x.UnitType == ReadinessRollupRules.TeamScope
+                || x.UnitType == ReadinessRollupRules.SiteScope
+                || x.UnitType == ReadinessRollupRules.DepartmentScope);
 
         if (tenantId is Guid scopedTenantId)
         {
@@ -385,9 +421,10 @@ public sealed class ReadinessRollupService(
         {
             ReadinessRollupRules.TeamScope => assignmentQuery.Where(x => x.TeamOrgUnitId == orgUnitId),
             ReadinessRollupRules.SiteScope => assignmentQuery.Where(x => x.SiteOrgUnitId == orgUnitId),
+            ReadinessRollupRules.DepartmentScope => assignmentQuery.Where(x => x.DepartmentOrgUnitId == orgUnitId),
             _ => throw new StlApiException(
                 "readiness_rollup.invalid_scope",
-                "Readiness rollup scope must be team or site.",
+                "Readiness rollup scope must be team, site, or department.",
                 400)
         };
 

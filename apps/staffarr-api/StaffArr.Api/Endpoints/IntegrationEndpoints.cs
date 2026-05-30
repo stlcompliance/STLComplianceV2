@@ -29,10 +29,12 @@ public static class IntegrationEndpoints
     public const string TrainingAcknowledgementIngestActionScope = "staffarr.training_acknowledgements.write";
 
     public const string TrainingAcknowledgementReadActionScope = "staffarr.training_acknowledgements.read";
+    public const string PermissionCheckReadActionScope = "staffarr.permission_check.read";
 
     public static void MapStaffArrIntegrationEndpoints(this WebApplication app)
     {
         var integrations = app.MapGroup("/api/integrations").WithTags("Integrations");
+        var integrationsV1 = app.MapGroup("/api/v1/integrations").WithTags("Integrations");
 
         integrations.MapPost("/training-blockers", async (
             IngestTrainingBlockerRequest request,
@@ -375,6 +377,40 @@ public static class IntegrationEndpoints
             return Results.Ok(await service.GetByExternalUserIdAsync(tenantId, externalUserId!.Value, cancellationToken));
         })
         .WithName("SupplyarrProcurementApprovalAuthority");
+
+        integrations.MapGet("/permission-check", CheckPermissionsAsync)
+        .WithName("IntegrationPermissionCheck");
+
+        integrationsV1.MapGet("/permission-check", CheckPermissionsAsync)
+        .WithName("IntegrationPermissionCheckV1");
+    }
+
+    private static async Task<IResult> CheckPermissionsAsync(
+        Guid tenantId,
+        Guid personId,
+        string[] permissionKey,
+        HttpContext context,
+        StlServiceTokenValidator tokenValidator,
+        IntegrationPermissionCheckService service,
+        CancellationToken cancellationToken)
+    {
+        ValidatePermissionCheckServiceToken(tokenValidator, context, tenantId);
+
+        if (personId == Guid.Empty)
+        {
+            return Results.BadRequest(new
+            {
+                code = "permission_check.validation",
+                message = "personId must be a valid identifier."
+            });
+        }
+
+        var result = await service.CheckAsync(
+            tenantId,
+            personId,
+            permissionKey,
+            cancellationToken);
+        return Results.Ok(result);
     }
 
     private static void ValidatePersonLookupServiceToken(
@@ -407,6 +443,39 @@ public static class IntegrationEndpoints
                 RequiredTargetProduct = "staffarr",
                 TenantId = tenantId,
                 RequiredActionScope = TrainarrPersonLookupActionScope
+            });
+    }
+
+    private static void ValidatePermissionCheckServiceToken(
+        StlServiceTokenValidator tokenValidator,
+        HttpContext context,
+        Guid tenantId)
+    {
+        var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+            context.Request.Headers.Authorization.ToString());
+        var preview = tokenValidator.TryValidate(bearer)
+            ?? throw new StlApiException(
+                "auth.service_token_invalid",
+                "Service token is invalid.",
+                401);
+
+        var source = preview.SourceProductKey?.Trim().ToLowerInvariant();
+        if (source is not "maintainarr" and not "routarr" and not "supplyarr" and not "trainarr" and not "compliancecore")
+        {
+            throw new StlApiException(
+                "auth.service_token_scope",
+                "Service token source product is not authorized for permission checks.",
+                403);
+        }
+
+        tokenValidator.ValidateOrThrow(
+            bearer,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = source,
+                RequiredTargetProduct = "staffarr",
+                TenantId = tenantId,
+                RequiredActionScope = PermissionCheckReadActionScope
             });
     }
 }

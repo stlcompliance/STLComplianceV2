@@ -48,6 +48,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<ReadinessRollupService>();
         builder.Services.AddScoped<PersonnelHistoryService>();
         builder.Services.AddScoped<PermissionProjectionService>();
+        builder.Services.AddScoped<IntegrationPermissionCheckService>();
         builder.Services.AddScoped<ProcurementApprovalAuthorityService>();
         builder.Services.AddScoped<TrainingBlockerIngestionService>();
         builder.Services.AddScoped<TrainingAcknowledgementIngestionService>();

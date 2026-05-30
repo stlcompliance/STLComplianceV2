@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react'
 import { AdvancedReferenceField, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import { getTripExecutionSummary, getTrips, downloadTripCaptureAttachment } from '../api/client'
-import { tripToPickerOption } from '../lib/referencePickers'
 
 type Props = {
   accessToken: string
@@ -28,13 +27,22 @@ export function TripProofDvirReadPanel({ accessToken }: Props) {
   })
 
   const tripOptions = useMemo(
-    () => (tripsQuery.data ?? []).map(tripToPickerOption),
+    () =>
+      (tripsQuery.data ?? []).map((trip) => ({
+        value: trip.tripId,
+        label: `${trip.tripNumber} · ${trip.title}`,
+      })),
     [tripsQuery.data],
   )
 
   const selectedTripOption = useMemo((): PickerOption | undefined => {
     const trip = (tripsQuery.data ?? []).find((item) => item.tripId === tripId)
-    return trip ? tripToPickerOption(trip) : undefined
+    return trip
+      ? {
+          value: trip.tripId,
+          label: `${trip.tripNumber} · ${trip.title}`,
+        }
+      : undefined
   }, [tripId, tripsQuery.data])
 
   const summaryQuery = useQuery({

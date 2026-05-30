@@ -4,11 +4,13 @@ public static class ReadinessRollupRules
 {
     public const string TeamScope = "team";
     public const string SiteScope = "site";
+    public const string DepartmentScope = "department";
 
     public static readonly IReadOnlySet<string> SupportedScopeTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         TeamScope,
-        SiteScope
+        SiteScope,
+        DepartmentScope
     };
 
     public static readonly IReadOnlySet<string> SupportedMemberReadinessFilters = new HashSet<string>(StringComparer.OrdinalIgnoreCase)

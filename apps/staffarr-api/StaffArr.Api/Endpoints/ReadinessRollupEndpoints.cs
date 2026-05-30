@@ -34,6 +34,19 @@ public static class ReadinessRollupEndpoints
         })
         .WithName($"ListSiteReadinessRollups{suffix}");
 
+            rollups.MapGet("/departments", async (
+            Guid? siteOrgUnitId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            ReadinessRollupService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReadinessRollupRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListDepartmentRollupsAsync(tenantId, siteOrgUnitId, cancellationToken));
+        })
+        .WithName($"ListDepartmentReadinessRollups{suffix}");
+
             rollups.MapGet("/teams/{teamOrgUnitId:guid}", async (
             Guid teamOrgUnitId,
             HttpContext context,
@@ -69,6 +82,42 @@ public static class ReadinessRollupEndpoints
                 cancellationToken));
         })
         .WithName($"ListTeamReadinessRollupMembers{suffix}");
+
+            rollups.MapGet("/departments/{departmentOrgUnitId:guid}", async (
+            Guid departmentOrgUnitId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            ReadinessRollupService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReadinessRollupRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetRollupAsync(
+                tenantId,
+                ReadinessRollupRules.DepartmentScope,
+                departmentOrgUnitId,
+                cancellationToken));
+        })
+        .WithName($"GetDepartmentReadinessRollup{suffix}");
+
+            rollups.MapGet("/departments/{departmentOrgUnitId:guid}/members", async (
+            Guid departmentOrgUnitId,
+            string? readinessStatus,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            ReadinessRollupService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReadinessRollupRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListMembersAsync(
+                tenantId,
+                ReadinessRollupRules.DepartmentScope,
+                departmentOrgUnitId,
+                readinessStatus,
+                cancellationToken));
+        })
+        .WithName($"ListDepartmentReadinessRollupMembers{suffix}");
 
             rollups.MapGet("/sites/{siteOrgUnitId:guid}", async (
             Guid siteOrgUnitId,

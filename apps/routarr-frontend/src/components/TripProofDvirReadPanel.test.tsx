@@ -10,7 +10,7 @@ vi.mock('../api/client', () => ({
       tripId: 'trip-1',
       tripNumber: 'TR-001',
       title: 'North route',
-      dispatchStatus: 'completed',
+      dispatchStatus: 'planned',
       assignedDriverPersonId: null,
       vehicleRefKey: null,
       scheduledStartAt: null,
@@ -39,6 +39,13 @@ function renderPanel() {
       <TripProofDvirReadPanel accessToken="token" />
     </QueryClientProvider>,
   )
+}
+
+async function selectTripFromPicker() {
+  const tripInput = screen.getByLabelText('Trip')
+  fireEvent.focus(tripInput)
+  fireEvent.change(tripInput, { target: { value: 'TR-001' } })
+  fireEvent.click(await screen.findByRole('button', { name: 'TR-001 · North route' }))
 }
 
 describe('TripProofDvirReadPanel', () => {
@@ -98,10 +105,7 @@ describe('TripProofDvirReadPanel', () => {
     })
 
     renderPanel()
-    fireEvent.click(screen.getByTestId('trip-proof-dvir-trip-advanced-toggle'))
-    fireEvent.change(screen.getByTestId('trip-proof-dvir-trip-advanced-input'), {
-      target: { value: 'trip-1' },
-    })
+    await selectTripFromPicker()
     fireEvent.click(screen.getByRole('button', { name: 'Load execution' }))
 
     expect(await screen.findByTestId('proof-row-proof-1')).toBeTruthy()
@@ -153,10 +157,7 @@ describe('TripProofDvirReadPanel', () => {
     })
 
     renderPanel()
-    fireEvent.click(screen.getByTestId('trip-proof-dvir-trip-advanced-toggle'))
-    fireEvent.change(screen.getByTestId('trip-proof-dvir-trip-advanced-input'), {
-      target: { value: 'trip-1' },
-    })
+    await selectTripFromPicker()
     fireEvent.click(screen.getByRole('button', { name: 'Load execution' }))
 
     const downloadButton = await screen.findByTestId('proof-attachment-attach-2')
@@ -215,10 +216,7 @@ describe('TripProofDvirReadPanel', () => {
     })
 
     renderPanel()
-    fireEvent.click(screen.getByTestId('trip-proof-dvir-trip-advanced-toggle'))
-    fireEvent.change(screen.getByTestId('trip-proof-dvir-trip-advanced-input'), {
-      target: { value: 'trip-1' },
-    })
+    await selectTripFromPicker()
     fireEvent.click(screen.getByRole('button', { name: 'Load execution' }))
 
     const downloadButton = await screen.findByTestId('proof-attachment-attach-doc-1')
@@ -277,10 +275,7 @@ describe('TripProofDvirReadPanel', () => {
     })
 
     renderPanel()
-    fireEvent.click(screen.getByTestId('trip-proof-dvir-trip-advanced-toggle'))
-    fireEvent.change(screen.getByTestId('trip-proof-dvir-trip-advanced-input'), {
-      target: { value: 'trip-1' },
-    })
+    await selectTripFromPicker()
     fireEvent.click(screen.getByRole('button', { name: 'Load execution' }))
 
     const downloadButton = await screen.findByTestId('dvir-attachment-attach-dvir-1')

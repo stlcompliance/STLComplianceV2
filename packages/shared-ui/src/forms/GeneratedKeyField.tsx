@@ -5,6 +5,8 @@ export type GeneratedKeyFieldProps = {
   manualOverride: string
   onManualOverrideChange: (value: string) => void
   showAdvancedKey?: boolean
+  allowManualOverride?: boolean
+  manualOverrideDisabledMessage?: string
   collisionWarning?: string | null
   disabled?: boolean
   label?: string
@@ -17,6 +19,8 @@ export function GeneratedKeyField({
   manualOverride,
   onManualOverrideChange,
   showAdvancedKey = false,
+  allowManualOverride = false,
+  manualOverrideDisabledMessage = 'Manual key overrides are disabled. The system generates and maintains this key.',
   collisionWarning,
   disabled = false,
   label = 'Key',
@@ -45,7 +49,7 @@ export function GeneratedKeyField({
           {collisionWarning}
         </p>
       ) : null}
-      {showAdvancedKey ? (
+      {showAdvancedKey && allowManualOverride ? (
         <label htmlFor={manualOverrideId} className="block text-sm text-slate-400">
           Manual key override
           <input
@@ -58,6 +62,11 @@ export function GeneratedKeyField({
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm text-slate-100"
           />
         </label>
+      ) : null}
+      {showAdvancedKey && !allowManualOverride ? (
+        <p className="text-xs text-slate-500" data-testid="generated-key-manual-override-disabled">
+          {manualOverrideDisabledMessage}
+        </p>
       ) : null}
     </div>
   )

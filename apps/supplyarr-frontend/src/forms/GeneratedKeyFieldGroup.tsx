@@ -7,6 +7,9 @@ type GeneratedKeyFieldGroupProps = {
   sourceLabel: string
   existingKeys: readonly string[]
   onKeyChange: (key: string) => void
+  domain?: string
+  kind?: string
+  aliases?: readonly string[]
   label?: string
   disabled?: boolean
 }
@@ -15,14 +18,16 @@ export function GeneratedKeyFieldGroup({
   sourceLabel,
   existingKeys,
   onKeyChange,
+  domain,
+  kind,
+  aliases,
   label = 'Key',
   disabled = false,
 }: GeneratedKeyFieldGroupProps) {
-  const [manualOverride, setManualOverride] = useState('')
-  const [showAdvancedKey, setShowAdvancedKey] = useState(false)
+  const [showPolicyHint, setShowPolicyHint] = useState(false)
 
-  const generatedKey = slugifyKey(sourceLabel)
-  const resolvedKey = resolveGeneratedKey(sourceLabel, manualOverride)
+  const generatedKey = resolveGeneratedKey(sourceLabel, { domain, kind, aliases, existingKeys }) || slugifyKey(sourceLabel)
+  const resolvedKey = generatedKey
   const collisionWarning = keyCollisionWarning(resolvedKey, existingKeys)
 
   useEffect(() => {
@@ -31,8 +36,7 @@ export function GeneratedKeyFieldGroup({
 
   useEffect(() => {
     if (!sourceLabel.trim()) {
-      setManualOverride('')
-      setShowAdvancedKey(false)
+      setShowPolicyHint(false)
     }
   }, [sourceLabel])
 
@@ -41,21 +45,21 @@ export function GeneratedKeyFieldGroup({
       <GeneratedKeyField
         sourceLabel={sourceLabel}
         generatedKey={generatedKey}
-        manualOverride={manualOverride}
-        onManualOverrideChange={setManualOverride}
-        showAdvancedKey={showAdvancedKey}
+        manualOverride=""
+        onManualOverrideChange={() => {}}
+        showAdvancedKey={showPolicyHint}
         collisionWarning={collisionWarning}
         disabled={disabled}
         label={label}
       />
-      {!showAdvancedKey ? (
+      {!showPolicyHint ? (
         <button
           type="button"
           className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
-          onClick={() => setShowAdvancedKey(true)}
+          onClick={() => setShowPolicyHint(true)}
           disabled={disabled}
         >
-          Customize key
+          Key policy
         </button>
       ) : null}
     </div>

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { CheckboxMultiSelect } from './CheckboxMultiSelect'
 import { GeneratedKeyField } from './GeneratedKeyField'
+import { AdvancedReferenceField } from './AdvancedReferenceField'
 import { StaticSearchPicker } from './StaticSearchPicker'
 
 afterEach(() => {
@@ -44,6 +45,7 @@ describe('GeneratedKeyField', () => {
         manualOverride="custom"
         onManualOverrideChange={onManualOverrideChange}
         showAdvancedKey
+        allowManualOverride
       />,
     )
     expect(screen.getByTestId('generated-key-manual-override')).toBeInTheDocument()
@@ -51,6 +53,19 @@ describe('GeneratedKeyField', () => {
       target: { value: 'custom-key' },
     })
     expect(onManualOverrideChange).toHaveBeenCalledWith('custom-key')
+  })
+
+  it('shows policy message when advanced override is disabled', () => {
+    render(
+      <GeneratedKeyField
+        sourceLabel="Widget"
+        generatedKey="widget"
+        manualOverride=""
+        onManualOverrideChange={() => {}}
+        showAdvancedKey
+      />,
+    )
+    expect(screen.getByTestId('generated-key-manual-override-disabled')).toBeInTheDocument()
   })
 })
 
@@ -87,5 +102,38 @@ describe('StaticSearchPicker', () => {
     expect(screen.getByTestId('trip-picker')).toBeInTheDocument()
     const input = screen.getByRole('searchbox')
     expect(input).toHaveValue('Old trip (inactive)')
+  })
+})
+
+describe('AdvancedReferenceField', () => {
+  it('blocks manual edits by default', () => {
+    const onChange = vi.fn()
+    render(<AdvancedReferenceField value="trip-1" onChange={onChange} testId="advanced-ref" />)
+
+    fireEvent.click(screen.getByTestId('advanced-ref-toggle'))
+    const input = screen.getByTestId('advanced-ref-input')
+    fireEvent.change(input, { target: { value: 'trip-2' } })
+
+    expect(onChange).not.toHaveBeenCalled()
+    expect(screen.getByTestId('advanced-ref-manual-disabled')).toBeInTheDocument()
+  })
+
+  it('allows manual edits only when explicitly enabled', () => {
+    const onChange = vi.fn()
+    render(
+      <AdvancedReferenceField
+        value=""
+        onChange={onChange}
+        allowManualEntry
+        testId="advanced-ref-enabled"
+      />,
+    )
+
+    fireEvent.click(screen.getByTestId('advanced-ref-enabled-toggle'))
+    fireEvent.change(screen.getByTestId('advanced-ref-enabled-input'), {
+      target: { value: 'trip-2' },
+    })
+
+    expect(onChange).toHaveBeenCalledWith('trip-2')
   })
 })
