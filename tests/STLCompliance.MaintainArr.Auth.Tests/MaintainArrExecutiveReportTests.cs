@@ -124,6 +124,18 @@ public sealed class MaintainArrExecutiveReportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Reports_index_v1_alias_lists_report_groups()
+    {
+        var response = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports", _managerToken));
+        response.EnsureSuccessStatusCode();
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("maintenance", body, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("executive", body, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("compliance", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Executive_report_summary_denies_unauthenticated()
     {
         var response = await _maintainarrClient.SendAsync(

@@ -7,6 +7,18 @@ public static class SupplyReadinessEndpoints
 {
     public static void MapSupplyArrSupplyReadinessEndpoints(this WebApplication app)
     {
+        static void MapRoutes(RouteGroupBuilder group, string namePrefix)
+        {
+            group.MapGet("/dashboard", GetDashboardAsync)
+                .WithName($"{namePrefix}GetSupplyArrSupplyReadinessDashboard");
+            group.MapGet("/parts/{partId:guid}", GetPartReadinessAsync)
+                .WithName($"{namePrefix}GetSupplyArrPartSupplyReadiness");
+            group.MapGet("/vendors/{externalPartyId:guid}", GetVendorReadinessAsync)
+                .WithName($"{namePrefix}GetSupplyArrVendorSupplyReadiness");
+            group.MapGet("/procurement-path", GetProcurementPathReadinessAsync)
+                .WithName($"{namePrefix}GetSupplyArrProcurementPathReadiness");
+        }
+
         static async Task<IResult> GetDashboardAsync(
             SupplyArrAuthorizationService authorization,
             SupplyReadinessService service,
@@ -109,25 +121,16 @@ public static class SupplyReadinessEndpoints
         var legacyGroup = app.MapGroup("/api/supply-readiness")
             .WithTags("SupplyReadiness")
             .RequireAuthorization();
-        legacyGroup.MapGet("/dashboard", GetDashboardAsync)
-            .WithName("GetSupplyArrSupplyReadinessDashboard");
-        legacyGroup.MapGet("/parts/{partId:guid}", GetPartReadinessAsync)
-            .WithName("GetSupplyArrPartSupplyReadiness");
-        legacyGroup.MapGet("/vendors/{externalPartyId:guid}", GetVendorReadinessAsync)
-            .WithName("GetSupplyArrVendorSupplyReadiness");
-        legacyGroup.MapGet("/procurement-path", GetProcurementPathReadinessAsync)
-            .WithName("GetSupplyArrProcurementPathReadiness");
+        MapRoutes(legacyGroup, string.Empty);
 
         var v1Group = app.MapGroup("/api/v1/supply-readiness")
             .WithTags("SupplyReadiness")
             .RequireAuthorization();
-        v1Group.MapGet("/dashboard", GetDashboardAsync)
-            .WithName("GetSupplyArrSupplyReadinessDashboardV1");
-        v1Group.MapGet("/parts/{partId:guid}", GetPartReadinessAsync)
-            .WithName("GetSupplyArrPartSupplyReadinessV1");
-        v1Group.MapGet("/vendors/{externalPartyId:guid}", GetVendorReadinessAsync)
-            .WithName("GetSupplyArrVendorSupplyReadinessV1");
-        v1Group.MapGet("/procurement-path", GetProcurementPathReadinessAsync)
-            .WithName("GetSupplyArrProcurementPathReadinessV1");
+        MapRoutes(v1Group, "V1");
+
+        var v1ReadinessAliasGroup = app.MapGroup("/api/v1/readiness")
+            .WithTags("SupplyReadiness")
+            .RequireAuthorization();
+        MapRoutes(v1ReadinessAliasGroup, "V1Alias");
     }
 }

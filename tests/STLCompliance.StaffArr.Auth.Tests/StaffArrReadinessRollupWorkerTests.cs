@@ -192,6 +192,24 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
         var notReadyFilterBody =
             (await notReadyFilterResponse.Content.ReadFromJsonAsync<ReadinessRollupMembersResponse>())!;
         Assert.Empty(notReadyFilterBody.Members);
+
+        var v1TeamRollupResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/v1/readiness-rollups/teams/{teamId}",
+            _supervisorToken));
+        v1TeamRollupResponse.EnsureSuccessStatusCode();
+        var v1TeamRollup = (await v1TeamRollupResponse.Content.ReadFromJsonAsync<ReadinessRollupSummaryResponse>())!;
+        Assert.Equal(teamRollup.TotalMembers, v1TeamRollup.TotalMembers);
+        Assert.Equal(teamRollup.ReadyCount, v1TeamRollup.ReadyCount);
+
+        var v1MembersResponse = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/v1/readiness-rollups/teams/{teamId}/members",
+            _supervisorToken));
+        v1MembersResponse.EnsureSuccessStatusCode();
+        var v1MembersBody = (await v1MembersResponse.Content.ReadFromJsonAsync<ReadinessRollupMembersResponse>())!;
+        Assert.Equal(membersBody.Members.Count, v1MembersBody.Members.Count);
+        Assert.Equal(membersBody.Members[0].PersonId, v1MembersBody.Members[0].PersonId);
     }
 
     [Fact]
@@ -203,6 +221,12 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
             "/api/readiness-rollups/teams",
             memberToken));
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+
+        var v1Response = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            "/api/v1/readiness-rollups/teams",
+            memberToken));
+        Assert.Equal(HttpStatusCode.Forbidden, v1Response.StatusCode);
     }
 
     private async Task<(Guid TeamId, Guid ReadyPersonId)> SeedOrgHierarchyWithAssignmentAsync()

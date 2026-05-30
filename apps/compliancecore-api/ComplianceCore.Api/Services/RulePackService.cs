@@ -213,6 +213,24 @@ public sealed class RulePackService(
 
     }
 
+    public async Task<RulePackResponse> GetAsync(
+        Guid tenantId,
+        Guid rulePackId,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await db.RulePacks.AsNoTracking().FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == rulePackId && x.IsActive,
+            cancellationToken);
+        if (entity is null)
+        {
+            throw new StlApiException("rule_packs.not_found", "Rule pack was not found.", 404);
+        }
+
+        var program = await db.RegulatoryPrograms.AsNoTracking()
+            .FirstAsync(x => x.Id == entity.RegulatoryProgramId, cancellationToken);
+        return MapResponse(entity, program);
+    }
+
 
 
     public async Task<RulePackResponse> UpdateStatusAsync(
@@ -308,6 +326,188 @@ public sealed class RulePackService(
 
         return MapResponse(entity, program);
 
+    }
+
+    public async Task<RulePackResponse> PatchAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        Guid rulePackId,
+        PatchRulePackRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await db.RulePacks.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == rulePackId && x.IsActive,
+            cancellationToken);
+        if (entity is null)
+        {
+            throw new StlApiException("rule_packs.not_found", "Rule pack was not found.", 404);
+        }
+
+        var changed = false;
+        if (request.Label is not null)
+        {
+            entity.Label = GoverningBodyService.NormalizeLabel(request.Label, "rule_packs.validation", "Label");
+            changed = true;
+        }
+
+        if (request.Description is not null)
+        {
+            entity.Description = GoverningBodyService.NormalizeDescription(request.Description, "rule_packs.validation");
+            changed = true;
+        }
+
+        if (request.Status is not null)
+        {
+            var nextStatus = NormalizeStatus(request.Status);
+            if (!string.Equals(entity.Status, nextStatus, StringComparison.OrdinalIgnoreCase))
+            {
+                ValidateStatusTransition(entity.Status, nextStatus);
+                entity.Status = nextStatus;
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            entity.UpdatedAt = DateTimeOffset.UtcNow;
+            await db.SaveChangesAsync(cancellationToken);
+            await auditService.WriteAsync(
+                "rule_pack.patch",
+                tenantId,
+                actorUserId,
+                "rule_pack",
+                entity.Id.ToString(),
+                "success",
+                cancellationToken: cancellationToken);
+        }
+
+        var program = await db.RegulatoryPrograms.AsNoTracking()
+            .FirstAsync(x => x.Id == entity.RegulatoryProgramId, cancellationToken);
+        return MapResponse(entity, program);
+    }
+
+    public async Task<RulePackResponse> CloneAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        Guid sourceRulePackId,
+        CloneRulePackRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var source = await db.RulePacks.AsNoTracking().FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == sourceRulePackId && x.IsActive,
+            cancellationToken);
+        if (source is null)
+        {
+            throw new StlApiException("rule_packs.not_found", "Rule pack was not found.", 404);
+        }
+
+        var baseCloneKey = $"{source.PackKey}_clone";
+        var chosenKey = request.PackKey?.Trim();
+        if (string.IsNullOrWhiteSpace(chosenKey))
+        {
+            chosenKey = baseCloneKey;
+            var exists = await db.RulePacks.AnyAsync(
+                x => x.TenantId == tenantId && x.PackKey == chosenKey,
+                cancellationToken);
+            if (exists)
+            {
+                chosenKey = $"{baseCloneKey}_{Guid.NewGuid():N}"[..Math.Min(32, baseCloneKey.Length + 9)];
+            }
+        }
+
+        var created = await CreateAsync(
+            tenantId,
+            actorUserId,
+            new CreateRulePackRequest(
+                source.RegulatoryProgramId,
+                chosenKey!,
+                request.Label ?? $"{source.Label} (Clone)",
+                request.Description ?? source.Description),
+            cancellationToken);
+
+        if (request.CopyContent && !string.IsNullOrWhiteSpace(source.RuleContentJson))
+        {
+            var cloned = await db.RulePacks.FirstAsync(
+                x => x.TenantId == tenantId && x.Id == created.RulePackId && x.IsActive,
+                cancellationToken);
+            cloned.RuleContentJson = source.RuleContentJson;
+            cloned.UpdatedAt = DateTimeOffset.UtcNow;
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        await auditService.WriteAsync(
+            "rule_pack.clone",
+            tenantId,
+            actorUserId,
+            "rule_pack",
+            created.RulePackId.ToString(),
+            "success",
+            cancellationToken: cancellationToken);
+
+        return await GetAsync(tenantId, created.RulePackId, cancellationToken);
+    }
+
+    public async Task<RulePackDiffResponse> DiffAsync(
+        Guid tenantId,
+        Guid baseRulePackId,
+        Guid? compareRulePackId,
+        CancellationToken cancellationToken = default)
+    {
+        var basePack = await db.RulePacks.AsNoTracking().FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == baseRulePackId && x.IsActive,
+            cancellationToken);
+        if (basePack is null)
+        {
+            throw new StlApiException("rule_packs.not_found", "Rule pack was not found.", 404);
+        }
+
+        RulePack? comparePack;
+        if (compareRulePackId.HasValue)
+        {
+            comparePack = await db.RulePacks.AsNoTracking().FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == compareRulePackId.Value && x.IsActive,
+                cancellationToken);
+        }
+        else
+        {
+            comparePack = await db.RulePacks.AsNoTracking()
+                .Where(x =>
+                    x.TenantId == tenantId
+                    && x.PackKey == basePack.PackKey
+                    && x.VersionNumber < basePack.VersionNumber
+                    && x.IsActive)
+                .OrderByDescending(x => x.VersionNumber)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        if (comparePack is null)
+        {
+            throw new StlApiException(
+                "rule_packs.diff_compare_not_found",
+                "Comparison rule pack was not found.",
+                404);
+        }
+
+        var baseHash = RuleChangeHash.Compute(basePack.RuleContentJson);
+        var compareHash = RuleChangeHash.Compute(comparePack.RuleContentJson);
+        var metadataChanged =
+            !string.Equals(basePack.Label, comparePack.Label, StringComparison.Ordinal)
+            || !string.Equals(basePack.Description, comparePack.Description, StringComparison.Ordinal)
+            || !string.Equals(basePack.Status, comparePack.Status, StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(basePack.PackKey, comparePack.PackKey, StringComparison.Ordinal);
+        var contentChanged = !string.Equals(baseHash, compareHash, StringComparison.Ordinal);
+
+        return new RulePackDiffResponse(
+            basePack.Id,
+            comparePack.Id,
+            basePack.VersionNumber,
+            comparePack.VersionNumber,
+            basePack.Status,
+            comparePack.Status,
+            metadataChanged,
+            contentChanged,
+            baseHash,
+            compareHash);
     }
 
 

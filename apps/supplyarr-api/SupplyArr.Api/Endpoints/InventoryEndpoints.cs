@@ -205,5 +205,84 @@ public static class InventoryEndpoints
 
         var v1Group = app.MapGroup("/api/v1/inventory").WithTags("Inventory").RequireAuthorization();
         MapRoutes(v1Group, "V1");
+
+        MapInventoryLocationAliases(app.MapGroup("/api/v1/inventory-locations").WithTags("Inventory").RequireAuthorization(), "V1Aliases");
+    }
+
+    private static void MapInventoryLocationAliases(RouteGroupBuilder group, string nameSuffix)
+    {
+        group.MapGet("/", async (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            InventoryLocationService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInventoryRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListLocationsAsync(tenantId, cancellationToken));
+        })
+        .WithName($"ListInventoryLocations{nameSuffix}");
+
+        group.MapGet("/{locationId:guid}", async (
+            Guid locationId,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            InventoryLocationService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInventoryRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetLocationAsync(tenantId, locationId, cancellationToken));
+        })
+        .WithName($"GetInventoryLocation{nameSuffix}");
+
+        group.MapPost("/", async (
+            CreateInventoryLocationRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            InventoryLocationService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInventoryManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var created = await service.CreateLocationAsync(tenantId, actorUserId, request, cancellationToken);
+            return Results.Created($"/api/v1/inventory-locations/{created.LocationId}", created);
+        })
+        .WithName($"CreateInventoryLocation{nameSuffix}");
+
+        group.MapGet("/{locationId:guid}/bins", async (
+            Guid locationId,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            InventoryLocationService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInventoryRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListBinsAsync(tenantId, locationId, cancellationToken));
+        })
+        .WithName($"ListInventoryBins{nameSuffix}");
+
+        group.MapPost("/{locationId:guid}/bins", async (
+            Guid locationId,
+            CreateInventoryBinRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            InventoryLocationService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInventoryManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var created = await service.CreateBinAsync(
+                tenantId,
+                actorUserId,
+                locationId,
+                request,
+                cancellationToken);
+            return Results.Created($"/api/v1/inventory-locations/bins/{created.BinId}", created);
+        })
+        .WithName($"CreateInventoryBin{nameSuffix}");
     }
 }

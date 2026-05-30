@@ -13,6 +13,8 @@ public static class PartCatalogEndpoints
 
         MapParts(app.MapGroup("/api/parts").WithTags("PartCatalog").RequireAuthorization(), string.Empty);
         MapParts(app.MapGroup("/api/v1/parts").WithTags("PartCatalog").RequireAuthorization(), "V1");
+        MapParts(app.MapGroup("/api/items").WithTags("PartCatalog").RequireAuthorization(), "Items");
+        MapParts(app.MapGroup("/api/v1/items").WithTags("PartCatalog").RequireAuthorization(), "ItemsV1");
     }
 
     private static void MapCatalogs(RouteGroupBuilder group, string nameSuffix)

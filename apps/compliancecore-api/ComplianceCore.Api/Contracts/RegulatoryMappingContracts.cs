@@ -35,3 +35,16 @@ public sealed record CreateRegulatoryMappingRequest(
     Guid? FactDefinitionId,
     Guid? ComplianceKeyId,
     Guid? MaterialKeyId);
+
+public sealed record DerivedFactPreviewRequest(
+    Guid? RegulatoryProgramId,
+    Guid? RulePackId,
+    Guid? CitationId,
+    Guid? ComplianceKeyId,
+    Guid? MaterialKeyId,
+    int? Limit);
+
+public sealed record DerivedFactPreviewResponse(
+    DateTimeOffset GeneratedAt,
+    int ReturnedCount,
+    IReadOnlyList<RegulatoryMappingResponse> Items);

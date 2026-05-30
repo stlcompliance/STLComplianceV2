@@ -152,6 +152,45 @@ public sealed class RoutArrDispatchReportTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Routarr_v1_feature_aliases_are_available()
+    {
+        var healthResponse = await _routarrClient.GetAsync("/api/v1/health");
+        healthResponse.EnsureSuccessStatusCode();
+
+        var dashboardResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/dashboard", _dispatcherToken));
+        dashboardResponse.EnsureSuccessStatusCode();
+
+        var routesResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/routes", _dispatcherToken));
+        routesResponse.EnsureSuccessStatusCode();
+
+        var tripsResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/trips", _dispatcherToken));
+        tripsResponse.EnsureSuccessStatusCode();
+
+        var loadsResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/loads?tripId={_tripId:D}", _dispatcherToken));
+        loadsResponse.EnsureSuccessStatusCode();
+
+        var exceptionsResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exceptions", _dispatcherToken));
+        exceptionsResponse.EnsureSuccessStatusCode();
+
+        var incidentsResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/incidents", _dispatcherToken));
+        incidentsResponse.EnsureSuccessStatusCode();
+
+        var reportsResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports", _dispatcherToken));
+        reportsResponse.EnsureSuccessStatusCode();
+
+        var availabilityResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/availability", _dispatcherToken));
+        availabilityResponse.EnsureSuccessStatusCode();
+    }
+
     private async Task<(Guid TripId, Guid ExceptionId)> SeedDispatchReportDataAsync()
     {
         var now = DateTimeOffset.UtcNow;

@@ -128,6 +128,50 @@ public class ComplianceCoreFactSourceRegistryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Fact_source_v1_aliases_and_update_route_work()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var factDefinitionId = await CreateBooleanFactDefinitionAsync(adminToken, "v1_fact_source_enabled");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/fact-sources", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateFactSourceRequest(
+            factDefinitionId,
+            "v1_fact_source",
+            "static_config",
+            "V1 source",
+            "Created via v1 route.",
+            null,
+            null,
+            """{"booleanValue":true}""",
+            5));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<FactSourceResponse>())!;
+
+        var listResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/fact-sources", adminToken));
+        listResponse.EnsureSuccessStatusCode();
+        var listed = (await listResponse.Content.ReadFromJsonAsync<List<FactSourceResponse>>())!;
+        Assert.Contains(listed, item => item.FactSourceId == created.FactSourceId);
+
+        var updateRequest = Authorized(HttpMethod.Patch, $"/api/v1/fact-sources/{created.FactSourceId}", adminToken);
+        updateRequest.Content = JsonContent.Create(new UpdateFactSourceRequest(
+            "V1 source updated",
+            "Updated via v1 patch route.",
+            null,
+            null,
+            """{"booleanValue":false}""",
+            9,
+            true));
+        var updateResponse = await _complianceCoreClient.SendAsync(updateRequest);
+        updateResponse.EnsureSuccessStatusCode();
+        var updated = (await updateResponse.Content.ReadFromJsonAsync<FactSourceResponse>())!;
+        Assert.Equal("V1 source updated", updated.Label);
+        Assert.Equal(9, updated.Priority);
+        Assert.Contains("\"booleanValue\":false", updated.ConfigJson);
+    }
+
+    [Fact]
     public async Task Internal_resolve_uses_context_for_product_api_source()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");

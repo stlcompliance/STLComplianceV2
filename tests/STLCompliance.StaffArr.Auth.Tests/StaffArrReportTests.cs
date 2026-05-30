@@ -18,6 +18,7 @@ public sealed class StaffArrReportTests : IAsyncLifetime
     private WebApplicationFactory<global::StaffArr.Api.Program> _staffarrFactory = null!;
     private HttpClient _staffarrClient = null!;
     private string _adminToken = null!;
+    private Guid _personId;
 
     public async Task InitializeAsync()
     {
@@ -111,11 +112,43 @@ public sealed class StaffArrReportTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, exportResponse.StatusCode);
     }
 
+    [Fact]
+    public async Task Staffarr_v1_feature_aliases_are_available()
+    {
+        var reportsIndexResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports", _adminToken));
+        reportsIndexResponse.EnsureSuccessStatusCode();
+
+        var certificationsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/certifications", _adminToken));
+        certificationsResponse.EnsureSuccessStatusCode();
+
+        var sitesResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/sites", _adminToken));
+        sitesResponse.EnsureSuccessStatusCode();
+
+        var hierarchyResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/hierarchy?personId={_personId:D}", _adminToken));
+        hierarchyResponse.EnsureSuccessStatusCode();
+
+        var documentsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/documents?personId={_personId:D}", _adminToken));
+        documentsResponse.EnsureSuccessStatusCode();
+
+        var onboardingResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/onboarding?personId={_personId:D}", _adminToken));
+        onboardingResponse.EnsureSuccessStatusCode();
+
+        var integrationsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/integrations", _adminToken));
+        integrationsResponse.EnsureSuccessStatusCode();
+    }
+
     private async Task SeedWorkforceDataAsync()
     {
         using var scope = _staffarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
-        var personId = Guid.NewGuid();
+        _personId = Guid.NewGuid();
         var orgUnitId = Guid.NewGuid();
         var now = DateTimeOffset.UtcNow;
 
@@ -132,7 +165,7 @@ public sealed class StaffArrReportTests : IAsyncLifetime
 
         db.People.Add(new StaffPerson
         {
-            Id = personId,
+            Id = _personId,
             TenantId = PlatformSeeder.DemoTenantId,
             GivenName = "Report",
             FamilyName = "Worker",
@@ -165,7 +198,7 @@ public sealed class StaffArrReportTests : IAsyncLifetime
         {
             Id = Guid.NewGuid(),
             TenantId = PlatformSeeder.DemoTenantId,
-            PersonId = personId,
+            PersonId = _personId,
             ReasonCategoryKey = "safety",
             Severity = "high",
             Status = "open",

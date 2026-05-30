@@ -102,12 +102,23 @@ public class StaffArrTrainArrProgramVersionMatrixTests : IAsyncLifetime
         Assert.Single(versions);
         Assert.Equal(1, versions[0].VersionNumber);
 
+        var versionsV1Response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/program-versions?programId={created.ProgramId}", adminToken));
+        versionsV1Response.EnsureSuccessStatusCode();
+        var versionsV1 = (await versionsV1Response.Content.ReadFromJsonAsync<IReadOnlyList<TrainingProgramVersionSummaryResponse>>())!;
+        Assert.Single(versionsV1);
+        Assert.Equal(versions[0].VersionNumber, versionsV1[0].VersionNumber);
+
         var revisionRequest = Authorized(HttpMethod.Post, "/api/program-versions/start-revision", adminToken);
         revisionRequest.Content = JsonContent.Create(new StartProgramRevisionRequest(created.ProgramId));
         var revisionResponse = await _trainarrClient.SendAsync(revisionRequest);
         revisionResponse.EnsureSuccessStatusCode();
         var revised = (await revisionResponse.Content.ReadFromJsonAsync<TrainingProgramDetailResponse>())!;
         Assert.Equal("draft", revised.Status);
+
+        var versionByIdV1Response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/program-versions/{versionsV1[0].ProgramVersionId}", adminToken));
+        versionByIdV1Response.EnsureSuccessStatusCode();
     }
 
     [Fact]

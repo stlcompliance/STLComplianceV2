@@ -15,7 +15,8 @@ public sealed class ExternalPartyService(
     {
         "vendor",
         "dealer",
-        "supplier"
+        "supplier",
+        "customer"
     };
 
     private static readonly HashSet<string> AllowedStatuses = new(StringComparer.OrdinalIgnoreCase)

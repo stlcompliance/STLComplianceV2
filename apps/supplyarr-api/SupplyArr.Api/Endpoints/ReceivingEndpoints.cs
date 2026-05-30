@@ -163,5 +163,8 @@ public static class ReceivingEndpoints
 
         var v1Group = app.MapGroup("/api/v1/receiving").WithTags("Receiving").RequireAuthorization();
         MapRoutes(v1Group, "V1");
+
+        var v1ReceiptsGroup = app.MapGroup("/api/v1/receipts").WithTags("Receiving").RequireAuthorization();
+        MapRoutes(v1ReceiptsGroup, "V1Receipts");
     }
 }

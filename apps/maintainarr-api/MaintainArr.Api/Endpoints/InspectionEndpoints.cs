@@ -10,6 +10,7 @@ public static class InspectionEndpoints
     {
         MapRoutes(app.MapGroup("/api/inspections").WithTags("Inspections").RequireAuthorization(), string.Empty);
         MapRoutes(app.MapGroup("/api/v1/inspections").WithTags("Inspections").RequireAuthorization(), "V1");
+        MapRoutes(app.MapGroup("/api/v1/inspection-runs").WithTags("Inspections").RequireAuthorization(), "V1InspectionRuns");
     }
 
     private static void MapRoutes(RouteGroupBuilder group, string nameSuffix)

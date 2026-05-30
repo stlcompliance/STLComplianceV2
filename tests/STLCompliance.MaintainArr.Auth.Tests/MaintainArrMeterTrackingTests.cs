@@ -153,6 +153,12 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
         listResponse.EnsureSuccessStatusCode();
         var readings = (await listResponse.Content.ReadFromJsonAsync<List<MeterReadingResponse>>())!;
         Assert.Single(readings);
+
+        var listByAssetRequest = Authorized(HttpMethod.Get, $"/api/v1/meters?assetId={assetId:D}", token);
+        var listByAssetResponse = await _maintainarrClient.SendAsync(listByAssetRequest);
+        listByAssetResponse.EnsureSuccessStatusCode();
+        var meters = (await listByAssetResponse.Content.ReadFromJsonAsync<List<AssetMeterResponse>>())!;
+        Assert.Contains(meters, x => x.AssetMeterId == meter.AssetMeterId);
     }
 
     [Fact]

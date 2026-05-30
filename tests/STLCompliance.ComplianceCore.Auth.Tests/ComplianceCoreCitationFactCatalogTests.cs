@@ -187,6 +187,174 @@ public class ComplianceCoreCitationFactCatalogTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task V1_citations_and_facts_aliases_match_primary_endpoints()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var (programId, rulePackId) = await CreateSampleRulePackAsync(adminToken);
+
+        var createCitationRequest = Authorized(HttpMethod.Post, "/api/v1/citations", adminToken);
+        createCitationRequest.Content = JsonContent.Create(new CreateRegulatoryCitationRequest(
+            programId,
+            rulePackId,
+            "cfr_v1_alias",
+            "V1 alias citation",
+            "49 CFR V1",
+            "Created through v1 citations alias.",
+            null));
+        var createCitationResponse = await _complianceCoreClient.SendAsync(createCitationRequest);
+        createCitationResponse.EnsureSuccessStatusCode();
+
+        var createFactRequest = Authorized(HttpMethod.Post, "/api/v1/facts", adminToken);
+        createFactRequest.Content = JsonContent.Create(new CreateFactDefinitionRequest(
+            "v1_alias_fact",
+            "V1 alias fact",
+            "Created through v1 facts alias.",
+            "boolean"));
+        var createFactResponse = await _complianceCoreClient.SendAsync(createFactRequest);
+        createFactResponse.EnsureSuccessStatusCode();
+
+        var legacyCitationsResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/citations?rulePackId={rulePackId}", adminToken));
+        legacyCitationsResponse.EnsureSuccessStatusCode();
+        var legacyCitations = (await legacyCitationsResponse.Content.ReadFromJsonAsync<IReadOnlyList<RegulatoryCitationResponse>>())!;
+
+        var v1CitationsResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/citations?rulePackId={rulePackId}", adminToken));
+        v1CitationsResponse.EnsureSuccessStatusCode();
+        var v1Citations = (await v1CitationsResponse.Content.ReadFromJsonAsync<IReadOnlyList<RegulatoryCitationResponse>>())!;
+        Assert.Equal(legacyCitations.Count, v1Citations.Count);
+
+        var legacyFactsResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/fact-definitions", adminToken));
+        legacyFactsResponse.EnsureSuccessStatusCode();
+        var legacyFacts = (await legacyFactsResponse.Content.ReadFromJsonAsync<IReadOnlyList<FactDefinitionResponse>>())!;
+
+        var v1FactsResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/facts", adminToken));
+        v1FactsResponse.EnsureSuccessStatusCode();
+        var v1Facts = (await v1FactsResponse.Content.ReadFromJsonAsync<IReadOnlyList<FactDefinitionResponse>>())!;
+        Assert.Equal(legacyFacts.Count, v1Facts.Count);
+    }
+
+    [Fact]
+    public async Task V1_citation_and_fact_detail_routes_support_read_update_history_usage_and_validation()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var (programId, rulePackId) = await CreateSampleRulePackAsync(adminToken);
+
+        var createCitationRequest = Authorized(HttpMethod.Post, "/api/v1/citations", adminToken);
+        createCitationRequest.Content = JsonContent.Create(new CreateRegulatoryCitationRequest(
+            programId,
+            rulePackId,
+            "cfr_detail_routes",
+            "Detail route citation",
+            "49 CFR detail",
+            "Detail route description",
+            null));
+        var createdCitation = (await (await _complianceCoreClient.SendAsync(createCitationRequest))
+            .Content.ReadFromJsonAsync<RegulatoryCitationResponse>())!;
+
+        var createCitationRevisionRequest = Authorized(HttpMethod.Post, "/api/v1/citations", adminToken);
+        createCitationRevisionRequest.Content = JsonContent.Create(new CreateRegulatoryCitationRequest(
+            programId,
+            rulePackId,
+            "cfr_detail_routes",
+            "Detail route citation rev2",
+            "49 CFR detail rev2",
+            "Detail route description rev2",
+            createdCitation.CitationId));
+        await _complianceCoreClient.SendAsync(createCitationRevisionRequest);
+
+        var getCitationResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/citations/{createdCitation.CitationId}", adminToken));
+        getCitationResponse.EnsureSuccessStatusCode();
+        var fetchedCitation = (await getCitationResponse.Content.ReadFromJsonAsync<RegulatoryCitationResponse>())!;
+        Assert.Equal("cfr_detail_routes", fetchedCitation.CitationKey);
+
+        var updateCitationRequest = Authorized(HttpMethod.Patch, $"/api/v1/citations/{createdCitation.CitationId}", adminToken);
+        updateCitationRequest.Content = JsonContent.Create(new UpdateRegulatoryCitationRequest(
+            "Updated detail citation",
+            "49 CFR detail updated",
+            "Updated detail route description",
+            true));
+        var updateCitationResponse = await _complianceCoreClient.SendAsync(updateCitationRequest);
+        updateCitationResponse.EnsureSuccessStatusCode();
+        var updatedCitation = (await updateCitationResponse.Content.ReadFromJsonAsync<RegulatoryCitationResponse>())!;
+        Assert.Equal("Updated detail citation", updatedCitation.Label);
+
+        var citationHistoryResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/citations/{createdCitation.CitationId}/history", adminToken));
+        citationHistoryResponse.EnsureSuccessStatusCode();
+        var citationHistory = (await citationHistoryResponse.Content.ReadFromJsonAsync<IReadOnlyList<RegulatoryCitationResponse>>())!;
+        Assert.True(citationHistory.Count >= 2);
+
+        var citationRulesResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/citations/{createdCitation.CitationId}/rules", adminToken));
+        citationRulesResponse.EnsureSuccessStatusCode();
+        var citationRules = (await citationRulesResponse.Content.ReadFromJsonAsync<IReadOnlyList<CitationRuleLinkResponse>>())!;
+        Assert.Contains(citationRules, x => x.RulePackId == rulePackId);
+
+        var createFactRequest = Authorized(HttpMethod.Post, "/api/v1/facts", adminToken);
+        createFactRequest.Content = JsonContent.Create(new CreateFactDefinitionRequest(
+            "fact_detail_routes",
+            "Fact detail routes",
+            "Fact detail description",
+            "string"));
+        var createFactResponse = await _complianceCoreClient.SendAsync(createFactRequest);
+        createFactResponse.EnsureSuccessStatusCode();
+
+        var getFactResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/facts/fact_detail_routes", adminToken));
+        getFactResponse.EnsureSuccessStatusCode();
+        var fetchedFact = (await getFactResponse.Content.ReadFromJsonAsync<FactDefinitionResponse>())!;
+        Assert.Equal("fact_detail_routes", fetchedFact.FactKey);
+
+        var updateFactRequest = Authorized(HttpMethod.Patch, "/api/v1/facts/fact_detail_routes", adminToken);
+        updateFactRequest.Content = JsonContent.Create(new UpdateFactDefinitionRequest(
+            "Fact detail routes updated",
+            "Fact detail description updated",
+            "boolean",
+            true));
+        var updateFactResponse = await _complianceCoreClient.SendAsync(updateFactRequest);
+        updateFactResponse.EnsureSuccessStatusCode();
+        var updatedFact = (await updateFactResponse.Content.ReadFromJsonAsync<FactDefinitionResponse>())!;
+        Assert.Equal("boolean", updatedFact.ValueType);
+
+        var createRequirementRequest = Authorized(HttpMethod.Post, "/api/fact-requirements", adminToken);
+        createRequirementRequest.Content = JsonContent.Create(new CreateFactRequirementRequest(
+            updatedFact.FactDefinitionId,
+            rulePackId,
+            createdCitation.CitationId,
+            "fact_detail_requirement",
+            "Fact detail requirement",
+            "Fact detail requirement description",
+            true));
+        var createRequirementResponse = await _complianceCoreClient.SendAsync(createRequirementRequest);
+        createRequirementResponse.EnsureSuccessStatusCode();
+
+        var usageResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/facts/fact_detail_routes/usage", adminToken));
+        usageResponse.EnsureSuccessStatusCode();
+        var usage = (await usageResponse.Content.ReadFromJsonAsync<FactDefinitionUsageResponse>())!;
+        Assert.True(usage.FactRequirementCount >= 1);
+        Assert.True(usage.RulePackCount >= 1);
+        Assert.True(usage.CitationCount >= 1);
+
+        var validateRequest = Authorized(HttpMethod.Post, "/api/v1/facts/validate-payload", adminToken);
+        validateRequest.Content = JsonContent.Create(new ValidateFactPayloadRequest(
+        [
+            new ValidateFactPayloadItemRequest("fact_detail_routes", "true"),
+            new ValidateFactPayloadItemRequest("unknown_fact_key", "anything")
+        ]));
+        var validateResponse = await _complianceCoreClient.SendAsync(validateRequest);
+        validateResponse.EnsureSuccessStatusCode();
+        var validation = (await validateResponse.Content.ReadFromJsonAsync<ValidateFactPayloadResponse>())!;
+        Assert.Equal(2, validation.Results.Count);
+        Assert.True(validation.Results.First(x => x.FactKey == "fact_detail_routes").IsValid);
+        Assert.False(validation.Results.First(x => x.FactKey == "unknown_fact_key").IsValid);
+    }
+
     private async Task<(Guid ProgramId, Guid RulePackId)> CreateSampleRulePackAsync(string adminToken)
     {
         var bodyRequest = Authorized(HttpMethod.Post, "/api/governing-bodies", adminToken);

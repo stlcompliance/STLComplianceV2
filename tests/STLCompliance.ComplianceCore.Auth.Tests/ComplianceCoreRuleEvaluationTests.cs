@@ -380,6 +380,164 @@ public class ComplianceCoreRuleEvaluationTests : IAsyncLifetime
         Assert.Equal(runsBeforeSim.Count, runsAfterSim.Count);
     }
 
+    [Fact]
+    public async Task V1_rule_pack_evaluation_aliases_support_content_and_evaluate_routes()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await CreateSampleRulePackAsync(adminToken);
+
+        var content = new RulePackContentBody(
+            1,
+            "all",
+            [new RuleDefinitionDto("license_valid", "Valid license", "fact_boolean", "driver_license_valid", true)]);
+
+        var updateRequest = Authorized(HttpMethod.Put, $"/api/v1/rule-packs/{rulePackId}/content", adminToken);
+        updateRequest.Content = JsonContent.Create(new UpdateRulePackContentRequest(content));
+        var updateResponse = await _complianceCoreClient.SendAsync(updateRequest);
+        updateResponse.EnsureSuccessStatusCode();
+
+        var getResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/rule-packs/{rulePackId}/content", adminToken));
+        getResponse.EnsureSuccessStatusCode();
+        var loadedContent = (await getResponse.Content.ReadFromJsonAsync<RulePackContentResponse>())!;
+        Assert.True(loadedContent.HasContent);
+
+        var evaluateRequest = Authorized(HttpMethod.Post, $"/api/v1/rule-packs/{rulePackId}/evaluate", adminToken);
+        evaluateRequest.Content = JsonContent.Create(new EvaluateRulePackRequest(new Dictionary<string, bool>
+        {
+            ["driver_license_valid"] = true,
+        }));
+        var evaluateResponse = await _complianceCoreClient.SendAsync(evaluateRequest);
+        evaluateResponse.EnsureSuccessStatusCode();
+        var run = (await evaluateResponse.Content.ReadFromJsonAsync<RuleEvaluationRunResponse>())!;
+        Assert.Equal("pass", run.OverallResult);
+
+        var batchRequest = Authorized(HttpMethod.Post, "/api/v1/rule-packs/evaluate/batch", adminToken);
+        batchRequest.Content = JsonContent.Create(new EvaluateRulePackBatchRequest(
+            [new EvaluateRulePackBatchItem("driver_qualification")],
+            new Dictionary<string, bool> { ["driver_license_valid"] = true }));
+        var batchResponse = await _complianceCoreClient.SendAsync(batchRequest);
+        batchResponse.EnsureSuccessStatusCode();
+        var batch = (await batchResponse.Content.ReadFromJsonAsync<EvaluateRulePackBatchResponse>())!;
+        Assert.Equal(1, batch.Summary.AllowCount);
+    }
+
+    [Fact]
+    public async Task V1_rules_catalog_routes_list_get_create_patch_validate_test_usage_and_history_work()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await CreateSampleRulePackWithContentAsync(adminToken);
+
+        var listResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/rules", adminToken));
+        listResponse.EnsureSuccessStatusCode();
+        var listedRules = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<RuleCatalogItemResponse>>())!;
+        var existingRule = Assert.Single(listedRules.Where(x => x.RulePackId == rulePackId));
+
+        var getResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/rules/{Uri.EscapeDataString(existingRule.RuleId)}", adminToken));
+        getResponse.EnsureSuccessStatusCode();
+        var loadedRule = (await getResponse.Content.ReadFromJsonAsync<RuleCatalogItemResponse>())!;
+        Assert.Equal(existingRule.RuleId, loadedRule.RuleId);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/rules", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateRuleCatalogRequest(
+            rulePackId,
+            "medical_cert_rule",
+            "Medical certificate required",
+            "fact_boolean",
+            "medical_cert_on_file",
+            true));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<RuleCatalogItemResponse>())!;
+        Assert.Equal("medical_cert_rule", created.RuleKey);
+
+        var patchRequest = Authorized(HttpMethod.Patch, $"/api/v1/rules/{Uri.EscapeDataString(created.RuleId)}", adminToken);
+        patchRequest.Content = JsonContent.Create(new PatchRuleCatalogRequest(
+            "Medical certificate still required",
+            null,
+            "medical_cert_on_file",
+            false,
+            true));
+        var patchResponse = await _complianceCoreClient.SendAsync(patchRequest);
+        patchResponse.EnsureSuccessStatusCode();
+        var patched = (await patchResponse.Content.ReadFromJsonAsync<RuleCatalogItemResponse>())!;
+        Assert.Equal("Medical certificate still required", patched.Label);
+        Assert.False(patched.ExpectedValue);
+        Assert.True(patched.NonWaivable);
+
+        var validateResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/rules/{Uri.EscapeDataString(patched.RuleId)}/validate", adminToken));
+        validateResponse.EnsureSuccessStatusCode();
+        var validation = (await validateResponse.Content.ReadFromJsonAsync<RuleCatalogValidateResponse>())!;
+        Assert.True(validation.IsValid);
+
+        var testRequest = Authorized(HttpMethod.Post, $"/api/v1/rules/{Uri.EscapeDataString(patched.RuleId)}/test", adminToken);
+        testRequest.Content = JsonContent.Create(new RuleCatalogTestRequest(new Dictionary<string, bool>
+        {
+            ["medical_cert_on_file"] = false
+        }));
+        var testResponse = await _complianceCoreClient.SendAsync(testRequest);
+        testResponse.EnsureSuccessStatusCode();
+        var testResult = (await testResponse.Content.ReadFromJsonAsync<RuleCatalogTestResponse>())!;
+        Assert.Equal("pass", testResult.Result);
+
+        var evaluateRequest = Authorized(HttpMethod.Post, $"/api/rule-packs/{rulePackId}/evaluate", adminToken);
+        evaluateRequest.Content = JsonContent.Create(new EvaluateRulePackRequest(new Dictionary<string, bool>
+        {
+            ["driver_license_valid"] = true,
+            ["medical_cert_on_file"] = false,
+        }));
+        var evaluateResponse = await _complianceCoreClient.SendAsync(evaluateRequest);
+        evaluateResponse.EnsureSuccessStatusCode();
+
+        var usageResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/rules/{Uri.EscapeDataString(patched.RuleId)}/usage", adminToken));
+        usageResponse.EnsureSuccessStatusCode();
+        var usage = (await usageResponse.Content.ReadFromJsonAsync<RuleCatalogUsageResponse>())!;
+        Assert.True(usage.EvaluationRunCount >= 1);
+
+        var historyResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/rules/{Uri.EscapeDataString(patched.RuleId)}/history", adminToken));
+        historyResponse.EnsureSuccessStatusCode();
+        var history = (await historyResponse.Content.ReadFromJsonAsync<RuleCatalogHistoryResponse>())!;
+        Assert.Equal("medical_cert_rule", history.RuleKey);
+        Assert.True(history.History.Count >= 1);
+        Assert.Contains(history.History, item => item.ExistsInVersion);
+    }
+
+    [Fact]
+    public async Task V1_rules_catalog_create_denies_member_role()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var memberToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "tenant_member");
+        var rulePackId = await CreateSampleRulePackWithContentAsync(adminToken);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/rules", memberToken);
+        createRequest.Content = JsonContent.Create(new CreateRuleCatalogRequest(
+            rulePackId,
+            "member_denied_rule",
+            "Member denied rule",
+            "fact_boolean",
+            "driver_license_valid",
+            true));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, createResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task V1_rules_catalog_requires_compliancecore_entitlement()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var staffArrToken = CreateComplianceCoreAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        await CreateSampleRulePackWithContentAsync(adminToken);
+
+        var listResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/rules", staffArrToken));
+        Assert.Equal(HttpStatusCode.Forbidden, listResponse.StatusCode);
+    }
+
     private async Task<Guid> CreateSampleRulePackAsync(string adminToken)
     {
         var programId = await CreateSampleProgramAsync(adminToken);

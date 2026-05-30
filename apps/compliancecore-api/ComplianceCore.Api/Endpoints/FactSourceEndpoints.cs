@@ -8,10 +8,20 @@ public static class FactSourceEndpoints
 {
     public static void MapComplianceCoreFactSourceEndpoints(this WebApplication app)
     {
-        var factSources = app.MapGroup("/api/fact-sources")
-            .WithTags("FactSources")
-            .RequireAuthorization();
+        MapRoutes(
+            app.MapGroup("/api/fact-sources")
+                .WithTags("FactSources")
+                .RequireAuthorization(),
+            string.Empty);
+        MapRoutes(
+            app.MapGroup("/api/v1/fact-sources")
+                .WithTags("FactSources")
+                .RequireAuthorization(),
+            "V1");
+    }
 
+    private static void MapRoutes(RouteGroupBuilder factSources, string suffix)
+    {
         factSources.MapGet("/", async (
             Guid? factDefinitionId,
             ComplianceCoreAuthorizationService authorization,
@@ -23,7 +33,7 @@ public static class FactSourceEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(tenantId, factDefinitionId, cancellationToken));
         })
-        .WithName("ListFactSources");
+        .WithName($"ListFactSources{suffix}");
 
         factSources.MapPost("/", async (
             CreateFactSourceRequest request,
@@ -41,6 +51,25 @@ public static class FactSourceEndpoints
                 cancellationToken);
             return Results.Created($"/api/fact-sources/{created.FactSourceId}", created);
         })
-        .WithName("CreateFactSource");
+        .WithName($"CreateFactSource{suffix}");
+
+        factSources.MapPatch("/{factSourceId:guid}", async (
+            Guid factSourceId,
+            UpdateFactSourceRequest request,
+            ComplianceCoreAuthorizationService authorization,
+            FactSourceService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRegulatoryManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.UpdateAsync(
+                tenantId,
+                context.User.GetUserId(),
+                factSourceId,
+                request,
+                cancellationToken));
+        })
+        .WithName($"UpdateFactSource{suffix}");
     }
 }

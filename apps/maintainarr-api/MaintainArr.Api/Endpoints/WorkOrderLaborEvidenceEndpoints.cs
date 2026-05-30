@@ -16,6 +16,97 @@ public static class WorkOrderLaborEvidenceEndpoints
 
         MapEvidenceRoutes(app.MapGroup("/api/work-orders/{workOrderId:guid}/evidence").WithTags("WorkOrderEvidence").RequireAuthorization(), string.Empty);
         MapEvidenceRoutes(app.MapGroup("/api/v1/work-orders/{workOrderId:guid}/evidence").WithTags("WorkOrderEvidence").RequireAuthorization(), "V1");
+
+        var taskAlias = app.MapGroup("/api/v1/work-order-tasks")
+            .WithTags("WorkOrderTasks")
+            .RequireAuthorization();
+
+        taskAlias.MapGet("/", async (
+            Guid workOrderId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            WorkOrderService workOrderService,
+            WorkOrderLaborEvidenceService laborEvidenceService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkOrdersRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var detail = await workOrderService.GetAsync(tenantId, workOrderId, cancellationToken);
+            authorization.RequireWorkOrderAccess(context.User, detail.CreatedByUserId, detail.AssignedTechnicianPersonId);
+            return Results.Ok(await laborEvidenceService.ListTasksAsync(tenantId, workOrderId, cancellationToken));
+        })
+        .WithName("ListWorkOrderTasksTopLevelV1");
+
+        taskAlias.MapPost("/", async (
+            CreateWorkOrderTaskLineAliasRequest request,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            WorkOrderService workOrderService,
+            WorkOrderLaborEvidenceService laborEvidenceService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkOrdersPerform(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var detail = await workOrderService.GetAsync(tenantId, request.WorkOrderId, cancellationToken);
+            authorization.RequireWorkOrderAccess(context.User, detail.CreatedByUserId, detail.AssignedTechnicianPersonId);
+            var created = await laborEvidenceService.CreateTaskAsync(
+                tenantId,
+                actorUserId,
+                request.WorkOrderId,
+                new CreateWorkOrderTaskLineRequest(request.Title, request.Description, request.SortOrder),
+                cancellationToken);
+            return Results.Created($"/api/v1/work-order-tasks/{created.TaskLineId}", created);
+        })
+        .WithName("CreateWorkOrderTaskTopLevelV1");
+
+        var laborAlias = app.MapGroup("/api/v1/labor")
+            .WithTags("WorkOrderLabor")
+            .RequireAuthorization();
+
+        laborAlias.MapGet("/", async (
+            Guid workOrderId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            WorkOrderService workOrderService,
+            WorkOrderLaborEvidenceService laborEvidenceService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkOrdersRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var detail = await workOrderService.GetAsync(tenantId, workOrderId, cancellationToken);
+            authorization.RequireWorkOrderAccess(context.User, detail.CreatedByUserId, detail.AssignedTechnicianPersonId);
+            return Results.Ok(await laborEvidenceService.ListLaborAsync(tenantId, workOrderId, cancellationToken));
+        })
+        .WithName("ListWorkOrderLaborTopLevelV1");
+
+        laborAlias.MapPost("/", async (
+            CreateWorkOrderLaborEntryAliasRequest request,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            WorkOrderService workOrderService,
+            WorkOrderLaborEvidenceService laborEvidenceService,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireWorkOrdersPerform(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var detail = await workOrderService.GetAsync(tenantId, request.WorkOrderId, cancellationToken);
+            authorization.RequireWorkOrderAccess(context.User, detail.CreatedByUserId, detail.AssignedTechnicianPersonId);
+            var created = await laborEvidenceService.LogLaborAsync(
+                tenantId,
+                actorUserId,
+                request.WorkOrderId,
+                new CreateWorkOrderLaborEntryRequest(
+                    request.PersonId,
+                    request.HoursWorked,
+                    request.LaborTypeKey,
+                    request.WorkOrderTaskLineId,
+                    request.Notes),
+                cancellationToken);
+            return Results.Created($"/api/v1/labor/{created.LaborEntryId}", created);
+        })
+        .WithName("LogWorkOrderLaborTopLevelV1");
     }
 
     private static void MapTaskRoutes(RouteGroupBuilder tasks, string nameSuffix)

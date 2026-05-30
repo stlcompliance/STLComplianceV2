@@ -8,36 +8,45 @@ public static class CertificationEndpoints
 {
     public static void MapStaffArrCertificationEndpoints(this WebApplication app)
     {
-        var definitions = app.MapGroup("/api/certifications")
-            .WithTags("Certifications")
-            .RequireAuthorization();
-
-        definitions.MapGet("/", async (
-            HttpContext context,
-            StaffArrAuthorizationService authorization,
-            CertificationService service,
-            CancellationToken cancellationToken) =>
+        var definitionRoutes = new[]
         {
-            authorization.RequireCertificationRead(context.User);
-            var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListDefinitionsAsync(tenantId, cancellationToken));
-        })
-        .WithName("ListCertificationDefinitions");
+            (Route: "/api/certifications", Suffix: string.Empty),
+            (Route: "/api/v1/certifications", Suffix: "V1")
+        };
 
-        definitions.MapPost("/", async (
-            UpsertCertificationDefinitionRequest request,
-            HttpContext context,
-            StaffArrAuthorizationService authorization,
-            CertificationService service,
-            CancellationToken cancellationToken) =>
+        foreach (var (route, suffix) in definitionRoutes)
         {
-            authorization.RequireCertificationManageWrite(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var created = await service.UpsertDefinitionAsync(tenantId, actorUserId, request, cancellationToken);
-            return Results.Ok(created);
-        })
-        .WithName("UpsertCertificationDefinition");
+            var definitions = app.MapGroup(route)
+                .WithTags("Certifications")
+                .RequireAuthorization();
+
+            definitions.MapGet("/", async (
+                HttpContext context,
+                StaffArrAuthorizationService authorization,
+                CertificationService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireCertificationRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await service.ListDefinitionsAsync(tenantId, cancellationToken));
+            })
+            .WithName($"ListCertificationDefinitions{suffix}");
+
+            definitions.MapPost("/", async (
+                UpsertCertificationDefinitionRequest request,
+                HttpContext context,
+                StaffArrAuthorizationService authorization,
+                CertificationService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireCertificationManageWrite(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var created = await service.UpsertDefinitionAsync(tenantId, actorUserId, request, cancellationToken);
+                return Results.Ok(created);
+            })
+            .WithName($"UpsertCertificationDefinition{suffix}");
+        }
 
         var personCertifications = app.MapGroup("/api/people/{personId:guid}/certifications")
             .WithTags("PersonCertifications")

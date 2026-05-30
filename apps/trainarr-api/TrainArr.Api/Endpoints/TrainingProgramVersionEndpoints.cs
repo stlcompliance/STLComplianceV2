@@ -8,9 +8,22 @@ public static class TrainingProgramVersionEndpoints
 {
     public static void MapTrainArrTrainingProgramVersionEndpoints(this WebApplication app)
     {
-        var versions = app.MapGroup("/api/program-versions")
-            .WithTags("ProgramVersions")
-            .RequireAuthorization();
+        MapRoutes(
+            app.MapGroup("/api/program-versions")
+                .WithTags("ProgramVersions")
+                .RequireAuthorization(),
+            string.Empty);
+
+        MapRoutes(
+            app.MapGroup("/api/v1/program-versions")
+                .WithTags("ProgramVersions")
+                .RequireAuthorization(),
+            "V1");
+    }
+
+    private static void MapRoutes(RouteGroupBuilder versions, string routeSuffix)
+    {
+        var nameSuffix = string.IsNullOrWhiteSpace(routeSuffix) ? string.Empty : routeSuffix;
 
         versions.MapGet("/", async (
             Guid? programId,
@@ -28,7 +41,7 @@ public static class TrainingProgramVersionEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListForProgramAsync(tenantId, programId.Value, cancellationToken));
         })
-        .WithName("ListTrainingProgramVersions");
+        .WithName($"ListTrainingProgramVersions{nameSuffix}");
 
         versions.MapGet("/{programVersionId:guid}", async (
             Guid programVersionId,
@@ -41,7 +54,7 @@ public static class TrainingProgramVersionEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, programVersionId, cancellationToken));
         })
-        .WithName("GetTrainingProgramVersion");
+        .WithName($"GetTrainingProgramVersion{nameSuffix}");
 
         versions.MapPost("/start-revision", async (
             StartProgramRevisionRequest request,
@@ -56,6 +69,6 @@ public static class TrainingProgramVersionEndpoints
             var updated = await service.StartRevisionAsync(tenantId, actorUserId, request, cancellationToken);
             return Results.Ok(updated);
         })
-        .WithName("StartTrainingProgramRevision");
+        .WithName($"StartTrainingProgramRevision{nameSuffix}");
     }
 }

@@ -411,6 +411,192 @@ public sealed class ComplianceCoreWaiverTests : IAsyncLifetime
         Assert.True(renewed.ExpiresAt > DateTimeOffset.UtcNow);
     }
 
+    [Fact]
+    public async Task V1_rule_pack_routes_create_list_and_status_update()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var programId = await CreateSampleProgramAsync(adminToken);
+
+        var packKey = $"v1_rule_pack_{Guid.NewGuid():N}"[..20];
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/rule-packs", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateRulePackRequest(
+            programId,
+            packKey,
+            "V1 Rule Pack",
+            "Created via v1 rule-pack route."));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<RulePackResponse>())!;
+
+        var listResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/rule-packs?regulatoryProgramId={programId}", adminToken));
+        listResponse.EnsureSuccessStatusCode();
+        var packs = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<RulePackResponse>>())!;
+        Assert.Contains(packs, p => p.RulePackId == created.RulePackId);
+
+        var reviewRequest = Authorized(HttpMethod.Patch, $"/api/v1/rule-packs/{created.RulePackId}/status", adminToken);
+        reviewRequest.Content = JsonContent.Create(new UpdateRulePackStatusRequest("review"));
+        var reviewResponse = await _complianceCoreClient.SendAsync(reviewRequest);
+        reviewResponse.EnsureSuccessStatusCode();
+        var reviewed = (await reviewResponse.Content.ReadFromJsonAsync<RulePackResponse>())!;
+        Assert.Equal("review", reviewed.Status);
+    }
+
+    [Fact]
+    public async Task V1_rule_pack_lifecycle_aliases_submit_publish_versions_and_retire()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var programId = await CreateSampleProgramAsync(adminToken);
+
+        var packKey = $"v1_lifecycle_{Guid.NewGuid():N}"[..20];
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/rule-packs", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateRulePackRequest(
+            programId,
+            packKey,
+            "V1 Lifecycle Pack",
+            "Created for lifecycle alias validation."));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<RulePackResponse>())!;
+        Assert.Equal("draft", created.Status);
+
+        var submitReviewResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/rule-packs/{created.RulePackId}/submit-review", adminToken));
+        submitReviewResponse.EnsureSuccessStatusCode();
+        var inReview = (await submitReviewResponse.Content.ReadFromJsonAsync<RulePackResponse>())!;
+        Assert.Equal("review", inReview.Status);
+
+        var publishResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/rule-packs/{created.RulePackId}/publish", adminToken));
+        publishResponse.EnsureSuccessStatusCode();
+        var published = (await publishResponse.Content.ReadFromJsonAsync<RuleVersionResponse>())!;
+        Assert.Equal("published", published.Status);
+
+        var versionsResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/rule-packs/{created.RulePackId}/versions", adminToken));
+        versionsResponse.EnsureSuccessStatusCode();
+        var versions = (await versionsResponse.Content.ReadFromJsonAsync<RuleVersionListResponse>())!;
+        Assert.Contains(versions.Items, x => x.RulePackId == created.RulePackId && x.Status == "published");
+
+        var retireResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/rule-packs/{created.RulePackId}/retire", adminToken));
+        retireResponse.EnsureSuccessStatusCode();
+        var retired = (await retireResponse.Content.ReadFromJsonAsync<RulePackResponse>())!;
+        Assert.Equal("archived", retired.Status);
+    }
+
+    [Fact]
+    public async Task V1_rule_pack_get_and_patch_aliases_round_trip()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var programId = await CreateSampleProgramAsync(adminToken);
+
+        var packKey = $"v1_get_patch_{Guid.NewGuid():N}"[..20];
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/rule-packs", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateRulePackRequest(
+            programId,
+            packKey,
+            "V1 Get Patch Pack",
+            "Initial description"));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<RulePackResponse>())!;
+
+        var getResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/rule-packs/{created.RulePackId}", adminToken));
+        getResponse.EnsureSuccessStatusCode();
+        var loaded = (await getResponse.Content.ReadFromJsonAsync<RulePackResponse>())!;
+        Assert.Equal(created.RulePackId, loaded.RulePackId);
+        Assert.Equal("draft", loaded.Status);
+
+        var patchRequest = Authorized(HttpMethod.Patch, $"/api/v1/rule-packs/{created.RulePackId}", adminToken);
+        patchRequest.Content = JsonContent.Create(new PatchRulePackRequest(
+            Label: "V1 Updated Label",
+            Description: "Updated via v1 patch alias"));
+        var patchResponse = await _complianceCoreClient.SendAsync(patchRequest);
+        patchResponse.EnsureSuccessStatusCode();
+        var patched = (await patchResponse.Content.ReadFromJsonAsync<RulePackResponse>())!;
+        Assert.Equal("V1 Updated Label", patched.Label);
+        Assert.Equal("Updated via v1 patch alias", patched.Description);
+
+        var patchStatusRequest = Authorized(HttpMethod.Patch, $"/api/v1/rule-packs/{created.RulePackId}", adminToken);
+        patchStatusRequest.Content = JsonContent.Create(new PatchRulePackRequest(Status: "review"));
+        var patchStatusResponse = await _complianceCoreClient.SendAsync(patchStatusRequest);
+        patchStatusResponse.EnsureSuccessStatusCode();
+        var reviewed = (await patchStatusResponse.Content.ReadFromJsonAsync<RulePackResponse>())!;
+        Assert.Equal("review", reviewed.Status);
+    }
+
+    [Fact]
+    public async Task V1_rule_pack_clone_and_diff_aliases_work()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var programId = await CreateSampleProgramAsync(adminToken);
+
+        var packKey = $"v1_clone_src_{Guid.NewGuid():N}"[..20];
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/rule-packs", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateRulePackRequest(
+            programId,
+            packKey,
+            "Clone Source",
+            "Source for clone and diff"));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<RulePackResponse>())!;
+
+        var content = new RulePackContentBody(
+            1,
+            "all",
+            [new RuleDefinitionDto("license_valid", "Valid license", "fact_boolean", "driver_license_valid", true)]);
+        var contentRequest = Authorized(HttpMethod.Put, $"/api/v1/rule-packs/{created.RulePackId}/content", adminToken);
+        contentRequest.Content = JsonContent.Create(new UpdateRulePackContentRequest(content));
+        (await _complianceCoreClient.SendAsync(contentRequest)).EnsureSuccessStatusCode();
+
+        var cloneRequest = Authorized(HttpMethod.Post, $"/api/v1/rule-packs/{created.RulePackId}/clone", adminToken);
+        cloneRequest.Content = JsonContent.Create(new CloneRulePackRequest(
+            PackKey: $"v1_clone_dst_{Guid.NewGuid():N}"[..20],
+            Label: "Clone Destination"));
+        var cloneResponse = await _complianceCoreClient.SendAsync(cloneRequest);
+        cloneResponse.EnsureSuccessStatusCode();
+        var cloned = (await cloneResponse.Content.ReadFromJsonAsync<RulePackResponse>())!;
+        Assert.NotEqual(created.RulePackId, cloned.RulePackId);
+        Assert.Equal("draft", cloned.Status);
+
+        var diffResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/rule-packs/{created.RulePackId}/diff?compareRulePackId={cloned.RulePackId}", adminToken));
+        diffResponse.EnsureSuccessStatusCode();
+        var diff = (await diffResponse.Content.ReadFromJsonAsync<RulePackDiffResponse>())!;
+        Assert.Equal(created.RulePackId, diff.BaseRulePackId);
+        Assert.Equal(cloned.RulePackId, diff.CompareRulePackId);
+    }
+
+    [Fact]
+    public async Task V1_rule_pack_approve_alias_publishes_review_pack()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var programId = await CreateSampleProgramAsync(adminToken);
+
+        var packKey = $"v1_approve_{Guid.NewGuid():N}"[..20];
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/rule-packs", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateRulePackRequest(
+            programId,
+            packKey,
+            "Approve Alias Pack",
+            "Approve alias should publish"));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<RulePackResponse>())!;
+
+        (await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/rule-packs/{created.RulePackId}/submit-review", adminToken))).EnsureSuccessStatusCode();
+
+        var approveResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/rule-packs/{created.RulePackId}/approve", adminToken));
+        approveResponse.EnsureSuccessStatusCode();
+        var published = (await approveResponse.Content.ReadFromJsonAsync<RuleVersionResponse>())!;
+        Assert.Equal("published", published.Status);
+    }
+
     private async Task<Guid> GetDriverQualificationRulePackIdAsync(string adminToken)
     {
         var response = await _complianceCoreClient.SendAsync(
@@ -502,9 +688,11 @@ public sealed class ComplianceCoreWaiverTests : IAsyncLifetime
 
     private async Task<Guid> CreateSampleProgramAsync(string adminToken)
     {
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+
         var bodyRequest = Authorized(HttpMethod.Post, "/api/governing-bodies", adminToken);
         bodyRequest.Content = JsonContent.Create(new CreateGoverningBodyRequest(
-            "dot",
+            $"dot_{suffix}",
             "U.S. Department of Transportation",
             "Federal transportation safety and compliance authority."));
         var body = (await (await _complianceCoreClient.SendAsync(bodyRequest)).Content.ReadFromJsonAsync<GoverningBodyResponse>())!;
@@ -512,7 +700,7 @@ public sealed class ComplianceCoreWaiverTests : IAsyncLifetime
         var jurisdictionRequest = Authorized(HttpMethod.Post, "/api/jurisdictions", adminToken);
         jurisdictionRequest.Content = JsonContent.Create(new CreateJurisdictionRequest(
             body.GoverningBodyId,
-            "us_federal",
+            $"us_federal_{suffix}",
             "United States Federal",
             "Federal jurisdiction for interstate transportation rules."));
         var jurisdiction = (await (await _complianceCoreClient.SendAsync(jurisdictionRequest)).Content.ReadFromJsonAsync<JurisdictionResponse>())!;
@@ -520,7 +708,7 @@ public sealed class ComplianceCoreWaiverTests : IAsyncLifetime
         var programRequest = Authorized(HttpMethod.Post, "/api/regulatory-programs", adminToken);
         programRequest.Content = JsonContent.Create(new CreateRegulatoryProgramRequest(
             jurisdiction.JurisdictionId,
-            "fmcsa_safety",
+            $"fmcsa_safety_{suffix}",
             "FMCSA Safety Compliance",
             "Federal motor carrier safety compliance program."));
         var program = (await (await _complianceCoreClient.SendAsync(programRequest)).Content.ReadFromJsonAsync<RegulatoryProgramResponse>())!;

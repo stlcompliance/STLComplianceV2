@@ -25,3 +25,29 @@ public sealed record CsvImportIssue(
     int? LineNumber,
     string Code,
     string Message);
+
+public sealed record RulePackImportRunResponse(
+    Guid ImportId,
+    string Status,
+    bool DryRun,
+    DateTimeOffset CreatedAt,
+    CsvImportResultResponse Result);
+
+public sealed record RulePackImportDiffResponse(
+    Guid ImportId,
+    int FilesWithChanges,
+    int CreatedCount,
+    int UpdatedCount,
+    int DeactivatedCount,
+    int IssueCount);
+
+public sealed record RulePackImportTestResultsResponse(
+    Guid ImportId,
+    bool Passed,
+    int IssueCount,
+    IReadOnlyList<CsvImportIssue> Issues);
+
+public sealed record RulePackImportRollbackResponse(
+    Guid ImportId,
+    bool RolledBack,
+    string Status);

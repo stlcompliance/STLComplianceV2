@@ -35,6 +35,24 @@ public sealed class RuleVersionService(
         return new RuleVersionListResponse(items);
     }
 
+    public async Task<RuleVersionListResponse> ListForRulePackIdAsync(
+        Guid tenantId,
+        Guid rulePackId,
+        CancellationToken cancellationToken = default)
+    {
+        var packKey = await db.RulePacks
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Id == rulePackId && x.IsActive)
+            .Select(x => x.PackKey)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (packKey is null)
+        {
+            throw new StlApiException("rule_versions.not_found", "Rule version was not found.", 404);
+        }
+
+        return await ListAsync(tenantId, packKey, cancellationToken);
+    }
+
     public async Task<RuleVersionResponse> PublishAsync(
         Guid tenantId,
         Guid? actorUserId,

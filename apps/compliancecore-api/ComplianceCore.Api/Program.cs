@@ -24,6 +24,7 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
         app.MapComplianceCoreRuleVersionEndpoints();
         app.MapComplianceCoreRegulatoryRegistryEndpoints();
         app.MapComplianceCoreRulePackEndpoints();
+        app.MapComplianceCoreRuleCatalogEndpoints();
         app.MapComplianceCoreCitationFactEndpoints();
         app.MapComplianceCoreRegulatoryMappingEndpoints();
         app.MapComplianceCoreRuleEvaluationEndpoints();

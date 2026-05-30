@@ -82,6 +82,80 @@ public static class RuleEvaluationEndpoints
         })
         .WithName("EvaluateRulePack");
 
+        var v1RulePacks = app.MapGroup("/api/v1/rule-packs")
+            .WithTags("RuleEvaluation")
+            .RequireAuthorization();
+
+        v1RulePacks.MapPost("/evaluate/batch", async (
+            EvaluateRulePackBatchRequest request,
+            ComplianceCoreAuthorizationService authorization,
+            RulePackBatchEvaluationService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRuleEvaluation(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.EvaluateBatchForUserAsync(
+                tenantId,
+                context.User.GetUserId(),
+                request,
+                cancellationToken));
+        })
+        .WithName("EvaluateRulePackBatchV1RulePacks");
+
+        v1RulePacks.MapGet("/{rulePackId:guid}/content", async (
+            Guid rulePackId,
+            ComplianceCoreAuthorizationService authorization,
+            RuleContentService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRulePacksRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetContentAsync(tenantId, rulePackId, cancellationToken));
+        })
+        .WithName("GetRulePackContentV1");
+
+        v1RulePacks.MapPut("/{rulePackId:guid}/content", async (
+            Guid rulePackId,
+            UpdateRulePackContentRequest request,
+            ComplianceCoreAuthorizationService authorization,
+            RuleContentService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRulePacksCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var updated = await service.UpdateContentAsync(
+                tenantId,
+                context.User.GetUserId(),
+                rulePackId,
+                request,
+                cancellationToken);
+            return Results.Ok(updated);
+        })
+        .WithName("UpdateRulePackContentV1");
+
+        v1RulePacks.MapPost("/{rulePackId:guid}/evaluate", async (
+            Guid rulePackId,
+            EvaluateRulePackRequest request,
+            ComplianceCoreAuthorizationService authorization,
+            RuleEvaluationService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRuleEvaluation(context.User);
+            var tenantId = context.User.GetTenantId();
+            var result = await service.EvaluateAsync(
+                tenantId,
+                context.User.GetUserId(),
+                rulePackId,
+                request,
+                cancellationToken);
+            return Results.Created($"/api/v1/evaluations/{result.EvaluationRunId}", result);
+        })
+        .WithName("EvaluateRulePackV1");
+
         var evaluations = app.MapGroup("/api/rule-evaluations")
             .WithTags("RuleEvaluation")
             .RequireAuthorization();

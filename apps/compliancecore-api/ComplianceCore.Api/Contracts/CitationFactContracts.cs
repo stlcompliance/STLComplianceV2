@@ -27,6 +27,18 @@ public sealed record CreateRegulatoryCitationRequest(
     string Description,
     Guid? SupersedesCitationId);
 
+public sealed record UpdateRegulatoryCitationRequest(
+    string Label,
+    string SourceReference,
+    string Description,
+    bool IsActive);
+
+public sealed record CitationRuleLinkResponse(
+    Guid RulePackId,
+    string RulePackKey,
+    string RulePackLabel,
+    string Source);
+
 public sealed record FactDefinitionResponse(
     Guid FactDefinitionId,
     string FactKey,
@@ -42,6 +54,33 @@ public sealed record CreateFactDefinitionRequest(
     string Label,
     string Description,
     string ValueType);
+
+public sealed record UpdateFactDefinitionRequest(
+    string Label,
+    string Description,
+    string ValueType,
+    bool IsActive);
+
+public sealed record FactDefinitionUsageResponse(
+    int FactRequirementCount,
+    int RulePackCount,
+    int CitationCount);
+
+public sealed record ValidateFactPayloadItemRequest(
+    string FactKey,
+    string? Value);
+
+public sealed record ValidateFactPayloadRequest(
+    IReadOnlyList<ValidateFactPayloadItemRequest> Facts);
+
+public sealed record ValidateFactPayloadItemResponse(
+    string FactKey,
+    bool IsValid,
+    string? ErrorCode,
+    string? ErrorMessage);
+
+public sealed record ValidateFactPayloadResponse(
+    IReadOnlyList<ValidateFactPayloadItemResponse> Results);
 
 public sealed record FactRequirementResponse(
     Guid FactRequirementId,

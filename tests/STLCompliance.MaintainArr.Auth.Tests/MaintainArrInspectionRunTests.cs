@@ -160,6 +160,30 @@ public sealed class MaintainArrInspectionRunTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Inspection_run_v1_inspection_runs_alias_happy_path_passes()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var (assetId, templateId, checklistItemId) = await SeedActiveTemplateWithAssetAsync(managerToken);
+        var technicianToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_technician");
+
+        var startRequest = Authorized(HttpMethod.Post, "/api/v1/inspection-runs", technicianToken);
+        startRequest.Content = JsonContent.Create(new StartInspectionRunRequest(assetId, templateId));
+        var startResponse = await _maintainarrClient.SendAsync(startRequest);
+        startResponse.EnsureSuccessStatusCode();
+        var started = (await startResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+
+        var submitRequest = Authorized(HttpMethod.Put, $"/api/v1/inspection-runs/{started.InspectionRunId}/answers", technicianToken);
+        submitRequest.Content = JsonContent.Create(new SubmitInspectionRunAnswersRequest([
+            new InspectionRunAnswerInput(checklistItemId, "pass", null, null),
+        ]));
+        (await _maintainarrClient.SendAsync(submitRequest)).EnsureSuccessStatusCode();
+
+        var completeRequest = Authorized(HttpMethod.Post, $"/api/v1/inspection-runs/{started.InspectionRunId}/complete", technicianToken);
+        var completeResponse = await _maintainarrClient.SendAsync(completeRequest);
+        completeResponse.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
     public async Task Inspection_run_fail_answer_marks_run_failed()
     {
         var token = await RedeemMaintainArrTokenAsync();

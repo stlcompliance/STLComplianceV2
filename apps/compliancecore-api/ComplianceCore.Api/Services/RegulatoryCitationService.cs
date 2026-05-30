@@ -10,6 +10,34 @@ public sealed class RegulatoryCitationService(
     ComplianceCoreDbContext db,
     IComplianceCoreAuditService auditService)
 {
+    public async Task<RegulatoryCitationResponse> GetAsync(
+        Guid tenantId,
+        Guid citationId,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await db.RegulatoryCitations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == citationId, cancellationToken);
+        if (entity is null)
+        {
+            throw new StlApiException("citations.not_found", "Citation was not found.", 404);
+        }
+
+        var program = await db.RegulatoryPrograms
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == entity.RegulatoryProgramId, cancellationToken)
+            ?? throw new StlApiException("citations.program_not_found", "Regulatory program was not found.", 404);
+        RulePack? rulePack = null;
+        if (entity.RulePackId.HasValue)
+        {
+            rulePack = await db.RulePacks
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == entity.RulePackId.Value, cancellationToken);
+        }
+
+        return MapResponse(entity, program, rulePack);
+    }
+
     public async Task<IReadOnlyList<RegulatoryCitationResponse>> ListAsync(
         Guid tenantId,
         Guid? regulatoryProgramId = null,
@@ -182,6 +210,139 @@ public sealed class RegulatoryCitationService(
             cancellationToken: cancellationToken);
 
         return MapResponse(entity, program, rulePack);
+    }
+
+    public async Task<RegulatoryCitationResponse> UpdateAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        Guid citationId,
+        UpdateRegulatoryCitationRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await db.RegulatoryCitations.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == citationId,
+            cancellationToken);
+        if (entity is null)
+        {
+            throw new StlApiException("citations.not_found", "Citation was not found.", 404);
+        }
+
+        entity.Label = GoverningBodyService.NormalizeLabel(request.Label, "citations.validation", "Label");
+        entity.SourceReference = NormalizeSourceReference(request.SourceReference);
+        entity.Description = GoverningBodyService.NormalizeDescription(request.Description, "citations.validation");
+        entity.IsActive = request.IsActive;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await auditService.WriteAsync(
+            "citation.update",
+            tenantId,
+            actorUserId,
+            "citation",
+            entity.Id.ToString(),
+            "success",
+            cancellationToken: cancellationToken);
+
+        var program = await db.RegulatoryPrograms
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == entity.RegulatoryProgramId, cancellationToken)
+            ?? throw new StlApiException("citations.program_not_found", "Regulatory program was not found.", 404);
+        RulePack? rulePack = null;
+        if (entity.RulePackId.HasValue)
+        {
+            rulePack = await db.RulePacks
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == entity.RulePackId.Value, cancellationToken);
+        }
+
+        return MapResponse(entity, program, rulePack);
+    }
+
+    public async Task<IReadOnlyList<RegulatoryCitationResponse>> ListHistoryAsync(
+        Guid tenantId,
+        Guid citationId,
+        CancellationToken cancellationToken = default)
+    {
+        var target = await db.RegulatoryCitations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == citationId, cancellationToken);
+        if (target is null)
+        {
+            throw new StlApiException("citations.not_found", "Citation was not found.", 404);
+        }
+
+        var history = await db.RegulatoryCitations
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.CitationKey == target.CitationKey)
+            .OrderByDescending(x => x.VersionNumber)
+            .ToListAsync(cancellationToken);
+
+        var programIds = history.Select(x => x.RegulatoryProgramId).Distinct().ToList();
+        var programs = await db.RegulatoryPrograms
+            .AsNoTracking()
+            .Where(x => programIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+        var rulePackIds = history.Where(x => x.RulePackId.HasValue).Select(x => x.RulePackId!.Value).Distinct().ToList();
+        var rulePacks = await db.RulePacks
+            .AsNoTracking()
+            .Where(x => rulePackIds.Contains(x.Id))
+            .ToDictionaryAsync(x => x.Id, cancellationToken);
+
+        return history.Select(entity =>
+        {
+            var program = programs[entity.RegulatoryProgramId];
+            rulePacks.TryGetValue(entity.RulePackId ?? Guid.Empty, out var pack);
+            return MapResponse(entity, program, pack);
+        }).ToList();
+    }
+
+    public async Task<IReadOnlyList<CitationRuleLinkResponse>> ListRuleLinksAsync(
+        Guid tenantId,
+        Guid citationId,
+        CancellationToken cancellationToken = default)
+    {
+        var citation = await db.RegulatoryCitations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == citationId, cancellationToken);
+        if (citation is null)
+        {
+            throw new StlApiException("citations.not_found", "Citation was not found.", 404);
+        }
+
+        var links = new List<CitationRuleLinkResponse>();
+        if (citation.RulePackId.HasValue)
+        {
+            var pack = await db.RulePacks.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == citation.RulePackId.Value, cancellationToken);
+            if (pack is not null)
+            {
+                links.Add(new CitationRuleLinkResponse(pack.Id, pack.PackKey, pack.Label, "citation.rule_pack"));
+            }
+        }
+
+        var requirementPackIds = await db.FactRequirements
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.CitationId == citationId && x.RulePackId.HasValue && x.IsActive)
+            .Select(x => x.RulePackId!.Value)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        if (requirementPackIds.Count > 0)
+        {
+            var requirementPacks = await db.RulePacks
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && requirementPackIds.Contains(x.Id))
+                .ToListAsync(cancellationToken);
+            foreach (var pack in requirementPacks)
+            {
+                if (links.All(x => x.RulePackId != pack.Id))
+                {
+                    links.Add(new CitationRuleLinkResponse(pack.Id, pack.PackKey, pack.Label, "fact_requirement"));
+                }
+            }
+        }
+
+        return links;
     }
 
     private static RegulatoryCitationResponse MapResponse(

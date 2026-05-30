@@ -165,6 +165,49 @@ public class ComplianceCoreRegulatoryMappingsTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task V1_regulatory_mapping_and_derived_facts_aliases_work()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var (programId, rulePackId) = await CreateSampleRulePackAsync(adminToken);
+        var complianceKeyId = await CreateComplianceKeyAsync(adminToken, "v1_derived_fact_key");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/regulatory-mappings", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateRegulatoryMappingRequest(
+            "v1_derived_fact_mapping",
+            "V1 derived fact mapping",
+            "Mapping created through v1 alias route.",
+            "compliance_key",
+            programId,
+            rulePackId,
+            null,
+            null,
+            complianceKeyId,
+            null));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+
+        var listDerivedResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/derived-facts", adminToken));
+        listDerivedResponse.EnsureSuccessStatusCode();
+        var derivedFacts = (await listDerivedResponse.Content.ReadFromJsonAsync<IReadOnlyList<RegulatoryMappingResponse>>())!;
+        Assert.Contains(derivedFacts, x => x.MappingKey == "v1_derived_fact_mapping");
+
+        var previewRequest = Authorized(HttpMethod.Post, "/api/v1/derived-facts/preview", adminToken);
+        previewRequest.Content = JsonContent.Create(new DerivedFactPreviewRequest(
+            programId,
+            rulePackId,
+            null,
+            complianceKeyId,
+            null,
+            10));
+        var previewResponse = await _complianceCoreClient.SendAsync(previewRequest);
+        previewResponse.EnsureSuccessStatusCode();
+        var preview = (await previewResponse.Content.ReadFromJsonAsync<DerivedFactPreviewResponse>())!;
+        Assert.True(preview.ReturnedCount >= 1);
+        Assert.Contains(preview.Items, x => x.MappingKey == "v1_derived_fact_mapping");
+    }
+
     private async Task<Guid> CreateComplianceKeyAsync(string adminToken, string key)
     {
         var request = Authorized(HttpMethod.Post, "/api/compliance-keys", adminToken);

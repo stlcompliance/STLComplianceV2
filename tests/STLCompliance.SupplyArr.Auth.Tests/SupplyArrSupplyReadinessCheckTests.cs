@@ -145,6 +145,27 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
         pathResponse.EnsureSuccessStatusCode();
         var pathReadiness = (await pathResponse.Content.ReadFromJsonAsync<ProcurementPathReadinessResponse>())!;
         Assert.Equal("not_ready", pathReadiness.ReadinessStatus);
+
+        var aliasPartResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/readiness/parts/{_partId}", buyerToken));
+        aliasPartResponse.EnsureSuccessStatusCode();
+        var aliasPartReadiness = (await aliasPartResponse.Content.ReadFromJsonAsync<PartSupplyReadinessResponse>())!;
+        Assert.Equal("not_ready", aliasPartReadiness.ReadinessStatus);
+
+        var aliasVendorResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/readiness/vendors/{_vendorId}", buyerToken));
+        aliasVendorResponse.EnsureSuccessStatusCode();
+        var aliasVendorReadiness = (await aliasVendorResponse.Content.ReadFromJsonAsync<VendorSupplyReadinessResponse>())!;
+        Assert.Equal("not_ready", aliasVendorReadiness.ReadinessStatus);
+
+        var aliasPathResponse = await _supplyarrClient.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/v1/readiness/procurement-path?partId={_partId}&externalPartyId={_vendorId}&quantity=5",
+                buyerToken));
+        aliasPathResponse.EnsureSuccessStatusCode();
+        var aliasPathReadiness = (await aliasPathResponse.Content.ReadFromJsonAsync<ProcurementPathReadinessResponse>())!;
+        Assert.Equal("not_ready", aliasPathReadiness.ReadinessStatus);
     }
 
     [Fact]

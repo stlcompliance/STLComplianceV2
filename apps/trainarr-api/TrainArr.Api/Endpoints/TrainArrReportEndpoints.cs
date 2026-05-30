@@ -5,6 +5,32 @@ namespace TrainArr.Api.Endpoints;
 
 public static class TrainArrReportEndpoints
 {
+    public static void MapTrainArrReportIndexEndpoints(this WebApplication app)
+    {
+        var routes = new[] { "/api/reports", "/api/v1/reports" };
+        foreach (var route in routes)
+        {
+            var group = app.MapGroup(route)
+                .WithTags("Reports")
+                .RequireAuthorization();
+
+            group.MapGet("/", (
+                TrainArrAuthorizationService authorization,
+                HttpContext context) =>
+            {
+                authorization.RequireAssignmentReportRead(context.User);
+                var items = new[]
+                {
+                    new { key = "assignments", path = $"{route}/assignments", description = "Training assignment summaries and exports." },
+                    new { key = "qualifications", path = $"{route}/qualifications", description = "Qualification issue and status summaries." },
+                    new { key = "compliance", path = $"{route}/compliance", description = "Compliance coverage and remediation summaries." },
+                };
+                return Results.Ok(new { items });
+            })
+            .WithName(route.Contains("/v1/") ? "GetTrainArrReportsIndexV1" : "GetTrainArrReportsIndex");
+        }
+    }
+
     public static void MapTrainArrAssignmentReportEndpoints(this WebApplication app)
     {
         var routes = new[]

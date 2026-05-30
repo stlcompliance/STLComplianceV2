@@ -54,3 +54,11 @@ public sealed record CreatePartyContactRequest(
     string Phone,
     string RoleLabel,
     bool IsPrimary);
+
+public sealed record CreateExternalPartyContactRequest(
+    Guid PartyId,
+    string ContactName,
+    string Email,
+    string Phone,
+    string RoleLabel,
+    bool IsPrimary);

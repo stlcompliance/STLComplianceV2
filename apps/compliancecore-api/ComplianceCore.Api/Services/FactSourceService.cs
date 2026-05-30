@@ -106,6 +106,56 @@ public sealed class FactSourceService(
         return MapResponse(entity, definition);
     }
 
+    public async Task<FactSourceResponse> UpdateAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        Guid factSourceId,
+        UpdateFactSourceRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await db.FactSources.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == factSourceId,
+            cancellationToken);
+        if (entity is null)
+        {
+            throw new StlApiException("fact_sources.not_found", "Fact source was not found.", 404);
+        }
+
+        var definition = await db.FactDefinitions.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == entity.FactDefinitionId,
+            cancellationToken)
+            ?? throw new StlApiException("fact_definitions.not_found", "Fact definition was not found.", 404);
+
+        var label = GoverningBodyService.NormalizeLabel(request.Label, "fact_sources.validation", "Label");
+        var description = GoverningBodyService.NormalizeDescription(request.Description, "fact_sources.validation");
+        var configJson = NormalizeConfigJson(request.ConfigJson);
+        var productKey = NormalizeOptionalProductKey(request.ProductKey);
+        var productReference = NormalizeOptionalReference(request.ProductReference);
+
+        ValidateConfigForSourceType(entity.SourceType, definition.ValueType, configJson);
+
+        entity.Label = label;
+        entity.Description = description;
+        entity.ConfigJson = configJson;
+        entity.ProductKey = productKey;
+        entity.ProductReference = productReference;
+        entity.Priority = request.Priority;
+        entity.IsActive = request.IsActive;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await auditService.WriteAsync(
+            "fact_source.update",
+            tenantId,
+            actorUserId,
+            "fact_source",
+            entity.Id.ToString(),
+            "success",
+            cancellationToken: cancellationToken);
+
+        return MapResponse(entity, definition);
+    }
+
     private async Task ValidateCreateAsync(
         Guid tenantId,
         CreateFactSourceRequest request,

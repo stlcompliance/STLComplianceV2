@@ -16,6 +16,12 @@ public static class PartyRegistryEndpoints
         MapPartyGroup(app, "/api/v1/dealers", "dealer");
         MapPartyGroup(app, "/api/suppliers", "supplier");
         MapPartyGroup(app, "/api/v1/suppliers", "supplier");
+        MapPartyGroup(app, "/api/external-parties", null);
+        MapPartyGroup(app, "/api/v1/external-parties", null);
+        MapPartyGroup(app, "/api/customers", "customer");
+        MapPartyGroup(app, "/api/v1/customers", "customer");
+        MapContactsGroup(app, "/api/contacts");
+        MapContactsGroup(app, "/api/v1/contacts");
     }
 
     private static void MapPartyGroup(WebApplication app, string routePrefix, string? fixedPartyType)
@@ -209,7 +215,67 @@ public static class PartyRegistryEndpoints
             "/api/v1/dealers" => "DealersV1",
             "/api/suppliers" => "Suppliers",
             "/api/v1/suppliers" => "SuppliersV1",
+            "/api/external-parties" => "ExternalParties",
+            "/api/v1/external-parties" => "ExternalPartiesV1",
+            "/api/customers" => "Customers",
+            "/api/v1/customers" => "CustomersV1",
             "/api/v1/parties" => "AllV1",
             _ => "All"
         };
+
+    private static void MapContactsGroup(WebApplication app, string routePrefix)
+    {
+        var group = app.MapGroup(routePrefix).WithTags("PartyRegistry").RequireAuthorization();
+
+        group.MapGet("/", async (
+            Guid? partyId,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ExternalPartyService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartiesRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            if (partyId.HasValue)
+            {
+                var party = await service.GetAsync(tenantId, partyId.Value, cancellationToken);
+                return Results.Ok(party.Contacts);
+            }
+
+            var parties = await service.ListAsync(tenantId, null, cancellationToken);
+            var contacts = parties
+                .SelectMany(p => p.Contacts)
+                .ToList();
+            return Results.Ok(contacts);
+        })
+        .WithName($"ListContacts{ContactsRouteSuffix(routePrefix)}");
+
+        group.MapPost("/", async (
+            CreateExternalPartyContactRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ExternalPartyService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartiesManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var contact = await service.AddContactAsync(
+                tenantId,
+                actorUserId,
+                request.PartyId,
+                new CreatePartyContactRequest(
+                    request.ContactName,
+                    request.Email,
+                    request.Phone,
+                    request.RoleLabel,
+                    request.IsPrimary),
+                cancellationToken);
+            return Results.Created($"{routePrefix}/{contact.ContactId}", contact);
+        })
+        .WithName($"CreateContact{ContactsRouteSuffix(routePrefix)}");
+    }
+
+    private static string ContactsRouteSuffix(string routePrefix) =>
+        routePrefix.Contains("/v1/", StringComparison.OrdinalIgnoreCase) ? "V1" : string.Empty;
 }

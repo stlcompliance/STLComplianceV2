@@ -155,6 +155,61 @@ public class ComplianceCoreCsvBundleTests : IAsyncLifetime
         Assert.Contains(result.Issues, issue => issue.Code == "vocabulary.type_unknown");
     }
 
+    [Fact]
+    public async Task V1_rule_pack_import_routes_preview_validate_publish_and_followups()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        await SeedSampleTenantDataAsync(adminToken);
+
+        var exportResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/csv-bundle/files/{CsvBundleFiles.ComplianceKeys}", adminToken));
+        exportResponse.EnsureSuccessStatusCode();
+        var exportedCsv = await exportResponse.Content.ReadAsStringAsync();
+        var updatedCsv = $"{exportedCsv.Trim()}\nrule_import_key,Rule Import Key,compliance_domain,Imported via rule-pack-import routes,true";
+
+        using var previewForm = new MultipartFormDataContent();
+        previewForm.Add(new StringContent(updatedCsv, Encoding.UTF8, "text/csv"), "file", CsvBundleFiles.ComplianceKeys);
+        var previewRequest = Authorized(HttpMethod.Post, "/api/v1/rule-pack-imports/preview", adminToken);
+        previewRequest.Content = previewForm;
+        var previewResponse = await _complianceCoreClient.SendAsync(previewRequest);
+        previewResponse.EnsureSuccessStatusCode();
+        var preview = (await previewResponse.Content.ReadFromJsonAsync<RulePackImportRunResponse>())!;
+        Assert.Equal("validated", preview.Status);
+        Assert.True(preview.DryRun);
+
+        var validateGetResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/rule-pack-imports/{preview.ImportId}", adminToken));
+        validateGetResponse.EnsureSuccessStatusCode();
+
+        var diffResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/rule-pack-imports/{preview.ImportId}/diff", adminToken));
+        diffResponse.EnsureSuccessStatusCode();
+        var diff = (await diffResponse.Content.ReadFromJsonAsync<RulePackImportDiffResponse>())!;
+        Assert.Equal(preview.ImportId, diff.ImportId);
+
+        var testsResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/rule-pack-imports/{preview.ImportId}/test-results", adminToken));
+        testsResponse.EnsureSuccessStatusCode();
+        var testResults = (await testsResponse.Content.ReadFromJsonAsync<RulePackImportTestResultsResponse>())!;
+        Assert.Equal(preview.ImportId, testResults.ImportId);
+
+        using var publishForm = new MultipartFormDataContent();
+        publishForm.Add(new StringContent(updatedCsv, Encoding.UTF8, "text/csv"), "file", CsvBundleFiles.ComplianceKeys);
+        var publishRequest = Authorized(HttpMethod.Post, "/api/v1/rule-pack-imports/publish-draft", adminToken);
+        publishRequest.Content = publishForm;
+        var publishResponse = await _complianceCoreClient.SendAsync(publishRequest);
+        publishResponse.EnsureSuccessStatusCode();
+        var published = (await publishResponse.Content.ReadFromJsonAsync<RulePackImportRunResponse>())!;
+        Assert.Equal("applied", published.Status);
+        Assert.False(published.DryRun);
+
+        var rollbackResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/rule-pack-imports/{published.ImportId}/rollback", adminToken));
+        rollbackResponse.EnsureSuccessStatusCode();
+        var rollback = (await rollbackResponse.Content.ReadFromJsonAsync<RulePackImportRollbackResponse>())!;
+        Assert.Equal(published.ImportId, rollback.ImportId);
+    }
+
     private async Task SeedSampleTenantDataAsync(string adminToken)
     {
         var bodyRequest = Authorized(HttpMethod.Post, "/api/governing-bodies", adminToken);

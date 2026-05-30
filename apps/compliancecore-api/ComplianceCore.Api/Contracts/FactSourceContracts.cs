@@ -30,6 +30,15 @@ public sealed record CreateFactSourceRequest(
     string ConfigJson,
     int Priority);
 
+public sealed record UpdateFactSourceRequest(
+    string Label,
+    string Description,
+    string? ProductKey,
+    string? ProductReference,
+    string ConfigJson,
+    int Priority,
+    bool IsActive);
+
 public sealed record InternalResolveFactsRequest(
     Guid TenantId,
     IReadOnlyList<string> FactKeys,

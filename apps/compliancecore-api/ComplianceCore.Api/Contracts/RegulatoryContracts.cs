@@ -138,4 +138,27 @@ public sealed record CreateRulePackRequest(
 
 public sealed record UpdateRulePackStatusRequest(string Status);
 
+public sealed record PatchRulePackRequest(
+    string? Status = null,
+    string? Label = null,
+    string? Description = null);
+
+public sealed record CloneRulePackRequest(
+    string? PackKey = null,
+    string? Label = null,
+    string? Description = null,
+    bool CopyContent = true);
+
+public sealed record RulePackDiffResponse(
+    Guid BaseRulePackId,
+    Guid CompareRulePackId,
+    int BaseVersionNumber,
+    int CompareVersionNumber,
+    string BaseStatus,
+    string CompareStatus,
+    bool MetadataChanged,
+    bool ContentChanged,
+    string? BaseContentHash,
+    string? CompareContentHash);
+
 

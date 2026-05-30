@@ -142,6 +142,51 @@ public class ComplianceCoreVocabularySpineTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task V1_vocabulary_aliases_match_primary_endpoints()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+
+        var createTermRequest = Authorized(HttpMethod.Post, "/api/v1/vocabulary", adminToken);
+        createTermRequest.Content = JsonContent.Create(new CreateVocabularyTermRequest(
+            "oxidizer",
+            "Oxidizer",
+            "material_hazard",
+            "Supports combustion."));
+        var createTermResponse = await _complianceCoreClient.SendAsync(createTermRequest);
+        createTermResponse.EnsureSuccessStatusCode();
+        var term = (await createTermResponse.Content.ReadFromJsonAsync<VocabularyTermResponse>())!;
+
+        var createAliasRequest = Authorized(HttpMethod.Post, "/api/v1/vocabulary/aliases", adminToken);
+        createAliasRequest.Content = JsonContent.Create(new CreateVocabularyAliasRequest(
+            term.TermId,
+            "Oxidizing agent"));
+        var createAliasResponse = await _complianceCoreClient.SendAsync(createAliasRequest);
+        createAliasResponse.EnsureSuccessStatusCode();
+
+        var legacyTypesResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/vocabulary/types", adminToken));
+        legacyTypesResponse.EnsureSuccessStatusCode();
+        var legacyTypes = (await legacyTypesResponse.Content.ReadFromJsonAsync<IReadOnlyList<VocabularyTypeResponse>>())!;
+
+        var v1TypesResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/vocabulary/types", adminToken));
+        v1TypesResponse.EnsureSuccessStatusCode();
+        var v1Types = (await v1TypesResponse.Content.ReadFromJsonAsync<IReadOnlyList<VocabularyTypeResponse>>())!;
+        Assert.Equal(legacyTypes.Count, v1Types.Count);
+
+        var legacyTermsResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/vocabulary?vocabularyTypeKey=material_hazard", adminToken));
+        legacyTermsResponse.EnsureSuccessStatusCode();
+        var legacyTerms = (await legacyTermsResponse.Content.ReadFromJsonAsync<IReadOnlyList<VocabularyTermResponse>>())!;
+
+        var v1TermsResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/vocabulary?vocabularyTypeKey=material_hazard", adminToken));
+        v1TermsResponse.EnsureSuccessStatusCode();
+        var v1Terms = (await v1TermsResponse.Content.ReadFromJsonAsync<IReadOnlyList<VocabularyTermResponse>>())!;
+        Assert.Equal(legacyTerms.Count, v1Terms.Count);
+    }
+
     private string CreateComplianceCoreAccessToken(
         IReadOnlyList<string> entitlements,
         string tenantRoleKey = "tenant_member")

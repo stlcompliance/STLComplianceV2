@@ -12,14 +12,19 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
     async app =>
     {
         app.MapSupplyArrAuthEndpoints();
+        app.MapSupplyArrWorkflowAliasEndpoints();
+        app.MapSupplyArrCoverageAliasEndpoints();
         app.MapStlProductLaunchEndpoints();
         app.MapSupplyArrSettingsEndpoints();
         app.MapSupplyArrPartyRegistryEndpoints();
         app.MapSupplyArrPartCatalogEndpoints();
+        app.MapSupplyArrPartAliasEndpoints();
         app.MapSupplyArrInventoryEndpoints();
         app.MapSupplyArrStockReservationEndpoints();
         app.MapSupplyArrRfqEndpoints();
+        app.MapSupplyArrQuoteAliasEndpoints();
         app.MapSupplyArrSupplierOnboardingEndpoints();
+        app.MapSupplyArrVendorDocumentEndpoints();
         app.MapSupplyArrVendorRestrictionEndpoints();
         app.MapSupplyArrSupplierIncidentEndpoints();
         app.MapSupplyArrProcurementExceptionEndpoints();
@@ -66,6 +71,7 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrPartsInventoryReportEndpoints();
         app.MapSupplyArrPurchasingReportEndpoints();
         app.MapSupplyArrComplianceReportEndpoints();
+        app.MapSupplyArrReportIndexEndpoints();
         app.MapSupplyArrForgivingSearchEndpoints();
         app.MapSupplyArrAuditHistoryEndpoints();
         app.MapSupplyArrEventAndAuditEndpoints();

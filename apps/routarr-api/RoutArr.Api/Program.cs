@@ -31,6 +31,7 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
         app.MapRoutArrEntityExportEndpoints();
         app.MapRoutArrAuditPackageEndpoints();
         app.MapRoutArrEventAndAuditEndpoints();
+        app.MapRoutArrV1FeatureAliasEndpoints();
         app.MapRoutArrInternalAuditPackageGenerationEndpoints();
         app.MapRoutArrDriverAvailabilityEndpoints();
         app.MapRoutArrEquipmentAvailabilityEndpoints();

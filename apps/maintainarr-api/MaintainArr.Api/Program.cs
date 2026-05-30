@@ -23,6 +23,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrInspectionEndpoints();
         app.MapMaintainArrDefectEndpoints();
         app.MapMaintainArrDefectEvidenceEndpoints();
+        app.MapMaintainArrDocumentEndpoints();
         app.MapMaintainArrWorkOrderEndpoints();
         app.MapMaintainArrTechnicianRefEndpoints();
         app.MapMaintainArrWorkOrderLaborEvidenceEndpoints();
@@ -56,6 +57,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrMaintenanceReportEndpoints();
         app.MapMaintainArrExecutiveReportEndpoints();
         app.MapMaintainArrComplianceReportEndpoints();
+        app.MapMaintainArrReportIndexEndpoints();
         app.MapMaintainArrAssetImportEndpoints();
         app.MapMaintainArrEntityExportEndpoints();
         await Task.CompletedTask;

@@ -111,6 +111,28 @@ public sealed class RoutArrTripExecutionCaptureTests : IAsyncLifetime
         getResponse.EnsureSuccessStatusCode();
         var loaded = (await getResponse.Content.ReadFromJsonAsync<TripExecutionSettingsResponse>())!;
         Assert.True(loaded.RequirePostTripDvirBeforeComplete);
+
+        var v1PutRequest = Authorized(HttpMethod.Put, "/api/v1/trip-execution-settings", _dispatcherToken);
+        v1PutRequest.Content = JsonContent.Create(new UpsertTripExecutionSettingsRequest(
+            RequirePreTripDvirBeforeStart: true,
+            RequirePostTripDvirBeforeComplete: false,
+            RequireDeliveryProofBeforeComplete: true,
+            RequirePickupProofBeforeStart: false,
+            BlockTripStartOnDvirFail: true,
+            BlockTripCompleteOnDvirFail: true,
+            RequirePickupProofPhotoBeforeStart: false,
+            RequireDeliveryProofPhotoBeforeComplete: false,
+            RequireDeliverySignatureBeforeComplete: true,
+            RequirePreTripDvirPhotoBeforeStart: false,
+            RequirePostTripDvirPhotoBeforeComplete: false));
+        var v1PutResponse = await _routarrClient.SendAsync(v1PutRequest);
+        v1PutResponse.EnsureSuccessStatusCode();
+
+        var v1GetResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/trip-execution-settings", _dispatcherToken));
+        v1GetResponse.EnsureSuccessStatusCode();
+        var v1Loaded = (await v1GetResponse.Content.ReadFromJsonAsync<TripExecutionSettingsResponse>())!;
+        Assert.False(v1Loaded.RequirePostTripDvirBeforeComplete);
     }
 
     [Fact]
@@ -183,6 +205,13 @@ public sealed class RoutArrTripExecutionCaptureTests : IAsyncLifetime
         Assert.Equal(trip.TripId, readiness.TripId);
         Assert.False(readiness.CanStartTrip);
         Assert.Contains(readiness.Items, x => x.Key == "pre_trip_dvir" && !x.Satisfied);
+
+        var v1ReadinessResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/trips/{trip.TripId}/capture-readiness", _dispatcherToken));
+        v1ReadinessResponse.EnsureSuccessStatusCode();
+        var v1Readiness = (await v1ReadinessResponse.Content.ReadFromJsonAsync<TripCaptureReadinessResponse>())!;
+        Assert.Equal(trip.TripId, v1Readiness.TripId);
+        Assert.False(v1Readiness.CanStartTrip);
     }
 
     [Fact]

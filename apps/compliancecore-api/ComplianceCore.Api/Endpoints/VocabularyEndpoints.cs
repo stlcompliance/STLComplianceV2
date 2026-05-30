@@ -8,10 +8,20 @@ public static class VocabularyEndpoints
 {
     public static void MapComplianceCoreVocabularyEndpoints(this WebApplication app)
     {
-        var vocabulary = app.MapGroup("/api/vocabulary")
-            .WithTags("Vocabulary")
-            .RequireAuthorization();
+        MapVocabularyRoutes(
+            app.MapGroup("/api/vocabulary")
+                .WithTags("Vocabulary")
+                .RequireAuthorization(),
+            string.Empty);
+        MapVocabularyRoutes(
+            app.MapGroup("/api/v1/vocabulary")
+                .WithTags("Vocabulary")
+                .RequireAuthorization(),
+            "V1Vocabulary");
+    }
 
+    private static void MapVocabularyRoutes(RouteGroupBuilder vocabulary, string nameSuffix)
+    {
         vocabulary.MapGet("/types", async (
             ComplianceCoreAuthorizationService authorization,
             VocabularyService service,
@@ -21,7 +31,7 @@ public static class VocabularyEndpoints
             authorization.RequireVocabularyRead(context.User);
             return Results.Ok(await service.ListTypesAsync(cancellationToken));
         })
-        .WithName("ListVocabularyTypes");
+        .WithName($"ListVocabularyTypes{nameSuffix}");
 
         vocabulary.MapGet("/", async (
             string? vocabularyTypeKey,
@@ -34,7 +44,7 @@ public static class VocabularyEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListTermsAsync(tenantId, vocabularyTypeKey, cancellationToken));
         })
-        .WithName("ListVocabularyTerms");
+        .WithName($"ListVocabularyTerms{nameSuffix}");
 
         vocabulary.MapPost("/", async (
             CreateVocabularyTermRequest request,
@@ -52,7 +62,7 @@ public static class VocabularyEndpoints
                 cancellationToken);
             return Results.Created($"/api/vocabulary/{created.TermId}", created);
         })
-        .WithName("CreateVocabularyTerm");
+        .WithName($"CreateVocabularyTerm{nameSuffix}");
 
         vocabulary.MapPost("/aliases", async (
             CreateVocabularyAliasRequest request,
@@ -70,6 +80,6 @@ public static class VocabularyEndpoints
                 cancellationToken);
             return Results.Created($"/api/vocabulary/aliases/{created.AliasId}", created);
         })
-        .WithName("CreateVocabularyAlias");
+        .WithName($"CreateVocabularyAlias{nameSuffix}");
     }
 }

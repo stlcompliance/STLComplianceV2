@@ -9,6 +9,107 @@ public static class TrainingDefinitionStepEndpoints
 {
     public static void MapTrainArrTrainingDefinitionStepEndpoints(this WebApplication app)
     {
+        var programSteps = app.MapGroup("/api/v1/program-steps")
+            .WithTags("TrainingDefinitionSteps")
+            .RequireAuthorization();
+
+        programSteps.MapGet("/", async (
+            Guid? trainingDefinitionId,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingDefinitionStepService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTrainingDefinitionsRead(context.User);
+            if (trainingDefinitionId is null || trainingDefinitionId == Guid.Empty)
+            {
+                return Results.BadRequest(new { code = "program_steps.validation", message = "trainingDefinitionId is required." });
+            }
+
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListForDefinitionAsync(tenantId, trainingDefinitionId.Value, cancellationToken));
+        })
+        .WithName("ListProgramStepsV1");
+
+        programSteps.MapPost("/", async (
+            Guid? trainingDefinitionId,
+            CreateTrainingDefinitionStepRequest request,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingDefinitionStepService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTrainingDefinitionsManage(context.User);
+            if (trainingDefinitionId is null || trainingDefinitionId == Guid.Empty)
+            {
+                return Results.BadRequest(new { code = "program_steps.validation", message = "trainingDefinitionId is required." });
+            }
+
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var created = await service.CreateAsync(
+                tenantId,
+                actorUserId,
+                trainingDefinitionId.Value,
+                request,
+                cancellationToken);
+            return Results.Created($"/api/v1/program-steps/{created.StepId}", created);
+        })
+        .WithName("CreateProgramStepV1");
+
+        programSteps.MapPut("/{stepId:guid}", async (
+            Guid stepId,
+            Guid? trainingDefinitionId,
+            UpdateTrainingDefinitionStepRequest request,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingDefinitionStepService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTrainingDefinitionsManage(context.User);
+            if (trainingDefinitionId is null || trainingDefinitionId == Guid.Empty)
+            {
+                return Results.BadRequest(new { code = "program_steps.validation", message = "trainingDefinitionId is required." });
+            }
+
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpdateAsync(
+                tenantId,
+                actorUserId,
+                trainingDefinitionId.Value,
+                stepId,
+                request,
+                cancellationToken));
+        })
+        .WithName("UpdateProgramStepV1");
+
+        programSteps.MapDelete("/{stepId:guid}", async (
+            Guid stepId,
+            Guid? trainingDefinitionId,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            TrainingDefinitionStepService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTrainingDefinitionsManage(context.User);
+            if (trainingDefinitionId is null || trainingDefinitionId == Guid.Empty)
+            {
+                return Results.BadRequest(new { code = "program_steps.validation", message = "trainingDefinitionId is required." });
+            }
+
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            await service.DeleteAsync(
+                tenantId,
+                actorUserId,
+                trainingDefinitionId.Value,
+                stepId,
+                cancellationToken);
+            return Results.NoContent();
+        })
+        .WithName("DeleteProgramStepV1");
+
         var steps = app.MapGroup("/api/training-definitions/{trainingDefinitionId:guid}/steps")
             .WithTags("TrainingDefinitionSteps")
             .RequireAuthorization();

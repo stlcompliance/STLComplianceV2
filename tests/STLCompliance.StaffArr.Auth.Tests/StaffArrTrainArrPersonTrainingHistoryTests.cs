@@ -140,6 +140,19 @@ public sealed class StaffArrTrainArrPersonTrainingHistoryTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Trainarr_v1_integration_person_training_history_accepts_service_token()
+    {
+        var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"/api/v1/integrations/person-training-history?tenantId={PlatformSeeder.DemoTenantId:D}&staffarrPersonId={_personId:D}&limit=10");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _staffarrToTrainarrToken);
+        var response = await _trainarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var history = (await response.Content.ReadFromJsonAsync<global::TrainArr.Api.Contracts.PersonTrainingHistoryResponse>())!;
+        Assert.True(history.Items.Count >= 1);
+    }
+
     private async Task SeedTrainarrHistoryAsync(Guid personId)
     {
         using var scope = _trainarrFactory.Services.CreateScope();

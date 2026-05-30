@@ -181,6 +181,76 @@ public sealed class MaintainArrWorkOrderLaborEvidenceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Top_level_v1_work_order_tasks_and_labor_aliases_round_trip()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+        var workOrderId = await CreateOpenWorkOrderAsync(managerToken, assetId);
+
+        var taskCreateRequest = Authorized(HttpMethod.Post, "/api/v1/work-order-tasks", managerToken);
+        taskCreateRequest.Content = JsonContent.Create(new CreateWorkOrderTaskLineAliasRequest(
+            workOrderId,
+            "Top-level v1 task",
+            "Alias route",
+            0));
+        var taskCreateResponse = await _maintainarrClient.SendAsync(taskCreateRequest);
+        taskCreateResponse.EnsureSuccessStatusCode();
+        var task = (await taskCreateResponse.Content.ReadFromJsonAsync<WorkOrderTaskLineResponse>())!;
+
+        var taskListRequest = Authorized(HttpMethod.Get, $"/api/v1/work-order-tasks?workOrderId={workOrderId}", managerToken);
+        var taskListResponse = await _maintainarrClient.SendAsync(taskListRequest);
+        taskListResponse.EnsureSuccessStatusCode();
+        var tasks = (await taskListResponse.Content.ReadFromJsonAsync<List<WorkOrderTaskLineResponse>>())!;
+        Assert.Contains(tasks, x => x.TaskLineId == task.TaskLineId);
+
+        var laborCreateRequest = Authorized(HttpMethod.Post, "/api/v1/labor", managerToken);
+        laborCreateRequest.Content = JsonContent.Create(new CreateWorkOrderLaborEntryAliasRequest(
+            workOrderId,
+            PlatformSeeder.DemoAdminUserId.ToString(),
+            1.25m,
+            "regular",
+            task.TaskLineId,
+            "top-level labor"));
+        var laborCreateResponse = await _maintainarrClient.SendAsync(laborCreateRequest);
+        laborCreateResponse.EnsureSuccessStatusCode();
+
+        var laborListRequest = Authorized(HttpMethod.Get, $"/api/v1/labor?workOrderId={workOrderId}", managerToken);
+        var laborListResponse = await _maintainarrClient.SendAsync(laborListRequest);
+        laborListResponse.EnsureSuccessStatusCode();
+        var labor = (await laborListResponse.Content.ReadFromJsonAsync<List<WorkOrderLaborEntryResponse>>())!;
+        Assert.NotEmpty(labor);
+    }
+
+    [Fact]
+    public async Task Documents_v1_alias_create_and_list_for_work_order()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+        var workOrderId = await CreateOpenWorkOrderAsync(managerToken, assetId);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/documents", managerToken);
+        createRequest.Content = JsonContent.Create(new CreateMaintainArrDocumentRequest(
+            "work_order",
+            workOrderId,
+            "before_photo",
+            "doc-before.jpg",
+            "image/jpeg",
+            Convert.ToBase64String(Encoding.UTF8.GetBytes("doc-before")),
+            "top-level document alias"));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<MaintainArrDocumentResponse>())!;
+        Assert.Equal("work_order", created.TargetType);
+        Assert.Equal(workOrderId, created.TargetId);
+
+        var listRequest = Authorized(HttpMethod.Get, $"/api/v1/documents?workOrderId={workOrderId}", managerToken);
+        var listResponse = await _maintainarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var docs = (await listResponse.Content.ReadFromJsonAsync<List<MaintainArrDocumentResponse>>())!;
+        Assert.Contains(docs, x => x.DocumentId == created.DocumentId);
+    }
+
+    [Fact]
     public async Task Cannot_add_labor_to_completed_work_order()
     {
         var managerToken = await RedeemMaintainArrTokenAsync();

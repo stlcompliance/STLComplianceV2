@@ -7,11 +7,9 @@ public static class ReadinessRollupEndpoints
 {
     public static void MapStaffArrReadinessRollupEndpoints(this WebApplication app)
     {
-        var rollups = app.MapGroup("/api/readiness-rollups")
-            .WithTags("ReadinessRollups")
-            .RequireAuthorization();
-
-        rollups.MapGet("/teams", async (
+        static void MapRoutes(RouteGroupBuilder rollups, string suffix)
+        {
+            rollups.MapGet("/teams", async (
             Guid? siteOrgUnitId,
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -22,9 +20,9 @@ public static class ReadinessRollupEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListTeamRollupsAsync(tenantId, siteOrgUnitId, cancellationToken));
         })
-        .WithName("ListTeamReadinessRollups");
+        .WithName($"ListTeamReadinessRollups{suffix}");
 
-        rollups.MapGet("/sites", async (
+            rollups.MapGet("/sites", async (
             HttpContext context,
             StaffArrAuthorizationService authorization,
             ReadinessRollupService service,
@@ -34,9 +32,9 @@ public static class ReadinessRollupEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListSiteRollupsAsync(tenantId, cancellationToken));
         })
-        .WithName("ListSiteReadinessRollups");
+        .WithName($"ListSiteReadinessRollups{suffix}");
 
-        rollups.MapGet("/teams/{teamOrgUnitId:guid}", async (
+            rollups.MapGet("/teams/{teamOrgUnitId:guid}", async (
             Guid teamOrgUnitId,
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -51,9 +49,9 @@ public static class ReadinessRollupEndpoints
                 teamOrgUnitId,
                 cancellationToken));
         })
-        .WithName("GetTeamReadinessRollup");
+        .WithName($"GetTeamReadinessRollup{suffix}");
 
-        rollups.MapGet("/teams/{teamOrgUnitId:guid}/members", async (
+            rollups.MapGet("/teams/{teamOrgUnitId:guid}/members", async (
             Guid teamOrgUnitId,
             string? readinessStatus,
             HttpContext context,
@@ -70,9 +68,9 @@ public static class ReadinessRollupEndpoints
                 readinessStatus,
                 cancellationToken));
         })
-        .WithName("ListTeamReadinessRollupMembers");
+        .WithName($"ListTeamReadinessRollupMembers{suffix}");
 
-        rollups.MapGet("/sites/{siteOrgUnitId:guid}", async (
+            rollups.MapGet("/sites/{siteOrgUnitId:guid}", async (
             Guid siteOrgUnitId,
             HttpContext context,
             StaffArrAuthorizationService authorization,
@@ -87,9 +85,9 @@ public static class ReadinessRollupEndpoints
                 siteOrgUnitId,
                 cancellationToken));
         })
-        .WithName("GetSiteReadinessRollup");
+        .WithName($"GetSiteReadinessRollup{suffix}");
 
-        rollups.MapGet("/sites/{siteOrgUnitId:guid}/members", async (
+            rollups.MapGet("/sites/{siteOrgUnitId:guid}/members", async (
             Guid siteOrgUnitId,
             string? readinessStatus,
             HttpContext context,
@@ -106,6 +104,19 @@ public static class ReadinessRollupEndpoints
                 readinessStatus,
                 cancellationToken));
         })
-        .WithName("ListSiteReadinessRollupMembers");
+        .WithName($"ListSiteReadinessRollupMembers{suffix}");
+        }
+
+        MapRoutes(
+            app.MapGroup("/api/readiness-rollups")
+                .WithTags("ReadinessRollups")
+                .RequireAuthorization(),
+            string.Empty);
+
+        MapRoutes(
+            app.MapGroup("/api/v1/readiness-rollups")
+                .WithTags("ReadinessRollups")
+                .RequireAuthorization(),
+            "V1");
     }
 }

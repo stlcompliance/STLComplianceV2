@@ -155,6 +155,13 @@ public sealed class RoutArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task V1_health_endpoint_returns_ok()
+    {
+        var response = await _routarrClient.GetAsync("/api/v1/health");
+        response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
     public async Task Me_forbids_users_without_routarr_entitlement_claim()
     {
         var token = CreateRoutArrAccessToken(["nexarr"]);

@@ -452,6 +452,35 @@ public sealed class MaintainArrSupplyArrPartsDemandTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Top_level_v1_parts_usage_alias_create_and_list()
+    {
+        var maintainarrToken = await RedeemMaintainArrTokenAsync();
+        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var partId = await SeedSupplyArrPartAsync(supplyarrToken);
+        var assetId = await SeedAssetOnlyAsync(maintainarrToken);
+        var workOrderId = await CreateOpenWorkOrderAsync(maintainarrToken, assetId);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/parts-usage", maintainarrToken);
+        createRequest.Content = JsonContent.Create(new CreateWorkOrderPartsUsageAliasRequest(
+            workOrderId,
+            partId,
+            "V1-PARTS-USAGE-001",
+            "Top-level alias part",
+            1m,
+            "each",
+            null));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<WorkOrderPartsDemandLineResponse>())!;
+
+        var listRequest = Authorized(HttpMethod.Get, $"/api/v1/parts-usage?workOrderId={workOrderId}", maintainarrToken);
+        var listResponse = await _maintainarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var lines = (await listResponse.Content.ReadFromJsonAsync<List<WorkOrderPartsDemandLineResponse>>())!;
+        Assert.Contains(lines, x => x.DemandLineId == created.DemandLineId);
+    }
+
+    [Fact]
     public async Task Parts_demand_status_events_list_is_empty_before_publish()
     {
         var maintainarrToken = await RedeemMaintainArrTokenAsync();

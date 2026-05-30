@@ -14,6 +14,19 @@ public static class MeterEndpoints
 
     private static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
     {
+        group.MapGet("/meters", async (
+            Guid assetId,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            AssetMeterService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireMetersRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListForAssetAsync(tenantId, assetId, cancellationToken));
+        })
+        .WithName($"ListMetersByAsset{nameSuffix}");
+
         group.MapGet("/assets/{assetId:guid}/meters", async (
             Guid assetId,
             HttpContext context,

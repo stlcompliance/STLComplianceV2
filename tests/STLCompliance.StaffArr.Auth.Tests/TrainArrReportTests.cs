@@ -132,6 +132,32 @@ public sealed class TrainArrReportTests : IAsyncLifetime
         var qualificationV1 = (await qualificationV1Response.Content.ReadFromJsonAsync<QualificationReportSummaryResponse>())!;
         Assert.Equal(qualificationLegacy.TotalQualifications, qualificationV1.TotalQualifications);
         Assert.Equal(qualificationLegacy.IssuedCount, qualificationV1.IssuedCount);
+
+        var complianceLegacyResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/reports/compliance/summary", _adminToken));
+        complianceLegacyResponse.EnsureSuccessStatusCode();
+        var complianceLegacy = (await complianceLegacyResponse.Content.ReadFromJsonAsync<ComplianceReportSummaryResponse>())!;
+
+        var complianceV1Response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/compliance/summary", _adminToken));
+        complianceV1Response.EnsureSuccessStatusCode();
+        var complianceV1 = (await complianceV1Response.Content.ReadFromJsonAsync<ComplianceReportSummaryResponse>())!;
+        Assert.Equal(complianceLegacy.CitationAttachmentCount, complianceV1.CitationAttachmentCount);
+        Assert.Equal(complianceLegacy.RulePackRequirementCount, complianceV1.RulePackRequirementCount);
+    }
+
+    [Fact]
+    public async Task Reports_index_v1_lists_available_report_groups()
+    {
+        var response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports", _adminToken));
+        response.EnsureSuccessStatusCode();
+
+        var payload = await response.Content.ReadFromJsonAsync<ReportIndexResponse>();
+        Assert.NotNull(payload);
+        Assert.Contains(payload!.Items, item => item.Key == "assignments");
+        Assert.Contains(payload.Items, item => item.Key == "qualifications");
+        Assert.Contains(payload.Items, item => item.Key == "compliance");
     }
 
     [Fact]
@@ -292,4 +318,8 @@ public sealed class TrainArrReportTests : IAsyncLifetime
             services.Remove(descriptor);
         }
     }
+
+    private sealed record ReportIndexResponse(IReadOnlyList<ReportIndexItem> Items);
+
+    private sealed record ReportIndexItem(string Key, string Path, string Description);
 }

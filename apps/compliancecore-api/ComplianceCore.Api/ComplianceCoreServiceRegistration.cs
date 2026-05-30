@@ -37,6 +37,7 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<FactRequirementService>();
         builder.Services.AddScoped<RegulatoryMappingService>();
         builder.Services.AddScoped<RuleContentService>();
+        builder.Services.AddScoped<RuleCatalogService>();
         builder.Services.AddScoped<ComplianceFindingService>();
         builder.Services.AddScoped<ComplianceWaiverService>();
         builder.Services.AddScoped<RuleEvaluationService>();

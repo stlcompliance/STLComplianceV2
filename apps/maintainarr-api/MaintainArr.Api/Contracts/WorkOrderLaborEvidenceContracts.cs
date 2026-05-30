@@ -16,6 +16,12 @@ public sealed record CreateWorkOrderTaskLineRequest(
     string? Description,
     int? SortOrder);
 
+public sealed record CreateWorkOrderTaskLineAliasRequest(
+    Guid WorkOrderId,
+    string Title,
+    string? Description,
+    int? SortOrder);
+
 public sealed record WorkOrderLaborEntryResponse(
     Guid LaborEntryId,
     Guid WorkOrderId,
@@ -28,6 +34,14 @@ public sealed record WorkOrderLaborEntryResponse(
     DateTimeOffset LoggedAt);
 
 public sealed record CreateWorkOrderLaborEntryRequest(
+    string PersonId,
+    decimal HoursWorked,
+    string LaborTypeKey,
+    Guid? WorkOrderTaskLineId,
+    string? Notes);
+
+public sealed record CreateWorkOrderLaborEntryAliasRequest(
+    Guid WorkOrderId,
     string PersonId,
     decimal HoursWorked,
     string LaborTypeKey,

@@ -29,6 +29,15 @@ public sealed record CreateWorkOrderPartsDemandLineRequest(
     string? UnitOfMeasure,
     string? Notes);
 
+public sealed record CreateWorkOrderPartsUsageAliasRequest(
+    Guid WorkOrderId,
+    Guid? SupplyarrPartId,
+    string? PartNumber,
+    string? Description,
+    decimal QuantityRequested,
+    string? UnitOfMeasure,
+    string? Notes);
+
 public sealed record PublishWorkOrderPartsDemandRequest(
     bool CreatePurchaseRequestDraft = false);
 
