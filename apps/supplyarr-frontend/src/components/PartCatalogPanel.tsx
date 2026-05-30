@@ -189,6 +189,8 @@ export function PartCatalogPanel({
               sourceLabel={catalogName}
               existingKeys={catalogKeys}
               onKeyChange={onCatalogKeyChange}
+              domain="part"
+              kind="catalog"
               label="Catalog key"
             />
             <label htmlFor="part-catalog-description" className="block text-sm text-slate-400">
@@ -235,6 +237,8 @@ export function PartCatalogPanel({
               sourceLabel={partName}
               existingKeys={partKeys}
               onKeyChange={onPartKeyChange}
+              domain="part"
+              kind="item"
               label="Part key"
             />
             <ControlledSelect

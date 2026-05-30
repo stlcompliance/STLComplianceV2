@@ -37,7 +37,7 @@ describe('StepBuilderPanel', () => {
 
     expect(onCreateStep).toHaveBeenCalledWith(
       expect.objectContaining({
-        stepKey: 'intro',
+        stepKey: 'train.step.intro',
         name: 'intro',
         stepType: 'content',
       }),

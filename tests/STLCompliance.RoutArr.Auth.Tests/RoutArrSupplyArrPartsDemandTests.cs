@@ -378,6 +378,54 @@ public sealed class RoutArrSupplyArrPartsDemandTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Supplyarr_demand_status_callback_supports_v1_alias_for_routarr()
+    {
+        var routarrToken = await RedeemRoutArrTokenAsync();
+        var supplyarrToken = await RedeemSupplyArrTokenAsync();
+        var partId = await SeedSupplyArrPartAsync(supplyarrToken);
+        var tripId = await CreateTripAsync(routarrToken);
+
+        var createLineRequest = Authorized(HttpMethod.Post, $"/api/trips/{tripId}/parts-demand", routarrToken);
+        createLineRequest.Content = JsonContent.Create(new CreateTripPartsDemandLineRequest(
+            partId,
+            "V1-R-001",
+            "RoutArr v1 callback part",
+            1m,
+            "each",
+            null));
+        await _routarrClient.SendAsync(createLineRequest);
+
+        var publishRequest = Authorized(HttpMethod.Post, $"/api/trips/{tripId}/parts-demand/publish", routarrToken);
+        publishRequest.Content = JsonContent.Create(new PublishTripPartsDemandRequest(false));
+        var publishResponse = await _routarrClient.SendAsync(publishRequest);
+        publishResponse.EnsureSuccessStatusCode();
+        var published = (await publishResponse.Content.ReadFromJsonAsync<PublishTripPartsDemandResponse>())!;
+
+        var callbackRequest = ServiceAuthorized(
+            HttpMethod.Post,
+            "/api/v1/integrations/supplyarr-demand-status",
+            _routarrStatusCallbackToken);
+        callbackRequest.Content = JsonContent.Create(new IngestSupplyarrDemandStatusRequest(
+            PlatformSeeder.DemoTenantId,
+            published.PublicationId,
+            published.DemandRefId,
+            Guid.NewGuid(),
+            "pr_submitted",
+            "pr_submitted",
+            null,
+            null,
+            null,
+            null,
+            "V1 alias test",
+            DateTimeOffset.UtcNow));
+
+        var response = await _routarrClient.SendAsync(callbackRequest);
+        response.EnsureSuccessStatusCode();
+        var payload = (await response.Content.ReadFromJsonAsync<IngestSupplyarrDemandStatusResponse>())!;
+        Assert.False(payload.IdempotentReplay);
+    }
+
+    [Fact]
     public async Task Routarr_demand_ingest_rejects_missing_service_token()
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/integrations/routarr-demand");

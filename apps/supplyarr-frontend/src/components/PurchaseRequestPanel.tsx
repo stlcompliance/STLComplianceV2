@@ -289,6 +289,8 @@ export function PurchaseRequestPanel({
               sourceLabel={title}
               existingKeys={existingRequestKeys}
               onKeyChange={onRequestKeyChange}
+              domain="purchase"
+              kind="request"
               label="Request key"
             />
             <label htmlFor="purchase-request-create-notes" className="block text-xs text-slate-500">

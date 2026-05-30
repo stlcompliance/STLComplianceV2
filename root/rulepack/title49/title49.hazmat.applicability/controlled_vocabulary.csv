@@ -1,0 +1,2 @@
+term_key,vocabulary_type_key,label,description,active
+ck_t49_hazmat_applicability,compliance_domain,Title 49 Hazmat Applicability,"operational Title 49 domain for material, shipment, hazmat_function.",true

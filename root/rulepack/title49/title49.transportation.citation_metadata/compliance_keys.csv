@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_transportation_citation_metadata,Title 49 Citation Metadata,compliance_domain,"Citation metadata for current Title 49 hierarchy not otherwise assigned to operational or reference rule packs. Mapping level: metadata. Products: ComplianceCore. Entities: citation, regulatory_hierarchy.",true

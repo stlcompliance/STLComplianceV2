@@ -10,6 +10,7 @@ type GeneratedKeyFieldGroupProps = {
   domain?: string
   kind?: string
   aliases?: readonly string[]
+  maxLength?: number
   label?: string
   disabled?: boolean
 }
@@ -21,12 +22,15 @@ export function GeneratedKeyFieldGroup({
   domain,
   kind,
   aliases,
+  maxLength,
   label = 'Key',
   disabled = false,
 }: GeneratedKeyFieldGroupProps) {
   const [showPolicyHint, setShowPolicyHint] = useState(false)
 
-  const generatedKey = resolveGeneratedKey(sourceLabel, { domain, kind, aliases, existingKeys }) || slugifyKey(sourceLabel)
+  const generatedKey =
+    resolveGeneratedKey(sourceLabel, { domain, kind, aliases, maxLength, existingKeys }) ||
+    slugifyKey(sourceLabel)
   const resolvedKey = generatedKey
   const collisionWarning = keyCollisionWarning(resolvedKey, existingKeys)
 

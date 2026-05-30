@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_shipping_papers,Title 49 Hazmat Shipping Papers,compliance_domain,"Shipping paper description, certification, emergency response, and retention controls. Mapping level: operational. Products: SupplyArr, RoutArr, ComplianceCore. Entities: shipment, shipping_paper, emergency_response_info.",true

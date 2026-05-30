@@ -84,7 +84,7 @@ public class ComplianceCoreCsvBundleTests : IAsyncLifetime
     [Fact]
     public async Task Csv_bundle_import_round_trip_upserts_keys()
     {
-        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin", isPlatformAdmin: true);
         await SeedSampleTenantDataAsync(adminToken);
 
         var exportResponse = await _complianceCoreClient.SendAsync(
@@ -133,9 +133,28 @@ public class ComplianceCoreCsvBundleTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Csv_bundle_import_dry_run_reports_validation_without_apply()
+    public async Task Csv_bundle_import_denies_non_platform_compliance_admin()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        using var form = new MultipartFormDataContent();
+        form.Add(
+            new StringContent(
+                "term_key,vocabulary_type_key,label,description,active\nsample,material_hazard,Sample,Desc,true",
+                Encoding.UTF8,
+                "text/csv"),
+            "file",
+            CsvBundleFiles.ControlledVocabulary);
+
+        var importRequest = Authorized(HttpMethod.Post, "/api/csv-bundle/import?dryRun=false", adminToken);
+        importRequest.Content = form;
+        var response = await _complianceCoreClient.SendAsync(importRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Csv_bundle_import_dry_run_reports_validation_without_apply()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin", isPlatformAdmin: true);
         using var form = new MultipartFormDataContent();
         form.Add(
             new StringContent(
@@ -156,9 +175,59 @@ public class ComplianceCoreCsvBundleTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Csv_bundle_import_upserts_expanded_fact_requirements_from_rule_fact_requirements()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin", isPlatformAdmin: true);
+        await SeedSampleTenantDataAsync(adminToken);
+
+        using var form = BuildExpandedRuleFactRequirementBundle(valueType: "boolean");
+        var importRequest = Authorized(HttpMethod.Post, "/api/csv-bundle/import?dryRun=false", adminToken);
+        importRequest.Content = form;
+        var importResponse = await _complianceCoreClient.SendAsync(importRequest);
+        importResponse.EnsureSuccessStatusCode();
+        var result = (await importResponse.Content.ReadFromJsonAsync<CsvImportResultResponse>())!;
+        Assert.True(result.Applied);
+        Assert.Empty(result.Issues);
+
+        var factResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/facts/t49_dq_application_present", adminToken));
+        factResponse.EnsureSuccessStatusCode();
+        var fact = (await factResponse.Content.ReadFromJsonAsync<FactDefinitionResponse>())!;
+        Assert.Equal("boolean", fact.ValueType);
+
+        var requirementsResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/fact-requirements?sourceProduct=StaffArr&sourceEntity=driver", adminToken));
+        requirementsResponse.EnsureSuccessStatusCode();
+        var requirements = (await requirementsResponse.Content.ReadFromJsonAsync<IReadOnlyList<FactRequirementResponse>>())!;
+        var requirement = Assert.Single(requirements);
+        Assert.Equal("StaffArr", requirement.SourceProduct);
+        Assert.Equal("driver", requirement.SourceEntity);
+        Assert.Equal("driver_qualification_application", requirement.SourceFieldOrRecordType);
+        Assert.Equal("Is the driver qualification application present?", requirement.AuditQuestion);
+        Assert.Equal("major", requirement.FailureSeverity);
+        Assert.True(requirement.RemediationRequired);
+    }
+
+    [Fact]
+    public async Task Csv_bundle_import_rejects_invalid_fact_requirement_enum_values()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin", isPlatformAdmin: true);
+        await SeedSampleTenantDataAsync(adminToken);
+
+        using var form = BuildExpandedRuleFactRequirementBundle(valueType: "blob");
+        var importRequest = Authorized(HttpMethod.Post, "/api/csv-bundle/import?dryRun=false", adminToken);
+        importRequest.Content = form;
+        var importResponse = await _complianceCoreClient.SendAsync(importRequest);
+        importResponse.EnsureSuccessStatusCode();
+        var result = (await importResponse.Content.ReadFromJsonAsync<CsvImportResultResponse>())!;
+        Assert.False(result.Applied);
+        Assert.Contains(result.Issues, issue => issue.Code == "fact_requirements.validation");
+    }
+
+    [Fact]
     public async Task V1_rule_pack_import_routes_preview_validate_publish_and_followups()
     {
-        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin", isPlatformAdmin: true);
         await SeedSampleTenantDataAsync(adminToken);
 
         var exportResponse = await _complianceCoreClient.SendAsync(
@@ -244,9 +313,41 @@ public class ComplianceCoreCsvBundleTests : IAsyncLifetime
         await _complianceCoreClient.SendAsync(keyRequest);
     }
 
+    private static MultipartFormDataContent BuildExpandedRuleFactRequirementBundle(string valueType)
+    {
+        const string ruleContent = """{"schemaVersion":1,"logic":"all","rules":[{"ruleKey":"dq_application_present","label":"DQ application present","type":"fact_boolean","factKey":"t49_dq_application_present","expectedValue":true,"nonWaivable":false}]}""";
+        var form = new MultipartFormDataContent();
+        AddCsv(form, CsvBundleFiles.ControlledVocabulary, "term_key,vocabulary_type_key,label,description,active\n");
+        AddCsv(form, CsvBundleFiles.VocabularyAliases, "term_key,alias_text,active\n");
+        AddCsv(form, CsvBundleFiles.ComplianceKeys, "key,label,category,description,active\n");
+        AddCsv(form, CsvBundleFiles.MaterialKeys, "key,label,category,description,active\n");
+        AddCsv(
+            form,
+            CsvBundleFiles.RulePacks,
+            "pack_key,program_key,version_number,label,description,status,active,rule_content_json\n"
+            + $"driver_qualification,fmcsa_safety,1,Driver Qualification,Driver qualification pack,published,true,\"{ruleContent.Replace("\"", "\"\"")}\"\n");
+        AddCsv(
+            form,
+            CsvBundleFiles.RuleRequirements,
+            "citation_key,program_key,pack_key,pack_version,label,source_reference,description,active,supersedes_citation_key\n"
+            + "t49_391_21,fmcsa_safety,driver_qualification,1,Driver application,49 CFR 391.21,Driver application citation,true,\n");
+        AddCsv(
+            form,
+            CsvBundleFiles.RuleFactRequirements,
+            "requirement_key,fact_key,pack_key,pack_version,citation_key,citation_version,applicability_key,source_product,source_entity,source_field_or_record_type,value_type,operator,expected_value,evidence_kind,required_document_type,retention_period,audit_question,failure_severity,automatic_failure_flag,override_allowed,override_permission,remediation_required,label,description,is_required,active\n"
+            + $"req_t49_dq_application_present_t49_391_21,t49_dq_application_present,driver_qualification,1,t49_391_21,1,motor_carrier_driver,StaffArr,driver,driver_qualification_application,{valueType},equals,true,product_record,driver_qualification_application,49_cfr_391_51,Is the driver qualification application present?,major,false,true,compliance.override.title49,true,DQ application present,Driver qualification application is present,true,true\n");
+        AddCsv(form, CsvBundleFiles.RegulatoryMappings, "mapping_key,target_kind,program_key,pack_key,pack_version,citation_key,compliance_key,material_key,fact_key,label,description,active\n");
+        AddCsv(form, CsvBundleFiles.SdsReferences, "sds_key,material_key,product_name,manufacturer,document_url,revision_date,active\n");
+        return form;
+    }
+
+    private static void AddCsv(MultipartFormDataContent form, string fileName, string content) =>
+        form.Add(new StringContent(content, Encoding.UTF8, "text/csv"), "file", fileName);
+
     private string CreateComplianceCoreAccessToken(
         IReadOnlyList<string> entitlements,
-        string tenantRoleKey = "tenant_member")
+        string tenantRoleKey = "tenant_member",
+        bool isPlatformAdmin = false)
     {
         using var scope = _complianceCoreFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<ComplianceCoreTokenService>();
@@ -259,7 +360,7 @@ public class ComplianceCoreCsvBundleTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin: isPlatformAdmin);
 
         return accessToken;
     }

@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import {
+  buildSemanticKey,
   CheckboxMultiSelect,
   ControlledSelect,
   GeneratedKeyField,
-  slugifyKey,
   type PickerOption,
 } from '@stl/shared-ui'
 
@@ -14,7 +14,6 @@ import type { ServiceTokenIssueResult } from '../../api/types'
 export function ServiceTokenAdminPanel() {
   const queryClient = useQueryClient()
   const [clientDisplayName, setClientDisplayName] = useState('')
-  const [clientKeyManual, setClientKeyManual] = useState('')
   const [confirmedClientKey, setConfirmedClientKey] = useState<string | null>(null)
   const [sourceProductKey, setSourceProductKey] = useState('')
   const [allowedProductKeys, setAllowedProductKeys] = useState<string[]>([])
@@ -24,11 +23,6 @@ export function ServiceTokenAdminPanel() {
   const [issueLifetimeMinutes, setIssueLifetimeMinutes] = useState('60')
   const [issuedToken, setIssuedToken] = useState<ServiceTokenIssueResult | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  const generatedClientKey = useMemo(
-    () => slugifyKey(clientKeyManual || clientDisplayName),
-    [clientDisplayName, clientKeyManual],
-  )
 
   const clientsQuery = useQuery({
     queryKey: ['platform-service-clients'],
@@ -49,6 +43,23 @@ export function ServiceTokenAdminPanel() {
     queryKey: ['platform-admin-product-overview'],
     queryFn: () => nexarr.getPlatformAdminProductOverview(),
   })
+
+  const existingClientKeys = useMemo(
+    () => (clientsQuery.data?.items ?? []).map((client) => client.clientKey),
+    [clientsQuery.data?.items],
+  )
+
+  const generatedClientKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'product',
+        kind: 'serviceclient',
+        title: clientDisplayName,
+        existingKeys: existingClientKeys,
+        maxLength: 128,
+      }),
+    [clientDisplayName, existingClientKeys],
+  )
 
   const productOptions: PickerOption[] = useMemo(
     () =>
@@ -82,7 +93,7 @@ export function ServiceTokenAdminPanel() {
   const registerMutation = useMutation({
     mutationFn: () =>
       nexarr.registerServiceClient({
-        clientKey: (clientKeyManual.trim() || generatedClientKey).trim(),
+        clientKey: generatedClientKey.trim(),
         displayName: clientDisplayName.trim(),
         sourceProductKey,
         allowedProductKeys,
@@ -91,7 +102,6 @@ export function ServiceTokenAdminPanel() {
       setErrorMessage(null)
       setConfirmedClientKey(client.clientKey)
       setClientDisplayName('')
-      setClientKeyManual('')
       setAllowedProductKeys([])
       void queryClient.invalidateQueries({ queryKey: ['platform-service-clients'] })
     },
@@ -165,9 +175,8 @@ export function ServiceTokenAdminPanel() {
             sourceLabel={clientDisplayName}
             generatedKey={generatedClientKey}
             confirmedKey={confirmedClientKey}
-            manualOverride={clientKeyManual}
-            onManualOverrideChange={setClientKeyManual}
-            showAdvancedKey
+            manualOverride=""
+            onManualOverrideChange={() => {}}
             label="Client key"
           />
           <ControlledSelect

@@ -149,6 +149,33 @@ public class StaffArrTrainArrTrainingBlockerTests : IAsyncLifetime
         Assert.Equal("qual.hazmat_remediation", trainingBlocker.QualificationKey);
         Assert.Equal("overdue", trainingBlocker.BlockerType);
         Assert.Contains("overdue", trainingBlocker.Message, StringComparison.OrdinalIgnoreCase);
+
+        var v1PersonId = Guid.NewGuid();
+        await SeedStaffPersonAsync(v1PersonId, "Training Blocked V1 User", "training.blocked.v1@example.com");
+        var v1PublicationId = Guid.NewGuid();
+
+        var v1IngestRequest = ServiceAuthorized(
+            HttpMethod.Post,
+            "/api/v1/integrations/training-blockers",
+            _staffarrIntegrationToken);
+        v1IngestRequest.Content = JsonContent.Create(new IngestTrainingBlockerRequest(
+            PlatformSeeder.DemoTenantId,
+            v1PersonId,
+            v1PublicationId,
+            "qual.hazmat_remediation.v1",
+            "Hazmat Remediation V1",
+            "overdue",
+            "V1 route should ingest training blockers successfully.",
+            null));
+
+        var v1IngestResponse = await _staffarrClient.SendAsync(v1IngestRequest);
+        v1IngestResponse.EnsureSuccessStatusCode();
+
+        var v1ReadinessResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{v1PersonId}/readiness", userToken));
+        v1ReadinessResponse.EnsureSuccessStatusCode();
+        var v1Readiness = (await v1ReadinessResponse.Content.ReadFromJsonAsync<PersonReadinessResponse>())!;
+        Assert.Contains(v1Readiness.Blockers, x => x.BlockerSource == "training" && x.QualificationKey == "qual.hazmat_remediation.v1");
     }
 
     [Fact]
@@ -246,6 +273,41 @@ public class StaffArrTrainArrTrainingBlockerTests : IAsyncLifetime
         var readiness = (await readinessResponse.Content.ReadFromJsonAsync<PersonReadinessResponse>())!;
 
         Assert.DoesNotContain(readiness.Blockers, x => x.BlockerSource == "training");
+
+        var v1PersonId = Guid.NewGuid();
+        await SeedStaffPersonAsync(v1PersonId, "Cleared V1 Blocker User", "cleared.v1.blocker@example.com");
+        var v1PublicationId = Guid.NewGuid();
+
+        var v1IngestRequest = ServiceAuthorized(
+            HttpMethod.Post,
+            "/api/v1/integrations/training-blockers",
+            _staffarrIntegrationToken);
+        v1IngestRequest.Content = JsonContent.Create(new IngestTrainingBlockerRequest(
+            PlatformSeeder.DemoTenantId,
+            v1PersonId,
+            v1PublicationId,
+            "qual.clear_me_v1",
+            "Clear Me Training V1",
+            "failed",
+            "V1 route blocker should be clearable.",
+            null));
+        (await _staffarrClient.SendAsync(v1IngestRequest)).EnsureSuccessStatusCode();
+
+        var v1ClearRequest = ServiceAuthorized(
+            HttpMethod.Post,
+            "/api/v1/integrations/training-blockers/clear",
+            _staffarrIntegrationToken);
+        v1ClearRequest.Content = JsonContent.Create(new ClearTrainingBlockerRequest(
+            PlatformSeeder.DemoTenantId,
+            v1PersonId,
+            v1PublicationId));
+        (await _staffarrClient.SendAsync(v1ClearRequest)).EnsureSuccessStatusCode();
+
+        var v1ReadinessResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{v1PersonId}/readiness", userToken));
+        v1ReadinessResponse.EnsureSuccessStatusCode();
+        var v1Readiness = (await v1ReadinessResponse.Content.ReadFromJsonAsync<PersonReadinessResponse>())!;
+        Assert.DoesNotContain(v1Readiness.Blockers, x => x.BlockerSource == "training" && x.QualificationKey == "qual.clear_me_v1");
     }
 
     private static void RemoveDbContext<TContext>(IServiceCollection services)

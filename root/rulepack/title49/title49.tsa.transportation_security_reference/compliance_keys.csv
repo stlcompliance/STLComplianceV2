@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_tsa_transportation_security_reference,Title 49 TSA Transportation Security Reference,compliance_domain,"Transportation Security Administration security rules reference coverage. Mapping level: reference. Products: StaffArr, TrainArr, RoutArr, ComplianceCore. Entities: worker, credential, transportation_security.",true

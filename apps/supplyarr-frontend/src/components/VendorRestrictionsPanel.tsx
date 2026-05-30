@@ -9,6 +9,7 @@ import {
   listVendorRestrictions,
 } from '../api/client'
 import type { ExternalPartyResponse } from '../api/types'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 const SCOPE_OPTIONS = [
   { value: 'purchase_requests', label: 'Purchase requests' },
@@ -151,16 +152,16 @@ export function VendorRestrictionsPanel({
 
         {selectedPartyId && (
           <>
-            <label htmlFor="vendor-restriction-key" className="block text-sm text-slate-400">
-              Restriction key
-              <input
-                id="vendor-restriction-key"
-                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
-                value={restrictionKey}
-                onChange={(event) => setRestrictionKey(event.target.value)}
-                placeholder="e.g. quality-hold-2026"
-              />
-            </label>
+            <GeneratedKeyFieldGroup
+              sourceLabel={`${selectedParty?.displayName ?? ''} ${selectedScopes.join(' ')} restriction`}
+              existingKeys={partyRestrictionsQuery.data?.map((restriction) => restriction.restrictionKey) ?? []}
+              onKeyChange={setRestrictionKey}
+              domain="vendor"
+              kind="restriction"
+              maxLength={128}
+              label="Restriction key"
+              disabled={createMutation.isPending}
+            />
             <label htmlFor="vendor-restriction-reason" className="block text-sm text-slate-400 md:col-span-2">
               Restriction reason
               <textarea

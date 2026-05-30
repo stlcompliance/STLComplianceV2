@@ -1,4 +1,7 @@
+import { ControlledSelect, type PickerOption } from '@stl/shared-ui'
+
 import type { TrainingAssignmentDetailResponse, TrainingEvidenceResponse } from '../api/types'
+import { EVIDENCE_TYPE_OPTIONS } from './formOptions'
 
 interface EvidenceCapturePanelProps {
   assignment: TrainingAssignmentDetailResponse | null
@@ -43,6 +46,27 @@ export function EvidenceCapturePanel({
   }
 
   const assignmentOpen = assignment.status === 'assigned' || assignment.status === 'in_progress'
+  const evidenceTypeOptionsByKey = new Map<string, PickerOption>()
+  for (const option of EVIDENCE_TYPE_OPTIONS) {
+    evidenceTypeOptionsByKey.set(option.value, option)
+  }
+  for (const item of evidence) {
+    if (!evidenceTypeOptionsByKey.has(item.evidenceTypeKey)) {
+      evidenceTypeOptionsByKey.set(item.evidenceTypeKey, {
+        value: item.evidenceTypeKey,
+        label: item.evidenceTypeKey,
+      })
+    }
+  }
+  if (evidenceTypeKey.trim() && !evidenceTypeOptionsByKey.has(evidenceTypeKey.trim())) {
+    evidenceTypeOptionsByKey.set(evidenceTypeKey.trim(), {
+      value: evidenceTypeKey.trim(),
+      label: evidenceTypeKey.trim(),
+    })
+  }
+  const evidenceTypeOptions = [...evidenceTypeOptionsByKey.values()].sort((left, right) =>
+    left.label.localeCompare(right.label),
+  )
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
@@ -70,15 +94,16 @@ export function EvidenceCapturePanel({
 
       {canUpload && assignmentOpen && (
         <div className="mt-4 space-y-3 border-t border-slate-700 pt-4">
-          <label htmlFor="evidence-capture-type" className="block text-xs text-slate-400">
-            Evidence type
-            <input
-              id="evidence-capture-type"
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
-              value={evidenceTypeKey}
-              onChange={(e) => onEvidenceTypeKeyChange(e.target.value)}
-            />
-          </label>
+          <ControlledSelect
+            id="evidence-capture-type"
+            label="Evidence type"
+            value={evidenceTypeKey}
+            onChange={onEvidenceTypeKeyChange}
+            options={evidenceTypeOptions}
+            emptyLabel="Select evidence type…"
+            testId="evidence-capture-type"
+            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
+          />
           <label htmlFor="evidence-capture-file" className="block text-xs text-slate-400">
             File
             <input

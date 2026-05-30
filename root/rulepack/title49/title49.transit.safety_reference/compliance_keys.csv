@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_transit_safety_reference,Title 49 Transit Safety Reference,compliance_domain,"Federal Transit Administration safety and program reference coverage. Mapping level: reference. Products: ComplianceCore. Entities: transit_agency, transit_program.",true

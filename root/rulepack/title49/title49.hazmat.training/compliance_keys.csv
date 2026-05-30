@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_training,Title 49 Hazmat Training,compliance_domain,"Hazmat employee training, recurrent training, and training record controls. Mapping level: operational. Products: TrainArr, StaffArr, SupplyArr, RoutArr, ComplianceCore. Entities: worker, training_record, hazmat_employee.",true

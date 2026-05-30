@@ -144,6 +144,7 @@ export function PartyRegistryPanel({
   }, [parties, selectedPartyId])
 
   const panelTestId = `party-registry-panel-${partyType}`
+  const partyKeyKind = partyType.endsWith('s') ? partyType.slice(0, -1) : partyType
 
   if (isLoading) {
     return (
@@ -435,6 +436,8 @@ export function PartyRegistryPanel({
             sourceLabel={displayName}
             existingKeys={existingPartyKeys}
             onKeyChange={onPartyKeyChange}
+            domain="vendor"
+            kind={partyKeyKind}
             label="Party key"
           />
           <label htmlFor="party-registry-create-legal-name" className="block text-sm text-slate-400">

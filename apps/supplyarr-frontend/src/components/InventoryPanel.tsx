@@ -185,6 +185,8 @@ export function InventoryPanel({
                   sourceLabel={locationName}
                   existingKeys={locationKeys}
                   onKeyChange={onLocationKeyChange}
+                  domain="inventory"
+                  kind="location"
                   label="Location key"
                 />
               </div>
@@ -238,6 +240,8 @@ export function InventoryPanel({
                   sourceLabel={binName}
                   existingKeys={binKeys}
                   onKeyChange={onBinKeyChange}
+                  domain="inventory"
+                  kind="bin"
                   label="Bin key"
                 />
               </div>

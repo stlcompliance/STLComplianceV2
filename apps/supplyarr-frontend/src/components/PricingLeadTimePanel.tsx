@@ -201,12 +201,16 @@ export function PricingLeadTimePanel({
               sourceLabel={pricingKeySource}
               existingKeys={existingPricingKeys}
               onKeyChange={onPricingSnapshotKeyChange}
+              domain="purchase"
+              kind="pricing"
               label="Pricing snapshot key"
             />
             <GeneratedKeyFieldGroup
               sourceLabel={leadTimeKeySource}
               existingKeys={existingLeadTimeKeys}
               onKeyChange={onLeadTimeSnapshotKeyChange}
+              domain="purchase"
+              kind="leadtime"
               label="Lead-time snapshot key"
             />
             <label htmlFor="pricing-lead-time-unit-price" className="block text-sm text-slate-400">

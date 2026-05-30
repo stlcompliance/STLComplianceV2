@@ -1,4 +1,5 @@
 import type { BackorderResponse, PurchaseOrderResponse } from '../api/types'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface BackordersPanelProps {
   backorders: BackorderResponse[]
@@ -86,6 +87,10 @@ export function BackordersPanel({
         label: `${po.orderKey} · line ${line.lineNumber} · ${line.partKey} (${line.quantityRemaining} remaining)`,
       })),
   )
+  const selectedPoLineLabel =
+    poLines.find((line) => line.purchaseOrderLineId === selectedPurchaseOrderLineId)?.label ?? ''
+  const backorderKeySource = selectedPoLineLabel ? `${selectedPoLineLabel} backorder` : ''
+  const existingBackorderKeys = backorders.map((backorder) => backorder.backorderKey)
 
   return (
     <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg lg:col-span-2">
@@ -169,15 +174,16 @@ export function BackordersPanel({
                 ))}
               </select>
             </label>
-            <label htmlFor="backorder-key" className="block text-sm text-slate-400">
-              Backorder key
-              <input
-                id="backorder-key"
-                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
-                value={backorderKey}
-                onChange={(e) => onBackorderKeyChange(e.target.value)}
-              />
-            </label>
+            <GeneratedKeyFieldGroup
+              sourceLabel={backorderKeySource}
+              existingKeys={existingBackorderKeys}
+              onKeyChange={onBackorderKeyChange}
+              domain="purchase"
+              kind="backorder"
+              maxLength={128}
+              label="Backorder key"
+              disabled={isCreating}
+            />
             <label htmlFor="backorder-quantity" className="block text-sm text-slate-400">
               Backorder quantity (optional)
               <input

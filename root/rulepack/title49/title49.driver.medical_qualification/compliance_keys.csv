@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_driver_medical_qualification,Title 49 Driver Medical Qualification,compliance_domain,"Driver physical qualification, medical certificate, and examiner registry controls. Mapping level: operational. Products: StaffArr, TrainArr, RoutArr, ComplianceCore. Entities: driver, medical_certificate, examiner.",true

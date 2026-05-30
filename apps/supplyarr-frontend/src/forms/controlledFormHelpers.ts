@@ -76,6 +76,7 @@ type ResolveGeneratedKeyOptions = {
   domain?: string
   kind?: string
   aliases?: readonly string[]
+  maxLength?: number
   existingKeys?: readonly string[]
 }
 
@@ -83,13 +84,14 @@ export function resolveGeneratedKey(
   sourceLabel: string,
   options: ResolveGeneratedKeyOptions = {},
 ): string {
-  const { domain, kind, aliases, existingKeys } = options
+  const { domain, kind, aliases, maxLength, existingKeys } = options
   if (domain && kind) {
     return buildSemanticKey({
       domain,
       kind,
       title: sourceLabel,
       aliases,
+      maxLength,
       existingKeys: existingKeys ?? [],
     })
   }

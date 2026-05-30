@@ -52,6 +52,22 @@ public sealed class CsvImportExportService(
                 "pack_version",
                 "citation_key",
                 "citation_version",
+                "applicability_key",
+                "source_product",
+                "source_entity",
+                "source_field_or_record_type",
+                "value_type",
+                "operator",
+                "expected_value",
+                "evidence_kind",
+                "required_document_type",
+                "retention_period",
+                "audit_question",
+                "failure_severity",
+                "automatic_failure_flag",
+                "override_allowed",
+                "override_permission",
+                "remediation_required",
                 "label",
                 "description",
                 "is_required",
@@ -415,6 +431,22 @@ public sealed class CsvImportExportService(
                         pack.Item2 > 0 ? pack.Item2.ToString() : string.Empty,
                         citation?.CitationKey ?? string.Empty,
                         citation?.VersionNumber.ToString() ?? string.Empty,
+                        requirement.ApplicabilityKey,
+                        requirement.SourceProduct,
+                        requirement.SourceEntity,
+                        requirement.SourceFieldOrRecordType,
+                        requirement.ValueType,
+                        requirement.Operator,
+                        requirement.ExpectedValue,
+                        requirement.EvidenceKind,
+                        requirement.RequiredDocumentType,
+                        requirement.RetentionPeriod,
+                        requirement.AuditQuestion,
+                        requirement.FailureSeverity,
+                        requirement.AutomaticFailureFlag.ToString().ToLowerInvariant(),
+                        requirement.OverrideAllowed.ToString().ToLowerInvariant(),
+                        requirement.OverridePermission,
+                        requirement.RemediationRequired.ToString().ToLowerInvariant(),
                         requirement.Label,
                         requirement.Description,
                         requirement.IsRequired.ToString().ToLowerInvariant(),
@@ -1045,6 +1077,12 @@ public sealed class CsvImportExportService(
         var updated = 0;
         var deactivated = 0;
         var lineNumber = 1;
+        var seenRequirementKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var incomingFactKeys = rows
+            .Select(row => row.GetValueOrDefault("fact_key"))
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value!.Trim().ToLowerInvariant())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         foreach (var row in rows)
         {
@@ -1056,14 +1094,13 @@ public sealed class CsvImportExportService(
                 continue;
             }
 
-            var fact = context.FactDefinitions.FirstOrDefault(x => x.FactKey == factKey);
-            if (fact is null)
+            if (!seenRequirementKeys.Add(requirementKey))
             {
                 issues.Add(new CsvImportIssue(
                     CsvBundleFiles.RuleFactRequirements,
                     lineNumber,
-                    "facts.not_found",
-                    $"Fact definition '{factKey}' was not found."));
+                    "fact_requirements.duplicate",
+                    $"Requirement key '{requirementKey}' is duplicated in the import bundle."));
                 continue;
             }
 
@@ -1122,10 +1159,99 @@ public sealed class CsvImportExportService(
             }
 
             var description = row.GetValueOrDefault("description") ?? string.Empty;
+            var valueType = (row.GetValueOrDefault("value_type") ?? string.Empty).Trim().ToLowerInvariant();
+            var operatorValue = (row.GetValueOrDefault("operator") ?? string.Empty).Trim().ToLowerInvariant();
+            var evidenceKind = (row.GetValueOrDefault("evidence_kind") ?? string.Empty).Trim().ToLowerInvariant();
+            var failureSeverity = (row.GetValueOrDefault("failure_severity") ?? string.Empty).Trim().ToLowerInvariant();
+            var automaticFailureFlag = CsvText.ParseBool(
+                row["automatic_failure_flag"],
+                CsvBundleFiles.RuleFactRequirements,
+                lineNumber,
+                "automatic_failure_flag");
+            var overrideAllowed = CsvText.ParseBool(
+                row["override_allowed"],
+                CsvBundleFiles.RuleFactRequirements,
+                lineNumber,
+                "override_allowed");
+            var remediationRequired = CsvText.ParseBool(
+                row["remediation_required"],
+                CsvBundleFiles.RuleFactRequirements,
+                lineNumber,
+                "remediation_required");
             var isRequired = CsvText.ParseBool(row["is_required"], CsvBundleFiles.RuleFactRequirements, lineNumber, "is_required");
             var active = CsvText.ParseBool(row["active"], CsvBundleFiles.RuleFactRequirements, lineNumber, "active");
-            var existing = context.FactRequirements.FirstOrDefault(x => x.RequirementKey == requirementKey);
+
+            var contract = new FactRequirementContractInput(
+                requirementKey,
+                factKey,
+                (row.GetValueOrDefault("applicability_key") ?? string.Empty).Trim(),
+                (row.GetValueOrDefault("source_product") ?? string.Empty).Trim(),
+                (row.GetValueOrDefault("source_entity") ?? string.Empty).Trim(),
+                (row.GetValueOrDefault("source_field_or_record_type") ?? string.Empty).Trim(),
+                valueType,
+                operatorValue,
+                (row.GetValueOrDefault("expected_value") ?? string.Empty).Trim(),
+                evidenceKind,
+                (row.GetValueOrDefault("required_document_type") ?? string.Empty).Trim(),
+                (row.GetValueOrDefault("retention_period") ?? string.Empty).Trim(),
+                (row.GetValueOrDefault("audit_question") ?? string.Empty).Trim(),
+                failureSeverity,
+                automaticFailureFlag,
+                overrideAllowed,
+                (row.GetValueOrDefault("override_permission") ?? string.Empty).Trim(),
+                remediationRequired,
+                isRequired);
+
+            var validationIssues = FactRequirementContractRules.Validate(contract, strictAuditMetadata: true);
+            foreach (var component in FactRequirementContractRules.SplitCsv(contract.ExpectedValue))
+            {
+                if (string.Equals(contract.EvidenceKind, FactRequirementEvidenceKinds.DerivedFact, StringComparison.OrdinalIgnoreCase)
+                    && !incomingFactKeys.Contains(component)
+                    && !context.FactDefinitions.Any(x => string.Equals(x.FactKey, component, StringComparison.OrdinalIgnoreCase)))
+                {
+                    validationIssues = validationIssues.Append($"Derived fact component '{component}' was not found.").ToList();
+                }
+            }
+
+            if (validationIssues.Count > 0)
+            {
+                issues.Add(new CsvImportIssue(
+                    CsvBundleFiles.RuleFactRequirements,
+                    lineNumber,
+                    "fact_requirements.validation",
+                    string.Join(" ", validationIssues)));
+                continue;
+            }
+
             var now = DateTimeOffset.UtcNow;
+            var fact = context.FactDefinitions.FirstOrDefault(x => x.FactKey == factKey);
+            if (fact is null)
+            {
+                fact = new FactDefinition
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = tenantId,
+                    FactKey = factKey,
+                    Label = label,
+                    Description = description,
+                    ValueType = valueType,
+                    IsActive = active,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                };
+                context.FactDefinitions.Add(fact);
+                db.FactDefinitions.Add(fact);
+            }
+            else
+            {
+                fact.Label = string.IsNullOrWhiteSpace(fact.Label) ? label : fact.Label;
+                fact.Description = string.IsNullOrWhiteSpace(fact.Description) ? description : fact.Description;
+                fact.ValueType = valueType;
+                fact.IsActive = fact.IsActive || active;
+                fact.UpdatedAt = now;
+            }
+
+            var existing = context.FactRequirements.FirstOrDefault(x => x.RequirementKey == requirementKey);
 
             if (existing is null)
             {
@@ -1139,6 +1265,23 @@ public sealed class CsvImportExportService(
                     RequirementKey = requirementKey,
                     Label = label,
                     Description = description,
+                    ApplicabilityKey = contract.ApplicabilityKey,
+                    SourceProduct = FactRequirementContractRules.NormalizeProducts(contract.SourceProduct),
+                    SourceEntity = contract.SourceEntity,
+                    SourceFieldOrRecordType = contract.SourceFieldOrRecordType,
+                    ValueType = contract.ValueType,
+                    Operator = contract.Operator,
+                    ExpectedValue = contract.ExpectedValue,
+                    EvidenceKind = contract.EvidenceKind,
+                    RequiredDocumentType = contract.RequiredDocumentType,
+                    RetentionPeriod = contract.RetentionPeriod,
+                    AuditQuestion = contract.AuditQuestion,
+                    FailureSeverity = contract.FailureSeverity,
+                    AutomaticFailureFlag = contract.AutomaticFailureFlag,
+                    OverrideAllowed = contract.OverrideAllowed,
+                    OverridePermission = contract.OverridePermission,
+                    RemediationRequired = contract.RemediationRequired,
+                    ExternallyAssertable = false,
                     IsRequired = isRequired,
                     IsActive = active,
                     CreatedAt = now,
@@ -1155,6 +1298,23 @@ public sealed class CsvImportExportService(
                 existing.CitationId = citation?.Id;
                 existing.Label = label;
                 existing.Description = description;
+                existing.ApplicabilityKey = contract.ApplicabilityKey;
+                existing.SourceProduct = FactRequirementContractRules.NormalizeProducts(contract.SourceProduct);
+                existing.SourceEntity = contract.SourceEntity;
+                existing.SourceFieldOrRecordType = contract.SourceFieldOrRecordType;
+                existing.ValueType = contract.ValueType;
+                existing.Operator = contract.Operator;
+                existing.ExpectedValue = contract.ExpectedValue;
+                existing.EvidenceKind = contract.EvidenceKind;
+                existing.RequiredDocumentType = contract.RequiredDocumentType;
+                existing.RetentionPeriod = contract.RetentionPeriod;
+                existing.AuditQuestion = contract.AuditQuestion;
+                existing.FailureSeverity = contract.FailureSeverity;
+                existing.AutomaticFailureFlag = contract.AutomaticFailureFlag;
+                existing.OverrideAllowed = contract.OverrideAllowed;
+                existing.OverridePermission = contract.OverridePermission;
+                existing.RemediationRequired = contract.RemediationRequired;
+                existing.ExternallyAssertable = false;
                 existing.IsRequired = isRequired;
                 existing.IsActive = active;
                 existing.UpdatedAt = now;

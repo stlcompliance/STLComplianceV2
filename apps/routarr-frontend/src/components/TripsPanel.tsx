@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import {
   AdvancedReferenceField,
+  buildSemanticKey,
   GeneratedKeyField,
-  slugifyKey,
   StaticSearchPicker,
   type PickerOption,
 } from '@stl/shared-ui'
@@ -115,9 +115,6 @@ export function TripsPanel({
   onAssignDriver,
   onUpdateStatus,
 }: TripsPanelProps) {
-  const [loadKeyManualOverride, setLoadKeyManualOverride] = useState('')
-  const [showAdvancedLoadKey, setShowAdvancedLoadKey] = useState(false)
-
   const driversQuery = useQuery({
     queryKey: ['routarr-drivers', accessToken],
     queryFn: () => listDrivers(accessToken),
@@ -137,8 +134,13 @@ export function TripsPanel({
   const vehicleOptions = useMemo(() => vehicleRefs.map(vehicleRefToPickerOption), [vehicleRefs])
 
   const loadSourceLabel = [loadOrigin, loadDestination].filter(Boolean).join(' - ')
-  const generatedLoadKey = slugifyKey(loadSourceLabel)
-  const effectiveLoadKey = loadKeyManualOverride.trim() || generatedLoadKey
+  const generatedLoadKey = buildSemanticKey({
+    domain: 'route',
+    kind: 'load',
+    title: loadSourceLabel,
+    maxLength: 128,
+  })
+  const effectiveLoadKey = generatedLoadKey
 
   useEffect(() => {
     if (effectiveLoadKey !== loadKey) {
@@ -244,17 +246,9 @@ export function TripsPanel({
               sourceLabel={loadSourceLabel}
               generatedKey={generatedLoadKey}
               confirmedKey={effectiveLoadKey}
-              manualOverride={loadKeyManualOverride}
-              onManualOverrideChange={setLoadKeyManualOverride}
-              showAdvancedKey={showAdvancedLoadKey}
+              manualOverride=""
+              onManualOverrideChange={() => {}}
             />
-            <button
-              type="button"
-              className="mt-2 text-xs text-slate-400 underline hover:text-slate-200"
-              onClick={() => setShowAdvancedLoadKey((current) => !current)}
-            >
-              {showAdvancedLoadKey ? 'Hide manual key override' : 'Manual key override'}
-            </button>
           </div>
           <label className="text-sm text-slate-300" htmlFor="trips-load-origin">
           Load origin

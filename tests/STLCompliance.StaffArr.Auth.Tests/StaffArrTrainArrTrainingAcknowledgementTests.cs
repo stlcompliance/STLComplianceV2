@@ -213,6 +213,33 @@ public class StaffArrTrainArrTrainingAcknowledgementTests : IAsyncLifetime
         var status = (await statusResponse.Content.ReadFromJsonAsync<TrainingAcknowledgementStatusResponse>())!;
         Assert.Equal("pending", status.Status);
         Assert.Equal(assignmentId, status.TrainarrAssignmentId);
+
+        var v1RequestId = Guid.NewGuid();
+        var v1AssignmentId = Guid.NewGuid();
+        var v1IngestRequest = ServiceAuthorized(
+            HttpMethod.Post,
+            "/api/v1/integrations/training-acknowledgements",
+            _trainarrToStaffarrToken);
+        v1IngestRequest.Content = JsonContent.Create(new IngestTrainingAcknowledgementRequest(
+            PlatformSeeder.DemoTenantId,
+            personId,
+            v1RequestId,
+            v1AssignmentId,
+            "Safety Orientation V1",
+            "manual",
+            "V1 route acknowledgement request.",
+            null));
+        (await _staffarrClient.SendAsync(v1IngestRequest)).EnsureSuccessStatusCode();
+
+        var v1StatusRequest = ServiceAuthorized(
+            HttpMethod.Get,
+            $"/api/v1/integrations/training-acknowledgements/status?tenantId={PlatformSeeder.DemoTenantId:D}&trainarrAcknowledgementRequestId={v1RequestId:D}",
+            _trainarrToStaffarrToken);
+        var v1StatusResponse = await _staffarrClient.SendAsync(v1StatusRequest);
+        v1StatusResponse.EnsureSuccessStatusCode();
+        var v1Status = (await v1StatusResponse.Content.ReadFromJsonAsync<TrainingAcknowledgementStatusResponse>())!;
+        Assert.Equal("pending", v1Status.Status);
+        Assert.Equal(v1AssignmentId, v1Status.TrainarrAssignmentId);
     }
 
     private async Task<Guid> CreateTrainingDefinitionAsync(string trainarrAdminToken)

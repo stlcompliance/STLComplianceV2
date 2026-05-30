@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_motorcarrier_insurance_financial_responsibility,Title 49 Motor Carrier Financial Responsibility,compliance_domain,"Minimum financial responsibility and proof-of-insurance controls for regulated motor carriers. Mapping level: operational. Products: StaffArr, RoutArr, SupplyArr, ComplianceCore. Entities: carrier, insurance_policy, shipment.",true

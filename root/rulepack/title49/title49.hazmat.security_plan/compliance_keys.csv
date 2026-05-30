@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_security_plan,Title 49 Hazmat Security Plan,compliance_domain,"Hazmat security plan, route analysis, rail routing, and security-sensitive shipment controls. Mapping level: operational. Products: SupplyArr, RoutArr, StaffArr, ComplianceCore. Entities: shipment, route, security_plan.",true

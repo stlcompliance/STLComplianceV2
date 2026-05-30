@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_loading_unloading_segregation,"Title 49 Hazmat Loading, Unloading, and Segregation",compliance_domain,"Highway carriage, loading, unloading, attendance, segregation, routing, and parking controls. Mapping level: operational. Products: SupplyArr, RoutArr, MaintainArr, ComplianceCore. Entities: shipment, vehicle, load, route.",true

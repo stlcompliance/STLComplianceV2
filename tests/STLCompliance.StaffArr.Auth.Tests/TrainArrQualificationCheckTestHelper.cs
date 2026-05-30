@@ -19,8 +19,9 @@ internal static class TrainArrQualificationCheckTestHelper
             qualificationKey,
             null,
             null,
-            trainingDefinitionId,
-            null));
+            EffectiveAt: null,
+            TrainingDefinitionId: trainingDefinitionId,
+            TrainingProgramId: null));
         var response = await trainarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<QualificationCheckResponse>())!;

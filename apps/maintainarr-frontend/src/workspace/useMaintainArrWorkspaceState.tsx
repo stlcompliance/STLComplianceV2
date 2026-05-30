@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { normalizeUom, slugifyKey } from '@stl/shared-ui'
+import { buildSemanticKey, normalizeUom } from '@stl/shared-ui'
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import {
@@ -105,12 +105,10 @@ export function useMaintainArrWorkspaceState() {
   const session = loadSession()
   const accessToken = session?.accessToken ?? ''
   const queryClient = useQueryClient()
-  const [classKeyManualOverride, setClassKeyManualOverride] = useState('')
   const [confirmedClassKey, setConfirmedClassKey] = useState<string | null>(null)
   const [className, setClassName] = useState('')
   const [classDescription, setClassDescription] = useState('')
   const [selectedClassId, setSelectedClassId] = useState('')
-  const [typeKeyManualOverride, setTypeKeyManualOverride] = useState('')
   const [confirmedTypeKey, setConfirmedTypeKey] = useState<string | null>(null)
   const [typeName, setTypeName] = useState('')
   const [typeDescription, setTypeDescription] = useState('')
@@ -174,7 +172,6 @@ export function useMaintainArrWorkspaceState() {
   const [createPurchaseRequestDraft, setCreatePurchaseRequestDraft] = useState(false)
   const [meterAssetId, setMeterAssetId] = useState('')
   const [selectedMeterId, setSelectedMeterId] = useState('')
-  const [meterKeyManualOverride, setMeterKeyManualOverride] = useState('')
   const [confirmedMeterKey, setConfirmedMeterKey] = useState<string | null>(null)
   const [meterName, setMeterName] = useState('')
   const [meterUnit, setMeterUnit] = useState('hours')
@@ -552,13 +549,34 @@ export function useMaintainArrWorkspaceState() {
   }
 
   const resolveClassKey = () =>
-    confirmedClassKey ?? (classKeyManualOverride.trim() || slugifyKey(className))
+    confirmedClassKey ??
+    buildSemanticKey({
+      domain: 'asset',
+      kind: 'category',
+      title: className,
+      existingKeys: (classesQuery.data ?? []).map((item) => item.classKey),
+      maxLength: 128,
+    })
 
   const resolveTypeKey = () =>
-    confirmedTypeKey ?? (typeKeyManualOverride.trim() || slugifyKey(typeName))
+    confirmedTypeKey ??
+    buildSemanticKey({
+      domain: 'asset',
+      kind: 'type',
+      title: typeName,
+      existingKeys: (typesQuery.data ?? []).map((item) => item.typeKey),
+      maxLength: 128,
+    })
 
   const resolveMeterKey = () =>
-    confirmedMeterKey ?? (meterKeyManualOverride.trim() || slugifyKey(meterName))
+    confirmedMeterKey ??
+    buildSemanticKey({
+      domain: 'asset',
+      kind: 'meter',
+      title: meterName,
+      existingKeys: (assetMetersQuery.data ?? []).map((item) => item.meterKey),
+      maxLength: 128,
+    })
 
   const createClassMutation = useMutation({
     mutationFn: () =>
@@ -569,7 +587,6 @@ export function useMaintainArrWorkspaceState() {
       }),
     onSuccess: async (created) => {
       setConfirmedClassKey(created.classKey)
-      setClassKeyManualOverride('')
       setClassName('')
       setClassDescription('')
       setApiError(null)
@@ -588,7 +605,6 @@ export function useMaintainArrWorkspaceState() {
       }),
     onSuccess: async (created) => {
       setConfirmedTypeKey(created.typeKey)
-      setTypeKeyManualOverride('')
       setTypeName('')
       setTypeDescription('')
       setApiError(null)
@@ -765,7 +781,6 @@ export function useMaintainArrWorkspaceState() {
       }),
     onSuccess: async (created) => {
       setConfirmedMeterKey(created.meterKey)
-      setMeterKeyManualOverride('')
       setMeterName('')
       setBaselineReading('')
       setSelectedMeterId(created.assetMeterId)
@@ -1143,12 +1158,10 @@ export function useMaintainArrWorkspaceState() {
     accessToken,
     apiError,
     searchParams,
-    classKeyManualOverride,
     confirmedClassKey,
     className,
     classDescription,
     selectedClassId,
-    typeKeyManualOverride,
     confirmedTypeKey,
     typeName,
     typeDescription,
@@ -1219,7 +1232,6 @@ export function useMaintainArrWorkspaceState() {
     createPurchaseRequestDraft,
     meterAssetId,
     selectedMeterId,
-    meterKeyManualOverride,
     confirmedMeterKey,
     meterName,
     meterUnit,
@@ -1235,12 +1247,10 @@ export function useMaintainArrWorkspaceState() {
     selectedProgramId,
     selectedProgramScheduleIds,
     historyAssetId,
-    setClassKeyManualOverride,
     setConfirmedClassKey,
     setClassName,
     setClassDescription,
     setSelectedClassId,
-    setTypeKeyManualOverride,
     setConfirmedTypeKey,
     setTypeName,
     setTypeDescription,
@@ -1302,7 +1312,6 @@ export function useMaintainArrWorkspaceState() {
     setCreatePurchaseRequestDraft,
     setMeterAssetId,
     setSelectedMeterId,
-    setMeterKeyManualOverride,
     setConfirmedMeterKey,
     setMeterName,
     setMeterUnit,

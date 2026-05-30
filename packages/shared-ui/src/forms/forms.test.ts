@@ -68,4 +68,42 @@ describe('semantic keys', () => {
   it('supports explicit alias hints', () => {
     expect(chooseSemanticAlias('Internal Label', ['Loto'])).toBe('loto')
   })
+
+  it('respects maximum key length constraints', () => {
+    expect(
+      buildSemanticKey({
+        domain: 'train',
+        kind: 'step',
+        title: 'This is a very long training step name that should be safely truncated',
+        maxLength: 64,
+      }),
+    ).toMatch(/^train\.step\.[a-z0-9]+$/)
+    expect(
+      buildSemanticKey({
+        domain: 'train',
+        kind: 'step',
+        title: 'This is a very long training step name that should be safely truncated',
+        maxLength: 64,
+      }).length,
+    ).toBeLessThanOrEqual(64)
+  })
+
+  it('keeps collision suffixes within max length', () => {
+    const first = buildSemanticKey({
+      domain: 'train',
+      kind: 'step',
+      title: 'Step title',
+      maxLength: 16,
+    })
+    const second = buildSemanticKey({
+      domain: 'train',
+      kind: 'step',
+      title: 'Step title',
+      existingKeys: [first],
+      maxLength: 16,
+    })
+
+    expect(second).toMatch(/\.2$/)
+    expect(second.length).toBeLessThanOrEqual(16)
+  })
 })

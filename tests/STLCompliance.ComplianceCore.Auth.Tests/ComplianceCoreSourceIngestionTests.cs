@@ -189,11 +189,62 @@ public sealed class ComplianceCoreSourceIngestionTests : IAsyncLifetime
         var scopeKey = $"purchase_request:{Guid.NewGuid():D}".ToLowerInvariant();
         const string factKey = "supplyarr.purchase_request.status";
 
-        var validateRequest = ServiceAuthorized(
-            HttpMethod.Post,
+        var validateResult = await IngestProductFactsBatchAsync(
             "/api/integrations/source-ingestion/product-facts/validate",
-            _supplyarrSourcesToken);
-        validateRequest.Content = JsonContent.Create(new ProductFactBulkIngestionRequest(
+            publicationId,
+            scopeKey,
+            factKey,
+            "submitted",
+            "purchase_request.submitted");
+        Assert.True(validateResult.DryRun);
+        Assert.Equal(1, validateResult.SuccessCount);
+
+        var commitResult = await IngestProductFactsBatchAsync(
+            "/api/integrations/source-ingestion/product-facts/commit",
+            publicationId,
+            scopeKey,
+            factKey,
+            "submitted",
+            "purchase_request.submitted");
+        Assert.False(commitResult.DryRun);
+        Assert.Equal(1, commitResult.SuccessCount);
+
+        var v1ValidateResult = await IngestProductFactsBatchAsync(
+            "/api/v1/integrations/source-ingestion/product-facts/validate",
+            Guid.NewGuid(),
+            $"{scopeKey}:v1",
+            factKey,
+            "approved",
+            "purchase_request.approved");
+        Assert.True(v1ValidateResult.DryRun);
+        Assert.Equal(1, v1ValidateResult.SuccessCount);
+
+        var v1CommitResult = await IngestProductFactsBatchAsync(
+            "/api/v1/integrations/source-ingestion/product-facts/commit",
+            Guid.NewGuid(),
+            $"{scopeKey}:v1-commit",
+            factKey,
+            "approved",
+            "purchase_request.approved");
+        Assert.False(v1CommitResult.DryRun);
+        Assert.Equal(1, v1CommitResult.SuccessCount);
+
+        using var scope = _complianceCoreFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        Assert.True(await db.ProductFactMirrors.AnyAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId && x.FactKey == factKey && x.ScopeKey == scopeKey));
+    }
+
+    private async Task<SourceIngestionBatchResponse> IngestProductFactsBatchAsync(
+        string endpoint,
+        Guid publicationId,
+        string scopeKey,
+        string factKey,
+        string value,
+        string eventName)
+    {
+        var request = ServiceAuthorized(HttpMethod.Post, endpoint, _supplyarrSourcesToken);
+        request.Content = JsonContent.Create(new ProductFactBulkIngestionRequest(
             PlatformSeeder.DemoTenantId,
             publicationId,
             "supplyarr",
@@ -203,36 +254,18 @@ public sealed class ComplianceCoreSourceIngestionTests : IAsyncLifetime
                     factKey,
                     "string",
                     scopeKey,
-                    "submitted",
+                    value,
                     null,
                     null,
                     null,
                     "purchase_request",
                     Guid.NewGuid(),
-                    "purchase_request.submitted",
+                    eventName,
                     $"supplyarr:{publicationId:D}:{factKey}:{scopeKey}"),
             ]));
-        var validateResponse = await _complianceCoreClient.SendAsync(validateRequest);
-        validateResponse.EnsureSuccessStatusCode();
-        var validateResult = (await validateResponse.Content.ReadFromJsonAsync<SourceIngestionBatchResponse>())!;
-        Assert.True(validateResult.DryRun);
-        Assert.Equal(1, validateResult.SuccessCount);
-
-        var commitRequest = ServiceAuthorized(
-            HttpMethod.Post,
-            "/api/integrations/source-ingestion/product-facts/commit",
-            _supplyarrSourcesToken);
-        commitRequest.Content = validateRequest.Content;
-        var commitResponse = await _complianceCoreClient.SendAsync(commitRequest);
-        commitResponse.EnsureSuccessStatusCode();
-        var commitResult = (await commitResponse.Content.ReadFromJsonAsync<SourceIngestionBatchResponse>())!;
-        Assert.False(commitResult.DryRun);
-        Assert.Equal(1, commitResult.SuccessCount);
-
-        using var scope = _complianceCoreFactory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
-        Assert.True(await db.ProductFactMirrors.AnyAsync(
-            x => x.TenantId == PlatformSeeder.DemoTenantId && x.FactKey == factKey && x.ScopeKey == scopeKey));
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<SourceIngestionBatchResponse>())!;
     }
 
     private async Task<int> CountFactSourcesAsync()

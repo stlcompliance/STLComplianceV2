@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_driver_eld_records,Title 49 ELD Records,compliance_domain,"Electronic logging device registration, transfer, malfunction, and record availability controls. Mapping level: operational. Products: RoutArr, StaffArr, ComplianceCore. Entities: driver, eld_device, eld_record.",true

@@ -1,4 +1,4 @@
-import { ControlledSelect, normalizeUom } from '@stl/shared-ui'
+import { ControlledSelect, normalizeUom, type PickerOption } from '@stl/shared-ui'
 
 import { MATERIAL_DEMAND_UOM_OPTIONS } from './formOptions'
 import type {
@@ -79,6 +79,35 @@ export function AssignmentMaterialDemandPanel({
 }: AssignmentMaterialDemandPanelProps) {
   const editable = assignmentEditable(assignment.status)
   const pendingCount = demandLines.filter((line) => line.status === 'pending').length
+  const supplyarrPartOptionsById = new Map<string, PickerOption>()
+  for (const line of demandLines) {
+    if (!line.supplyarrPartId) {
+      continue
+    }
+
+    if (!supplyarrPartOptionsById.has(line.supplyarrPartId)) {
+      const partLabel = line.partNumber.trim() || 'SupplyArr part'
+      supplyarrPartOptionsById.set(line.supplyarrPartId, {
+        value: line.supplyarrPartId,
+        label: `${partLabel} (${line.supplyarrPartId.slice(0, 8)}…)`,
+      })
+    }
+  }
+
+  const normalizedSelectedSupplyarrPartId = supplyarrPartId.trim()
+  if (
+    normalizedSelectedSupplyarrPartId.length > 0 &&
+    !supplyarrPartOptionsById.has(normalizedSelectedSupplyarrPartId)
+  ) {
+    supplyarrPartOptionsById.set(normalizedSelectedSupplyarrPartId, {
+      value: normalizedSelectedSupplyarrPartId,
+      label: `${normalizedSelectedSupplyarrPartId} (selected)`,
+    })
+  }
+
+  const supplyarrPartOptions = [...supplyarrPartOptionsById.values()].sort((left, right) =>
+    left.label.localeCompare(right.label),
+  )
 
   return (
     <section
@@ -164,15 +193,16 @@ export function AssignmentMaterialDemandPanel({
 
       {canManage && editable ? (
         <div className="mt-4 grid gap-3 md:grid-cols-2">
-          <label htmlFor="material-demand-supplyarr-part-id" className="block text-xs text-slate-400">
-            SupplyArr part id (optional)
-            <input
-              id="material-demand-supplyarr-part-id"
-              className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
-              value={supplyarrPartId}
-              onChange={(event) => onSupplyarrPartIdChange(event.target.value)}
-            />
-          </label>
+          <ControlledSelect
+            id="material-demand-supplyarr-part-id"
+            label="SupplyArr part (optional)"
+            value={supplyarrPartId}
+            onChange={onSupplyarrPartIdChange}
+            options={supplyarrPartOptions}
+            emptyLabel="No linked SupplyArr part"
+            testId="material-demand-supplyarr-part-id"
+            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
+          />
           <label htmlFor="material-demand-part-number" className="block text-xs text-slate-400">
             Part number
             <input

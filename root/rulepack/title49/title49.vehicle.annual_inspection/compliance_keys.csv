@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_vehicle_annual_inspection,Title 49 Annual Inspection,compliance_domain,"Periodic inspection, inspector qualification, brake inspector, and recordkeeping controls. Mapping level: operational. Products: MaintainArr, RoutArr, ComplianceCore. Entities: vehicle, inspection, inspector.",true

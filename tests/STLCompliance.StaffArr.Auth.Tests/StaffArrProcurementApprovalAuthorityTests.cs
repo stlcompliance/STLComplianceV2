@@ -106,6 +106,16 @@ public sealed class StaffArrProcurementApprovalAuthorityTests : IAsyncLifetime
         Assert.True(authority.CanApprovePurchaseRequests);
         Assert.True(authority.CanIssuePurchaseOrders);
         Assert.Equal(25000m, authority.MaxApproveAmount);
+
+        var v1Response = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/v1/integrations/procurement-approval-authority?tenantId={PlatformSeeder.DemoTenantId}&personId={_personId}",
+            _supplyarrAuthorityToken));
+        v1Response.EnsureSuccessStatusCode();
+        var v1Authority = (await v1Response.Content.ReadFromJsonAsync<ProcurementApprovalAuthorityResponse>())!;
+        Assert.Equal(authority.PersonId, v1Authority.PersonId);
+        Assert.Equal(authority.CanApprovePurchaseRequests, v1Authority.CanApprovePurchaseRequests);
+        Assert.Equal(authority.MaxApproveAmount, v1Authority.MaxApproveAmount);
     }
 
     [Fact]

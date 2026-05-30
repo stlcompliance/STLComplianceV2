@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_special_permits_exceptions,Title 49 Hazmat Special Permits and Exceptions,compliance_domain,"Special permits, approvals, registrations, and exception-condition controls. Mapping level: operational. Products: SupplyArr, RoutArr, ComplianceCore. Entities: special_permit, approval, shipment.",true

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import { ControlledSelect } from '@stl/shared-ui'
 
 import { getRuleChangeSummary, listRuleChangeEvents } from '../api/client'
 
@@ -24,6 +25,11 @@ export function RuleChangeMonitoringPanel({ accessToken }: RuleChangeMonitoringP
     queryFn: () => getRuleChangeSummary(accessToken),
   })
 
+  const packKeysQuery = useQuery({
+    queryKey: ['compliancecore-rule-change-pack-keys', accessToken],
+    queryFn: () => listRuleChangeEvents(accessToken, { limit: 200 }),
+  })
+
   const eventsQuery = useQuery({
     queryKey: ['compliancecore-rule-change-events', accessToken, changeType, packKey],
     queryFn: () =>
@@ -35,6 +41,15 @@ export function RuleChangeMonitoringPanel({ accessToken }: RuleChangeMonitoringP
   })
 
   const summary = summaryQuery.data
+  const packKeyOptions = [
+    ...new Set([
+      ...(packKeysQuery.data ?? []).map((event) => event.packKey).filter((value) => value.trim().length > 0),
+      ...((eventsQuery.data ?? []).map((event) => event.packKey).filter((value) => value.trim().length > 0)),
+      ...(packKey.trim().length > 0 ? [packKey.trim()] : []),
+    ]),
+  ]
+    .sort((left, right) => left.localeCompare(right))
+    .map((value) => ({ value, label: value }))
 
   return (
     <section
@@ -86,17 +101,16 @@ export function RuleChangeMonitoringPanel({ accessToken }: RuleChangeMonitoringP
             ))}
           </select>
         </label>
-        <label htmlFor="rule-change-filter-pack-key" className="flex flex-col gap-1 text-sm text-slate-400">
-          Rule pack key filter
-          <input
-            id="rule-change-filter-pack-key"
-            type="text"
-            value={packKey}
-            onChange={(event) => setPackKey(event.target.value)}
-            placeholder="e.g. driver_dispatch_gate"
-            className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 font-mono text-sm text-slate-200"
-          />
-        </label>
+        <ControlledSelect
+          id="rule-change-filter-pack-key"
+          label="Rule pack key filter"
+          value={packKey}
+          onChange={setPackKey}
+          options={packKeyOptions}
+          emptyLabel="All rule packs"
+          testId="rule-change-filter-pack-key"
+          className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 font-mono text-sm text-slate-200"
+        />
       </div>
 
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">

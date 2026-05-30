@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { RuleChangeMonitoringPanel } from './RuleChangeMonitoringPanel'
@@ -51,7 +51,8 @@ describe('RuleChangeMonitoringPanel', () => {
     )
 
     expect(await screen.findByText(/Rule change monitoring/)).toBeInTheDocument()
-    expect(await screen.findByText(/test_pack/)).toBeInTheDocument()
+    const eventsList = await screen.findByTestId('rule-change-events-list')
+    expect(within(eventsList).getByText(/test_pack/)).toBeInTheDocument()
     expect(screen.getByText(/Last 24 hours/)).toBeInTheDocument()
   })
 })

@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_registration,Title 49 Hazmat Registration,compliance_domain,"PHMSA hazmat registration for offerors and transporters requiring registration. Mapping level: operational. Products: SupplyArr, RoutArr, StaffArr, ComplianceCore. Entities: carrier, shipper, registration.",true

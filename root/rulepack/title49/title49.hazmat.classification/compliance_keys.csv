@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_classification,Title 49 Hazmat Classification,compliance_domain,"Hazard class, packing group, exception, and shipper classification controls. Mapping level: operational. Products: SupplyArr, TrainArr, RoutArr, ComplianceCore. Entities: material, sds, classification.",true

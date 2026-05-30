@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { getM12AnalyticsWorkerSettings, upsertM12AnalyticsWorkerSettings } from '../api/client'
 
@@ -64,11 +64,25 @@ export function M12AnalyticsWorkerSettingsPanel({
     },
   })
 
+  const settings = settingsQuery.data
+  const scopeOptions = useMemo(() => {
+    const known = new Set<string>(['tenant'])
+    if (settingsQuery.data?.defaultScopeKey?.trim()) {
+      known.add(settingsQuery.data.defaultScopeKey)
+    }
+    if (defaultScopeKey.trim()) {
+      known.add(defaultScopeKey.trim())
+    }
+    return [...known].sort((a, b) => {
+      if (a === 'tenant') return -1
+      if (b === 'tenant') return 1
+      return a.localeCompare(b)
+    })
+  }, [defaultScopeKey, settingsQuery.data?.defaultScopeKey])
+
   if (!canManage) {
     return null
   }
-
-  const settings = settingsQuery.data
 
   return (
     <section
@@ -97,14 +111,19 @@ export function M12AnalyticsWorkerSettingsPanel({
       <div className="grid gap-3 sm:grid-cols-2">
         <label htmlFor="compliancecore-m12-worker-scope" className="block text-sm text-slate-300">
           Default analytics scope key
-          <input
+          <select
             id="compliancecore-m12-worker-scope"
-            type="text"
             value={defaultScopeKey}
             onChange={(e) => setDefaultScopeKey(e.target.value)}
             data-testid="compliancecore-m12-worker-scope"
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-          />
+          >
+            {scopeOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </label>
         <label htmlFor="compliancecore-m12-worker-interval" className="block text-sm text-slate-300">
           Batch interval (hours)

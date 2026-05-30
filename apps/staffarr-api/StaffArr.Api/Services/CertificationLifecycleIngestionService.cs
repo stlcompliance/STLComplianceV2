@@ -14,6 +14,7 @@ public sealed class CertificationLifecycleIngestionService(
     private static readonly HashSet<string> AllowedLifecycleActions = new(StringComparer.OrdinalIgnoreCase)
     {
         "suspend",
+        "reinstate",
         "revoke",
         "expire"
     };
@@ -76,6 +77,15 @@ public sealed class CertificationLifecycleIngestionService(
                 break;
             case "expire":
                 certification.Status = "expired";
+                certification.UpdatedAt = DateTimeOffset.UtcNow;
+                break;
+            case "reinstate":
+                await ClearSuspendedTrainingBlockersAsync(
+                    request.TenantId,
+                    request.PersonId,
+                    qualificationKey,
+                    cancellationToken);
+                certification.Status = "active";
                 certification.UpdatedAt = DateTimeOffset.UtcNow;
                 break;
         }
@@ -211,5 +221,33 @@ public sealed class CertificationLifecycleIngestionService(
 
         var combined = $"{existingNotes.Trim()} | {lifecycleNote}";
         return combined.Length <= 1024 ? combined : combined[..1024];
+    }
+
+    private async Task ClearSuspendedTrainingBlockersAsync(
+        Guid tenantId,
+        Guid personId,
+        string qualificationKey,
+        CancellationToken cancellationToken)
+    {
+        var blockers = await db.PersonTrainingBlockers
+            .Where(x => x.TenantId == tenantId
+                        && x.PersonId == personId
+                        && x.Status == "active"
+                        && x.BlockerType == "suspended"
+                        && x.QualificationKey == qualificationKey)
+            .ToListAsync(cancellationToken);
+
+        if (blockers.Count == 0)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        foreach (var blocker in blockers)
+        {
+            blocker.Status = "cleared";
+            blocker.ClearedAt = now;
+            blocker.UpdatedAt = now;
+        }
     }
 }

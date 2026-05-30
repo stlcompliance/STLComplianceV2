@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_applicability,Title 49 Hazmat Applicability,compliance_domain,"HMR applicability, definitions, forbidden shipments, and international standards controls. Mapping level: operational. Products: SupplyArr, RoutArr, TrainArr, ComplianceCore. Entities: material, shipment, hazmat_function.",true

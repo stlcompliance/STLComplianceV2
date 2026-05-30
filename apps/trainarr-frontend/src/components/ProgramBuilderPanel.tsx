@@ -1,3 +1,6 @@
+import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { useEffect, useMemo, useState } from 'react'
+
 import type {
   TrainingDefinitionResponse,
   TrainingProgramDetailResponse,
@@ -60,8 +63,29 @@ export function ProgramBuilderPanel({
   isStartingRevision,
   canManage,
 }: ProgramBuilderPanelProps) {
+  const [showProgramKeyPolicy, setShowProgramKeyPolicy] = useState(false)
   const isEditing = Boolean(selectedProgramId)
   const editStatus = selectedProgramDetail?.status ?? 'draft'
+  const existingProgramKeys = programs.map((program) => program.programKey)
+  const programKeySource = programName.trim()
+  const generatedProgramKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'train',
+        kind: 'program',
+        title: programKeySource,
+        existingKeys: existingProgramKeys,
+        maxLength: 128,
+      }),
+    [existingProgramKeys, programKeySource],
+  )
+
+  useEffect(() => {
+    if (!isEditing) {
+      onProgramKeyChange(generatedProgramKey)
+    }
+  }, [generatedProgramKey, isEditing, onProgramKeyChange])
+
   const canPublish =
     isEditing &&
     editStatus === 'draft' &&
@@ -148,15 +172,28 @@ export function ProgramBuilderPanel({
       {!isEditing ? (
         <>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <label htmlFor="program-builder-key" className="block text-xs text-slate-400">
-              Program key
-              <input
-                id="program-builder-key"
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
-                value={programKey}
-                onChange={(e) => onProgramKeyChange(e.target.value)}
+            <div className="space-y-1">
+              <GeneratedKeyField
+                sourceLabel={programKeySource}
+                generatedKey={generatedProgramKey}
+                confirmedKey={programKey}
+                manualOverride=""
+                onManualOverrideChange={() => {}}
+                showAdvancedKey={showProgramKeyPolicy}
+                disabled={isCreating}
+                label="Program key"
               />
-            </label>
+              {!showProgramKeyPolicy ? (
+                <button
+                  type="button"
+                  className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                  onClick={() => setShowProgramKeyPolicy(true)}
+                  disabled={isCreating}
+                >
+                  Key policy
+                </button>
+              ) : null}
+            </div>
             <label htmlFor="program-builder-name" className="block text-xs text-slate-400">
               Program name
               <input
@@ -181,7 +218,7 @@ export function ProgramBuilderPanel({
           <button
             type="button"
             className="mt-4 rounded bg-sky-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-600 disabled:opacity-50"
-            disabled={isCreating || selectedDefinitionIds.length === 0}
+            disabled={isCreating || selectedDefinitionIds.length === 0 || !programKey.trim()}
             onClick={onCreateProgram}
           >
             {isCreating ? 'Creating…' : 'Create program'}

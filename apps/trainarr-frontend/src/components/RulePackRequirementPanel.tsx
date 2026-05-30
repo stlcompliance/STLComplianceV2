@@ -1,9 +1,12 @@
+import { ControlledSelect, type PickerOption } from '@stl/shared-ui'
+
 import type { TrainingRulePackRequirementResponse } from '../api/types'
 
 interface RulePackRequirementPanelProps {
   title: string
   requirements: TrainingRulePackRequirementResponse[]
   rulePackKeyInput: string
+  rulePackOptions: PickerOption[]
   onRulePackKeyChange: (value: string) => void
   onSave: () => void
   onRemove: (requirementId: string) => void
@@ -18,6 +21,7 @@ export function RulePackRequirementPanel({
   title,
   requirements,
   rulePackKeyInput,
+  rulePackOptions,
   onRulePackKeyChange,
   onSave,
   onRemove,
@@ -36,15 +40,17 @@ export function RulePackRequirementPanel({
 
       {canManage ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label htmlFor="rule-pack-requirement-key" className="block text-xs text-slate-400 sm:col-span-2">
-            Rule pack key
-            <input
-              id="rule-pack-requirement-key"
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
+          <div className="sm:col-span-2">
+            <ControlledSelect
+              label="Rule pack key"
               value={rulePackKeyInput}
-              onChange={(e) => onRulePackKeyChange(e.target.value)}
+              onChange={onRulePackKeyChange}
+              options={rulePackOptions}
+              emptyLabel="Select rule pack…"
+              testId="rule-pack-requirement-key"
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
             />
-          </label>
+          </div>
           <label htmlFor="rule-pack-requirement-validate-compliance-core" className="flex items-center gap-2 text-xs text-slate-400 sm:col-span-2">
             <input
               id="rule-pack-requirement-validate-compliance-core"

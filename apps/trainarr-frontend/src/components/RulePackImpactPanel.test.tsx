@@ -11,6 +11,9 @@ describe('RulePackImpactPanel', () => {
     render(
       <RulePackImpactPanel
         rulePackKeyInput=""
+        rulePackOptions={[
+          { value: 'driver_qualification', label: 'driver_qualification' },
+        ]}
         onRulePackKeyChange={vi.fn()}
         onAssess={vi.fn()}
         isAssessing={false}
@@ -20,13 +23,16 @@ describe('RulePackImpactPanel', () => {
     )
 
     expect(screen.getByRole('button', { name: /run impact assessment/i })).toBeDisabled()
-    expect(screen.getByPlaceholderText('driver_qualification')).toBeInTheDocument()
+    expect(screen.getByTestId('rule-pack-impact-key')).toBeInTheDocument()
   })
 
   it('shows assessment summary and recommended actions', () => {
     render(
       <RulePackImpactPanel
         rulePackKeyInput="driver_qualification"
+        rulePackOptions={[
+          { value: 'driver_qualification', label: 'driver_qualification' },
+        ]}
         onRulePackKeyChange={vi.fn()}
         onAssess={vi.fn()}
         isAssessing={false}

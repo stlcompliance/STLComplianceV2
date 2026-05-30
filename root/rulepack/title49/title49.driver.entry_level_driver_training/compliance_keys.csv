@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_driver_entry_level_driver_training,Title 49 Entry-Level Driver Training,compliance_domain,"Entry-level driver training, provider registry, and curriculum completion controls. Mapping level: operational. Products: TrainArr, StaffArr, RoutArr, ComplianceCore. Entities: driver, training_assignment, training_provider.",true

@@ -12,3 +12,11 @@ export const MATERIAL_DEMAND_UOM_OPTIONS: PickerOption[] = [
   { value: 'l', label: 'Liters' },
   { value: 'ml', label: 'Milliliters' },
 ]
+
+export const EVIDENCE_TYPE_OPTIONS: PickerOption[] = [
+  { value: 'completion_certificate', label: 'Completion certificate' },
+  { value: 'evaluation_sheet', label: 'Evaluation sheet' },
+  { value: 'signoff_form', label: 'Signoff form' },
+  { value: 'practical_demo', label: 'Practical demonstration' },
+  { value: 'attendance_roster', label: 'Attendance roster' },
+]

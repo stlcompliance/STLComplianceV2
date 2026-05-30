@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_labeling,Title 49 Hazmat Labeling,compliance_domain,"Hazmat label application, specifications, placement, and hazard communication controls. Mapping level: operational. Products: SupplyArr, RoutArr, ComplianceCore. Entities: package, shipment, label.",true

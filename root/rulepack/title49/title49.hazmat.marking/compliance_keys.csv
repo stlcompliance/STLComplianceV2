@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_marking,Title 49 Hazmat Marking,compliance_domain,"Package, bulk packaging, marine pollutant, lithium battery, and limited quantity marking controls. Mapping level: operational. Products: SupplyArr, RoutArr, ComplianceCore. Entities: package, shipment, marking.",true

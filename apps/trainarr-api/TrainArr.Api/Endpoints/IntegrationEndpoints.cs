@@ -1,6 +1,7 @@
 using TrainArr.Api.Contracts;
 using TrainArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Contracts;
 
 namespace TrainArr.Api.Endpoints;
 
@@ -9,6 +10,7 @@ public static class IntegrationEndpoints
     public const string IncidentRemediationIngestActionScope = "trainarr.incident_remediations.write";
 
     public const string RoutarrQualificationCheckActionScope = "trainarr.qualification_checks.dispatch";
+    public const string QualificationCheckReadActionScope = "trainarr.qualification_checks.read";
 
     public const string SupplyarrDemandStatusIngestActionScope = "trainarr.demand_status.write";
 
@@ -78,6 +80,28 @@ public static class IntegrationEndpoints
         })
         .WithName($"RoutarrQualificationCheck{(route.Contains("/v1/") ? "V1" : string.Empty)}");
 
+            integrations.MapPost("/qualification-check", async (
+            RoutarrQualificationCheckRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            QualificationCheckService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateQualificationCheckServiceToken(tokenValidator, context, request.TenantId);
+
+            var result = await service.CheckAsync(
+                request.TenantId,
+                actorUserId: null,
+                new CreateQualificationCheckRequest(
+                    request.StaffarrPersonId,
+                    request.QualificationKey,
+                    request.RulePackKey,
+                    request.Context),
+                cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName($"QualificationCheckIntegration{(route.Contains("/v1/") ? "V1" : string.Empty)}");
+
             integrations.MapPost("/supplyarr-demand-status", async (
             IngestSupplyarrDemandStatusRequest request,
             HttpContext context,
@@ -127,5 +151,38 @@ public static class IntegrationEndpoints
         })
         .WithName($"GetTrainArrPersonTrainingHistoryIntegration{(route.Contains("/v1/") ? "V1" : string.Empty)}");
         }
+    }
+
+    private static void ValidateQualificationCheckServiceToken(
+        StlServiceTokenValidator tokenValidator,
+        HttpContext context,
+        Guid tenantId)
+    {
+        var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+            context.Request.Headers.Authorization.ToString());
+        var preview = tokenValidator.TryValidate(bearer)
+            ?? throw new StlApiException(
+                "auth.service_token_invalid",
+                "Service token is invalid.",
+                401);
+
+        var source = preview.SourceProductKey?.Trim().ToLowerInvariant();
+        if (source is not "maintainarr" and not "routarr" and not "supplyarr" and not "staffarr" and not "compliancecore")
+        {
+            throw new StlApiException(
+                "auth.service_token_scope",
+                "Service token source product is not authorized for qualification checks.",
+                403);
+        }
+
+        tokenValidator.ValidateOrThrow(
+            bearer,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = source,
+                RequiredTargetProduct = "trainarr",
+                TenantId = tenantId,
+                RequiredActionScope = QualificationCheckReadActionScope
+            });
     }
 }

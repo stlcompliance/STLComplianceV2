@@ -236,10 +236,23 @@ public static class V1FeatureAliasEndpoints
             authorization.RequireStaffArrEntitlement(context.User);
             var items = new[]
             {
-                new { key = "training-blockers", path = "/api/integrations/training-blockers" },
-                new { key = "certification-grants", path = "/api/integrations/certification-grants" },
-                new { key = "certification-lifecycle", path = "/api/integrations/certification-lifecycle" },
-                new { key = "person-lookup", path = "/api/integrations/person-lookup" }
+                new { key = "training-blockers", path = "/api/v1/integrations/training-blockers" },
+                new { key = "training-blockers-clear", path = "/api/v1/integrations/training-blockers/clear" },
+                new { key = "certification-grants", path = "/api/v1/integrations/certification-grants" },
+                new { key = "certification-lifecycle", path = "/api/v1/integrations/certification-lifecycle" },
+                new { key = "person-lookup", path = "/api/v1/integrations/person-lookup" },
+                new { key = "person-history", path = "/api/v1/integrations/person-history" },
+                new { key = "person-history-summary", path = "/api/v1/integrations/person-history/summary" },
+                new { key = "routarr-readiness", path = "/api/v1/integrations/routarr-readiness" },
+                new { key = "readiness-rollups-teams", path = "/api/v1/integrations/readiness-rollups/teams" },
+                new { key = "readiness-rollups-sites", path = "/api/v1/integrations/readiness-rollups/sites" },
+                new { key = "readiness-rollups-departments", path = "/api/v1/integrations/readiness-rollups/departments" },
+                new { key = "supplyarr-demand-status", path = "/api/v1/integrations/supplyarr-demand-status" },
+                new { key = "training-acknowledgements", path = "/api/v1/integrations/training-acknowledgements" },
+                new { key = "training-acknowledgements-supersede", path = "/api/v1/integrations/training-acknowledgements/supersede" },
+                new { key = "training-acknowledgements-status", path = "/api/v1/integrations/training-acknowledgements/status" },
+                new { key = "procurement-approval-authority", path = "/api/v1/integrations/procurement-approval-authority" },
+                new { key = "permission-check", path = "/api/v1/integrations/permission-check" }
             };
             return Results.Ok(new { items });
         })

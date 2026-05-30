@@ -207,6 +207,16 @@ public class StaffArrPersonnelHistoryRollupWorkerTests : IAsyncLifetime
         response.EnsureSuccessStatusCode();
         var history = (await response.Content.ReadFromJsonAsync<PagedResult<PersonTimelineEntryResponse>>())!;
         Assert.True(history.TotalCount >= 1);
+
+        var v1IntegrationRequest = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"/api/v1/integrations/person-history?tenantId={PlatformSeeder.DemoTenantId}&personId={personId}");
+        v1IntegrationRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", trainarrToken);
+
+        var v1Response = await _staffarrClient.SendAsync(v1IntegrationRequest);
+        v1Response.EnsureSuccessStatusCode();
+        var v1History = (await v1Response.Content.ReadFromJsonAsync<PagedResult<PersonTimelineEntryResponse>>())!;
+        Assert.Equal(history.TotalCount, v1History.TotalCount);
     }
 
     [Fact]

@@ -173,6 +173,36 @@ public class StaffArrTrainArrQualificationCheckTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Qualification_check_honors_effective_time_for_expiration_state()
+    {
+        var personId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+        await SeedIssuedQualificationIssueAsync(
+            personId,
+            "hazmat_endorsement",
+            issuedAt: now.AddDays(-5),
+            expiresAt: now.AddDays(-1));
+
+        var current = await RunQualificationCheckAsync(
+            adminToken,
+            personId,
+            "hazmat_endorsement",
+            "driver_qualification");
+        Assert.Equal(QualificationCheckOutcomes.Block, current.Outcome);
+        Assert.Equal("expired", current.LocalQualification!.Status);
+
+        var pointInTime = await RunQualificationCheckAsync(
+            adminToken,
+            personId,
+            "hazmat_endorsement",
+            "driver_qualification",
+            effectiveAt: now.AddDays(-2));
+        Assert.Equal(QualificationCheckOutcomes.Allow, pointInTime.Outcome);
+        Assert.Equal("issued", pointInTime.LocalQualification!.Status);
+    }
+
+    [Fact]
     public async Task Qualification_check_denies_unrelated_member_for_other_person()
     {
         var subjectPersonId = Guid.NewGuid();
@@ -243,17 +273,61 @@ public class StaffArrTrainArrQualificationCheckTests : IAsyncLifetime
         Guid personId,
         string qualificationKey,
         string rulePackKey,
-        string endpoint = "/api/qualification-checks")
+        string endpoint = "/api/qualification-checks",
+        DateTimeOffset? effectiveAt = null)
     {
         var request = Authorized(HttpMethod.Post, endpoint, trainarrToken);
         request.Content = JsonContent.Create(new CreateQualificationCheckRequest(
             personId,
             qualificationKey,
             rulePackKey,
-            null));
+            null,
+            effectiveAt));
         var response = await _trainarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<QualificationCheckResponse>())!;
+    }
+
+    private async Task SeedIssuedQualificationIssueAsync(
+        Guid personId,
+        string qualificationKey,
+        DateTimeOffset issuedAt,
+        DateTimeOffset? expiresAt)
+    {
+        using var scope = _trainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TrainArr.Api.Data.TrainArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        var assignmentId = Guid.NewGuid();
+
+        db.TrainingAssignments.Add(new TrainArr.Api.Entities.TrainingAssignment
+        {
+            Id = assignmentId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            StaffarrPersonId = personId,
+            TrainingDefinitionId = Guid.NewGuid(),
+            AssignmentReason = "manual",
+            Status = "completed",
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.QualificationIssues.Add(new TrainArr.Api.Entities.QualificationIssue
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            TrainingAssignmentId = assignmentId,
+            StaffarrPersonId = personId,
+            QualificationKey = qualificationKey,
+            QualificationName = "Hazmat Endorsement",
+            GrantPublicationId = Guid.NewGuid(),
+            Status = "issued",
+            IssuedAt = issuedAt,
+            ExpiresAt = expiresAt,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        await db.SaveChangesAsync();
     }
 
     private async Task SeedSuspendedQualificationIssueAsync(Guid personId, string qualificationKey)

@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_vehicle_dvir,Title 49 Driver Vehicle Inspection Reports,compliance_domain,"DVIR submission, defect certification, and intermodal report acceptance controls. Mapping level: operational. Products: MaintainArr, RoutArr, StaffArr, ComplianceCore. Entities: vehicle, dvir, defect, repair.",true

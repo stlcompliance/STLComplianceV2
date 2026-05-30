@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_motorcarrier_safety_fitness_proceedings_reference,Title 49 FMCSA State Compliance and Proceedings Reference,compliance_domain,"Reference coverage for CDL state compliance, safety fitness procedures, and FMCSA rules of practice. Mapping level: reference. Products: StaffArr, RoutArr, ComplianceCore. Entities: state_compliance, safety_fitness, enforcement_proceeding.",true

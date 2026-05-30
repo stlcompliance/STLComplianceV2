@@ -1,0 +1,2 @@
+term_key,vocabulary_type_key,label,description,active
+ck_t49_vehicle_inspection_repair_maintenance,compliance_domain,"Title 49 Inspection, Repair, and Maintenance","operational Title 49 domain for vehicle, asset, work_order, inspection.",true

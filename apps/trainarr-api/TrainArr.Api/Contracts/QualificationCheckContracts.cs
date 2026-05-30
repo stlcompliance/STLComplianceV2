@@ -5,6 +5,7 @@ public sealed record CreateQualificationCheckRequest(
     string QualificationKey,
     string? RulePackKey,
     IReadOnlyDictionary<string, string>? Context,
+    DateTimeOffset? EffectiveAt = null,
     Guid? TrainingDefinitionId = null,
     Guid? TrainingProgramId = null);
 
@@ -39,6 +40,7 @@ public sealed record CreateBatchQualificationCheckRequest(
     string QualificationKey,
     string? RulePackKey,
     IReadOnlyList<BatchQualificationCheckSubject> Subjects,
+    DateTimeOffset? EffectiveAt = null,
     Guid? TrainingDefinitionId = null,
     Guid? TrainingProgramId = null);
 

@@ -1,4 +1,4 @@
-import { GeneratedKeyField, slugifyKey } from '@stl/shared-ui'
+import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
 
 import type { AssetMeterResponse, AssetResponse, MeterPmForecastResponse, MeterReadingResponse } from '../api/types'
 
@@ -12,7 +12,6 @@ interface MeterReadingsPanelProps {
   selectedAssetId: string
   selectedMeterId: string
   meterName: string
-  meterKeyManualOverride: string
   confirmedMeterKey: string | null
   meterUnit: string
   baselineReading: string
@@ -24,7 +23,6 @@ interface MeterReadingsPanelProps {
   onSelectedAssetIdChange: (assetId: string) => void
   onSelectedMeterIdChange: (meterId: string) => void
   onMeterNameChange: (value: string) => void
-  onMeterKeyManualOverrideChange: (value: string) => void
   onMeterUnitChange: (value: string) => void
   onBaselineReadingChange: (value: string) => void
   onReadingValueChange: (value: string) => void
@@ -43,7 +41,6 @@ export function MeterReadingsPanel({
   selectedAssetId,
   selectedMeterId,
   meterName,
-  meterKeyManualOverride,
   confirmedMeterKey,
   meterUnit,
   baselineReading,
@@ -55,7 +52,6 @@ export function MeterReadingsPanel({
   onSelectedAssetIdChange,
   onSelectedMeterIdChange,
   onMeterNameChange,
-  onMeterKeyManualOverrideChange,
   onMeterUnitChange,
   onBaselineReadingChange,
   onReadingValueChange,
@@ -64,6 +60,13 @@ export function MeterReadingsPanel({
   onRecordReading,
 }: MeterReadingsPanelProps) {
   const selectedMeter = meters.find((m) => m.assetMeterId === selectedMeterId)
+  const generatedMeterKey = buildSemanticKey({
+    domain: 'asset',
+    kind: 'meter',
+    title: meterName,
+    existingKeys: meters.map((meter) => meter.meterKey),
+    maxLength: 128,
+  })
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
@@ -134,11 +137,10 @@ export function MeterReadingsPanel({
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 <GeneratedKeyField
                   sourceLabel={meterName}
-                  generatedKey={slugifyKey(meterName)}
+                  generatedKey={generatedMeterKey}
                   confirmedKey={confirmedMeterKey}
-                  manualOverride={meterKeyManualOverride}
-                  onManualOverrideChange={onMeterKeyManualOverrideChange}
-                  showAdvancedKey
+                  manualOverride=""
+                  onManualOverrideChange={() => {}}
                   label="Meter key"
                 />
                 <input id="meterreadings-input-field-5"

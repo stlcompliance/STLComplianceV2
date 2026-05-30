@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_pipeline_safety_reference,Title 49 Pipeline Safety Reference,compliance_domain,"Pipeline safety, damage prevention, and pipeline drug/alcohol program reference coverage. Mapping level: reference. Products: ComplianceCore. Entities: pipeline_operator, pipeline_program.",true

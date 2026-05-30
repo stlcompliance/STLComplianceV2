@@ -1,4 +1,5 @@
 import type { AvailabilitySnapshotResponse, PartResponse } from '../api/types'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface AvailabilitySnapshotsPanelProps {
   parts: PartResponse[]
@@ -55,6 +56,12 @@ export function AvailabilitySnapshotsPanel({
       label: `${part.partKey} · ${link.partyKey} · ${link.vendorPartNumber}`,
     })),
   )
+  const selectedVendorLinkLabel =
+    vendorLinks.find((link) => link.linkId === selectedVendorLinkId)?.label ?? ''
+  const snapshotKeySource = selectedVendorLinkLabel
+    ? `${selectedVendorLinkLabel} ${availabilityStatus} snapshot`
+    : ''
+  const existingSnapshotKeys = availabilitySnapshots.map((row) => row.snapshotKey)
 
   const filteredSnapshots = currentOnlyFilter
     ? availabilitySnapshots.filter((row) => row.isCurrent)
@@ -135,15 +142,16 @@ export function AvailabilitySnapshotsPanel({
           </label>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <label htmlFor="availability-snapshot-key" className="block text-sm text-slate-400">
-              Snapshot key
-              <input
-                id="availability-snapshot-key"
-                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
-                value={snapshotKey}
-                onChange={(e) => onSnapshotKeyChange(e.target.value)}
-              />
-            </label>
+            <GeneratedKeyFieldGroup
+              sourceLabel={snapshotKeySource}
+              existingKeys={existingSnapshotKeys}
+              onKeyChange={onSnapshotKeyChange}
+              domain="purchase"
+              kind="availability"
+              maxLength={128}
+              label="Snapshot key"
+              disabled={isCreating}
+            />
             <label htmlFor="availability-status" className="block text-sm text-slate-400">
               Availability status
               <select

@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_driver_cdl_clp_endorsements,"Title 49 CDL, CLP, and Endorsements",compliance_domain,"Commercial driver license, permit, disqualification, and endorsement readiness controls. Mapping level: operational. Products: StaffArr, TrainArr, RoutArr, ComplianceCore. Entities: driver, license, endorsement.",true

@@ -1,4 +1,5 @@
 import type { PurchaseOrderResponse, PurchaseRequestResponse } from '../api/types'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface PurchaseOrderPanelProps {
   purchaseOrders: PurchaseOrderResponse[]
@@ -68,6 +69,10 @@ export function PurchaseOrderPanel({
   )
   const canCancelSelected =
     canCreate && selectedPo != null && (selectedPo.status === 'draft' || selectedPo.status === 'approved')
+  const orderKeySource = selectedPr
+    ? `${selectedPr.requestKey} ${selectedPr.title || 'purchase order'}`
+    : ''
+  const existingOrderKeys = purchaseOrders.map((po) => po.orderKey)
 
   return (
     <section
@@ -209,15 +214,16 @@ export function PurchaseOrderPanel({
                 Vendor: {selectedPr.vendorDisplayName ?? 'none'} · {selectedPr.lines.length} line(s)
               </p>
             ) : null}
-            <label htmlFor="purchase-order-create-order-key" className="block text-xs text-slate-500">
-              Order key
-              <input
-                id="purchase-order-create-order-key"
-                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
-                value={orderKey}
-                onChange={(e) => onOrderKeyChange(e.target.value)}
-              />
-            </label>
+            <GeneratedKeyFieldGroup
+              sourceLabel={orderKeySource}
+              existingKeys={existingOrderKeys}
+              onKeyChange={onOrderKeyChange}
+              domain="purchase"
+              kind="order"
+              maxLength={128}
+              label="Order key"
+              disabled={isCreating}
+            />
             <button
               type="button"
               className="rounded-md bg-violet-600 px-3 py-1.5 text-sm text-white hover:bg-violet-500 disabled:opacity-50"

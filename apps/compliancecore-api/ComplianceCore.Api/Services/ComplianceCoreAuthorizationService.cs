@@ -217,7 +217,18 @@ public sealed class ComplianceCoreAuthorizationService
 
     public void RequireCsvBundleManage(ClaimsPrincipal principal)
     {
-        RequireVocabularyManage(principal);
+        RequirePlatformAdmin(principal, "CSV bundle import and rule-pack publication require server-side platform-admin validation.");
+    }
+
+    public void RequirePlatformAdmin(ClaimsPrincipal principal, string message = "Platform administrator access is required.")
+    {
+        RequireComplianceCoreEntitlement(principal);
+        if (principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        throw new StlApiException("auth.platform_admin_required", message, 403);
     }
 
     public void RequireAuditPackageRead(ClaimsPrincipal principal)

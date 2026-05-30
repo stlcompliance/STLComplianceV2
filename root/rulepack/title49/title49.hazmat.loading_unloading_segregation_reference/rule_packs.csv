@@ -1,0 +1,2 @@
+pack_key,program_key,version_number,label,description,status,active,rule_content_json
+title49.hazmat.loading_unloading_segregation_reference,phmsa_hmr,1,Title 49 Hazmat Rail Air Vessel Reference,"Reference coverage for HMR carriage by rail, aircraft, and vessel, plus tank car specifications. Source date 2026-05-28; source URLs in coverage report.",draft,true,

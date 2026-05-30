@@ -9,16 +9,57 @@ type Props = { state: TrainArrWorkspaceState }
 
 export function CitationsSection({ state }: Props) {
   const s = state
+  const citationOptionsById = new Map<string, { citationId: string; citationKey: string; label: string }>()
+  for (const citation of s.definitionCitationsQuery.data ?? []) {
+    citationOptionsById.set(citation.complianceCoreCitationId, {
+      citationId: citation.complianceCoreCitationId,
+      citationKey: citation.citationKey,
+      label: citation.metadata?.label
+        ? `${citation.metadata.label} (${citation.citationKey})`
+        : citation.citationKey,
+    })
+  }
+  for (const citation of s.programCitationsQuery.data ?? []) {
+    if (!citationOptionsById.has(citation.complianceCoreCitationId)) {
+      citationOptionsById.set(citation.complianceCoreCitationId, {
+        citationId: citation.complianceCoreCitationId,
+        citationKey: citation.citationKey,
+        label: citation.metadata?.label
+          ? `${citation.metadata.label} (${citation.citationKey})`
+          : citation.citationKey,
+      })
+    }
+  }
+
+  if (
+    s.citationIdInput.trim().length > 0 &&
+    s.citationKeyInput.trim().length > 0 &&
+    !citationOptionsById.has(s.citationIdInput.trim())
+  ) {
+    citationOptionsById.set(s.citationIdInput.trim(), {
+      citationId: s.citationIdInput.trim(),
+      citationKey: s.citationKeyInput.trim(),
+      label: s.citationKeyInput.trim(),
+    })
+  }
+
+  const citationOptions = [...citationOptionsById.values()].sort((left, right) =>
+    left.label.localeCompare(right.label),
+  )
+
   return (
     <>
       {s.selectedDefinitionIdForCitations ? (
         <CitationAttachmentPanel
           title="Training definition citations"
           citations={s.definitionCitationsQuery.data ?? []}
+          citationOptions={citationOptions}
           citationIdInput={s.citationIdInput}
           citationKeyInput={s.citationKeyInput}
-          onCitationIdChange={s.setCitationIdInput}
-          onCitationKeyChange={s.setCitationKeyInput}
+          onCitationSelectionChange={(value) => {
+            s.setCitationIdInput(value?.citationId ?? '')
+            s.setCitationKeyInput(value?.citationKey ?? '')
+          }}
           onAttach={() => s.attachDefinitionCitationMutation.mutate()}
           onRemove={async (attachmentId) => {
             s.setRemovingCitationId(attachmentId)
@@ -49,10 +90,13 @@ export function CitationsSection({ state }: Props) {
         <CitationAttachmentPanel
           title="Training program citations"
           citations={s.programCitationsQuery.data ?? []}
+          citationOptions={citationOptions}
           citationIdInput={s.citationIdInput}
           citationKeyInput={s.citationKeyInput}
-          onCitationIdChange={s.setCitationIdInput}
-          onCitationKeyChange={s.setCitationKeyInput}
+          onCitationSelectionChange={(value) => {
+            s.setCitationIdInput(value?.citationId ?? '')
+            s.setCitationKeyInput(value?.citationKey ?? '')
+          }}
           onAttach={() => s.attachProgramCitationMutation.mutate()}
           onRemove={async (attachmentId) => {
             s.setRemovingCitationId(attachmentId)

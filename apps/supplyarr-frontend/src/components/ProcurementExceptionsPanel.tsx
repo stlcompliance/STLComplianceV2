@@ -356,6 +356,8 @@ export function ProcurementExceptionsPanel({
             sourceLabel={title}
             existingKeys={existingExceptionKeys}
             onKeyChange={setExceptionKey}
+            domain="purchase"
+            kind="exception"
             label="Exception key"
           />
         </div>

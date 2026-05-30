@@ -9,6 +9,7 @@ interface BatchQualificationCheckPanelProps {
   canRun: boolean
   qualificationKey: string
   onQualificationKeyChange: (value: string) => void
+  qualificationOptions: PickerOption[]
   rulePackKey: string
   onRulePackKeyChange: (value: string) => void
   rulePackOptions: PickerOption[]
@@ -40,6 +41,7 @@ export function BatchQualificationCheckPanel({
   canRun,
   qualificationKey,
   onQualificationKeyChange,
+  qualificationOptions,
   rulePackKey,
   onRulePackKeyChange,
   rulePackOptions,
@@ -58,16 +60,15 @@ export function BatchQualificationCheckPanel({
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label htmlFor="batch-qualification-key" className="block text-xs text-slate-400">
-          Qualification key
-          <input
-            id="batch-qualification-key"
-            type="text"
-            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm text-slate-100"
-            value={qualificationKey}
-            onChange={(e) => onQualificationKeyChange(e.target.value)}
-          />
-        </label>
+        <ControlledSelect
+          label="Qualification key"
+          value={qualificationKey}
+          onChange={onQualificationKeyChange}
+          options={qualificationOptions}
+          emptyLabel="Select qualification…"
+          testId="batch-qualification-key"
+          className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-2 text-sm text-slate-100"
+        />
         <ControlledSelect
           label="Compliance Core rule pack key"
           value={rulePackKey}

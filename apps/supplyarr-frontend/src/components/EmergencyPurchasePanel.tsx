@@ -179,6 +179,8 @@ export function EmergencyPurchasePanel({
               sourceLabel={title}
               existingKeys={existingRequestKeys}
               onKeyChange={setRequestKey}
+              domain="purchase"
+              kind="request"
               label="Request key"
             />
           </div>
@@ -304,6 +306,8 @@ export function EmergencyPurchasePanel({
               sourceLabel={orderKeySource}
               existingKeys={[]}
               onKeyChange={setOrderKey}
+              domain="purchase"
+              kind="order"
               label="PO order key"
             />
           </div>

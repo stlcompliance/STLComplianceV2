@@ -1,4 +1,5 @@
-import { type FormEvent, useMemo, useState } from 'react'
+import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type {
   OrgUnitResponse,
   PermissionTemplateSummaryResponse,
@@ -99,10 +100,12 @@ export function RoleTemplateAssignmentPanel({
   const [permissionKey, setPermissionKey] = useState('staffarr.people.read')
   const [permissionName, setPermissionName] = useState('People read')
   const [permissionDescription, setPermissionDescription] = useState('')
+  const [showPermissionKeyPolicy, setShowPermissionKeyPolicy] = useState(false)
 
   const [roleKey, setRoleKey] = useState('staffarr.viewer')
   const [roleName, setRoleName] = useState('StaffArr Viewer')
   const [roleDescription, setRoleDescription] = useState('')
+  const [showRoleKeyPolicy, setShowRoleKeyPolicy] = useState(false)
   const [roleScopeType, setRoleScopeType] = useState<(typeof SCOPE_TYPES)[number]>('tenant')
   const [roleScopeValue, setRoleScopeValue] = useState('')
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<string[]>([])
@@ -113,6 +116,36 @@ export function RoleTemplateAssignmentPanel({
 
   const roleScopeUnits = useMemo(() => unitsForScope(orgUnits, roleScopeType), [orgUnits, roleScopeType])
   const assignmentScopeUnits = useMemo(() => unitsForScope(orgUnits, assignmentScopeType), [orgUnits, assignmentScopeType])
+  const generatedPermissionKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'perm',
+        kind: 'staffarr',
+        title: permissionName,
+        existingKeys: permissionTemplates.map((permission) => permission.permissionKey),
+        maxLength: 128,
+      }),
+    [permissionName, permissionTemplates],
+  )
+  const generatedRoleKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'role',
+        kind: 'staffarr',
+        title: roleName,
+        existingKeys: roleTemplates.map((role) => role.roleKey),
+        maxLength: 128,
+      }),
+    [roleName, roleTemplates],
+  )
+
+  useEffect(() => {
+    setPermissionKey(generatedPermissionKey)
+  }, [generatedPermissionKey])
+
+  useEffect(() => {
+    setRoleKey(generatedRoleKey)
+  }, [generatedRoleKey])
 
   const handlePermissionSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -252,16 +285,28 @@ export function RoleTemplateAssignmentPanel({
         <div className="mt-6 grid gap-6 xl:grid-cols-3">
           <form className="space-y-3" onSubmit={handlePermissionSubmit}>
             <h3 className="text-sm font-medium text-slate-300">Upsert permission template</h3>
-            <label htmlFor="permission-template-key" className="block text-sm text-slate-300">
-              Permission key
-              <input
-                id="permission-template-key"
-                value={permissionKey}
-                onChange={(event) => setPermissionKey(event.target.value)}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                required
+            <div className="space-y-1">
+              <GeneratedKeyField
+                sourceLabel={permissionName}
+                generatedKey={generatedPermissionKey}
+                confirmedKey={permissionKey}
+                manualOverride=""
+                onManualOverrideChange={() => {}}
+                showAdvancedKey={showPermissionKeyPolicy}
+                disabled={isSubmitting}
+                label="Permission key"
               />
-            </label>
+              {!showPermissionKeyPolicy ? (
+                <button
+                  type="button"
+                  className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                  onClick={() => setShowPermissionKeyPolicy(true)}
+                  disabled={isSubmitting}
+                >
+                  Key policy
+                </button>
+              ) : null}
+            </div>
             <label htmlFor="permission-template-name" className="block text-sm text-slate-300">
               Permission name
               <input
@@ -284,7 +329,7 @@ export function RoleTemplateAssignmentPanel({
             <button
               type="submit"
               className="rounded bg-sky-600 px-3 py-2 text-sm text-white disabled:opacity-50"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !permissionKey.trim() || !permissionName.trim()}
             >
               {isSubmitting ? 'Saving…' : 'Save permission template'}
             </button>
@@ -292,16 +337,28 @@ export function RoleTemplateAssignmentPanel({
 
           <form className="space-y-3" onSubmit={handleRoleTemplateSubmit}>
             <h3 className="text-sm font-medium text-slate-300">Create role template</h3>
-            <label htmlFor="role-template-key" className="block text-sm text-slate-300">
-              Role key
-              <input
-                id="role-template-key"
-                value={roleKey}
-                onChange={(event) => setRoleKey(event.target.value)}
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
-                required
+            <div className="space-y-1">
+              <GeneratedKeyField
+                sourceLabel={roleName}
+                generatedKey={generatedRoleKey}
+                confirmedKey={roleKey}
+                manualOverride=""
+                onManualOverrideChange={() => {}}
+                showAdvancedKey={showRoleKeyPolicy}
+                disabled={isSubmitting}
+                label="Role key"
               />
-            </label>
+              {!showRoleKeyPolicy ? (
+                <button
+                  type="button"
+                  className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                  onClick={() => setShowRoleKeyPolicy(true)}
+                  disabled={isSubmitting}
+                >
+                  Key policy
+                </button>
+              ) : null}
+            </div>
             <label htmlFor="role-template-name" className="block text-sm text-slate-300">
               Role template name
               <input
@@ -386,7 +443,7 @@ export function RoleTemplateAssignmentPanel({
             <button
               type="submit"
               className="rounded bg-sky-600 px-3 py-2 text-sm text-white disabled:opacity-50"
-              disabled={isSubmitting || selectedPermissionIds.length === 0}
+              disabled={isSubmitting || selectedPermissionIds.length === 0 || !roleKey.trim() || !roleName.trim()}
             >
               {isSubmitting ? 'Saving…' : 'Create role template'}
             </button>

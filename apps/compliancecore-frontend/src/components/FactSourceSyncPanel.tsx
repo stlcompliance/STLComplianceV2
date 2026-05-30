@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import {
   getFactSourceSyncHealth,
@@ -95,6 +95,22 @@ export function FactSourceSyncPanel({ accessToken, canManage }: FactSourceSyncPa
   })
 
   const health = healthQuery.data
+  const scopeOptions = useMemo(() => {
+    const known = new Set<string>(['tenant'])
+    if (settingsQuery.data?.defaultScopeKey?.trim()) {
+      known.add(settingsQuery.data.defaultScopeKey)
+    }
+    for (const source of health?.sources ?? []) {
+      if (source.scopeKey?.trim()) {
+        known.add(source.scopeKey)
+      }
+    }
+    return [...known].sort((a, b) => {
+      if (a === 'tenant') return -1
+      if (b === 'tenant') return 1
+      return a.localeCompare(b)
+    })
+  }, [health?.sources, settingsQuery.data?.defaultScopeKey])
 
   return (
     <div className="space-y-6">
@@ -161,12 +177,17 @@ export function FactSourceSyncPanel({ accessToken, canManage }: FactSourceSyncPa
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block text-sm text-slate-400">
                 Default scope key
-                <input
-                  type="text"
+                <select
                   value={defaultScopeKey}
                   onChange={(e) => setDefaultScopeKey(e.target.value)}
                   className="mt-1 w-full rounded-md border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                />
+                >
+                  {scopeOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label className="block text-sm text-slate-400">
                 Sync interval (minutes)

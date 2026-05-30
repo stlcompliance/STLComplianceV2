@@ -29,6 +29,7 @@ public static class QualificationIssueEndpoints
     {
         qualifications.MapGet("/", async (
             string? status,
+            Guid? personId,
             HttpContext context,
             TrainArrAuthorizationService authorization,
             QualificationIssueService service,
@@ -36,7 +37,11 @@ public static class QualificationIssueEndpoints
         {
             authorization.RequireQualificationsManage(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListAsync(tenantId, status, cancellationToken));
+            return Results.Ok(await service.ListAsync(
+                tenantId,
+                status,
+                personId,
+                cancellationToken));
         })
         .WithName($"ListQualificationIssues{nameSuffix}");
 
@@ -52,6 +57,19 @@ public static class QualificationIssueEndpoints
             return Results.Ok(await service.GetByIdAsync(tenantId, qualificationIssueId, cancellationToken));
         })
         .WithName($"GetQualificationIssue{nameSuffix}");
+
+        qualifications.MapGet("/{qualificationIssueId:guid}/history", async (
+            Guid qualificationIssueId,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            QualificationIssueService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireQualificationsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetHistoryAsync(tenantId, qualificationIssueId, cancellationToken));
+        })
+        .WithName($"GetQualificationIssueHistory{nameSuffix}");
 
         qualifications.MapPost("/{qualificationIssueId:guid}/suspend", async (
             Guid qualificationIssueId,
@@ -115,5 +133,26 @@ public static class QualificationIssueEndpoints
             return Results.Ok(result);
         })
         .WithName($"ExpireQualificationIssue{nameSuffix}");
+
+        qualifications.MapPost("/{qualificationIssueId:guid}/reinstate", async (
+            Guid qualificationIssueId,
+            QualificationLifecycleActionRequest request,
+            HttpContext context,
+            TrainArrAuthorizationService authorization,
+            QualificationIssueService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireQualificationsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var result = await service.ReinstateAsync(
+                tenantId,
+                actorUserId,
+                qualificationIssueId,
+                request,
+                cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName($"ReinstateQualificationIssue{nameSuffix}");
     }
 }

@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_motorcarrier_applicability,Title 49 Motor Carrier Applicability,compliance_domain,"FMCSR applicability, definitions, marking, records, and operating-readiness controls. Mapping level: operational. Products: StaffArr, RoutArr, MaintainArr, ComplianceCore. Entities: carrier, driver, vehicle, dispatch.",true

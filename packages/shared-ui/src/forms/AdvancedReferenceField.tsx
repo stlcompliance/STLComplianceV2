@@ -16,9 +16,9 @@ export type AdvancedReferenceFieldProps = {
 export function AdvancedReferenceField({
   value,
   onChange,
-  label = 'Reference ID',
+  label = 'Selected reference',
   id,
-  placeholder = 'Paste GUID or key…',
+  placeholder,
   followUpId,
   allowManualEntry = false,
   manualEntryDisabledMessage = 'Manual entry is disabled. Select from the owning product picker.',
@@ -28,6 +28,11 @@ export function AdvancedReferenceField({
   const [open, setOpen] = useState(false)
   const inputId = id ?? (testId ? `${testId}-input` : 'advanced-reference-input')
   const inputDisabled = disabled
+  const resolvedPlaceholder =
+    placeholder ??
+    (allowManualEntry
+      ? 'Type a verified reference…'
+      : 'Selected from the owning product picker')
 
   return (
     <div data-testid={testId}>
@@ -37,7 +42,7 @@ export function AdvancedReferenceField({
         onClick={() => setOpen((current) => !current)}
         data-testid={testId ? `${testId}-toggle` : 'advanced-reference-toggle'}
       >
-        {open ? 'Hide advanced reference' : 'Advanced reference'}
+        {open ? 'Hide reference policy' : 'Reference policy'}
       </button>
       {open ? (
         <label htmlFor={inputId} className="mt-2 block text-sm text-slate-400">
@@ -52,7 +57,7 @@ export function AdvancedReferenceField({
               }
               onChange(event.target.value)
             }}
-            placeholder={placeholder}
+            placeholder={resolvedPlaceholder}
             disabled={inputDisabled}
             readOnly={!allowManualEntry}
             aria-readonly={!allowManualEntry}

@@ -257,6 +257,110 @@
         }
       }
     },
+    "/api/citations/{citationId}": {
+      "get": {
+        "tags": [
+          "Citations"
+        ],
+        "operationId": "GetRegulatoryCitation",
+        "parameters": [
+          {
+            "name": "citationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Citations"
+        ],
+        "operationId": "UpdateRegulatoryCitation",
+        "parameters": [
+          {
+            "name": "citationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRegulatoryCitationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/citations/{citationId}/history": {
+      "get": {
+        "tags": [
+          "Citations"
+        ],
+        "operationId": "ListRegulatoryCitationHistory",
+        "parameters": [
+          {
+            "name": "citationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/citations/{citationId}/rules": {
+      "get": {
+        "tags": [
+          "Citations"
+        ],
+        "operationId": "ListRegulatoryCitationRules",
+        "parameters": [
+          {
+            "name": "citationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/compliance-keys": {
       "get": {
         "tags": [
@@ -284,6 +388,18 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/config": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -468,6 +584,61 @@
         }
       }
     },
+    "/api/events": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "ListComplianceCoreEvents",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/exports/evaluations": {
       "get": {
         "tags": [
@@ -585,6 +756,106 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/fact-definitions/validate-payload": {
+      "post": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "ValidateFactPayload",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateFactPayloadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/fact-definitions/{factKey}": {
+      "get": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "GetFactDefinition",
+        "parameters": [
+          {
+            "name": "factKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "UpdateFactDefinition",
+        "parameters": [
+          {
+            "name": "factKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFactDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/fact-definitions/{factKey}/usage": {
+      "get": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "GetFactDefinitionUsage",
+        "parameters": [
+          {
+            "name": "factKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -723,6 +994,40 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateFactSourceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/fact-sources/{factSourceId}": {
+      "patch": {
+        "tags": [
+          "FactSources"
+        ],
+        "operationId": "UpdateFactSource",
+        "parameters": [
+          {
+            "name": "factSourceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFactSourceRequest"
               }
             }
           },
@@ -2506,6 +2811,120 @@
         }
       }
     },
+    "/api/rule-packs/{rulePackId}": {
+      "get": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "GetRulePack",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "PatchRulePack",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchRulePackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/{rulePackId}/approve": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "ApproveRulePack",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/{rulePackId}/clone": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "CloneRulePack",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloneRulePackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/rule-packs/{rulePackId}/content": {
       "get": {
         "tags": [
@@ -2562,6 +2981,38 @@
         }
       }
     },
+    "/api/rule-packs/{rulePackId}/diff": {
+      "get": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "DiffRulePack",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "compareRulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/rule-packs/{rulePackId}/evaluate": {
       "post": {
         "tags": [
@@ -2596,6 +3047,54 @@
         }
       }
     },
+    "/api/rule-packs/{rulePackId}/publish": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "PublishRulePack",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/{rulePackId}/retire": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "RetireRulePack",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/rule-packs/{rulePackId}/status": {
       "patch": {
         "tags": [
@@ -2623,6 +3122,54 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/{rulePackId}/submit-review": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "SubmitRulePackReview",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/{rulePackId}/versions": {
+      "get": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "ListRulePackVersions",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2812,6 +3359,18 @@
         }
       }
     },
+    "/api/settings": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/source-ingestion/batches": {
       "get": {
         "tags": [
@@ -2928,6 +3487,903 @@
         }
       }
     },
+    "/api/v1/audit/events": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "ListComplianceCoreAuditEventsV1",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit/packages": {
+      "post": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "CreateComplianceCoreAuditPackageV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditPackageGenerationJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "ListComplianceCoreAuditPackagesV1",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit/packages/{jobId}": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetComplianceCoreAuditPackageV1",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit/packages/{jobId}/download": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "DownloadComplianceCoreAuditPackageV1",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "ComplianceCoreRedeemHandoffV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/citations": {
+      "get": {
+        "tags": [
+          "Citations"
+        ],
+        "operationId": "ListRegulatoryCitationsV1Citations",
+        "parameters": [
+          {
+            "name": "regulatoryProgramId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "rulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Citations"
+        ],
+        "operationId": "CreateRegulatoryCitationV1Citations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRegulatoryCitationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/citations/{citationId}": {
+      "get": {
+        "tags": [
+          "Citations"
+        ],
+        "operationId": "GetRegulatoryCitationV1Citations",
+        "parameters": [
+          {
+            "name": "citationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Citations"
+        ],
+        "operationId": "UpdateRegulatoryCitationV1Citations",
+        "parameters": [
+          {
+            "name": "citationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRegulatoryCitationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/citations/{citationId}/history": {
+      "get": {
+        "tags": [
+          "Citations"
+        ],
+        "operationId": "ListRegulatoryCitationHistoryV1Citations",
+        "parameters": [
+          {
+            "name": "citationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/citations/{citationId}/rules": {
+      "get": {
+        "tags": [
+          "Citations"
+        ],
+        "operationId": "ListRegulatoryCitationRulesV1Citations",
+        "parameters": [
+          {
+            "name": "citationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/config": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/derived-facts": {
+      "get": {
+        "tags": [
+          "DerivedFacts"
+        ],
+        "operationId": "ListDerivedFactsV1",
+        "parameters": [
+          {
+            "name": "regulatoryProgramId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "rulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "citationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "complianceKeyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "materialKeyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/derived-facts/preview": {
+      "post": {
+        "tags": [
+          "DerivedFacts"
+        ],
+        "operationId": "PreviewDerivedFactsV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DerivedFactPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/evaluations": {
+      "get": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "ListRuleEvaluationsV1",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/evaluations/batch": {
+      "post": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "EvaluateRulePackBatchV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRulePackBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/evaluations/run": {
+      "post": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "RunRuleEvaluationV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRulePackRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/evaluations/simulate": {
+      "post": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "SimulateRuleEvaluationV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRulePackSimulationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/evaluations/{evaluationRunId}": {
+      "get": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "GetRuleEvaluationV1",
+        "parameters": [
+          {
+            "name": "evaluationRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/evaluations/{evaluationRunId}/audit-export": {
+      "get": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "ExportRuleEvaluationAuditPackageV1",
+        "parameters": [
+          {
+            "name": "evaluationRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/evaluations/{evaluationRunId}/explanation": {
+      "get": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "GetRuleEvaluationExplanationV1",
+        "parameters": [
+          {
+            "name": "evaluationRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/evaluations/{evaluationRunId}/re-evaluate": {
+      "post": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "ReEvaluateRuleEvaluationV1",
+        "parameters": [
+          {
+            "name": "evaluationRunId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReEvaluateRuleEvaluationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/events": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "ListComplianceCoreEventsV1",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/fact-sources": {
+      "get": {
+        "tags": [
+          "FactSources"
+        ],
+        "operationId": "ListFactSourcesV1",
+        "parameters": [
+          {
+            "name": "factDefinitionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "FactSources"
+        ],
+        "operationId": "CreateFactSourceV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFactSourceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/fact-sources/{factSourceId}": {
+      "patch": {
+        "tags": [
+          "FactSources"
+        ],
+        "operationId": "UpdateFactSourceV1",
+        "parameters": [
+          {
+            "name": "factSourceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFactSourceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/facts": {
+      "get": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "ListFactDefinitionsV1Facts",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "CreateFactDefinitionV1Facts",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFactDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/facts/validate-payload": {
+      "post": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "ValidateFactPayloadV1Facts",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateFactPayloadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/facts/{factKey}": {
+      "get": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "GetFactDefinitionV1Facts",
+        "parameters": [
+          {
+            "name": "factKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "UpdateFactDefinitionV1Facts",
+        "parameters": [
+          {
+            "name": "factKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFactDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/facts/{factKey}/usage": {
+      "get": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "GetFactDefinitionUsageV1Facts",
+        "parameters": [
+          {
+            "name": "factKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/gates/evaluate": {
       "post": {
         "tags": [
@@ -2943,6 +4399,1372 @@
             }
           },
           "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/{actionKey}": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGateByHyphenatedActionKey",
+        "parameters": [
+          {
+            "name": "actionKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^can-[a-z0-9-]\u002B$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealthV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/product-facts/ingest": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestProductFactsV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestProductFactsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/source-ingestion/product-facts/commit": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CommitProductFactSourceIngestionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductFactBulkIngestionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/source-ingestion/product-facts/validate": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ValidateProductFactSourceIngestionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductFactBulkIngestionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContextV1",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoffV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "ComplianceCoreGetMeV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/regulatory-mappings": {
+      "get": {
+        "tags": [
+          "RegulatoryMappings"
+        ],
+        "operationId": "ListRegulatoryMappingsV1",
+        "parameters": [
+          {
+            "name": "regulatoryProgramId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "rulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "citationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "complianceKeyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "materialKeyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RegulatoryMappings"
+        ],
+        "operationId": "CreateRegulatoryMappingV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRegulatoryMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-pack-imports/preview": {
+      "post": {
+        "tags": [
+          "RulePackImports"
+        ],
+        "operationId": "PreviewRulePackImportV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-pack-imports/publish-draft": {
+      "post": {
+        "tags": [
+          "RulePackImports"
+        ],
+        "operationId": "PublishDraftRulePackImportV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-pack-imports/validate": {
+      "post": {
+        "tags": [
+          "RulePackImports"
+        ],
+        "operationId": "ValidateRulePackImportV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-pack-imports/{importId}": {
+      "get": {
+        "tags": [
+          "RulePackImports"
+        ],
+        "operationId": "GetRulePackImportV1",
+        "parameters": [
+          {
+            "name": "importId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-pack-imports/{importId}/diff": {
+      "get": {
+        "tags": [
+          "RulePackImports"
+        ],
+        "operationId": "DiffRulePackImportV1",
+        "parameters": [
+          {
+            "name": "importId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-pack-imports/{importId}/rollback": {
+      "post": {
+        "tags": [
+          "RulePackImports"
+        ],
+        "operationId": "RollbackRulePackImportV1",
+        "parameters": [
+          {
+            "name": "importId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-pack-imports/{importId}/test-results": {
+      "get": {
+        "tags": [
+          "RulePackImports"
+        ],
+        "operationId": "RulePackImportTestResultsV1",
+        "parameters": [
+          {
+            "name": "importId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs": {
+      "get": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "ListRulePacksV1RulePacks",
+        "parameters": [
+          {
+            "name": "regulatoryProgramId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "CreateRulePackV1RulePacks",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRulePackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/evaluate/batch": {
+      "post": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "EvaluateRulePackBatchV1RulePacks",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRulePackBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{rulePackId}": {
+      "get": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "GetRulePackV1RulePacks",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "PatchRulePackV1RulePacks",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchRulePackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{rulePackId}/approve": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "ApproveRulePackV1RulePacks",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{rulePackId}/clone": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "CloneRulePackV1RulePacks",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloneRulePackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{rulePackId}/content": {
+      "get": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "GetRulePackContentV1",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "UpdateRulePackContentV1",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRulePackContentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{rulePackId}/diff": {
+      "get": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "DiffRulePackV1RulePacks",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "compareRulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{rulePackId}/evaluate": {
+      "post": {
+        "tags": [
+          "RuleEvaluation"
+        ],
+        "operationId": "EvaluateRulePackV1",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRulePackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{rulePackId}/publish": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "PublishRulePackV1RulePacks",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{rulePackId}/retire": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "RetireRulePackV1RulePacks",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{rulePackId}/status": {
+      "patch": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "UpdateRulePackStatusV1RulePacks",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRulePackStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{rulePackId}/submit-review": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "SubmitRulePackReviewV1RulePacks",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{rulePackId}/versions": {
+      "get": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "ListRulePackVersionsV1RulePacks",
+        "parameters": [
+          {
+            "name": "rulePackId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rules": {
+      "get": {
+        "tags": [
+          "Rules"
+        ],
+        "operationId": "ListRulesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Rules"
+        ],
+        "operationId": "CreateRuleV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRuleCatalogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rules/{ruleId}": {
+      "get": {
+        "tags": [
+          "Rules"
+        ],
+        "operationId": "GetRuleV1",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Rules"
+        ],
+        "operationId": "PatchRuleV1",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchRuleCatalogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rules/{ruleId}/history": {
+      "get": {
+        "tags": [
+          "Rules"
+        ],
+        "operationId": "GetRuleHistoryV1",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rules/{ruleId}/test": {
+      "post": {
+        "tags": [
+          "Rules"
+        ],
+        "operationId": "TestRuleV1",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleCatalogTestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rules/{ruleId}/usage": {
+      "get": {
+        "tags": [
+          "Rules"
+        ],
+        "operationId": "GetRuleUsageV1",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rules/{ruleId}/validate": {
+      "post": {
+        "tags": [
+          "Rules"
+        ],
+        "operationId": "ValidateRuleV1",
+        "parameters": [
+          {
+            "name": "ruleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/session": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "operationId": "ComplianceCoreGetSessionBootstrapV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/settings": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vocabulary": {
+      "get": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "ListVocabularyTermsV1Vocabulary",
+        "parameters": [
+          {
+            "name": "vocabularyTypeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "CreateVocabularyTermV1Vocabulary",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVocabularyTermRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vocabulary/aliases": {
+      "post": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "CreateVocabularyAliasV1Vocabulary",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVocabularyAliasRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vocabulary/types": {
+      "get": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "ListVocabularyTypesV1Vocabulary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/waivers": {
+      "get": {
+        "tags": [
+          "Waivers"
+        ],
+        "operationId": "ListComplianceWaiversV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "packKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scopeKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Waivers"
+        ],
+        "operationId": "CreateComplianceWaiverV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateComplianceWaiverRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/waivers/{waiverId}": {
+      "get": {
+        "tags": [
+          "Waivers"
+        ],
+        "operationId": "GetComplianceWaiverV1",
+        "parameters": [
+          {
+            "name": "waiverId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Waivers"
+        ],
+        "operationId": "UpdateComplianceWaiverV1",
+        "parameters": [
+          {
+            "name": "waiverId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateComplianceWaiverRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/waivers/{waiverId}/approve": {
+      "post": {
+        "tags": [
+          "Waivers"
+        ],
+        "operationId": "ApproveComplianceWaiverV1",
+        "parameters": [
+          {
+            "name": "waiverId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/waivers/{waiverId}/reject": {
+      "post": {
+        "tags": [
+          "Waivers"
+        ],
+        "operationId": "RejectComplianceWaiverV1",
+        "parameters": [
+          {
+            "name": "waiverId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RejectComplianceWaiverRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/waivers/{waiverId}/renew": {
+      "post": {
+        "tags": [
+          "Waivers"
+        ],
+        "operationId": "RenewComplianceWaiverV1",
+        "parameters": [
+          {
+            "name": "waiverId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenewComplianceWaiverRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/waivers/{waiverId}/revoke": {
+      "post": {
+        "tags": [
+          "Waivers"
+        ],
+        "operationId": "RevokeComplianceWaiverV1",
+        "parameters": [
+          {
+            "name": "waiverId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RevokeComplianceWaiverRequest"
+                  }
+                ]
+              }
+            }
+          }
         },
         "responses": {
           "200": {
@@ -3349,6 +6171,33 @@
   },
   "components": {
     "schemas": {
+      "CloneRulePackRequest": {
+        "type": "object",
+        "properties": {
+          "packKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "copyContent": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
       "CreateAuditPackageGenerationJobRequest": {
         "required": [
           "format",
@@ -3868,6 +6717,42 @@
           }
         }
       },
+      "CreateRuleCatalogRequest": {
+        "required": [
+          "rulePackId",
+          "ruleKey",
+          "label",
+          "type",
+          "factKey",
+          "expectedValue"
+        ],
+        "type": "object",
+        "properties": {
+          "rulePackId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ruleKey": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "factKey": {
+            "type": "string"
+          },
+          "expectedValue": {
+            "type": "boolean"
+          },
+          "nonWaivable": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "CreateRulePackRequest": {
         "required": [
           "regulatoryProgramId",
@@ -3995,6 +6880,63 @@
           "rulePackId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "DerivedFactPreviewRequest": {
+        "required": [
+          "regulatoryProgramId",
+          "rulePackId",
+          "citationId",
+          "complianceKeyId",
+          "materialKeyId",
+          "limit"
+        ],
+        "type": "object",
+        "properties": {
+          "regulatoryProgramId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "rulePackId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "citationId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "complianceKeyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "materialKeyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "limit": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -4184,6 +7126,48 @@
           "emitFindings": {
             "type": "boolean",
             "default": false
+          }
+        }
+      },
+      "EvaluateRulePackRunRequest": {
+        "required": [
+          "rulePackId",
+          "facts"
+        ],
+        "type": "object",
+        "properties": {
+          "rulePackId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "facts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "emitFindings": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "EvaluateRulePackSimulationRequest": {
+        "required": [
+          "rulePackId",
+          "facts"
+        ],
+        "type": "object",
+        "properties": {
+          "rulePackId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "facts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            }
           }
         }
       },
@@ -4548,6 +7532,71 @@
           }
         }
       },
+      "PatchRuleCatalogRequest": {
+        "required": [
+          "label",
+          "type",
+          "factKey",
+          "expectedValue",
+          "nonWaivable"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "factKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expectedValue": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "nonWaivable": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "PatchRulePackRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ProcessAuditPackageGenerationJobsRequest": {
         "required": [
           "tenantId",
@@ -4872,6 +7921,57 @@
           }
         }
       },
+      "ProductGateCompatibilityRequest": {
+        "required": [
+          "tenantId",
+          "activityContextKey",
+          "subjectReferences"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "activityContextKey": {
+            "type": "string"
+          },
+          "subjectReferences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductGateSubjectReference"
+            }
+          },
+          "ruleContext": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "factSnapshotReferences": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ProductGateFactSnapshotReference"
+            }
+          },
+          "emitFindings": {
+            "type": "boolean",
+            "default": false
+          },
+          "workflowKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ProductGateEvaluationRequest": {
         "required": [
           "tenantId",
@@ -4990,9 +8090,44 @@
           }
         }
       },
+      "ReEvaluateRuleEvaluationRequest": {
+        "type": "object",
+        "properties": {
+          "emitFindings": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "RejectComplianceWaiverRequest": {
         "type": "object",
         "properties": {
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RenewComplianceWaiverRequest": {
+        "required": [
+          "effectiveAt",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "effectiveAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
           "notes": {
             "type": [
               "null",
@@ -5009,6 +8144,20 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "RuleCatalogTestRequest": {
+        "required": [
+          "facts"
+        ],
+        "type": "object",
+        "properties": {
+          "facts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            }
           }
         }
       },
@@ -5081,6 +8230,106 @@
           }
         }
       },
+      "UpdateComplianceWaiverRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateFactDefinitionRequest": {
+        "required": [
+          "label",
+          "description",
+          "valueType",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "valueType": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateFactSourceRequest": {
+        "required": [
+          "label",
+          "description",
+          "productKey",
+          "productReference",
+          "configJson",
+          "priority",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "productKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "productReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "configJson": {
+            "type": "string"
+          },
+          "priority": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
       "UpdateHazComReferenceRequest": {
         "required": [
           "title",
@@ -5127,6 +8376,29 @@
               "null",
               "boolean"
             ]
+          }
+        }
+      },
+      "UpdateRegulatoryCitationRequest": {
+        "required": [
+          "label",
+          "sourceReference",
+          "description",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "sourceReference": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
           }
         }
       },
@@ -5290,6 +8562,38 @@
           }
         }
       },
+      "ValidateFactPayloadItemRequest": {
+        "required": [
+          "factKey",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "factKey": {
+            "type": "string"
+          },
+          "value": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ValidateFactPayloadRequest": {
+        "required": [
+          "facts"
+        ],
+        "type": "object",
+        "properties": {
+          "facts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidateFactPayloadItemRequest"
+            }
+          }
+        }
+      },
       "WorkflowGateBatchCheckItem": {
         "required": [
           "gateKey"
@@ -5415,6 +8719,9 @@
       "name": "Launch"
     },
     {
+      "name": "Settings"
+    },
+    {
       "name": "Vocabulary"
     },
     {
@@ -5439,6 +8746,9 @@
       "name": "RulePacks"
     },
     {
+      "name": "Rules"
+    },
+    {
       "name": "Citations"
     },
     {
@@ -5446,6 +8756,9 @@
     },
     {
       "name": "RegulatoryMappings"
+    },
+    {
+      "name": "DerivedFacts"
     },
     {
       "name": "RuleEvaluation"
@@ -5503,6 +8816,9 @@
     },
     {
       "name": "CsvBundle"
+    },
+    {
+      "name": "RulePackImports"
     },
     {
       "name": "AuditPackages"

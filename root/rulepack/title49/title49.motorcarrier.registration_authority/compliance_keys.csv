@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_motorcarrier_registration_authority,Title 49 Motor Carrier Registration and Authority,compliance_domain,"Operating authority, process agent, state registration, and registration update controls. Mapping level: operational. Products: StaffArr, RoutArr, ComplianceCore. Entities: carrier, authority_record, registration.",true

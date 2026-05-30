@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_driver_accident_post_accident_actions,Title 49 Accident and Post-Accident Actions,compliance_domain,"Accident register, post-accident testing, and corrective-action evidence controls. Mapping level: operational. Products: StaffArr, RoutArr, ComplianceCore. Entities: incident, driver, accident_register, test_decision.",true

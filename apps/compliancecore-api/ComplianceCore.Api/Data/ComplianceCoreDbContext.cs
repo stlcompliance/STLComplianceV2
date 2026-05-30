@@ -34,6 +34,12 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
 
     public DbSet<FactRequirement> FactRequirements => Set<FactRequirement>();
 
+    public DbSet<EvidenceReference> EvidenceReferences => Set<EvidenceReference>();
+
+    public DbSet<FactAssertion> FactAssertions => Set<FactAssertion>();
+
+    public DbSet<AuditTrace> AuditTraces => Set<AuditTrace>();
+
     public DbSet<RegulatoryMapping> RegulatoryMappings => Set<RegulatoryMapping>();
 
     public DbSet<RuleEvaluationRun> RuleEvaluationRuns => Set<RuleEvaluationRun>();
@@ -292,10 +298,25 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
             entity.Property(x => x.RequirementKey).HasMaxLength(64).IsRequired();
             entity.Property(x => x.Label).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.ApplicabilityKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SourceEntity).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.SourceFieldOrRecordType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ValueType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Operator).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ExpectedValue).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.EvidenceKind).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.RequiredDocumentType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.RetentionPeriod).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.AuditQuestion).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.FailureSeverity).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.OverridePermission).HasMaxLength(128).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => x.FactDefinitionId);
             entity.HasIndex(x => x.RulePackId);
             entity.HasIndex(x => x.CitationId);
+            entity.HasIndex(x => new { x.TenantId, x.SourceProduct });
+            entity.HasIndex(x => new { x.TenantId, x.SourceEntity });
             entity.HasIndex(x => new { x.TenantId, x.RequirementKey }).IsUnique();
             entity.HasOne(x => x.FactDefinition)
                 .WithMany()
@@ -309,6 +330,72 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
                 .WithMany()
                 .HasForeignKey(x => x.CitationId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EvidenceReference>(entity =>
+        {
+            entity.ToTable("compliancecore_evidence_references");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EvidenceId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.FactKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceEntity).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SourceRecordId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SourceField).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.DocumentType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.DocumentUrl).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.StorageKey).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.FileHash).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ReviewStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.EvidenceId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.FactKey });
+            entity.HasIndex(x => new { x.TenantId, x.SourceProduct, x.SourceEntity });
+        });
+
+        modelBuilder.Entity<FactAssertion>(entity =>
+        {
+            entity.ToTable("compliancecore_fact_assertions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.FactKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SubjectKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SubjectId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Value).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.ValueType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SourceRecordId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.EvidenceId).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.FactKey, x.SubjectKind, x.SubjectId });
+            entity.HasIndex(x => new { x.TenantId, x.SourceProduct });
+            entity.HasOne(x => x.EvidenceReference)
+                .WithMany()
+                .HasForeignKey(x => x.EvidenceReferenceId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<AuditTrace>(entity =>
+        {
+            entity.ToTable("compliancecore_audit_traces");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.AuditTraceId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.PackKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.FactKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.CitationKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SubjectKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SubjectId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.EvaluatedValue).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.ExpectedValue).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.Operator).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Result).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.FailureSeverity).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.OverrideReason).HasMaxLength(1024).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.AuditTraceId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.PackKey });
+            entity.HasIndex(x => new { x.TenantId, x.FactKey });
+            entity.HasIndex(x => new { x.TenantId, x.CitationKey });
         });
 
         modelBuilder.Entity<RegulatoryMapping>(entity =>

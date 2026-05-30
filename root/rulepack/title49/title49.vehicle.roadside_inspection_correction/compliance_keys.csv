@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_vehicle_roadside_inspection_correction,Title 49 Roadside Inspection Correction,compliance_domain,"Roadside inspection defect correction, return-to-service, and report closeout controls. Mapping level: operational. Products: MaintainArr, RoutArr, ComplianceCore. Entities: vehicle, roadside_inspection, defect.",true

@@ -223,6 +223,16 @@ public sealed class StaffArrPersonLookupTests : IAsyncLifetime
         response.EnsureSuccessStatusCode();
         var lookup = (await response.Content.ReadFromJsonAsync<PersonLookupResponse>())!;
         Assert.Equal("Integration Lookup User", lookup.DisplayName);
+
+        var v1Request = ServiceAuthorized(
+            HttpMethod.Get,
+            $"/api/v1/integrations/person-lookup?tenantId={PlatformSeeder.DemoTenantId}&personId={personId}",
+            _trainarrLookupToken);
+        var v1Response = await _staffarrClient.SendAsync(v1Request);
+        v1Response.EnsureSuccessStatusCode();
+        var v1Lookup = (await v1Response.Content.ReadFromJsonAsync<PersonLookupResponse>())!;
+        Assert.Equal(lookup.PersonId, v1Lookup.PersonId);
+        Assert.Equal(lookup.DisplayName, v1Lookup.DisplayName);
     }
 
     [Fact]

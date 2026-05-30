@@ -1,3 +1,6 @@
+import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { useEffect, useMemo, useState } from 'react'
+
 import type { RouteDetailResponse, RouteSummaryResponse } from '../api/types'
 
 interface RoutesPanelProps {
@@ -67,6 +70,23 @@ export function RoutesPanel({
   onLinkTrip,
   onUpdateStopStatus,
 }: RoutesPanelProps) {
+  const [showStopKeyPolicy, setShowStopKeyPolicy] = useState(false)
+  const stopKeySource = stopLabel.trim() || stopAddress.trim()
+  const generatedStopKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'route',
+        kind: 'stop',
+        title: `${stopType} ${stopKeySource}`.trim(),
+        maxLength: 128,
+      }),
+    [stopKeySource, stopType],
+  )
+
+  useEffect(() => {
+    onStopKeyChange(generatedStopKey)
+  }, [generatedStopKey, onStopKeyChange])
+
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
       <div className="mb-4">
@@ -96,14 +116,28 @@ export function RoutesPanel({
               onChange={(event) => onRouteDescriptionChange(event.target.value)}
             />
           </label>
-          <label className="text-sm text-slate-300" htmlFor="routes-first-stop-key">
-          First stop key
-          <input id="routes-first-stop-key"
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
-              value={stopKey}
-              onChange={(event) => onStopKeyChange(event.target.value)}
+          <div className="space-y-1 text-sm text-slate-300">
+            <GeneratedKeyField
+              sourceLabel={`${stopType} ${stopKeySource}`.trim()}
+              generatedKey={generatedStopKey}
+              confirmedKey={stopKey}
+              manualOverride=""
+              onManualOverrideChange={() => {}}
+              showAdvancedKey={showStopKeyPolicy}
+              disabled={isCreating}
+              label="First stop key"
             />
-          </label>
+            {!showStopKeyPolicy ? (
+              <button
+                type="button"
+                className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                onClick={() => setShowStopKeyPolicy(true)}
+                disabled={isCreating}
+              >
+                Key policy
+              </button>
+            ) : null}
+          </div>
           <label className="text-sm text-slate-300" htmlFor="routes-stop-type">
           Stop type
           <select id="routes-stop-type"

@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_vehicle_parts_accessories_condition,Title 49 Vehicle Parts and Accessories Condition,compliance_domain,"CMV parts and accessories readiness controls excluding cargo securement. Mapping level: operational. Products: MaintainArr, RoutArr, ComplianceCore. Entities: vehicle, asset, defect.",true

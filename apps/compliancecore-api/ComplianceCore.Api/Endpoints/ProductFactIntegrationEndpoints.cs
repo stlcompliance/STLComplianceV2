@@ -9,21 +9,30 @@ public static class ProductFactIntegrationEndpoints
 {
     public static void MapComplianceCoreProductFactIntegrationEndpoints(this WebApplication app)
     {
-        var integrations = app.MapGroup("/api/integrations/product-facts")
-            .WithTags("Integrations");
+        MapProductFactIngestGroup(
+            app.MapGroup("/api/integrations/product-facts").WithTags("Integrations"),
+            "IngestProductFacts");
+        MapProductFactIngestGroup(
+            app.MapGroup("/api/v1/integrations/product-facts").WithTags("Integrations"),
+            "IngestProductFactsV1");
+    }
 
-        integrations.MapPost("/ingest", async (
-            IngestProductFactsRequest request,
-            HttpContext context,
-            StlServiceTokenValidator tokenValidator,
-            ProductFactIngestionService service,
-            CancellationToken cancellationToken) =>
-        {
-            ValidateServiceToken(tokenValidator, context, request.TenantId);
-            var result = await service.IngestAsync(request, cancellationToken);
-            return Results.Ok(result);
-        })
-        .WithName("IngestProductFacts");
+    private static void MapProductFactIngestGroup(RouteGroupBuilder integrations, string endpointName)
+    {
+        integrations.MapPost("/ingest", IngestProductFactsAsync)
+            .WithName(endpointName);
+    }
+
+    private static async Task<IResult> IngestProductFactsAsync(
+        IngestProductFactsRequest request,
+        HttpContext context,
+        StlServiceTokenValidator tokenValidator,
+        ProductFactIngestionService service,
+        CancellationToken cancellationToken)
+    {
+        ValidateServiceToken(tokenValidator, context, request.TenantId);
+        var result = await service.IngestAsync(request, cancellationToken);
+        return Results.Ok(result);
     }
 
     private static void ValidateServiceToken(

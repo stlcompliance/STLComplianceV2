@@ -1,3 +1,6 @@
+import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { useEffect, useMemo, useState } from 'react'
+
 import type {
   AssetResponse,
   AssetTypeResponse,
@@ -71,6 +74,24 @@ export function PmProgramBuilderPanel({
   isCreatingProgram,
   isSavingSchedules,
 }: PmProgramBuilderPanelProps) {
+  const [showProgramKeyPolicy, setShowProgramKeyPolicy] = useState(false)
+  const existingProgramKeys = programs.map((program) => program.programKey)
+  const generatedProgramKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'inspection',
+        kind: 'program',
+        title: programName.trim(),
+        existingKeys: existingProgramKeys,
+        maxLength: 128,
+      }),
+    [existingProgramKeys, programName],
+  )
+
+  useEffect(() => {
+    onProgramKeyChange(generatedProgramKey)
+  }, [generatedProgramKey, onProgramKeyChange])
+
   if (isLoading) {
     return <p className="text-sm text-slate-400">Loading PM programs…</p>
   }
@@ -97,14 +118,28 @@ export function PmProgramBuilderPanel({
 
       {canManage ? (
         <div className="mt-6 grid gap-4 rounded-lg border border-slate-700 bg-slate-950/40 p-4 md:grid-cols-3">
-          <label className="block text-sm" htmlFor="pmprogrambuilder-program-key">
-          <span className="text-slate-300">Program key</span>
-          <input id="pmprogrambuilder-program-key"
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
-              value={programKey}
-              onChange={(e) => onProgramKeyChange(e.target.value)}
+          <div className="space-y-1 text-sm">
+            <GeneratedKeyField
+              sourceLabel={programName.trim()}
+              generatedKey={generatedProgramKey}
+              confirmedKey={programKey}
+              manualOverride=""
+              onManualOverrideChange={() => {}}
+              showAdvancedKey={showProgramKeyPolicy}
+              disabled={isCreatingProgram}
+              label="Program key"
             />
-          </label>
+            {!showProgramKeyPolicy ? (
+              <button
+                type="button"
+                className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                onClick={() => setShowProgramKeyPolicy(true)}
+                disabled={isCreatingProgram}
+              >
+                Key policy
+              </button>
+            ) : null}
+          </div>
           <label className="block text-sm" htmlFor="pmprogrambuilder-name">
           <span className="text-slate-300">Name</span>
           <input id="pmprogrambuilder-name"
@@ -169,7 +204,7 @@ export function PmProgramBuilderPanel({
             <button
               type="button"
               className="rounded bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50"
-              disabled={isCreatingProgram}
+              disabled={isCreatingProgram || !programKey.trim()}
               onClick={onCreateProgram}
             >
               {isCreatingProgram ? 'Creating…' : 'Create PM program'}

@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_vehicle_cargo_securement,Title 49 Cargo Securement,compliance_domain,"Cargo securement controls under Part 393 Subpart I. Mapping level: operational. Products: MaintainArr, RoutArr, SupplyArr, ComplianceCore. Entities: vehicle, load, securement_device.",true

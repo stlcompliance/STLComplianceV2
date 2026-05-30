@@ -17,6 +17,7 @@ export function RulePacksSection({ state }: Props) {
           title="Training definition rule pack requirements"
           requirements={s.definitionRulePackRequirementsQuery.data ?? []}
           rulePackKeyInput={s.rulePackKeyInput}
+          rulePackOptions={s.rulePackOptions}
           onRulePackKeyChange={s.setRulePackKeyInput}
           onSave={() => s.upsertDefinitionRulePackMutation.mutate()}
           onRemove={async (requirementId) => {
@@ -49,6 +50,7 @@ export function RulePacksSection({ state }: Props) {
           title="Training program rule pack requirements"
           requirements={s.programRulePackRequirementsQuery.data ?? []}
           rulePackKeyInput={s.rulePackKeyInput}
+          rulePackOptions={s.rulePackOptions}
           onRulePackKeyChange={s.setRulePackKeyInput}
           onSave={() => s.upsertProgramRulePackMutation.mutate()}
           onRemove={async (requirementId) => {
@@ -77,6 +79,7 @@ export function RulePacksSection({ state }: Props) {
       {s.canImpact ? (
         <RulePackImpactPanel
           rulePackKeyInput={s.impactRulePackKeyInput}
+          rulePackOptions={s.rulePackOptions}
           onRulePackKeyChange={(value) => {
             s.setImpactRulePackKeyInput(value)
             s.setRulePackImpactAssessment(null)

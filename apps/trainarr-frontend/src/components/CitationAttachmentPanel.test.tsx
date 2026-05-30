@@ -3,22 +3,30 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CitationAttachmentPanel } from './CitationAttachmentPanel'
 
 describe('CitationAttachmentPanel', () => {
+  const citationOptions = [
+    {
+      citationId: 'c1',
+      citationKey: 'cfr_391_11',
+      label: '391.11 General qualifications (cfr_391_11)',
+    },
+  ]
+
   afterEach(() => {
     cleanup()
   })
 
   it('renders attach form for managers', () => {
     render(
-      <CitationAttachmentPanel
-        title="Definition citations"
-        citations={[]}
-        citationIdInput=""
-        citationKeyInput=""
-        onCitationIdChange={vi.fn()}
-        onCitationKeyChange={vi.fn()}
-        onAttach={vi.fn()}
-        onRemove={vi.fn()}
-        isAttaching={false}
+        <CitationAttachmentPanel
+          title="Definition citations"
+          citations={[]}
+          citationOptions={citationOptions}
+          citationIdInput=""
+          citationKeyInput=""
+          onCitationSelectionChange={vi.fn()}
+          onAttach={vi.fn()}
+          onRemove={vi.fn()}
+          isAttaching={false}
         isRemovingId={null}
         canManage
         validateWithComplianceCore
@@ -27,14 +35,14 @@ describe('CitationAttachmentPanel', () => {
     )
 
     expect(screen.getByRole('button', { name: /attach citation/i })).toBeDisabled()
-    expect(screen.getByText(/compliance core citation id/i)).toBeInTheDocument()
+    expect(screen.getByTestId('citation-attachment-citation-id')).toBeInTheDocument()
   })
 
   it('lists attached citations with metadata', () => {
     render(
-      <CitationAttachmentPanel
-        title="Program citations"
-        citations={[
+        <CitationAttachmentPanel
+          title="Program citations"
+          citations={[
           {
             attachmentId: 'a1',
             entityType: 'training_program',
@@ -52,14 +60,14 @@ describe('CitationAttachmentPanel', () => {
               isActive: true,
             },
           },
-        ]}
-        citationIdInput=""
-        citationKeyInput=""
-        onCitationIdChange={vi.fn()}
-        onCitationKeyChange={vi.fn()}
-        onAttach={vi.fn()}
-        onRemove={vi.fn()}
-        isAttaching={false}
+          ]}
+          citationOptions={citationOptions}
+          citationIdInput=""
+          citationKeyInput=""
+          onCitationSelectionChange={vi.fn()}
+          onAttach={vi.fn()}
+          onRemove={vi.fn()}
+          isAttaching={false}
         isRemovingId={null}
         canManage
         validateWithComplianceCore={false}

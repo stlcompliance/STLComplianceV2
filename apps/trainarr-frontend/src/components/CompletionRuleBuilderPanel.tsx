@@ -1,4 +1,4 @@
-import { GeneratedKeyField, slugifyKey } from '@stl/shared-ui'
+import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type {
   TrainingCompletionRuleCatalogItemResponse,
@@ -44,15 +44,22 @@ export function CompletionRuleBuilderPanel({
   onCreateRule,
   onDeleteRule,
 }: CompletionRuleBuilderPanelProps) {
-  const [ruleKeyManual, setRuleKeyManual] = useState('')
-  const [showAdvancedRuleKey, setShowAdvancedRuleKey] = useState(false)
   const [label, setLabel] = useState('')
   const [ruleType, setRuleType] = useState('required_evaluator_pass')
   const [configJson, setConfigJson] = useState('{}')
   const [sortOrder, setSortOrder] = useState('0')
 
-  const generatedRuleKey = useMemo(() => slugifyKey(label), [label])
-  const resolvedRuleKey = ruleKeyManual.trim() || generatedRuleKey
+  const generatedRuleKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'train',
+        kind: 'rule',
+        title: label,
+        existingKeys: rules.map((rule) => rule.ruleKey),
+        maxLength: 64,
+      }),
+    [label, rules],
+  )
 
   useEffect(() => {
     setSortOrder(String(rules.length))
@@ -78,15 +85,13 @@ export function CompletionRuleBuilderPanel({
     }
 
     await onCreateRule({
-      ruleKey: resolvedRuleKey.trim(),
+      ruleKey: generatedRuleKey.trim(),
       ruleType,
       label: label.trim(),
       configJson,
       sortOrder: Number.parseInt(sortOrder, 10) || 0,
     })
 
-    setRuleKeyManual('')
-    setShowAdvancedRuleKey(false)
     setLabel('')
     setSortOrder(String(rules.length + 1))
   }
@@ -164,19 +169,9 @@ export function CompletionRuleBuilderPanel({
                   label="Generated rule key"
                   sourceLabel={label}
                   generatedKey={generatedRuleKey}
-                  manualOverride={ruleKeyManual}
-                  onManualOverrideChange={setRuleKeyManual}
-                  showAdvancedKey={showAdvancedRuleKey}
+                  manualOverride=""
+                  onManualOverrideChange={() => {}}
                 />
-                {!showAdvancedRuleKey ? (
-                  <button
-                    type="button"
-                    className="mt-1 text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
-                    onClick={() => setShowAdvancedRuleKey(true)}
-                  >
-                    Customize rule key
-                  </button>
-                ) : null}
               </div>
               <label htmlFor="completion-rule-label" className="block text-sm text-slate-300 md:col-span-2">
                 Label
@@ -228,7 +223,7 @@ export function CompletionRuleBuilderPanel({
               <div className="md:col-span-2">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !generatedRuleKey}
                   className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
                 >
                   {isSubmitting ? 'Adding…' : 'Add completion rule'}

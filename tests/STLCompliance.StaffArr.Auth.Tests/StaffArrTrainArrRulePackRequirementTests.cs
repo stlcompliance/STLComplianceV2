@@ -243,8 +243,9 @@ public class StaffArrTrainArrRulePackRequirementTests : IAsyncLifetime
             "hazmat_endorsement",
             null,
             null,
-            definitionId,
-            null));
+            EffectiveAt: null,
+            TrainingDefinitionId: definitionId,
+            TrainingProgramId: null));
         var checkResponse = await _trainarrClient.SendAsync(checkRequest);
         checkResponse.EnsureSuccessStatusCode();
         var check = (await checkResponse.Content.ReadFromJsonAsync<QualificationCheckResponse>())!;

@@ -1,7 +1,10 @@
+import { ControlledSelect, type PickerOption } from '@stl/shared-ui'
+
 import type { RulePackImpactAssessmentResponse } from '../api/types'
 
 interface RulePackImpactPanelProps {
   rulePackKeyInput: string
+  rulePackOptions: PickerOption[]
   onRulePackKeyChange: (value: string) => void
   onAssess: () => void
   isAssessing: boolean
@@ -39,6 +42,7 @@ function priorityClass(priority: string): string {
 
 export function RulePackImpactPanel({
   rulePackKeyInput,
+  rulePackOptions,
   onRulePackKeyChange,
   onAssess,
   isAssessing,
@@ -55,15 +59,17 @@ export function RulePackImpactPanel({
 
       {canAssess ? (
         <div className="mt-4 flex flex-wrap items-end gap-3">
-          <label htmlFor="rule-pack-impact-key" className="block min-w-[16rem] flex-1 text-xs text-slate-400">
-            Rule pack key
-            <input
-              id="rule-pack-impact-key"
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
+          <div className="min-w-[16rem] flex-1">
+            <ControlledSelect
+              label="Rule pack key"
               value={rulePackKeyInput}
-              onChange={(e) => onRulePackKeyChange(e.target.value)}
+              onChange={onRulePackKeyChange}
+              options={rulePackOptions}
+              emptyLabel="Select rule pack…"
+              testId="rule-pack-impact-key"
+              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
             />
-          </label>
+          </div>
           <button
             type="button"
             className="rounded bg-violet-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-violet-600 disabled:opacity-50"

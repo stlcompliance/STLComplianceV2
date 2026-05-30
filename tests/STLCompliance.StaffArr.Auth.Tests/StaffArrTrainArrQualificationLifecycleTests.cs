@@ -196,6 +196,42 @@ public class StaffArrTrainArrQualificationLifecycleTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Qualification_reinstate_clears_staffarr_training_blocker_and_restores_readiness()
+    {
+        var issue = await IssueQualificationAsync("lifecycle_reinstate", "Lifecycle Reinstate Subject");
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+
+        var suspendRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/qualification-issues/{issue.QualificationIssueId}/suspend",
+            adminToken);
+        suspendRequest.Content = JsonContent.Create(new QualificationLifecycleActionRequest(
+            "Qualification suspended pending remediation review and approval."));
+        (await _trainarrClient.SendAsync(suspendRequest)).EnsureSuccessStatusCode();
+
+        var reinstateRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/qualifications/{issue.QualificationIssueId}/reinstate",
+            adminToken);
+        reinstateRequest.Content = JsonContent.Create(new QualificationLifecycleActionRequest(
+            "Qualification reinstated after remediation completion and management signoff."));
+        var reinstateResponse = await _trainarrClient.SendAsync(reinstateRequest);
+        reinstateResponse.EnsureSuccessStatusCode();
+        var reinstated = (await reinstateResponse.Content.ReadFromJsonAsync<QualificationIssueResponse>())!;
+        Assert.Equal("issued", reinstated.Status);
+        Assert.NotNull(reinstated.LifecyclePublicationId);
+
+        var staffarrToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var readinessResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{issue.StaffarrPersonId}/readiness", staffarrToken));
+        readinessResponse.EnsureSuccessStatusCode();
+        var readiness = (await readinessResponse.Content.ReadFromJsonAsync<PersonReadinessResponse>())!;
+        Assert.DoesNotContain(
+            readiness.Blockers,
+            b => b.BlockerSource == "training" && b.BlockerType == "suspended");
+    }
+
+    [Fact]
     public async Task Qualification_lifecycle_rejects_terminal_status_transition()
     {
         var issue = await IssueQualificationAsync("lifecycle_terminal", "Lifecycle Terminal Subject");
@@ -237,6 +273,56 @@ public class StaffArrTrainArrQualificationLifecycleTests : IAsyncLifetime
 
         Assert.Equal(primaryIssues.Count, v1Issues.Count);
         Assert.Contains(v1Issues, x => x.QualificationIssueId == issue.QualificationIssueId);
+    }
+
+    [Fact]
+    public async Task Qualifications_history_endpoint_includes_lifecycle_actions()
+    {
+        var issue = await IssueQualificationAsync("lifecycle_history", "Lifecycle History Subject");
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+
+        var suspendRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/qualifications/{issue.QualificationIssueId}/suspend",
+            adminToken);
+        suspendRequest.Content = JsonContent.Create(new QualificationLifecycleActionRequest(
+            "Qualification suspended pending incident review and remediation."));
+        (await _trainarrClient.SendAsync(suspendRequest)).EnsureSuccessStatusCode();
+
+        var reinstateRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/qualifications/{issue.QualificationIssueId}/reinstate",
+            adminToken);
+        reinstateRequest.Content = JsonContent.Create(new QualificationLifecycleActionRequest(
+            "Qualification reinstated after remediation completion and management signoff."));
+        (await _trainarrClient.SendAsync(reinstateRequest)).EnsureSuccessStatusCode();
+
+        var historyResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/qualifications/{issue.QualificationIssueId}/history", adminToken));
+        historyResponse.EnsureSuccessStatusCode();
+        var history = (await historyResponse.Content.ReadFromJsonAsync<IReadOnlyList<QualificationIssueHistoryItemResponse>>())!;
+
+        Assert.True(history.Count >= 3);
+        Assert.Equal("issued", history[0].Status);
+        Assert.Contains(history, x => x.EventType == "qualification_issue.suspend" && x.Status == "suspended");
+        Assert.Contains(history, x => x.EventType == "qualification_issue.reinstate" && x.Status == "issued");
+    }
+
+    [Fact]
+    public async Task Qualifications_list_can_filter_by_person_id()
+    {
+        var issueA = await IssueQualificationAsync("lifecycle_person_filter_a", "Lifecycle Person Filter A");
+        var issueB = await IssueQualificationAsync("lifecycle_person_filter_b", "Lifecycle Person Filter B");
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+
+        var filteredResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/qualifications?personId={issueA.StaffarrPersonId:D}", adminToken));
+        filteredResponse.EnsureSuccessStatusCode();
+        var filtered = (await filteredResponse.Content.ReadFromJsonAsync<IReadOnlyList<QualificationIssueResponse>>())!;
+
+        Assert.Contains(filtered, x => x.QualificationIssueId == issueA.QualificationIssueId);
+        Assert.DoesNotContain(filtered, x => x.QualificationIssueId == issueB.QualificationIssueId);
+        Assert.All(filtered, x => Assert.Equal(issueA.StaffarrPersonId, x.StaffarrPersonId));
     }
 
     [Fact]

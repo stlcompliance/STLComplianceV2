@@ -1,4 +1,4 @@
-import { GeneratedKeyField, slugifyKey } from '@stl/shared-ui'
+import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type {
   TrainingDefinitionResponse,
@@ -51,16 +51,23 @@ export function StepBranchBuilderPanel({
   onCreateBranch,
   onDeleteBranch,
 }: StepBranchBuilderPanelProps) {
-  const [branchKeyManual, setBranchKeyManual] = useState('')
-  const [showAdvancedBranchKey, setShowAdvancedBranchKey] = useState(false)
   const [label, setLabel] = useState('')
   const [branchType, setBranchType] = useState('quiz_failed_remediation')
   const [configJson, setConfigJson] = useState('{}')
   const [sortOrder, setSortOrder] = useState('0')
 
   const selectedStep = steps.find((step) => step.stepId === selectedStepId) ?? null
-  const generatedBranchKey = useMemo(() => slugifyKey(label), [label])
-  const resolvedBranchKey = branchKeyManual.trim() || generatedBranchKey
+  const generatedBranchKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'train',
+        kind: 'branch',
+        title: label,
+        existingKeys: branches.map((branch) => branch.branchKey),
+        maxLength: 64,
+      }),
+    [branches, label],
+  )
 
   useEffect(() => {
     setSortOrder(String(branches.length))
@@ -86,15 +93,13 @@ export function StepBranchBuilderPanel({
     }
 
     await onCreateBranch({
-      branchKey: resolvedBranchKey.trim(),
+      branchKey: generatedBranchKey.trim(),
       branchType,
       label: label.trim(),
       configJson,
       sortOrder: Number.parseInt(sortOrder, 10) || 0,
     })
 
-    setBranchKeyManual('')
-    setShowAdvancedBranchKey(false)
     setLabel('')
     setSortOrder(String(branches.length + 1))
   }
@@ -197,19 +202,9 @@ export function StepBranchBuilderPanel({
                       label="Generated branch key"
                       sourceLabel={label}
                       generatedKey={generatedBranchKey}
-                      manualOverride={branchKeyManual}
-                      onManualOverrideChange={setBranchKeyManual}
-                      showAdvancedKey={showAdvancedBranchKey}
+                      manualOverride=""
+                      onManualOverrideChange={() => {}}
                     />
-                    {!showAdvancedBranchKey ? (
-                      <button
-                        type="button"
-                        className="mt-1 text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
-                        onClick={() => setShowAdvancedBranchKey(true)}
-                      >
-                        Customize branch key
-                      </button>
-                    ) : null}
                   </div>
                   <label htmlFor="branch-builder-sort-order" className="block text-sm text-slate-300">
                     Sort order
@@ -261,7 +256,7 @@ export function StepBranchBuilderPanel({
                   <div className="md:col-span-2">
                     <button
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || !generatedBranchKey}
                       className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 disabled:opacity-50"
                     >
                       {isSubmitting ? 'Adding…' : 'Add branch rule'}

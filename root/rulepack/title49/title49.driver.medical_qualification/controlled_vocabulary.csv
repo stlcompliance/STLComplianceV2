@@ -1,0 +1,2 @@
+term_key,vocabulary_type_key,label,description,active
+ck_t49_driver_medical_qualification,compliance_domain,Title 49 Driver Medical Qualification,"operational Title 49 domain for driver, medical_certificate, examiner.",true

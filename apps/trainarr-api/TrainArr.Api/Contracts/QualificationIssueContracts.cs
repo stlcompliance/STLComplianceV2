@@ -17,6 +17,13 @@ public sealed record QualificationIssueResponse(
 public sealed record QualificationLifecycleActionRequest(
     string? Reason);
 
+public sealed record QualificationIssueHistoryItemResponse(
+    DateTimeOffset OccurredAt,
+    string EventType,
+    string Status,
+    string? Reason,
+    Guid? ActorUserId);
+
 public sealed record PublishQualificationGrantRequest(
     Guid TenantId,
     Guid StaffarrPersonId,

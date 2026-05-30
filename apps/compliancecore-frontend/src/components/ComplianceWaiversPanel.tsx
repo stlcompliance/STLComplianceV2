@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { useMemo, useState } from 'react'
 
 import {
   approveComplianceWaiver,
@@ -21,11 +22,11 @@ export function ComplianceWaiversPanel({
   canManage,
 }: ComplianceWaiversPanelProps) {
   const queryClient = useQueryClient()
-  const [waiverKey, setWaiverKey] = useState('')
   const [rulePackId, setRulePackId] = useState('')
   const [scopeKey, setScopeKey] = useState('tenant')
   const [reasonCode, setReasonCode] = useState('temporary_ops_override')
   const [explanation, setExplanation] = useState('')
+  const [showPolicyHint, setShowPolicyHint] = useState(false)
 
   const waiversQuery = useQuery({
     queryKey: ['compliancecore-waivers', accessToken],
@@ -35,7 +36,7 @@ export function ComplianceWaiversPanel({
   const createMutation = useMutation({
     mutationFn: () =>
       createComplianceWaiver(accessToken, {
-        waiverKey: waiverKey.trim(),
+        waiverKey: generatedWaiverKey,
         rulePackId,
         subjectScopeKey: scopeKey.trim() || 'tenant',
         reasonCode: reasonCode.trim(),
@@ -43,7 +44,6 @@ export function ComplianceWaiversPanel({
         effectiveAt: new Date().toISOString(),
       }),
     onSuccess: () => {
-      setWaiverKey('')
       setExplanation('')
       void queryClient.invalidateQueries({ queryKey: ['compliancecore-waivers', accessToken] })
     },
@@ -64,6 +64,45 @@ export function ComplianceWaiversPanel({
   })
 
   const publishedPacks = rulePacks.filter((pack) => pack.status === 'published')
+  const selectedPack = publishedPacks.find((pack) => pack.rulePackId === rulePackId) ?? null
+  const existingWaiverKeys = waiversQuery.data?.map((waiver) => waiver.waiverKey) ?? []
+  const waiverKeySource = `${selectedPack?.packKey ?? ''} ${reasonCode} waiver`
+  const generatedWaiverKey = buildSemanticKey({
+    domain: 'rule',
+    kind: 'waiver',
+    title: waiverKeySource,
+    existingKeys: existingWaiverKeys,
+    maxLength: 128,
+  })
+  const scopeOptions = useMemo(() => {
+    const known = new Set<string>(['tenant'])
+    for (const waiver of waiversQuery.data ?? []) {
+      if (waiver.subjectScopeKey?.trim()) {
+        known.add(waiver.subjectScopeKey)
+      }
+    }
+    return [...known].sort((a, b) => {
+      if (a === 'tenant') return -1
+      if (b === 'tenant') return 1
+      return a.localeCompare(b)
+    })
+  }, [waiversQuery.data])
+  const reasonCodeOptions = useMemo(() => {
+    const known = new Set<string>([
+      'temporary_ops_override',
+      'incident_containment',
+      'corrective_action_in_progress',
+      'customer_exception',
+      'legal_stay',
+      'other',
+    ])
+    for (const waiver of waiversQuery.data ?? []) {
+      if (waiver.reasonCode?.trim()) {
+        known.add(waiver.reasonCode)
+      }
+    }
+    return [...known].sort()
+  }, [waiversQuery.data])
 
   return (
     <section
@@ -88,16 +127,27 @@ export function ComplianceWaiversPanel({
             createMutation.mutate()
           }}
         >
-          <label className="block text-sm text-slate-300">
-            Waiver key
-            <input
-              value={waiverKey}
-              onChange={(event) => setWaiverKey(event.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-              placeholder="dispatch-gate-temp-waiver"
-              required
+          <div className="space-y-1">
+            <GeneratedKeyField
+              sourceLabel={waiverKeySource}
+              generatedKey={generatedWaiverKey}
+              manualOverride=""
+              onManualOverrideChange={() => {}}
+              showAdvancedKey={showPolicyHint}
+              disabled={createMutation.isPending}
+              label="Waiver key"
             />
-          </label>
+            {!showPolicyHint ? (
+              <button
+                type="button"
+                className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                onClick={() => setShowPolicyHint(true)}
+                disabled={createMutation.isPending}
+              >
+                Key policy
+              </button>
+            ) : null}
+          </div>
           <label className="block text-sm text-slate-300">
             Rule pack
             <select
@@ -116,20 +166,31 @@ export function ComplianceWaiversPanel({
           </label>
           <label className="block text-sm text-slate-300">
             Subject scope key
-            <input
+            <select
               value={scopeKey}
               onChange={(event) => setScopeKey(event.target.value)}
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-            />
+            >
+              {scopeOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="block text-sm text-slate-300">
             Reason code
-            <input
+            <select
               value={reasonCode}
               onChange={(event) => setReasonCode(event.target.value)}
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-              required
-            />
+            >
+              {reasonCodeOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="md:col-span-2 block text-sm text-slate-300">
             Explanation
@@ -145,7 +206,9 @@ export function ComplianceWaiversPanel({
           <div className="md:col-span-2">
             <button
               type="submit"
-              disabled={createMutation.isPending || !waiverKey.trim() || !rulePackId || !explanation.trim()}
+              disabled={
+                createMutation.isPending || !generatedWaiverKey || !rulePackId || !explanation.trim()
+              }
               className="rounded-md bg-violet-600 px-3 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
             >
               {createMutation.isPending ? 'Submitting…' : 'Request waiver'}

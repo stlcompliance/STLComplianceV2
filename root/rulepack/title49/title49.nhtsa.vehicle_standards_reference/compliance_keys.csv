@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_nhtsa_vehicle_standards_reference,Title 49 NHTSA Vehicle Standards Reference,compliance_domain,"NHTSA vehicle standards, recalls, theft prevention, and consumer information reference coverage. Mapping level: reference. Products: MaintainArr, ComplianceCore. Entities: vehicle, vehicle_standard, manufacturer.",true

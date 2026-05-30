@@ -52,18 +52,25 @@ public static class SourceIngestionEndpoints
         batches.MapPost("/fact-sources/commit", IngestFactSourcesAsync(dryRun: false, SourceIngestionPhases.Commit))
             .WithName("CommitFactSourceIngestion");
 
-        var integrations = app.MapGroup("/api/integrations/source-ingestion")
-            .WithTags("Integrations");
+        MapProductFactIntegrationIngestionRoutes(
+            app.MapGroup("/api/integrations/source-ingestion").WithTags("Integrations"),
+            suffix: string.Empty);
+        MapProductFactIntegrationIngestionRoutes(
+            app.MapGroup("/api/v1/integrations/source-ingestion").WithTags("Integrations"),
+            suffix: "V1");
+    }
 
+    private static void MapProductFactIntegrationIngestionRoutes(RouteGroupBuilder integrations, string suffix)
+    {
         integrations.MapPost("/product-facts/validate", IngestProductFactsIntegrationAsync(
                 dryRun: true,
                 SourceIngestionPhases.Validate))
-            .WithName("ValidateProductFactSourceIngestion");
+            .WithName($"ValidateProductFactSourceIngestion{suffix}");
 
         integrations.MapPost("/product-facts/commit", IngestProductFactsIntegrationAsync(
                 dryRun: false,
                 SourceIngestionPhases.Commit))
-            .WithName("CommitProductFactSourceIngestion");
+            .WithName($"CommitProductFactSourceIngestion{suffix}");
     }
 
     private static Delegate IngestFactSourcesAsync(bool dryRun, string phase) =>

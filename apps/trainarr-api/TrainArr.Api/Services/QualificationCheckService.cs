@@ -51,6 +51,7 @@ public sealed class QualificationCheckService(
     {
 
         var personId = request.StaffarrPersonId;
+        var evaluationAt = request.EffectiveAt ?? DateTimeOffset.UtcNow;
 
         if (personId == Guid.Empty)
 
@@ -77,6 +78,8 @@ public sealed class QualificationCheckService(
             [personId],
 
             qualificationKey,
+
+            evaluationAt,
 
             cancellationToken);
 
@@ -219,6 +222,7 @@ public sealed class QualificationCheckService(
 
 
         var qualificationKey = NormalizeQualificationKey(request.QualificationKey);
+        var evaluationAt = request.EffectiveAt ?? DateTimeOffset.UtcNow;
 
         var distinctSubjects = request.Subjects
 
@@ -257,6 +261,8 @@ public sealed class QualificationCheckService(
             personIds,
 
             qualificationKey,
+
+            evaluationAt,
 
             cancellationToken);
 
@@ -596,6 +602,8 @@ public sealed class QualificationCheckService(
 
         string qualificationKey,
 
+        DateTimeOffset evaluationAt,
+
         CancellationToken cancellationToken)
 
     {
@@ -620,7 +628,9 @@ public sealed class QualificationCheckService(
 
                 && personIds.Contains(x.StaffarrPersonId)
 
-                && x.QualificationKey == qualificationKey)
+                && x.QualificationKey == qualificationKey
+
+                && x.IssuedAt <= evaluationAt)
 
             .OrderByDescending(x => x.IssuedAt)
 
@@ -650,7 +660,7 @@ public sealed class QualificationCheckService(
 
             pair => pair.Key,
 
-            pair => MapLocalState(pair.Value));
+            pair => MapLocalState(pair.Value, evaluationAt));
 
     }
 
@@ -668,11 +678,20 @@ public sealed class QualificationCheckService(
 
 
 
-    private static QualificationLocalStateResponse MapLocalState(QualificationIssue issue)
+    private static QualificationLocalStateResponse MapLocalState(
+        QualificationIssue issue,
+        DateTimeOffset? evaluationAt = null)
 
     {
 
+        var effectiveAt = evaluationAt ?? DateTimeOffset.UtcNow;
         var status = issue.Status.Trim().ToLowerInvariant();
+        if (status == "issued"
+            && issue.ExpiresAt is DateTimeOffset expiresAt
+            && expiresAt <= effectiveAt)
+        {
+            status = "expired";
+        }
 
         var message = status switch
 

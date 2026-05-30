@@ -354,6 +354,16 @@ public sealed class CertificationPublicationService(
 
 
 
+    public Task<CertificationPublicationResponse> PublishQualificationReinstateAsync(
+
+        PublishQualificationLifecycleRequest request,
+
+        CancellationToken cancellationToken = default) =>
+
+        PublishQualificationLifecycleAsync(request, "qualification_reinstate", "issued", cancellationToken);
+
+
+
     private async Task<CertificationPublicationResponse> PublishQualificationLifecycleAsync(
 
         PublishQualificationLifecycleRequest request,

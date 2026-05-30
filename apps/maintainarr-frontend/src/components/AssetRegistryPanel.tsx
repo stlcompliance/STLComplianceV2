@@ -1,4 +1,4 @@
-import { ControlledSelect, GeneratedKeyField, slugifyKey } from '@stl/shared-ui'
+import { buildSemanticKey, ControlledSelect, GeneratedKeyField } from '@stl/shared-ui'
 
 import type {
   AssetClassResponse,
@@ -19,12 +19,10 @@ interface AssetRegistryPanelProps {
   isReadinessLoading: boolean
   className: string
   classDescription: string
-  classKeyManualOverride: string
   confirmedClassKey: string | null
   selectedClassId: string
   typeName: string
   typeDescription: string
-  typeKeyManualOverride: string
   confirmedTypeKey: string | null
   selectedTypeId: string
   assetTag: string
@@ -33,11 +31,9 @@ interface AssetRegistryPanelProps {
   siteRef: string
   onClassNameChange: (value: string) => void
   onClassDescriptionChange: (value: string) => void
-  onClassKeyManualOverrideChange: (value: string) => void
   onSelectedClassIdChange: (value: string) => void
   onTypeNameChange: (value: string) => void
   onTypeDescriptionChange: (value: string) => void
-  onTypeKeyManualOverrideChange: (value: string) => void
   onSelectedTypeIdChange: (value: string) => void
   onAssetTagChange: (value: string) => void
   onAssetNameChange: (value: string) => void
@@ -73,12 +69,10 @@ export function AssetRegistryPanel({
   isReadinessLoading,
   className,
   classDescription,
-  classKeyManualOverride,
   confirmedClassKey,
   selectedClassId,
   typeName,
   typeDescription,
-  typeKeyManualOverride,
   confirmedTypeKey,
   selectedTypeId,
   assetTag,
@@ -87,11 +81,9 @@ export function AssetRegistryPanel({
   siteRef,
   onClassNameChange,
   onClassDescriptionChange,
-  onClassKeyManualOverrideChange,
   onSelectedClassIdChange,
   onTypeNameChange,
   onTypeDescriptionChange,
-  onTypeKeyManualOverrideChange,
   onSelectedTypeIdChange,
   onAssetTagChange,
   onAssetNameChange,
@@ -116,6 +108,20 @@ export function AssetRegistryPanel({
     value: item.assetTypeId,
     label: `${item.className} / ${item.name}`,
   }))
+  const generatedClassKey = buildSemanticKey({
+    domain: 'asset',
+    kind: 'category',
+    title: className,
+    existingKeys: classes.map((item) => item.classKey),
+    maxLength: 128,
+  })
+  const generatedTypeKey = buildSemanticKey({
+    domain: 'asset',
+    kind: 'type',
+    title: typeName,
+    existingKeys: types.map((item) => item.typeKey),
+    maxLength: 128,
+  })
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -137,11 +143,10 @@ export function AssetRegistryPanel({
           <div className="mt-4 space-y-2">
             <GeneratedKeyField
               sourceLabel={className}
-              generatedKey={slugifyKey(className)}
+              generatedKey={generatedClassKey}
               confirmedKey={confirmedClassKey}
-              manualOverride={classKeyManualOverride}
-              onManualOverrideChange={onClassKeyManualOverrideChange}
-              showAdvancedKey
+              manualOverride=""
+              onManualOverrideChange={() => {}}
               label="Class key"
             />
             <input id="assetregistry-input-field-8"
@@ -196,11 +201,10 @@ export function AssetRegistryPanel({
             />
             <GeneratedKeyField
               sourceLabel={typeName}
-              generatedKey={slugifyKey(typeName)}
+              generatedKey={generatedTypeKey}
               confirmedKey={confirmedTypeKey}
-              manualOverride={typeKeyManualOverride}
-              onManualOverrideChange={onTypeKeyManualOverrideChange}
-              showAdvancedKey
+              manualOverride=""
+              onManualOverrideChange={() => {}}
               label="Type key"
             />
             <input id="assetregistry-input-field-6"

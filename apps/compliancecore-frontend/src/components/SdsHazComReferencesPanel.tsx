@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import {
+  buildSemanticKey,
   GeneratedKeyField,
-  slugifyKey,
   StaticSearchPicker,
   type PickerOption,
 } from '@stl/shared-ui'
@@ -26,21 +26,10 @@ export function SdsHazComReferencesPanel({
 }: SdsHazComReferencesPanelProps) {
   const queryClient = useQueryClient()
   const [productName, setProductName] = useState('')
-  const [sdsKeyManual, setSdsKeyManual] = useState('')
   const [confirmedSdsKey, setConfirmedSdsKey] = useState<string | null>(null)
   const [hazComTitle, setHazComTitle] = useState('')
-  const [hazComKeyManual, setHazComKeyManual] = useState('')
   const [confirmedHazComKey, setConfirmedHazComKey] = useState<string | null>(null)
   const [linkedSdsKey, setLinkedSdsKey] = useState('')
-
-  const generatedSdsKey = useMemo(
-    () => slugifyKey(sdsKeyManual || productName),
-    [productName, sdsKeyManual],
-  )
-  const generatedHazComKey = useMemo(
-    () => slugifyKey(hazComKeyManual || hazComTitle),
-    [hazComKeyManual, hazComTitle],
-  )
 
   const sdsQuery = useQuery({
     queryKey: ['compliancecore-sds-references', accessToken],
@@ -53,6 +42,29 @@ export function SdsHazComReferencesPanel({
     queryFn: () => listHazComReferences(accessToken),
     enabled: canRead,
   })
+
+  const generatedSdsKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'docs',
+        kind: 'sds',
+        title: productName,
+        existingKeys: (sdsQuery.data ?? []).map((item) => item.sdsKey),
+        maxLength: 64,
+      }),
+    [productName, sdsQuery.data],
+  )
+  const generatedHazComKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'hazmat',
+        kind: 'reference',
+        title: hazComTitle,
+        existingKeys: (hazComQuery.data ?? []).map((item) => item.hazComKey),
+        maxLength: 64,
+      }),
+    [hazComQuery.data, hazComTitle],
+  )
 
   const sdsPickerOptions: PickerOption[] = useMemo(
     () =>
@@ -67,7 +79,7 @@ export function SdsHazComReferencesPanel({
   const createSdsMutation = useMutation({
     mutationFn: () =>
       createSdsReference(accessToken, {
-        sdsKey: (sdsKeyManual.trim() || generatedSdsKey).trim(),
+        sdsKey: generatedSdsKey.trim(),
         materialKeyId: null,
         productName,
         manufacturer: '',
@@ -77,7 +89,6 @@ export function SdsHazComReferencesPanel({
     onSuccess: (created) => {
       setConfirmedSdsKey(created.sdsKey)
       setProductName('')
-      setSdsKeyManual('')
       queryClient.invalidateQueries({ queryKey: ['compliancecore-sds-references', accessToken] })
     },
   })
@@ -85,7 +96,7 @@ export function SdsHazComReferencesPanel({
   const createHazComMutation = useMutation({
     mutationFn: () =>
       createHazComReference(accessToken, {
-        hazComKey: (hazComKeyManual.trim() || generatedHazComKey).trim(),
+        hazComKey: generatedHazComKey.trim(),
         title: hazComTitle,
         description: '',
         linkedSdsKey: linkedSdsKey || null,
@@ -95,7 +106,6 @@ export function SdsHazComReferencesPanel({
     onSuccess: (created) => {
       setConfirmedHazComKey(created.hazComKey)
       setHazComTitle('')
-      setHazComKeyManual('')
       setLinkedSdsKey('')
       queryClient.invalidateQueries({ queryKey: ['compliancecore-hazcom-references', accessToken] })
     },
@@ -149,9 +159,8 @@ export function SdsHazComReferencesPanel({
                 sourceLabel={productName}
                 generatedKey={generatedSdsKey}
                 confirmedKey={confirmedSdsKey}
-                manualOverride={sdsKeyManual}
-                onManualOverrideChange={setSdsKeyManual}
-                showAdvancedKey
+                manualOverride=""
+                onManualOverrideChange={() => {}}
               />
               <button
                 type="submit"
@@ -197,9 +206,8 @@ export function SdsHazComReferencesPanel({
                 sourceLabel={hazComTitle}
                 generatedKey={generatedHazComKey}
                 confirmedKey={confirmedHazComKey}
-                manualOverride={hazComKeyManual}
-                onManualOverrideChange={setHazComKeyManual}
-                showAdvancedKey
+                manualOverride=""
+                onManualOverrideChange={() => {}}
               />
               <StaticSearchPicker
                 label="Linked SDS (optional)"

@@ -195,6 +195,8 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
         sourceLabel={title}
         existingKeys={existingRfqKeys}
         onKeyChange={setRfqKey}
+        domain="purchase"
+        kind="rfq"
         label="RFQ key"
       />
       <button
@@ -294,6 +296,8 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
                   sourceLabel={quoteKeySource}
                   existingKeys={selectedRfq.quotes.map((quote) => quote.quoteKey)}
                   onKeyChange={setQuoteKey}
+                  domain="purchase"
+                  kind="quote"
                   label="Quote key"
                 />
               </div>
@@ -429,6 +433,8 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors }: R
                   sourceLabel={prKeySource}
                   existingKeys={[]}
                   onKeyChange={setPrKeyFromRfq}
+                  domain="purchase"
+                  kind="request"
                   label="PR key from RFQ"
                 />
               </div>

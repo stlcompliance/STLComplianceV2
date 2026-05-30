@@ -286,6 +286,90 @@
         }
       }
     },
+    "/api/audit": {
+      "get": {
+        "tags": [
+          "EventAndAudit"
+        ],
+        "operationId": "ListTrainArrAudit",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/audit-packages/export": {
       "get": {
         "tags": [
@@ -454,6 +538,18 @@
         }
       }
     },
+    "/api/config": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/evaluations": {
       "get": {
         "tags": [
@@ -580,6 +676,33 @@
           "EventProcessingSettings"
         ],
         "operationId": "ListTrainArrTrainingDomainEvents",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/events": {
+      "get": {
+        "tags": [
+          "EventAndAudit"
+        ],
+        "operationId": "ListTrainArrEvents",
         "parameters": [
           {
             "name": "limit",
@@ -909,6 +1032,29 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/qualification-check": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "QualificationCheckIntegration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutarrQualificationCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -2242,6 +2388,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -2281,6 +2435,64 @@
           "QualificationIssues"
         ],
         "operationId": "ExpireQualificationIssue",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualificationLifecycleActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/qualification-issues/{qualificationIssueId}/history": {
+      "get": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "GetQualificationIssueHistory",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/qualification-issues/{qualificationIssueId}/reinstate": {
+      "post": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "ReinstateQualificationIssue",
         "parameters": [
           {
             "name": "qualificationIssueId",
@@ -2519,6 +2731,19 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "GetTrainArrReportsIndex",
         "responses": {
           "200": {
             "description": "OK"
@@ -2831,6 +3056,18 @@
           "Session"
         ],
         "operationId": "TrainArrGetSessionBootstrap",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -3528,6 +3765,19 @@
         }
       }
     },
+    "/api/training-completion-rules/catalog": {
+      "get": {
+        "tags": [
+          "TrainingCompletionRules"
+        ],
+        "operationId": "ListTrainingCompletionRuleCatalog",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/training-definitions": {
       "get": {
         "tags": [
@@ -3772,6 +4022,136 @@
         }
       }
     },
+    "/api/training-definitions/{trainingDefinitionId}/completion-rules": {
+      "get": {
+        "tags": [
+          "TrainingCompletionRules"
+        ],
+        "operationId": "ListTrainingDefinitionCompletionRules",
+        "parameters": [
+          {
+            "name": "trainingDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingCompletionRules"
+        ],
+        "operationId": "CreateTrainingDefinitionCompletionRule",
+        "parameters": [
+          {
+            "name": "trainingDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingDefinitionCompletionRuleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-definitions/{trainingDefinitionId}/completion-rules/{completionRuleId}": {
+      "put": {
+        "tags": [
+          "TrainingCompletionRules"
+        ],
+        "operationId": "UpdateTrainingDefinitionCompletionRule",
+        "parameters": [
+          {
+            "name": "trainingDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "completionRuleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrainingDefinitionCompletionRuleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "TrainingCompletionRules"
+        ],
+        "operationId": "DeleteTrainingDefinitionCompletionRule",
+        "parameters": [
+          {
+            "name": "trainingDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "completionRuleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/training-definitions/{trainingDefinitionId}/steps": {
       "get": {
         "tags": [
@@ -3887,6 +4267,122 @@
           },
           {
             "name": "stepId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-definitions/{trainingDefinitionId}/steps/{stepId}/branches": {
+      "get": {
+        "tags": [
+          "TrainingStepBranches"
+        ],
+        "operationId": "ListTrainingDefinitionStepBranches",
+        "parameters": [
+          {
+            "name": "trainingDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "stepId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingStepBranches"
+        ],
+        "operationId": "CreateTrainingDefinitionStepBranch",
+        "parameters": [
+          {
+            "name": "trainingDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "stepId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingDefinitionStepBranchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training-definitions/{trainingDefinitionId}/steps/{stepId}/branches/{branchId}": {
+      "delete": {
+        "tags": [
+          "TrainingStepBranches"
+        ],
+        "operationId": "DeleteTrainingDefinitionStepBranch",
+        "parameters": [
+          {
+            "name": "trainingDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "stepId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "branchId",
             "in": "path",
             "required": true,
             "schema": {
@@ -4418,6 +4914,2646 @@
         }
       }
     },
+    "/api/training-step-branches/catalog": {
+      "get": {
+        "tags": [
+          "TrainingStepBranches"
+        ],
+        "operationId": "ListTrainingStepBranchCatalog",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assignments": {
+      "get": {
+        "tags": [
+          "TrainingAssignments"
+        ],
+        "operationId": "ListTrainingAssignmentsV1Assignments",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "staffarrIncidentRemediationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingAssignments"
+        ],
+        "operationId": "CreateTrainingAssignmentV1Assignments",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingAssignmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignmentId}": {
+      "get": {
+        "tags": [
+          "TrainingAssignments"
+        ],
+        "operationId": "GetTrainingAssignmentV1Assignments",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assignments/{assignmentId}/complete": {
+      "post": {
+        "tags": [
+          "TrainingAssignments"
+        ],
+        "operationId": "CompleteTrainingAssignmentV1Assignments",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/attempts": {
+      "get": {
+        "tags": [
+          "Evaluations"
+        ],
+        "operationId": "ListTrainingEvaluationsV1Attempts",
+        "parameters": [
+          {
+            "name": "trainingAssignmentId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Evaluations"
+        ],
+        "operationId": "SubmitTrainingEvaluationV1Attempts",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitTrainingEvaluationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/attempts/review-timeline": {
+      "get": {
+        "tags": [
+          "Evaluations"
+        ],
+        "operationId": "ListTrainingEvaluationReviewTimelineV1Attempts",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit": {
+      "get": {
+        "tags": [
+          "EventAndAudit"
+        ],
+        "operationId": "ListTrainArrAuditV1",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-packages/export": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "ExportTrainArrAuditPackageV1",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-packages/jobs": {
+      "post": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "CreateTrainArrAuditPackageGenerationJobV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditPackageGenerationJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-packages/jobs/{jobId}": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetTrainArrAuditPackageGenerationJobV1",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-packages/jobs/{jobId}/download": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "DownloadTrainArrAuditPackageGenerationJobV1",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-packages/manifest": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetTrainArrAuditPackageManifestV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "TrainArrRedeemHandoffV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization-checks": {
+      "post": {
+        "tags": [
+          "QualificationChecks"
+        ],
+        "operationId": "CreateQualificationCheckV1AuthorizationChecks",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQualificationCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "QualificationChecks"
+        ],
+        "operationId": "ListQualificationChecksV1AuthorizationChecks",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "qualificationKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization-checks/batch": {
+      "post": {
+        "tags": [
+          "QualificationChecks"
+        ],
+        "operationId": "CreateBatchQualificationCheckV1AuthorizationChecks",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBatchQualificationCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/certificates": {
+      "post": {
+        "tags": [
+          "CertificationPublications"
+        ],
+        "operationId": "CreateCertificationPublicationV1Certificates",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCertificationPublicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/certification-publications": {
+      "post": {
+        "tags": [
+          "CertificationPublications"
+        ],
+        "operationId": "CreateCertificationPublicationV1CertificationPublications",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCertificationPublicationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/config": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/evaluations": {
+      "get": {
+        "tags": [
+          "Evaluations"
+        ],
+        "operationId": "ListTrainingEvaluationsV1Evaluations",
+        "parameters": [
+          {
+            "name": "trainingAssignmentId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Evaluations"
+        ],
+        "operationId": "SubmitTrainingEvaluationV1Evaluations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitTrainingEvaluationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/evaluations/review-timeline": {
+      "get": {
+        "tags": [
+          "Evaluations"
+        ],
+        "operationId": "ListTrainingEvaluationReviewTimelineV1Evaluations",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/events": {
+      "get": {
+        "tags": [
+          "EventAndAudit"
+        ],
+        "operationId": "ListTrainArrEventsV1",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/evidence": {
+      "get": {
+        "tags": [
+          "TrainingEvidence"
+        ],
+        "operationId": "ListTrainingEvidenceV1Evidence",
+        "parameters": [
+          {
+            "name": "trainingAssignmentId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/evidence/{assignmentId}": {
+      "post": {
+        "tags": [
+          "TrainingEvidence"
+        ],
+        "operationId": "CreateTrainingEvidenceV1Evidence",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingEvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealthV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/incident-remediations": {
+      "get": {
+        "tags": [
+          "IncidentRemediations"
+        ],
+        "operationId": "ListStaffarrIncidentRemediationsV1IncidentRemediations",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/incident-remediations/{remediationId}": {
+      "get": {
+        "tags": [
+          "IncidentRemediations"
+        ],
+        "operationId": "GetStaffarrIncidentRemediationV1IncidentRemediations",
+        "parameters": [
+          {
+            "name": "remediationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/incident-remediations": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestStaffarrIncidentRemediationV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestStaffarrIncidentRemediationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/person-training-history": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetTrainArrPersonTrainingHistoryIntegrationV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/qualification-check": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "QualificationCheckIntegrationV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutarrQualificationCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/routarr-qualification-check": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RoutarrQualificationCheckV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutarrQualificationCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/supplyarr-demand-status": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestSupplyarrDemandStatusV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestSupplyarrDemandStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContextV1",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoffV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "TrainArrGetMeV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/program-steps": {
+      "get": {
+        "tags": [
+          "TrainingDefinitionSteps"
+        ],
+        "operationId": "ListProgramStepsV1",
+        "parameters": [
+          {
+            "name": "trainingDefinitionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingDefinitionSteps"
+        ],
+        "operationId": "CreateProgramStepV1",
+        "parameters": [
+          {
+            "name": "trainingDefinitionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingDefinitionStepRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/program-steps/{stepId}": {
+      "put": {
+        "tags": [
+          "TrainingDefinitionSteps"
+        ],
+        "operationId": "UpdateProgramStepV1",
+        "parameters": [
+          {
+            "name": "stepId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "trainingDefinitionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrainingDefinitionStepRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "TrainingDefinitionSteps"
+        ],
+        "operationId": "DeleteProgramStepV1",
+        "parameters": [
+          {
+            "name": "stepId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "trainingDefinitionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/program-versions": {
+      "get": {
+        "tags": [
+          "ProgramVersions"
+        ],
+        "operationId": "ListTrainingProgramVersionsV1",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/program-versions/start-revision": {
+      "post": {
+        "tags": [
+          "ProgramVersions"
+        ],
+        "operationId": "StartTrainingProgramRevisionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartProgramRevisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/program-versions/{programVersionId}": {
+      "get": {
+        "tags": [
+          "ProgramVersions"
+        ],
+        "operationId": "GetTrainingProgramVersionV1",
+        "parameters": [
+          {
+            "name": "programVersionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/programs": {
+      "get": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "ListTrainingProgramsV1Programs",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "CreateTrainingProgramV1Programs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/programs/{programId}": {
+      "get": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "GetTrainingProgramV1Programs",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "UpdateTrainingProgramV1Programs",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrainingProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualification-checks": {
+      "post": {
+        "tags": [
+          "QualificationChecks"
+        ],
+        "operationId": "CreateQualificationCheckV1QualificationChecks",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQualificationCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "QualificationChecks"
+        ],
+        "operationId": "ListQualificationChecksV1QualificationChecks",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "qualificationKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualification-checks/batch": {
+      "post": {
+        "tags": [
+          "QualificationChecks"
+        ],
+        "operationId": "CreateBatchQualificationCheckV1QualificationChecks",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBatchQualificationCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualification-issues": {
+      "get": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "ListQualificationIssuesV1QualificationIssues",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualification-issues/{qualificationIssueId}": {
+      "get": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "GetQualificationIssueV1QualificationIssues",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualification-issues/{qualificationIssueId}/expire": {
+      "post": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "ExpireQualificationIssueV1QualificationIssues",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualificationLifecycleActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualification-issues/{qualificationIssueId}/history": {
+      "get": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "GetQualificationIssueHistoryV1QualificationIssues",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualification-issues/{qualificationIssueId}/reinstate": {
+      "post": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "ReinstateQualificationIssueV1QualificationIssues",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualificationLifecycleActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualification-issues/{qualificationIssueId}/revoke": {
+      "post": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "RevokeQualificationIssueV1QualificationIssues",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualificationLifecycleActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualification-issues/{qualificationIssueId}/suspend": {
+      "post": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "SuspendQualificationIssueV1QualificationIssues",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualificationLifecycleActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualifications": {
+      "get": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "ListQualificationIssuesV1Qualifications",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualifications/{qualificationIssueId}": {
+      "get": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "GetQualificationIssueV1Qualifications",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualifications/{qualificationIssueId}/expire": {
+      "post": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "ExpireQualificationIssueV1Qualifications",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualificationLifecycleActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualifications/{qualificationIssueId}/history": {
+      "get": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "GetQualificationIssueHistoryV1Qualifications",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualifications/{qualificationIssueId}/reinstate": {
+      "post": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "ReinstateQualificationIssueV1Qualifications",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualificationLifecycleActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualifications/{qualificationIssueId}/revoke": {
+      "post": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "RevokeQualificationIssueV1Qualifications",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualificationLifecycleActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualifications/{qualificationIssueId}/suspend": {
+      "post": {
+        "tags": [
+          "QualificationIssues"
+        ],
+        "operationId": "SuspendQualificationIssueV1Qualifications",
+        "parameters": [
+          {
+            "name": "qualificationIssueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QualificationLifecycleActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/recertification": {
+      "get": {
+        "tags": [
+          "RecertificationSettings"
+        ],
+        "operationId": "GetTrainArrRecertificationSettingsV1Recertification",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "RecertificationSettings"
+        ],
+        "operationId": "UpsertTrainArrRecertificationSettingsV1Recertification",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertRecertificationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/recertification-settings": {
+      "get": {
+        "tags": [
+          "RecertificationSettings"
+        ],
+        "operationId": "GetTrainArrRecertificationSettingsV1RecertificationSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "RecertificationSettings"
+        ],
+        "operationId": "UpsertTrainArrRecertificationSettingsV1RecertificationSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertRecertificationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/recertification-settings/runs": {
+      "get": {
+        "tags": [
+          "RecertificationSettings"
+        ],
+        "operationId": "ListTrainArrRecertificationAssignmentRunsV1RecertificationSettings",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/recertification/runs": {
+      "get": {
+        "tags": [
+          "RecertificationSettings"
+        ],
+        "operationId": "ListTrainArrRecertificationAssignmentRunsV1Recertification",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/remediation": {
+      "get": {
+        "tags": [
+          "IncidentRemediations"
+        ],
+        "operationId": "ListStaffarrIncidentRemediationsV1Remediation",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/remediation/{remediationId}": {
+      "get": {
+        "tags": [
+          "IncidentRemediations"
+        ],
+        "operationId": "GetStaffarrIncidentRemediationV1Remediation",
+        "parameters": [
+          {
+            "name": "remediationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "GetTrainArrReportsIndexV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/assignments/summary": {
+      "get": {
+        "tags": [
+          "AssignmentReports"
+        ],
+        "operationId": "GetTrainArrAssignmentReportSummaryV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "overdueOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/assignments/summary/export": {
+      "get": {
+        "tags": [
+          "AssignmentReports"
+        ],
+        "operationId": "ExportTrainArrAssignmentReportSummaryV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "overdueOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/compliance/summary": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetTrainArrComplianceReportSummaryV1",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/compliance/summary/export": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ExportTrainArrComplianceReportSummaryV1",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/qualifications/summary": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "GetTrainArrQualificationReportSummaryV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/qualifications/summary/export": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "ExportTrainArrQualificationReportSummaryV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/requirements": {
+      "get": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "ListTrainingRequirementsV1Requirements",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "CreateTrainingRequirementV1Requirements",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingRequirementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/requirements/builder-view": {
+      "get": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "GetTrainingRequirementBuilderViewV1Requirements",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/requirements/sync-to-matrix": {
+      "post": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "SyncTrainingRequirementToMatrixV1Requirements",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncRequirementToMatrixRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/requirements/{requirementId}": {
+      "put": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "UpdateTrainingRequirementV1Requirements",
+        "parameters": [
+          {
+            "name": "requirementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrainingRequirementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "DeleteTrainingRequirementV1Requirements",
+        "parameters": [
+          {
+            "name": "requirementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/session": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "operationId": "TrainArrGetSessionBootstrapV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/settings": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/signoffs": {
+      "get": {
+        "tags": [
+          "Signoffs"
+        ],
+        "operationId": "ListTrainingSignoffsV1Signoffs",
+        "parameters": [
+          {
+            "name": "trainingAssignmentId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Signoffs"
+        ],
+        "operationId": "SubmitTrainingSignoffV1Signoffs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitTrainingSignoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/training-assignments": {
+      "get": {
+        "tags": [
+          "TrainingAssignments"
+        ],
+        "operationId": "ListTrainingAssignmentsV1TrainingAssignments",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "staffarrIncidentRemediationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingAssignments"
+        ],
+        "operationId": "CreateTrainingAssignmentV1TrainingAssignments",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingAssignmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/training-assignments/{assignmentId}": {
+      "get": {
+        "tags": [
+          "TrainingAssignments"
+        ],
+        "operationId": "GetTrainingAssignmentV1TrainingAssignments",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/training-assignments/{assignmentId}/complete": {
+      "post": {
+        "tags": [
+          "TrainingAssignments"
+        ],
+        "operationId": "CompleteTrainingAssignmentV1TrainingAssignments",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/training-programs": {
+      "get": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "ListTrainingProgramsV1TrainingPrograms",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "CreateTrainingProgramV1TrainingPrograms",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/training-programs/{programId}": {
+      "get": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "GetTrainingProgramV1TrainingPrograms",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TrainingPrograms"
+        ],
+        "operationId": "UpdateTrainingProgramV1TrainingPrograms",
+        "parameters": [
+          {
+            "name": "programId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrainingProgramRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/training-requirements": {
+      "get": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "ListTrainingRequirementsV1TrainingRequirements",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "CreateTrainingRequirementV1TrainingRequirements",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingRequirementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/training-requirements/builder-view": {
+      "get": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "GetTrainingRequirementBuilderViewV1TrainingRequirements",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/training-requirements/sync-to-matrix": {
+      "post": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "SyncTrainingRequirementToMatrixV1TrainingRequirements",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncRequirementToMatrixRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/training-requirements/{requirementId}": {
+      "put": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "UpdateTrainingRequirementV1TrainingRequirements",
+        "parameters": [
+          {
+            "name": "requirementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrainingRequirementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "TrainingRequirements"
+        ],
+        "operationId": "DeleteTrainingRequirementV1TrainingRequirements",
+        "parameters": [
+          {
+            "name": "requirementId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -4570,6 +7706,13 @@
               "$ref": "#/components/schemas/BatchQualificationCheckSubject"
             }
           },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
           "trainingDefinitionId": {
             "type": [
               "null",
@@ -4657,6 +7800,13 @@
             "additionalProperties": {
               "type": "string"
             }
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           },
           "trainingDefinitionId": {
             "type": [
@@ -4810,6 +7960,38 @@
           }
         }
       },
+      "CreateTrainingDefinitionCompletionRuleRequest": {
+        "required": [
+          "ruleKey",
+          "ruleType",
+          "label",
+          "configJson",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "ruleKey": {
+            "type": "string"
+          },
+          "ruleType": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "configJson": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "CreateTrainingDefinitionRequest": {
         "required": [
           "definitionKey",
@@ -4834,6 +8016,38 @@
           },
           "qualificationName": {
             "type": "string"
+          }
+        }
+      },
+      "CreateTrainingDefinitionStepBranchRequest": {
+        "required": [
+          "branchKey",
+          "branchType",
+          "label",
+          "configJson",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "branchKey": {
+            "type": "string"
+          },
+          "branchType": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "configJson": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -5805,6 +9019,34 @@
           }
         }
       },
+      "UpdateTrainingDefinitionCompletionRuleRequest": {
+        "required": [
+          "ruleType",
+          "label",
+          "configJson",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "ruleType": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "configJson": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "UpdateTrainingDefinitionStepRequest": {
         "required": [
           "name",
@@ -6320,6 +9562,9 @@
       "name": "Launch"
     },
     {
+      "name": "Settings"
+    },
+    {
       "name": "TrainingDefinitions"
     },
     {
@@ -6327,6 +9572,12 @@
     },
     {
       "name": "TrainingAssignmentSteps"
+    },
+    {
+      "name": "TrainingCompletionRules"
+    },
+    {
+      "name": "TrainingStepBranches"
     },
     {
       "name": "TrainingPrograms"
@@ -6422,7 +9673,13 @@
       "name": "AuditPackages"
     },
     {
+      "name": "EventAndAudit"
+    },
+    {
       "name": "IntegrationSettings"
+    },
+    {
+      "name": "Reports"
     },
     {
       "name": "AssignmentReports"

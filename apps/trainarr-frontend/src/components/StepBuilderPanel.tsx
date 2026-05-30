@@ -1,4 +1,4 @@
-import { GeneratedKeyField, slugifyKey } from '@stl/shared-ui'
+import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type { TrainingDefinitionResponse, TrainingDefinitionStepResponse } from '../api/types'
 
@@ -69,16 +69,23 @@ export function StepBuilderPanel({
   onCreateStep,
   onDeleteStep,
 }: StepBuilderPanelProps) {
-  const [stepKeyManual, setStepKeyManual] = useState('')
-  const [showAdvancedStepKey, setShowAdvancedStepKey] = useState(false)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [stepType, setStepType] = useState<'content' | 'quiz' | 'practical'>('content')
   const [configJson, setConfigJson] = useState(DEFAULT_CONTENT_CONFIG)
   const [sortOrder, setSortOrder] = useState('0')
 
-  const generatedStepKey = useMemo(() => slugifyKey(name), [name])
-  const resolvedStepKey = stepKeyManual.trim() || generatedStepKey
+  const generatedStepKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'train',
+        kind: 'step',
+        title: name,
+        existingKeys: steps.map((step) => step.stepKey),
+        maxLength: 64,
+      }),
+    [name, steps],
+  )
 
   useEffect(() => {
     setSortOrder(String(steps.length))
@@ -96,7 +103,7 @@ export function StepBuilderPanel({
     }
 
     await onCreateStep({
-      stepKey: resolvedStepKey.trim(),
+      stepKey: generatedStepKey.trim(),
       name: name.trim(),
       description: description.trim(),
       stepType,
@@ -104,8 +111,6 @@ export function StepBuilderPanel({
       sortOrder: Number.parseInt(sortOrder, 10) || 0,
     })
 
-    setStepKeyManual('')
-    setShowAdvancedStepKey(false)
     setName('')
     setDescription('')
     setStepType('content')
@@ -180,19 +185,9 @@ export function StepBuilderPanel({
                   label="Generated step key"
                   sourceLabel={name}
                   generatedKey={generatedStepKey}
-                  manualOverride={stepKeyManual}
-                  onManualOverrideChange={setStepKeyManual}
-                  showAdvancedKey={showAdvancedStepKey}
+                  manualOverride=""
+                  onManualOverrideChange={() => {}}
                 />
-                {!showAdvancedStepKey ? (
-                  <button
-                    type="button"
-                    className="mt-1 text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
-                    onClick={() => setShowAdvancedStepKey(true)}
-                  >
-                    Customize step key
-                  </button>
-                ) : null}
               </div>
               <label htmlFor="step-builder-sort-order" className="block text-sm text-slate-300">
                 Sort order
@@ -256,7 +251,7 @@ export function StepBuilderPanel({
               <div className="md:col-span-2">
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !generatedStepKey}
                   className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
                 >
                   {isSubmitting ? 'Adding…' : 'Add step'}

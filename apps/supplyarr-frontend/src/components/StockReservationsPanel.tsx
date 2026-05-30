@@ -229,6 +229,8 @@ export function StockReservationsPanel({
                 sourceLabel={reservationKeySource}
                 existingKeys={existingReservationKeys}
                 onKeyChange={onReservationKeyChange}
+                domain="inventory"
+                kind="reservation"
                 label="Reservation key"
               />
             </div>

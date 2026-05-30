@@ -11,6 +11,7 @@ import {
   submitWarrantyClaim,
 } from '../api/client'
 import type { ExternalPartyResponse, PartResponse, PurchaseOrderResponse } from '../api/types'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 const CLAIM_TYPES = ['defective', 'doa', 'premature_failure', 'other'] as const
 const DISPOSITIONS = ['approved', 'partial_credit', 'replacement', 'denied'] as const
@@ -75,6 +76,25 @@ export function WarrantyClaimsPanel({
     const po = issuedPurchaseOrders.find((x) => x.purchaseOrderId === purchaseOrderId)
     return po?.lines ?? []
   }, [issuedPurchaseOrders, purchaseOrderId])
+
+  const selectedVendor = useMemo(
+    () => vendors.find((vendor) => vendor.partyId === vendorPartyId) ?? null,
+    [vendorPartyId, vendors],
+  )
+  const selectedPart = useMemo(
+    () => parts.find((part) => part.partId === partId) ?? null,
+    [partId, parts],
+  )
+  const claimKeySource = useMemo(() => {
+    const vendorLabel = selectedVendor?.displayName.trim() ?? ''
+    const partLabel = selectedPart?.displayName.trim() ?? ''
+    if (!vendorLabel && !partLabel) {
+      return ''
+    }
+
+    return `${vendorLabel || 'vendor'} ${partLabel || 'part'} ${claimType} claim`
+  }, [claimType, selectedPart, selectedVendor])
+  const existingClaimKeys = claimsQuery.data?.map((claim) => claim.claimKey) ?? []
 
   const selectedClaim = claimsQuery.data?.find((x) => x.warrantyClaimId === selectedClaimId)
 
@@ -145,15 +165,16 @@ export function WarrantyClaimsPanel({
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label htmlFor="warranty-claim-key" className="text-sm text-slate-300">
-          Claim key
-          <input
-            id="warranty-claim-key"
-            className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1"
-            value={claimKey}
-            onChange={(e) => setClaimKey(e.target.value)}
-          />
-        </label>
+        <GeneratedKeyFieldGroup
+          sourceLabel={claimKeySource}
+          existingKeys={existingClaimKeys}
+          onKeyChange={setClaimKey}
+          domain="purchase"
+          kind="warrantyclaim"
+          maxLength={128}
+          label="Claim key"
+          disabled={createMutation.isPending}
+        />
         <label htmlFor="warranty-claim-type" className="text-sm text-slate-300">
           Claim type
           <select

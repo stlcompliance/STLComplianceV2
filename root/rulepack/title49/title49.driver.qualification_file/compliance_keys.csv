@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_driver_qualification_file,Title 49 Driver Qualification File,compliance_domain,"Driver qualification, application, investigation, review, and file retention controls. Mapping level: operational. Products: StaffArr, TrainArr, RoutArr, ComplianceCore. Entities: driver, qualification_file, mvr.",true

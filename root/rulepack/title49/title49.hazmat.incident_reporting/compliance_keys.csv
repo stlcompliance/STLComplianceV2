@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_incident_reporting,Title 49 Hazmat Incident Reporting,compliance_domain,"Immediate notice, written incident report, and BOE approval controls. Mapping level: operational. Products: StaffArr, SupplyArr, RoutArr, ComplianceCore. Entities: incident, shipment, hazmat_release.",true

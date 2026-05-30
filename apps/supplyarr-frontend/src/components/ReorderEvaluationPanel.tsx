@@ -1,4 +1,5 @@
 import type { ReorderSuggestionResponse } from '../api/types'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface ReorderEvaluationPanelProps {
   suggestions: ReorderSuggestionResponse[]
@@ -53,6 +54,13 @@ export function ReorderEvaluationPanel({
   isSavingPolicy,
   isCreatingPurchaseRequest,
 }: ReorderEvaluationPanelProps) {
+  const selectedPartLabels = suggestions
+    .filter((suggestion) => selectedSuggestionPartIds.includes(suggestion.partId))
+    .map((suggestion) => suggestion.partKey)
+  const prRequestKeySource =
+    prTitle.trim() ||
+    (selectedPartLabels.length > 0 ? `reorder ${selectedPartLabels.join(' ')}` : '')
+
   const toggleSuggestion = (partId: string) => {
     if (selectedSuggestionPartIds.includes(partId)) {
       onSelectedSuggestionPartIdsChange(selectedSuggestionPartIds.filter((id) => id !== partId))
@@ -196,15 +204,16 @@ export function ReorderEvaluationPanel({
 
       {canCreatePurchaseRequest && suggestions.some((x) => !x.hasOpenPurchaseRequest) ? (
         <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <label htmlFor="reorder-pr-request-key" className="block text-sm text-slate-400">
-            PR request key
-            <input
-              id="reorder-pr-request-key"
-              className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
-              value={prRequestKey}
-              onChange={(event) => onPrRequestKeyChange(event.target.value)}
-            />
-          </label>
+          <GeneratedKeyFieldGroup
+            sourceLabel={prRequestKeySource}
+            existingKeys={[]}
+            onKeyChange={onPrRequestKeyChange}
+            domain="purchase"
+            kind="request"
+            maxLength={128}
+            label="PR request key"
+            disabled={isCreatingPurchaseRequest}
+          />
           <label htmlFor="reorder-pr-title" className="block text-sm text-slate-400">
             PR title
             <input
@@ -227,7 +236,11 @@ export function ReorderEvaluationPanel({
             <button
               type="button"
               className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
-              disabled={selectedSuggestionPartIds.length === 0 || isCreatingPurchaseRequest}
+              disabled={
+                selectedSuggestionPartIds.length === 0 ||
+                !prRequestKey.trim() ||
+                isCreatingPurchaseRequest
+              }
               onClick={onCreatePurchaseRequest}
             >
               {isCreatingPurchaseRequest ? 'Creating…' : 'Create draft purchase request'}

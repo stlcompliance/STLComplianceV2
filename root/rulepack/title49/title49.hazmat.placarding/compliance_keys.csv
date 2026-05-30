@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_placarding,Title 49 Hazmat Placarding,compliance_domain,"Placard applicability, tables, display, visibility, and specification controls. Mapping level: operational. Products: SupplyArr, RoutArr, ComplianceCore. Entities: vehicle, shipment, placard.",true

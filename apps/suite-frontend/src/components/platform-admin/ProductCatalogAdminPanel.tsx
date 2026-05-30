@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { type FormEvent, useState } from 'react'
+import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
 
 import * as nexarr from '../../api/nexarrClient'
 
@@ -11,6 +12,7 @@ export function ProductCatalogAdminPanel() {
   const [sortOrder, setSortOrder] = useState('100')
   const [isActive, setIsActive] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [showProductKeyPolicy, setShowProductKeyPolicy] = useState(false)
 
   const productsQuery = useQuery({
     queryKey: ['platform-products-admin'],
@@ -19,6 +21,21 @@ export function ProductCatalogAdminPanel() {
 
   const products = productsQuery.data?.items ?? []
   const selectedProduct = products.find((product) => product.productKey === selectedProductKey) ?? null
+  const generatedProductKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'product',
+        kind: 'catalog',
+        title: displayName.trim(),
+        existingKeys: products.map((product) => product.productKey),
+        maxLength: 128,
+      }),
+    [displayName, products],
+  )
+
+  useEffect(() => {
+    setProductKey(generatedProductKey)
+  }, [generatedProductKey])
 
   const createMutation = useMutation({
     mutationFn: () =>
@@ -77,16 +94,28 @@ export function ProductCatalogAdminPanel() {
       ) : null}
 
       <form className="grid gap-3 md:grid-cols-4" onSubmit={handleCreate}>
-        <label htmlFor="product-catalog-create-key" className="block text-sm text-slate-700">
-          New product key
-          <input
-            id="product-catalog-create-key"
-            value={productKey}
-            onChange={(event) => setProductKey(event.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            required
+        <div className="space-y-1 text-sm text-slate-700">
+          <GeneratedKeyField
+            sourceLabel={displayName.trim()}
+            generatedKey={generatedProductKey}
+            confirmedKey={productKey}
+            manualOverride=""
+            onManualOverrideChange={() => {}}
+            showAdvancedKey={showProductKeyPolicy}
+            disabled={createMutation.isPending}
+            label="New product key"
           />
-        </label>
+          {!showProductKeyPolicy ? (
+            <button
+              type="button"
+              className="text-xs text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
+              onClick={() => setShowProductKeyPolicy(true)}
+              disabled={createMutation.isPending}
+            >
+              Key policy
+            </button>
+          ) : null}
+        </div>
         <label htmlFor="product-catalog-create-display-name" className="block text-sm text-slate-700 md:col-span-2">
           New product display name
           <input
@@ -119,7 +148,7 @@ export function ProductCatalogAdminPanel() {
         <div className="md:col-span-4">
           <button
             type="submit"
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || !productKey.trim() || !displayName.trim()}
             className="rounded-md bg-stl-navy px-4 py-2 text-sm font-medium text-white hover:bg-stl-navy/90 disabled:opacity-50"
           >
             {createMutation.isPending ? 'Creating…' : 'Create product'}

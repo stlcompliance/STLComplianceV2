@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { BatchQualificationCheckPanel } from './BatchQualificationCheckPanel'
 
 const rulePackOptions = [{ value: 'driver_qualification', label: 'driver_qualification' }]
+const qualificationOptions = [{ value: 'hazmat_endorsement', label: 'Hazmat endorsement (hazmat_endorsement)' }]
 
 describe('BatchQualificationCheckPanel', () => {
   afterEach(() => {
@@ -18,6 +19,7 @@ describe('BatchQualificationCheckPanel', () => {
         canRun
         qualificationKey="hazmat_endorsement"
         onQualificationKeyChange={vi.fn()}
+        qualificationOptions={qualificationOptions}
         rulePackKey="driver_qualification"
         onRulePackKeyChange={vi.fn()}
         rulePackOptions={rulePackOptions}
@@ -31,7 +33,7 @@ describe('BatchQualificationCheckPanel', () => {
     )
 
     expect(screen.getByRole('button', { name: /run batch qualification check/i })).toBeEnabled()
-    expect(screen.getByPlaceholderText(/hazmat_endorsement/i)).toBeInTheDocument()
+    expect(screen.getByTestId('batch-qualification-key')).toBeInTheDocument()
     expect(screen.getByTestId('batch-qualification-rule-pack')).toBeInTheDocument()
   })
 
@@ -70,6 +72,7 @@ describe('BatchQualificationCheckPanel', () => {
         canRun
         qualificationKey="hazmat_endorsement"
         onQualificationKeyChange={vi.fn()}
+        qualificationOptions={qualificationOptions}
         rulePackKey="driver_qualification"
         onRulePackKeyChange={vi.fn()}
         rulePackOptions={rulePackOptions}
@@ -97,6 +100,7 @@ describe('BatchQualificationCheckPanel', () => {
         canRun
         qualificationKey="hazmat_endorsement"
         onQualificationKeyChange={vi.fn()}
+        qualificationOptions={qualificationOptions}
         rulePackKey=""
         onRulePackKeyChange={vi.fn()}
         rulePackOptions={rulePackOptions}

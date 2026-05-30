@@ -1,0 +1,2 @@
+pack_key,program_key,version_number,label,description,status,active,rule_content_json
+title49.nhtsa.vehicle_standards_reference,nhtsa_vehicle,1,Title 49 NHTSA Vehicle Standards Reference,"NHTSA vehicle standards, recalls, theft prevention, and consumer information reference coverage. Source date 2026-05-28; source URLs in coverage report.",draft,true,

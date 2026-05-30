@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_vehicle_inspection_repair_maintenance,"Title 49 Inspection, Repair, and Maintenance",compliance_domain,"Inspection, repair, maintenance, lubrication, pretrip, and driveaway-towaway controls. Mapping level: operational. Products: MaintainArr, RoutArr, ComplianceCore. Entities: vehicle, asset, work_order, inspection.",true

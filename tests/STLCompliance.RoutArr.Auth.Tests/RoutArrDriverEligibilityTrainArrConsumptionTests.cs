@@ -29,6 +29,7 @@ public sealed class RoutArrDriverEligibilityTrainArrConsumptionTests : IAsyncLif
     private HttpClient _trainarrClient = null!;
     private HttpClient _routarrClient = null!;
     private string _routarrToTrainarrToken = null!;
+    private string _crossProductToTrainarrQualificationToken = null!;
 
     public async Task InitializeAsync()
     {
@@ -61,6 +62,11 @@ public sealed class RoutArrDriverEligibilityTrainArrConsumptionTests : IAsyncLif
             "routarr",
             ["trainarr"],
             IntegrationEndpoints.RoutarrQualificationCheckActionScope);
+        _crossProductToTrainarrQualificationToken = await IssueServiceTokenAsync(
+            adminToken,
+            "routarr",
+            ["trainarr"],
+            IntegrationEndpoints.QualificationCheckReadActionScope);
 
         _trainarrFactory = new WebApplicationFactory<global::TrainArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -132,6 +138,29 @@ public sealed class RoutArrDriverEligibilityTrainArrConsumptionTests : IAsyncLif
         Assert.False(string.IsNullOrWhiteSpace(check.TrainArr.Outcome));
         Assert.False(string.IsNullOrWhiteSpace(check.TrainArr.Message));
         Assert.Equal(check.TrainArr.Outcome, check.Outcome);
+    }
+
+    [Fact]
+    public async Task Cross_product_qualification_check_endpoint_supports_v1_alias()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/integrations/qualification-check");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _crossProductToTrainarrQualificationToken);
+        request.Content = JsonContent.Create(new TrainArr.Api.Contracts.RoutarrQualificationCheckRequest(
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            "driver_qualification",
+            null,
+            null));
+
+        var response = await _trainarrClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"Qualification-check integration failed: {(int)response.StatusCode} {error}");
+        }
+        var payload = await response.Content.ReadFromJsonAsync<TrainArr.Api.Contracts.QualificationCheckResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal("driver_qualification", payload!.QualificationKey);
     }
 
     private async Task<string> RedeemRoutArrTokenAsync()

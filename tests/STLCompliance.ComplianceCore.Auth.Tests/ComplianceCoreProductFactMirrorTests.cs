@@ -110,30 +110,23 @@ public sealed class ComplianceCoreProductFactMirrorTests : IAsyncLifetime
         var publicationId = Guid.NewGuid();
         var scopeKey = $"purchase_request:{purchaseRequestId:D}".ToLowerInvariant();
 
-        var ingestRequest = ServiceAuthorized(HttpMethod.Post, "/api/integrations/product-facts/ingest", _supplyarrIngestToken);
-        ingestRequest.Content = JsonContent.Create(new IngestProductFactsRequest(
-            PlatformSeeder.DemoTenantId,
+        var ingestResult = await IngestFactAsync(
+            "/api/integrations/product-facts/ingest",
             publicationId,
-            "supplyarr",
-            DateTimeOffset.UtcNow,
-            [
-                new ProductFactPublicationItemRequest(
-                    SupplyArrFactKey,
-                    "string",
-                    scopeKey,
-                    "submitted",
-                    null,
-                    null,
-                    null,
-                    "purchase_request",
-                    purchaseRequestId,
-                    "purchase_request.submitted",
-                    $"supplyarr:{publicationId:D}:{SupplyArrFactKey}:{scopeKey}")
-            ]));
-        var ingestResponse = await _complianceCoreClient.SendAsync(ingestRequest);
-        ingestResponse.EnsureSuccessStatusCode();
-        var ingestResult = (await ingestResponse.Content.ReadFromJsonAsync<IngestProductFactsResponse>())!;
+            purchaseRequestId,
+            scopeKey,
+            "submitted",
+            "purchase_request.submitted");
         Assert.Equal(1, ingestResult.AcceptedCount);
+
+        var v1IngestResult = await IngestFactAsync(
+            "/api/v1/integrations/product-facts/ingest",
+            Guid.NewGuid(),
+            purchaseRequestId,
+            scopeKey,
+            "approved",
+            "purchase_request.approved");
+        Assert.Equal(1, v1IngestResult.AcceptedCount);
 
         var resolveRequest = ServiceAuthorized(HttpMethod.Post, "/api/internal/resolve", _supplyarrIngestToken);
         resolveRequest.Content = JsonContent.Create(new InternalResolveFactsRequest(
@@ -148,10 +141,43 @@ public sealed class ComplianceCoreProductFactMirrorTests : IAsyncLifetime
         var resolveResult = (await resolveResponse.Content.ReadFromJsonAsync<InternalResolveFactsResponse>())!;
         Assert.Empty(resolveResult.UnresolvedFactKeys);
         Assert.Single(resolveResult.Resolved);
-        Assert.Equal("submitted", resolveResult.Resolved[0].Value!.Value.GetString());
+        Assert.Equal("approved", resolveResult.Resolved[0].Value!.Value.GetString());
     }
 
     private const string SupplyArrFactKey = "supplyarr.purchase_request.status";
+
+    private async Task<IngestProductFactsResponse> IngestFactAsync(
+        string endpoint,
+        Guid publicationId,
+        Guid purchaseRequestId,
+        string scopeKey,
+        string status,
+        string eventName)
+    {
+        var ingestRequest = ServiceAuthorized(HttpMethod.Post, endpoint, _supplyarrIngestToken);
+        ingestRequest.Content = JsonContent.Create(new IngestProductFactsRequest(
+            PlatformSeeder.DemoTenantId,
+            publicationId,
+            "supplyarr",
+            DateTimeOffset.UtcNow,
+            [
+                new ProductFactPublicationItemRequest(
+                    SupplyArrFactKey,
+                    "string",
+                    scopeKey,
+                    status,
+                    null,
+                    null,
+                    null,
+                    "purchase_request",
+                    purchaseRequestId,
+                    eventName,
+                    $"supplyarr:{publicationId:D}:{SupplyArrFactKey}:{scopeKey}")
+            ]));
+        var ingestResponse = await _complianceCoreClient.SendAsync(ingestRequest);
+        ingestResponse.EnsureSuccessStatusCode();
+        return (await ingestResponse.Content.ReadFromJsonAsync<IngestProductFactsResponse>())!;
+    }
 
     private async Task<Guid> CreateStringFactDefinitionAsync(string adminToken, string factKey)
     {

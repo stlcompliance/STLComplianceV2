@@ -86,9 +86,16 @@ public sealed class QualificationIssueService(
     public async Task<IReadOnlyList<QualificationIssueListItemResponse>> ListAsync(
         Guid tenantId,
         string? status,
+        Guid? staffarrPersonId,
         CancellationToken cancellationToken = default)
     {
         var query = db.QualificationIssues.AsNoTracking().Where(x => x.TenantId == tenantId);
+
+        if (staffarrPersonId.HasValue)
+        {
+            query = query.Where(x => x.StaffarrPersonId == staffarrPersonId.Value);
+        }
+
         if (!string.IsNullOrWhiteSpace(status))
         {
             var normalized = status.Trim().ToLowerInvariant();
@@ -118,6 +125,42 @@ public sealed class QualificationIssueService(
     {
         var issue = await LoadIssueAsync(tenantId, qualificationIssueId, cancellationToken);
         return MapResponse(issue);
+    }
+
+    public async Task<IReadOnlyList<QualificationIssueHistoryItemResponse>> GetHistoryAsync(
+        Guid tenantId,
+        Guid qualificationIssueId,
+        CancellationToken cancellationToken = default)
+    {
+        var issue = await LoadIssueAsync(tenantId, qualificationIssueId, cancellationToken);
+        var issueIdText = issue.Id.ToString();
+
+        var events = await db.AuditEvents.AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                        && x.TargetType == "qualification_issue"
+                        && x.TargetId == issueIdText
+                        && x.Result == "Succeeded")
+            .OrderBy(x => x.OccurredAt)
+            .Select(x => new QualificationIssueHistoryItemResponse(
+                x.OccurredAt,
+                x.Action,
+                x.ReasonCode ?? issue.Status,
+                null,
+                x.ActorUserId))
+            .ToListAsync(cancellationToken);
+
+        var history = new List<QualificationIssueHistoryItemResponse>
+        {
+            new(
+                issue.IssuedAt,
+                "qualification_issue.issued",
+                "issued",
+                null,
+                null)
+        };
+
+        history.AddRange(events);
+        return history.OrderBy(x => x.OccurredAt).ToList();
     }
 
     public async Task<QualificationIssueResponse?> GetByAssignmentAsync(
@@ -183,6 +226,23 @@ public sealed class QualificationIssueService(
             "qualification_issue.expire",
             cancellationToken);
 
+    public Task<QualificationIssueResponse> ReinstateAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid qualificationIssueId,
+        QualificationLifecycleActionRequest request,
+        CancellationToken cancellationToken = default) =>
+        ApplyLifecycleAsync(
+            tenantId,
+            actorUserId,
+            qualificationIssueId,
+            "issued",
+            "reinstate",
+            request.Reason,
+            publicationService.PublishQualificationReinstateAsync,
+            "qualification_issue.reinstate",
+            cancellationToken);
+
     public Task<QualificationIssueResponse> ExpireByWorkerAsync(
         Guid tenantId,
         Guid qualificationIssueId,
@@ -221,6 +281,15 @@ public sealed class QualificationIssueService(
         if (string.Equals(issue.Status, targetStatus, StringComparison.OrdinalIgnoreCase))
         {
             return MapResponse(issue);
+        }
+
+        if (string.Equals(targetStatus, "issued", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(issue.Status, "suspended", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "qualification_issues.invalid_status",
+                $"Qualification issue status '{issue.Status}' does not allow {lifecycleAction}.",
+                409);
         }
 
         if (!ActiveStatuses.Contains(issue.Status))
@@ -274,6 +343,7 @@ public sealed class QualificationIssueService(
 
         var eventKind = targetStatus switch
         {
+            "issued" => TrainingDomainEventKinds.QualificationIssued,
             "suspended" => TrainingDomainEventKinds.QualificationSuspended,
             "revoked" => TrainingDomainEventKinds.QualificationRevoked,
             "expired" => TrainingDomainEventKinds.QualificationExpired,
@@ -330,6 +400,8 @@ public sealed class QualificationIssueService(
                 $"Qualification {qualificationName} revoked and removed from active certification status.",
             "expire" =>
                 $"Qualification {qualificationName} expired and must be renewed through training.",
+            "reinstate" =>
+                $"Qualification {qualificationName} reinstated and returned to active status.",
             _ => $"Qualification {qualificationName} lifecycle action recorded."
         };
     }

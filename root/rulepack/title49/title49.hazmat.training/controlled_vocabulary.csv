@@ -1,0 +1,2 @@
+term_key,vocabulary_type_key,label,description,active
+ck_t49_hazmat_training,compliance_domain,Title 49 Hazmat Training,"operational Title 49 domain for worker, training_record, hazmat_employee.",true

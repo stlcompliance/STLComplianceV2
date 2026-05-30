@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_rail_safety_reference,Title 49 Rail Safety Reference,compliance_domain,"Federal Railroad Administration rail safety reference coverage. Mapping level: reference. Products: ComplianceCore. Entities: railroad, rail_equipment, rail_operation.",true

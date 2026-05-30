@@ -1,12 +1,20 @@
+import { ControlledSelect } from '@stl/shared-ui'
+
 import type { TrainingCitationAttachmentResponse } from '../api/types'
+
+interface CitationReferenceOption {
+  citationId: string
+  citationKey: string
+  label: string
+}
 
 interface CitationAttachmentPanelProps {
   title: string
   citations: TrainingCitationAttachmentResponse[]
+  citationOptions: CitationReferenceOption[]
   citationIdInput: string
   citationKeyInput: string
-  onCitationIdChange: (value: string) => void
-  onCitationKeyChange: (value: string) => void
+  onCitationSelectionChange: (value: CitationReferenceOption | null) => void
   onAttach: () => void
   onRemove: (attachmentId: string) => void
   isAttaching: boolean
@@ -19,10 +27,10 @@ interface CitationAttachmentPanelProps {
 export function CitationAttachmentPanel({
   title,
   citations,
+  citationOptions,
   citationIdInput,
   citationKeyInput,
-  onCitationIdChange,
-  onCitationKeyChange,
+  onCitationSelectionChange,
   onAttach,
   onRemove,
   isAttaching,
@@ -31,6 +39,9 @@ export function CitationAttachmentPanel({
   validateWithComplianceCore,
   onValidateWithComplianceCoreChange,
 }: CitationAttachmentPanelProps) {
+  const selectedCitationOption =
+    citationOptions.find((option) => option.citationId === citationIdInput.trim()) ?? null
+
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">{title}</h2>
@@ -40,24 +51,33 @@ export function CitationAttachmentPanel({
 
       {canManage ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label htmlFor="citation-attachment-citation-id" className="block text-xs text-slate-400">
-            Compliance Core citation id
-            <input
-              id="citation-attachment-citation-id"
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-xs text-slate-100"
-              value={citationIdInput}
-              onChange={(e) => onCitationIdChange(e.target.value)}
-            />
-          </label>
-          <label htmlFor="citation-attachment-citation-key" className="block text-xs text-slate-400">
+          <ControlledSelect
+            label="Compliance Core citation"
+            value={citationIdInput}
+            onChange={(value) => {
+              const selectedOption =
+                citationOptions.find((option) => option.citationId === value) ?? null
+              onCitationSelectionChange(selectedOption)
+            }}
+            options={citationOptions.map((option) => ({
+              value: option.citationId,
+              label: option.label,
+            }))}
+            emptyLabel="Select citation…"
+            testId="citation-attachment-citation-id"
+            className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
+          />
+          <div className="block text-xs text-slate-400" data-testid="citation-attachment-citation-key">
             Citation key
-            <input
-              id="citation-attachment-citation-key"
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
-              value={citationKeyInput}
-              onChange={(e) => onCitationKeyChange(e.target.value)}
-            />
-          </label>
+            <p className="mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100">
+              {(selectedCitationOption?.citationKey ?? citationKeyInput) || 'Select a citation to populate'}
+            </p>
+          </div>
+          {citationOptions.length === 0 ? (
+            <p className="text-xs text-amber-300 sm:col-span-2">
+              No citation references are available to select. Create and publish citations in Compliance Core first.
+            </p>
+          ) : null}
           <label htmlFor="citation-attachment-validate-compliance-core" className="flex items-center gap-2 text-xs text-slate-400 sm:col-span-2">
             <input
               id="citation-attachment-validate-compliance-core"

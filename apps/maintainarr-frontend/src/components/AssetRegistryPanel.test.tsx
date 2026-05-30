@@ -52,12 +52,10 @@ describe('AssetRegistryPanel', () => {
         isLoading={false}
         className=""
         classDescription=""
-        classKeyManualOverride=""
         confirmedClassKey={null}
         selectedClassId=""
         typeName=""
         typeDescription=""
-        typeKeyManualOverride=""
         confirmedTypeKey={null}
         selectedTypeId=""
         assetTag=""
@@ -66,11 +64,9 @@ describe('AssetRegistryPanel', () => {
         siteRef=""
         onClassNameChange={() => {}}
         onClassDescriptionChange={() => {}}
-        onClassKeyManualOverrideChange={() => {}}
         onSelectedClassIdChange={() => {}}
         onTypeNameChange={() => {}}
         onTypeDescriptionChange={() => {}}
-        onTypeKeyManualOverrideChange={() => {}}
         onSelectedTypeIdChange={() => {}}
         onAssetTagChange={() => {}}
         onAssetNameChange={() => {}}

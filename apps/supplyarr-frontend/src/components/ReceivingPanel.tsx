@@ -6,6 +6,7 @@ import type {
   ReceivingExceptionResponse,
   ReceivingReceiptResponse,
 } from '../api/types'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface ReceivingPanelProps {
   receivingReceipts: ReceivingReceiptResponse[]
@@ -130,6 +131,12 @@ export function ReceivingPanel({
   )
   const selectedPo = issuedPurchaseOrders.find((po) => po.purchaseOrderId === selectedPurchaseOrderId)
   const selectedLine = selectedReceipt?.lines.find((line) => line.lineId === selectedLineId)
+  const selectedBin = bins.find((bin) => bin.binId === selectedBinId) ?? null
+  const receiptKeySource =
+    selectedPo && selectedBin
+      ? `${selectedPo.orderKey} ${selectedBin.binKey} receiving receipt`
+      : ''
+  const existingReceiptKeys = receivingReceipts.map((receipt) => receipt.receiptKey)
 
   const filteredExceptions = useMemo(
     () => filterExceptions(selectedReceipt?.exceptions ?? [], exceptionFilter),
@@ -445,16 +452,16 @@ export function ReceivingPanel({
               {selectedPo.lines.reduce((sum, l) => sum + l.quantityRemaining, 0)} units remaining
             </p>
           ) : null}
-          <label htmlFor="receiving-create-key-input" className="block text-xs text-slate-500">
-            Receipt key
-            <input
-              id="receiving-create-key-input"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-200"
-              value={receiptKey}
-              onChange={(e) => onReceiptKeyChange(e.target.value)}
-              data-testid="receiving-create-key-input"
-            />
-          </label>
+          <GeneratedKeyFieldGroup
+            sourceLabel={receiptKeySource}
+            existingKeys={existingReceiptKeys}
+            onKeyChange={onReceiptKeyChange}
+            domain="purchase"
+            kind="receipt"
+            maxLength={128}
+            label="Receipt key"
+            disabled={isCreating}
+          />
           <label htmlFor="receiving-create-bin-select" className="block text-xs text-slate-500">
             Destination bin
             <select

@@ -17,7 +17,6 @@ export function MetersSection({ state }: Props) {
         selectedAssetId={s.meterAssetId}
         selectedMeterId={s.selectedMeterId}
         meterName={s.meterName}
-        meterKeyManualOverride={s.meterKeyManualOverride}
         confirmedMeterKey={s.confirmedMeterKey}
         meterUnit={s.meterUnit}
         baselineReading={s.baselineReading}
@@ -32,7 +31,6 @@ export function MetersSection({ state }: Props) {
         }}
         onSelectedMeterIdChange={s.setSelectedMeterId}
         onMeterNameChange={s.setMeterName}
-        onMeterKeyManualOverrideChange={s.setMeterKeyManualOverride}
         onMeterUnitChange={s.setMeterUnit}
         onBaselineReadingChange={s.setBaselineReading}
         onReadingValueChange={s.setReadingValue}

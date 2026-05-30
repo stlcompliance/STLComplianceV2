@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_household_goods_consumer_protection,Title 49 Household Goods Consumer Protection,compliance_domain,"Household goods transportation consumer protection reference coverage. Mapping level: reference. Products: SupplyArr, RoutArr, ComplianceCore. Entities: household_goods_shipment, carrier, consumer_disclosure.",true

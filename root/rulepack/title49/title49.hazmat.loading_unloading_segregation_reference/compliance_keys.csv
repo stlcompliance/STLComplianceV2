@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_loading_unloading_segregation_reference,Title 49 Hazmat Rail Air Vessel Reference,compliance_domain,"Reference coverage for HMR carriage by rail, aircraft, and vessel, plus tank car specifications. Mapping level: reference. Products: SupplyArr, RoutArr, ComplianceCore. Entities: shipment, mode, package.",true

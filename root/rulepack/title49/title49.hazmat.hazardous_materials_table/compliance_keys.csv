@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_hazardous_materials_table,Title 49 Hazardous Materials Table,compliance_domain,"Hazardous Materials Table lookup, proper shipping name, and special provision controls. Mapping level: operational. Products: SupplyArr, RoutArr, ComplianceCore. Entities: material, shipment, shipping_description.",true

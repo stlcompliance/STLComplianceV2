@@ -13,6 +13,9 @@ describe('RulePackRequirementPanel', () => {
         title="Definition rule packs"
         requirements={[]}
         rulePackKeyInput=""
+        rulePackOptions={[
+          { value: 'driver_qualification', label: 'driver_qualification' },
+        ]}
         onRulePackKeyChange={vi.fn()}
         onSave={vi.fn()}
         onRemove={vi.fn()}
@@ -25,7 +28,7 @@ describe('RulePackRequirementPanel', () => {
     )
 
     expect(screen.getByRole('button', { name: /save rule pack requirement/i })).toBeDisabled()
-    expect(screen.getByPlaceholderText('driver_qualification')).toBeInTheDocument()
+    expect(screen.getByTestId('rule-pack-requirement-key')).toBeInTheDocument()
   })
 
   it('lists linked requirements with metadata', () => {
@@ -52,6 +55,9 @@ describe('RulePackRequirementPanel', () => {
           },
         ]}
         rulePackKeyInput=""
+        rulePackOptions={[
+          { value: 'driver_qualification', label: 'driver_qualification' },
+        ]}
         onRulePackKeyChange={vi.fn()}
         onSave={vi.fn()}
         onRemove={vi.fn()}
@@ -63,7 +69,7 @@ describe('RulePackRequirementPanel', () => {
       />,
     )
 
-    expect(screen.getByText('driver_qualification')).toBeInTheDocument()
+    expect(screen.getAllByText('driver_qualification').length).toBeGreaterThan(0)
     expect(screen.getByText('Driver qualification rules')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /remove/i }))
   })

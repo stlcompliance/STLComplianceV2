@@ -33,6 +33,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     private HttpClient _maintainarrClient = null!;
     private string _handoffServiceToken = null!;
     private string _pmScanServiceToken = null!;
+    private string _routarrAssetReadinessToken = null!;
 
     public async Task InitializeAsync()
     {
@@ -60,6 +61,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
         var adminToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
         _handoffServiceToken = await IssueHandoffServiceTokenAsync(adminToken, "maintainarr");
         _pmScanServiceToken = await IssuePmScanServiceTokenAsync(adminToken);
+        _routarrAssetReadinessToken = await IssueAssetReadinessIntegrationTokenAsync(adminToken);
 
         _maintainarrFactory = new WebApplicationFactory<global::MaintainArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -283,6 +285,34 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Integration_asset_readiness_supports_v1_alias()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(token);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var asset = await db.Assets.SingleAsync(x => x.Id == assetId);
+
+        var response = await _maintainarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/integrations/asset-readiness?tenantId={PlatformSeeder.DemoTenantId:D}&assetTag={Uri.EscapeDataString(asset.AssetTag)}",
+            _routarrAssetReadinessToken));
+        response.EnsureSuccessStatusCode();
+        var readiness = (await response.Content.ReadFromJsonAsync<AssetReadinessResponse>())!;
+        Assert.Equal(assetId, readiness.AssetId);
+
+        var v1Response = await _maintainarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/v1/integrations/asset-readiness?tenantId={PlatformSeeder.DemoTenantId:D}&assetTag={Uri.EscapeDataString(asset.AssetTag)}",
+            _routarrAssetReadinessToken));
+        v1Response.EnsureSuccessStatusCode();
+        var v1Readiness = (await v1Response.Content.ReadFromJsonAsync<AssetReadinessResponse>())!;
+        Assert.Equal(readiness.AssetId, v1Readiness.AssetId);
+        Assert.Equal(readiness.ReadinessStatus, v1Readiness.ReadinessStatus);
+    }
+
     private async Task<Guid> SeedAssetOnlyAsync(string token)
     {
         var assetTypeId = await SeedAssetTypeAsync(token);
@@ -394,6 +424,31 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
             PlatformSeeder.DemoTenantId,
             ["maintainarr"],
             PmDueScanService.ProcessDueScanActionScope,
+            30));
+        var issueResponse = await _nexarrClient.SendAsync(issueRequest);
+        issueResponse.EnsureSuccessStatusCode();
+        var issued = (await issueResponse.Content.ReadFromJsonAsync<NexArr.Api.Contracts.ServiceTokenIssueResponse>())!;
+        return issued.AccessToken;
+    }
+
+    private async Task<string> IssueAssetReadinessIntegrationTokenAsync(string adminToken)
+    {
+        var registerRequest = Authorized(HttpMethod.Post, "/api/service-tokens/clients", adminToken);
+        registerRequest.Content = JsonContent.Create(new NexArr.Api.Contracts.RegisterServiceClientRequest(
+            $"routarr-asset-readiness-{Guid.NewGuid():N}",
+            "MaintainArr asset readiness integration test",
+            "routarr",
+            ["maintainarr"]));
+        var registerResponse = await _nexarrClient.SendAsync(registerRequest);
+        registerResponse.EnsureSuccessStatusCode();
+        var client = (await registerResponse.Content.ReadFromJsonAsync<NexArr.Api.Contracts.ServiceClientResponse>())!;
+
+        var issueRequest = Authorized(HttpMethod.Post, "/api/service-tokens", adminToken);
+        issueRequest.Content = JsonContent.Create(new NexArr.Api.Contracts.IssueServiceTokenRequest(
+            client.ServiceClientId,
+            PlatformSeeder.DemoTenantId,
+            ["maintainarr"],
+            global::MaintainArr.Api.Endpoints.IntegrationEndpoints.AssetReadinessReadActionScope,
             30));
         var issueResponse = await _nexarrClient.SendAsync(issueRequest);
         issueResponse.EnsureSuccessStatusCode();

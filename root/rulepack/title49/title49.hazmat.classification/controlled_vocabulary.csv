@@ -1,0 +1,2 @@
+term_key,vocabulary_type_key,label,description,active
+ck_t49_hazmat_classification,compliance_domain,Title 49 Hazmat Classification,"operational Title 49 domain for material, sds, classification.",true

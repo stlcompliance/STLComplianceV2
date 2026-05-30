@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 
 import type { MaintainArrDemandRefResponse, PartResponse } from '../api/types'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface DemandRefsPanelProps {
   demandRefs: MaintainArrDemandRefResponse[]
@@ -87,6 +88,11 @@ export function DemandRefsPanel({
 }: DemandRefsPanelProps) {
   const selected = demandRefs.find((ref) => ref.demandRefId === selectedDemandRefId) ?? null
   const activeStepIndex = selected ? procurementStepIndex(selected.procurementStatus) : -1
+  const prRequestKeySource =
+    prTitle.trim() ||
+    (selected
+      ? `${selected.maintainarrWorkOrderNumber} ${selected.title} purchase request`
+      : '')
 
   return (
     <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-5" data-testid="demand-refs-panel">
@@ -220,15 +226,16 @@ export function DemandRefsPanel({
 
           {canCreatePurchaseRequest && !selected.purchaseRequestId ? (
             <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <label htmlFor="demand-ref-pr-request-key" className="block text-xs text-slate-400">
-                PR request key
-                <input
-                  id="demand-ref-pr-request-key"
-                  className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white"
-                  value={prRequestKey}
-                  onChange={(event) => onPrRequestKeyChange(event.target.value)}
-                />
-              </label>
+              <GeneratedKeyFieldGroup
+                sourceLabel={prRequestKeySource}
+                existingKeys={[]}
+                onKeyChange={onPrRequestKeyChange}
+                domain="purchase"
+                kind="request"
+                maxLength={128}
+                label="PR request key"
+                disabled={isCreatingPurchaseRequest}
+              />
               <label htmlFor="demand-ref-pr-title" className="block text-xs text-slate-400">
                 PR title
                 <input

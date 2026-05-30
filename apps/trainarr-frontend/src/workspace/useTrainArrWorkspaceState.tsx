@@ -390,7 +390,7 @@ export function useTrainArrWorkspaceState() {
         (d) => d.trainingDefinitionId === manualAssignmentDefinitionId,
       )
       if (!manualAssignmentPersonId.trim() || !definition) {
-        throw new Error('Enter a person id and select a training definition before running a check.')
+        throw new Error('Select a StaffArr person and training definition before running a check.')
       }
       return createQualificationCheck(session!.accessToken, {
         staffarrPersonId: manualAssignmentPersonId.trim(),
@@ -412,7 +412,7 @@ export function useTrainArrWorkspaceState() {
         (d) => d.trainingDefinitionId === operationsCheckDefinitionId,
       )
       if (!operationsCheckPersonId.trim() || !definition) {
-        throw new Error('Enter a person id and select a training definition before running a check.')
+        throw new Error('Select a StaffArr person and training definition before running a check.')
       }
       return createQualificationCheck(session!.accessToken, {
         staffarrPersonId: operationsCheckPersonId.trim(),

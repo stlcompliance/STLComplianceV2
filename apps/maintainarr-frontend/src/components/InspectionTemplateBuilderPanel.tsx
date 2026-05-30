@@ -1,3 +1,6 @@
+import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { useEffect, useMemo, useState } from 'react'
+
 import type {
   AssetTypeResponse,
   InspectionTemplateDetailResponse,
@@ -79,6 +82,58 @@ export function InspectionTemplateBuilderPanel({
   isCreatingTemplate,
   isSavingBuilder,
 }: InspectionTemplateBuilderPanelProps) {
+  const [showTemplateKeyPolicy, setShowTemplateKeyPolicy] = useState(false)
+  const [showCategoryKeyPolicy, setShowCategoryKeyPolicy] = useState(false)
+  const [showItemKeyPolicy, setShowItemKeyPolicy] = useState(false)
+  const existingTemplateKeys = templates.map((template) => template.templateKey)
+  const existingCategoryKeys = selectedTemplate?.categories.map((category) => category.categoryKey) ?? []
+  const existingItemKeys = selectedTemplate?.checklistItems.map((item) => item.itemKey) ?? []
+  const generatedTemplateKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'inspection',
+        kind: 'template',
+        title: templateName.trim(),
+        existingKeys: existingTemplateKeys,
+        maxLength: 128,
+      }),
+    [existingTemplateKeys, templateName],
+  )
+  const generatedCategoryKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'inspection',
+        kind: 'category',
+        title: categoryName.trim(),
+        existingKeys: existingCategoryKeys,
+        maxLength: 128,
+      }),
+    [categoryName, existingCategoryKeys],
+  )
+  const generatedItemKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'inspection',
+        kind: 'item',
+        title: itemPrompt.trim(),
+        existingKeys: existingItemKeys,
+        maxLength: 128,
+      }),
+    [existingItemKeys, itemPrompt],
+  )
+
+  useEffect(() => {
+    onTemplateKeyChange(generatedTemplateKey)
+  }, [generatedTemplateKey, onTemplateKeyChange])
+
+  useEffect(() => {
+    onCategoryKeyChange(generatedCategoryKey)
+  }, [generatedCategoryKey, onCategoryKeyChange])
+
+  useEffect(() => {
+    onItemKeyChange(generatedItemKey)
+  }, [generatedItemKey, onItemKeyChange])
+
   if (isLoading) {
     return <p className="text-sm text-slate-400">Loading inspection templates…</p>
   }
@@ -100,14 +155,28 @@ export function InspectionTemplateBuilderPanel({
 
       {canManage ? (
         <div className="mt-6 grid gap-4 rounded-lg border border-slate-700 bg-slate-950/40 p-4 md:grid-cols-3">
-          <label className="block text-sm" htmlFor="inspectiontemplatebuilder-template-key">
-          <span className="text-slate-300">Template key</span>
-          <input id="inspectiontemplatebuilder-template-key"
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
-              value={templateKey}
-              onChange={(e) => onTemplateKeyChange(e.target.value)}
+          <div className="space-y-1 text-sm">
+            <GeneratedKeyField
+              sourceLabel={templateName.trim()}
+              generatedKey={generatedTemplateKey}
+              confirmedKey={templateKey}
+              manualOverride=""
+              onManualOverrideChange={() => {}}
+              showAdvancedKey={showTemplateKeyPolicy}
+              disabled={isCreatingTemplate}
+              label="Template key"
             />
-          </label>
+            {!showTemplateKeyPolicy ? (
+              <button
+                type="button"
+                className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                onClick={() => setShowTemplateKeyPolicy(true)}
+                disabled={isCreatingTemplate}
+              >
+                Key policy
+              </button>
+            ) : null}
+          </div>
           <label className="block text-sm" htmlFor="inspectiontemplatebuilder-name">
           <span className="text-slate-300">Name</span>
           <input id="inspectiontemplatebuilder-name"
@@ -128,7 +197,7 @@ export function InspectionTemplateBuilderPanel({
             <button
               type="button"
               className="rounded bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50"
-              disabled={isCreatingTemplate}
+              disabled={isCreatingTemplate || !templateKey.trim() || !templateName.trim()}
               onClick={onCreateTemplate}
             >
               {isCreatingTemplate ? 'Creating…' : 'Create template'}
@@ -182,14 +251,28 @@ export function InspectionTemplateBuilderPanel({
           </div>
 
           <div className="grid gap-4 rounded-lg border border-slate-700 bg-slate-950/40 p-4 md:grid-cols-3">
-            <label className="block text-sm" htmlFor="inspectiontemplatebuilder-category-key">
-          <span className="text-slate-300">Category key</span>
-          <input id="inspectiontemplatebuilder-category-key"
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
-                value={categoryKey}
-                onChange={(e) => onCategoryKeyChange(e.target.value)}
+            <div className="space-y-1 text-sm">
+              <GeneratedKeyField
+                sourceLabel={categoryName.trim()}
+                generatedKey={generatedCategoryKey}
+                confirmedKey={categoryKey}
+                manualOverride=""
+                onManualOverrideChange={() => {}}
+                showAdvancedKey={showCategoryKeyPolicy}
+                disabled={isSavingBuilder}
+                label="Category key"
               />
-            </label>
+              {!showCategoryKeyPolicy ? (
+                <button
+                  type="button"
+                  className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                  onClick={() => setShowCategoryKeyPolicy(true)}
+                  disabled={isSavingBuilder}
+                >
+                  Key policy
+                </button>
+              ) : null}
+            </div>
             <label className="block text-sm" htmlFor="inspectiontemplatebuilder-category-name">
           <span className="text-slate-300">Category name</span>
           <input id="inspectiontemplatebuilder-category-name"
@@ -202,7 +285,7 @@ export function InspectionTemplateBuilderPanel({
               <button
                 type="button"
                 className="rounded bg-slate-700 px-4 py-2 text-sm hover:bg-slate-600 disabled:opacity-50"
-                disabled={isSavingBuilder}
+                disabled={isSavingBuilder || !categoryKey.trim() || !categoryName.trim()}
                 onClick={onCreateCategory}
               >
                 Add category
@@ -211,14 +294,28 @@ export function InspectionTemplateBuilderPanel({
           </div>
 
           <div className="grid gap-4 rounded-lg border border-slate-700 bg-slate-950/40 p-4 md:grid-cols-2">
-            <label className="block text-sm" htmlFor="inspectiontemplatebuilder-item-key">
-          <span className="text-slate-300">Item key</span>
-          <input id="inspectiontemplatebuilder-item-key"
-                className="mt-1 w-full rounded border border-slate-600 bg-slate-900 px-3 py-2"
-                value={itemKey}
-                onChange={(e) => onItemKeyChange(e.target.value)}
+            <div className="space-y-1 text-sm">
+              <GeneratedKeyField
+                sourceLabel={itemPrompt.trim()}
+                generatedKey={generatedItemKey}
+                confirmedKey={itemKey}
+                manualOverride=""
+                onManualOverrideChange={() => {}}
+                showAdvancedKey={showItemKeyPolicy}
+                disabled={isSavingBuilder}
+                label="Item key"
               />
-            </label>
+              {!showItemKeyPolicy ? (
+                <button
+                  type="button"
+                  className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                  onClick={() => setShowItemKeyPolicy(true)}
+                  disabled={isSavingBuilder}
+                >
+                  Key policy
+                </button>
+              ) : null}
+            </div>
             <label className="block text-sm" htmlFor="inspectiontemplatebuilder-item-type">
           <span className="text-slate-300">Item type</span>
           <select id="inspectiontemplatebuilder-item-type"
@@ -258,7 +355,7 @@ export function InspectionTemplateBuilderPanel({
               <button
                 type="button"
                 className="rounded bg-slate-700 px-4 py-2 text-sm hover:bg-slate-600 disabled:opacity-50"
-                disabled={isSavingBuilder}
+                disabled={isSavingBuilder || !itemKey.trim() || !itemPrompt.trim()}
                 onClick={onCreateItem}
               >
                 Add checklist item

@@ -63,16 +63,13 @@ describe('RoleTemplateAssignmentPanel', () => {
       />,
     )
 
-    fireEvent.change(screen.getByPlaceholderText('staffarr.permissions.assign'), {
-      target: { value: 'staffarr.permissions.assign' },
-    })
-    fireEvent.change(screen.getByPlaceholderText('Permission name'), {
+    fireEvent.change(screen.getByLabelText('Permission name'), {
       target: { value: 'Assign permissions' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Save permission template' }))
 
     expect(onUpsert).toHaveBeenCalledWith({
-      permissionKey: 'staffarr.permissions.assign',
+      permissionKey: 'perm.staffarr.assignpermissions',
       name: 'Assign permissions',
       description: null,
     })

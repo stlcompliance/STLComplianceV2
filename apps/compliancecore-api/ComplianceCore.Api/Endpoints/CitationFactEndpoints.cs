@@ -37,6 +37,9 @@ public static class CitationFactEndpoints
         factRequirements.MapGet("/", async (
             Guid? rulePackId,
             Guid? citationId,
+            string? sourceProduct,
+            string? sourceEntity,
+            string? factKey,
             ComplianceCoreAuthorizationService authorization,
             FactRequirementService service,
             HttpContext context,
@@ -44,7 +47,14 @@ public static class CitationFactEndpoints
         {
             authorization.RequireRegulatoryRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListAsync(tenantId, rulePackId, citationId, cancellationToken));
+            return Results.Ok(await service.ListAsync(
+                tenantId,
+                rulePackId,
+                citationId,
+                sourceProduct,
+                sourceEntity,
+                factKey,
+                cancellationToken));
         })
         .WithName("ListFactRequirements");
 

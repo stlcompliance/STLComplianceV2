@@ -27,12 +27,10 @@ export function AssetsSection({ state }: Props) {
         isReadinessLoading={s.assetReadinessFleetQuery.isLoading}
         className={s.className}
         classDescription={s.classDescription}
-        classKeyManualOverride={s.classKeyManualOverride}
         confirmedClassKey={s.confirmedClassKey}
         selectedClassId={s.selectedClassId}
         typeName={s.typeName}
         typeDescription={s.typeDescription}
-        typeKeyManualOverride={s.typeKeyManualOverride}
         confirmedTypeKey={s.confirmedTypeKey}
         selectedTypeId={s.selectedTypeId}
         assetTag={s.assetTag}
@@ -41,11 +39,9 @@ export function AssetsSection({ state }: Props) {
         siteRef={s.siteRef}
         onClassNameChange={s.setClassName}
         onClassDescriptionChange={s.setClassDescription}
-        onClassKeyManualOverrideChange={s.setClassKeyManualOverride}
         onSelectedClassIdChange={s.setSelectedClassId}
         onTypeNameChange={s.setTypeName}
         onTypeDescriptionChange={s.setTypeDescription}
-        onTypeKeyManualOverrideChange={s.setTypeKeyManualOverride}
         onSelectedTypeIdChange={s.setSelectedTypeId}
         onAssetTagChange={s.setAssetTag}
         onAssetNameChange={s.setAssetName}

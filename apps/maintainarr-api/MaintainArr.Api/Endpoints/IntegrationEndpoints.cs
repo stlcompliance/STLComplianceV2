@@ -1,6 +1,7 @@
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Services;
 using STLCompliance.Shared.Auth;
+using STLCompliance.Shared.Contracts;
 
 namespace MaintainArr.Api.Endpoints;
 
@@ -9,6 +10,7 @@ public static class IntegrationEndpoints
     public const string SupplyarrDemandStatusIngestActionScope = "maintainarr.demand_status.write";
 
     public const string RoutarrAssetReadinessDispatchActionScope = "maintainarr.asset_readiness.dispatch_gate";
+    public const string AssetReadinessReadActionScope = "maintainarr.asset_readiness.read";
 
     public const string StaffarrPersonSyncActionScope = "maintainarr.technician_refs.sync";
 
@@ -45,6 +47,26 @@ public static class IntegrationEndpoints
             return Results.Ok(result);
         })
         .WithName($"RoutarrAssetReadinessCheck{nameSuffix}");
+
+        integrations.MapGet("/asset-readiness", async (
+            Guid tenantId,
+            string? vehicleRefKey,
+            string? assetTag,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            AssetReadinessService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateAssetReadinessServiceToken(tokenValidator, context, tenantId);
+
+            var result = await service.GetByDispatchRefAsync(
+                tenantId,
+                vehicleRefKey,
+                assetTag,
+                cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName($"AssetReadinessIntegration{nameSuffix}");
 
         integrations.MapPost("/supplyarr-demand-status", async (
             IngestSupplyarrDemandStatusRequest request,
@@ -93,5 +115,38 @@ public static class IntegrationEndpoints
 
         MapRoutes(app.MapGroup("/api/integrations"), string.Empty);
         MapRoutes(app.MapGroup("/api/v1/integrations"), "V1");
+    }
+
+    private static void ValidateAssetReadinessServiceToken(
+        StlServiceTokenValidator tokenValidator,
+        HttpContext context,
+        Guid tenantId)
+    {
+        var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+            context.Request.Headers.Authorization.ToString());
+        var preview = tokenValidator.TryValidate(bearer)
+            ?? throw new StlApiException(
+                "auth.service_token_invalid",
+                "Service token is invalid.",
+                401);
+
+        var source = preview.SourceProductKey?.Trim().ToLowerInvariant();
+        if (source is not "maintainarr" and not "routarr" and not "staffarr" and not "supplyarr" and not "trainarr" and not "compliancecore")
+        {
+            throw new StlApiException(
+                "auth.service_token_scope",
+                "Service token source product is not authorized for asset readiness reads.",
+                403);
+        }
+
+        tokenValidator.ValidateOrThrow(
+            bearer,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = source,
+                RequiredTargetProduct = "maintainarr",
+                TenantId = tenantId,
+                RequiredActionScope = AssetReadinessReadActionScope
+            });
     }
 }

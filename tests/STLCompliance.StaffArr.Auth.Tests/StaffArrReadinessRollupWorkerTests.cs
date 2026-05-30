@@ -24,6 +24,7 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
     private HttpClient _staffarrClient = null!;
     private string _supervisorToken = null!;
     private string _sharedWorkerToStaffarrToken = null!;
+    private string _routarrToStaffarrReadinessRollupToken = null!;
 
     public async Task InitializeAsync()
     {
@@ -54,6 +55,11 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
             "shared-worker",
             ["staffarr"],
             ReadinessRollupService.ProcessRollupsActionScope);
+        _routarrToStaffarrReadinessRollupToken = await IssueServiceTokenAsync(
+            adminToken,
+            "routarr",
+            ["staffarr"],
+            global::StaffArr.Api.Endpoints.IntegrationEndpoints.ReadinessRollupReadActionScope);
 
         _staffarrFactory = new WebApplicationFactory<global::StaffArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -295,6 +301,54 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, v1Response.StatusCode);
     }
 
+    [Fact]
+    public async Task Integration_readiness_rollup_summaries_support_v1_aliases()
+    {
+        var (teamId, departmentId, readyPersonId) = await SeedOrgHierarchyWithAssignmentAsync();
+        await GrantBaselineCertificationsAsync(readyPersonId);
+
+        var processRequest = new HttpRequestMessage(
+            HttpMethod.Post,
+            "/api/internal/readiness-rollups/process-batch");
+        processRequest.Headers.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            _sharedWorkerToStaffarrToken);
+        processRequest.Content = JsonContent.Create(new ProcessReadinessRollupsRequest(
+            PlatformSeeder.DemoTenantId,
+            DateTimeOffset.UtcNow,
+            50,
+            1));
+        var processResponse = await _staffarrClient.SendAsync(processRequest);
+        processResponse.EnsureSuccessStatusCode();
+
+        var teamsResponse = await _staffarrClient.SendAsync(ServiceAuthorized(
+            HttpMethod.Get,
+            $"/api/integrations/readiness-rollups/teams?tenantId={PlatformSeeder.DemoTenantId:D}",
+            _routarrToStaffarrReadinessRollupToken));
+        teamsResponse.EnsureSuccessStatusCode();
+        var teams = (await teamsResponse.Content.ReadFromJsonAsync<IReadOnlyList<ReadinessRollupSummaryResponse>>())!;
+        Assert.Contains(teams, x => x.ScopeType == ReadinessRollupRules.TeamScope && x.OrgUnitId == teamId);
+
+        var sitesResponse = await _staffarrClient.SendAsync(ServiceAuthorized(
+            HttpMethod.Get,
+            $"/api/integrations/readiness-rollups/sites?tenantId={PlatformSeeder.DemoTenantId:D}",
+            _routarrToStaffarrReadinessRollupToken));
+        sitesResponse.EnsureSuccessStatusCode();
+        var sites = (await sitesResponse.Content.ReadFromJsonAsync<IReadOnlyList<ReadinessRollupSummaryResponse>>())!;
+        Assert.Contains(sites, x => x.ScopeType == ReadinessRollupRules.SiteScope);
+
+        var departmentsResponse = await _staffarrClient.SendAsync(ServiceAuthorized(
+            HttpMethod.Get,
+            $"/api/v1/integrations/readiness-rollups/departments?tenantId={PlatformSeeder.DemoTenantId:D}",
+            _routarrToStaffarrReadinessRollupToken));
+        departmentsResponse.EnsureSuccessStatusCode();
+        var departments =
+            (await departmentsResponse.Content.ReadFromJsonAsync<IReadOnlyList<ReadinessRollupSummaryResponse>>())!;
+        Assert.Contains(
+            departments,
+            x => x.ScopeType == ReadinessRollupRules.DepartmentScope && x.OrgUnitId == departmentId);
+    }
+
     private async Task<(Guid TeamId, Guid DepartmentId, Guid ReadyPersonId)> SeedOrgHierarchyWithAssignmentAsync()
     {
         using var scope = _staffarrFactory.Services.CreateScope();
@@ -490,6 +544,13 @@ public class StaffArrReadinessRollupWorkerTests : IAsyncLifetime
     }
 
     private static HttpRequestMessage Authorized(HttpMethod method, string url, string accessToken)
+    {
+        var request = new HttpRequestMessage(method, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return request;
+    }
+
+    private static HttpRequestMessage ServiceAuthorized(HttpMethod method, string url, string accessToken)
     {
         var request = new HttpRequestMessage(method, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);

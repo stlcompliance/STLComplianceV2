@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -142,6 +143,14 @@ public sealed class StaffArrReportTests : IAsyncLifetime
         var integrationsResponse = await _staffarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/integrations", _adminToken));
         integrationsResponse.EnsureSuccessStatusCode();
+        var integrationsJson = JsonDocument.Parse(await integrationsResponse.Content.ReadAsStringAsync());
+        var items = integrationsJson.RootElement.GetProperty("items");
+        Assert.Contains(items.EnumerateArray(), item => item.GetProperty("key").GetString() == "person-history");
+        Assert.Contains(items.EnumerateArray(), item => item.GetProperty("key").GetString() == "procurement-approval-authority");
+        Assert.Contains(items.EnumerateArray(), item => item.GetProperty("key").GetString() == "permission-check");
+        Assert.Contains(items.EnumerateArray(), item => item.GetProperty("key").GetString() == "readiness-rollups-teams");
+        Assert.Contains(items.EnumerateArray(), item => item.GetProperty("key").GetString() == "readiness-rollups-sites");
+        Assert.Contains(items.EnumerateArray(), item => item.GetProperty("key").GetString() == "readiness-rollups-departments");
     }
 
     private async Task SeedWorkforceDataAsync()

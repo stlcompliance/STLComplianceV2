@@ -1,0 +1,2 @@
+term_key,vocabulary_type_key,label,description,active
+ck_t49_hazmat_special_permits_exceptions,compliance_domain,Title 49 Hazmat Special Permits and Exceptions,"operational Title 49 domain for special_permit, approval, shipment.",true

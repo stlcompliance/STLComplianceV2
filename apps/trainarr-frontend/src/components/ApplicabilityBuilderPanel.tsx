@@ -1,3 +1,6 @@
+import { buildSemanticKey, ControlledSelect, GeneratedKeyField, type PickerOption } from '@stl/shared-ui'
+import { useEffect, useMemo, useState } from 'react'
+
 import type {
   CreateTrainingRequirementRequest,
   TrainingApplicabilityProfileResponse,
@@ -103,6 +106,66 @@ export function ApplicabilityBuilderPanel({
   syncingRequirementId,
   canManage,
 }: ApplicabilityBuilderPanelProps) {
+  const [showProfileScopeKeyPolicy, setShowProfileScopeKeyPolicy] = useState(false)
+  const [showRequirementKeyPolicy, setShowRequirementKeyPolicy] = useState(false)
+  const generatedProfileScopeKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'profile',
+        kind: profileScopeType.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'scope',
+        title: profileLabel.trim(),
+        existingKeys: profiles
+          .filter((profile) => profile.scopeType === profileScopeType)
+          .map((profile) => profile.scopeKey),
+        maxLength: 128,
+      }),
+    [profileLabel, profileScopeType, profiles],
+  )
+  const generatedRequirementKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'train',
+        kind: 'req',
+        title: requirementLabel.trim(),
+        existingKeys: requirements.map((row) => row.requirementKey),
+        maxLength: 128,
+      }),
+    [requirementLabel, requirements],
+  )
+  const scopeKeyOptions = useMemo<PickerOption[]>(
+    () =>
+      profiles
+        .filter((profile) => profile.scopeType === profileScopeType)
+        .map((profile) => ({ value: profile.scopeKey, label: `${profile.scopeKey} (${profile.label})` })),
+    [profileScopeType, profiles],
+  )
+  const sourceKeyOptions = useMemo<PickerOption[]>(
+    () =>
+      requirements
+        .filter(
+          (row) =>
+            row.requirementSource === requirementSource &&
+            typeof row.sourceKey === 'string' &&
+            row.sourceKey.trim().length > 0,
+        )
+        .map((row) => ({ value: row.sourceKey!, label: row.sourceKey! })),
+    [requirementSource, requirements],
+  )
+
+  useEffect(() => {
+    onProfileScopeKeyChange(generatedProfileScopeKey)
+  }, [generatedProfileScopeKey, onProfileScopeKeyChange])
+
+  useEffect(() => {
+    onRequirementKeyChange(generatedRequirementKey)
+  }, [generatedRequirementKey, onRequirementKeyChange])
+
+  useEffect(() => {
+    if (requirementSource === 'internal') {
+      onRequirementSourceKeyChange('')
+    }
+  }, [onRequirementSourceKeyChange, requirementSource])
+
   const targets =
     requirementTargetType === 'program'
       ? programs.map((program) => ({ id: program.programId, label: program.name }))
@@ -159,15 +222,37 @@ export function ApplicabilityBuilderPanel({
                   ))}
                 </select>
               </label>
-              <label htmlFor="applicability-profile-scope-key" className="block text-xs text-slate-400">
-                Scope key
-                <input
-                  id="applicability-profile-scope-key"
-                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
-                  value={profileScopeKey}
-                  onChange={(event) => onProfileScopeKeyChange(event.target.value)}
+              <div className="space-y-1 text-xs text-slate-400">
+                <GeneratedKeyField
+                  sourceLabel={profileLabel.trim()}
+                  generatedKey={generatedProfileScopeKey}
+                  confirmedKey={profileScopeKey}
+                  manualOverride=""
+                  onManualOverrideChange={() => {}}
+                  showAdvancedKey={showProfileScopeKeyPolicy}
+                  disabled={isCreatingProfile}
+                  label="Scope key"
                 />
-              </label>
+                {!showProfileScopeKeyPolicy ? (
+                  <button
+                    type="button"
+                    className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                    onClick={() => setShowProfileScopeKeyPolicy(true)}
+                    disabled={isCreatingProfile}
+                  >
+                    Key policy
+                  </button>
+                ) : null}
+                <ControlledSelect
+                  label="Known scope key references"
+                  value={profileScopeKey}
+                  onChange={onProfileScopeKeyChange}
+                  options={scopeKeyOptions}
+                  emptyLabel="Use generated key"
+                  testId="applicability-profile-scope-key-picker"
+                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
+                />
+              </div>
               <label htmlFor="applicability-profile-description" className="block text-xs text-slate-400 sm:col-span-2">
                 Description
                 <input
@@ -193,15 +278,28 @@ export function ApplicabilityBuilderPanel({
           <div className="border-t border-slate-700 pt-4">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-violet-300">Step 2 — Requirement mapping</h3>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <label htmlFor="requirement-mapping-key" className="block text-xs text-slate-400">
-                Requirement key
-                <input
-                  id="requirement-mapping-key"
-                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
-                  value={requirementKey}
-                  onChange={(event) => onRequirementKeyChange(event.target.value)}
+              <div className="space-y-1 text-xs text-slate-400">
+                <GeneratedKeyField
+                  sourceLabel={requirementLabel.trim()}
+                  generatedKey={generatedRequirementKey}
+                  confirmedKey={requirementKey}
+                  manualOverride=""
+                  onManualOverrideChange={() => {}}
+                  showAdvancedKey={showRequirementKeyPolicy}
+                  disabled={isCreatingRequirement}
+                  label="Requirement key"
                 />
-              </label>
+                {!showRequirementKeyPolicy ? (
+                  <button
+                    type="button"
+                    className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                    onClick={() => setShowRequirementKeyPolicy(true)}
+                    disabled={isCreatingRequirement}
+                  >
+                    Key policy
+                  </button>
+                ) : null}
+              </div>
               <label htmlFor="requirement-mapping-label" className="block text-xs text-slate-400">
                 Label
                 <input
@@ -226,15 +324,17 @@ export function ApplicabilityBuilderPanel({
                   ))}
                 </select>
               </label>
-              <label htmlFor="requirement-mapping-source-key" className="block text-xs text-slate-400">
-                Source key
-                <input
-                  id="requirement-mapping-source-key"
-                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
+              {requirementSource === 'internal' ? null : (
+                <ControlledSelect
+                  label="Source key"
                   value={requirementSourceKey}
-                  onChange={(event) => onRequirementSourceKeyChange(event.target.value)}
+                  onChange={onRequirementSourceKeyChange}
+                  options={sourceKeyOptions}
+                  emptyLabel="Select source key…"
+                  testId="requirement-mapping-source-key"
+                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
                 />
-              </label>
+              )}
               <label htmlFor="requirement-mapping-profile" className="block text-xs text-slate-400">
                 Applicability profile
                 <select

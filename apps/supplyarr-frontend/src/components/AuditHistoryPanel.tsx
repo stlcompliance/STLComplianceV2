@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ScrollText } from 'lucide-react'
+import { ControlledSelect } from '@stl/shared-ui'
 
 import { listAuditHistory } from '../api/client'
 
@@ -67,6 +68,45 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
     setResultFilter('')
   }
 
+  const auditItems = useMemo(() => accumulatedItems, [accumulatedItems])
+
+  const targetTypeOptions = useMemo(() => {
+    const values = new Set<string>()
+    for (const item of auditItems) {
+      if (item.targetType.trim().length > 0) {
+        values.add(item.targetType)
+      }
+    }
+    if (targetTypeFilter.trim().length > 0) {
+      values.add(targetTypeFilter.trim())
+    }
+
+    return [...values]
+      .sort((left, right) => left.localeCompare(right))
+      .map((value) => ({ value, label: value }))
+  }, [auditItems, targetTypeFilter])
+
+  const targetIdOptions = useMemo(() => {
+    const values = new Set<string>()
+    for (const item of auditItems) {
+      if (targetTypeFilter && item.targetType !== targetTypeFilter) {
+        continue
+      }
+
+      if (item.targetId?.trim()) {
+        values.add(item.targetId)
+      }
+    }
+
+    if (targetIdFilter.trim().length > 0) {
+      values.add(targetIdFilter.trim())
+    }
+
+    return [...values]
+      .sort((left, right) => left.localeCompare(right))
+      .map((value) => ({ value, label: value }))
+  }, [auditItems, targetIdFilter, targetTypeFilter])
+
   return (
     <section
       className="rounded-xl border border-slate-700 bg-slate-900/80 p-5 lg:col-span-2"
@@ -96,32 +136,35 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
             }}
           />
         </label>
-        <label htmlFor="audit-history-target-type-filter" className="text-xs text-slate-400">
-          Target type
-          <input
-            id="audit-history-target-type-filter"
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
-            value={targetTypeFilter}
-            onChange={(event) => {
-              setCursor(undefined)
-              setAccumulatedItems([])
-              setTargetTypeFilter(event.target.value)
-            }}
-          />
-        </label>
-        <label htmlFor="audit-history-target-id-filter" className="text-xs text-slate-400">
-          Target id
-          <input
-            id="audit-history-target-id-filter"
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
-            value={targetIdFilter}
-            onChange={(event) => {
-              setCursor(undefined)
-              setAccumulatedItems([])
-              setTargetIdFilter(event.target.value)
-            }}
-          />
-        </label>
+        <ControlledSelect
+          id="audit-history-target-type-filter"
+          label="Target type"
+          value={targetTypeFilter}
+          onChange={(value) => {
+            setCursor(undefined)
+            setAccumulatedItems([])
+            setTargetTypeFilter(value)
+            setTargetIdFilter('')
+          }}
+          options={targetTypeOptions}
+          emptyLabel="Any"
+          testId="audit-history-target-type-filter"
+          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
+        />
+        <ControlledSelect
+          id="audit-history-target-id-filter"
+          label="Target id"
+          value={targetIdFilter}
+          onChange={(value) => {
+            setCursor(undefined)
+            setAccumulatedItems([])
+            setTargetIdFilter(value)
+          }}
+          options={targetIdOptions}
+          emptyLabel="Any"
+          testId="audit-history-target-id-filter"
+          className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-sm text-slate-100"
+        />
         <label htmlFor="audit-history-result-filter" className="text-xs text-slate-400">
           Audit result filter
           <select

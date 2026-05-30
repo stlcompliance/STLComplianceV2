@@ -14,6 +14,9 @@ public sealed class FactRequirementService(
         Guid tenantId,
         Guid? rulePackId = null,
         Guid? citationId = null,
+        string? sourceProduct = null,
+        string? sourceEntity = null,
+        string? factKey = null,
         CancellationToken cancellationToken = default)
     {
         var query = db.FactRequirements
@@ -30,30 +33,30 @@ public sealed class FactRequirementService(
             query = query.Where(x => x.CitationId == citationId.Value);
         }
 
-        return await (
+        if (!string.IsNullOrWhiteSpace(sourceProduct))
+        {
+            query = query.Where(x => x.SourceProduct.ToLower().Contains(sourceProduct.Trim().ToLowerInvariant()));
+        }
+
+        if (!string.IsNullOrWhiteSpace(sourceEntity))
+        {
+            query = query.Where(x => x.SourceEntity.ToLower().Contains(sourceEntity.Trim().ToLowerInvariant()));
+        }
+
+        var rows = await (
             from requirement in query.OrderByDescending(x => x.UpdatedAt)
             join definition in db.FactDefinitions.AsNoTracking() on requirement.FactDefinitionId equals definition.Id
             join pack in db.RulePacks.AsNoTracking() on requirement.RulePackId equals pack.Id into packJoin
             from pack in packJoin.DefaultIfEmpty()
             join citation in db.RegulatoryCitations.AsNoTracking() on requirement.CitationId equals citation.Id into citationJoin
             from citation in citationJoin.DefaultIfEmpty()
-            select new FactRequirementResponse(
-                requirement.Id,
-                requirement.FactDefinitionId,
-                definition.FactKey,
-                definition.Label,
-                requirement.RulePackId,
-                pack != null ? pack.PackKey : null,
-                requirement.CitationId,
-                citation != null ? citation.CitationKey : null,
-                requirement.RequirementKey,
-                requirement.Label,
-                requirement.Description,
-                requirement.IsRequired,
-                requirement.IsActive,
-                requirement.CreatedAt,
-                requirement.UpdatedAt))
+            where string.IsNullOrWhiteSpace(factKey) || definition.FactKey == factKey.Trim().ToLowerInvariant()
+            select new { requirement, definition, pack, citation })
             .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(x => MapResponse(x.requirement, x.definition, x.pack, x.citation))
+            .ToList();
     }
 
     public async Task<FactRequirementResponse> CreateAsync(
@@ -121,6 +124,16 @@ public sealed class FactRequirementService(
         }
 
         var now = DateTimeOffset.UtcNow;
+        var contract = BuildCreateContract(request, definition, label);
+        var validationIssues = FactRequirementContractRules.Validate(contract, strictAuditMetadata: false);
+        if (validationIssues.Count > 0)
+        {
+            throw new StlApiException(
+                "fact_requirements.validation",
+                string.Join(" ", validationIssues),
+                400);
+        }
+
         var entity = new FactRequirement
         {
             Id = Guid.NewGuid(),
@@ -131,6 +144,23 @@ public sealed class FactRequirementService(
             RequirementKey = requirementKey,
             Label = label,
             Description = description,
+            ApplicabilityKey = contract.ApplicabilityKey,
+            SourceProduct = FactRequirementContractRules.NormalizeProducts(contract.SourceProduct),
+            SourceEntity = contract.SourceEntity,
+            SourceFieldOrRecordType = contract.SourceFieldOrRecordType,
+            ValueType = contract.ValueType,
+            Operator = contract.Operator,
+            ExpectedValue = contract.ExpectedValue,
+            EvidenceKind = contract.EvidenceKind,
+            RequiredDocumentType = contract.RequiredDocumentType,
+            RetentionPeriod = contract.RetentionPeriod,
+            AuditQuestion = contract.AuditQuestion,
+            FailureSeverity = contract.FailureSeverity,
+            AutomaticFailureFlag = contract.AutomaticFailureFlag,
+            OverrideAllowed = contract.OverrideAllowed,
+            OverridePermission = contract.OverridePermission,
+            RemediationRequired = contract.RemediationRequired,
+            ExternallyAssertable = contract.ExternallyAssertable,
             IsRequired = request.IsRequired,
             IsActive = true,
             CreatedAt = now,
@@ -149,21 +179,79 @@ public sealed class FactRequirementService(
             "success",
             cancellationToken: cancellationToken);
 
-        return new FactRequirementResponse(
-            entity.Id,
-            entity.FactDefinitionId,
+        return MapResponse(entity, definition, rulePack, citation);
+    }
+
+    internal static FactRequirementResponse MapResponse(
+        FactRequirement requirement,
+        FactDefinition definition,
+        RulePack? pack,
+        RegulatoryCitation? citation) =>
+        new(
+            requirement.Id,
+            requirement.FactDefinitionId,
             definition.FactKey,
             definition.Label,
-            entity.RulePackId,
-            rulePack?.PackKey,
-            entity.CitationId,
+            requirement.RulePackId,
+            pack?.PackKey,
+            requirement.CitationId,
             citation?.CitationKey,
-            entity.RequirementKey,
-            entity.Label,
-            entity.Description,
-            entity.IsRequired,
-            entity.IsActive,
-            entity.CreatedAt,
-            entity.UpdatedAt);
+            requirement.RequirementKey,
+            requirement.ApplicabilityKey,
+            requirement.SourceProduct,
+            requirement.SourceEntity,
+            requirement.SourceFieldOrRecordType,
+            requirement.ValueType,
+            requirement.Operator,
+            requirement.ExpectedValue,
+            requirement.EvidenceKind,
+            requirement.RequiredDocumentType,
+            requirement.RetentionPeriod,
+            requirement.AuditQuestion,
+            requirement.FailureSeverity,
+            requirement.AutomaticFailureFlag,
+            requirement.OverrideAllowed,
+            requirement.OverridePermission,
+            requirement.RemediationRequired,
+            requirement.ExternallyAssertable,
+            requirement.Label,
+            requirement.Description,
+            requirement.IsRequired,
+            requirement.IsActive,
+            requirement.CreatedAt,
+            requirement.UpdatedAt);
+
+    private static FactRequirementContractInput BuildCreateContract(
+        CreateFactRequirementRequest request,
+        FactDefinition definition,
+        string label)
+    {
+        var valueType = (request.ValueType ?? definition.ValueType).Trim().ToLowerInvariant();
+        var evidenceKind = (request.EvidenceKind ?? FactRequirementEvidenceKinds.SystemFact).Trim().ToLowerInvariant();
+        var operatorValue = (request.Operator ?? FactRequirementOperators.Equal).Trim().ToLowerInvariant();
+        var expectedValue = request.ExpectedValue
+            ?? (string.Equals(valueType, FactValueTypes.Boolean, StringComparison.OrdinalIgnoreCase) ? "true" : string.Empty);
+
+        return new FactRequirementContractInput(
+            request.RequirementKey.Trim().ToLowerInvariant(),
+            definition.FactKey,
+            (request.ApplicabilityKey ?? "default").Trim(),
+            (request.SourceProduct ?? ComplianceCoreProductKeys.ComplianceCore).Trim(),
+            (request.SourceEntity ?? "fact_requirement").Trim(),
+            (request.SourceFieldOrRecordType ?? "manual_catalog_requirement").Trim(),
+            valueType,
+            operatorValue,
+            expectedValue.Trim(),
+            evidenceKind,
+            (request.RequiredDocumentType ?? string.Empty).Trim(),
+            (request.RetentionPeriod ?? "per_citation_or_company_policy").Trim(),
+            (request.AuditQuestion ?? $"Is {label.ToLowerInvariant()}?").Trim(),
+            (request.FailureSeverity ?? FactRequirementFailureSeverities.Major).Trim().ToLowerInvariant(),
+            request.AutomaticFailureFlag ?? false,
+            request.OverrideAllowed ?? true,
+            (request.OverridePermission ?? "compliance.override.fact_requirement").Trim(),
+            request.RemediationRequired ?? true,
+            request.IsRequired,
+            request.ExternallyAssertable);
     }
 }

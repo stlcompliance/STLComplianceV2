@@ -163,6 +163,36 @@ public class StaffArrTrainArrQualificationBatchCheckTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Batch_qualification_check_honors_effective_time_for_expiration_state()
+    {
+        var personId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+        await SeedIssuedQualificationIssueAsync(
+            personId,
+            "hazmat_endorsement",
+            issuedAt: now.AddDays(-5),
+            expiresAt: now.AddDays(-1));
+
+        var current = await RunBatchQualificationCheckAsync(
+            adminToken,
+            "hazmat_endorsement",
+            "driver_qualification",
+            "/api/qualification-checks/batch",
+            personId);
+        Assert.Equal(QualificationCheckOutcomes.Block, current.Results[0].Outcome);
+
+        var pointInTime = await RunBatchQualificationCheckAsync(
+            adminToken,
+            "hazmat_endorsement",
+            "driver_qualification",
+            "/api/qualification-checks/batch",
+            now.AddDays(-2),
+            personId);
+        Assert.Equal(QualificationCheckOutcomes.Allow, pointInTime.Results[0].Outcome);
+    }
+
+    [Fact]
     public async Task Batch_qualification_check_writes_batch_audit_event()
     {
         var personId = Guid.NewGuid();
@@ -251,16 +281,74 @@ public class StaffArrTrainArrQualificationBatchCheckTests : IAsyncLifetime
         string rulePackKey,
         string endpoint,
         params Guid[] personIds)
+        => await RunBatchQualificationCheckAsync(
+            trainarrToken,
+            qualificationKey,
+            rulePackKey,
+            endpoint,
+            effectiveAt: null,
+            personIds);
+
+    private async Task<BatchQualificationCheckResponse> RunBatchQualificationCheckAsync(
+        string trainarrToken,
+        string qualificationKey,
+        string rulePackKey,
+        string endpoint,
+        DateTimeOffset? effectiveAt,
+        params Guid[] personIds)
     {
         var request = Authorized(HttpMethod.Post, endpoint, trainarrToken);
         request.Content = JsonContent.Create(new CreateBatchQualificationCheckRequest(
             qualificationKey,
             rulePackKey,
-            personIds.Select(id => new BatchQualificationCheckSubject(id, null)).ToList()));
+            personIds.Select(id => new BatchQualificationCheckSubject(id, null)).ToList(),
+            effectiveAt));
 
         var response = await _trainarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<BatchQualificationCheckResponse>())!;
+    }
+
+    private async Task SeedIssuedQualificationIssueAsync(
+        Guid personId,
+        string qualificationKey,
+        DateTimeOffset issuedAt,
+        DateTimeOffset? expiresAt)
+    {
+        using var scope = _trainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TrainArr.Api.Data.TrainArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        var assignmentId = Guid.NewGuid();
+
+        db.TrainingAssignments.Add(new TrainArr.Api.Entities.TrainingAssignment
+        {
+            Id = assignmentId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            StaffarrPersonId = personId,
+            TrainingDefinitionId = Guid.NewGuid(),
+            AssignmentReason = "manual",
+            Status = "completed",
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.QualificationIssues.Add(new TrainArr.Api.Entities.QualificationIssue
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            TrainingAssignmentId = assignmentId,
+            StaffarrPersonId = personId,
+            QualificationKey = qualificationKey,
+            QualificationName = "Hazmat Endorsement",
+            GrantPublicationId = Guid.NewGuid(),
+            Status = "issued",
+            IssuedAt = issuedAt,
+            ExpiresAt = expiresAt,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        await db.SaveChangesAsync();
     }
 
     private async Task SeedDriverQualificationRulePackAsync(

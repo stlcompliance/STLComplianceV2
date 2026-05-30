@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type {
   MePortalSummaryResponse,
   PersonnelIncidentSummaryResponse,
@@ -67,6 +67,29 @@ function defaultOccurredAtLocalValue(): string {
   return now.toISOString().slice(0, 16)
 }
 
+const UPDATE_FIELD_OPTIONS_BY_REQUEST_TYPE: Record<string, { value: string; label: string }[]> = {
+  phone_update: [
+    { value: 'work_phone', label: 'Work phone' },
+    { value: 'mobile_phone', label: 'Mobile phone' },
+    { value: 'emergency_contact_phone', label: 'Emergency contact phone' },
+  ],
+  contact_info_update: [
+    { value: 'primary_email', label: 'Primary email' },
+    { value: 'work_phone', label: 'Work phone' },
+    { value: 'mailing_address', label: 'Mailing address' },
+    { value: 'emergency_contact_name', label: 'Emergency contact name' },
+    { value: 'emergency_contact_phone', label: 'Emergency contact phone' },
+  ],
+  profile_correction: [
+    { value: 'given_name', label: 'Given name' },
+    { value: 'family_name', label: 'Family name' },
+    { value: 'job_title', label: 'Job title' },
+    { value: 'manager_person', label: 'Manager assignment' },
+    { value: 'primary_org_unit', label: 'Primary org assignment' },
+  ],
+  other: [{ value: 'other', label: 'Other profile field' }],
+}
+
 export function MeSelfServicePortalPanel({
   summary,
   updateRequests,
@@ -90,6 +113,18 @@ export function MeSelfServicePortalPanel({
   const [incidentTitle, setIncidentTitle] = useState('')
   const [incidentDescription, setIncidentDescription] = useState('')
   const [incidentOccurredAt, setIncidentOccurredAt] = useState(defaultOccurredAtLocalValue())
+  const updateFieldOptions = useMemo(
+    () => UPDATE_FIELD_OPTIONS_BY_REQUEST_TYPE[requestType] ?? UPDATE_FIELD_OPTIONS_BY_REQUEST_TYPE.other,
+    [requestType],
+  )
+
+  useEffect(() => {
+    if (updateFieldOptions.some((option) => option.value === fieldKey)) {
+      return
+    }
+
+    setFieldKey(updateFieldOptions[0]?.value ?? 'other')
+  }, [fieldKey, updateFieldOptions])
 
   if (isLoading) {
     return (
@@ -310,12 +345,18 @@ export function MeSelfServicePortalPanel({
           </label>
           <label className="block text-sm">
             <span className="text-slate-400">Field</span>
-            <input
+            <select
               className="mt-1 w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-slate-100"
               value={fieldKey}
               onChange={(event) => setFieldKey(event.target.value)}
               data-testid="me-update-field-key"
-            />
+            >
+              {updateFieldOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="block text-sm sm:col-span-2">
             <span className="text-slate-400">Current value (optional)</span>

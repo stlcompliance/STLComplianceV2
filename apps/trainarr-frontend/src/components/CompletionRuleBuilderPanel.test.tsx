@@ -56,7 +56,7 @@ describe('CompletionRuleBuilderPanel', () => {
 
     expect(onCreateRule).toHaveBeenCalledWith(
       expect.objectContaining({
-        ruleKey: 'evaluator-pass-only',
+        ruleKey: 'train.rule.evaluatorpassonly',
         ruleType: 'required_evaluator_pass',
         label: 'Evaluator pass only',
       }),

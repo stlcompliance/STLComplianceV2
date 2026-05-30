@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_passenger_carrier_operations,Title 49 Passenger Carrier Operations,compliance_domain,"Passenger carrier operations and consumer protection reference coverage. Mapping level: reference. Products: RoutArr, StaffArr, ComplianceCore. Entities: passenger_trip, carrier, lease.",true

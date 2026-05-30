@@ -1,3 +1,6 @@
+import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { useEffect, useMemo, useState } from 'react'
+
 import type {
   CreateTrainingMatrixEntryRequest,
   TrainingDefinitionResponse,
@@ -50,6 +53,23 @@ export function TrainingMatrixPanel({
   deletingEntryId,
   canManage,
 }: TrainingMatrixPanelProps) {
+  const [showApplicabilityKeyPolicy, setShowApplicabilityKeyPolicy] = useState(false)
+  const generatedApplicabilityKey = useMemo(
+    () =>
+      buildSemanticKey({
+        domain: 'train',
+        kind: 'applicability',
+        title: applicabilityLabel.trim(),
+        existingKeys: entries.map((entry) => entry.applicabilityKey),
+        maxLength: 128,
+      }),
+    [applicabilityLabel, entries],
+  )
+
+  useEffect(() => {
+    onApplicabilityKeyChange(generatedApplicabilityKey)
+  }, [generatedApplicabilityKey, onApplicabilityKeyChange])
+
   const targets =
     targetType === 'program'
       ? programs.map((p) => ({ id: p.programId, label: p.name }))
@@ -74,15 +94,28 @@ export function TrainingMatrixPanel({
         <p className="mt-3 text-sm text-slate-400">Matrix editing requires trainarr admin access.</p>
       ) : (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label htmlFor="training-matrix-applicability-key" className="block text-xs text-slate-400">
-            Applicability key
-            <input
-              id="training-matrix-applicability-key"
-              className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
-              value={applicabilityKey}
-              onChange={(e) => onApplicabilityKeyChange(e.target.value)}
+          <div className="space-y-1">
+            <GeneratedKeyField
+              sourceLabel={applicabilityLabel.trim()}
+              generatedKey={generatedApplicabilityKey}
+              confirmedKey={applicabilityKey}
+              manualOverride=""
+              onManualOverrideChange={() => {}}
+              showAdvancedKey={showApplicabilityKeyPolicy}
+              disabled={isCreating}
+              label="Applicability key"
             />
-          </label>
+            {!showApplicabilityKeyPolicy ? (
+              <button
+                type="button"
+                className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
+                onClick={() => setShowApplicabilityKeyPolicy(true)}
+                disabled={isCreating}
+              >
+                Key policy
+              </button>
+            ) : null}
+          </div>
           <label htmlFor="training-matrix-label" className="block text-xs text-slate-400">
             Label
             <input

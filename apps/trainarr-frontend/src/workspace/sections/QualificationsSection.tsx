@@ -17,6 +17,28 @@ type Props = { state: TrainArrWorkspaceState }
 export function QualificationsSection({ state }: Props) {
 
   const s = state
+  const qualificationOptionsByKey = new Map<string, { value: string; label: string }>()
+  for (const definition of s.definitionsQuery.data ?? []) {
+    const qualificationKey = definition.qualificationKey.trim()
+    if (!qualificationKey || qualificationOptionsByKey.has(qualificationKey)) {
+      continue
+    }
+    qualificationOptionsByKey.set(qualificationKey, {
+      value: qualificationKey,
+      label: `${definition.qualificationName} (${qualificationKey})`,
+    })
+  }
+
+  if (s.batchQualificationKey.trim() && !qualificationOptionsByKey.has(s.batchQualificationKey.trim())) {
+    qualificationOptionsByKey.set(s.batchQualificationKey.trim(), {
+      value: s.batchQualificationKey.trim(),
+      label: s.batchQualificationKey.trim(),
+    })
+  }
+
+  const qualificationOptions = [...qualificationOptionsByKey.values()].sort((left, right) =>
+    left.label.localeCompare(right.label),
+  )
 
 
 
@@ -135,6 +157,7 @@ export function QualificationsSection({ state }: Props) {
           qualificationKey={s.batchQualificationKey}
 
           onQualificationKeyChange={s.setBatchQualificationKey}
+          qualificationOptions={qualificationOptions}
 
           rulePackKey={s.rulePackKey}
 

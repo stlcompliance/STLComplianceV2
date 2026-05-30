@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_hazmat_packaging,Title 49 Hazmat Packaging,compliance_domain,"Authorized packaging, specification packaging, retesting, and requalification controls. Mapping level: operational. Products: SupplyArr, MaintainArr, RoutArr, ComplianceCore. Entities: material, package, container, asset.",true

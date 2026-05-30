@@ -74,7 +74,7 @@ describe('StepBranchBuilderPanel', () => {
 
     expect(onCreateBranch).toHaveBeenCalledWith(
       expect.objectContaining({
-        branchKey: 'unlock-remediation',
+        branchKey: 'train.branch.unlockremediation',
         branchType: 'quiz_failed_remediation',
         label: 'Unlock remediation',
       }),

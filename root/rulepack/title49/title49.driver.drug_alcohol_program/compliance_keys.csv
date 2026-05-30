@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_driver_drug_alcohol_program,Title 49 Driver Drug and Alcohol Program,compliance_domain,"DOT Part 40 and FMCSA Part 382 drug and alcohol testing program controls. Mapping level: operational. Products: StaffArr, TrainArr, RoutArr, ComplianceCore. Entities: driver, test_result, clearinghouse_query, program.",true

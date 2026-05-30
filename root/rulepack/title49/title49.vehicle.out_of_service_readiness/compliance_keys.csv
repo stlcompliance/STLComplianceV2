@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_vehicle_out_of_service_readiness,Title 49 Out-of-Service Readiness,compliance_domain,"Controls that prevent dispatch while vehicle, driver, or carrier out-of-service orders are active. Mapping level: operational. Products: MaintainArr, RoutArr, StaffArr, ComplianceCore. Entities: vehicle, driver, dispatch, out_of_service_order.",true

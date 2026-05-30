@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { buildSemanticKey } from '@stl/shared-ui'
 import { useMemo, useState } from 'react'
 
 import {
@@ -13,6 +14,7 @@ import {
   startSupplierIncidentInvestigation,
 } from '../api/client'
 import type { ExternalPartyResponse } from '../api/types'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 const INCIDENT_TYPES = ['quality', 'delivery', 'compliance', 'safety', 'other'] as const
 const SEVERITIES = ['low', 'medium', 'high', 'critical'] as const
@@ -72,6 +74,17 @@ export function SupplierIncidentsPanel({
     () => incidentParties.find((p) => p.partyId === selectedPartyId),
     [incidentParties, selectedPartyId],
   )
+  const incidentKeySource = useMemo(() => {
+    const partyLabel = selectedParty?.displayName ?? ''
+    const titleLabel = title.trim()
+    if (titleLabel) {
+      return `${partyLabel} ${titleLabel}`
+    }
+    if (!partyLabel) {
+      return ''
+    }
+    return `${partyLabel} ${incidentType} incident`
+  }, [incidentType, selectedParty, title])
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['supplyarr-supplier-incidents-open', accessToken] })
@@ -127,7 +140,12 @@ export function SupplierIncidentsPanel({
         })
       }
       return applySupplierIncidentProcurementRestriction(accessToken, action.incidentId, {
-        restrictionKey: `incident-${incidentKey || action.incidentId.slice(0, 8)}`,
+        restrictionKey: buildSemanticKey({
+          domain: 'vendor',
+          kind: 'restriction',
+          title: `${incidentKey || action.incidentId.slice(0, 8)} procurement hold`,
+          maxLength: 128,
+        }),
         scopes: ['all_procurement'],
         reason: title || 'Supplier incident procurement hold',
       })
@@ -176,15 +194,16 @@ export function SupplierIncidentsPanel({
 
         {selectedPartyId && (
           <>
-            <label htmlFor="supplier-incident-key" className="block text-sm text-slate-400">
-              Incident key
-              <input
-                id="supplier-incident-key"
-                className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
-                value={incidentKey}
-                onChange={(event) => setIncidentKey(event.target.value)}
-              />
-            </label>
+            <GeneratedKeyFieldGroup
+              sourceLabel={incidentKeySource}
+              existingKeys={partyIncidentsQuery.data?.map((incident) => incident.incidentKey) ?? []}
+              onKeyChange={setIncidentKey}
+              domain="incident"
+              kind="supplier"
+              maxLength={128}
+              label="Incident key"
+              disabled={createMutation.isPending}
+            />
             <label htmlFor="supplier-incident-type" className="block text-sm text-slate-400">
               Incident type
               <select

@@ -4,6 +4,7 @@ import type {
   PurchaseOrderResponse,
   VendorReturnResponse,
 } from '../api/types'
+import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 interface ReturnsPanelProps {
   returns: VendorReturnResponse[]
@@ -117,6 +118,17 @@ export function ReturnsPanel({
         label: `${po.orderKey} · line ${line.lineNumber} · ${line.partKey} (${line.quantityReceived} received)`,
       })),
   )
+  const selectedVendorLabel =
+    vendors.find((vendor) => vendor.partyId === selectedVendorPartyId)?.displayName ?? ''
+  const selectedPartLabel =
+    parts.find((part) => part.partId === selectedReturnPartId)?.displayName ?? ''
+  const selectedPoLineLabel =
+    poLines.find((line) => line.purchaseOrderLineId === selectedReturnPoLineId)?.label ?? ''
+  const returnKeySource =
+    returnSource === 'stock'
+      ? `${selectedVendorLabel} ${selectedPartLabel} stock return`
+      : `${selectedPoLineLabel} po return`
+  const existingReturnKeys = returns.map((item) => item.returnKey)
 
   return (
     <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg lg:col-span-2">
@@ -200,15 +212,16 @@ export function ReturnsPanel({
                 <option value="purchase_order_line">From PO line</option>
               </select>
             </label>
-            <label htmlFor="vendor-return-key" className="block text-sm text-slate-400">
-              Return key
-              <input
-                id="vendor-return-key"
-                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-200"
-                value={returnKey}
-                onChange={(e) => onReturnKeyChange(e.target.value)}
-              />
-            </label>
+            <GeneratedKeyFieldGroup
+              sourceLabel={returnKeySource}
+              existingKeys={existingReturnKeys}
+              onKeyChange={onReturnKeyChange}
+              domain="purchase"
+              kind="return"
+              maxLength={128}
+              label="Return key"
+              disabled={isCreating}
+            />
             <label htmlFor="vendor-return-inventory-bin" className="block text-sm text-slate-400">
               Inventory bin
               <select

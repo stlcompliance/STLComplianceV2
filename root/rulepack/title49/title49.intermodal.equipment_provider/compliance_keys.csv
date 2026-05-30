@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_intermodal_equipment_provider,Title 49 Intermodal Equipment Provider,compliance_domain,"Intermodal equipment provider safety and inspection reference coverage. Mapping level: reference. Products: MaintainArr, RoutArr, ComplianceCore. Entities: intermodal_equipment, provider, inspection.",true

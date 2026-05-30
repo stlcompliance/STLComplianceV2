@@ -1,0 +1,2 @@
+term_key,vocabulary_type_key,label,description,active
+ck_t49_tsa_transportation_security_reference,compliance_domain,Title 49 TSA Transportation Security Reference,"reference Title 49 domain for worker, credential, transportation_security.",true

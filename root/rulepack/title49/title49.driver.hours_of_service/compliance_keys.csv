@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_driver_hours_of_service,Title 49 Hours of Service,compliance_domain,"Hours-of-service limit, log, supporting-document, and out-of-service controls. Mapping level: operational. Products: RoutArr, StaffArr, ComplianceCore. Entities: driver, trip, duty_status, hos_log.",true

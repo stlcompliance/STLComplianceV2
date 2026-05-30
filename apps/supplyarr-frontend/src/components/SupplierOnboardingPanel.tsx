@@ -108,16 +108,21 @@ export function SupplierOnboardingPanel({
   })
 
   const registerDocMutation = useMutation({
-    mutationFn: () =>
-      registerPartyComplianceDocument(accessToken, selectedPartyId, {
-        documentKey: docKey || `${docTypeKey}-${Date.now()}`,
+    mutationFn: () => {
+      const generatedDocumentKey = docKey.trim()
+      if (!generatedDocumentKey) {
+        throw new Error('Generated document key is required.')
+      }
+      return registerPartyComplianceDocument(accessToken, selectedPartyId, {
+        documentKey: generatedDocumentKey,
         documentTypeKey: docTypeKey,
         title: docTitle || docTypeKey,
         fileName: `${docTypeKey}.pdf`,
         contentType: 'application/pdf',
         sizeBytes: 1024,
         notes: '',
-      }),
+      })
+    },
     onSuccess: async (created) => {
       if (canReview) {
         await approvePartyComplianceDocument(accessToken, selectedPartyId, created.documentId)
@@ -268,13 +273,15 @@ export function SupplierOnboardingPanel({
               sourceLabel={docTitle || docTypeKey}
               existingKeys={[]}
               onKeyChange={setDocKey}
+              domain="vendor"
+              kind="document"
               label="Document key"
             />
           </div>
           <button
             type="button"
             className="mt-2 rounded-lg border border-slate-600 px-3 py-1.5 text-sm hover:bg-slate-800 disabled:opacity-50"
-            disabled={registerDocMutation.isPending}
+            disabled={registerDocMutation.isPending || !docKey.trim()}
             onClick={() => registerDocMutation.mutate()}
           >
             Register {canReview ? '& approve' : ''} document

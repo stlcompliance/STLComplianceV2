@@ -1,0 +1,2 @@
+key,label,category,description,active
+ck_t49_stb_surface_transportation_reference,Title 49 STB Surface Transportation Reference,compliance_domain,"Surface Transportation Board procedural and economic regulation reference coverage. Mapping level: reference. Products: ComplianceCore. Entities: carrier, rate_case, surface_transportation.",true
