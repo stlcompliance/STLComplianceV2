@@ -80,4 +80,21 @@ public class TenantLifecycleRulesTests
 
         Assert.Equal("reactivate", action);
     }
+
+    [Fact]
+    public void ResolvePendingActionKind_ignores_archived_tenant()
+    {
+        var asOf = DateTimeOffset.UtcNow;
+
+        var action = TenantLifecycleRules.ResolvePendingActionKind(
+            TenantStatuses.Archived,
+            hasValidLicense: true,
+            coverageBaseline: asOf,
+            asOfUtc: asOf,
+            suspendGraceDays: 7,
+            autoSuspendWhenNoValidLicense: true,
+            autoReactivateWhenValidLicense: true);
+
+        Assert.Equal("none", action);
+    }
 }

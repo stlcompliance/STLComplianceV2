@@ -16,11 +16,17 @@ public sealed class TenantDispatchNotificationSettings : IHasTenant
 
     public bool NotifyOnTripDispatched { get; set; } = true;
 
+    public bool NotifyOnTripAccepted { get; set; } = true;
+
     public bool NotifyOnTripInProgress { get; set; } = true;
 
     public bool NotifyOnTripCompleted { get; set; } = true;
 
     public bool NotifyOnTripCancelled { get; set; } = true;
+
+    public bool NotifyOnDriverAssignmentChanged { get; set; } = true;
+
+    public bool NotifyOnRouteCancelled { get; set; } = true;
 
     public Guid? UpdatedByUserId { get; set; }
 
@@ -37,7 +43,9 @@ public sealed class DispatchNotificationDispatch : IHasTenant
 
     public string EventKind { get; set; } = string.Empty;
 
-    public Guid TripId { get; set; }
+    public Guid? TripId { get; set; }
+
+    public Guid? RouteId { get; set; }
 
     public string? DriverPersonId { get; set; }
 
@@ -64,11 +72,17 @@ public static class DispatchNotificationEventKinds
 
     public const string TripDispatched = "trip_dispatched";
 
+    public const string TripAccepted = "trip_accepted";
+
     public const string TripInProgress = "trip_in_progress";
 
     public const string TripCompleted = "trip_completed";
 
     public const string TripCancelled = "trip_cancelled";
+
+    public const string DriverAssignmentChanged = "driver_assignment_changed";
+
+    public const string RouteCancelled = "route_cancelled";
 }
 
 public static class DispatchNotificationDispatchStatuses

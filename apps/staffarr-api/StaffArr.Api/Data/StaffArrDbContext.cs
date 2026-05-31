@@ -302,9 +302,16 @@ public sealed class StaffArrDbContext(DbContextOptions<StaffArrDbContext> option
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(4096).IsRequired();
+            entity.Property(x => x.SourceProduct).HasMaxLength(64);
+            entity.Property(x => x.SourceEventKind).HasMaxLength(64);
+            entity.Property(x => x.SourceReferenceKey).HasMaxLength(128);
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.PersonId, x.ReportedAt });
             entity.HasIndex(x => new { x.TenantId, x.Status, x.ReportedAt });
+            entity.HasIndex(x => new { x.TenantId, x.SourceProduct, x.SourceIncidentId })
+                .IsUnique()
+                .HasDatabaseName("IX_staffarr_personnel_incidents_source_incident")
+                .HasFilter("\"SourceIncidentId\" IS NOT NULL");
             entity.HasOne<StaffPerson>().WithMany().HasForeignKey(x => x.PersonId);
         });
 

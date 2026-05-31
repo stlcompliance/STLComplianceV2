@@ -81,9 +81,12 @@ public static class DispatchNotificationRules
         {
             DispatchNotificationEventKinds.TripAssigned => settings.NotifyOnTripAssigned,
             DispatchNotificationEventKinds.TripDispatched => settings.NotifyOnTripDispatched,
+            DispatchNotificationEventKinds.TripAccepted => settings.NotifyOnTripAccepted,
             DispatchNotificationEventKinds.TripInProgress => settings.NotifyOnTripInProgress,
             DispatchNotificationEventKinds.TripCompleted => settings.NotifyOnTripCompleted,
             DispatchNotificationEventKinds.TripCancelled => settings.NotifyOnTripCancelled,
+            DispatchNotificationEventKinds.DriverAssignmentChanged => settings.NotifyOnDriverAssignmentChanged,
+            DispatchNotificationEventKinds.RouteCancelled => settings.NotifyOnRouteCancelled,
             _ => false,
         };
 
@@ -104,6 +107,9 @@ public sealed record TenantDispatchNotificationSettingsSnapshot(
     string? NotificationWebhookUrl,
     bool NotifyOnTripAssigned,
     bool NotifyOnTripDispatched,
+    bool NotifyOnTripAccepted,
     bool NotifyOnTripInProgress,
     bool NotifyOnTripCompleted,
-    bool NotifyOnTripCancelled);
+    bool NotifyOnTripCancelled,
+    bool NotifyOnDriverAssignmentChanged,
+    bool NotifyOnRouteCancelled);

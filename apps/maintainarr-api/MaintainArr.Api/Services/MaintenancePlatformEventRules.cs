@@ -45,6 +45,16 @@ public static class MaintenancePlatformEventRules
         string lifecycleStatus) =>
         $"{eventKind}:asset:{assetId:D}:{previousLifecycleStatus}>{lifecycleStatus}".ToLowerInvariant();
 
+    public static string BuildEntityEventIdempotencyKey(string eventKind, string entityType, Guid entityId) =>
+        $"{eventKind}:{entityType}:{entityId:D}".ToLowerInvariant();
+
+    public static string BuildEntityEventIdempotencyKey(
+        string eventKind,
+        string entityType,
+        Guid entityId,
+        string discriminator) =>
+        $"{eventKind}:{entityType}:{entityId:D}:{discriminator.Trim()}".ToLowerInvariant();
+
     public static bool HasReadinessTransition(
         string? previousReadinessStatus,
         string readinessStatus,

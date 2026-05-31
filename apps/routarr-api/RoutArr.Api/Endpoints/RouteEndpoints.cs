@@ -89,6 +89,27 @@ public static class RouteEndpoints
         })
         .WithName("LinkRouteTrip");
 
+        routes.MapPatch("/{routeId:guid}/status", async (
+            Guid routeId,
+            UpdateRouteStatusRequest request,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            RouteService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTripsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var updated = await service.UpdateRouteStatusAsync(
+                tenantId,
+                actorUserId,
+                routeId,
+                request,
+                cancellationToken);
+            return Results.Ok(updated);
+        })
+        .WithName("UpdateRouteStatus");
+
         routes.MapPut("/{routeId:guid}/stops/reorder", async (
             Guid routeId,
             ReorderRouteStopsRequest request,

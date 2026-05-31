@@ -3446,6 +3446,9 @@ namespace SupplyArr.Api.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<Guid?>("InvolvedStaffarrPersonId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("LastReopenReason")
                         .IsRequired()
                         .HasMaxLength(512)
@@ -3491,6 +3494,19 @@ namespace SupplyArr.Api.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<string>("StaffarrIncidentRouteStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("");
+
+                    b.Property<DateTimeOffset?>("StaffarrIncidentRoutedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("StaffarrPersonnelIncidentId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -3503,6 +3519,19 @@ namespace SupplyArr.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
+
+                    b.Property<Guid?>("TrainarrIncidentRemediationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TrainarrIncidentRouteStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasDefaultValue("");
+
+                    b.Property<DateTimeOffset?>("TrainarrIncidentRoutedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -3523,7 +3552,16 @@ namespace SupplyArr.Api.Migrations
                     b.HasIndex("TenantId", "IncidentKey")
                         .IsUnique();
 
+                    b.HasIndex("TenantId", "InvolvedStaffarrPersonId")
+                        .HasDatabaseName("IX_supplyarr_supplier_incidents_staffarr_person");
+
                     b.HasIndex("TenantId", "Severity");
+
+                    b.HasIndex("TenantId", "StaffarrPersonnelIncidentId")
+                        .HasDatabaseName("IX_supplyarr_supplier_incidents_staffarr_incident");
+
+                    b.HasIndex("TenantId", "TrainarrIncidentRemediationId")
+                        .HasDatabaseName("IX_supplyarr_supplier_incidents_trainarr_remediation");
 
                     b.HasIndex("TenantId", "Status", "UpdatedAt");
 

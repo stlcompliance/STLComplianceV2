@@ -22,6 +22,7 @@ public sealed class DriverPortalService(
     public const string CompleteAction = "driver_portal.trip.complete";
     public const string CloseAction = "driver_portal.trip.close";
     public const string DispatchAction = "driver_portal.trip.dispatch";
+    public const string AcceptAction = "driver_portal.trip.accept";
     public const string ReportExceptionAction = "driver_portal.exception.report";
 
     public async Task<DriverPortalScheduleResponse> GetScheduleAsync(
@@ -245,6 +246,35 @@ public sealed class DriverPortalService(
             cancellationToken);
     }
 
+    public async Task<TripDetailResponse> AcceptTripAsync(
+        ClaimsPrincipal principal,
+        Guid tripId,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireDriverPortalExecute(principal);
+        var tenantId = principal.GetTenantId();
+        var actorUserId = principal.GetUserId();
+        var actorPersonId = principal.GetPersonId().ToString();
+
+        var updated = await tripService.AcceptDriverAssignmentAsync(
+            tenantId,
+            actorUserId,
+            tripId,
+            actorPersonId,
+            cancellationToken);
+
+        await audit.WriteAsync(
+            AcceptAction,
+            tenantId,
+            actorUserId,
+            "trip",
+            tripId.ToString(),
+            "accepted",
+            cancellationToken: cancellationToken);
+
+        return updated;
+    }
+
     public async Task<DispatchExceptionSummaryResponse> ReportExceptionAsync(
         ClaimsPrincipal principal,
         Guid tripId,
@@ -286,6 +316,7 @@ public sealed class DriverPortalService(
         db.DispatchExceptions.Add(entity);
         await db.SaveChangesAsync(cancellationToken);
         await integrationOutbox.TryEnqueueExceptionCreatedAsync(trip, entity, cancellationToken);
+        await integrationOutbox.TryEnqueueIncidentCreatedAsync(entity, trip, cancellationToken);
 
         await audit.WriteAsync(
             ReportExceptionAction,
@@ -399,6 +430,23 @@ public sealed class DriverPortalService(
             entity.Description,
             entity.Category,
             entity.Status,
+            entity.IncidentType,
+            entity.IncidentSeverity,
+            entity.IncidentReviewStatus,
+            entity.IncidentRoutedProduct,
+            entity.StaffarrPersonnelIncidentId,
+            entity.StaffarrIncidentRoutedAt,
+            entity.StaffarrIncidentRouteStatus,
+            entity.TrainarrIncidentRemediationId,
+            entity.TrainarrIncidentRoutedAt,
+            entity.TrainarrIncidentRouteStatus,
+            entity.MaintainarrInboundEventId,
+            entity.MaintainarrDefectId,
+            entity.MaintainarrIncidentRoutedAt,
+            entity.MaintainarrIncidentRouteStatus,
+            entity.CompliancecoreFactPublicationId,
+            entity.CompliancecoreIncidentRoutedAt,
+            entity.CompliancecoreIncidentRouteStatus,
             entity.TripId,
             trip.TripNumber,
             trip.Title,
@@ -494,10 +542,13 @@ public sealed class DriverPortalService(
             trip.VehicleRefKey,
             trip.ScheduledStartAt,
             trip.ScheduledEndAt,
+            trip.AcceptedAt,
             trip.DispatchedAt,
             trip.StartedAt,
             trip.CompletedAt,
             closedAt,
+            CanAccept: string.Equals(status, TripDispatchStatuses.Assigned, StringComparison.OrdinalIgnoreCase)
+                && !trip.AcceptedAt.HasValue,
             CanDispatch: string.Equals(status, TripDispatchStatuses.Assigned, StringComparison.OrdinalIgnoreCase),
             CanStart: canStartStatus && captureStartReady,
             CanComplete: canCompleteStatus && captureCompleteReady,

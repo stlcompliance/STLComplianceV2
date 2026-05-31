@@ -1,4 +1,6 @@
 using System.IO.Compression;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using RoutArr.Api.Contracts;
@@ -24,6 +26,12 @@ public sealed class AuditPackageService(
             [
                 new("audit_events", "audit_events.json", "Audit events", "Tenant-scoped RoutArr audit trail (JSON)."),
                 new("audit_events_csv", "audit_events.csv", "Audit events (CSV)", "Same audit events in CSV for spreadsheets."),
+                new("proof_records", "proof_records.json", "Proof records", "Trip proof records with tamper evidence hashes."),
+                new("proof_records_csv", "proof_records.csv", "Proof records (CSV)", "Trip proof records in CSV for spreadsheets."),
+                new("dvir_inspections", "dvir_inspections.json", "DVIR inspections", "Pre-trip and post-trip DVIR records with tamper evidence hashes."),
+                new("dvir_inspections_csv", "dvir_inspections.csv", "DVIR inspections (CSV)", "DVIR records in CSV for spreadsheets."),
+                new("capture_attachments", "capture_attachments.json", "Capture attachments", "Proof/DVIR attachment metadata with tamper evidence hashes."),
+                new("capture_attachments_csv", "capture_attachments.csv", "Capture attachments (CSV)", "Attachment metadata in CSV for spreadsheets."),
             ]);
 
     public async Task<AuditPackageFilterOptionsResponse> GetFilterOptionsAsync(
@@ -243,7 +251,13 @@ public sealed class AuditPackageService(
             }, cancellationToken);
 
             await WriteJsonEntryAsync(archive, "audit_events.json", package.AuditEvents, cancellationToken);
-            await WriteCsvEntryAsync(archive, "audit_events.csv", package.AuditEvents, cancellationToken);
+            await WriteBytesEntryAsync(archive, "audit_events.csv", AuditPackageCsvWriter.WriteAuditEvents(package.AuditEvents), cancellationToken);
+            await WriteJsonEntryAsync(archive, "proof_records.json", package.ProofRecords, cancellationToken);
+            await WriteBytesEntryAsync(archive, "proof_records.csv", AuditPackageCsvWriter.WriteProofRecords(package.ProofRecords), cancellationToken);
+            await WriteJsonEntryAsync(archive, "dvir_inspections.json", package.DvirInspections, cancellationToken);
+            await WriteBytesEntryAsync(archive, "dvir_inspections.csv", AuditPackageCsvWriter.WriteDvirInspections(package.DvirInspections), cancellationToken);
+            await WriteJsonEntryAsync(archive, "capture_attachments.json", package.CaptureAttachments, cancellationToken);
+            await WriteBytesEntryAsync(archive, "capture_attachments.csv", AuditPackageCsvWriter.WriteCaptureAttachments(package.CaptureAttachments), cancellationToken);
         }
 
         return memory.ToArray();
@@ -271,14 +285,141 @@ public sealed class AuditPackageService(
                 x.OccurredAt))
             .ToListAsync(cancellationToken);
 
+        var proofRecords = await (
+            from proof in ApplyProofDateFilters(db.TripProofRecords.AsNoTracking().Where(x => x.TenantId == tenantId), filter)
+            join trip in db.Trips.AsNoTracking() on proof.TripId equals trip.Id
+            orderby proof.CapturedAt
+            select new
+            {
+                proof,
+                trip.TripNumber,
+            })
+            .ToListAsync(cancellationToken);
+
+        var proofItems = proofRecords
+            .Select(x => new ProofRecordExportItem(
+                x.proof.Id,
+                x.proof.TripId,
+                x.TripNumber,
+                x.proof.ProofType,
+                x.proof.CapturedByPersonId,
+                x.proof.VehicleRefKey,
+                x.proof.ReferenceKey,
+                x.proof.Notes,
+                x.proof.CapturedAt,
+                x.proof.CreatedAt,
+                x.proof.UpdatedAt,
+                ComputeEvidenceHash(
+                    "proof",
+                    x.proof.Id,
+                    x.proof.TripId,
+                    x.proof.ProofType,
+                    x.proof.CapturedByPersonId,
+                    x.proof.VehicleRefKey,
+                    x.proof.ReferenceKey,
+                    x.proof.Notes,
+                    x.proof.CapturedAt,
+                    x.proof.CreatedAt,
+                    x.proof.UpdatedAt)))
+            .ToList();
+
+        var dvirRecords = await (
+            from dvir in ApplyDvirDateFilters(db.TripDvirInspections.AsNoTracking().Where(x => x.TenantId == tenantId), filter)
+            join trip in db.Trips.AsNoTracking() on dvir.TripId equals trip.Id
+            orderby dvir.SubmittedAt
+            select new
+            {
+                dvir,
+                trip.TripNumber,
+            })
+            .ToListAsync(cancellationToken);
+
+        var dvirItems = dvirRecords
+            .Select(x => new DvirInspectionExportItem(
+                x.dvir.Id,
+                x.dvir.TripId,
+                x.TripNumber,
+                x.dvir.Phase,
+                x.dvir.VehicleRefKey,
+                x.dvir.Result,
+                x.dvir.OdometerReading,
+                x.dvir.DefectNotes,
+                x.dvir.SubmittedByPersonId,
+                x.dvir.SubmittedAt,
+                x.dvir.CreatedAt,
+                x.dvir.UpdatedAt,
+                ComputeEvidenceHash(
+                    "dvir",
+                    x.dvir.Id,
+                    x.dvir.TripId,
+                    x.dvir.Phase,
+                    x.dvir.VehicleRefKey,
+                    x.dvir.Result,
+                    x.dvir.OdometerReading,
+                    x.dvir.DefectNotes,
+                    x.dvir.SubmittedByPersonId,
+                    x.dvir.SubmittedAt,
+                    x.dvir.CreatedAt,
+                    x.dvir.UpdatedAt)))
+            .ToList();
+
+        var attachmentRecords = await (
+            from attachment in ApplyAttachmentDateFilters(db.TripCaptureAttachments.AsNoTracking().Where(x => x.TenantId == tenantId), filter)
+            join trip in db.Trips.AsNoTracking() on attachment.TripId equals trip.Id
+            orderby attachment.CreatedAt
+            select new
+            {
+                attachment,
+                trip.TripNumber,
+            })
+            .ToListAsync(cancellationToken);
+
+        var attachmentItems = attachmentRecords
+            .Select(x => new CaptureAttachmentExportItem(
+                x.attachment.Id,
+                x.attachment.TripId,
+                x.TripNumber,
+                x.attachment.SubjectType,
+                x.attachment.SubjectId,
+                x.attachment.AttachmentKind,
+                x.attachment.FileName,
+                x.attachment.ContentType,
+                x.attachment.SizeBytes,
+                x.attachment.StorageKey,
+                x.attachment.Notes,
+                x.attachment.CapturedByPersonId,
+                x.attachment.CreatedAt,
+                ComputeEvidenceHash(
+                    "attachment",
+                    x.attachment.Id,
+                    x.attachment.TripId,
+                    x.attachment.SubjectType,
+                    x.attachment.SubjectId,
+                    x.attachment.AttachmentKind,
+                    x.attachment.FileName,
+                    x.attachment.ContentType,
+                    x.attachment.SizeBytes,
+                    x.attachment.StorageKey,
+                    x.attachment.Notes,
+                    x.attachment.CapturedByPersonId,
+                    x.attachment.CreatedAt)))
+            .ToList();
+
         return new AuditPackageExportResponse(
             Guid.Empty,
             tenantId,
             DateTimeOffset.UtcNow,
             new AuditPackageDateRangeResponse(filter.From, filter.To),
             MapAppliedFilters(filter),
-            new AuditPackageCountsResponse(auditEvents.Count),
-            auditEvents);
+            new AuditPackageCountsResponse(
+                auditEvents.Count,
+                proofItems.Count,
+                dvirItems.Count,
+                attachmentItems.Count),
+            auditEvents,
+            proofItems,
+            dvirItems,
+            attachmentItems);
     }
 
     private static IQueryable<RoutArrAuditEvent> ApplyAuditEventFilters(
@@ -331,6 +472,57 @@ public sealed class AuditPackageService(
         return query;
     }
 
+    private static IQueryable<TripProofRecord> ApplyProofDateFilters(
+        IQueryable<TripProofRecord> query,
+        AuditPackageFilter filter)
+    {
+        if (filter.From is not null)
+        {
+            query = query.Where(x => x.CapturedAt >= filter.From);
+        }
+
+        if (filter.To is not null)
+        {
+            query = query.Where(x => x.CapturedAt <= filter.To);
+        }
+
+        return query;
+    }
+
+    private static IQueryable<TripDvirInspection> ApplyDvirDateFilters(
+        IQueryable<TripDvirInspection> query,
+        AuditPackageFilter filter)
+    {
+        if (filter.From is not null)
+        {
+            query = query.Where(x => x.SubmittedAt >= filter.From);
+        }
+
+        if (filter.To is not null)
+        {
+            query = query.Where(x => x.SubmittedAt <= filter.To);
+        }
+
+        return query;
+    }
+
+    private static IQueryable<TripCaptureAttachment> ApplyAttachmentDateFilters(
+        IQueryable<TripCaptureAttachment> query,
+        AuditPackageFilter filter)
+    {
+        if (filter.From is not null)
+        {
+            query = query.Where(x => x.CreatedAt >= filter.From);
+        }
+
+        if (filter.To is not null)
+        {
+            query = query.Where(x => x.CreatedAt <= filter.To);
+        }
+
+        return query;
+    }
+
     private static async Task WriteJsonEntryAsync<T>(
         ZipArchive archive,
         string entryName,
@@ -342,16 +534,29 @@ public sealed class AuditPackageService(
         await JsonSerializer.SerializeAsync(entryStream, payload, JsonOptions, cancellationToken);
     }
 
-    private static async Task WriteCsvEntryAsync(
+    private static async Task WriteBytesEntryAsync(
         ZipArchive archive,
         string entryName,
-        IReadOnlyList<AuditEventExportItem> events,
+        byte[] bytes,
         CancellationToken cancellationToken)
     {
         var entry = archive.CreateEntry(entryName, CompressionLevel.Optimal);
         await using var entryStream = entry.Open();
-        var bytes = AuditPackageCsvWriter.WriteAuditEvents(events);
         await entryStream.WriteAsync(bytes, cancellationToken);
+    }
+
+    private static string ComputeEvidenceHash(params object?[] values)
+    {
+        var canonical = string.Join(
+            '\u001f',
+            values.Select(value => value switch
+            {
+                null => string.Empty,
+                DateTimeOffset dateTime => dateTime.ToString("O"),
+                _ => value.ToString() ?? string.Empty,
+            }));
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(canonical));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
     private static void ValidateDateRange(DateTimeOffset? from, DateTimeOffset? to)

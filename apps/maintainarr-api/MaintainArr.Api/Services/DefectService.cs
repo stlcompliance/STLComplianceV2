@@ -20,7 +20,9 @@ public sealed class DefectService(
 
     IMaintainArrAuditService audit,
 
-    AssetDowntimeService assetDowntimeService)
+    AssetDowntimeService assetDowntimeService,
+
+    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
 
 {
 
@@ -179,10 +181,10 @@ public sealed class DefectService(
         await db.SaveChangesAsync(cancellationToken);
 
         DowntimeFollowUpResponse? downtimeFollowUp = null;
+        var asset = await db.Assets
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == entity.AssetId, cancellationToken);
         if (string.Equals(entity.Severity, DefectSeverities.Critical, StringComparison.OrdinalIgnoreCase))
         {
-            var asset = await db.Assets
-                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == entity.AssetId, cancellationToken);
             if (asset is not null
                 && string.Equals(asset.LifecycleStatus, "active", StringComparison.OrdinalIgnoreCase))
             {
@@ -219,6 +221,20 @@ public sealed class DefectService(
             "Succeeded",
 
             cancellationToken: cancellationToken);
+
+        if (asset is not null)
+        {
+            await platformOutboxEnqueue.TryEnqueueDefectEventAsync(
+                tenantId,
+                MaintenancePlatformOutboxEventKinds.DefectCreated,
+                entity,
+                asset,
+                actorUserId,
+                now,
+                $"Defect {entity.Title} created for asset {asset.AssetTag}.",
+                eventResult: entity.Severity,
+                cancellationToken: cancellationToken);
+        }
 
 
 
@@ -490,6 +506,33 @@ public sealed class DefectService(
 
             cancellationToken: cancellationToken);
 
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == defect.AssetId, cancellationToken);
+        if (asset is not null)
+        {
+            var eventKind = defect.Status switch
+            {
+                DefectStatuses.Resolved => MaintenancePlatformOutboxEventKinds.DefectRepaired,
+                DefectStatuses.Closed => MaintenancePlatformOutboxEventKinds.DefectClosed,
+                _ => null,
+            };
+
+            if (eventKind is not null)
+            {
+                await platformOutboxEnqueue.TryEnqueueDefectEventAsync(
+                    tenantId,
+                    eventKind,
+                    defect,
+                    asset,
+                    actorUserId,
+                    now,
+                    $"Defect {defect.Title} changed to {defect.Status} for asset {asset.AssetTag}.",
+                    eventResult: defect.Status,
+                    cancellationToken: cancellationToken);
+            }
+        }
+
 
 
         return await MapDetailAsync(tenantId, defect, cancellationToken);
@@ -621,6 +664,23 @@ public sealed class DefectService(
             source,
 
             cancellationToken: cancellationToken);
+
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == entity.AssetId, cancellationToken);
+        if (asset is not null)
+        {
+            await platformOutboxEnqueue.TryEnqueueDefectEventAsync(
+                tenantId,
+                MaintenancePlatformOutboxEventKinds.DefectCreated,
+                entity,
+                asset,
+                actorUserId,
+                now,
+                $"Defect {entity.Title} created from inspection for asset {asset.AssetTag}.",
+                eventResult: entity.Severity,
+                cancellationToken: cancellationToken);
+        }
 
 
 

@@ -17,6 +17,7 @@ public sealed class ServiceTokenAdminService(
     NexArrDbContext db,
     PlatformAuthorizationService authorization,
     IPlatformAuditService audit,
+    PlatformOutboxEnqueueService outboxEnqueue,
     IOptions<StlServiceTokenOptions> serviceTokenOptions,
     IConfiguration configuration)
 {
@@ -88,6 +89,27 @@ public sealed class ServiceTokenAdminService(
             client.Id.ToString(),
             "Success",
             actorUserId: principal.GetUserId(),
+            cancellationToken: cancellationToken);
+
+        await outboxEnqueue.TryEnqueueAsync(
+            PlatformOutboxEventKinds.ServiceClientCreated,
+            "service_client",
+            client.Id.ToString(),
+            client.CreatedAt.ToUnixTimeMilliseconds().ToString(),
+            new PlatformOutboxPayload(
+                PlatformOutboxRules.DefaultSchemaVersion,
+                TenantId: null,
+                ActorPersonId: principal.GetUserId(),
+                TargetType: "service_client",
+                TargetId: client.Id.ToString(),
+                Summary: $"Service client created: {client.ClientKey}",
+                Metadata: new Dictionary<string, string>
+                {
+                    ["serviceClientId"] = client.Id.ToString(),
+                    ["serviceClientKey"] = client.ClientKey,
+                    ["sourceProductKey"] = client.SourceProductKey,
+                    ["allowedProductKeys"] = client.AllowedProductKeys,
+                }),
             cancellationToken: cancellationToken);
 
         return ToClientResponse(client);
@@ -408,6 +430,27 @@ public sealed class ServiceTokenAdminService(
             "Success",
             actorUserId: principal.GetUserId(),
             cancellationToken: cancellationToken);
+
+        await outboxEnqueue.TryEnqueueAsync(
+            PlatformOutboxEventKinds.ServiceClientRotated,
+            "service_client",
+            client.Id.ToString(),
+            now.ToUnixTimeMilliseconds().ToString(),
+            new PlatformOutboxPayload(
+                PlatformOutboxRules.DefaultSchemaVersion,
+                TenantId: null,
+                ActorPersonId: principal.GetUserId(),
+                TargetType: "service_client",
+                TargetId: client.Id.ToString(),
+                Summary: $"Service client rotated: {client.ClientKey}",
+                Metadata: new Dictionary<string, string>
+                {
+                    ["serviceClientId"] = client.Id.ToString(),
+                    ["serviceClientKey"] = client.ClientKey,
+                    ["sourceProductKey"] = client.SourceProductKey,
+                    ["revokedTokenCount"] = activeTokens.Count.ToString(),
+                }),
+            cancellationToken: cancellationToken);
     }
 
     public async Task RevokeClientAsync(
@@ -421,6 +464,7 @@ public sealed class ServiceTokenAdminService(
             ?? throw new StlApiException("service_client.not_found", "Service client was not found.", 404);
 
         var now = DateTimeOffset.UtcNow;
+        var wasActive = client.IsActive;
         var activeTokens = await db.ServiceTokens
             .Where(t => t.ServiceClientId == client.Id && t.RevokedAt == null && t.ExpiresAt > now)
             .ToListAsync(cancellationToken);
@@ -441,6 +485,30 @@ public sealed class ServiceTokenAdminService(
             "Success",
             actorUserId: principal.GetUserId(),
             cancellationToken: cancellationToken);
+
+        if (wasActive)
+        {
+            await outboxEnqueue.TryEnqueueAsync(
+                PlatformOutboxEventKinds.ServiceClientRevoked,
+                "service_client",
+                client.Id.ToString(),
+                now.ToUnixTimeMilliseconds().ToString(),
+                new PlatformOutboxPayload(
+                    PlatformOutboxRules.DefaultSchemaVersion,
+                    TenantId: null,
+                    ActorPersonId: principal.GetUserId(),
+                    TargetType: "service_client",
+                    TargetId: client.Id.ToString(),
+                    Summary: $"Service client revoked: {client.ClientKey}",
+                    Metadata: new Dictionary<string, string>
+                    {
+                        ["serviceClientId"] = client.Id.ToString(),
+                        ["serviceClientKey"] = client.ClientKey,
+                        ["sourceProductKey"] = client.SourceProductKey,
+                        ["revokedTokenCount"] = activeTokens.Count.ToString(),
+                    }),
+                cancellationToken: cancellationToken);
+        }
     }
 
     private (string Token, DateTimeOffset ExpiresAt) CreateServiceToken(

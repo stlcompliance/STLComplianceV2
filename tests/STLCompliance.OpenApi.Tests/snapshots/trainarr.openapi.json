@@ -994,6 +994,39 @@
         }
       }
     },
+    "/api/integrations/incident-remediations/{remediationId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetStaffarrIncidentRemediationIntegration",
+        "parameters": [
+          {
+            "name": "remediationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/person-training-history": {
       "get": {
         "tags": [
@@ -1062,6 +1095,29 @@
         }
       }
     },
+    "/api/integrations/routarr-incident-remediations": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestRoutarrIncidentRemediation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestRoutarrIncidentRemediationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/routarr-qualification-check": {
       "post": {
         "tags": [
@@ -1096,6 +1152,29 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/IngestSupplyarrDemandStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/supplyarr-incident-remediations": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestSupplyarrIncidentRemediation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestSupplyarrIncidentRemediationRequest"
               }
             }
           },
@@ -5746,6 +5825,39 @@
         }
       }
     },
+    "/api/v1/integrations/incident-remediations/{remediationId}": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetStaffarrIncidentRemediationIntegrationV1",
+        "parameters": [
+          {
+            "name": "remediationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/person-training-history": {
       "get": {
         "tags": [
@@ -5814,6 +5926,29 @@
         }
       }
     },
+    "/api/v1/integrations/routarr-incident-remediations": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestRoutarrIncidentRemediationV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestRoutarrIncidentRemediationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/routarr-qualification-check": {
       "post": {
         "tags": [
@@ -5848,6 +5983,29 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/IngestSupplyarrDemandStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/supplyarr-incident-remediations": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestSupplyarrIncidentRemediationV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestSupplyarrIncidentRemediationRequest"
               }
             }
           },
@@ -8258,6 +8416,48 @@
           }
         }
       },
+      "IngestRoutarrIncidentRemediationRequest": {
+        "required": [
+          "tenantId",
+          "sourceEventId",
+          "eventKind",
+          "relatedEntityId",
+          "correlationId",
+          "payload"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceEventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventKind": {
+            "type": "string"
+          },
+          "relatedEntityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/RoutarrIncidentPayload"
+          },
+          "occurredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "IngestStaffarrIncidentRemediationRequest": {
         "required": [
           "tenantId",
@@ -8383,6 +8583,53 @@
           },
           "occurredAt": {
             "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "IngestSupplyarrIncidentRemediationRequest": {
+        "required": [
+          "tenantId",
+          "sourceEventId",
+          "eventKind",
+          "supplierIncidentId",
+          "correlationId",
+          "staffarrPersonId",
+          "payload"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceEventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventKind": {
+            "type": "string"
+          },
+          "supplierIncidentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "staffarrPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/SupplyarrIncidentPayload"
+          },
+          "occurredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
             "format": "date-time"
           }
         }
@@ -8847,6 +9094,97 @@
           }
         }
       },
+      "RoutarrIncidentPayload": {
+        "required": [
+          "tenantId",
+          "summary",
+          "tripId"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "tripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "tripNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "driverPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dispatchStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "exceptionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "exceptionKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "exceptionCategory": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentSeverity": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentReviewStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentRoutedProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RoutarrQualificationCheckRequest": {
         "required": [
           "tenantId",
@@ -8986,6 +9324,80 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "SupplyarrIncidentPayload": {
+        "required": [
+          "tenantId",
+          "summary",
+          "supplierIncidentId",
+          "incidentKey",
+          "incidentType",
+          "severity",
+          "status",
+          "externalPartyId",
+          "partyDisplayName"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "supplierIncidentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "incidentKey": {
+            "type": "string"
+          },
+          "incidentType": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "externalPartyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "partyDisplayName": {
+            "type": "string"
+          },
+          "purchaseRequestId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "purchaseOrderId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "receivingReceiptId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "receivingExceptionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },

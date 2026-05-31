@@ -32,6 +32,8 @@ public sealed class Trip : IHasTenant
 
     public DateTimeOffset? AssignedAt { get; set; }
 
+    public DateTimeOffset? AcceptedAt { get; set; }
+
     public DateTimeOffset? DispatchedAt { get; set; }
 
     public DateTimeOffset? StartedAt { get; set; }
@@ -46,6 +48,8 @@ public sealed class Trip : IHasTenant
     public ICollection<TripLoad> Loads { get; set; } = [];
 
     public ICollection<TripPartsDemandLine> PartsDemandLines { get; set; } = [];
+
+    public ICollection<DispatchMessage> DispatchMessages { get; set; } = [];
 }
 
 public static class TripDispatchStatuses

@@ -11,7 +11,8 @@ namespace RoutArr.Api.Services;
 public sealed class DispatchExceptionService(
     RoutArrDbContext db,
     RoutArrAuthorizationService authorization,
-    IRoutArrAuditService audit)
+    IRoutArrAuditService audit,
+    IntegrationOutboxEnqueueService integrationOutbox)
 {
     public const string ListAction = "dispatch_exception.list";
     public const string CreateAction = "dispatch_exception.create";
@@ -20,6 +21,7 @@ public sealed class DispatchExceptionService(
     public const string LinkTripAction = "dispatch_exception.link_trip";
     public const string BulkAssignAction = "dispatch_exception.bulk_assign";
     public const string BulkResolveAction = "dispatch_exception.bulk_resolve";
+    public const string IncidentCreateAction = "routarr.incident.created";
 
     public IReadOnlyList<DispatchExceptionResolutionTemplateResponse> ListResolutionTemplates() =>
         DispatchExceptionResolutionTemplates.All
@@ -155,6 +157,10 @@ public sealed class DispatchExceptionService(
             Title = request.Title.Trim(),
             Description = request.Description?.Trim() ?? string.Empty,
             Category = category,
+            IncidentType = DispatchIncidentTypes.OperationalException,
+            IncidentSeverity = DispatchIncidentSeverities.Medium,
+            IncidentReviewStatus = DispatchIncidentReviewStatuses.Open,
+            IncidentRoutedProduct = DispatchIncidentRoutedProducts.RoutArr,
             Status = request.AssignedToUserId.HasValue
                 ? DispatchExceptionStatuses.Assigned
                 : DispatchExceptionStatuses.Open,
@@ -178,6 +184,86 @@ public sealed class DispatchExceptionService(
             entity.Id.ToString(),
             entity.ExceptionKey,
             cancellationToken: cancellationToken);
+
+        await integrationOutbox.TryEnqueueExceptionCreatedAsync(entity, trip, cancellationToken);
+        await integrationOutbox.TryEnqueueIncidentCreatedAsync(entity, trip, cancellationToken);
+        await integrationOutbox.TryEnqueueComplianceHoldCreatedAsync(entity, trip, cancellationToken);
+
+        return MapSummary(entity, trip);
+    }
+
+    public async Task<DispatchExceptionSummaryResponse> CreateIncidentAsync(
+        ClaimsPrincipal principal,
+        CreateDispatchIncidentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        authorization.RequireDispatchExceptionTriage(principal);
+        var tenantId = principal.GetTenantId();
+        var actorUserId = principal.GetUserId();
+
+        ValidateTitle(request.Title);
+        var incidentType = NormalizeIncidentType(request.IncidentType);
+        var severity = NormalizeIncidentSeverity(request.IncidentSeverity);
+        var routedProduct = NormalizeIncidentRoutedProduct(request.RoutedProduct, incidentType);
+        var category = CategoryForIncidentType(incidentType);
+
+        Trip? trip = null;
+        if (request.TripId.HasValue)
+        {
+            trip = await RequireTripAsync(tenantId, request.TripId.Value, cancellationToken);
+            authorization.RequireTripAccess(
+                principal,
+                trip.CreatedByUserId,
+                trip.AssignedDriverPersonId);
+        }
+
+        if (request.AssignedToUserId is { } assignee)
+        {
+            DispatchExceptionRules.EnsureAssignee(assignee);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new DispatchException
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            ExceptionKey = await GenerateExceptionKeyAsync(tenantId, cancellationToken),
+            Title = request.Title.Trim(),
+            Description = request.Description?.Trim() ?? string.Empty,
+            Category = category,
+            IncidentType = incidentType,
+            IncidentSeverity = severity,
+            IncidentReviewStatus = string.Equals(routedProduct, DispatchIncidentRoutedProducts.RoutArr, StringComparison.OrdinalIgnoreCase)
+                ? DispatchIncidentReviewStatuses.Open
+                : DispatchIncidentReviewStatuses.Routed,
+            IncidentRoutedProduct = routedProduct,
+            Status = request.AssignedToUserId.HasValue
+                ? DispatchExceptionStatuses.Assigned
+                : DispatchExceptionStatuses.Open,
+            TripId = trip?.Id,
+            AssignedToUserId = request.AssignedToUserId,
+            AssignedAt = request.AssignedToUserId.HasValue ? now : null,
+            SlaDueAt = DispatchExceptionRules.NormalizeSlaDueAt(request.SlaDueAt, category, now),
+            CreatedByUserId = actorUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.DispatchExceptions.Add(entity);
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            IncidentCreateAction,
+            tenantId,
+            actorUserId,
+            "dispatch_incident",
+            entity.Id.ToString(),
+            $"{incidentType}:{severity}:{routedProduct}",
+            cancellationToken: cancellationToken);
+
+        await integrationOutbox.TryEnqueueIncidentCreatedAsync(entity, trip, cancellationToken);
+        await integrationOutbox.TryEnqueueExceptionCreatedAsync(entity, trip, cancellationToken);
+        await integrationOutbox.TryEnqueueComplianceHoldCreatedAsync(entity, trip, cancellationToken);
 
         return MapSummary(entity, trip);
     }
@@ -236,6 +322,7 @@ public sealed class DispatchExceptionService(
 
         var templateKey = DispatchExceptionRules.NormalizeResolutionTemplateKey(request.ResolutionTemplateKey);
         entity.Status = DispatchExceptionStatuses.Resolved;
+        entity.IncidentReviewStatus = DispatchIncidentReviewStatuses.Closed;
         entity.ResolutionTemplateKey = templateKey;
         entity.ResolutionNotes = DispatchExceptionRules.BuildResolutionNotes(
             string.IsNullOrWhiteSpace(templateKey) ? null : templateKey,
@@ -254,6 +341,15 @@ public sealed class DispatchExceptionService(
             entity.Id.ToString(),
             string.IsNullOrWhiteSpace(templateKey) ? "resolved" : templateKey,
             cancellationToken: cancellationToken);
+
+        var trip = entity.TripId.HasValue
+            ? await db.Trips
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == entity.TripId.Value, cancellationToken)
+            : null;
+
+        await integrationOutbox.TryEnqueueExceptionResolvedAsync(entity, trip, cancellationToken);
+        await integrationOutbox.TryEnqueueComplianceHoldReleasedAsync(entity, trip, cancellationToken);
 
         return await MapWithTripAsync(tenantId, entity, cancellationToken);
     }
@@ -519,6 +615,77 @@ public sealed class DispatchExceptionService(
         return normalized;
     }
 
+    private static string NormalizeIncidentType(string? incidentType)
+    {
+        var normalized = string.IsNullOrWhiteSpace(incidentType)
+            ? DispatchIncidentTypes.OperationalException
+            : incidentType.Trim().ToLowerInvariant();
+
+        if (!DispatchIncidentTypes.All.Contains(normalized))
+        {
+            throw new StlApiException(
+                "dispatch_incident.invalid_type",
+                "Incident type is not valid.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeIncidentSeverity(string? severity)
+    {
+        var normalized = string.IsNullOrWhiteSpace(severity)
+            ? DispatchIncidentSeverities.Medium
+            : severity.Trim().ToLowerInvariant();
+
+        if (!DispatchIncidentSeverities.All.Contains(normalized))
+        {
+            throw new StlApiException(
+                "dispatch_incident.invalid_severity",
+                "Incident severity must be low, medium, high, or critical.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string NormalizeIncidentRoutedProduct(string? routedProduct, string incidentType)
+    {
+        var normalized = string.IsNullOrWhiteSpace(routedProduct)
+            ? DefaultRoutedProductForIncidentType(incidentType)
+            : routedProduct.Trim().ToLowerInvariant();
+
+        if (!DispatchIncidentRoutedProducts.All.Contains(normalized))
+        {
+            throw new StlApiException(
+                "dispatch_incident.invalid_routed_product",
+                "Incident routed product is not valid.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string DefaultRoutedProductForIncidentType(string incidentType) =>
+        incidentType switch
+        {
+            DispatchIncidentTypes.EquipmentAbuse => DispatchIncidentRoutedProducts.MaintainArr,
+            DispatchIncidentTypes.TrainingRelated => DispatchIncidentRoutedProducts.TrainArr,
+            DispatchIncidentTypes.ComplianceRelated => DispatchIncidentRoutedProducts.ComplianceCore,
+            DispatchIncidentTypes.Injury => DispatchIncidentRoutedProducts.StaffArr,
+            _ => DispatchIncidentRoutedProducts.RoutArr,
+        };
+
+    private static string CategoryForIncidentType(string incidentType) =>
+        incidentType switch
+        {
+            DispatchIncidentTypes.EquipmentAbuse => DispatchExceptionCategories.Vehicle,
+            DispatchIncidentTypes.ComplianceRelated => DispatchExceptionCategories.Compliance,
+            DispatchIncidentTypes.TrainingRelated => DispatchExceptionCategories.Driver,
+            DispatchIncidentTypes.Injury => DispatchExceptionCategories.Driver,
+            _ => DispatchExceptionCategories.Other,
+        };
+
     private async Task<string> GenerateExceptionKeyAsync(Guid tenantId, CancellationToken cancellationToken)
     {
         var datePart = DateTimeOffset.UtcNow.ToString("yyyyMMdd");
@@ -565,6 +732,23 @@ public sealed class DispatchExceptionService(
             entity.Description,
             entity.Category,
             entity.Status,
+            entity.IncidentType,
+            entity.IncidentSeverity,
+            entity.IncidentReviewStatus,
+            entity.IncidentRoutedProduct,
+            entity.StaffarrPersonnelIncidentId,
+            entity.StaffarrIncidentRoutedAt,
+            entity.StaffarrIncidentRouteStatus,
+            entity.TrainarrIncidentRemediationId,
+            entity.TrainarrIncidentRoutedAt,
+            entity.TrainarrIncidentRouteStatus,
+            entity.MaintainarrInboundEventId,
+            entity.MaintainarrDefectId,
+            entity.MaintainarrIncidentRoutedAt,
+            entity.MaintainarrIncidentRouteStatus,
+            entity.CompliancecoreFactPublicationId,
+            entity.CompliancecoreIncidentRoutedAt,
+            entity.CompliancecoreIncidentRouteStatus,
             entity.TripId,
             trip?.TripNumber,
             trip?.Title,

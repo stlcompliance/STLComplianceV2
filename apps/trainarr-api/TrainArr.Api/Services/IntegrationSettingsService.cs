@@ -132,6 +132,20 @@ public sealed class IntegrationSettingsService(
         }
     }
 
+    public async Task EnsureRoutarrIncidentIntakeEnabledAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var snapshot = await LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!IntegrationSettingsRules.ResolveRoutarrIncidentIntakeEnabled(snapshot))
+        {
+            throw new StlApiException(
+                "integration_settings.routarr_incident_intake_disabled",
+                "RoutArr incident remediation intake is disabled for this tenant.",
+                403);
+        }
+    }
+
     internal static TenantIntegrationSettingsSnapshot ToSnapshot(TenantIntegrationSettings settings) =>
         new(
             settings.StaffArrIntegrationEnabled,

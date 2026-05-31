@@ -27,6 +27,10 @@ public sealed record TripDvirInspectionResponse(
     string Result,
     long? OdometerReading,
     string DefectNotes,
+    Guid? MaintainarrInboundEventId,
+    Guid? MaintainarrDefectId,
+    DateTimeOffset? MaintainarrEventRoutedAt,
+    string MaintainarrEventRouteStatus,
     string SubmittedByPersonId,
     DateTimeOffset SubmittedAt,
     IReadOnlyList<TripCaptureAttachmentResponse> Attachments);

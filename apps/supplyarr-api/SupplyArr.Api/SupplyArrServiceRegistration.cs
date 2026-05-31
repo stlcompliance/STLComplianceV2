@@ -21,6 +21,18 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<ExternalPartyService>();
         builder.Services.AddScoped<PartCatalogService>();
         builder.Services.AddScoped<PartRegistryService>();
+        builder.Services.AddScoped<PartCatalogCsvImportService>();
+        builder.Services.AddScoped<VendorCatalogCsvImportService>();
+        builder.Services.AddScoped<VendorDocumentsCsvImportService>();
+        builder.Services.AddScoped<InventoryCountsCsvImportService>();
+        builder.Services.AddScoped<PriceListCsvImportService>();
+        builder.Services.AddScoped<LeadTimeListCsvImportService>();
+        builder.Services.AddScoped<AvailabilityListCsvImportService>();
+        builder.Services.AddScoped<ContractsCsvImportService>();
+        builder.Services.AddScoped<ExternalPartiesCsvImportService>();
+        builder.Services.AddScoped<ContactsCsvImportService>();
+        builder.Services.AddScoped<OpenPurchaseOrdersCsvImportService>();
+        builder.Services.AddScoped<PurchaseHistoryCsvImportService>();
         builder.Services.AddScoped<InventoryLocationService>();
         builder.Services.AddScoped<PartStockService>();
         builder.Services.AddScoped<StockReservationService>();
@@ -64,6 +76,7 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<VendorRestrictionService>();
         builder.Services.AddScoped<SupplierIncidentService>();
         builder.Services.AddScoped<WarrantyClaimService>();
+        builder.Services.AddScoped<SupplyContractService>();
         builder.Services.AddScoped<ProcurementExceptionService>();
         builder.Services.AddScoped<StaffarrProcurementApprovalAuthorityService>();
         builder.Services.AddHttpClient<StaffArrProcurementApprovalAuthorityClient>((sp, client) =>
@@ -71,6 +84,23 @@ public static class SupplyArrServiceRegistration
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
+        builder.Services.AddHttpClient<StaffArrProductIncidentClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddHttpClient<TrainArrIncidentRemediationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<TrainArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddHttpClient<TrainArrQualificationCheckClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<TrainArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddScoped<StaffArrProductIncidentPublisherService>();
+        builder.Services.AddScoped<TrainArrSupplierIncidentPublisherService>();
         builder.Services.AddScoped<EmergencyPurchaseService>();
         builder.Services.AddScoped<VendorReportService>();
         builder.Services.AddScoped<PartsInventoryReportService>();
@@ -95,6 +125,11 @@ public static class SupplyArrServiceRegistration
         builder.Services.Configure<StaffArrClientOptions>(builder.Configuration.GetSection(StaffArrClientOptions.SectionName));
         builder.Services.Configure<ComplianceCoreClientOptions>(builder.Configuration.GetSection(ComplianceCoreClientOptions.SectionName));
         builder.Services.AddHttpClient<ComplianceCoreFactPublicationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ComplianceCoreClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddHttpClient<ComplianceCoreVendorUseGateClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ComplianceCoreClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");

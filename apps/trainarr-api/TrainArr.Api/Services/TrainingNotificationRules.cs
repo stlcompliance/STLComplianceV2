@@ -87,6 +87,7 @@ public static class TrainingNotificationRules
             TrainingNotificationEventKinds.QualificationSuspended => settings.NotifyOnQualificationSuspended,
             TrainingNotificationEventKinds.QualificationRevoked => settings.NotifyOnQualificationRevoked,
             TrainingNotificationEventKinds.QualificationExpired => settings.NotifyOnQualificationExpired,
+            TrainingNotificationEventKinds.RemediationRequired => true,
             TrainingNotificationEventKinds.AssignmentDueReminder => settings.NotifyOnAssignmentDueReminder,
             TrainingNotificationEventKinds.AssignmentOverdueEscalation => settings.NotifyOnAssignmentOverdueEscalation,
             _ => false,
@@ -101,6 +102,7 @@ public static class TrainingNotificationRules
             TrainingDomainEventKinds.QualificationSuspended => TrainingNotificationEventKinds.QualificationSuspended,
             TrainingDomainEventKinds.QualificationRevoked => TrainingNotificationEventKinds.QualificationRevoked,
             TrainingDomainEventKinds.QualificationExpired => TrainingNotificationEventKinds.QualificationExpired,
+            TrainingDomainEventKinds.RemediationRequired => TrainingNotificationEventKinds.RemediationRequired,
             _ => null,
         };
 }

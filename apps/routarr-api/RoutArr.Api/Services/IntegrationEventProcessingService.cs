@@ -8,6 +8,10 @@ namespace RoutArr.Api.Services;
 public sealed class IntegrationEventProcessingService(
     RoutArrDbContext db,
     IntegrationEventSettingsService settingsService,
+    StaffArrProductIncidentPublisherService staffarrIncidentPublisher,
+    TrainArrIncidentRemediationPublisherService trainarrIncidentPublisher,
+    MaintainArrRoutarrEventPublisherService maintainarrEventPublisher,
+    ComplianceCoreIncidentFactPublisherService complianceCoreIncidentFactPublisher,
     IRoutArrAuditService audit)
 {
     public const string ProcessEventsActionScope = "routarr.integration.events.process";
@@ -171,6 +175,25 @@ public sealed class IntegrationEventProcessingService(
             item.ErrorMessage = "max_attempts_exceeded";
             await db.SaveChangesAsync(cancellationToken);
             return;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await staffarrIncidentPublisher.TryPublishFromOutboxAsync(item, cancellationToken);
+            await trainarrIncidentPublisher.TryPublishFromOutboxAsync(item, cancellationToken);
+            await maintainarrEventPublisher.TryPublishFromOutboxAsync(item, cancellationToken);
+            await complianceCoreIncidentFactPublisher.TryPublishFromOutboxAsync(item, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            item.ProcessingStatus = IntegrationEventStatuses.Pending;
+            item.ErrorMessage = ex.Message;
+            item.NextRetryAt = now.AddMinutes(settings.RetryIntervalMinutes);
+            item.UpdatedAt = DateTimeOffset.UtcNow;
+            await db.SaveChangesAsync(cancellationToken);
+            throw;
         }
 
         item.ProcessingStatus = IntegrationEventStatuses.Processed;

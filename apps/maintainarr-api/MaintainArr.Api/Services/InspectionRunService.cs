@@ -10,7 +10,8 @@ public sealed class InspectionRunService(
     MaintainArrDbContext db,
     AssetService assetService,
     DefectService defectService,
-    IMaintainArrAuditService audit)
+    IMaintainArrAuditService audit,
+    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
 {
     private static readonly HashSet<string> AllowedPassFailValues = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -145,6 +146,16 @@ public sealed class InspectionRunService(
             "Succeeded",
             cancellationToken: cancellationToken);
 
+        await platformOutboxEnqueue.TryEnqueueInspectionRunEventAsync(
+            tenantId,
+            MaintenancePlatformOutboxEventKinds.InspectionStarted,
+            entity,
+            asset,
+            actorUserId,
+            now,
+            $"Inspection {template.TemplateKey} started for asset {asset.AssetTag}.",
+            cancellationToken: cancellationToken);
+
         return await MapDetailAsync(tenantId, entity, cancellationToken);
     }
 
@@ -234,6 +245,18 @@ public sealed class InspectionRunService(
             "Succeeded",
             cancellationToken: cancellationToken);
 
+        var asset = await assetService.GetAsync(tenantId, run.AssetId, cancellationToken);
+        await platformOutboxEnqueue.TryEnqueueInspectionRunEventAsync(
+            tenantId,
+            MaintenancePlatformOutboxEventKinds.InspectionAnswerSubmitted,
+            run,
+            asset,
+            actorUserId,
+            now,
+            $"Inspection answers submitted for asset {asset.AssetTag}.",
+            eventResult: $"{request.Answers.Count}",
+            cancellationToken: cancellationToken);
+
         return await MapDetailAsync(tenantId, run, cancellationToken);
     }
 
@@ -298,6 +321,32 @@ public sealed class InspectionRunService(
             run.Id.ToString(),
             run.Result ?? "Succeeded",
             cancellationToken: cancellationToken);
+
+        var asset = await assetService.GetAsync(tenantId, run.AssetId, cancellationToken);
+        await platformOutboxEnqueue.TryEnqueueInspectionRunEventAsync(
+            tenantId,
+            MaintenancePlatformOutboxEventKinds.InspectionCompleted,
+            run,
+            asset,
+            actorUserId,
+            now,
+            $"Inspection completed for asset {asset.AssetTag} with result {run.Result}.",
+            eventResult: run.Result,
+            cancellationToken: cancellationToken);
+
+        if (failed)
+        {
+            await platformOutboxEnqueue.TryEnqueueInspectionRunEventAsync(
+                tenantId,
+                MaintenancePlatformOutboxEventKinds.InspectionFailed,
+                run,
+                asset,
+                actorUserId,
+                now,
+                $"Inspection failed for asset {asset.AssetTag}.",
+                eventResult: run.Result,
+                cancellationToken: cancellationToken);
+        }
 
         if (failed)
         {

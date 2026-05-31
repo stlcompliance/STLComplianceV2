@@ -20,7 +20,9 @@ public sealed record RuleDefinitionDto(
     string Type,
     string FactKey,
     bool ExpectedValue,
-    bool NonWaivable = false);
+    bool NonWaivable = false,
+    bool RemediationRequired = false,
+    bool ReviewRequired = false);
 
 public sealed record UpdateRulePackContentRequest(RulePackContentBody Content);
 
@@ -60,7 +62,9 @@ public sealed record RuleEvaluationItemResponse(
     string Label,
     string Result,
     string Message,
-    bool NonWaivable = false);
+    bool NonWaivable = false,
+    bool RemediationRequired = false,
+    bool ReviewRequired = false);
 
 public sealed record EvaluateRulePackBatchItem(
     string RulePackKey,

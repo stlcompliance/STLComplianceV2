@@ -7,7 +7,13 @@ public static class DispatchOverrideReportEndpoints
 {
     public static void MapRoutArrDispatchOverrideReportEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/reports/dispatch-overrides")
+        MapGroup(app, "/api/reports/dispatch-overrides", string.Empty);
+        MapGroup(app, "/api/v1/reports/dispatch-overrides", "V1");
+    }
+
+    private static void MapGroup(WebApplication app, string routePrefix, string routeNameSuffix)
+    {
+        var group = app.MapGroup(routePrefix)
             .WithTags("DispatchOverrideReports")
             .RequireAuthorization();
 
@@ -33,7 +39,7 @@ public static class DispatchOverrideReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(summary);
         })
-        .WithName("GetRoutArrDispatchOverrideReportSummary");
+        .WithName($"GetRoutArrDispatchOverrideReportSummary{routeNameSuffix}");
 
         group.MapGet("/summary/export", async (
             string? scope,
@@ -57,6 +63,6 @@ public static class DispatchOverrideReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportRoutArrDispatchOverrideReportSummary");
+        .WithName($"ExportRoutArrDispatchOverrideReportSummary{routeNameSuffix}");
     }
 }

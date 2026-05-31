@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
+using NexArr.Api.Entities;
 using NexArr.Api.Services;
 
 namespace STLCompliance.NexArr.Auth.Tests;
@@ -67,6 +68,49 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
             new LoginRequest(PlatformSeeder.DemoAdminEmail, "wrong-password", PlatformSeeder.DemoTenantId));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Repeated_failed_login_locks_user_and_emits_outbox()
+    {
+        await SeedDatabaseAsync();
+
+        for (var attempt = 0; attempt < AuthService.FailedLoginLockoutThreshold; attempt++)
+        {
+            var response = await _client.PostAsJsonAsync(
+                "/api/auth/login",
+                new LoginRequest(
+                    PlatformSeeder.DemoTenantAdminEmail,
+                    "wrong-password",
+                    PlatformSeeder.DemoTenantId));
+
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        }
+
+        var lockedResponse = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                PlatformSeeder.DemoTenantAdminEmail,
+                PlatformSeeder.DemoAdminPassword,
+                PlatformSeeder.DemoTenantId));
+
+        Assert.Equal(HttpStatusCode.Locked, lockedResponse.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        var user = await db.Users
+            .Include(x => x.Credential)
+            .SingleAsync(x => x.Id == PlatformSeeder.DemoTenantAdminUserId);
+
+        Assert.Equal(AuthService.FailedLoginLockoutThreshold, user.Credential!.FailedLoginCount);
+        Assert.True(user.Credential.LockedUntil > DateTimeOffset.UtcNow);
+
+        var outboxEvent = await db.PlatformOutboxEvents
+            .AsNoTracking()
+            .SingleAsync(x => x.EventType == PlatformOutboxEventKinds.UserLocked
+                && x.PayloadJson.Contains(PlatformSeeder.DemoTenantAdminUserId.ToString()));
+
+        Assert.Contains("failed_login_threshold", outboxEvent.PayloadJson);
     }
 
     [Fact]

@@ -8,6 +8,7 @@ namespace SupplyArr.Api.Services;
 
 public sealed class PartyComplianceDocumentService(
     SupplyArrDbContext db,
+    IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
     public async Task<IReadOnlyList<PartyComplianceDocumentResponse>> ListForPartyAsync(
@@ -77,6 +78,12 @@ public sealed class PartyComplianceDocumentService(
             entity.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
+        await EnqueueDocumentFactEventAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.PartyComplianceDocumentRegistered,
+            entity,
+            $"Compliance document registered: {entity.DocumentKey}",
+            cancellationToken);
 
         return Map(entity);
     }
@@ -112,6 +119,12 @@ public sealed class PartyComplianceDocumentService(
             entity.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
+        await EnqueueDocumentFactEventAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.PartyComplianceDocumentApproved,
+            entity,
+            $"Compliance document approved: {entity.DocumentKey}",
+            cancellationToken);
 
         return Map(entity);
     }
@@ -151,6 +164,12 @@ public sealed class PartyComplianceDocumentService(
             entity.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
+        await EnqueueDocumentFactEventAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.PartyComplianceDocumentRejected,
+            entity,
+            $"Compliance document rejected: {entity.DocumentKey}",
+            cancellationToken);
 
         return Map(entity);
     }
@@ -190,6 +209,20 @@ public sealed class PartyComplianceDocumentService(
             x => x.TenantId == tenantId && x.Id == documentId,
             cancellationToken)
         ?? throw new StlApiException("party_compliance_document.not_found", "Compliance document was not found.", 404);
+
+    private async Task EnqueueDocumentFactEventAsync(
+        Guid tenantId,
+        string eventKind,
+        PartyComplianceDocument entity,
+        string summary,
+        CancellationToken cancellationToken) =>
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            eventKind,
+            "party_compliance_document",
+            entity.Id,
+            new IntegrationOutboxPayload(tenantId, summary, entity.ExternalPartyId),
+            cancellationToken: cancellationToken);
 
     private static PartyComplianceDocumentResponse Map(PartyComplianceDocument entity) =>
         new(

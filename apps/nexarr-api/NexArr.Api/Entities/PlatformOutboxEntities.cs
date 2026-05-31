@@ -6,13 +6,29 @@ public static class PlatformOutboxEventKinds
     public const string TenantUpdated = "tenant.updated";
     public const string TenantDisabled = "tenant.disabled";
     public const string TenantEnabled = "tenant.enabled";
+    public const string TenantArchived = "tenant.archived";
     public const string TenantEntitlementGranted = "tenant.entitlement.granted";
     public const string TenantEntitlementUpdated = "tenant.entitlement.updated";
     public const string TenantEntitlementRevoked = "tenant.entitlement.revoked";
     public const string TenantMembershipAdded = "tenant.membership.added";
     public const string TenantMembershipRemoved = "tenant.membership.removed";
+    public const string UserCreated = "user.created";
+    public const string UserUpdated = "user.updated";
     public const string UserDisabled = "user.disabled";
     public const string UserEnabled = "user.enabled";
+    public const string UserLocked = "user.locked";
+    public const string UserUnlocked = "user.unlocked";
+    public const string ProductCreated = "product.created";
+    public const string ProductUpdated = "product.updated";
+    public const string ProductDisabled = "product.disabled";
+    public const string ProductEnabled = "product.enabled";
+    public const string ServiceClientCreated = "serviceClient.created";
+    public const string ServiceClientRotated = "serviceClient.rotated";
+    public const string ServiceClientRevoked = "serviceClient.revoked";
+    public const string LaunchSucceeded = "launch.succeeded";
+    public const string LaunchFailed = "launch.failed";
+    public const string HandoffRedeemed = "handoff.redeemed";
+    public const string HandoffFailed = "handoff.failed";
 }
 
 public static class PlatformOutboxEventStatuses

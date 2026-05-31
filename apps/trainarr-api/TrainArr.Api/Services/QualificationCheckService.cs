@@ -28,6 +28,14 @@ public sealed class QualificationCheckService(
 
 {
 
+    public const string SingleCheckAction = "qualification_check.run";
+
+    public const string BatchCheckAction = "qualification_check.batch_run";
+
+    public const string SingleCheckSnapshotKind = "qualification_check";
+
+    public const string BatchCheckSnapshotKind = "qualification_check_batch";
+
     public const int MaxBatchSubjects = 100;
 
     public const int DefaultHistoryLimit = 25;
@@ -129,11 +137,23 @@ public sealed class QualificationCheckService(
 
             complianceSummary);
 
+        result = result with
+        {
+            AuthorizationGuidance = await BuildAuthorizationGuidanceAsync(
+                tenantId,
+                personId,
+                qualificationKey,
+                result,
+                request.TrainingDefinitionId,
+                request.TrainingProgramId,
+                cancellationToken)
+        };
 
 
-        await auditService.WriteAsync(
 
-            "qualification_check.run",
+        var auditResult = await auditService.WriteAsync(
+
+            SingleCheckAction,
 
             tenantId,
 
@@ -148,6 +168,14 @@ public sealed class QualificationCheckService(
             reasonCode: result.ReasonCode,
 
             cancellationToken: cancellationToken);
+
+        result = result with
+        {
+            AuditSnapshot = new QualificationCheckAuditSnapshotResponse(
+                auditResult.AuditEventId,
+                SingleCheckSnapshotKind,
+                auditResult.OccurredAt)
+        };
 
 
 
@@ -356,6 +384,19 @@ public sealed class QualificationCheckService(
 
             var subjectResult = results[^1];
 
+            subjectResult = subjectResult with
+            {
+                AuthorizationGuidance = await BuildAuthorizationGuidanceAsync(
+                    tenantId,
+                    subject.StaffarrPersonId,
+                    qualificationKey,
+                    subjectResult,
+                    request.TrainingDefinitionId,
+                    request.TrainingProgramId,
+                    cancellationToken)
+            };
+            results[^1] = subjectResult;
+
             await PersistRecordAsync(
 
                 tenantId,
@@ -384,13 +425,15 @@ public sealed class QualificationCheckService(
 
             results.Count(item => item.Outcome == QualificationCheckOutcomes.Warn),
 
-            results.Count(item => item.Outcome == QualificationCheckOutcomes.Block));
+            results.Count(item => item.Outcome == QualificationCheckOutcomes.Block),
+
+            results.Count(item => item.Outcome == QualificationCheckOutcomes.Waived));
 
 
 
-        await auditService.WriteAsync(
+        var batchAuditResult = await auditService.WriteAsync(
 
-            "qualification_check.batch_run",
+            BatchCheckAction,
 
             tenantId,
 
@@ -408,7 +451,15 @@ public sealed class QualificationCheckService(
 
 
 
-        return new BatchQualificationCheckResponse(batchId, qualificationKey, results, summary);
+        return new BatchQualificationCheckResponse(
+            batchId,
+            qualificationKey,
+            results,
+            summary,
+            new QualificationCheckAuditSnapshotResponse(
+                batchAuditResult.AuditEventId,
+                BatchCheckSnapshotKind,
+                batchAuditResult.OccurredAt));
 
     }
 
@@ -434,12 +485,24 @@ public sealed class QualificationCheckService(
             null,
             cancellationToken);
 
-        return BuildCheckResponse(
+        var result = BuildCheckResponse(
             Guid.NewGuid(),
             issue.StaffarrPersonId,
             qualificationKey,
             localState,
             complianceSummary);
+
+        return result with
+        {
+            AuthorizationGuidance = await BuildAuthorizationGuidanceAsync(
+                tenantId,
+                issue.StaffarrPersonId,
+                qualificationKey,
+                result,
+                trainingDefinitionId,
+                null,
+                cancellationToken)
+        };
     }
 
 
@@ -552,7 +615,11 @@ public sealed class QualificationCheckService(
 
             evaluation.EvaluationResult,
 
-            evaluation.UnresolvedFactKeys);
+            evaluation.UnresolvedFactKeys,
+
+            evaluation.AppliedWaiverId,
+
+            evaluation.AppliedWaiverKey);
 
 
 
@@ -588,8 +655,257 @@ public sealed class QualificationCheckService(
 
             localState,
 
-            complianceSummary);
+            complianceSummary,
 
+            BuildDependencyFacts(complianceSummary));
+
+    }
+
+    private static IReadOnlyList<QualificationDependencyFactResponse> BuildDependencyFacts(
+        ComplianceCoreCheckSummaryResponse? complianceSummary)
+    {
+        if (complianceSummary is null || complianceSummary.UnresolvedFactKeys.Count == 0)
+        {
+            return [];
+        }
+
+        return complianceSummary.UnresolvedFactKeys
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+            .Select(factKey => new QualificationDependencyFactResponse(
+                factKey,
+                "missing",
+                $"Compliance dependency fact '{factKey}' is missing or unresolved."))
+            .ToList();
+    }
+
+    private async Task<QualificationAuthorizationGuidanceResponse?> BuildAuthorizationGuidanceAsync(
+        Guid tenantId,
+        Guid personId,
+        string qualificationKey,
+        QualificationCheckResponse result,
+        Guid? requestedTrainingDefinitionId,
+        Guid? requestedTrainingProgramId,
+        CancellationToken cancellationToken)
+    {
+        if (string.Equals(result.Outcome, QualificationCheckOutcomes.Allow, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(result.Outcome, QualificationCheckOutcomes.Waived, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var definition = await ResolveGuidanceDefinitionAsync(
+            tenantId,
+            qualificationKey,
+            requestedTrainingDefinitionId,
+            requestedTrainingProgramId,
+            cancellationToken);
+        var program = await ResolveGuidanceProgramAsync(
+            tenantId,
+            definition?.Id,
+            requestedTrainingProgramId,
+            cancellationToken);
+
+        TrainingAssignment? assignment = null;
+        if (definition is not null)
+        {
+            assignment = await db.TrainingAssignments
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId
+                    && x.StaffarrPersonId == personId
+                    && x.TrainingDefinitionId == definition.Id)
+                .OrderByDescending(x => TrainingAssignmentService.ActiveAssignmentStatuses.Contains(x.Status))
+                .ThenByDescending(x => x.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        var assignmentStatus = assignment?.Status ?? "not_assigned";
+        var missingQualification = result.LocalQualification?.Status switch
+        {
+            "expired" => $"Qualification '{qualificationKey}' is expired.",
+            "suspended" => $"Qualification '{qualificationKey}' is suspended.",
+            "revoked" => $"Qualification '{qualificationKey}' is revoked.",
+            "issued" => result.ComplianceCore is null
+                ? $"Qualification '{qualificationKey}' requires review."
+                : $"Qualification '{qualificationKey}' has unresolved compliance requirements.",
+            _ => $"Qualification '{qualificationKey}' has not been issued."
+        };
+
+        return new QualificationAuthorizationGuidanceResponse(
+            BuildGuidanceBlockReason(result),
+            missingQualification,
+            definition?.Id,
+            definition?.Name,
+            program?.Id,
+            program?.Name,
+            assignmentStatus,
+            assignment?.Id,
+            assignment?.DueAt,
+            BuildGuidanceNextAction(assignmentStatus, definition, program, result),
+            BuildGuidanceSupervisorAction(assignmentStatus, result),
+            BuildGuidanceEstimatedPath(assignmentStatus, assignment, definition, program, result));
+    }
+
+    private async Task<TrainingDefinition?> ResolveGuidanceDefinitionAsync(
+        Guid tenantId,
+        string qualificationKey,
+        Guid? requestedTrainingDefinitionId,
+        Guid? requestedTrainingProgramId,
+        CancellationToken cancellationToken)
+    {
+        if (requestedTrainingDefinitionId is { } definitionId && definitionId != Guid.Empty)
+        {
+            return await db.TrainingDefinitions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == definitionId, cancellationToken);
+        }
+
+        if (requestedTrainingProgramId is { } programId && programId != Guid.Empty)
+        {
+            var programDefinition = await db.TrainingProgramDefinitions
+                .AsNoTracking()
+                .Include(x => x.TrainingDefinition)
+                .Where(x => x.TrainingProgram.TenantId == tenantId
+                    && x.TrainingProgramId == programId
+                    && x.TrainingDefinition.QualificationKey == qualificationKey)
+                .OrderBy(x => x.SortOrder)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (programDefinition is not null)
+            {
+                return programDefinition.TrainingDefinition;
+            }
+        }
+
+        return await db.TrainingDefinitions
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.QualificationKey == qualificationKey
+                && x.Status == "active")
+            .OrderByDescending(x => x.UpdatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private async Task<TrainingProgram?> ResolveGuidanceProgramAsync(
+        Guid tenantId,
+        Guid? trainingDefinitionId,
+        Guid? requestedTrainingProgramId,
+        CancellationToken cancellationToken)
+    {
+        if (requestedTrainingProgramId is { } programId && programId != Guid.Empty)
+        {
+            return await db.TrainingPrograms
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == programId, cancellationToken);
+        }
+
+        if (trainingDefinitionId is not { } definitionId)
+        {
+            return null;
+        }
+
+        return await db.TrainingPrograms
+            .AsNoTracking()
+            .Include(x => x.ProgramDefinitions)
+            .Where(x => x.TenantId == tenantId
+                && x.Status == "published"
+                && x.ProgramDefinitions.Any(link => link.TrainingDefinitionId == definitionId))
+            .OrderByDescending(x => x.UpdatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private static string BuildGuidanceBlockReason(QualificationCheckResponse result)
+    {
+        if (result.DependencyFacts?.Count > 0)
+        {
+            return "Missing or stale dependency facts prevent a clean authorization decision.";
+        }
+
+        if (result.ComplianceCore is { Outcome: QualificationCheckOutcomes.Block })
+        {
+            return result.ComplianceCore.Message;
+        }
+
+        return result.LocalQualification?.Status switch
+        {
+            "expired" => "The local qualification is expired.",
+            "suspended" => "The local qualification is suspended.",
+            "revoked" => "The local qualification is revoked.",
+            "none" => "No local qualification has been issued.",
+            _ => result.Message
+        };
+    }
+
+    private static string BuildGuidanceNextAction(
+        string assignmentStatus,
+        TrainingDefinition? definition,
+        TrainingProgram? program,
+        QualificationCheckResponse result)
+    {
+        if (result.DependencyFacts?.Count > 0)
+        {
+            return "Resolve the missing dependency facts, then rerun the authorization check.";
+        }
+
+        if (TrainingAssignmentService.ActiveAssignmentStatuses.Contains(assignmentStatus))
+        {
+            return "Continue and complete the active training assignment.";
+        }
+
+        if (definition is not null)
+        {
+            var trainingName = program?.Name ?? definition.Name;
+            return $"Assign or restart '{trainingName}' for this person.";
+        }
+
+        return "Create or select a training definition that issues this qualification, then assign it.";
+    }
+
+    private static string BuildGuidanceSupervisorAction(
+        string assignmentStatus,
+        QualificationCheckResponse result)
+    {
+        if (result.DependencyFacts?.Count > 0)
+        {
+            return "Provide the missing facts or confirm the source system can publish them.";
+        }
+
+        if (TrainingAssignmentService.ActiveAssignmentStatuses.Contains(assignmentStatus))
+        {
+            return "Review assignment progress and remove operational access until qualification is restored.";
+        }
+
+        if (string.Equals(result.Outcome, QualificationCheckOutcomes.Block, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Keep the person blocked from this work until training or review restores authorization.";
+        }
+
+        return "Review whether a training assignment, waiver, or manual qualification review is appropriate.";
+    }
+
+    private static string BuildGuidanceEstimatedPath(
+        string assignmentStatus,
+        TrainingAssignment? assignment,
+        TrainingDefinition? definition,
+        TrainingProgram? program,
+        QualificationCheckResponse result)
+    {
+        if (result.DependencyFacts?.Count > 0)
+        {
+            return "Available after dependency facts are resolved.";
+        }
+
+        if (TrainingAssignmentService.ActiveAssignmentStatuses.Contains(assignmentStatus))
+        {
+            return assignment?.DueAt is DateTimeOffset dueAt
+                ? $"Complete active assignment by {dueAt:u}, then qualification can be rechecked."
+                : "Complete the active assignment, then qualification can be rechecked.";
+        }
+
+        var trainingName = program?.Name ?? definition?.Name;
+        return string.IsNullOrWhiteSpace(trainingName)
+            ? "Define, assign, complete, and issue the required qualification."
+            : $"Assign and complete '{trainingName}', then issue or recalculate the qualification.";
     }
 
 
@@ -741,7 +1057,7 @@ public sealed class QualificationCheckService(
 
 
 
-        var outcome = MaxSeverity(localOutcome, complianceOutcome);
+        var outcome = MergeOutcome(localOutcome, complianceOutcome);
 
         var reasonCode = outcome switch
 
@@ -795,6 +1111,10 @@ public sealed class QualificationCheckService(
 
                 "Authorization check returned warnings. " + string.Join(" ", parts),
 
+            QualificationCheckOutcomes.Waived =>
+
+                "Authorization check passed with a Compliance Core waiver. " + string.Join(" ", parts),
+
             _ =>
 
                 "Authorization check blocked. " + string.Join(" ", parts),
@@ -837,6 +1157,17 @@ public sealed class QualificationCheckService(
 
     }
 
+    private static string MergeOutcome(string localOutcome, string? complianceOutcome)
+    {
+        if (string.Equals(complianceOutcome, QualificationCheckOutcomes.Waived, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(localOutcome, QualificationCheckOutcomes.Allow, StringComparison.OrdinalIgnoreCase))
+        {
+            return QualificationCheckOutcomes.Waived;
+        }
+
+        return MaxSeverity(localOutcome, complianceOutcome);
+    }
+
 
 
     private static int SeverityRank(string outcome) =>
@@ -848,6 +1179,8 @@ public sealed class QualificationCheckService(
             QualificationCheckOutcomes.Block => 2,
 
             QualificationCheckOutcomes.Warn => 1,
+
+            QualificationCheckOutcomes.Waived => 0,
 
             _ => 0,
 

@@ -11,7 +11,8 @@ namespace NexArr.Api.Services;
 public sealed class ProductCatalogService(
     NexArrDbContext db,
     PlatformAuthorizationService authorization,
-    IPlatformAuditService audit)
+    IPlatformAuditService audit,
+    PlatformOutboxEnqueueService outboxEnqueue)
 {
     public async Task<PagedResult<ProductDetailResponse>> ListAsync(
         ClaimsPrincipal principal,
@@ -26,12 +27,12 @@ public sealed class ProductCatalogService(
 
         var query = db.ProductCatalog.AsNoTracking();
         var total = await query.CountAsync(cancellationToken);
-        var items = await query
+        var products = await query
             .OrderBy(p => p.SortOrder)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(p => new ProductDetailResponse(p.ProductKey, p.DisplayName, p.SortOrder, p.IsActive))
             .ToListAsync(cancellationToken);
+        var items = products.Select(ToResponse).ToList();
 
         return new PagedResult<ProductDetailResponse>(items, page, pageSize, total, page * pageSize < total);
     }
@@ -47,7 +48,7 @@ public sealed class ProductCatalogService(
             .FirstOrDefaultAsync(p => p.ProductKey == productKey, cancellationToken)
             ?? throw new StlApiException("product.not_found", "Product was not found.", 404);
 
-        return new ProductDetailResponse(product.ProductKey, product.DisplayName, product.SortOrder, product.IsActive);
+        return ToResponse(product);
     }
 
     public async Task<ProductDetailResponse> CreateAsync(
@@ -92,7 +93,14 @@ public sealed class ProductCatalogService(
             actorUserId: principal.GetUserId(),
             cancellationToken: cancellationToken);
 
-        return new ProductDetailResponse(product.ProductKey, product.DisplayName, product.SortOrder, product.IsActive);
+        await EnqueueProductEventAsync(
+            PlatformOutboxEventKinds.ProductCreated,
+            product,
+            principal.GetUserId(),
+            previousStatus: null,
+            cancellationToken);
+
+        return ToResponse(product);
     }
 
     public async Task<ProductDetailResponse> UpdateAsync(
@@ -106,6 +114,7 @@ public sealed class ProductCatalogService(
         var product = await db.ProductCatalog.FirstOrDefaultAsync(p => p.ProductKey == productKey, cancellationToken)
             ?? throw new StlApiException("product.not_found", "Product was not found.", 404);
 
+        var previousStatus = product.ProductStatus;
         product.DisplayName = request.DisplayName.Trim();
         product.SortOrder = request.SortOrder;
         product.IsActive = request.IsActive;
@@ -120,7 +129,14 @@ public sealed class ProductCatalogService(
             actorUserId: principal.GetUserId(),
             cancellationToken: cancellationToken);
 
-        return new ProductDetailResponse(product.ProductKey, product.DisplayName, product.SortOrder, product.IsActive);
+        await EnqueueProductEventAsync(
+            PlatformOutboxEventKinds.ProductUpdated,
+            product,
+            principal.GetUserId(),
+            previousStatus,
+            cancellationToken);
+
+        return ToResponse(product);
     }
 
     public async Task<ProductDetailResponse> SetActiveAsync(
@@ -134,6 +150,7 @@ public sealed class ProductCatalogService(
         var product = await db.ProductCatalog.FirstOrDefaultAsync(p => p.ProductKey == productKey, cancellationToken)
             ?? throw new StlApiException("product.not_found", "Product was not found.", 404);
 
+        var previousStatus = product.ProductStatus;
         product.IsActive = isActive;
         product.ProductStatus = isActive ? "available" : "disabled";
         await db.SaveChangesAsync(cancellationToken);
@@ -146,6 +163,60 @@ public sealed class ProductCatalogService(
             actorUserId: principal.GetUserId(),
             cancellationToken: cancellationToken);
 
-        return new ProductDetailResponse(product.ProductKey, product.DisplayName, product.SortOrder, product.IsActive);
+        await EnqueueProductEventAsync(
+            isActive ? PlatformOutboxEventKinds.ProductEnabled : PlatformOutboxEventKinds.ProductDisabled,
+            product,
+            principal.GetUserId(),
+            previousStatus,
+            cancellationToken);
+
+        return ToResponse(product);
     }
+
+    private static ProductDetailResponse ToResponse(ProductCatalogItem product) =>
+        new(
+            product.ProductKey,
+            product.DisplayName,
+            product.SortOrder,
+            product.IsActive,
+            product.ProductCategory,
+            product.ProductOwner,
+            product.ProductStatus,
+            product.CanonicalCallbackPath,
+            product.ApiBaseUrl,
+            product.HealthUrl,
+            product.ServiceAudience,
+            product.MarketingUrl,
+            product.DocumentationUrl,
+            product.SupportUrl,
+            product.EnvironmentKey,
+            product.EntitlementDependencyRules);
+
+    private Task<Guid?> EnqueueProductEventAsync(
+        string eventType,
+        ProductCatalogItem product,
+        Guid actorUserId,
+        string? previousStatus,
+        CancellationToken cancellationToken) =>
+        outboxEnqueue.TryEnqueueAsync(
+            eventType,
+            "product",
+            product.ProductKey,
+            $"{product.ProductStatus}:{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}",
+            new PlatformOutboxPayload(
+                PlatformOutboxRules.DefaultSchemaVersion,
+                TenantId: null,
+                ActorPersonId: actorUserId,
+                TargetType: "product",
+                TargetId: product.ProductKey,
+                Summary: $"Product {eventType}: {product.ProductKey}",
+                Metadata: new Dictionary<string, string>
+                {
+                    ["productCode"] = product.ProductKey,
+                    ["displayName"] = product.DisplayName,
+                    ["status"] = product.ProductStatus,
+                    ["previousStatus"] = previousStatus ?? string.Empty,
+                    ["isActive"] = product.IsActive.ToString().ToLowerInvariant(),
+                }),
+            cancellationToken: cancellationToken);
 }

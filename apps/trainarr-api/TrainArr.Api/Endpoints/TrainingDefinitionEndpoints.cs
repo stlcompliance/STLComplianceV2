@@ -8,7 +8,13 @@ public static class TrainingDefinitionEndpoints
 {
     public static void MapTrainArrTrainingDefinitionEndpoints(this WebApplication app)
     {
-        var definitions = app.MapGroup("/api/training-definitions")
+        MapRoutes(app.MapGroup("/api/training-definitions"), string.Empty, "/api/training-definitions");
+        MapRoutes(app.MapGroup("/api/v1/training-definitions"), "V1", "/api/v1/training-definitions");
+    }
+
+    private static void MapRoutes(RouteGroupBuilder definitions, string nameSuffix, string pathPrefix)
+    {
+        definitions = definitions
             .WithTags("TrainingDefinitions")
             .RequireAuthorization();
 
@@ -22,7 +28,7 @@ public static class TrainingDefinitionEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(tenantId, cancellationToken));
         })
-        .WithName("ListTrainingDefinitions");
+        .WithName($"ListTrainingDefinitions{nameSuffix}");
 
         definitions.MapPost("/", async (
             CreateTrainingDefinitionRequest request,
@@ -34,8 +40,8 @@ public static class TrainingDefinitionEndpoints
             authorization.RequireTrainingDefinitionsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var created = await service.CreateAsync(tenantId, request, cancellationToken);
-            return Results.Created($"/api/training-definitions/{created.TrainingDefinitionId}", created);
+            return Results.Created($"{pathPrefix}/{created.TrainingDefinitionId}", created);
         })
-        .WithName("CreateTrainingDefinition");
+        .WithName($"CreateTrainingDefinition{nameSuffix}");
     }
 }

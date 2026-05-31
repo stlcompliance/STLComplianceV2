@@ -108,6 +108,14 @@ public sealed class PartRegistryService(
             new IntegrationOutboxPayload(tenantId, $"Part created: {entity.PartKey}"),
             cancellationToken: cancellationToken);
 
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.SupplyArrItemCreated,
+            "part",
+            entity.Id,
+            new IntegrationOutboxPayload(tenantId, $"Item created: {entity.PartKey}"),
+            cancellationToken: cancellationToken);
+
         return Map(await LoadPartAsync(tenantId, entity.Id, cancellationToken));
     }
 
@@ -145,6 +153,14 @@ public sealed class PartRegistryService(
             "part",
             entity.Id.ToString(),
             "Succeeded",
+            cancellationToken: cancellationToken);
+
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.SupplyArrItemUpdated,
+            "part",
+            entity.Id,
+            new IntegrationOutboxPayload(tenantId, $"Item updated: {entity.PartKey}"),
             cancellationToken: cancellationToken);
 
         return Map(await LoadPartAsync(tenantId, partId, cancellationToken));

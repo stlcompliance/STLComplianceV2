@@ -146,6 +146,7 @@ public class ComplianceCoreFactSourceRegistryTests : IAsyncLifetime
             5));
         var createResponse = await _complianceCoreClient.SendAsync(createRequest);
         createResponse.EnsureSuccessStatusCode();
+        Assert.StartsWith("/api/v1/fact-sources/", createResponse.Headers.Location?.ToString());
         var created = (await createResponse.Content.ReadFromJsonAsync<FactSourceResponse>())!;
 
         var listResponse = await _complianceCoreClient.SendAsync(

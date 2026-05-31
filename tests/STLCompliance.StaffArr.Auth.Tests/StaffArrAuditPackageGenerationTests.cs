@@ -100,6 +100,26 @@ public class StaffArrAuditPackageGenerationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Create_job_v1_returns_versioned_status_location()
+    {
+        var adminToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/audit-packages/jobs", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateAuditPackageGenerationJobRequest("json", null, null));
+
+        var createResponse = await _staffarrClient.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Accepted, createResponse.StatusCode);
+        Assert.StartsWith("/api/v1/audit-packages/jobs/", createResponse.Headers.Location?.OriginalString);
+        var job = (await createResponse.Content.ReadFromJsonAsync<AuditPackageGenerationJobResponse>())!;
+        Assert.Equal(AuditPackageGenerationJobStatuses.Pending, job.Status);
+
+        var statusResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/audit-packages/jobs/{job.JobId}", adminToken));
+        statusResponse.EnsureSuccessStatusCode();
+        var status = (await statusResponse.Content.ReadFromJsonAsync<AuditPackageGenerationJobResponse>())!;
+        Assert.Equal(job.JobId, status.JobId);
+    }
+
+    [Fact]
     public async Task Process_batch_completes_job_and_download_returns_zip()
     {
         await SeedWorkforceDataAsync();

@@ -48,6 +48,8 @@ public static class TrainingDomainEventKinds
     public const string QualificationRevoked = "qualification_revoked";
 
     public const string QualificationExpired = "qualification_expired";
+
+    public const string RemediationRequired = "remediation_required";
 }
 
 public static class TrainingDomainEventStatuses

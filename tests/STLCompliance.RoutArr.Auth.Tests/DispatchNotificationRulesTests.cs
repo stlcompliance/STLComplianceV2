@@ -35,9 +35,12 @@ public sealed class DispatchNotificationRulesTests
             "https://hooks.example.com/routarr",
             NotifyOnTripAssigned: true,
             NotifyOnTripDispatched: false,
+            NotifyOnTripAccepted: true,
             NotifyOnTripInProgress: false,
             NotifyOnTripCompleted: false,
-            NotifyOnTripCancelled: false);
+            NotifyOnTripCancelled: false,
+            NotifyOnDriverAssignmentChanged: true,
+            NotifyOnRouteCancelled: true);
 
         Assert.True(DispatchNotificationRules.ShouldNotifyForEvent(
             settings,
@@ -45,6 +48,15 @@ public sealed class DispatchNotificationRulesTests
         Assert.False(DispatchNotificationRules.ShouldNotifyForEvent(
             settings,
             DispatchNotificationEventKinds.TripDispatched));
+        Assert.True(DispatchNotificationRules.ShouldNotifyForEvent(
+            settings,
+            DispatchNotificationEventKinds.TripAccepted));
+        Assert.True(DispatchNotificationRules.ShouldNotifyForEvent(
+            settings,
+            DispatchNotificationEventKinds.DriverAssignmentChanged));
+        Assert.True(DispatchNotificationRules.ShouldNotifyForEvent(
+            settings,
+            DispatchNotificationEventKinds.RouteCancelled));
     }
 
     [Fact]

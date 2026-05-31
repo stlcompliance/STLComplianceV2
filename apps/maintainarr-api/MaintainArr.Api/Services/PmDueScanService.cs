@@ -10,7 +10,8 @@ public sealed class PmDueScanService(
     MaintainArrDbContext db,
     WorkOrderService workOrders,
     IMaintainArrAuditService audit,
-    MaintenanceNotificationEnqueueService notificationEnqueueService)
+    MaintenanceNotificationEnqueueService notificationEnqueueService,
+    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
 {
     public const string ProcessDueScanActionScope = "maintainarr.pm.scan";
 
@@ -339,7 +340,47 @@ public sealed class PmDueScanService(
                 cancellationToken);
         }
 
+        await EnqueuePmDuePlatformEventAsync(entity, targetDueStatus, asOfUtc, cancellationToken);
+
         return targetDueStatus;
+    }
+
+    private async Task EnqueuePmDuePlatformEventAsync(
+        PmSchedule schedule,
+        string targetDueStatus,
+        DateTimeOffset occurredAt,
+        CancellationToken cancellationToken)
+    {
+        var eventKind = targetDueStatus switch
+        {
+            PmDueStatuses.Due => MaintenancePlatformOutboxEventKinds.PmDue,
+            PmDueStatuses.Overdue => MaintenancePlatformOutboxEventKinds.PmOverdue,
+            _ => null,
+        };
+
+        if (eventKind is null)
+        {
+            return;
+        }
+
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == schedule.TenantId && x.Id == schedule.AssetId, cancellationToken);
+        if (asset is null)
+        {
+            return;
+        }
+
+        await platformOutboxEnqueue.TryEnqueuePmScheduleEventAsync(
+            schedule.TenantId,
+            eventKind,
+            schedule,
+            asset,
+            WorkerActorUserId,
+            occurredAt,
+            $"PM schedule {schedule.ScheduleKey} changed to {targetDueStatus} for asset {asset.AssetTag}.",
+            eventResult: targetDueStatus,
+            cancellationToken: cancellationToken);
     }
 
     private async Task<IReadOnlyList<PendingPmDueItem>> LoadPendingCandidatesAsync(

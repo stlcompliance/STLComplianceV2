@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
+using SupplyArr.Api.Options;
 using STLCompliance.Shared.Contracts;
 
 namespace SupplyArr.Api.Services;
@@ -9,6 +11,8 @@ namespace SupplyArr.Api.Services;
 public sealed class ReorderEvaluationService(
     SupplyArrDbContext db,
     PurchaseRequestService purchaseRequests,
+    ComplianceCoreFactPublicationClient complianceCoreClient,
+    IOptions<ComplianceCoreClientOptions> complianceCoreOptions,
     ISupplyArrAuditService audit)
 {
     public const string ProcessEvaluationActionScope = "supplyarr.reorder.evaluate";
@@ -201,6 +205,12 @@ public sealed class ReorderEvaluationService(
             .Where(x => !x.HasOpenPurchaseRequest)
             .ToList();
 
+        await PublishLowInventoryFactsAsync(
+            request.TenantId.Value,
+            evaluatedAt,
+            suggestions,
+            cancellationToken);
+
         var skippedOpen = suggestions.Count - actionable.Count;
         var createdPurchaseRequestIds = new List<Guid>();
 
@@ -248,6 +258,59 @@ public sealed class ReorderEvaluationService(
             createdPurchaseRequestIds.Count,
             createdPurchaseRequestIds,
             suggestions);
+    }
+
+    private async Task PublishLowInventoryFactsAsync(
+        Guid tenantId,
+        DateTimeOffset evaluatedAt,
+        IReadOnlyList<ReorderSuggestionResponse> suggestions,
+        CancellationToken cancellationToken)
+    {
+        if (suggestions.Count == 0
+            || string.IsNullOrWhiteSpace(complianceCoreOptions.Value.ServiceToken))
+        {
+            return;
+        }
+
+        var publicationId = Guid.NewGuid();
+        var facts = new List<ComplianceCoreFactPublicationItem>(suggestions.Count * 2);
+        foreach (var suggestion in suggestions)
+        {
+            var scopeKey = ScopeForPart(suggestion.PartId);
+            facts.Add(new ComplianceCoreFactPublicationItem(
+                SupplyArrComplianceCoreFactKeys.CriticalInventoryBelowMinimum,
+                "boolean",
+                scopeKey,
+                null,
+                true,
+                null,
+                null,
+                "part",
+                suggestion.PartId,
+                "reorder_evaluation.processed",
+                IdempotencyKey(publicationId, suggestion.PartId, SupplyArrComplianceCoreFactKeys.CriticalInventoryBelowMinimum)));
+            facts.Add(new ComplianceCoreFactPublicationItem(
+                SupplyArrComplianceCoreFactKeys.InventoryQuantityAvailable,
+                "number",
+                scopeKey,
+                null,
+                null,
+                suggestion.QuantityAvailable,
+                null,
+                "part",
+                suggestion.PartId,
+                "reorder_evaluation.processed",
+                IdempotencyKey(publicationId, suggestion.PartId, SupplyArrComplianceCoreFactKeys.InventoryQuantityAvailable)));
+        }
+
+        await complianceCoreClient.IngestAsync(
+            new ComplianceCoreIngestProductFactsPayload(
+                tenantId,
+                publicationId,
+                "supplyarr",
+                evaluatedAt,
+                facts),
+            cancellationToken);
     }
 
     private async Task<IReadOnlyList<ReorderSuggestionResponse>> BuildSuggestionsAsync(
@@ -406,6 +469,11 @@ public sealed class ReorderEvaluationService(
 
     private static int NormalizeBatchSize(int batchSize) =>
         Math.Clamp(batchSize, 1, 500);
+
+    private static string ScopeForPart(Guid partId) => $"part:{partId:D}".ToLowerInvariant();
+
+    private static string IdempotencyKey(Guid publicationId, Guid partId, string factKey) =>
+        $"supplyarr:{publicationId:D}:{partId:D}:{factKey}".ToLowerInvariant();
 
     private static decimal? NormalizeOptionalQuantity(decimal? value, string label)
     {

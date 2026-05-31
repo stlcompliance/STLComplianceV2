@@ -62,6 +62,27 @@ public sealed class DispatchBoardService(
             .Where(x => IsStopInScope(x, windowStart, windowEnd))
             .ToList();
 
+        var settingsEntity = await db.TenantTripExecutionSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId, cancellationToken);
+        var captureSettings = TripExecutionCaptureRules.ResolveSettings(settingsEntity);
+
+        var scopedTripIds = scopedTrips.Select(x => x.Id).ToHashSet();
+        var proofTypesByTrip = await db.TripProofRecords
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && scopedTripIds.Contains(x.TripId))
+            .Select(x => new { x.TripId, x.ProofType })
+            .ToListAsync(cancellationToken);
+        var proofLookup = proofTypesByTrip
+            .GroupBy(x => x.TripId)
+            .ToDictionary(
+                x => x.Key,
+                x => x.Select(y => y.ProofType).ToHashSet(StringComparer.OrdinalIgnoreCase));
+
+        var missingRequiredProofByTrip = scopedTrips.ToDictionary(
+            x => x.Id,
+            x => DispatchBoardRules.CountMissingRequiredProof(x, captureSettings, proofLookup.GetValueOrDefault(x.Id)));
+
         var routeCountByTrip = scopedRoutes
             .Where(x => x.TripId.HasValue)
             .GroupBy(x => x.TripId!.Value)
@@ -78,6 +99,7 @@ public sealed class DispatchBoardService(
                 trip,
                 routeCountByTrip.GetValueOrDefault(trip.Id),
                 pendingStopCountByTrip.GetValueOrDefault(trip.Id),
+                missingRequiredProofByTrip.GetValueOrDefault(trip.Id),
                 now))
             .OrderBy(x => x.ScheduledStartAt ?? DateTimeOffset.MaxValue)
             .ThenBy(x => x.TripNumber)
@@ -114,7 +136,8 @@ public sealed class DispatchBoardService(
                 TripDispatchStatuses.Active.Contains(x.DispatchStatus)
                 && string.IsNullOrWhiteSpace(x.AssignedDriverPersonId)),
             scopedRoutes.Count(x => !x.TripId.HasValue && RouteStatuses.Editable.Contains(x.RouteStatus)),
-            scopedStops.Count(x => StatusEquals(x.StopStatus, RouteStopStatuses.Pending)));
+            scopedStops.Count(x => StatusEquals(x.StopStatus, RouteStopStatuses.Pending)),
+            missingRequiredProofByTrip.Count(x => x.Value > 0));
 
         var assignedTrips = tripRows
             .Where(x => !string.IsNullOrWhiteSpace(x.AssignedDriverPersonId))
@@ -219,6 +242,7 @@ public sealed class DispatchBoardService(
         Trip trip,
         int routeCount,
         int pendingStopCount,
+        int missingRequiredProofCount,
         DateTimeOffset now)
     {
         var isLate = DispatchBoardRules.IsLateTrip(trip, now);
@@ -235,7 +259,8 @@ public sealed class DispatchBoardService(
             isLate,
             isAtRisk,
             routeCount,
-            pendingStopCount);
+            pendingStopCount,
+            missingRequiredProofCount);
     }
 
     private static IQueryable<Trip> ApplyTripAccessFilter(

@@ -13,6 +13,10 @@ public sealed class ProductGateEvaluationService(
 {
     public const string EvaluateActionScope = "compliancecore.product_gates.evaluate";
 
+    public const string EvidenceMissingEventAction = "compliancecore.evidence.missing";
+
+    public const string EvidenceStaleEventAction = "compliancecore.evidence.stale";
+
     public async Task<ProductGateEvaluationResponse> EvaluateAsync(
         ProductGateEvaluationRequest request,
         string? sourceProductKey,
@@ -74,6 +78,9 @@ public sealed class ProductGateEvaluationService(
                 snapshot.CapturedAt,
                 snapshot.ExpiresAt!.Value))
             .ToList();
+        var productOutcome = ResolveProductOutcome(gateCheck.Outcome, missingFacts, staleFacts);
+        var productReasonCode = ResolveProductReasonCode(productOutcome, gateCheck.ReasonCode);
+        var productMessage = ResolveProductMessage(productOutcome, gateCheck.Message, missingFacts, staleFacts);
         var remediationHints = BuildRemediationHints(gateCheck.Reasons);
 
         await auditService.WriteAsync(
@@ -82,9 +89,43 @@ public sealed class ProductGateEvaluationService(
             actorUserId: null,
             "workflow_gate_check_result",
             gateCheck.CheckResultId.ToString(),
-            gateCheck.Outcome,
+            productOutcome,
             reasonCode: sourceProductKey,
             cancellationToken: cancellationToken);
+
+        if (string.Equals(productOutcome, ProductGateEvaluationOutcomes.StaleEvidence, StringComparison.OrdinalIgnoreCase))
+        {
+            await auditService.WriteAsync(
+                EvidenceStaleEventAction,
+                request.TenantId,
+                actorUserId: null,
+                "workflow_gate_check_result",
+                gateCheck.CheckResultId.ToString(),
+                productOutcome,
+                reasonCode: string.Join(
+                    ",",
+                    staleFacts
+                        .Select(fact => fact.FactKey)
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .OrderBy(factKey => factKey)),
+                cancellationToken: cancellationToken);
+        }
+        else if (string.Equals(productOutcome, ProductGateEvaluationOutcomes.MissingEvidence, StringComparison.OrdinalIgnoreCase))
+        {
+            await auditService.WriteAsync(
+                EvidenceMissingEventAction,
+                request.TenantId,
+                actorUserId: null,
+                "workflow_gate_check_result",
+                gateCheck.CheckResultId.ToString(),
+                productOutcome,
+                reasonCode: string.Join(
+                    ",",
+                    missingFacts
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .OrderBy(factKey => factKey)),
+                cancellationToken: cancellationToken);
+        }
 
         return new ProductGateEvaluationResponse(
             TraceId: gateCheck.CheckResultId,
@@ -95,9 +136,9 @@ public sealed class ProductGateEvaluationService(
             subjects,
             gateCheck.CheckResultId,
             gateCheck.RuleEvaluationRunId,
-            gateCheck.Outcome,
-            gateCheck.ReasonCode,
-            gateCheck.Message,
+            productOutcome,
+            productReasonCode,
+            productMessage,
             appliedRules,
             citations,
             missingFacts,
@@ -151,9 +192,73 @@ public sealed class ProductGateEvaluationService(
                 rule.Result,
                 rule.Message,
                 version,
-                rule.NonWaivable))
+                rule.NonWaivable,
+                rule.RemediationRequired,
+                rule.ReviewRequired))
             .ToList();
     }
+
+    private static string ResolveProductOutcome(
+        string gateOutcome,
+        IReadOnlyList<string> missingFacts,
+        IReadOnlyList<ProductGateStaleFactReference> staleFacts)
+    {
+        if (missingFacts.Count > 0)
+        {
+            return ProductGateEvaluationOutcomes.MissingEvidence;
+        }
+
+        if (staleFacts.Count > 0 && IsPermissiveGateOutcome(gateOutcome))
+        {
+            return ProductGateEvaluationOutcomes.StaleEvidence;
+        }
+
+        return gateOutcome;
+    }
+
+    private static string ResolveProductReasonCode(string productOutcome, string gateReasonCode)
+    {
+        if (string.Equals(productOutcome, ProductGateEvaluationOutcomes.MissingEvidence, StringComparison.OrdinalIgnoreCase))
+        {
+            return "missing_evidence";
+        }
+
+        if (string.Equals(productOutcome, ProductGateEvaluationOutcomes.StaleEvidence, StringComparison.OrdinalIgnoreCase))
+        {
+            return "stale_evidence";
+        }
+
+        return gateReasonCode;
+    }
+
+    private static string ResolveProductMessage(
+        string productOutcome,
+        string gateMessage,
+        IReadOnlyList<string> missingFacts,
+        IReadOnlyList<ProductGateStaleFactReference> staleFacts)
+    {
+        if (string.Equals(productOutcome, ProductGateEvaluationOutcomes.MissingEvidence, StringComparison.OrdinalIgnoreCase))
+        {
+            return $"Required evidence or facts are missing for this workflow gate: {string.Join(", ", missingFacts)}.";
+        }
+
+        if (string.Equals(productOutcome, ProductGateEvaluationOutcomes.StaleEvidence, StringComparison.OrdinalIgnoreCase))
+        {
+            var factKeys = staleFacts
+                .Select(fact => fact.FactKey)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(factKey => factKey)
+                .ToList();
+            return $"Required evidence or facts are stale for this workflow gate: {string.Join(", ", factKeys)}.";
+        }
+
+        return gateMessage;
+    }
+
+    private static bool IsPermissiveGateOutcome(string outcome) =>
+        string.Equals(outcome, ComplianceEvaluationOutcomes.Allow, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(outcome, ComplianceEvaluationOutcomes.Warn, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(outcome, ComplianceEvaluationOutcomes.Waived, StringComparison.OrdinalIgnoreCase);
 
     private async Task<IReadOnlyList<ProductGateCitationReference>> LoadCitationReferencesAsync(
         Guid tenantId,

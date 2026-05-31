@@ -123,6 +123,41 @@ public class StaffArrPersonOffboardingTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task V1_offboarding_query_returns_active_workflow_for_person()
+    {
+        var personId = Guid.NewGuid();
+        await SeedPersonAsync(personId, "V1", "Offboarding", "v1.offboarding@example.com");
+
+        var adminToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var startRequest = Authorized(HttpMethod.Post, "/api/v1/offboarding", adminToken);
+        startRequest.Content = JsonContent.Create(new StartPersonOffboardingRequest(
+            personId,
+            DateTimeOffset.UtcNow.AddDays(5),
+            "Seasonal separation",
+            "inactive",
+            DisableLoginRequested: false,
+            NewManagerPersonIdForReports: null));
+        var startResponse = await _staffarrClient.SendAsync(startRequest);
+        startResponse.EnsureSuccessStatusCode();
+        Assert.StartsWith("/api/v1/offboarding/", startResponse.Headers.Location?.OriginalString);
+        var started = (await startResponse.Content.ReadFromJsonAsync<PersonOffboardingResponse>())!;
+
+        var memberToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_member", personId: personId);
+        var queryResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/offboarding?personId={personId:D}", memberToken));
+        queryResponse.EnsureSuccessStatusCode();
+        var active = (await queryResponse.Content.ReadFromJsonAsync<PersonOffboardingResponse>())!;
+        Assert.Equal(started.OffboardingId, active.OffboardingId);
+        Assert.Equal(personId, active.PersonId);
+        Assert.Equal("in_progress", active.Status);
+
+        var missingPersonId = Guid.NewGuid();
+        var missingResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/offboarding?personId={missingPersonId:D}", adminToken));
+        Assert.Equal(HttpStatusCode.NotFound, missingResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Offboarding_read_denied_for_non_reader_role()
     {
         var personId = Guid.NewGuid();

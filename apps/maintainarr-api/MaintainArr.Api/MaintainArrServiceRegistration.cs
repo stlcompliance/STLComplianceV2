@@ -36,11 +36,29 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<WorkOrderService>();
         builder.Services.AddScoped<TechnicianRefService>();
         builder.Services.AddScoped<StaffarrPersonSyncIngestionService>();
+        builder.Services.AddScoped<RoutarrEventIngestionService>();
         builder.Services.AddScoped<TechnicianRefSyncService>();
         builder.Services.Configure<StaffArrClientOptions>(builder.Configuration.GetSection(StaffArrClientOptions.SectionName));
         builder.Services.AddHttpClient<StaffArrPersonLookupClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.Configure<TrainArrClientOptions>(builder.Configuration.GetSection(TrainArrClientOptions.SectionName));
+        builder.Services.AddHttpClient<TrainArrQualificationCheckClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<TrainArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.Configure<ComplianceCoreClientOptions>(builder.Configuration.GetSection(ComplianceCoreClientOptions.SectionName));
+        builder.Services.AddHttpClient<ComplianceCoreWorkOrderGateClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ComplianceCoreClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddHttpClient<ComplianceCoreAssetReadinessGateClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ComplianceCoreClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
         builder.Services.AddScoped<WorkOrderLaborEvidenceService>();
@@ -84,6 +102,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<MaintenancePlatformOutboxEnqueueService>();
         builder.Services.AddScoped<MaintenanceReportService>();
         builder.Services.AddScoped<ExecutiveReportService>();
+        builder.Services.AddScoped<DashboardService>();
         builder.Services.AddScoped<ComplianceReportService>();
         builder.Services.AddScoped<AssetBulkImportService>();
         builder.Services.AddScoped<EntityBulkExportService>();

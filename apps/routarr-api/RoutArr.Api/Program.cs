@@ -21,6 +21,7 @@ await StlApiHost.RunAsync<RoutArrDbContext>(
         app.MapRoutArrIntegrationEndpoints();
         app.MapRoutArrRouteEndpoints();
         app.MapRoutArrDispatchEndpoints();
+        app.MapRoutArrDispatchMessageEndpoints();
         app.MapRoutArrDriverEndpoints();
         app.MapRoutArrVehicleRefEndpoints();
         app.MapRoutArrDriverPortalEndpoints();

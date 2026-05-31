@@ -98,6 +98,17 @@ public sealed class AssignmentReportService(TrainArrDbContext db)
             Encoding.UTF8.GetBytes(builder.ToString()));
     }
 
+    public async Task<AssignmentOverdueReportResponse> GetOverdueReportAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var summary = await GetSummaryAsync(tenantId, null, overdueOnly: true, cancellationToken);
+        return new AssignmentOverdueReportResponse(
+            DateTimeOffset.UtcNow,
+            summary.TotalAssignments,
+            summary.RecentAssignments);
+    }
+
     private static bool MatchesStatusFilter(TrainingAssignment assignment, string? status)
     {
         if (string.IsNullOrWhiteSpace(status) || string.Equals(status, "all", StringComparison.OrdinalIgnoreCase))

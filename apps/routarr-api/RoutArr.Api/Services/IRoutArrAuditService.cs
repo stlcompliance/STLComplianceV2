@@ -1,8 +1,15 @@
 namespace RoutArr.Api.Services;
 
+public sealed record RoutArrAuditWriteResult(
+    Guid AuditEventId,
+    DateTimeOffset OccurredAt,
+    string Action,
+    string Result,
+    string? ReasonCode);
+
 public interface IRoutArrAuditService
 {
-    Task WriteAsync(
+    Task<RoutArrAuditWriteResult> WriteAsync(
         string action,
         Guid tenantId,
         Guid? actorUserId,

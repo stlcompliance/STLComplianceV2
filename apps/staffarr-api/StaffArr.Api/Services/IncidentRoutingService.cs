@@ -44,7 +44,12 @@ public sealed class IncidentRoutingService(
 
         if (existingRouting is not null)
         {
-            return MapRouteResponse(incident, existingRouting);
+            return new RouteIncidentToTrainarrResponse(
+                incident.Id,
+                incident.PersonId,
+                incident.ReasonCategoryKey,
+                incident.Status,
+                await MapRoutingAsync(tenantId, existingRouting, cancellationToken));
         }
 
         TrainArrIncidentRemediationResult trainArrResult;
@@ -102,7 +107,18 @@ public sealed class IncidentRoutingService(
             "Succeeded",
             cancellationToken: cancellationToken);
 
-        return MapRouteResponse(incident, routing);
+        return new RouteIncidentToTrainarrResponse(
+            incident.Id,
+            incident.PersonId,
+            incident.ReasonCategoryKey,
+            incident.Status,
+            MapRouting(routing, new IncidentTrainarrRemediationResultResponse(
+                trainArrResult.RemediationId,
+                trainArrResult.Status,
+                trainArrResult.ReasonCategoryKey,
+                incident.Severity,
+                incident.Title,
+                trainArrResult.CreatedAt)));
     }
 
     public async Task<IncidentTrainarrRoutingResponse?> GetRoutingForIncidentAsync(
@@ -114,23 +130,47 @@ public sealed class IncidentRoutingService(
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.IncidentId == incidentId, cancellationToken);
 
-        return routing is null ? null : MapRouting(routing);
+        return routing is null ? null : await MapRoutingAsync(tenantId, routing, cancellationToken);
     }
 
-    internal static IncidentTrainarrRoutingResponse MapRouting(IncidentTrainarrRouting routing) =>
+    internal static IncidentTrainarrRoutingResponse MapRouting(
+        IncidentTrainarrRouting routing,
+        IncidentTrainarrRemediationResultResponse? remediationResult = null) =>
         new(
             routing.RoutingStatus,
             routing.TrainarrRemediationId,
             routing.RoutedAt,
-            routing.RoutedByUserId);
+            routing.RoutedByUserId,
+            remediationResult);
 
-    private static RouteIncidentToTrainarrResponse MapRouteResponse(
-        PersonnelIncident incident,
-        IncidentTrainarrRouting routing) =>
-        new(
-            incident.Id,
-            incident.PersonId,
-            incident.ReasonCategoryKey,
-            incident.Status,
-            MapRouting(routing));
+    private async Task<IncidentTrainarrRoutingResponse> MapRoutingAsync(
+        Guid tenantId,
+        IncidentTrainarrRouting routing,
+        CancellationToken cancellationToken)
+    {
+        IncidentTrainarrRemediationResultResponse? remediationResult = null;
+        try
+        {
+            var detail = await trainArrClient.GetRemediationAsync(
+                tenantId,
+                routing.TrainarrRemediationId,
+                cancellationToken);
+            if (detail is not null)
+            {
+                remediationResult = new IncidentTrainarrRemediationResultResponse(
+                    detail.RemediationId,
+                    detail.Status,
+                    detail.ReasonCategoryKey,
+                    detail.Severity,
+                    detail.Title,
+                    detail.CreatedAt);
+            }
+        }
+        catch (StlApiException)
+        {
+            remediationResult = null;
+        }
+
+        return MapRouting(routing, remediationResult);
+    }
 }

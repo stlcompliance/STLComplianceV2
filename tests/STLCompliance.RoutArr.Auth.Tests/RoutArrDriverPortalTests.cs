@@ -110,7 +110,23 @@ public sealed class RoutArrDriverPortalTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/driver-portal/schedule", driverToken));
         scheduleResponse.EnsureSuccessStatusCode();
         var schedule = (await scheduleResponse.Content.ReadFromJsonAsync<DriverPortalScheduleResponse>())!;
-        Assert.Contains(schedule.TodayTrips, x => x.TripId == trip.TripId && x.CanDispatch);
+        Assert.Contains(schedule.TodayTrips, x => x.TripId == trip.TripId && x.CanAccept && x.CanDispatch);
+
+        var acceptResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/driver-portal/trips/{trip.TripId}/accept", driverToken));
+        acceptResponse.EnsureSuccessStatusCode();
+        var accepted = (await acceptResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+        Assert.Equal("assigned", accepted.DispatchStatus);
+        Assert.NotNull(accepted.AcceptedAt);
+
+        var scheduleAfterAcceptResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/driver-portal/schedule", driverToken));
+        scheduleAfterAcceptResponse.EnsureSuccessStatusCode();
+        var scheduleAfterAccept = (await scheduleAfterAcceptResponse.Content.ReadFromJsonAsync<DriverPortalScheduleResponse>())!;
+        var acceptedRow = scheduleAfterAccept.TodayTrips.Single(x => x.TripId == trip.TripId);
+        Assert.False(acceptedRow.CanAccept);
+        Assert.True(acceptedRow.CanDispatch);
+        Assert.NotNull(acceptedRow.AcceptedAt);
 
         var dispatchResponse = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Post, $"/api/driver-portal/trips/{trip.TripId}/dispatch", driverToken));
@@ -174,6 +190,21 @@ public sealed class RoutArrDriverPortalTests : IAsyncLifetime
         var execution = (await executionResponse.Content.ReadFromJsonAsync<TripExecutionSummaryResponse>())!;
         Assert.Equal("completed", execution.DispatchStatus);
         Assert.NotNull(execution.ClosedAt);
+
+        using var scope = _routarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+        Assert.Contains(
+            await db.IntegrationOutboxEvents
+                .Where(x => x.TenantId == PlatformSeeder.DemoTenantId && x.RelatedEntityId == trip.TripId)
+                .ToListAsync(),
+            x => x.EventKind == RoutArrIntegrationOutboxEventKinds.TripAccepted);
+        Assert.Contains(
+            await db.AuditEvents
+                .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                    && x.TargetType == "trip"
+                    && x.TargetId == trip.TripId.ToString())
+                .ToListAsync(),
+            x => x.Action == DriverPortalService.AcceptAction);
     }
 
     [Fact]
@@ -230,6 +261,99 @@ public sealed class RoutArrDriverPortalTests : IAsyncLifetime
                 && x.EventKind == RoutArrIntegrationOutboxEventKinds.ExceptionCreated
                 && x.RelatedEntityId == reported.ExceptionId);
         Assert.Equal("dispatch_exception", outbox.RelatedEntityType);
+    }
+
+    [Fact]
+    public async Task Driver_and_dispatcher_can_exchange_trip_messages()
+    {
+        var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
+        var driverToken = CreateRoutArrAccessToken(["routarr"], "routarr_driver", PlatformSeeder.DemoAdminUserId);
+        var now = DateTimeOffset.UtcNow;
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/trips", _dispatcherToken);
+        createRequest.Content = JsonContent.Create(new CreateTripRequest(
+            "Dispatch message trip",
+            "Thread test",
+            "VEH-MSG-1",
+            now.AddHours(1),
+            now.AddHours(4),
+            null));
+        var createResponse = await _routarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var trip = (await createResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        var assignRequest = Authorized(HttpMethod.Patch, $"/api/trips/{trip.TripId}/assign-driver", _dispatcherToken);
+        assignRequest.Content = JsonContent.Create(new AssignTripDriverRequest(driverPersonId, DriverDisplayName: "Demo Driver"));
+        (await _routarrClient.SendAsync(assignRequest)).EnsureSuccessStatusCode();
+
+        var dispatchMessageRequest = Authorized(HttpMethod.Post, $"/api/trips/{trip.TripId}/messages", _dispatcherToken);
+        dispatchMessageRequest.Content = JsonContent.Create(new CreateDispatchMessageRequest(
+            " Gate 3 is open. ",
+            RequiresAcknowledgement: true));
+        var dispatchMessageResponse = await _routarrClient.SendAsync(dispatchMessageRequest);
+        dispatchMessageResponse.EnsureSuccessStatusCode();
+        var dispatchMessage = (await dispatchMessageResponse.Content.ReadFromJsonAsync<DispatchMessageResponse>())!;
+        Assert.Equal(DispatchMessageSenderRoles.Dispatch, dispatchMessage.SenderRole);
+        Assert.Equal("Gate 3 is open.", dispatchMessage.Body);
+        Assert.True(dispatchMessage.RequiresAcknowledgement);
+        Assert.Null(dispatchMessage.AcknowledgedAt);
+
+        var driverMessageRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/driver-portal/trips/{trip.TripId}/messages",
+            driverToken);
+        driverMessageRequest.Content = JsonContent.Create(new CreateDispatchMessageRequest("Copy. I am staged."));
+        var driverMessageResponse = await _routarrClient.SendAsync(driverMessageRequest);
+        driverMessageResponse.EnsureSuccessStatusCode();
+        var driverMessage = (await driverMessageResponse.Content.ReadFromJsonAsync<DispatchMessageResponse>())!;
+        Assert.Equal(DispatchMessageSenderRoles.Driver, driverMessage.SenderRole);
+        Assert.False(driverMessage.RequiresAcknowledgement);
+
+        var acknowledgeResponse = await _routarrClient.SendAsync(Authorized(
+            HttpMethod.Post,
+            $"/api/driver-portal/trips/{trip.TripId}/messages/{dispatchMessage.MessageId}/acknowledge",
+            driverToken));
+        acknowledgeResponse.EnsureSuccessStatusCode();
+        var acknowledged = (await acknowledgeResponse.Content.ReadFromJsonAsync<DispatchMessageResponse>())!;
+        Assert.Equal(dispatchMessage.MessageId, acknowledged.MessageId);
+        Assert.Equal(PlatformSeeder.DemoAdminUserId, acknowledged.AcknowledgedByUserId);
+        Assert.Equal(driverPersonId, acknowledged.AcknowledgedByPersonId);
+        Assert.NotNull(acknowledged.AcknowledgedAt);
+
+        var acknowledgeAgainResponse = await _routarrClient.SendAsync(Authorized(
+            HttpMethod.Post,
+            $"/api/driver-portal/trips/{trip.TripId}/messages/{dispatchMessage.MessageId}/acknowledge",
+            driverToken));
+        acknowledgeAgainResponse.EnsureSuccessStatusCode();
+
+        var threadResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/driver-portal/trips/{trip.TripId}/messages", driverToken));
+        threadResponse.EnsureSuccessStatusCode();
+        var thread = (await threadResponse.Content.ReadFromJsonAsync<DispatchThreadResponse>())!;
+        Assert.Equal(trip.TripId, thread.TripId);
+        Assert.Collection(
+            thread.Messages,
+            first =>
+            {
+                Assert.Equal(dispatchMessage.MessageId, first.MessageId);
+                Assert.NotNull(first.AcknowledgedAt);
+            },
+            second => Assert.Equal(driverMessage.MessageId, second.MessageId));
+
+        using var scope = _routarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+        Assert.Equal(
+            2,
+            await db.AuditEvents.CountAsync(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.Action == DispatchMessageService.MessageCreatedAction
+                && x.TargetType == "trip"
+                && x.TargetId == trip.TripId.ToString()));
+        Assert.Equal(
+            1,
+            await db.AuditEvents.CountAsync(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.Action == DispatchMessageService.MessageAcknowledgedAction
+                && x.TargetType == "dispatch_message"
+                && x.TargetId == dispatchMessage.MessageId.ToString()));
     }
 
     [Fact]

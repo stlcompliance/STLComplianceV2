@@ -1,3 +1,4 @@
+using NexArr.Api.Contracts;
 using NexArr.Api.Services;
 
 namespace NexArr.Api.Endpoints;
@@ -112,6 +113,28 @@ public static class PlatformAdminEndpoints
         })
         .WithName($"PlatformAdminProductManifests{suffix}");
 
+            group.MapPost("/users", async (
+            CreatePlatformUserRequest request,
+            HttpContext context,
+            PlatformUserAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            var created = await service.CreateUserAsync(context.User, request, cancellationToken);
+            return Results.Created($"/api/platform-admin/users/{created.UserId}", created);
+        })
+        .WithName($"PlatformAdminCreateUser{suffix}");
+
+            group.MapPatch("/users/{userId:guid}", async (
+            Guid userId,
+            UpdatePlatformUserRequest request,
+            HttpContext context,
+            PlatformUserAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.UpdateUserAsync(context.User, userId, request, cancellationToken));
+        })
+        .WithName($"PlatformAdminUpdateUser{suffix}");
+
             group.MapPost("/users/{userId:guid}/enable", async (
             Guid userId,
             HttpContext context,
@@ -121,6 +144,26 @@ public static class PlatformAdminEndpoints
             return Results.Ok(await service.EnableUserAsync(context.User, userId, cancellationToken));
         })
         .WithName($"PlatformAdminEnableUser{suffix}");
+
+            group.MapPost("/users/{userId:guid}/lock", async (
+            Guid userId,
+            HttpContext context,
+            PlatformUserAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.LockUserAsync(context.User, userId, cancellationToken));
+        })
+        .WithName($"PlatformAdminLockUser{suffix}");
+
+            group.MapPost("/users/{userId:guid}/unlock", async (
+            Guid userId,
+            HttpContext context,
+            PlatformUserAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            return Results.Ok(await service.UnlockUserAsync(context.User, userId, cancellationToken));
+        })
+        .WithName($"PlatformAdminUnlockUser{suffix}");
         }
 
         MapRoutes(

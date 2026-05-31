@@ -5,9 +5,47 @@ namespace ComplianceCore.Api.Endpoints;
 
 public static class ComplianceCoreReportEndpoints
 {
+    public static void MapComplianceCoreReportIndexEndpoints(this WebApplication app)
+    {
+        var routes = new[]
+        {
+            (Route: "/api/reports", Suffix: string.Empty),
+            (Route: "/api/v1/reports", Suffix: "V1")
+        };
+
+        foreach (var (route, suffix) in routes)
+        {
+            var group = app.MapGroup(route)
+                .WithTags("Reports")
+                .RequireAuthorization();
+
+            group.MapGet("/", (
+                ComplianceCoreAuthorizationService authorization,
+                HttpContext context) =>
+            {
+                authorization.RequireFindingsReportRead(context.User);
+                return Results.Ok(new
+                {
+                    Reports = new[]
+                    {
+                        new { Key = "findings", Path = "/api/v1/reports/findings" },
+                        new { Key = "operator", Path = "/api/v1/reports/operator" }
+                    }
+                });
+            })
+            .WithName($"ListComplianceCoreReportGroups{suffix}");
+        }
+    }
+
     public static void MapComplianceCoreFindingsReportEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/reports/findings")
+        MapGroup(app, "/api/reports/findings", string.Empty);
+        MapGroup(app, "/api/v1/reports/findings", "V1");
+    }
+
+    private static void MapGroup(WebApplication app, string routePrefix, string routeNameSuffix)
+    {
+        var group = app.MapGroup(routePrefix)
             .WithTags("FindingsReports")
             .RequireAuthorization();
 
@@ -40,7 +78,7 @@ public static class ComplianceCoreReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(summary);
         })
-        .WithName("GetComplianceCoreFindingsReportSummary");
+        .WithName($"GetComplianceCoreFindingsReportSummary{routeNameSuffix}");
 
         group.MapGet("/summary/export", async (
             string? status,
@@ -71,12 +109,18 @@ public static class ComplianceCoreReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportComplianceCoreFindingsReportSummary");
+        .WithName($"ExportComplianceCoreFindingsReportSummary{routeNameSuffix}");
     }
 
     public static void MapComplianceCoreOperatorReportEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/reports/operator")
+        MapOperatorGroup(app, "/api/reports/operator", string.Empty);
+        MapOperatorGroup(app, "/api/v1/reports/operator", "V1");
+    }
+
+    private static void MapOperatorGroup(WebApplication app, string routePrefix, string routeNameSuffix)
+    {
+        var group = app.MapGroup(routePrefix)
             .WithTags("OperatorReports")
             .RequireAuthorization();
 
@@ -105,7 +149,7 @@ public static class ComplianceCoreReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(summary);
         })
-        .WithName("GetComplianceCoreOperatorReportSummary");
+        .WithName($"GetComplianceCoreOperatorReportSummary{routeNameSuffix}");
 
         group.MapGet("/summary/export", async (
             bool? attentionOnly,
@@ -132,7 +176,7 @@ public static class ComplianceCoreReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportComplianceCoreOperatorReportSummary");
+        .WithName($"ExportComplianceCoreOperatorReportSummary{routeNameSuffix}");
     }
 
     public static void MapComplianceCoreEntityExportEndpoints(this WebApplication app)

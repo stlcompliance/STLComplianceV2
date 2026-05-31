@@ -2,6 +2,7 @@ using STLCompliance.Shared.Integration;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -12,6 +13,7 @@ using NexArr.Api.Data;
 using NexArr.Api.Services;
 using RoutArr.Api.Contracts;
 using RoutArr.Api.Data;
+using RoutArr.Api.Entities;
 using RoutArr.Api.Services;
 using RoutArrRedeemRequest = RoutArr.Api.Contracts.RedeemHandoffRequest;
 using RoutArrHandoffSessionResponse = RoutArr.Api.Contracts.HandoffSessionResponse;
@@ -159,6 +161,18 @@ public sealed class RoutArrDispatchAssignmentTests : IAsyncLifetime
         assignResponse.EnsureSuccessStatusCode();
         var assigned = (await assignResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
         Assert.Equal(vehicleRefKey, assigned.VehicleRefKey);
+
+        using var scope = _routarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+        var overrideEvent = await db.IntegrationOutboxEvents
+            .SingleAsync(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.RelatedEntityId == trip.TripId
+                && x.EventKind == RoutArrIntegrationOutboxEventKinds.ComplianceOverridePerformed);
+        using var payload = JsonDocument.Parse(overrideEvent.PayloadJson);
+        Assert.Equal("equipment", payload.RootElement.GetProperty("overrideTargetType").GetString());
+        Assert.Equal(vehicleRefKey, payload.RootElement.GetProperty("vehicleRefKey").GetString());
+        var kind = Assert.Single(payload.RootElement.GetProperty("overrideKinds").EnumerateArray());
+        Assert.Equal("availability", kind.GetString());
     }
 
     [Fact]

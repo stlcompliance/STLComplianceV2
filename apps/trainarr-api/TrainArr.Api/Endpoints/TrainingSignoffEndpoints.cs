@@ -12,12 +12,14 @@ public static class TrainingSignoffEndpoints
             app.MapGroup("/api/signoffs")
                 .WithTags("Signoffs")
                 .RequireAuthorization(),
-            string.Empty);
+            string.Empty,
+            "/api/signoffs");
         MapTopLevelRoutes(
             app.MapGroup("/api/v1/signoffs")
                 .WithTags("Signoffs")
                 .RequireAuthorization(),
-            "V1Signoffs");
+            "V1Signoffs",
+            "/api/v1/signoffs");
 
         var nested = app.MapGroup("/api/training-assignments/{assignmentId:guid}/signoffs")
             .WithTags("Signoffs")
@@ -62,7 +64,7 @@ public static class TrainingSignoffEndpoints
         .WithName("SubmitTrainingSignoffForAssignment");
     }
 
-    private static void MapTopLevelRoutes(RouteGroupBuilder signoffs, string nameSuffix)
+    private static void MapTopLevelRoutes(RouteGroupBuilder signoffs, string nameSuffix, string routePrefix)
     {
         signoffs.MapGet("/", async (
             Guid? trainingAssignmentId,
@@ -103,7 +105,7 @@ public static class TrainingSignoffEndpoints
             var assignment = await assignmentService.GetAsync(tenantId, request.TrainingAssignmentId, cancellationToken);
             authorization.RequireSignoffSubmit(context.User, assignment.StaffarrPersonId, request.SignoffRole);
             var created = await signoffService.SubmitAsync(tenantId, actorUserId, request, cancellationToken);
-            return Results.Created($"/api/signoffs?trainingAssignmentId={created.TrainingAssignmentId}", created);
+            return Results.Created($"{routePrefix}?trainingAssignmentId={created.TrainingAssignmentId}", created);
         })
         .WithName($"SubmitTrainingSignoff{nameSuffix}");
     }

@@ -14,8 +14,12 @@ public sealed class AuthService(
     IPasswordHasher passwordHasher,
     ITokenService tokenService,
     IPlatformAuditService audit,
+    PlatformOutboxEnqueueService outboxEnqueue,
     IOptions<StlJwtOptions> jwtOptions)
 {
+    public const int FailedLoginLockoutThreshold = 5;
+    public const int LockoutMinutes = 15;
+
     public async Task<AuthTokenResponse> LoginAsync(
         LoginRequest request,
         string? userAgent,
@@ -34,10 +38,33 @@ public sealed class AuthService(
             throw new StlApiException("auth.invalid_credentials", "Invalid email or password.", 401);
         }
 
+        var now = DateTimeOffset.UtcNow;
+        var wasLocked = user.Credential.LockedUntil is DateTimeOffset lockedUntil && lockedUntil > now;
+        if (wasLocked)
+        {
+            await audit.WriteAsync(
+                "auth.login",
+                "user",
+                user.Id.ToString(),
+                "Denied",
+                actorUserId: user.Id,
+                reasonCode: "account_locked",
+                cancellationToken: cancellationToken);
+            throw new StlApiException("auth.account_locked", "Account is temporarily locked.", 423);
+        }
+
         if (!passwordHasher.Verify(request.Password, user.Credential.PasswordHash))
         {
-            await audit.WriteAsync("auth.login", "user", user.Id.ToString(), "Denied", actorUserId: user.Id, reasonCode: "invalid_credentials", cancellationToken: cancellationToken);
+            await RecordFailedLoginAsync(user, now, cancellationToken);
             throw new StlApiException("auth.invalid_credentials", "Invalid email or password.", 401);
+        }
+
+        var shouldEmitUnlock = user.Credential.LockedUntil is DateTimeOffset expiredLock && expiredLock <= now;
+        if (user.Credential.FailedLoginCount != 0 || user.Credential.LockedUntil is not null)
+        {
+            user.Credential.FailedLoginCount = 0;
+            user.Credential.LockedUntil = null;
+            user.ModifiedAt = now;
         }
 
         var tenantId = await ResolveTenantIdAsync(user, request.TenantId, cancellationToken);
@@ -56,7 +83,22 @@ public sealed class AuthService(
             throw new StlApiException("auth.no_entitlements", "No active product entitlements for this tenant.", 403);
         }
 
-        return await IssueSessionAsync(user, tenantId, entitlements, userAgent, ipAddress, cancellationToken);
+        var response = await IssueSessionAsync(user, tenantId, entitlements, userAgent, ipAddress, cancellationToken);
+
+        if (shouldEmitUnlock)
+        {
+            await EnqueueUserLifecycleEventAsync(
+                PlatformOutboxEventKinds.UserUnlocked,
+                user,
+                "Platform user automatically unlocked after successful login.",
+                new Dictionary<string, string>
+                {
+                    ["source"] = "login_lockout",
+                },
+                cancellationToken);
+        }
+
+        return response;
     }
 
     public async Task<AuthTokenResponse> RenewAsync(
@@ -304,6 +346,83 @@ public sealed class AuthService(
             sessionId,
             user.Id,
             tenantId);
+    }
+
+    private async Task RecordFailedLoginAsync(
+        PlatformUser user,
+        DateTimeOffset failedAt,
+        CancellationToken cancellationToken)
+    {
+        user.Credential!.FailedLoginCount += 1;
+        user.ModifiedAt = failedAt;
+
+        var lockTriggered = false;
+        if (user.Credential.FailedLoginCount >= FailedLoginLockoutThreshold)
+        {
+            user.Credential.LockedUntil = failedAt.AddMinutes(LockoutMinutes);
+            lockTriggered = true;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "auth.login",
+            "user",
+            user.Id.ToString(),
+            "Denied",
+            actorUserId: user.Id,
+            reasonCode: lockTriggered ? "account_locked" : "invalid_credentials",
+            cancellationToken: cancellationToken);
+
+        if (lockTriggered)
+        {
+            await audit.WriteAsync(
+                "user.locked",
+                "user",
+                user.Id.ToString(),
+                "Success",
+                actorUserId: user.Id,
+                reasonCode: "failed_login_threshold",
+                cancellationToken: cancellationToken);
+
+            await EnqueueUserLifecycleEventAsync(
+                PlatformOutboxEventKinds.UserLocked,
+                user,
+                "Platform user automatically locked after repeated failed logins.",
+                new Dictionary<string, string>
+                {
+                    ["source"] = "login_lockout",
+                    ["reason"] = "failed_login_threshold",
+                },
+                cancellationToken);
+        }
+    }
+
+    private async Task EnqueueUserLifecycleEventAsync(
+        string eventType,
+        PlatformUser user,
+        string summary,
+        Dictionary<string, string> metadata,
+        CancellationToken cancellationToken)
+    {
+        metadata["email"] = user.Email;
+        metadata["failedLoginCount"] = user.Credential?.FailedLoginCount.ToString() ?? "0";
+        metadata["lockedUntil"] = user.Credential?.LockedUntil?.ToString("O") ?? string.Empty;
+
+        await outboxEnqueue.TryEnqueueAsync(
+            eventType,
+            "user",
+            user.Id.ToString(),
+            user.ModifiedAt.ToUnixTimeMilliseconds().ToString(),
+            new PlatformOutboxPayload(
+                PlatformOutboxRules.DefaultSchemaVersion,
+                null,
+                user.Id,
+                "user",
+                user.Id.ToString(),
+                summary,
+                metadata),
+            cancellationToken: cancellationToken);
     }
 
     private async Task<Guid> ResolveTenantIdAsync(

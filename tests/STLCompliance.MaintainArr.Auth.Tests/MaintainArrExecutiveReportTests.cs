@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
+using MaintainArr.Api.Entities;
 using MaintainArr.Api.Services;
 using MaintainArrRedeemRequest = MaintainArr.Api.Contracts.RedeemHandoffRequest;
 using MaintainArrHandoffSessionResponse = MaintainArr.Api.Contracts.HandoffSessionResponse;
@@ -84,6 +85,8 @@ public sealed class MaintainArrExecutiveReportTests : IAsyncLifetime
     [Fact]
     public async Task Executive_report_summary_returns_kpis()
     {
+        await SeedReliabilityDowntimeAsync();
+
         var response = await _maintainarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/reports/executive/summary", _managerToken));
         response.EnsureSuccessStatusCode();
@@ -95,6 +98,35 @@ public sealed class MaintainArrExecutiveReportTests : IAsyncLifetime
         Assert.True(summary.DowntimeTrend.PeriodDays >= 1);
         Assert.NotNull(summary.DowntimeTrend.CurrentPeriod);
         Assert.NotNull(summary.DowntimeTrend.PreviousPeriod);
+        Assert.Equal(3, summary.Reliability.FailureEventCount);
+        Assert.Equal(3, summary.Reliability.ClosedRepairEventCount);
+        Assert.Equal(1, summary.Reliability.RepeatDowntimeAssetCount);
+        Assert.Equal(1, summary.Reliability.ChronicAssetCount);
+        Assert.True(summary.Reliability.MeanTimeToRepairHours > 0);
+        Assert.True(summary.Reliability.MeanTimeBetweenFailuresHours > 0);
+        Assert.Contains(summary.Reliability.ChronicAssets, x => x.AssetTag == "REL-001");
+    }
+
+    [Fact]
+    public async Task Dashboard_v1_returns_fleet_command_center_metrics_and_actions()
+    {
+        await SeedReliabilityDowntimeAsync();
+
+        var response = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/dashboard", _managerToken));
+        response.EnsureSuccessStatusCode();
+
+        var dashboard = (await response.Content.ReadFromJsonAsync<MaintainArrDashboardResponse>())!;
+        Assert.Equal(2, dashboard.Readiness.TotalAssets);
+        Assert.Equal(1, dashboard.Readiness.NotReadyAssets);
+        Assert.Equal(1, dashboard.Operations.OpenWorkOrders);
+        Assert.Equal(1, dashboard.Operations.CriticalDefects);
+        Assert.Equal(1, dashboard.Operations.OverduePm);
+        Assert.Equal(1, dashboard.Downtime.ChronicAssetCount);
+        Assert.Contains(dashboard.Downtime.TopProblemAssets, asset => asset.AssetTag == "REL-001");
+        Assert.Contains(dashboard.ActionItems, item => item.Key == "critical_defects");
+        Assert.Contains(dashboard.ActionItems, item => item.Key == "overdue_pm");
+        Assert.Contains(dashboard.ActionItems, item => item.Key == "chronic_assets");
     }
 
     [Fact]
@@ -108,6 +140,7 @@ public sealed class MaintainArrExecutiveReportTests : IAsyncLifetime
         var csv = await response.Content.ReadAsStringAsync();
         Assert.Contains("fleet,total_assets", csv, StringComparison.Ordinal);
         Assert.Contains("downtime,current_hours", csv, StringComparison.Ordinal);
+        Assert.Contains("reliability,mean_time_to_repair_hours", csv, StringComparison.Ordinal);
         Assert.Contains("supplyarr,published_demand_lines", csv, StringComparison.Ordinal);
     }
 
@@ -133,6 +166,7 @@ public sealed class MaintainArrExecutiveReportTests : IAsyncLifetime
         Assert.Contains("maintenance", body, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("executive", body, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("compliance", body, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("dashboard", body, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -211,6 +245,118 @@ public sealed class MaintainArrExecutiveReportTests : IAsyncLifetime
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         await PlatformSeeder.SeedAsync(db, hasher);
     }
+
+    private async Task SeedReliabilityDowntimeAsync()
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+
+        var assetClass = new AssetClass
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            ClassKey = $"reliability-class-{Guid.NewGuid():N}",
+            Name = "Reliability Class",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var assetType = new AssetType
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            AssetClassId = assetClass.Id,
+            TypeKey = $"reliability-type-{Guid.NewGuid():N}",
+            Name = "Reliability Type",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var asset = new Asset
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            AssetTypeId = assetType.Id,
+            AssetTag = "REL-001",
+            Name = "Reliability Report Asset",
+            LifecycleStatus = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.AssetClasses.Add(assetClass);
+        db.AssetTypes.Add(assetType);
+        db.Assets.Add(asset);
+
+        db.AssetDowntimeEvents.AddRange(
+            ClosedUnplannedDowntime(asset, now.AddDays(-20), hours: 4),
+            ClosedUnplannedDowntime(asset, now.AddDays(-12), hours: 6),
+            ClosedUnplannedDowntime(asset, now.AddDays(-2), hours: 8));
+
+        db.AssetStatusRollups.Add(new AssetStatusRollup
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            AssetId = asset.Id,
+            AssetTag = asset.AssetTag,
+            AssetName = asset.Name,
+            LifecycleStatus = "active",
+            ReadinessStatus = "not_ready",
+            ReadinessBasis = "maintenance_blockers",
+            BlockerCount = 3,
+            PrimaryBlockerMessage = "Critical defect, overdue PM, and failed inspection.",
+            OpenCriticalDefectCount = 1,
+            OpenHighDefectCount = 0,
+            ActiveWorkOrderCount = 1,
+            PmDueCount = 1,
+            PmOverdueCount = 1,
+            FailedInspectionCount = 1,
+            ComputedAt = now,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.AssetStatusScopeRollups.Add(new AssetStatusScopeRollup
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            ScopeType = AssetStatusRollupScopeTypes.Fleet,
+            ScopeEntityId = PlatformSeeder.DemoTenantId,
+            ScopeLabel = "Fleet",
+            TotalAssets = 2,
+            ReadyCount = 1,
+            NotReadyCount = 1,
+            ReadyPercent = 50m,
+            ComputedAt = now,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        await db.SaveChangesAsync();
+    }
+
+    private static AssetDowntimeEvent ClosedUnplannedDowntime(
+        Asset asset,
+        DateTimeOffset startedAt,
+        int hours) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            TenantId = asset.TenantId,
+            AssetId = asset.Id,
+            AssetTag = asset.AssetTag,
+            AssetName = asset.Name,
+            Source = AssetDowntimeSources.Manual,
+            Reason = AssetDowntimeReasons.InRepair,
+            IsPlanned = false,
+            StartedAt = startedAt,
+            EndedAt = startedAt.AddHours(hours),
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            ClosedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = startedAt,
+            UpdatedAt = startedAt.AddHours(hours),
+        };
 
     private static void RemoveDbContext<TContext>(IServiceCollection services) where TContext : DbContext
     {

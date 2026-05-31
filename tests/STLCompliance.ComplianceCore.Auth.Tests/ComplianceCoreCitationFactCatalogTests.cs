@@ -283,6 +283,21 @@ public class ComplianceCoreCitationFactCatalogTests : IAsyncLifetime
         var updatedCitation = (await updateCitationResponse.Content.ReadFromJsonAsync<RegulatoryCitationResponse>())!;
         Assert.Equal("Updated detail citation", updatedCitation.Label);
 
+        using (var scope = _complianceCoreFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+            var citationEvents = await db.AuditEvents
+                .AsNoTracking()
+                .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                    && x.Action == RegulatoryCitationService.CitationChangedEventAction
+                    && x.TargetId == createdCitation.CitationId.ToString())
+                .ToListAsync();
+
+            Assert.Single(citationEvents, x => x.Result == "created");
+            Assert.Single(citationEvents, x => x.Result == "updated");
+            Assert.All(citationEvents, citationEvent => Assert.Equal("cfr_detail_routes", citationEvent.ReasonCode));
+        }
+
         var citationHistoryResponse = await _complianceCoreClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/v1/citations/{createdCitation.CitationId}/history", adminToken));
         citationHistoryResponse.EnsureSuccessStatusCode();
@@ -340,6 +355,21 @@ public class ComplianceCoreCitationFactCatalogTests : IAsyncLifetime
         Assert.True(usage.FactRequirementCount >= 1);
         Assert.True(usage.RulePackCount >= 1);
         Assert.True(usage.CitationCount >= 1);
+
+        var historyResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/facts/fact_detail_routes/history", adminToken));
+        historyResponse.EnsureSuccessStatusCode();
+        var history = (await historyResponse.Content.ReadFromJsonAsync<IReadOnlyList<FactDefinitionHistoryItemResponse>>())!;
+        Assert.Contains(history, item =>
+            item.FactDefinitionId == updatedFact.FactDefinitionId
+            && item.FactKey == "fact_detail_routes"
+            && item.Action == "fact_definition.create"
+            && item.Result == "success");
+        Assert.Contains(history, item =>
+            item.FactDefinitionId == updatedFact.FactDefinitionId
+            && item.FactKey == "fact_detail_routes"
+            && item.Action == "fact_definition.update"
+            && item.Result == "success");
 
         var validateRequest = Authorized(HttpMethod.Post, "/api/v1/facts/validate-payload", adminToken);
         validateRequest.Content = JsonContent.Create(new ValidateFactPayloadRequest(

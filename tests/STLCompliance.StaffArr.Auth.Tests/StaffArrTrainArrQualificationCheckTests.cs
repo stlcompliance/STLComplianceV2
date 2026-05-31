@@ -129,6 +129,18 @@ public class StaffArrTrainArrQualificationCheckTests : IAsyncLifetime
         Assert.Equal("local_no_qualification", check.ReasonCode);
         Assert.NotNull(check.ComplianceCore);
         Assert.Equal(QualificationCheckOutcomes.Allow, check.ComplianceCore!.Outcome);
+        Assert.Empty(check.DependencyFacts!);
+        Assert.NotNull(check.AuditSnapshot);
+        Assert.Equal("qualification_check", check.AuditSnapshot.SnapshotKind);
+
+        await using var scope = _trainarrFactory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<TrainArr.Api.Data.TrainArrDbContext>();
+        var audit = await db.AuditEvents.SingleAsync(x => x.Id == check.AuditSnapshot.AuditEventId);
+        Assert.Equal(TrainArr.Api.Services.QualificationCheckService.SingleCheckAction, audit.Action);
+        Assert.Equal("qualification_check", audit.TargetType);
+        Assert.Equal(check.CheckId.ToString(), audit.TargetId);
+        Assert.Equal(QualificationCheckOutcomes.Warn, audit.Result);
+        Assert.Equal("local_no_qualification", audit.ReasonCode);
     }
 
     [Fact]
@@ -152,6 +164,108 @@ public class StaffArrTrainArrQualificationCheckTests : IAsyncLifetime
         Assert.Equal("rule_evaluation_failed", check.ReasonCode);
         Assert.NotNull(check.ComplianceCore);
         Assert.Equal(QualificationCheckOutcomes.Block, check.ComplianceCore!.Outcome);
+    }
+
+    [Fact]
+    public async Task Qualification_check_returns_waived_when_compliancecore_waiver_applies_to_valid_local_qualification()
+    {
+        var complianceAdminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var packId = await SeedDriverQualificationRulePackAsync(
+            complianceAdminToken,
+            packKey: "driver_qualification_waived",
+            booleanValue: false);
+
+        var waiverRequest = Authorized(HttpMethod.Post, "/api/waivers", complianceAdminToken);
+        waiverRequest.Content = JsonContent.Create(new CreateComplianceWaiverRequest(
+            "trainarr-driver-qualification-waiver",
+            packId,
+            "tenant",
+            "temporary_training_policy_exception",
+            "Temporary compliance waiver while driver qualification policy is reviewed.",
+            DateTimeOffset.UtcNow.AddMinutes(-5),
+            DateTimeOffset.UtcNow.AddDays(5)));
+        var waiverResponse = await _complianceCoreClient.SendAsync(waiverRequest);
+        waiverResponse.EnsureSuccessStatusCode();
+        var waiver = (await waiverResponse.Content.ReadFromJsonAsync<ComplianceWaiverResponse>())!;
+
+        (await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/waivers/{waiver.WaiverId}/approve", complianceAdminToken)))
+            .EnsureSuccessStatusCode();
+
+        var personId = Guid.NewGuid();
+        await SeedIssuedQualificationIssueAsync(
+            personId,
+            "hazmat_endorsement",
+            issuedAt: DateTimeOffset.UtcNow.AddDays(-1),
+            expiresAt: DateTimeOffset.UtcNow.AddDays(30));
+        var trainarrAdminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+
+        var check = await RunQualificationCheckAsync(
+            trainarrAdminToken,
+            personId,
+            "hazmat_endorsement",
+            "driver_qualification_waived");
+
+        Assert.Equal(QualificationCheckOutcomes.Waived, check.Outcome);
+        Assert.Equal("compliance_waiver_applied", check.ReasonCode);
+        Assert.NotNull(check.ComplianceCore);
+        Assert.Equal(QualificationCheckOutcomes.Waived, check.ComplianceCore!.Outcome);
+        Assert.Equal(waiver.WaiverId, check.ComplianceCore.AppliedWaiverId);
+        Assert.Equal("trainarr-driver-qualification-waiver", check.ComplianceCore.AppliedWaiverKey);
+        Assert.Null(check.AuthorizationGuidance);
+    }
+
+    [Fact]
+    public async Task Qualification_check_returns_missing_dependency_facts_for_unresolved_compliance_inputs()
+    {
+        var complianceAdminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        await SeedDriverQualificationRulePackWithoutFactSourceAsync(
+            complianceAdminToken,
+            "driver_qualification_missing_fact",
+            "driver_medical_certificate_current");
+
+        var personId = Guid.NewGuid();
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+
+        var check = await RunQualificationCheckAsync(
+            adminToken,
+            personId,
+            "hazmat_endorsement",
+            "driver_qualification_missing_fact");
+
+        Assert.Equal(QualificationCheckOutcomes.Warn, check.Outcome);
+        var dependency = Assert.Single(check.DependencyFacts!);
+        Assert.Equal("driver_medical_certificate_current", dependency.FactKey);
+        Assert.Equal("missing", dependency.Status);
+        Assert.Contains("missing", dependency.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Qualification_check_returns_assignment_guidance_for_authorization_warning_ui()
+    {
+        var personId = Guid.NewGuid();
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+        var definitionId = await SeedTrainingDefinitionWithOpenAssignmentAsync(
+            personId,
+            "hazmat_endorsement",
+            "Hazmat Endorsement Refresher");
+
+        var check = await RunQualificationCheckAsync(
+            adminToken,
+            personId,
+            "hazmat_endorsement",
+            "driver_qualification",
+            trainingDefinitionId: definitionId);
+
+        Assert.Equal(QualificationCheckOutcomes.Warn, check.Outcome);
+        Assert.NotNull(check.AuthorizationGuidance);
+        Assert.Equal("No local qualification has been issued.", check.AuthorizationGuidance!.BlockReason);
+        Assert.Equal("assigned", check.AuthorizationGuidance.PersonAssignmentStatus);
+        Assert.Equal(definitionId, check.AuthorizationGuidance.RequiredTrainingDefinitionId);
+        Assert.Equal("Hazmat Endorsement Refresher", check.AuthorizationGuidance.RequiredTrainingDefinitionName);
+        Assert.Contains("Continue", check.AuthorizationGuidance.NextAction, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("assignment progress", check.AuthorizationGuidance.SupervisorAction, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Complete active assignment", check.AuthorizationGuidance.EstimatedPathToQualification, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -274,7 +388,9 @@ public class StaffArrTrainArrQualificationCheckTests : IAsyncLifetime
         string qualificationKey,
         string rulePackKey,
         string endpoint = "/api/qualification-checks",
-        DateTimeOffset? effectiveAt = null)
+        DateTimeOffset? effectiveAt = null,
+        Guid? trainingDefinitionId = null,
+        Guid? trainingProgramId = null)
     {
         var request = Authorized(HttpMethod.Post, endpoint, trainarrToken);
         request.Content = JsonContent.Create(new CreateQualificationCheckRequest(
@@ -282,10 +398,50 @@ public class StaffArrTrainArrQualificationCheckTests : IAsyncLifetime
             qualificationKey,
             rulePackKey,
             null,
-            effectiveAt));
+            effectiveAt,
+            trainingDefinitionId,
+            trainingProgramId));
         var response = await _trainarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<QualificationCheckResponse>())!;
+    }
+
+    private async Task<Guid> SeedTrainingDefinitionWithOpenAssignmentAsync(
+        Guid personId,
+        string qualificationKey,
+        string definitionName)
+    {
+        using var scope = _trainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TrainArr.Api.Data.TrainArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        var definitionId = Guid.NewGuid();
+        db.TrainingDefinitions.Add(new TrainArr.Api.Entities.TrainingDefinition
+        {
+            Id = definitionId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            DefinitionKey = $"def-{Guid.NewGuid():N}",
+            Name = definitionName,
+            Description = "Training required before this qualification can authorize work.",
+            QualificationKey = qualificationKey,
+            QualificationName = "Hazmat Endorsement",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+        db.TrainingAssignments.Add(new TrainArr.Api.Entities.TrainingAssignment
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            StaffarrPersonId = personId,
+            TrainingDefinitionId = definitionId,
+            AssignmentReason = "manual",
+            Status = "assigned",
+            DueAt = now.AddDays(7),
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+        await db.SaveChangesAsync();
+        return definitionId;
     }
 
     private async Task SeedIssuedQualificationIssueAsync(
@@ -369,7 +525,7 @@ public class StaffArrTrainArrQualificationCheckTests : IAsyncLifetime
         await db.SaveChangesAsync();
     }
 
-    private async Task SeedDriverQualificationRulePackAsync(
+    private async Task<Guid> SeedDriverQualificationRulePackAsync(
         string adminToken,
         bool booleanValue,
         string packKey = "driver_qualification")
@@ -407,6 +563,41 @@ public class StaffArrTrainArrQualificationCheckTests : IAsyncLifetime
                 new RuleDefinitionDto(
                     "license_valid",
                     "Valid driver license",
+                    "fact_boolean",
+                    factKey,
+                    true),
+            ]);
+
+        var updateContentRequest = Authorized(HttpMethod.Put, $"/api/rule-packs/{pack.RulePackId}/content", adminToken);
+        updateContentRequest.Content = JsonContent.Create(new UpdateRulePackContentRequest(content));
+        (await _complianceCoreClient.SendAsync(updateContentRequest)).EnsureSuccessStatusCode();
+        return pack.RulePackId;
+    }
+
+    private async Task SeedDriverQualificationRulePackWithoutFactSourceAsync(
+        string adminToken,
+        string packKey,
+        string factKey)
+    {
+        var programId = await CreateSampleProgramAsync(adminToken);
+        var createPackRequest = Authorized(HttpMethod.Post, "/api/rule-packs", adminToken);
+        createPackRequest.Content = JsonContent.Create(new CreateRulePackRequest(
+            programId,
+            packKey,
+            "Driver Qualification Missing Fact Rules",
+            "TrainArr authorization check rule pack with unresolved dependency facts."));
+        var createPackResponse = await _complianceCoreClient.SendAsync(createPackRequest);
+        createPackResponse.EnsureSuccessStatusCode();
+        var pack = (await createPackResponse.Content.ReadFromJsonAsync<RulePackResponse>())!;
+
+        await CreateBooleanFactDefinitionAsync(adminToken, factKey);
+        var content = new RulePackContentBody(
+            1,
+            "all",
+            [
+                new RuleDefinitionDto(
+                    "medical_current",
+                    "Current medical certificate",
                     "fact_boolean",
                     factKey,
                     true),

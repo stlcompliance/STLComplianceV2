@@ -28,6 +28,26 @@ public sealed class DispatchReportService(RoutArrDbContext db)
         var scopedTrips = trips.Where(x => IsTripInScope(x, windowStart, windowEnd)).ToList();
         var tripIds = scopedTrips.Select(x => x.Id).ToHashSet();
 
+        var settingsEntity = await db.TenantTripExecutionSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId, cancellationToken);
+        var captureSettings = TripExecutionCaptureRules.ResolveSettings(settingsEntity);
+
+        var proofTypesByTrip = await db.TripProofRecords
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && tripIds.Contains(x.TripId))
+            .Select(x => new { x.TripId, x.ProofType })
+            .ToListAsync(cancellationToken);
+        var proofLookup = proofTypesByTrip
+            .GroupBy(x => x.TripId)
+            .ToDictionary(
+                x => x.Key,
+                x => x.Select(y => y.ProofType).ToHashSet(StringComparer.OrdinalIgnoreCase));
+
+        var missingRequiredProofByTrip = scopedTrips.ToDictionary(
+            x => x.Id,
+            x => DispatchBoardRules.CountMissingRequiredProof(x, captureSettings, proofLookup.GetValueOrDefault(x.Id)));
+
         var routes = await db.Routes
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId && x.TripId.HasValue && tripIds.Contains(x.TripId.Value))
@@ -69,6 +89,7 @@ public sealed class DispatchReportService(RoutArrDbContext db)
                     isAtRisk,
                     isUnassigned,
                     routeCountByTrip.GetValueOrDefault(trip.Id),
+                    missingRequiredProofByTrip.GetValueOrDefault(trip.Id),
                     openExceptionCountByTrip.GetValueOrDefault(trip.Id));
             })
             .OrderBy(x => x.ScheduledStartAt ?? DateTimeOffset.MaxValue)
@@ -90,6 +111,7 @@ public sealed class DispatchReportService(RoutArrDbContext db)
             tripItems.Count(x => x.IsLate),
             tripItems.Count(x => x.IsAtRisk),
             tripItems.Count(x => x.IsUnassigned),
+            tripItems.Count(x => x.MissingRequiredProofCount > 0),
             scopedExceptions.Count(x => DispatchExceptionStatuses.OpenQueue.Contains(x.Status)),
             scopedExceptions.Count(x =>
                 string.Equals(x.Category, DispatchExceptionCategories.Delay, StringComparison.OrdinalIgnoreCase)),
@@ -113,6 +135,21 @@ public sealed class DispatchReportService(RoutArrDbContext db)
         var now = DateTimeOffset.UtcNow;
         var isLate = DispatchBoardRules.IsLateTrip(trip, now);
         var isAtRisk = !isLate && DispatchBoardRules.IsAtRiskTrip(trip, now);
+
+        var settingsEntity = await db.TenantTripExecutionSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId, cancellationToken);
+        var captureSettings = TripExecutionCaptureRules.ResolveSettings(settingsEntity);
+
+        var proofTypes = await db.TripProofRecords
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.TripId == tripId)
+            .Select(x => x.ProofType)
+            .ToListAsync(cancellationToken);
+        var missingRequiredProofCount = DispatchBoardRules.CountMissingRequiredProof(
+            trip,
+            captureSettings,
+            proofTypes.ToHashSet(StringComparer.OrdinalIgnoreCase));
 
         var routeCount = await db.Routes
             .AsNoTracking()
@@ -151,6 +188,7 @@ public sealed class DispatchReportService(RoutArrDbContext db)
             isAtRisk,
             routeCount,
             pendingStopCount,
+            missingRequiredProofCount,
             tripExceptions.Count,
             tripExceptions.Count(x =>
                 string.Equals(x.Category, DispatchExceptionCategories.Delay, StringComparison.OrdinalIgnoreCase)),
@@ -212,7 +250,7 @@ public sealed class DispatchReportService(RoutArrDbContext db)
         var summary = await GetSummaryAsync(tenantId, scope, cancellationToken);
         var builder = new StringBuilder();
         builder.AppendLine(
-            "tripNumber,title,dispatchStatus,assignedDriverPersonId,vehicleRefKey,scheduledStartAt,scheduledEndAt,isLate,isAtRisk,isUnassigned,routeCount,openExceptionCount");
+            "tripNumber,title,dispatchStatus,assignedDriverPersonId,vehicleRefKey,scheduledStartAt,scheduledEndAt,isLate,isAtRisk,isUnassigned,routeCount,missingRequiredProofCount,openExceptionCount");
 
         foreach (var trip in summary.Trips)
         {
@@ -238,10 +276,94 @@ public sealed class DispatchReportService(RoutArrDbContext db)
             builder.Append(',');
             builder.Append(trip.RouteCount);
             builder.Append(',');
+            builder.Append(trip.MissingRequiredProofCount);
+            builder.Append(',');
             builder.AppendLine(trip.OpenExceptionCount.ToString());
         }
 
         var fileName = $"routarr-dispatch-report-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv";
+        return ("text/csv", fileName, Encoding.UTF8.GetBytes(builder.ToString()));
+    }
+
+    public async Task<DispatchTimeSummaryResponse> GetTimeSummaryAsync(
+        Guid tenantId,
+        string? scope,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedScope = NormalizeScope(scope);
+        var now = DateTimeOffset.UtcNow;
+        var (windowStart, windowEnd) = GetWindow(normalizedScope, now);
+
+        var trips = await db.Trips
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+
+        var rows = trips
+            .Where(x => IsTimeSummaryTripInScope(x, windowStart, windowEnd))
+            .OrderBy(x => x.StartedAt ?? x.ScheduledStartAt ?? x.CreatedAt)
+            .ThenBy(x => x.TripNumber)
+            .Select(MapTimeSummaryTrip)
+            .ToList();
+
+        return new DispatchTimeSummaryResponse(
+            now,
+            normalizedScope,
+            windowStart,
+            windowEnd,
+            rows.Count,
+            rows.Count(x => x.IsCompleted),
+            rows.Count(x => x.IsClosed),
+            rows.Sum(x => x.ScheduledDurationMinutes ?? 0),
+            rows.Sum(x => x.ActualDurationMinutes ?? 0),
+            rows.Sum(x => x.VarianceMinutes ?? 0),
+            rows);
+    }
+
+    public async Task<(string ContentType, string FileName, byte[] Content)> ExportTimeSummaryCsvAsync(
+        Guid tenantId,
+        string? scope,
+        CancellationToken cancellationToken = default)
+    {
+        var summary = await GetTimeSummaryAsync(tenantId, scope, cancellationToken);
+        var builder = new StringBuilder();
+        builder.AppendLine(
+            "tripNumber,title,dispatchStatus,assignedDriverPersonId,vehicleRefKey,scheduledStartAt,scheduledEndAt,startedAt,completedAt,closedAt,scheduledDurationMinutes,actualDurationMinutes,varianceMinutes,isCompleted,isClosed");
+
+        foreach (var trip in summary.Trips)
+        {
+            builder.Append(CsvEscape(trip.TripNumber));
+            builder.Append(',');
+            builder.Append(CsvEscape(trip.Title));
+            builder.Append(',');
+            builder.Append(CsvEscape(trip.DispatchStatus));
+            builder.Append(',');
+            builder.Append(CsvEscape(trip.AssignedDriverPersonId ?? string.Empty));
+            builder.Append(',');
+            builder.Append(CsvEscape(trip.VehicleRefKey ?? string.Empty));
+            builder.Append(',');
+            builder.Append(trip.ScheduledStartAt?.ToString("O") ?? string.Empty);
+            builder.Append(',');
+            builder.Append(trip.ScheduledEndAt?.ToString("O") ?? string.Empty);
+            builder.Append(',');
+            builder.Append(trip.StartedAt?.ToString("O") ?? string.Empty);
+            builder.Append(',');
+            builder.Append(trip.CompletedAt?.ToString("O") ?? string.Empty);
+            builder.Append(',');
+            builder.Append(trip.ClosedAt?.ToString("O") ?? string.Empty);
+            builder.Append(',');
+            builder.Append(trip.ScheduledDurationMinutes?.ToString() ?? string.Empty);
+            builder.Append(',');
+            builder.Append(trip.ActualDurationMinutes?.ToString() ?? string.Empty);
+            builder.Append(',');
+            builder.Append(trip.VarianceMinutes?.ToString() ?? string.Empty);
+            builder.Append(',');
+            builder.Append(trip.IsCompleted ? "true" : "false");
+            builder.Append(',');
+            builder.AppendLine(trip.IsClosed ? "true" : "false");
+        }
+
+        var fileName = $"routarr-time-summary-report-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv";
         return ("text/csv", fileName, Encoding.UTF8.GetBytes(builder.ToString()));
     }
 
@@ -283,6 +405,49 @@ public sealed class DispatchReportService(RoutArrDbContext db)
     private static bool IsExceptionInScope(DispatchException entity, DateTimeOffset windowStart, DateTimeOffset windowEnd) =>
         (entity.UpdatedAt >= windowStart && entity.UpdatedAt < windowEnd)
         || (entity.CreatedAt >= windowStart && entity.CreatedAt < windowEnd);
+
+    private static bool IsTimeSummaryTripInScope(Trip trip, DateTimeOffset windowStart, DateTimeOffset windowEnd) =>
+        trip.StartedAt.HasValue
+        && OverlapsWindow(trip.StartedAt, trip.CompletedAt ?? trip.ClosedAt, windowStart, windowEnd)
+        || (trip.CompletedAt.HasValue && trip.CompletedAt.Value >= windowStart && trip.CompletedAt.Value < windowEnd)
+        || (trip.ClosedAt.HasValue && trip.ClosedAt.Value >= windowStart && trip.ClosedAt.Value < windowEnd);
+
+    private static DispatchTimeSummaryTripRow MapTimeSummaryTrip(Trip trip)
+    {
+        var scheduledDuration = ComputeMinutes(trip.ScheduledStartAt, trip.ScheduledEndAt);
+        var actualDuration = ComputeMinutes(trip.StartedAt, trip.CompletedAt ?? trip.ClosedAt);
+        int? variance = scheduledDuration.HasValue && actualDuration.HasValue
+            ? actualDuration.Value - scheduledDuration.Value
+            : null;
+
+        return new DispatchTimeSummaryTripRow(
+            trip.Id,
+            trip.TripNumber,
+            trip.Title,
+            trip.DispatchStatus,
+            trip.AssignedDriverPersonId,
+            trip.VehicleRefKey,
+            trip.ScheduledStartAt,
+            trip.ScheduledEndAt,
+            trip.StartedAt,
+            trip.CompletedAt,
+            trip.ClosedAt,
+            scheduledDuration,
+            actualDuration,
+            variance,
+            string.Equals(trip.DispatchStatus, TripDispatchStatuses.Completed, StringComparison.OrdinalIgnoreCase),
+            trip.ClosedAt.HasValue);
+    }
+
+    private static int? ComputeMinutes(DateTimeOffset? startAt, DateTimeOffset? endAt)
+    {
+        if (!startAt.HasValue || !endAt.HasValue || endAt.Value < startAt.Value)
+        {
+            return null;
+        }
+
+        return (int)Math.Round((endAt.Value - startAt.Value).TotalMinutes, MidpointRounding.AwayFromZero);
+    }
 
     private static bool OverlapsWindow(
         DateTimeOffset? startAt,

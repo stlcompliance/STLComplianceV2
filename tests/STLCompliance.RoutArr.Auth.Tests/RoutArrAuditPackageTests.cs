@@ -112,6 +112,31 @@ public sealed class RoutArrAuditPackageTests : IAsyncLifetime
         using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read);
         Assert.NotNull(archive.GetEntry("audit_events.json"));
         Assert.NotNull(archive.GetEntry("audit_events.csv"));
+        Assert.NotNull(archive.GetEntry("proof_records.json"));
+        Assert.NotNull(archive.GetEntry("proof_records.csv"));
+        Assert.NotNull(archive.GetEntry("dvir_inspections.json"));
+        Assert.NotNull(archive.GetEntry("dvir_inspections.csv"));
+        Assert.NotNull(archive.GetEntry("capture_attachments.json"));
+        Assert.NotNull(archive.GetEntry("capture_attachments.csv"));
+    }
+
+    [Fact]
+    public async Task Manager_can_use_v1_audit_package_manifest_and_json_export()
+    {
+        var manifestResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit-packages/manifest", _managerToken));
+        manifestResponse.EnsureSuccessStatusCode();
+        var manifest = (await manifestResponse.Content.ReadFromJsonAsync<AuditPackageManifestResponse>())!;
+        Assert.Contains(manifest.Sections, section => section.Key == "audit_events");
+        Assert.Contains(manifest.Sections, section => section.Key == "proof_records");
+
+        var exportResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit-packages/export?format=json", _managerToken));
+        exportResponse.EnsureSuccessStatusCode();
+        var package = (await exportResponse.Content.ReadFromJsonAsync<AuditPackageExportResponse>())!;
+        Assert.Equal(PlatformSeeder.DemoTenantId, package.TenantId);
+        Assert.True(package.Counts.AuditEvents >= 1);
+        Assert.True(package.Counts.ProofRecords >= 1);
     }
 
     [Fact]
@@ -133,6 +158,20 @@ public sealed class RoutArrAuditPackageTests : IAsyncLifetime
         var summary =
             (await summaryResponse.Content.ReadFromJsonAsync<AuditPackageExportSummaryResponse>())!;
         Assert.True(summary.Counts.AuditEvents >= 1);
+
+        var jsonResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/audit-packages/export?format=json", _managerToken));
+        jsonResponse.EnsureSuccessStatusCode();
+        var package = (await jsonResponse.Content.ReadFromJsonAsync<AuditPackageExportResponse>())!;
+        Assert.True(package.Counts.ProofRecords >= 1);
+        Assert.True(package.Counts.DvirInspections >= 1);
+        Assert.True(package.Counts.CaptureAttachments >= 1);
+        Assert.Contains(package.ProofRecords, x =>
+            x.ProofType == TripProofTypes.Delivery && !string.IsNullOrWhiteSpace(x.EvidenceHash));
+        Assert.Contains(package.DvirInspections, x =>
+            x.Phase == DvirInspectionPhases.PreTrip && !string.IsNullOrWhiteSpace(x.EvidenceHash));
+        Assert.Contains(package.CaptureAttachments, x =>
+            x.AttachmentKind == TripCaptureAttachmentKinds.Photo && !string.IsNullOrWhiteSpace(x.EvidenceHash));
 
         var csvResponse = await _routarrClient.SendAsync(
             Authorized(
@@ -202,6 +241,25 @@ public sealed class RoutArrAuditPackageTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Background_job_v1_create_returns_versioned_status_location()
+    {
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/audit-packages/jobs", _managerToken);
+        createRequest.Content = JsonContent.Create(
+            new CreateAuditPackageGenerationJobRequest("json", null, null, "w227.test.success", "success"));
+        var createResponse = await _routarrClient.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Accepted, createResponse.StatusCode);
+        Assert.StartsWith("/api/v1/audit-packages/jobs/", createResponse.Headers.Location?.OriginalString);
+        var created = (await createResponse.Content.ReadFromJsonAsync<AuditPackageGenerationJobResponse>())!;
+        Assert.Equal(AuditPackageGenerationJobStatuses.Pending, created.Status);
+
+        var statusResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/audit-packages/jobs/{created.JobId}", _managerToken));
+        statusResponse.EnsureSuccessStatusCode();
+        var status = (await statusResponse.Content.ReadFromJsonAsync<AuditPackageGenerationJobResponse>())!;
+        Assert.Equal(created.JobId, status.JobId);
+    }
+
+    [Fact]
     public async Task Audit_v1_alias_matches_audit_package_timeline()
     {
         var legacyResponse = await _routarrClient.SendAsync(
@@ -224,6 +282,71 @@ public sealed class RoutArrAuditPackageTests : IAsyncLifetime
         using var scope = _routarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
         var now = DateTimeOffset.UtcNow;
+        var tripId = Guid.NewGuid();
+        var proofId = Guid.NewGuid();
+        var dvirId = Guid.NewGuid();
+        db.Trips.Add(new Trip
+        {
+            Id = tripId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            TripNumber = "AUD-PROOF-001",
+            Title = "Audit proof packet seed",
+            Description = "Trip seeded for audit package proof packet export.",
+            DispatchStatus = TripDispatchStatuses.Completed,
+            AssignedDriverPersonId = PlatformSeeder.DemoAdminUserId.ToString(),
+            VehicleRefKey = "VEH-AUD",
+            ScheduledStartAt = now.AddHours(-4),
+            ScheduledEndAt = now.AddHours(-2),
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now.AddHours(-5),
+            UpdatedAt = now,
+            CompletedAt = now.AddHours(-1),
+        });
+        db.TripProofRecords.Add(new TripProofRecord
+        {
+            Id = proofId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            TripId = tripId,
+            ProofType = TripProofTypes.Delivery,
+            CapturedByPersonId = PlatformSeeder.DemoAdminUserId.ToString(),
+            VehicleRefKey = "VEH-AUD",
+            ReferenceKey = "POD-AUD-001",
+            Notes = "Delivered with signature on file.",
+            CapturedAt = now.AddMinutes(-45),
+            CreatedAt = now.AddMinutes(-44),
+            UpdatedAt = now.AddMinutes(-44),
+        });
+        db.TripDvirInspections.Add(new TripDvirInspection
+        {
+            Id = dvirId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            TripId = tripId,
+            Phase = DvirInspectionPhases.PreTrip,
+            VehicleRefKey = "VEH-AUD",
+            Result = DvirInspectionResults.Pass,
+            OdometerReading = 12345,
+            DefectNotes = string.Empty,
+            SubmittedByPersonId = PlatformSeeder.DemoAdminUserId.ToString(),
+            SubmittedAt = now.AddHours(-4),
+            CreatedAt = now.AddHours(-4),
+            UpdatedAt = now.AddHours(-4),
+        });
+        db.TripCaptureAttachments.Add(new TripCaptureAttachment
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            TripId = tripId,
+            SubjectType = TripCaptureAttachmentSubjects.Proof,
+            SubjectId = proofId,
+            AttachmentKind = TripCaptureAttachmentKinds.Photo,
+            FileName = "pod-audit.jpg",
+            ContentType = "image/jpeg",
+            SizeBytes = 2048,
+            StorageKey = "audit/pod-audit.jpg",
+            Notes = "Photo metadata only for package export.",
+            CapturedByPersonId = PlatformSeeder.DemoAdminUserId.ToString(),
+            CreatedAt = now.AddMinutes(-43),
+        });
         db.AuditEvents.AddRange(
             new RoutArrAuditEvent
             {

@@ -51,6 +51,8 @@ public static class TrainingNotificationEventKinds
 
     public const string QualificationRevoked = "qualification_revoked";
 
+    public const string RemediationRequired = "remediation_required";
+
     public const string AssignmentDueReminder = "assignment_due_reminder";
 
     public const string AssignmentOverdueEscalation = "assignment_overdue_escalation";

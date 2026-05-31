@@ -7,7 +7,13 @@ public static class ProofDvirReportEndpoints
 {
     public static void MapRoutArrProofDvirReportEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/reports/proof-dvir")
+        MapGroup(app, "/api/reports/proof-dvir", string.Empty);
+        MapGroup(app, "/api/v1/reports/proof-dvir", "V1");
+    }
+
+    private static void MapGroup(WebApplication app, string routePrefix, string routeNameSuffix)
+    {
+        var group = app.MapGroup(routePrefix)
             .WithTags("ProofDvirReports")
             .RequireAuthorization();
 
@@ -33,7 +39,7 @@ public static class ProofDvirReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(summary);
         })
-        .WithName("GetRoutArrProofDvirReportSummary");
+        .WithName($"GetRoutArrProofDvirReportSummary{routeNameSuffix}");
 
         group.MapGet("/summary/export", async (
             string? scope,
@@ -57,7 +63,7 @@ public static class ProofDvirReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportRoutArrProofDvirReportSummary");
+        .WithName($"ExportRoutArrProofDvirReportSummary{routeNameSuffix}");
 
         group.MapGet("/trips/{tripId:guid}", async (
             Guid tripId,
@@ -81,7 +87,7 @@ public static class ProofDvirReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(detail);
         })
-        .WithName("GetRoutArrProofDvirReportTripDetail");
+        .WithName($"GetRoutArrProofDvirReportTripDetail{routeNameSuffix}");
 
         group.MapGet("/proofs/{proofId:guid}", async (
             Guid proofId,
@@ -105,7 +111,7 @@ public static class ProofDvirReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(detail);
         })
-        .WithName("GetRoutArrProofDvirReportProofDetail");
+        .WithName($"GetRoutArrProofDvirReportProofDetail{routeNameSuffix}");
 
         group.MapGet("/dvir/{dvirId:guid}", async (
             Guid dvirId,
@@ -129,6 +135,6 @@ public static class ProofDvirReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(detail);
         })
-        .WithName("GetRoutArrProofDvirReportDvirDetail");
+        .WithName($"GetRoutArrProofDvirReportDvirDetail{routeNameSuffix}");
     }
 }

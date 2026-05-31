@@ -1,4 +1,5 @@
 using STLCompliance.Shared.Integration;
+using System.Text.Json;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
@@ -100,9 +101,9 @@ public sealed class RoutArrDispatchExceptionQueueTests : IAsyncLifetime
 
         var createExRequest = Authorized(HttpMethod.Post, "/api/dispatch/exceptions", _dispatcherToken);
         createExRequest.Content = JsonContent.Create(new CreateDispatchExceptionRequest(
-            "Late departure",
-            "Driver delayed at yard",
-            "delay",
+            "Compliance hold",
+            "Driver qualification review required before departure",
+            "compliance",
             null,
             null,
             null));
@@ -153,6 +154,18 @@ public sealed class RoutArrDispatchExceptionQueueTests : IAsyncLifetime
         openListResponse.EnsureSuccessStatusCode();
         var openList = (await openListResponse.Content.ReadFromJsonAsync<DispatchExceptionListResponse>())!;
         Assert.DoesNotContain(openList.Items, x => x.ExceptionId == created.ExceptionId);
+
+        using var scope = _routarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+        var events = await db.IntegrationOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.RelatedEntityId == created.ExceptionId)
+            .ToListAsync();
+        Assert.Contains(events, x => x.EventKind == RoutArrIntegrationOutboxEventKinds.IncidentCreated);
+        Assert.Contains(events, x => x.EventKind == RoutArrIntegrationOutboxEventKinds.ComplianceHoldCreated);
+        Assert.Contains(events, x => x.EventKind == RoutArrIntegrationOutboxEventKinds.ComplianceHoldReleased);
+        Assert.Contains(events, x => x.EventKind == RoutArrIntegrationOutboxEventKinds.ExceptionCreated);
+        Assert.Contains(events, x => x.EventKind == RoutArrIntegrationOutboxEventKinds.ExceptionResolved);
     }
 
     [Fact]
@@ -221,6 +234,71 @@ public sealed class RoutArrDispatchExceptionQueueTests : IAsyncLifetime
         var overdueList = (await overdueResponse.Content.ReadFromJsonAsync<DispatchExceptionListResponse>())!;
         Assert.DoesNotContain(overdueList.Items, x => x.ExceptionId == created.ExceptionId);
         Assert.DoesNotContain(overdueList.Items, x => x.ExceptionId == created2.ExceptionId);
+    }
+
+    [Fact]
+    public async Task Incident_v1_create_records_metadata_routing_and_audit()
+    {
+        var createTripRequest = Authorized(HttpMethod.Post, "/api/trips", _dispatcherToken);
+        createTripRequest.Content = JsonContent.Create(new CreateTripRequest(
+            "Incident trip",
+            "Linked incident trip",
+            "VEH-INC",
+            DateTimeOffset.UtcNow.AddHours(1),
+            DateTimeOffset.UtcNow.AddHours(4),
+            null));
+        var createTripResponse = await _routarrClient.SendAsync(createTripRequest);
+        createTripResponse.EnsureSuccessStatusCode();
+        var trip = (await createTripResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        var createIncidentRequest = Authorized(HttpMethod.Post, "/api/v1/incidents", _dispatcherToken);
+        createIncidentRequest.Content = JsonContent.Create(new CreateDispatchIncidentRequest(
+            "Vehicle damage during loading",
+            "Forklift contact caused trailer door damage.",
+            DispatchIncidentTypes.EquipmentAbuse,
+            DispatchIncidentSeverities.High,
+            trip.TripId,
+            _dispatcherUserId,
+            null,
+            null));
+        var createIncidentResponse = await _routarrClient.SendAsync(createIncidentRequest);
+        createIncidentResponse.EnsureSuccessStatusCode();
+        var incident = (await createIncidentResponse.Content.ReadFromJsonAsync<DispatchExceptionSummaryResponse>())!;
+        Assert.Equal(DispatchIncidentTypes.EquipmentAbuse, incident.IncidentType);
+        Assert.Equal(DispatchIncidentSeverities.High, incident.IncidentSeverity);
+        Assert.Equal(DispatchIncidentReviewStatuses.Routed, incident.IncidentReviewStatus);
+        Assert.Equal(DispatchIncidentRoutedProducts.MaintainArr, incident.IncidentRoutedProduct);
+        Assert.Equal(DispatchExceptionCategories.Vehicle, incident.Category);
+        Assert.Equal(trip.TripId, incident.TripId);
+
+        var listResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/incidents?status=assigned", _dispatcherToken));
+        listResponse.EnsureSuccessStatusCode();
+        var list = (await listResponse.Content.ReadFromJsonAsync<DispatchExceptionListResponse>())!;
+        Assert.Contains(list.Items, x =>
+            x.ExceptionId == incident.ExceptionId
+            && x.IncidentType == DispatchIncidentTypes.EquipmentAbuse
+            && x.IncidentRoutedProduct == DispatchIncidentRoutedProducts.MaintainArr);
+
+        using var scope = _routarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+        var auditEvents = await db.AuditEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.TargetId == incident.ExceptionId.ToString())
+            .ToListAsync();
+        Assert.Contains(auditEvents, x => x.Action == DispatchExceptionService.IncidentCreateAction);
+
+        var outboxEvents = await db.IntegrationOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.RelatedEntityId == incident.ExceptionId)
+            .ToListAsync();
+        var incidentEvent = Assert.Single(outboxEvents, x => x.EventKind == RoutArrIntegrationOutboxEventKinds.IncidentCreated);
+        using var payload = JsonDocument.Parse(incidentEvent.PayloadJson);
+        Assert.Equal(DispatchIncidentTypes.EquipmentAbuse, payload.RootElement.GetProperty("incidentType").GetString());
+        Assert.Equal(DispatchIncidentSeverities.High, payload.RootElement.GetProperty("incidentSeverity").GetString());
+        Assert.Equal(DispatchIncidentReviewStatuses.Routed, payload.RootElement.GetProperty("incidentReviewStatus").GetString());
+        Assert.Equal(DispatchIncidentRoutedProducts.MaintainArr, payload.RootElement.GetProperty("incidentRoutedProduct").GetString());
+        Assert.Equal(trip.TripId, payload.RootElement.GetProperty("tripId").GetGuid());
     }
 
     private async Task<string> RedeemRoutArrTokenAsync()

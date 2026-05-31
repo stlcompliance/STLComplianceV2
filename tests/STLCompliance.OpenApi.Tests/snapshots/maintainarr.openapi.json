@@ -2444,6 +2444,14 @@
             }
           },
           {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "vehicleRefKey",
             "in": "query",
             "schema": {
@@ -2482,6 +2490,14 @@
             }
           },
           {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "vehicleRefKey",
             "in": "query",
             "schema": {
@@ -2496,6 +2512,29 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/routarr-events": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestRoutarrEvent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestRoutarrEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -6999,6 +7038,14 @@
             }
           },
           {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "vehicleRefKey",
             "in": "query",
             "schema": {
@@ -7037,6 +7084,14 @@
             }
           },
           {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "vehicleRefKey",
             "in": "query",
             "schema": {
@@ -7051,6 +7106,29 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/routarr-events": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestRoutarrEventV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestRoutarrEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -10499,6 +10577,52 @@
           }
         }
       },
+      "IngestRoutarrEventRequest": {
+        "required": [
+          "tenantId",
+          "sourceEventId",
+          "eventKind",
+          "relatedEntityType",
+          "relatedEntityId",
+          "correlationId",
+          "payload"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceEventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "eventKind": {
+            "type": "string"
+          },
+          "relatedEntityType": {
+            "type": "string"
+          },
+          "relatedEntityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/RoutarrEventPayload"
+          },
+          "occurredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "IngestStaffarrPersonSyncRequest": {
         "required": [
           "tenantId",
@@ -11084,6 +11208,188 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "RoutarrEventPayload": {
+        "required": [
+          "tenantId",
+          "summary",
+          "tripId"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "tripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "tripNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "driverPersonId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dispatchStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "routeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "stopId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "stopKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "stopStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "proofId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "proofType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dvirId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "dvirPhase": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dvirResult": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "defectNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "exceptionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "exceptionKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "exceptionCategory": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentSeverity": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentReviewStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentRoutedProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "overrideTargetType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "overrideKinds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "routeNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "routeStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

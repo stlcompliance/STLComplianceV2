@@ -186,6 +186,7 @@ public class ComplianceCoreRegulatoryMappingsTests : IAsyncLifetime
             null));
         var createResponse = await _complianceCoreClient.SendAsync(createRequest);
         createResponse.EnsureSuccessStatusCode();
+        Assert.StartsWith("/api/v1/regulatory-mappings/", createResponse.Headers.Location?.ToString());
 
         var listDerivedResponse = await _complianceCoreClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/derived-facts", adminToken));

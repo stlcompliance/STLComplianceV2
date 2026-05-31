@@ -8,7 +8,13 @@ public static class MePortalEndpoints
 {
     public static void MapStaffArrMePortalEndpoints(this WebApplication app)
     {
-        var me = app.MapGroup("/api/me").WithTags("Me").RequireAuthorization();
+        MapRoutes(app.MapGroup("/api/me"), string.Empty, "/api/me");
+        MapRoutes(app.MapGroup("/api/v1/me"), "V1", "/api/v1/me");
+    }
+
+    private static void MapRoutes(RouteGroupBuilder me, string nameSuffix, string pathPrefix)
+    {
+        me = me.WithTags("Me").RequireAuthorization();
 
         me.MapGet("/portal", async (
             HttpContext context,
@@ -19,7 +25,7 @@ public static class MePortalEndpoints
             authorization.RequireSelfServicePortalAccess(context.User);
             return Results.Ok(await service.GetSummaryAsync(context.User, cancellationToken));
         })
-        .WithName("StaffArrGetMePortalSummary");
+        .WithName($"StaffArrGetMePortalSummary{nameSuffix}");
 
         me.MapGet("/subordinates", async (
             int? limit,
@@ -38,7 +44,7 @@ public static class MePortalEndpoints
                 limit ?? 50,
                 cancellationToken));
         })
-        .WithName("StaffArrListMyDirectReports");
+        .WithName($"StaffArrListMyDirectReports{nameSuffix}");
 
         me.MapGet("/update-requests", async (
             int? limit,
@@ -56,7 +62,7 @@ public static class MePortalEndpoints
                 limit ?? 25,
                 cancellationToken));
         })
-        .WithName("StaffArrListMyPersonnelUpdateRequests");
+        .WithName($"StaffArrListMyPersonnelUpdateRequests{nameSuffix}");
 
         me.MapPost("/update-requests", async (
             SubmitPersonnelUpdateRequest request,
@@ -75,9 +81,9 @@ public static class MePortalEndpoints
                 actorUserId,
                 request,
                 cancellationToken);
-            return Results.Created($"/api/me/update-requests/{created.RequestId}", created);
+            return Results.Created($"{pathPrefix}/update-requests/{created.RequestId}", created);
         })
-        .WithName("StaffArrSubmitPersonnelUpdateRequest");
+        .WithName($"StaffArrSubmitPersonnelUpdateRequest{nameSuffix}");
 
         me.MapGet("/update-requests/{requestId:guid}", async (
             Guid requestId,
@@ -97,7 +103,7 @@ public static class MePortalEndpoints
 
             return Results.Ok(record);
         })
-        .WithName("StaffArrGetMyPersonnelUpdateRequest");
+        .WithName($"StaffArrGetMyPersonnelUpdateRequest{nameSuffix}");
 
         me.MapGet("/team", async (
             int? limit,
@@ -115,7 +121,7 @@ public static class MePortalEndpoints
                 limit ?? 50,
                 cancellationToken));
         })
-        .WithName("StaffArrGetMyTeamDashboard");
+        .WithName($"StaffArrGetMyTeamDashboard{nameSuffix}");
 
         me.MapPost("/team/update-requests/{requestId:guid}/review", async (
             Guid requestId,
@@ -144,7 +150,7 @@ public static class MePortalEndpoints
                 cancellationToken);
             return Results.Ok(reviewed);
         })
-        .WithName("StaffArrReviewMyTeamPersonnelUpdateRequest");
+        .WithName($"StaffArrReviewMyTeamPersonnelUpdateRequest{nameSuffix}");
 
         me.MapGet("/incidents", async (
             int? limit,
@@ -164,7 +170,7 @@ public static class MePortalEndpoints
 
             return Results.Ok(incidents);
         })
-        .WithName("StaffArrListMyPersonnelIncidents");
+        .WithName($"StaffArrListMyPersonnelIncidents{nameSuffix}");
 
         me.MapPost("/incidents", async (
             SubmitSelfReportedPersonnelIncidentRequest request,
@@ -183,9 +189,9 @@ public static class MePortalEndpoints
                 actorUserId,
                 request,
                 cancellationToken);
-            return Results.Created($"/api/me/incidents/{created.IncidentId}", created);
+            return Results.Created($"{pathPrefix}/incidents/{created.IncidentId}", created);
         })
-        .WithName("StaffArrSubmitSelfReportedPersonnelIncident");
+        .WithName($"StaffArrSubmitSelfReportedPersonnelIncident{nameSuffix}");
 
         me.MapGet("/incidents/{incidentId:guid}", async (
             Guid incidentId,
@@ -205,6 +211,6 @@ public static class MePortalEndpoints
 
             return Results.Ok(detail);
         })
-        .WithName("StaffArrGetMyPersonnelIncident");
+        .WithName($"StaffArrGetMyPersonnelIncident{nameSuffix}");
     }
 }

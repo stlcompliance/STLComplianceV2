@@ -55,4 +55,32 @@ public static class DispatchBoardRules
 
         return false;
     }
+
+    public static int CountMissingRequiredProof(
+        Trip trip,
+        TripExecutionSettingsSnapshot settings,
+        IReadOnlySet<string>? proofTypes)
+    {
+        if (!TripDispatchStatuses.Active.Contains(trip.DispatchStatus))
+        {
+            return 0;
+        }
+
+        var missing = 0;
+        if (settings.RequirePickupProofBeforeStart
+            && trip.DispatchStatus is TripDispatchStatuses.Planned or TripDispatchStatuses.Assigned or TripDispatchStatuses.Dispatched
+            && proofTypes?.Contains(TripProofTypes.Pickup) != true)
+        {
+            missing++;
+        }
+
+        if (settings.RequireDeliveryProofBeforeComplete
+            && trip.DispatchStatus is not TripDispatchStatuses.Completed and not TripDispatchStatuses.Cancelled
+            && proofTypes?.Contains(TripProofTypes.Delivery) != true)
+        {
+            missing++;
+        }
+
+        return missing;
+    }
 }

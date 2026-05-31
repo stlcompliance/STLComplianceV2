@@ -54,6 +54,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrInternalMaintenancePlatformEventEndpoints();
         app.MapMaintainArrMaintenanceHistoryRollupSettingsEndpoints();
         app.MapMaintainArrInternalMaintenanceHistoryRollupEndpoints();
+        app.MapMaintainArrDashboardEndpoints();
         app.MapMaintainArrMaintenanceReportEndpoints();
         app.MapMaintainArrExecutiveReportEndpoints();
         app.MapMaintainArrComplianceReportEndpoints();

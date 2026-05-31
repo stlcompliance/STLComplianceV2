@@ -7,6 +7,23 @@ public sealed record DispatchExceptionSummaryResponse(
     string Description,
     string Category,
     string Status,
+    string IncidentType,
+    string IncidentSeverity,
+    string IncidentReviewStatus,
+    string IncidentRoutedProduct,
+    Guid? StaffarrPersonnelIncidentId,
+    DateTimeOffset? StaffarrIncidentRoutedAt,
+    string StaffarrIncidentRouteStatus,
+    Guid? TrainarrIncidentRemediationId,
+    DateTimeOffset? TrainarrIncidentRoutedAt,
+    string TrainarrIncidentRouteStatus,
+    Guid? MaintainarrInboundEventId,
+    Guid? MaintainarrDefectId,
+    DateTimeOffset? MaintainarrIncidentRoutedAt,
+    string MaintainarrIncidentRouteStatus,
+    Guid? CompliancecoreFactPublicationId,
+    DateTimeOffset? CompliancecoreIncidentRoutedAt,
+    string CompliancecoreIncidentRouteStatus,
     Guid? TripId,
     string? TripNumber,
     string? TripTitle,
@@ -34,6 +51,16 @@ public sealed record CreateDispatchExceptionRequest(
     Guid? TripId,
     Guid? AssignedToUserId,
     DateTimeOffset? SlaDueAt);
+
+public sealed record CreateDispatchIncidentRequest(
+    string Title,
+    string Description,
+    string? IncidentType,
+    string? IncidentSeverity,
+    Guid? TripId,
+    Guid? AssignedToUserId,
+    DateTimeOffset? SlaDueAt,
+    string? RoutedProduct);
 
 public sealed record AssignDispatchExceptionRequest(
     Guid AssignedToUserId,

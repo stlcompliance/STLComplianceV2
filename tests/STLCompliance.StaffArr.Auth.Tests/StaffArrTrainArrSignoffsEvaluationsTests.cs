@@ -122,7 +122,7 @@ public class StaffArrTrainArrSignoffsEvaluationsTests : IAsyncLifetime
         var definitionId = await CreateTrainingDefinitionAsync(adminToken);
         var assignmentId = await CreateAssignmentAsync(adminToken, personId, definitionId);
 
-        var evaluationRequest = Authorized(HttpMethod.Post, "/api/evaluations", trainerToken);
+        var evaluationRequest = Authorized(HttpMethod.Post, "/api/v1/evaluations", trainerToken);
         evaluationRequest.Content = JsonContent.Create(new SubmitTrainingEvaluationRequest(
             assignmentId,
             "pass",
@@ -130,24 +130,27 @@ public class StaffArrTrainArrSignoffsEvaluationsTests : IAsyncLifetime
             "Practical skills verified."));
         var evaluationResponse = await _trainarrClient.SendAsync(evaluationRequest);
         evaluationResponse.EnsureSuccessStatusCode();
+        Assert.StartsWith($"/api/v1/evaluations?trainingAssignmentId={assignmentId}", evaluationResponse.Headers.Location?.OriginalString);
         var evaluation = (await evaluationResponse.Content.ReadFromJsonAsync<TrainingEvaluationResponse>())!;
         Assert.Equal("pass", evaluation.Result);
 
-        var traineeSignoffRequest = Authorized(HttpMethod.Post, "/api/signoffs", memberToken);
+        var traineeSignoffRequest = Authorized(HttpMethod.Post, "/api/v1/signoffs", memberToken);
         traineeSignoffRequest.Content = JsonContent.Create(new SubmitTrainingSignoffRequest(
             assignmentId,
             "trainee",
             "I completed the training."));
         var traineeSignoffResponse = await _trainarrClient.SendAsync(traineeSignoffRequest);
         traineeSignoffResponse.EnsureSuccessStatusCode();
+        Assert.StartsWith($"/api/v1/signoffs?trainingAssignmentId={assignmentId}", traineeSignoffResponse.Headers.Location?.OriginalString);
 
-        var trainerSignoffRequest = Authorized(HttpMethod.Post, "/api/signoffs", trainerToken);
+        var trainerSignoffRequest = Authorized(HttpMethod.Post, "/api/v1/signoffs", trainerToken);
         trainerSignoffRequest.Content = JsonContent.Create(new SubmitTrainingSignoffRequest(
             assignmentId,
             "trainer",
             "Trainer approves qualification."));
         var trainerSignoffResponse = await _trainarrClient.SendAsync(trainerSignoffRequest);
         trainerSignoffResponse.EnsureSuccessStatusCode();
+        Assert.StartsWith($"/api/v1/signoffs?trainingAssignmentId={assignmentId}", trainerSignoffResponse.Headers.Location?.OriginalString);
 
         var detailResponse = await _trainarrClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/training-assignments/{assignmentId}", adminToken));

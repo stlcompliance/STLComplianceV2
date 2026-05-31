@@ -14,6 +14,7 @@ public static class StaffArrServiceRegistration
         builder.Services.Configure<TrainArrClientOptions>(builder.Configuration.GetSection(TrainArrClientOptions.SectionName));
         builder.Services.Configure<SupplyArrClientOptions>(builder.Configuration.GetSection(SupplyArrClientOptions.SectionName));
         builder.Services.Configure<MaintainArrClientOptions>(builder.Configuration.GetSection(MaintainArrClientOptions.SectionName));
+        builder.Services.Configure<ComplianceCoreClientOptions>(builder.Configuration.GetSection(ComplianceCoreClientOptions.SectionName));
 
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
 
@@ -49,6 +50,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<PersonnelHistoryService>();
         builder.Services.AddScoped<PermissionProjectionService>();
         builder.Services.AddScoped<IntegrationPermissionCheckService>();
+        builder.Services.AddScoped<StaffArrEventFeedService>();
         builder.Services.AddScoped<ProcurementApprovalAuthorityService>();
         builder.Services.AddScoped<TrainingBlockerIngestionService>();
         builder.Services.AddScoped<TrainingAcknowledgementIngestionService>();
@@ -84,6 +86,11 @@ public static class StaffArrServiceRegistration
         builder.Services.AddHttpClient<MaintainArrTechnicianRefSyncClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<MaintainArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+        builder.Services.AddHttpClient<ComplianceCorePersonReadinessGateClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ComplianceCoreClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
         builder.Services.AddScoped<StaffArrMaintainArrTechnicianRefSyncService>();

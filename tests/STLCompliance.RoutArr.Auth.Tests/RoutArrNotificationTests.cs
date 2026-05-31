@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -144,6 +145,216 @@ public sealed class RoutArrNotificationTests : IAsyncLifetime
         var dispatched = await verifyDb.DispatchNotificationDispatches.SingleAsync(x => x.TripId == created.TripId);
         Assert.Equal(DispatchNotificationDispatchStatuses.Sent, dispatched.DispatchStatus);
         Assert.Equal(200, dispatched.HttpStatusCode);
+    }
+
+    [Fact]
+    public async Task Trip_accept_enqueues_notification_and_worker_posts_webhook()
+    {
+        const string webhookUrl = "https://hooks.example.test/routarr-accepted";
+
+        var adminToken = CreateRoutArrAccessToken(["routarr"], "routarr_admin");
+        var settingsRequest = Authorized(HttpMethod.Put, "/api/notification-settings", adminToken);
+        settingsRequest.Content = JsonContent.Create(new UpsertDispatchNotificationSettingsRequest(
+            true,
+            webhookUrl,
+            NotifyOnTripAssigned: false,
+            NotifyOnTripDispatched: false,
+            NotifyOnTripInProgress: false,
+            NotifyOnTripCompleted: false,
+            NotifyOnTripCancelled: false,
+            NotifyOnTripAccepted: true));
+        (await _routarrClient.SendAsync(settingsRequest)).EnsureSuccessStatusCode();
+
+        var driverPersonId = Guid.NewGuid();
+        var driverToken = CreateRoutArrAccessToken(["routarr"], "routarr_driver", driverPersonId);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/trips", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateTripRequest(
+            "Accepted notification trip",
+            string.Empty,
+            null,
+            null,
+            null,
+            null));
+        var createResponse = await _routarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        var assignRequest = Authorized(HttpMethod.Patch, $"/api/trips/{created.TripId}/assign-driver", adminToken);
+        assignRequest.Content = JsonContent.Create(new AssignTripDriverRequest(driverPersonId.ToString()));
+        (await _routarrClient.SendAsync(assignRequest)).EnsureSuccessStatusCode();
+
+        var acceptResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/driver-portal/trips/{created.TripId}/accept", driverToken));
+        acceptResponse.EnsureSuccessStatusCode();
+
+        using (var scope = _routarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+            var pending = await db.DispatchNotificationDispatches.SingleAsync(x =>
+                x.TenantId == PlatformSeeder.DemoTenantId
+                && x.EventKind == DispatchNotificationEventKinds.TripAccepted
+                && x.TripId == created.TripId);
+            Assert.Equal(DispatchNotificationDispatchStatuses.Pending, pending.DispatchStatus);
+            Assert.Equal(driverPersonId.ToString(), pending.DriverPersonId);
+        }
+
+        var processRequest = Authorized(
+            HttpMethod.Post,
+            "/api/internal/dispatch-notifications/process-batch",
+            _sharedWorkerToRoutarrToken);
+        processRequest.Content = JsonContent.Create(new ProcessDispatchNotificationsRequest(
+            PlatformSeeder.DemoTenantId,
+            null,
+            10));
+        var processResponse = await _routarrClient.SendAsync(processRequest);
+        processResponse.EnsureSuccessStatusCode();
+
+        Assert.Single(_webhookRequests);
+        var payload = JsonDocument.Parse(await _webhookRequests[0].Content!.ReadAsStringAsync());
+        Assert.Equal("routarr.trip.accepted", payload.RootElement.GetProperty("event").GetString());
+        Assert.Equal(created.TripId, payload.RootElement.GetProperty("tripId").GetGuid());
+        Assert.Equal(driverPersonId.ToString(), payload.RootElement.GetProperty("driverPersonId").GetString());
+    }
+
+    [Fact]
+    public async Task Trip_reassignment_enqueues_assignment_changed_notification_and_worker_posts_webhook()
+    {
+        const string webhookUrl = "https://hooks.example.test/routarr-reassigned";
+
+        var adminToken = CreateRoutArrAccessToken(["routarr"], "routarr_admin");
+        var settingsRequest = Authorized(HttpMethod.Put, "/api/notification-settings", adminToken);
+        settingsRequest.Content = JsonContent.Create(new UpsertDispatchNotificationSettingsRequest(
+            true,
+            webhookUrl,
+            NotifyOnTripAssigned: false,
+            NotifyOnTripDispatched: false,
+            NotifyOnTripInProgress: false,
+            NotifyOnTripCompleted: false,
+            NotifyOnTripCancelled: false,
+            NotifyOnTripAccepted: false,
+            NotifyOnDriverAssignmentChanged: true));
+        (await _routarrClient.SendAsync(settingsRequest)).EnsureSuccessStatusCode();
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/trips", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateTripRequest(
+            "Reassignment notification trip",
+            string.Empty,
+            null,
+            null,
+            null,
+            null));
+        var createResponse = await _routarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        var firstDriverPersonId = Guid.NewGuid().ToString();
+        var firstAssignRequest = Authorized(HttpMethod.Patch, $"/api/trips/{created.TripId}/assign-driver", adminToken);
+        firstAssignRequest.Content = JsonContent.Create(new AssignTripDriverRequest(firstDriverPersonId));
+        (await _routarrClient.SendAsync(firstAssignRequest)).EnsureSuccessStatusCode();
+
+        var replacementDriverPersonId = Guid.NewGuid().ToString();
+        var reassignRequest = Authorized(HttpMethod.Patch, $"/api/trips/{created.TripId}/assign-driver", adminToken);
+        reassignRequest.Content = JsonContent.Create(new AssignTripDriverRequest(replacementDriverPersonId));
+        (await _routarrClient.SendAsync(reassignRequest)).EnsureSuccessStatusCode();
+
+        using (var scope = _routarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+            var pending = await db.DispatchNotificationDispatches.SingleAsync(x =>
+                x.TenantId == PlatformSeeder.DemoTenantId
+                && x.EventKind == DispatchNotificationEventKinds.DriverAssignmentChanged
+                && x.TripId == created.TripId);
+            Assert.Equal(DispatchNotificationDispatchStatuses.Pending, pending.DispatchStatus);
+            Assert.Equal(replacementDriverPersonId, pending.DriverPersonId);
+        }
+
+        var processRequest = Authorized(
+            HttpMethod.Post,
+            "/api/internal/dispatch-notifications/process-batch",
+            _sharedWorkerToRoutarrToken);
+        processRequest.Content = JsonContent.Create(new ProcessDispatchNotificationsRequest(
+            PlatformSeeder.DemoTenantId,
+            null,
+            10));
+        var processResponse = await _routarrClient.SendAsync(processRequest);
+        processResponse.EnsureSuccessStatusCode();
+
+        Assert.Single(_webhookRequests);
+        var payload = JsonDocument.Parse(await _webhookRequests[0].Content!.ReadAsStringAsync());
+        Assert.Equal("routarr.driver.assignment.changed", payload.RootElement.GetProperty("event").GetString());
+        Assert.Equal(created.TripId, payload.RootElement.GetProperty("tripId").GetGuid());
+        Assert.Equal(replacementDriverPersonId, payload.RootElement.GetProperty("driverPersonId").GetString());
+    }
+
+    [Fact]
+    public async Task Route_cancel_enqueues_notification_and_worker_posts_webhook()
+    {
+        const string webhookUrl = "https://hooks.example.test/routarr-route-cancelled";
+
+        var adminToken = CreateRoutArrAccessToken(["routarr"], "routarr_admin");
+        var settingsRequest = Authorized(HttpMethod.Put, "/api/notification-settings", adminToken);
+        settingsRequest.Content = JsonContent.Create(new UpsertDispatchNotificationSettingsRequest(
+            true,
+            webhookUrl,
+            NotifyOnTripAssigned: false,
+            NotifyOnTripDispatched: false,
+            NotifyOnTripInProgress: false,
+            NotifyOnTripCompleted: false,
+            NotifyOnTripCancelled: false,
+            NotifyOnTripAccepted: false,
+            NotifyOnDriverAssignmentChanged: false,
+            NotifyOnRouteCancelled: true));
+        (await _routarrClient.SendAsync(settingsRequest)).EnsureSuccessStatusCode();
+
+        var createRouteRequest = Authorized(HttpMethod.Post, "/api/routes", adminToken);
+        createRouteRequest.Content = JsonContent.Create(new CreateRouteRequest(
+            "Cancelled notification route",
+            string.Empty,
+            null,
+            [
+                new CreateRouteStopRequest("cancel-stop-1", "Cancel stop", "Yard", "waypoint", 1, null),
+            ]));
+        var createRouteResponse = await _routarrClient.SendAsync(createRouteRequest);
+        createRouteResponse.EnsureSuccessStatusCode();
+        var created = (await createRouteResponse.Content.ReadFromJsonAsync<RouteDetailResponse>())!;
+
+        var cancelRequest = Authorized(HttpMethod.Patch, $"/api/routes/{created.RouteId}/status", adminToken);
+        cancelRequest.Content = JsonContent.Create(new UpdateRouteStatusRequest(RouteStatuses.Cancelled));
+        var cancelResponse = await _routarrClient.SendAsync(cancelRequest);
+        cancelResponse.EnsureSuccessStatusCode();
+        var cancelled = (await cancelResponse.Content.ReadFromJsonAsync<RouteDetailResponse>())!;
+        Assert.Equal(RouteStatuses.Cancelled, cancelled.RouteStatus);
+        Assert.NotNull(cancelled.CancelledAt);
+
+        using (var scope = _routarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+            var pending = await db.DispatchNotificationDispatches.SingleAsync(x =>
+                x.TenantId == PlatformSeeder.DemoTenantId
+                && x.EventKind == DispatchNotificationEventKinds.RouteCancelled
+                && x.RouteId == created.RouteId);
+            Assert.Equal(DispatchNotificationDispatchStatuses.Pending, pending.DispatchStatus);
+            Assert.Null(pending.TripId);
+            Assert.Equal("route", pending.RelatedEntityType);
+        }
+
+        var processRequest = Authorized(
+            HttpMethod.Post,
+            "/api/internal/dispatch-notifications/process-batch",
+            _sharedWorkerToRoutarrToken);
+        processRequest.Content = JsonContent.Create(new ProcessDispatchNotificationsRequest(
+            PlatformSeeder.DemoTenantId,
+            null,
+            10));
+        var processResponse = await _routarrClient.SendAsync(processRequest);
+        processResponse.EnsureSuccessStatusCode();
+
+        Assert.Single(_webhookRequests);
+        var payload = JsonDocument.Parse(await _webhookRequests[0].Content!.ReadAsStringAsync());
+        Assert.Equal("routarr.route.cancelled", payload.RootElement.GetProperty("event").GetString());
+        Assert.Equal(created.RouteId, payload.RootElement.GetProperty("routeId").GetGuid());
+        Assert.Equal(JsonValueKind.Null, payload.RootElement.GetProperty("tripId").ValueKind);
     }
 
     [Fact]

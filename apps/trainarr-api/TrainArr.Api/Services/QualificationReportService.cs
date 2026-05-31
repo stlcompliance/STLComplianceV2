@@ -101,6 +101,49 @@ public sealed class QualificationReportService(TrainArrDbContext db)
             Encoding.UTF8.GetBytes(builder.ToString()));
     }
 
+    public async Task<QualificationExpiringReportResponse> GetExpiringReportAsync(
+        Guid tenantId,
+        int? windowDays,
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var days = Math.Clamp(windowDays ?? ExpiringSoonDays, 1, 365);
+        var expiringThreshold = now.AddDays(days);
+
+        var qualifications = await db.QualificationIssues
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.Status == "issued"
+                && x.ExpiresAt != null
+                && x.ExpiresAt >= now
+                && x.ExpiresAt <= expiringThreshold)
+            .OrderBy(x => x.ExpiresAt)
+            .Take(RecentLimit)
+            .ToListAsync(cancellationToken);
+
+        var items = qualifications
+            .Select(x => new QualificationReportSummaryItem(
+                x.Id,
+                x.StaffarrPersonId,
+                x.QualificationKey,
+                x.QualificationName,
+                x.Status,
+                x.IssuedAt,
+                x.ExpiresAt,
+                ExpiringSoon: true))
+            .ToList();
+
+        var total = await db.QualificationIssues.CountAsync(
+            x => x.TenantId == tenantId
+                && x.Status == "issued"
+                && x.ExpiresAt != null
+                && x.ExpiresAt >= now
+                && x.ExpiresAt <= expiringThreshold,
+            cancellationToken);
+
+        return new QualificationExpiringReportResponse(now, days, total, items);
+    }
+
     private static bool MatchesStatusFilter(QualificationIssue issue, string? status)
     {
         if (string.IsNullOrWhiteSpace(status) || string.Equals(status, "all", StringComparison.OrdinalIgnoreCase))

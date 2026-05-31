@@ -146,6 +146,188 @@ public sealed class VocabularyService(
         return MapTermResponse(entity, []);
     }
 
+    public Task<VocabularyTermResponse> CreateTermForFamilyAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        string family,
+        CreateVocabularyTermRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedFamily = NormalizeVocabularyTypeKey(family);
+        var normalizedRequestFamily = NormalizeVocabularyTypeKey(request.VocabularyTypeKey);
+        if (!string.Equals(normalizedFamily, normalizedRequestFamily, StringComparison.Ordinal))
+        {
+            throw new StlApiException(
+                "vocabulary.family_mismatch",
+                "Vocabulary family route must match the request vocabulary type key.",
+                400);
+        }
+
+        return CreateTermAsync(tenantId, actorUserId, request, cancellationToken);
+    }
+
+    public async Task<VocabularyTermResponse> UpdateTermForFamilyAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        string family,
+        string termKey,
+        UpdateVocabularyTermRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedFamily = NormalizeVocabularyTypeKey(family);
+        var normalizedTermKey = NormalizeTermKey(termKey);
+
+        var term = await db.VocabularyTerms.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId
+                && x.VocabularyTypeKey == normalizedFamily
+                && x.TermKey == normalizedTermKey,
+            cancellationToken);
+        if (term is null)
+        {
+            throw new StlApiException("vocabulary.term_not_found", "Vocabulary term was not found.", 404);
+        }
+
+        if (request.Label is not null)
+        {
+            term.Label = NormalizeLabel(request.Label);
+        }
+
+        if (request.Description is not null)
+        {
+            term.Description = NormalizeDescription(request.Description);
+        }
+
+        if (request.IsActive is not null)
+        {
+            term.IsActive = request.IsActive.Value;
+        }
+
+        term.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await auditService.WriteAsync(
+            "vocabulary.term.update",
+            tenantId,
+            actorUserId,
+            "vocabulary_term",
+            term.Id.ToString(),
+            "success",
+            cancellationToken: cancellationToken);
+
+        var aliases = await LoadActiveAliasesAsync(tenantId, term.Id, cancellationToken);
+        return MapTermResponse(term, aliases);
+    }
+
+    public async Task<ValidateVocabularyKeysResponse> ValidateKeysAsync(
+        Guid tenantId,
+        ValidateVocabularyKeysRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.Items.Count == 0)
+        {
+            throw new StlApiException(
+                "vocabulary.validation",
+                "At least one vocabulary key must be supplied.",
+                400);
+        }
+
+        var results = new List<ValidateVocabularyKeyResult>();
+        foreach (var item in request.Items)
+        {
+            var family = item.Family.Trim().ToLowerInvariant();
+            var key = item.Key.Trim().ToLowerInvariant();
+
+            if (!VocabularyTypeCatalog.TypeKeys.Contains(family))
+            {
+                results.Add(new ValidateVocabularyKeyResult(family, key, false, "unknown_family", null));
+                continue;
+            }
+
+            if (key.Length == 0)
+            {
+                results.Add(new ValidateVocabularyKeyResult(family, key, false, "missing_key", null));
+                continue;
+            }
+
+            var term = await db.VocabularyTerms
+                .AsNoTracking()
+                .FirstOrDefaultAsync(
+                    x => x.TenantId == tenantId
+                        && x.VocabularyTypeKey == family
+                        && x.TermKey == key,
+                    cancellationToken);
+
+            results.Add(term is null || !term.IsActive
+                ? new ValidateVocabularyKeyResult(family, key, false, term is null ? "unknown_key" : "inactive_key", term?.Id)
+                : new ValidateVocabularyKeyResult(family, key, true, null, term.Id));
+        }
+
+        return new ValidateVocabularyKeysResponse(results);
+    }
+
+    public async Task<VocabularyTermUsageResponse> GetUsageForFamilyAsync(
+        Guid tenantId,
+        string family,
+        string termKey,
+        CancellationToken cancellationToken = default)
+    {
+        var term = await LoadTermForFamilyAsync(tenantId, family, termKey, asNoTracking: true, cancellationToken);
+
+        var aliasCount = await db.VocabularyAliases
+            .AsNoTracking()
+            .CountAsync(
+                x => x.TenantId == tenantId
+                    && x.VocabularyTermId == term.Id
+                    && x.IsActive,
+                cancellationToken);
+
+        var requirements = await db.FactRequirements
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.IsActive)
+            .ToListAsync(cancellationToken);
+
+        var matchingRequirements = requirements
+            .Where(x => FactRequirementContractRules
+                .SplitCsv(x.ExpectedValue)
+                .Any(value => string.Equals(value, term.TermKey, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+
+        return new VocabularyTermUsageResponse(
+            term.VocabularyTypeKey,
+            term.TermKey,
+            aliasCount,
+            matchingRequirements.Count,
+            matchingRequirements.Where(x => x.RulePackId.HasValue).Select(x => x.RulePackId!.Value).Distinct().Count(),
+            matchingRequirements.Where(x => x.CitationId.HasValue).Select(x => x.CitationId!.Value).Distinct().Count());
+    }
+
+    public async Task<IReadOnlyList<VocabularyTermHistoryItemResponse>> ListHistoryForFamilyAsync(
+        Guid tenantId,
+        string family,
+        string termKey,
+        CancellationToken cancellationToken = default)
+    {
+        var term = await LoadTermForFamilyAsync(tenantId, family, termKey, asNoTracking: true, cancellationToken);
+
+        return await db.AuditEvents
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.TargetType == "vocabulary_term"
+                && x.TargetId == term.Id.ToString())
+            .OrderByDescending(x => x.OccurredAt)
+            .Select(x => new VocabularyTermHistoryItemResponse(
+                x.Id,
+                term.Id,
+                term.VocabularyTypeKey,
+                term.TermKey,
+                x.Action,
+                x.Result,
+                x.ActorUserId,
+                x.CorrelationId,
+                x.OccurredAt))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<VocabularyAliasResponse> CreateAliasAsync(
         Guid tenantId,
         Guid? actorUserId,
@@ -205,6 +387,40 @@ public sealed class VocabularyService(
             entity.IsActive,
             entity.CreatedAt);
     }
+
+    private async Task<VocabularyTerm> LoadTermForFamilyAsync(
+        Guid tenantId,
+        string family,
+        string termKey,
+        bool asNoTracking,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedFamily = NormalizeVocabularyTypeKey(family);
+        var normalizedTermKey = NormalizeTermKey(termKey);
+        var query = db.VocabularyTerms.Where(
+            x => x.TenantId == tenantId
+                && x.VocabularyTypeKey == normalizedFamily
+                && x.TermKey == normalizedTermKey);
+
+        if (asNoTracking)
+        {
+            query = query.AsNoTracking();
+        }
+
+        return await query.FirstOrDefaultAsync(cancellationToken)
+            ?? throw new StlApiException("vocabulary.term_not_found", "Vocabulary term was not found.", 404);
+    }
+
+    private async Task<IReadOnlyList<string>> LoadActiveAliasesAsync(
+        Guid tenantId,
+        Guid termId,
+        CancellationToken cancellationToken = default) =>
+        await db.VocabularyAliases
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.VocabularyTermId == termId && x.IsActive)
+            .OrderBy(x => x.AliasText)
+            .Select(x => x.AliasText)
+            .ToListAsync(cancellationToken);
 
     private static VocabularyTermResponse MapTermResponse(VocabularyTerm entity, IReadOnlyList<string> aliases) =>
         new(

@@ -113,6 +113,26 @@ public sealed class MeterReadingService(
         return Map(entity);
     }
 
+    public Task<MeterReadingResponse> CorrectAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid assetMeterId,
+        CorrectMeterReadingRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var reason = NormalizeCorrectionReason(request.Reason);
+        return RecordAsync(
+            tenantId,
+            actorUserId,
+            assetMeterId,
+            new RecordMeterReadingRequest(
+                request.ReadingValue,
+                request.ReadAt,
+                reason,
+                true),
+            cancellationToken);
+    }
+
     private static MeterReadingResponse Map(MeterReading entity) =>
         new(
             entity.Id,
@@ -138,4 +158,18 @@ public sealed class MeterReadingService(
 
     private static string NormalizeNotes(string notes) =>
         notes.Trim().Length <= 512 ? notes.Trim() : notes.Trim()[..512];
+
+    private static string NormalizeCorrectionReason(string reason)
+    {
+        var normalized = NormalizeNotes(reason);
+        if (normalized.Length < 3)
+        {
+            throw new StlApiException(
+                "meter_reading.correction_reason_required",
+                "Meter correction reason must be at least 3 characters.",
+                400);
+        }
+
+        return normalized;
+    }
 }

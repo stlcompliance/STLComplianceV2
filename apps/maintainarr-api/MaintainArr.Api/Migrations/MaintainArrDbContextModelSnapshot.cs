@@ -1663,6 +1663,76 @@ namespace MaintainArr.Api.Migrations
                     b.ToTable("maintainarr_maintenance_history_rollup_runs", (string)null);
                 });
 
+            modelBuilder.Entity("MaintainArr.Api.Entities.MaintenanceInboundPlatformEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CorrelationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedDefectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EventKind")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("RelatedEntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RelatedEntityType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("SourceEventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SourceProduct")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedDefectId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "CreatedDefectId");
+
+                    b.HasIndex("TenantId", "EventKind", "CreatedAt");
+
+                    b.HasIndex("TenantId", "SourceProduct", "SourceEventId")
+                        .IsUnique();
+
+                    b.ToTable("maintainarr_inbound_platform_events", (string)null);
+                });
+
             modelBuilder.Entity("MaintainArr.Api.Entities.MaintenanceNotificationDispatch", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3028,6 +3098,16 @@ namespace MaintainArr.Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Rollup");
+                });
+
+            modelBuilder.Entity("MaintainArr.Api.Entities.MaintenanceInboundPlatformEvent", b =>
+                {
+                    b.HasOne("MaintainArr.Api.Entities.Defect", "CreatedDefect")
+                        .WithMany()
+                        .HasForeignKey("CreatedDefectId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CreatedDefect");
                 });
 
             modelBuilder.Entity("MaintainArr.Api.Entities.MeterReading", b =>

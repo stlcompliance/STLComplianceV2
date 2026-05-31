@@ -8,6 +8,9 @@ namespace TrainArr.Api.Endpoints;
 public static class IntegrationEndpoints
 {
     public const string IncidentRemediationIngestActionScope = "trainarr.incident_remediations.write";
+    public const string IncidentRemediationReadActionScope = "trainarr.incident_remediations.read";
+    public const string RoutarrIncidentRemediationIngestActionScope = "trainarr.routarr_incident_remediations.write";
+    public const string SupplyarrIncidentRemediationIngestActionScope = "trainarr.supplyarr_incident_remediations.write";
 
     public const string RoutarrQualificationCheckActionScope = "trainarr.qualification_checks.dispatch";
     public const string QualificationCheckReadActionScope = "trainarr.qualification_checks.read";
@@ -44,6 +47,73 @@ public static class IntegrationEndpoints
             return Results.Ok(result);
         })
         .WithName($"IngestStaffarrIncidentRemediation{(route.Contains("/v1/") ? "V1" : string.Empty)}");
+
+            integrations.MapGet("/incident-remediations/{remediationId:guid}", async (
+            Guid remediationId,
+            Guid tenantId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            StaffarrIncidentRemediationQueryService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "staffarr",
+                    RequiredTargetProduct = "trainarr",
+                    TenantId = tenantId,
+                    RequiredActionScope = IncidentRemediationReadActionScope
+                });
+
+            var result = await service.GetAsync(tenantId, remediationId, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName($"GetStaffarrIncidentRemediationIntegration{(route.Contains("/v1/") ? "V1" : string.Empty)}");
+
+            integrations.MapPost("/routarr-incident-remediations", async (
+            IngestRoutarrIncidentRemediationRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            StaffarrIncidentRemediationService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "routarr",
+                    RequiredTargetProduct = "trainarr",
+                    TenantId = request.TenantId,
+                    RequiredActionScope = RoutarrIncidentRemediationIngestActionScope
+                });
+
+            var result = await service.IngestRoutarrAsync(request, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName($"IngestRoutarrIncidentRemediation{(route.Contains("/v1/") ? "V1" : string.Empty)}");
+
+            integrations.MapPost("/supplyarr-incident-remediations", async (
+            IngestSupplyarrIncidentRemediationRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            StaffarrIncidentRemediationService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "supplyarr",
+                    RequiredTargetProduct = "trainarr",
+                    TenantId = request.TenantId,
+                    RequiredActionScope = SupplyarrIncidentRemediationIngestActionScope
+                });
+
+            var result = await service.IngestSupplyarrAsync(request, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName($"IngestSupplyarrIncidentRemediation{(route.Contains("/v1/") ? "V1" : string.Empty)}");
 
             integrations.MapPost("/routarr-qualification-check", async (
             RoutarrQualificationCheckRequest request,
@@ -101,6 +171,30 @@ public static class IntegrationEndpoints
             return Results.Ok(result);
         })
         .WithName($"QualificationCheckIntegration{(route.Contains("/v1/") ? "V1" : string.Empty)}");
+
+            integrations.MapPost("/qualification-check/batch", async (
+            CreateIntegrationBatchQualificationCheckRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            QualificationCheckService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateQualificationCheckServiceToken(tokenValidator, context, request.TenantId);
+
+            var result = await service.CheckBatchAsync(
+                request.TenantId,
+                actorUserId: null,
+                new CreateBatchQualificationCheckRequest(
+                    request.QualificationKey,
+                    request.RulePackKey,
+                    request.Subjects,
+                    request.EffectiveAt,
+                    request.TrainingDefinitionId,
+                    request.TrainingProgramId),
+                cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName($"BatchQualificationCheckIntegration{(route.Contains("/v1/") ? "V1" : string.Empty)}");
 
             integrations.MapPost("/supplyarr-demand-status", async (
             IngestSupplyarrDemandStatusRequest request,

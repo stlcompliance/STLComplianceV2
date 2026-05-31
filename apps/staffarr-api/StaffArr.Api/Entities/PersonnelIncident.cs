@@ -26,6 +26,14 @@ public sealed class PersonnelIncident : IHasTenant
 
     public Guid ReportedByUserId { get; set; }
 
+    public string? SourceProduct { get; set; }
+
+    public Guid? SourceIncidentId { get; set; }
+
+    public string? SourceEventKind { get; set; }
+
+    public string? SourceReferenceKey { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

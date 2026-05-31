@@ -172,7 +172,7 @@ public class StaffArrTrainArrTrainingAcknowledgementTests : IAsyncLifetime
 
         var allowedEvidenceRequest = Authorized(
             HttpMethod.Post,
-            $"/api/training-assignments/{assignment.AssignmentId}/evidence",
+            $"/api/v1/evidence/{assignment.AssignmentId}",
             memberTrainarrToken);
         allowedEvidenceRequest.Content = JsonContent.Create(new CreateTrainingEvidenceRequest(
             "completion_certificate",
@@ -182,6 +182,7 @@ public class StaffArrTrainArrTrainingAcknowledgementTests : IAsyncLifetime
             null));
         var allowedEvidence = await _trainarrClient.SendAsync(allowedEvidenceRequest);
         allowedEvidence.EnsureSuccessStatusCode();
+        Assert.StartsWith($"/api/v1/evidence/{assignment.AssignmentId}/", allowedEvidence.Headers.Location?.OriginalString);
     }
 
     [Fact]

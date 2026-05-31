@@ -384,6 +384,96 @@ public class ComplianceCoreFindingsWorkflowGateTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Product_gate_evaluate_returns_missing_evidence_for_unresolved_required_facts()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await GetDriverQualificationRulePackIdAsync(adminToken);
+        await CreateWorkflowGateAsync(adminToken, rulePackId, "can_start_work_order");
+
+        var request = ServiceAuthorized(HttpMethod.Post, "/api/v1/gates/evaluate", _trainarrProductGateToken);
+        request.Content = JsonContent.Create(new ProductGateEvaluationRequest(
+            PlatformSeeder.DemoTenantId,
+            "can_start_work_order",
+            "can_start_work_order",
+            "maintenance_work",
+            [new ProductGateSubjectReference("asset", Guid.NewGuid().ToString(), "maintainarr", "Forklift")]));
+
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<ProductGateEvaluationResponse>())!;
+
+        Assert.Equal(ProductGateEvaluationOutcomes.MissingEvidence, result.Outcome);
+        Assert.Equal("missing_evidence", result.ReasonCode);
+        Assert.Contains("Required evidence", result.Message);
+        Assert.Contains("medical_cert_on_file", result.MissingFacts);
+        Assert.Contains(result.RemediationHints, hint =>
+            hint.Code == "fact_unresolved" && hint.FactKey == "medical_cert_on_file");
+        Assert.NotEqual(Guid.Empty, result.TraceId);
+        Assert.NotNull(result.AuditExportPath);
+
+        using var scope = _complianceCoreFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var missingEvent = await db.AuditEvents
+            .AsNoTracking()
+            .SingleAsync(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.Action == ProductGateEvaluationService.EvidenceMissingEventAction
+                && x.TargetId == result.CheckResultId.ToString());
+        Assert.Equal(ProductGateEvaluationOutcomes.MissingEvidence, missingEvent.Result);
+        Assert.Equal("medical_cert_on_file", missingEvent.ReasonCode);
+    }
+
+    [Fact]
+    public async Task Product_gate_evaluate_returns_stale_evidence_when_snapshot_is_expired()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await GetDriverQualificationRulePackIdAsync(adminToken);
+        await CreateWorkflowGateAsync(adminToken, rulePackId, "can_start_route_with_stale_snapshot");
+
+        var now = DateTimeOffset.UtcNow;
+        var request = ServiceAuthorized(HttpMethod.Post, "/api/v1/gates/evaluate", _trainarrProductGateToken);
+        request.Content = JsonContent.Create(new ProductGateEvaluationRequest(
+            PlatformSeeder.DemoTenantId,
+            "can_start_route_with_stale_snapshot",
+            "can_start_route",
+            "route_start",
+            [new ProductGateSubjectReference("person", Guid.NewGuid().ToString(), "staffarr", "Driver")],
+            new Dictionary<string, string>
+            {
+                ["driver_license_valid"] = "true",
+                ["medical_cert_on_file"] = "true",
+            },
+            [new ProductGateFactSnapshotReference(
+                "medical_cert_on_file",
+                "staffarr:cert:stale",
+                now.AddHours(-5),
+                now.AddHours(-2))]));
+
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<ProductGateEvaluationResponse>())!;
+
+        Assert.Equal(ProductGateEvaluationOutcomes.StaleEvidence, result.Outcome);
+        Assert.Equal("stale_evidence", result.ReasonCode);
+        Assert.Contains("medical_cert_on_file", result.Message);
+        Assert.Empty(result.MissingFacts);
+        var stale = Assert.Single(result.StaleFacts);
+        Assert.Equal("medical_cert_on_file", stale.FactKey);
+        Assert.Equal("staffarr:cert:stale", stale.SnapshotReference);
+        Assert.NotNull(result.AuditExportPath);
+
+        using var scope = _complianceCoreFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var staleEvent = await db.AuditEvents
+            .AsNoTracking()
+            .SingleAsync(x =>
+                x.Action == ProductGateEvaluationService.EvidenceStaleEventAction
+                && x.TargetType == "workflow_gate_check_result"
+                && x.TargetId == result.CheckResultId.ToString());
+        Assert.Equal(ProductGateEvaluationOutcomes.StaleEvidence, staleEvent.Result);
+        Assert.Equal("medical_cert_on_file", staleEvent.ReasonCode);
+    }
+
+    [Fact]
     public async Task Product_gate_evaluate_requires_product_gate_scope()
     {
         var request = ServiceAuthorized(HttpMethod.Post, "/api/v1/gates/evaluate", _trainarrGateToken);

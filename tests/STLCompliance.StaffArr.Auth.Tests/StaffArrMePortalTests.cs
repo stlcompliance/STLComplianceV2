@@ -102,6 +102,52 @@ public sealed class StaffArrMePortalTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task V1_me_portal_summary_and_update_request_intake_for_self()
+    {
+        var personId = Guid.NewGuid();
+        var managerId = Guid.NewGuid();
+        await SeedPersonAsync(personId, "Versioned", "Worker", "v1.worker@example.com", managerId);
+        await SeedPersonAsync(managerId, "Versioned", "Manager", "v1.manager@example.com");
+
+        var token = CreateStaffArrAccessToken(["staffarr", "trainarr"], tenantRoleKey: "tenant_member", personId: personId);
+
+        var portalRequest = Authorized(HttpMethod.Get, "/api/v1/me/portal", token);
+        var portalResponse = await _staffarrClient.SendAsync(portalRequest);
+        portalResponse.EnsureSuccessStatusCode();
+        var portal = (await portalResponse.Content.ReadFromJsonAsync<MePortalSummaryResponse>())!;
+        Assert.Equal(personId, portal.Session.PersonId);
+        Assert.Equal("v1.worker@example.com", portal.Profile.PrimaryEmail);
+        Assert.Equal(managerId, portal.Profile.Placement.ManagerPersonId);
+        Assert.Contains("trainarr", portal.ProductAccess);
+
+        var submitRequest = Authorized(HttpMethod.Post, "/api/v1/me/update-requests", token);
+        submitRequest.Content = JsonContent.Create(new SubmitPersonnelUpdateRequest(
+            PersonnelUpdateRequestTypes.Other,
+            "preferred_name",
+            "Versioned",
+            "Vee",
+            "Use preferred name in dashboards"));
+        var submitResponse = await _staffarrClient.SendAsync(submitRequest);
+        Assert.Equal(HttpStatusCode.Created, submitResponse.StatusCode);
+        Assert.StartsWith("/api/v1/me/update-requests/", submitResponse.Headers.Location?.OriginalString);
+        var created = (await submitResponse.Content.ReadFromJsonAsync<PersonnelUpdateRequestResponse>())!;
+        Assert.Equal(personId, created.PersonId);
+
+        var getRequest = Authorized(HttpMethod.Get, $"/api/v1/me/update-requests/{created.RequestId}", token);
+        var getResponse = await _staffarrClient.SendAsync(getRequest);
+        getResponse.EnsureSuccessStatusCode();
+        var detail = (await getResponse.Content.ReadFromJsonAsync<PersonnelUpdateRequestResponse>())!;
+        Assert.Equal(created.RequestId, detail.RequestId);
+
+        var listRequest = Authorized(HttpMethod.Get, "/api/v1/me/update-requests", token);
+        var listResponse = await _staffarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var listed = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<PersonnelUpdateRequestResponse>>())!;
+        Assert.Single(listed);
+        Assert.Equal(created.RequestId, listed[0].RequestId);
+    }
+
+    [Fact]
     public async Task Me_incident_self_report_intake_and_history()
     {
         var personId = Guid.NewGuid();

@@ -1,8 +1,12 @@
 namespace TrainArr.Api.Services;
 
+public sealed record TrainArrAuditWriteResult(
+    Guid AuditEventId,
+    DateTimeOffset OccurredAt);
+
 public interface ITrainArrAuditService
 {
-    Task WriteAsync(
+    Task<TrainArrAuditWriteResult> WriteAsync(
         string action,
         Guid tenantId,
         Guid? actorUserId,

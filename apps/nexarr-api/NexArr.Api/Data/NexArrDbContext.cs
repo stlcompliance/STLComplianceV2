@@ -81,6 +81,7 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.ToTable("user_credentials");
             entity.HasKey(x => x.UserId);
             entity.Property(x => x.PasswordHash).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.FailedLoginCount).HasDefaultValue(0);
             entity.HasOne(x => x.User).WithOne(x => x.Credential).HasForeignKey<UserCredential>(x => x.UserId);
         });
 

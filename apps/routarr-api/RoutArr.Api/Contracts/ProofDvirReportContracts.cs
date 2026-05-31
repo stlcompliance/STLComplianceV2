@@ -12,6 +12,7 @@ public sealed record ProofDvirReportTripSummaryItem(
     int ProofCount,
     bool HasPreTripDvir,
     bool HasPostTripDvir,
+    int MissingRequiredProofCount,
     int FailOrConditionalDvirCount);
 
 public sealed record ProofDvirReportProofRow(
@@ -42,6 +43,7 @@ public sealed record ProofDvirReportSummaryResponse(
     int TotalProofCount,
     int TotalDvirCount,
     int TripWithProofOrDvirCount,
+    int MissingProofTripCount,
     int PreTripDvirCount,
     int PostTripDvirCount,
     int FailOrConditionalDvirCount,
@@ -64,6 +66,7 @@ public sealed record ProofDvirReportTripDetailResponse(
     int ProofCount,
     bool HasPreTripDvir,
     bool HasPostTripDvir,
+    int MissingRequiredProofCount,
     int FailOrConditionalDvirCount,
     IReadOnlyList<ProofDvirReportProofRow> Proofs,
     IReadOnlyList<ProofDvirReportDvirRow> DvirInspections);

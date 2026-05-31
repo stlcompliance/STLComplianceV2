@@ -159,6 +159,39 @@ public sealed class InternalRuleEvaluationService(
             reasonCode: reasonCode,
             cancellationToken: cancellationToken);
 
+        await ruleEvaluationService.WriteEvaluationLifecycleEventsAsync(
+            request.TenantId,
+            actorUserId: null,
+            evaluationRunId,
+            rulePack.Id,
+            outcome,
+            reasonCode,
+            unresolved,
+            ruleResults,
+            cancellationToken);
+
+        if (!string.Equals(outcome, ComplianceEvaluationOutcomes.Allow, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(outcome, ComplianceEvaluationOutcomes.Waived, StringComparison.OrdinalIgnoreCase))
+        {
+            await ruleEvaluationService.WriteReviewRequiredEventIfNeededAsync(
+                request.TenantId,
+                actorUserId: null,
+                evaluationRunId,
+                rulePack.Id,
+                outcome,
+                ruleResults,
+                cancellationToken);
+
+            await ruleEvaluationService.WriteRemediationRequiredEventIfNeededAsync(
+                request.TenantId,
+                actorUserId: null,
+                evaluationRunId,
+                rulePack.Id,
+                ComplianceEvaluationOutcomes.NeedsRemediation,
+                ruleResults,
+                cancellationToken);
+        }
+
         return new InternalEvaluateRulePackResponse(
             request.TenantId,
             rulePack.Id,

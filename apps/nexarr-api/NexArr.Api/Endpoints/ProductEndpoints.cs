@@ -44,16 +44,27 @@ public static class ProductEndpoints
             CreateProductRequest request,
             HttpContext context,
             ProductCatalogService service,
+            string locationPrefix,
             CancellationToken cancellationToken)
         {
             var created = await service.CreateAsync(context.User, request, cancellationToken);
-            return Results.Created($"/api/products/{created.ProductKey}", created);
+            return Results.Created($"{locationPrefix}/{created.ProductKey}", created);
         }
 
-        group.MapPost("/", CreateProductEndpoint)
+        group.MapPost("/", (
+            CreateProductRequest request,
+            HttpContext context,
+            ProductCatalogService service,
+            CancellationToken cancellationToken) =>
+            CreateProductEndpoint(request, context, service, "/api/products", cancellationToken))
         .WithName("CreateProduct");
 
-        v1.MapPost("/", CreateProductEndpoint)
+        v1.MapPost("/", (
+            CreateProductRequest request,
+            HttpContext context,
+            ProductCatalogService service,
+            CancellationToken cancellationToken) =>
+            CreateProductEndpoint(request, context, service, "/api/v1/products", cancellationToken))
         .WithName("CreateProductV1");
 
         static async Task<IResult> UpdateProductEndpoint(

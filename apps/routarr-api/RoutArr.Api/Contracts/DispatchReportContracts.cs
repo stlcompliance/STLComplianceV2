@@ -15,6 +15,7 @@ public sealed record DispatchReportTripSummaryItem(
     bool IsAtRisk,
     bool IsUnassigned,
     int RouteCount,
+    int MissingRequiredProofCount,
     int OpenExceptionCount);
 
 public sealed record DispatchReportExceptionRow(
@@ -36,6 +37,7 @@ public sealed record DispatchReportSummaryResponse(
     int LateTripCount,
     int AtRiskTripCount,
     int UnassignedTripCount,
+    int MissingProofTripCount,
     int OpenExceptionCount,
     int DelayExceptionCount,
     IReadOnlyList<DispatchReportCountItem> TripStatusCounts,
@@ -62,6 +64,7 @@ public sealed record DispatchReportTripDetailResponse(
     bool IsAtRisk,
     int RouteCount,
     int PendingStopCount,
+    int MissingRequiredProofCount,
     int LinkedExceptionCount,
     int DelayExceptionCount,
     DateTimeOffset CreatedAt,
@@ -85,3 +88,34 @@ public sealed record DispatchReportExceptionDetailResponse(
     DateTimeOffset? AssignedAt,
     Guid? ResolvedByUserId,
     DateTimeOffset? ResolvedAt);
+
+public sealed record DispatchTimeSummaryTripRow(
+    Guid TripId,
+    string TripNumber,
+    string Title,
+    string DispatchStatus,
+    string? AssignedDriverPersonId,
+    string? VehicleRefKey,
+    DateTimeOffset? ScheduledStartAt,
+    DateTimeOffset? ScheduledEndAt,
+    DateTimeOffset? StartedAt,
+    DateTimeOffset? CompletedAt,
+    DateTimeOffset? ClosedAt,
+    int? ScheduledDurationMinutes,
+    int? ActualDurationMinutes,
+    int? VarianceMinutes,
+    bool IsCompleted,
+    bool IsClosed);
+
+public sealed record DispatchTimeSummaryResponse(
+    DateTimeOffset GeneratedAt,
+    string Scope,
+    DateTimeOffset WindowStart,
+    DateTimeOffset WindowEnd,
+    int TripCount,
+    int CompletedTripCount,
+    int ClosedTripCount,
+    int TotalScheduledMinutes,
+    int TotalActualMinutes,
+    int TotalVarianceMinutes,
+    IReadOnlyList<DispatchTimeSummaryTripRow> Trips);

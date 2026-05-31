@@ -23,7 +23,11 @@ public sealed record MaintenancePlatformEventPayload(
     int BlockerCount,
     string? PrimaryBlockerMessage,
     DateTimeOffset OccurredAt,
-    string Summary);
+    string Summary,
+    string? TargetEntityType = null,
+    Guid? TargetEntityId = null,
+    string? EventResult = null,
+    Guid? ActorUserId = null);
 
 public sealed record PendingMaintenancePlatformOutboxItem(
     Guid Id,

@@ -23,16 +23,63 @@ public sealed class DispatchNotificationEnqueueService(
             trip.TenantId,
             eventKind,
             trip.Id,
+            null,
             trip.AssignedDriverPersonId,
+            "trip",
+            trip.Id,
             cancellationToken);
     }
+
+    public Task<Guid?> TryEnqueueTripAcceptedAsync(
+        Trip trip,
+        CancellationToken cancellationToken = default) =>
+        TryEnqueueAsync(
+            trip.TenantId,
+            DispatchNotificationEventKinds.TripAccepted,
+            trip.Id,
+            null,
+            trip.AssignedDriverPersonId,
+            "trip",
+            trip.Id,
+            cancellationToken);
+
+    public Task<Guid?> TryEnqueueDriverAssignmentChangedAsync(
+        Trip trip,
+        CancellationToken cancellationToken = default) =>
+        TryEnqueueAsync(
+            trip.TenantId,
+            DispatchNotificationEventKinds.DriverAssignmentChanged,
+            trip.Id,
+            null,
+            trip.AssignedDriverPersonId,
+            "trip",
+            trip.Id,
+            cancellationToken,
+            suppressDuplicates: false);
+
+    public Task<Guid?> TryEnqueueRouteCancelledAsync(
+        DispatchRoute route,
+        CancellationToken cancellationToken = default) =>
+        TryEnqueueAsync(
+            route.TenantId,
+            DispatchNotificationEventKinds.RouteCancelled,
+            route.TripId,
+            route.Id,
+            null,
+            "route",
+            route.Id,
+            cancellationToken);
 
     public async Task<Guid?> TryEnqueueAsync(
         Guid tenantId,
         string eventKind,
-        Guid tripId,
+        Guid? tripId,
+        Guid? routeId,
         string? driverPersonId,
-        CancellationToken cancellationToken = default)
+        string relatedEntityType,
+        Guid relatedEntityId,
+        CancellationToken cancellationToken = default,
+        bool suppressDuplicates = true)
     {
         var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
         if (settings is null || !DispatchNotificationRules.ShouldNotifyForEvent(settings, eventKind))
@@ -40,18 +87,21 @@ public sealed class DispatchNotificationEnqueueService(
             return null;
         }
 
-        var duplicate = await db.DispatchNotificationDispatches.AnyAsync(
-            x => x.TenantId == tenantId
-                && x.EventKind == eventKind
-                && x.RelatedEntityType == "trip"
-                && x.RelatedEntityId == tripId
-                && (x.DispatchStatus == DispatchNotificationDispatchStatuses.Pending
-                    || x.DispatchStatus == DispatchNotificationDispatchStatuses.Sent),
-            cancellationToken);
-
-        if (duplicate)
+        if (suppressDuplicates)
         {
-            return null;
+            var duplicate = await db.DispatchNotificationDispatches.AnyAsync(
+                x => x.TenantId == tenantId
+                    && x.EventKind == eventKind
+                    && x.RelatedEntityType == relatedEntityType
+                    && x.RelatedEntityId == relatedEntityId
+                    && (x.DispatchStatus == DispatchNotificationDispatchStatuses.Pending
+                        || x.DispatchStatus == DispatchNotificationDispatchStatuses.Sent),
+                cancellationToken);
+
+            if (duplicate)
+            {
+                return null;
+            }
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -61,9 +111,10 @@ public sealed class DispatchNotificationEnqueueService(
             TenantId = tenantId,
             EventKind = eventKind,
             TripId = tripId,
+            RouteId = routeId,
             DriverPersonId = driverPersonId,
-            RelatedEntityType = "trip",
-            RelatedEntityId = tripId,
+            RelatedEntityType = relatedEntityType,
+            RelatedEntityId = relatedEntityId,
             DispatchStatus = DispatchNotificationDispatchStatuses.Pending,
             CreatedAt = now,
         };

@@ -117,6 +117,9 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
     public DbSet<MaintenancePlatformEventProcessingRun> MaintenancePlatformEventProcessingRuns =>
         Set<MaintenancePlatformEventProcessingRun>();
 
+    public DbSet<MaintenanceInboundPlatformEvent> MaintenanceInboundPlatformEvents =>
+        Set<MaintenanceInboundPlatformEvent>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -867,6 +870,25 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.ToTable("maintainarr_platform_event_processing_runs");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        });
+
+        modelBuilder.Entity<MaintenanceInboundPlatformEvent>(entity =>
+        {
+            entity.ToTable("maintainarr_inbound_platform_events");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SourceProduct).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.EventKind).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.RelatedEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.PayloadJson).IsRequired();
+            entity.Property(x => x.Outcome).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.SourceProduct, x.SourceEventId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.EventKind, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.CreatedDefectId });
+            entity.HasOne(x => x.CreatedDefect)
+                .WithMany()
+                .HasForeignKey(x => x.CreatedDefectId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

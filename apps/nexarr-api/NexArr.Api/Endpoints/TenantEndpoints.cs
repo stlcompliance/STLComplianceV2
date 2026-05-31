@@ -45,16 +45,27 @@ public static class TenantEndpoints
             CreateTenantRequest request,
             HttpContext context,
             TenantAdminService service,
+            string locationPrefix,
             CancellationToken cancellationToken)
         {
             var created = await service.CreateAsync(context.User, request, cancellationToken);
-            return Results.Created($"/api/tenants/{created.TenantId}", created);
+            return Results.Created($"{locationPrefix}/{created.TenantId}", created);
         }
 
-        group.MapPost("/", CreateTenantEndpoint)
+        group.MapPost("/", (
+            CreateTenantRequest request,
+            HttpContext context,
+            TenantAdminService service,
+            CancellationToken cancellationToken) =>
+            CreateTenantEndpoint(request, context, service, "/api/tenants", cancellationToken))
         .WithName("CreateTenant");
 
-        v1.MapPost("/", CreateTenantEndpoint)
+        v1.MapPost("/", (
+            CreateTenantRequest request,
+            HttpContext context,
+            TenantAdminService service,
+            CancellationToken cancellationToken) =>
+            CreateTenantEndpoint(request, context, service, "/api/v1/tenants", cancellationToken))
         .WithName("CreateTenantV1");
 
         static async Task<IResult> UpdateTenantEndpoint(
@@ -105,6 +116,18 @@ public static class TenantEndpoints
                 new UpdateTenantStatusRequest(TenantStatuses.Active),
                 cancellationToken)))
         .WithName("EnableTenantV1");
+
+        v1.MapPost("/{tenantId:guid}/archive", async (
+            Guid tenantId,
+            HttpContext context,
+            TenantAdminService service,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await service.UpdateStatusAsync(
+                context.User,
+                tenantId,
+                new UpdateTenantStatusRequest(TenantStatuses.Archived),
+                cancellationToken)))
+        .WithName("ArchiveTenantV1");
 
         static async Task<IResult> ListTenantMembersEndpoint(
             Guid tenantId,

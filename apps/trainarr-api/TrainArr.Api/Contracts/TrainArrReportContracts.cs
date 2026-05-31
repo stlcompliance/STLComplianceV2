@@ -19,6 +19,11 @@ public sealed record AssignmentReportSummaryItem(
     DateTimeOffset CreatedAt,
     DateTimeOffset? CompletedAt);
 
+public sealed record AssignmentOverdueReportResponse(
+    DateTimeOffset GeneratedAt,
+    int TotalOverdueAssignments,
+    IReadOnlyList<AssignmentReportSummaryItem> Items);
+
 public sealed record QualificationReportSummaryResponse(
     int TotalQualifications,
     int IssuedCount,
@@ -38,6 +43,30 @@ public sealed record QualificationReportSummaryItem(
     DateTimeOffset? ExpiresAt,
     bool ExpiringSoon);
 
+public sealed record QualificationExpiringReportResponse(
+    DateTimeOffset GeneratedAt,
+    int WindowDays,
+    int TotalExpiringQualifications,
+    IReadOnlyList<QualificationReportSummaryItem> Items);
+
+public sealed record TrainingGapReportItem(
+    Guid AssignmentId,
+    Guid StaffarrPersonId,
+    Guid TrainingDefinitionId,
+    string DefinitionKey,
+    string DefinitionName,
+    string QualificationKey,
+    string QualificationName,
+    string AssignmentStatus,
+    DateTimeOffset? DueAt,
+    string GapReasonCode,
+    string GapMessage);
+
+public sealed record TrainingGapReportResponse(
+    DateTimeOffset GeneratedAt,
+    int TotalGaps,
+    IReadOnlyList<TrainingGapReportItem> Items);
+
 public sealed record ComplianceReportSummaryResponse(
     int CitationAttachmentCount,
     int RulePackRequirementCount,
@@ -53,6 +82,26 @@ public sealed record ComplianceReportRemediationItem(
     string Status,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
+
+public sealed record TrainArrCommandCenterResponse(
+    DateTimeOffset GeneratedAt,
+    AssignmentReportSummaryResponse Assignments,
+    QualificationReportSummaryResponse Qualifications,
+    ComplianceReportSummaryResponse Compliance,
+    int FailedEvaluationCount,
+    int RemediationBacklogCount,
+    int UpcomingRecertificationCount,
+    int ProgramsNeedingReviewCount,
+    int UnqualifiedAssignmentRiskCount,
+    int AuditReadinessScore,
+    IReadOnlyList<TrainArrCommandCenterRiskItem> Risks);
+
+public sealed record TrainArrCommandCenterRiskItem(
+    string RiskKey,
+    string Severity,
+    int Count,
+    string Message,
+    string? ReportPath);
 
 public sealed record EntityExportFormatDescriptor(
     string FormatKey,

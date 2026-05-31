@@ -46,6 +46,16 @@ public sealed class RuleContentService(
             "success",
             cancellationToken: cancellationToken);
 
+        await auditService.WriteAsync(
+            RuleCatalogService.RuleChangedEventAction,
+            tenantId,
+            actorUserId,
+            "rule_pack",
+            entity.Id.ToString(),
+            "content_updated",
+            reasonCode: entity.PackKey,
+            cancellationToken: cancellationToken);
+
         var program = await db.RegulatoryPrograms.AsNoTracking()
             .FirstAsync(x => x.Id == entity.RegulatoryProgramId, cancellationToken);
         var newHash = RuleChangeHash.Compute(entity.RuleContentJson);

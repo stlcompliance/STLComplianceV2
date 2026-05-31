@@ -13,6 +13,8 @@ public sealed record RuleCatalogItemResponse(
     string FactKey,
     bool ExpectedValue,
     bool NonWaivable,
+    bool RemediationRequired,
+    bool ReviewRequired,
     DateTimeOffset UpdatedAt);
 
 public sealed record CreateRuleCatalogRequest(
@@ -22,14 +24,18 @@ public sealed record CreateRuleCatalogRequest(
     string Type,
     string FactKey,
     bool ExpectedValue,
-    bool NonWaivable = false);
+    bool NonWaivable = false,
+    bool RemediationRequired = false,
+    bool ReviewRequired = false);
 
 public sealed record PatchRuleCatalogRequest(
     string? Label,
     string? Type,
     string? FactKey,
     bool? ExpectedValue,
-    bool? NonWaivable);
+    bool? NonWaivable,
+    bool? RemediationRequired = null,
+    bool? ReviewRequired = null);
 
 public sealed record RuleCatalogValidateResponse(
     bool IsValid,

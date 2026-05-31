@@ -36,6 +36,7 @@ public sealed class ExecutiveReportService(
         var fleetReadiness = await BuildFleetReadinessAsync(tenantId, cancellationToken);
         var operationalTotals = await BuildOperationalTotalsAsync(tenantId, generatedAt, cancellationToken);
         var downtimeTrend = await BuildDowntimeTrendAsync(tenantId, generatedAt, cancellationToken);
+        var reliability = await BuildReliabilitySummaryAsync(tenantId, generatedAt, cancellationToken);
         var supplyDemand = await BuildSupplyDemandSummaryAsync(tenantId, cancellationToken);
         var scopeReadiness = await BuildScopeReadinessAsync(tenantId, cancellationToken);
 
@@ -58,6 +59,7 @@ public sealed class ExecutiveReportService(
             fleetReadiness,
             operationalTotals,
             downtimeTrend,
+            reliability,
             supplyDemand,
             scopeReadiness,
             workOrderStatusCounts
@@ -92,6 +94,13 @@ public sealed class ExecutiveReportService(
         builder.AppendLine($"downtime,hours_delta,{summary.DowntimeTrend.DowntimeHoursDelta:F2}");
         builder.AppendLine($"downtime,current_availability_percent,{summary.DowntimeTrend.CurrentPeriod.AvailabilityPercent:F2}");
         builder.AppendLine($"downtime,availability_percent_delta,{summary.DowntimeTrend.AvailabilityPercentDelta:F2}");
+        builder.AppendLine($"reliability,period_days,{summary.Reliability.PeriodDays}");
+        builder.AppendLine($"reliability,closed_repair_events,{summary.Reliability.ClosedRepairEventCount}");
+        builder.AppendLine($"reliability,failure_events,{summary.Reliability.FailureEventCount}");
+        builder.AppendLine($"reliability,repeat_downtime_assets,{summary.Reliability.RepeatDowntimeAssetCount}");
+        builder.AppendLine($"reliability,chronic_assets,{summary.Reliability.ChronicAssetCount}");
+        builder.AppendLine($"reliability,mean_time_to_repair_hours,{summary.Reliability.MeanTimeToRepairHours:F2}");
+        builder.AppendLine($"reliability,mean_time_between_failures_hours,{summary.Reliability.MeanTimeBetweenFailuresHours:F2}");
         builder.AppendLine($"supplyarr,published_demand_lines,{summary.SupplyDemand.PublishedDemandLines}");
         builder.AppendLine($"supplyarr,open_procurement_lines,{summary.SupplyDemand.OpenProcurementLines}");
 
@@ -101,6 +110,14 @@ public sealed class ExecutiveReportService(
         {
             builder.AppendLine(
                 $"{CsvEscape(scope.ScopeType)},{CsvEscape(scope.ScopeLabel)},{scope.TotalAssets},{scope.ReadyCount},{scope.NotReadyCount},{scope.ReadyPercent:F2}");
+        }
+
+        builder.AppendLine();
+        builder.AppendLine("asset_id,asset_tag,asset_name,downtime_event_count,downtime_hours,availability_percent,has_active_downtime,last_downtime_started_at");
+        foreach (var asset in summary.Reliability.ChronicAssets)
+        {
+            builder.AppendLine(
+                $"{asset.AssetId},{CsvEscape(asset.AssetTag)},{CsvEscape(asset.AssetName)},{asset.DowntimeEventCount},{asset.DowntimeHours:F2},{asset.AvailabilityPercent:F2},{asset.HasActiveDowntime},{asset.LastDowntimeStartedAt?.ToString("O") ?? string.Empty}");
         }
 
         var content = Encoding.UTF8.GetBytes(builder.ToString());
@@ -262,6 +279,93 @@ public sealed class ExecutiveReportService(
             Math.Round(currentPeriod.DowntimeHours - previousPeriod.DowntimeHours, 2),
             Math.Round(currentPeriod.AvailabilityPercent - previousPeriod.AvailabilityPercent, 1),
             snapshotComputedAt);
+    }
+
+    private async Task<ExecutiveReportReliabilitySummary> BuildReliabilitySummaryAsync(
+        Guid tenantId,
+        DateTimeOffset generatedAt,
+        CancellationToken cancellationToken)
+    {
+        var settings = await downtimeSettingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        var periodDays = AssetDowntimeRules.NormalizeAvailabilityPeriodDays(settings?.AvailabilityPeriodDays);
+        var periodEnd = generatedAt;
+        var periodStart = periodEnd.AddDays(-periodDays);
+        var totalHours = (decimal)(periodEnd - periodStart).TotalHours;
+
+        var events = await db.AssetDowntimeEvents
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.StartedAt < periodEnd
+                && (x.EndedAt == null || x.EndedAt > periodStart))
+            .ToListAsync(cancellationToken);
+
+        var failureEvents = events
+            .Where(x => !x.IsPlanned && x.StartedAt >= periodStart && x.StartedAt < periodEnd)
+            .ToList();
+
+        var closedRepairDurations = failureEvents
+            .Where(x => x.EndedAt is not null)
+            .Select(x => (decimal)(x.EndedAt!.Value - x.StartedAt).TotalHours)
+            .Where(x => x >= 0m)
+            .ToList();
+
+        var failureGaps = failureEvents
+            .GroupBy(x => x.AssetId)
+            .SelectMany(g =>
+            {
+                var starts = g
+                    .OrderBy(x => x.StartedAt)
+                    .Select(x => x.StartedAt)
+                    .ToList();
+                return starts
+                    .Skip(1)
+                    .Select((startedAt, index) => (decimal)(startedAt - starts[index]).TotalHours);
+            })
+            .Where(x => x >= 0m)
+            .ToList();
+
+        var reliabilityAssets = events
+            .GroupBy(x => x.AssetId)
+            .Select(g =>
+            {
+                var intervals = g
+                    .Select(x => new DowntimeInterval(x.StartedAt, x.EndedAt, x.IsPlanned))
+                    .ToList();
+                var downtimeHours = AssetDowntimeRules.ComputeDowntimeHoursForPeriod(intervals, periodStart, periodEnd);
+                var eventCount = g.Count(x => x.StartedAt >= periodStart && x.StartedAt < periodEnd);
+                var hasActiveDowntime = g.Any(x => x.EndedAt is null);
+                return new ExecutiveReportReliabilityAssetItem(
+                    g.Key,
+                    g.OrderByDescending(x => x.StartedAt).First().AssetTag,
+                    g.OrderByDescending(x => x.StartedAt).First().AssetName,
+                    eventCount,
+                    downtimeHours,
+                    AssetDowntimeRules.ComputeAvailabilityPercent(totalHours, downtimeHours),
+                    hasActiveDowntime,
+                    g.Max(x => (DateTimeOffset?)x.StartedAt));
+            })
+            .Where(x => x.DowntimeEventCount >= 3
+                || x.DowntimeHours >= 24m
+                || (x.HasActiveDowntime && x.DowntimeEventCount >= 2)
+                || x.AvailabilityPercent < 95m)
+            .OrderByDescending(x => x.DowntimeHours)
+            .ThenByDescending(x => x.DowntimeEventCount)
+            .Take(10)
+            .ToList();
+
+        var repeatDowntimeAssetCount = failureEvents
+            .GroupBy(x => x.AssetId)
+            .Count(g => g.Count() >= 2);
+
+        return new ExecutiveReportReliabilitySummary(
+            periodDays,
+            closedRepairDurations.Count,
+            failureEvents.Count,
+            repeatDowntimeAssetCount,
+            reliabilityAssets.Count,
+            closedRepairDurations.Count == 0 ? 0m : Math.Round(closedRepairDurations.Average(), 2),
+            failureGaps.Count == 0 ? 0m : Math.Round(failureGaps.Average(), 2),
+            reliabilityAssets);
     }
 
     private static ExecutiveReportDowntimePeriodMetrics MapDowntimePeriod(FleetAvailabilityResponse fleet) =>

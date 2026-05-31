@@ -20,6 +20,14 @@ public sealed class TripDvirInspection : IHasTenant
 
     public string DefectNotes { get; set; } = string.Empty;
 
+    public Guid? MaintainarrInboundEventId { get; set; }
+
+    public Guid? MaintainarrDefectId { get; set; }
+
+    public DateTimeOffset? MaintainarrEventRoutedAt { get; set; }
+
+    public string MaintainarrEventRouteStatus { get; set; } = string.Empty;
+
     public string SubmittedByPersonId { get; set; } = string.Empty;
 
     public DateTimeOffset SubmittedAt { get; set; }

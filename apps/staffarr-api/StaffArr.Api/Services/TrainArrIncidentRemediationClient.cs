@@ -26,6 +26,20 @@ public sealed record TrainArrIncidentRemediationResult(
     string Status,
     DateTimeOffset CreatedAt);
 
+public sealed record TrainArrIncidentRemediationDetailResult(
+    Guid RemediationId,
+    Guid TenantId,
+    Guid StaffarrIncidentId,
+    Guid StaffarrPersonId,
+    string ReasonCategoryKey,
+    string Severity,
+    string Title,
+    string Description,
+    string Status,
+    DateTimeOffset OccurredAt,
+    DateTimeOffset ReportedAt,
+    DateTimeOffset CreatedAt);
+
 public sealed class TrainArrIncidentRemediationClient(
     HttpClient httpClient,
     IOptions<TrainArrClientOptions> options)
@@ -67,5 +81,39 @@ public sealed class TrainArrIncidentRemediationClient(
         }
 
         return result;
+    }
+
+    public async Task<TrainArrIncidentRemediationDetailResult?> GetRemediationAsync(
+        Guid tenantId,
+        Guid remediationId,
+        CancellationToken cancellationToken = default)
+    {
+        var serviceToken = options.Value.ServiceToken;
+        if (string.IsNullOrWhiteSpace(serviceToken))
+        {
+            return null;
+        }
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"api/v1/integrations/incident-remediations/{remediationId:D}?tenantId={tenantId:D}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", serviceToken);
+
+        using var response = await httpClient.SendAsync(request, cancellationToken);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new StlApiException(
+                "trainarr.incident_remediation_read_failed",
+                $"TrainArr incident remediation read failed ({(int)response.StatusCode}): {body}",
+                (int)response.StatusCode);
+        }
+
+        return await response.Content.ReadFromJsonAsync<TrainArrIncidentRemediationDetailResult>(cancellationToken);
     }
 }

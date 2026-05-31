@@ -127,6 +127,41 @@ public sealed class SupplyArrSupplyReadinessDashboardTests : IAsyncLifetime
         Assert.Equal(1, aliasDashboard.Totals.PartsBelowReorderCount);
     }
 
+    [Fact]
+    public async Task Product_dashboard_aliases_return_supply_readiness_dashboard()
+    {
+        await SeedReadinessScenarioAsync();
+
+        var buyerToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_buyer");
+        var dashboardResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/dashboard", buyerToken));
+        dashboardResponse.EnsureSuccessStatusCode();
+        var dashboard = (await dashboardResponse.Content.ReadFromJsonAsync<SupplyReadinessDashboardResponse>())!;
+        Assert.Equal(1, dashboard.Totals.ActivePartsCount);
+        Assert.Equal(1, dashboard.Totals.OpenDemandRefCount);
+
+        var commandCenterResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/command-center", buyerToken));
+        commandCenterResponse.EnsureSuccessStatusCode();
+        var commandCenter = (await commandCenterResponse.Content.ReadFromJsonAsync<SupplyReadinessDashboardResponse>())!;
+        Assert.Equal(dashboard.Totals.PartsBelowReorderCount, commandCenter.Totals.PartsBelowReorderCount);
+    }
+
+    [Fact]
+    public async Task Reports_index_lists_dashboard_and_readiness_report_surfaces()
+    {
+        var buyerToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_buyer");
+        var response = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports", buyerToken));
+        response.EnsureSuccessStatusCode();
+
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.Contains("dashboard", body, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("/api/v1/dashboard", body, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("readiness", body, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("/api/v1/supply-readiness/dashboard", body, StringComparison.OrdinalIgnoreCase);
+    }
+
     private async Task SeedReadinessScenarioAsync()
     {
         using var scope = _supplyarrFactory.Services.CreateScope();

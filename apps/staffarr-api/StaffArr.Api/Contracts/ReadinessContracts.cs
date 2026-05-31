@@ -7,7 +7,13 @@ public sealed record PersonReadinessResponse(
     DateTimeOffset CalculatedAt,
     IReadOnlyList<ReadinessRequirementStatusResponse> Requirements,
     IReadOnlyList<ReadinessBlockerResponse> Blockers,
-    ReadinessOverrideSummaryResponse? ActiveOverride);
+    ReadinessOverrideSummaryResponse? ActiveOverride,
+    ReadinessAuditSnapshotResponse? AuditSnapshot = null);
+
+public sealed record ReadinessAuditSnapshotResponse(
+    Guid AuditEventId,
+    string SnapshotKind,
+    DateTimeOffset CapturedAt);
 
 public sealed record ReadinessRequirementStatusResponse(
     Guid CertificationDefinitionId,

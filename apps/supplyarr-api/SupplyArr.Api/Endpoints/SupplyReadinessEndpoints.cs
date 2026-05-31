@@ -46,22 +46,19 @@ public static class SupplyReadinessEndpoints
             decimal? quantity,
             SupplyArrAuthorizationService authorization,
             SupplyReadinessService service,
-            ISupplyArrAuditService audit,
             HttpContext context,
             CancellationToken cancellationToken)
         {
             authorization.RequireSupplyReadinessRead(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var result = await service.GetPartReadinessAsync(tenantId, partId, quantity, cancellationToken);
-            await audit.WriteAsync(
-                "supplyarr.supply_readiness.part",
+            var result = await service.GetPartReadinessAsync(
                 tenantId,
+                partId,
+                quantity,
+                cancellationToken,
                 actorUserId,
-                "part",
-                partId.ToString(),
-                "success",
-                cancellationToken: cancellationToken);
+                SupplyReadinessService.PartSnapshotKind);
             return Results.Ok(result);
         }
 
@@ -69,22 +66,18 @@ public static class SupplyReadinessEndpoints
             Guid externalPartyId,
             SupplyArrAuthorizationService authorization,
             SupplyReadinessService service,
-            ISupplyArrAuditService audit,
             HttpContext context,
             CancellationToken cancellationToken)
         {
             authorization.RequireSupplyReadinessRead(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var result = await service.GetVendorReadinessAsync(tenantId, externalPartyId, cancellationToken);
-            await audit.WriteAsync(
-                "supplyarr.supply_readiness.vendor",
+            var result = await service.GetVendorReadinessAsync(
                 tenantId,
+                externalPartyId,
+                cancellationToken,
                 actorUserId,
-                "external_party",
-                externalPartyId.ToString(),
-                "success",
-                cancellationToken: cancellationToken);
+                SupplyReadinessService.VendorSnapshotKind);
             return Results.Ok(result);
         }
 
@@ -94,7 +87,6 @@ public static class SupplyReadinessEndpoints
             decimal? quantity,
             SupplyArrAuthorizationService authorization,
             SupplyReadinessService service,
-            ISupplyArrAuditService audit,
             HttpContext context,
             CancellationToken cancellationToken)
         {
@@ -106,15 +98,9 @@ public static class SupplyReadinessEndpoints
                 partId,
                 externalPartyId,
                 quantity,
-                cancellationToken);
-            await audit.WriteAsync(
-                "supplyarr.supply_readiness.procurement_path",
-                tenantId,
+                cancellationToken,
                 actorUserId,
-                "procurement_path",
-                $"{partId}:{externalPartyId}",
-                "success",
-                cancellationToken: cancellationToken);
+                SupplyReadinessService.ProcurementPathSnapshotKind);
             return Results.Ok(result);
         }
 
@@ -132,5 +118,35 @@ public static class SupplyReadinessEndpoints
             .WithTags("SupplyReadiness")
             .RequireAuthorization();
         MapRoutes(v1ReadinessAliasGroup, "V1Alias");
+
+        static async Task<IResult> GetProductDashboardAsync(
+            SupplyArrAuthorizationService authorization,
+            SupplyReadinessService service,
+            ISupplyArrAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken)
+        {
+            return await GetDashboardAsync(authorization, service, audit, context, cancellationToken);
+        }
+
+        app.MapGet("/api/dashboard", GetProductDashboardAsync)
+            .WithTags("Dashboard")
+            .RequireAuthorization()
+            .WithName("GetSupplyArrDashboard");
+
+        app.MapGet("/api/v1/dashboard", GetProductDashboardAsync)
+            .WithTags("Dashboard")
+            .RequireAuthorization()
+            .WithName("GetSupplyArrDashboardV1");
+
+        app.MapGet("/api/command-center", GetProductDashboardAsync)
+            .WithTags("Dashboard")
+            .RequireAuthorization()
+            .WithName("GetSupplyArrCommandCenter");
+
+        app.MapGet("/api/v1/command-center", GetProductDashboardAsync)
+            .WithTags("Dashboard")
+            .RequireAuthorization()
+            .WithName("GetSupplyArrCommandCenterV1");
     }
 }

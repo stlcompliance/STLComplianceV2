@@ -68,6 +68,26 @@ public class StaffArrAuditPackageTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Audit_package_v1_manifest_and_json_export_use_versioned_routes()
+    {
+        var adminToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        await SeedWorkforceDataAsync();
+
+        var manifestResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit-packages/manifest", adminToken));
+        manifestResponse.EnsureSuccessStatusCode();
+        var manifest = (await manifestResponse.Content.ReadFromJsonAsync<AuditPackageManifestResponse>())!;
+        Assert.Contains(manifest.Sections, section => section.Key == "people");
+
+        var exportResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit-packages/export?format=json", adminToken));
+        exportResponse.EnsureSuccessStatusCode();
+        var package = (await exportResponse.Content.ReadFromJsonAsync<AuditPackageExportResponse>())!;
+        Assert.Equal(PlatformSeeder.DemoTenantId, package.TenantId);
+        Assert.Equal(1, package.Counts.People);
+    }
+
+    [Fact]
     public async Task Audit_package_export_zip_contains_json_files()
     {
         var adminToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");

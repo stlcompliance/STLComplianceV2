@@ -35,6 +35,7 @@ await StlApiHost.RunAsync<SupplyArrDbContext>(
         app.MapSupplyArrBackorderEndpoints();
         app.MapSupplyArrVendorReturnEndpoints();
         app.MapSupplyArrWarrantyClaimEndpoints();
+        app.MapSupplyArrContractEndpoints();
         app.MapSupplyArrPricingSnapshotEndpoints();
         app.MapSupplyArrLeadTimeSnapshotEndpoints();
         app.MapSupplyArrAvailabilitySnapshotEndpoints();

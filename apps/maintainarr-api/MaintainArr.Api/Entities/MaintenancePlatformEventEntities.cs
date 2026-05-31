@@ -89,9 +89,43 @@ public static class MaintenancePlatformOutboxEventKinds
     public const string AssetOutOfService = "asset.out_of_service";
 
     public const string AssetReturnedToService = "asset.returned_to_service";
+
+    public const string InspectionStarted = "inspection.started";
+
+    public const string InspectionAnswerSubmitted = "inspection.answer_submitted";
+
+    public const string InspectionCompleted = "inspection.completed";
+
+    public const string InspectionFailed = "inspection.failed";
+
+    public const string DefectCreated = "defect.created";
+
+    public const string DefectRepaired = "defect.repaired";
+
+    public const string DefectClosed = "defect.closed";
+
+    public const string WorkOrderCreated = "work_order.created";
+
+    public const string WorkOrderAssigned = "work_order.assigned";
+
+    public const string WorkOrderStarted = "work_order.started";
+
+    public const string WorkOrderCompleted = "work_order.completed";
+
+    public const string PmDue = "pm.due";
+
+    public const string PmOverdue = "pm.overdue";
 }
 
 public static class MaintenancePlatformEventRelatedEntityTypes
 {
     public const string Asset = "asset";
+
+    public const string InspectionRun = "inspection_run";
+
+    public const string Defect = "defect";
+
+    public const string WorkOrder = "work_order";
+
+    public const string PmSchedule = "pm_schedule";
 }

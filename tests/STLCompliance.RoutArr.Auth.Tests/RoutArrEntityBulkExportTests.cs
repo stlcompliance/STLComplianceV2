@@ -96,7 +96,45 @@ public sealed class RoutArrEntityBulkExportTests : IAsyncLifetime
         Assert.Contains(manifest.Entities, x => x.EntityKey == "routes");
         Assert.Contains(manifest.Entities, x => x.EntityKey == "dispatch_exceptions");
         Assert.Contains(manifest.ReportExports, x => x.ReportKey == "dispatch");
+        Assert.Contains(manifest.ReportExports, x => x.ReportKey == "time_summary");
         Assert.Contains(manifest.ReportExports, x => x.ReportKey == "routes_report");
+    }
+
+    [Fact]
+    public async Task Entity_export_v1_manifest_and_csv_aliases_work()
+    {
+        var manifestResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports/manifest", _managerToken));
+        manifestResponse.EnsureSuccessStatusCode();
+
+        var manifest = (await manifestResponse.Content.ReadFromJsonAsync<EntityExportManifestResponse>())!;
+        Assert.Contains(manifest.Entities, x => x.EntityKey == "trips" && x.Route == "/api/v1/exports/trips");
+        Assert.Contains(manifest.ReportExports, x => x.ReportKey == "dispatch" && x.Route == "/api/v1/reports/dispatch/summary/export");
+        Assert.Contains(manifest.ReportExports, x => x.ReportKey == "time_summary" && x.Route == "/api/v1/reports/dispatch/time-summary/export");
+
+        var tripsResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports/trips", _managerToken));
+        tripsResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", tripsResponse.Content.Headers.ContentType?.MediaType);
+        var tripsCsv = await tripsResponse.Content.ReadAsStringAsync();
+        Assert.Contains(RoutArrEntityBulkExportService.TripsCsvHeader, tripsCsv, StringComparison.Ordinal);
+        Assert.Contains("Export bulk trip", tripsCsv, StringComparison.Ordinal);
+
+        var routesResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports/routes", _managerToken));
+        routesResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", routesResponse.Content.Headers.ContentType?.MediaType);
+        var routesCsv = await routesResponse.Content.ReadAsStringAsync();
+        Assert.Contains(RoutArrEntityBulkExportService.RoutesCsvHeader, routesCsv, StringComparison.Ordinal);
+        Assert.Contains("Export bulk route", routesCsv, StringComparison.Ordinal);
+
+        var exceptionsResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports/dispatch-exceptions?status=open", _managerToken));
+        exceptionsResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", exceptionsResponse.Content.Headers.ContentType?.MediaType);
+        var exceptionsCsv = await exceptionsResponse.Content.ReadAsStringAsync();
+        Assert.Contains(RoutArrEntityBulkExportService.DispatchExceptionsCsvHeader, exceptionsCsv, StringComparison.Ordinal);
+        Assert.Contains("Export delay", exceptionsCsv, StringComparison.Ordinal);
     }
 
     [Fact]

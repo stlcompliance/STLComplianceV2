@@ -1,0 +1,41 @@
+namespace SupplyArr.Api.Contracts;
+
+public sealed record SupplyContractResponse(
+    Guid ContractId,
+    string ContractKey,
+    string ContractType,
+    string Title,
+    Guid VendorPartyId,
+    string VendorPartyKey,
+    string VendorDisplayName,
+    DateTimeOffset EffectiveAt,
+    DateTimeOffset? ExpiresAt,
+    DateTimeOffset? RenewalAt,
+    string PaymentTerms,
+    string FreightTerms,
+    string WarrantyTerms,
+    decimal? MinimumSpend,
+    string ServiceLevelAgreement,
+    string ApprovalStatus,
+    string Status,
+    string Notes,
+    Guid CreatedByUserId,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt);
+
+public sealed record CreateSupplyContractRequest(
+    string ContractKey,
+    string ContractType,
+    string Title,
+    Guid VendorPartyId,
+    DateTimeOffset? EffectiveAt,
+    DateTimeOffset? ExpiresAt,
+    DateTimeOffset? RenewalAt,
+    string PaymentTerms,
+    string FreightTerms,
+    string WarrantyTerms,
+    decimal? MinimumSpend,
+    string ServiceLevelAgreement,
+    string ApprovalStatus,
+    string Status,
+    string Notes);

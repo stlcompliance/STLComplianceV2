@@ -41,6 +41,11 @@ public sealed record RecordMeterReadingRequest(
     string Notes,
     bool IsCorrection);
 
+public sealed record CorrectMeterReadingRequest(
+    decimal ReadingValue,
+    DateTimeOffset? ReadAt,
+    string Reason);
+
 public sealed record MeterPmForecastItem(
     Guid PmScheduleId,
     string ScheduleKey,

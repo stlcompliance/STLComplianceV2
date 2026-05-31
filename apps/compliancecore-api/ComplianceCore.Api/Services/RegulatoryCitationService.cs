@@ -10,6 +10,8 @@ public sealed class RegulatoryCitationService(
     ComplianceCoreDbContext db,
     IComplianceCoreAuditService auditService)
 {
+    public const string CitationChangedEventAction = "compliancecore.citation.changed";
+
     public async Task<RegulatoryCitationResponse> GetAsync(
         Guid tenantId,
         Guid citationId,
@@ -209,6 +211,16 @@ public sealed class RegulatoryCitationService(
             "success",
             cancellationToken: cancellationToken);
 
+        await auditService.WriteAsync(
+            CitationChangedEventAction,
+            tenantId,
+            actorUserId,
+            "citation",
+            entity.Id.ToString(),
+            "created",
+            reasonCode: entity.CitationKey,
+            cancellationToken: cancellationToken);
+
         return MapResponse(entity, program, rulePack);
     }
 
@@ -241,6 +253,16 @@ public sealed class RegulatoryCitationService(
             "citation",
             entity.Id.ToString(),
             "success",
+            cancellationToken: cancellationToken);
+
+        await auditService.WriteAsync(
+            CitationChangedEventAction,
+            tenantId,
+            actorUserId,
+            "citation",
+            entity.Id.ToString(),
+            "updated",
+            reasonCode: entity.CitationKey,
             cancellationToken: cancellationToken);
 
         var program = await db.RegulatoryPrograms

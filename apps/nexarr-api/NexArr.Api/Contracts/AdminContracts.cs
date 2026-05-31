@@ -29,7 +29,19 @@ public sealed record ProductDetailResponse(
     string ProductKey,
     string DisplayName,
     int SortOrder,
-    bool IsActive);
+    bool IsActive,
+    string ProductCategory,
+    string ProductOwner,
+    string ProductStatus,
+    string CanonicalCallbackPath,
+    string ApiBaseUrl,
+    string HealthUrl,
+    string ServiceAudience,
+    string MarketingUrl,
+    string DocumentationUrl,
+    string SupportUrl,
+    string EnvironmentKey,
+    string EntitlementDependencyRules);
 
 public sealed record GrantEntitlementRequest(Guid TenantId, string ProductKey);
 

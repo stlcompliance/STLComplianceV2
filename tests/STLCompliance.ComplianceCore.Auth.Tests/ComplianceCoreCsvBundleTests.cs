@@ -54,7 +54,7 @@ public class ComplianceCoreCsvBundleTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Csv_bundle_manifest_lists_nine_files()
+    public async Task Csv_bundle_manifest_lists_ten_files()
     {
         var token = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
         var response = await _complianceCoreClient.SendAsync(
@@ -68,7 +68,7 @@ public class ComplianceCoreCsvBundleTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Csv_bundle_export_zip_contains_nine_csv_files()
+    public async Task Csv_bundle_export_zip_contains_ten_csv_files()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
         await SeedSampleTenantDataAsync(adminToken);

@@ -12,12 +12,14 @@ public static class RegulatoryMappingEndpoints
             app.MapGroup("/api/regulatory-mappings")
                 .WithTags("RegulatoryMappings")
                 .RequireAuthorization(),
-            string.Empty);
+            string.Empty,
+            "/api/regulatory-mappings");
         MapMappingRoutes(
             app.MapGroup("/api/v1/regulatory-mappings")
                 .WithTags("RegulatoryMappings")
                 .RequireAuthorization(),
-            "V1");
+            "V1",
+            "/api/v1/regulatory-mappings");
 
         var derivedFacts = app.MapGroup("/api/v1/derived-facts")
             .WithTags("DerivedFacts")
@@ -75,7 +77,7 @@ public static class RegulatoryMappingEndpoints
         .WithName("PreviewDerivedFactsV1");
     }
 
-    private static void MapMappingRoutes(RouteGroupBuilder mappings, string suffix)
+    private static void MapMappingRoutes(RouteGroupBuilder mappings, string suffix, string routePrefix)
     {
         mappings.MapGet("/", async (
             Guid? regulatoryProgramId,
@@ -115,7 +117,7 @@ public static class RegulatoryMappingEndpoints
                 context.User.GetUserId(),
                 request,
                 cancellationToken);
-            return Results.Created($"/api/regulatory-mappings/{created.RegulatoryMappingId}", created);
+            return Results.Created($"{routePrefix}/{created.RegulatoryMappingId}", created);
         })
         .WithName($"CreateRegulatoryMapping{suffix}");
     }

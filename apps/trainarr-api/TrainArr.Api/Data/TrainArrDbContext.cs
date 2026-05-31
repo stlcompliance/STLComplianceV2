@@ -209,6 +209,10 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
 
             entity.HasKey(x => x.Id);
 
+            entity.Property(x => x.SourceProduct).HasMaxLength(64).IsRequired();
+
+            entity.Property(x => x.SourceEventKind).HasMaxLength(64);
+
             entity.Property(x => x.ReasonCategoryKey).HasMaxLength(64).IsRequired();
 
             entity.Property(x => x.Severity).HasMaxLength(32).IsRequired();
@@ -222,6 +226,8 @@ public sealed class TrainArrDbContext(DbContextOptions<TrainArrDbContext> option
             entity.HasIndex(x => x.TenantId);
 
             entity.HasIndex(x => new { x.TenantId, x.StaffarrIncidentId }).IsUnique();
+
+            entity.HasIndex(x => new { x.TenantId, x.SourceProduct, x.SourceIncidentId }).IsUnique();
 
             entity.HasIndex(x => new { x.TenantId, x.StaffarrPersonId, x.CreatedAt });
 

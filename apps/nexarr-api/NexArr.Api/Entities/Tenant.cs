@@ -23,4 +23,5 @@ public static class TenantStatuses
 {
     public const string Active = "Active";
     public const string Suspended = "Suspended";
+    public const string Archived = "Archived";
 }

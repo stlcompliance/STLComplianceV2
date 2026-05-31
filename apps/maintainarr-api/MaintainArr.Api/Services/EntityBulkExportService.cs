@@ -24,28 +24,30 @@ public sealed class EntityBulkExportService(
         "maintainarr-{entity}-export-{timestamp}.csv",
         "Comma-separated values for spreadsheets and bulk import round-trips.");
 
-    public EntityExportManifestResponse GetManifest() =>
+    public EntityExportManifestResponse GetManifest(
+        string exportBasePath = "/api/exports",
+        string reportBasePath = "/api/reports") =>
         new(
             PackageVersion: "1",
             Entities:
             [
                 new(
                     "assets",
-                    "/api/exports/assets",
+                    $"{exportBasePath}/assets",
                     "Assets",
                     AssetsCsvHeader,
                     "Full tenant asset registry with class and type keys.",
                     [CsvFormat]),
                 new(
                     "work_orders",
-                    "/api/exports/work-orders",
+                    $"{exportBasePath}/work-orders",
                     "Work orders",
                     WorkOrdersCsvHeader,
                     "Maintenance work orders with asset tags for cross-reference.",
                     [CsvFormat]),
                 new(
                     "inspection_runs",
-                    "/api/exports/inspection-runs",
+                    $"{exportBasePath}/inspection-runs",
                     "Inspection runs",
                     InspectionRunsCsvHeader,
                     "Inspection execution history with template keys.",
@@ -55,17 +57,17 @@ public sealed class EntityBulkExportService(
             [
                 new(
                     "maintenance",
-                    "/api/reports/maintenance/summary/export",
+                    $"{reportBasePath}/maintenance/summary/export",
                     "Maintenance report CSV",
                     "Aggregated fleet maintenance KPIs per asset (Worker 203)."),
                 new(
                     "executive",
-                    "/api/reports/executive/summary/export",
+                    $"{reportBasePath}/executive/summary/export",
                     "Executive report CSV",
                     "Fleet readiness and scope rollups (Worker 204)."),
                 new(
                     "compliance",
-                    "/api/reports/compliance/summary/export",
+                    $"{reportBasePath}/compliance/summary/export",
                     "Compliance report CSV",
                     "Regulatory key coverage on inspection templates (Worker 205)."),
             ],

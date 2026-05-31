@@ -149,7 +149,8 @@ public sealed class MaintainArrEntityBulkExportTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/exports/manifest", _managerToken));
         manifestResponse.EnsureSuccessStatusCode();
         var manifest = (await manifestResponse.Content.ReadFromJsonAsync<EntityExportManifestResponse>())!;
-        Assert.Contains(manifest.Entities, x => x.EntityKey == "assets");
+        Assert.Contains(manifest.Entities, x => x.EntityKey == "assets" && x.Route == "/api/v1/exports/assets");
+        Assert.Contains(manifest.ReportExports, x => x.ReportKey == "maintenance" && x.Route == "/api/v1/reports/maintenance/summary/export");
 
         var assetsResponse = await _maintainarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/exports/assets", _managerToken));

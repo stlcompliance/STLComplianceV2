@@ -18,6 +18,40 @@ public sealed class DispatchException : IHasTenant
 
     public string Status { get; set; } = DispatchExceptionStatuses.Open;
 
+    public string IncidentType { get; set; } = DispatchIncidentTypes.OperationalException;
+
+    public string IncidentSeverity { get; set; } = DispatchIncidentSeverities.Medium;
+
+    public string IncidentReviewStatus { get; set; } = DispatchIncidentReviewStatuses.Open;
+
+    public string IncidentRoutedProduct { get; set; } = DispatchIncidentRoutedProducts.RoutArr;
+
+    public Guid? StaffarrPersonnelIncidentId { get; set; }
+
+    public DateTimeOffset? StaffarrIncidentRoutedAt { get; set; }
+
+    public string StaffarrIncidentRouteStatus { get; set; } = string.Empty;
+
+    public Guid? TrainarrIncidentRemediationId { get; set; }
+
+    public DateTimeOffset? TrainarrIncidentRoutedAt { get; set; }
+
+    public string TrainarrIncidentRouteStatus { get; set; } = string.Empty;
+
+    public Guid? MaintainarrInboundEventId { get; set; }
+
+    public Guid? MaintainarrDefectId { get; set; }
+
+    public DateTimeOffset? MaintainarrIncidentRoutedAt { get; set; }
+
+    public string MaintainarrIncidentRouteStatus { get; set; } = string.Empty;
+
+    public Guid? CompliancecoreFactPublicationId { get; set; }
+
+    public DateTimeOffset? CompliancecoreIncidentRoutedAt { get; set; }
+
+    public string CompliancecoreIncidentRouteStatus { get; set; } = string.Empty;
+
     public Guid? TripId { get; set; }
 
     public Guid? AssignedToUserId { get; set; }
@@ -95,6 +129,106 @@ public static class DispatchExceptionCategories
         Stop,
         Compliance,
         Other,
+    };
+}
+
+public static class DispatchIncidentTypes
+{
+    public const string OperationalException = "operational_exception";
+
+    public const string Accident = "accident";
+
+    public const string NearMiss = "near_miss";
+
+    public const string Injury = "injury";
+
+    public const string PropertyDamage = "property_damage";
+
+    public const string CargoDamage = "cargo_damage";
+
+    public const string EquipmentAbuse = "equipment_abuse";
+
+    public const string SafetyConcern = "safety_concern";
+
+    public const string CustomerComplaint = "customer_complaint";
+
+    public const string TrainingRelated = "training_related";
+
+    public const string ComplianceRelated = "compliance_related";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        OperationalException,
+        Accident,
+        NearMiss,
+        Injury,
+        PropertyDamage,
+        CargoDamage,
+        EquipmentAbuse,
+        SafetyConcern,
+        CustomerComplaint,
+        TrainingRelated,
+        ComplianceRelated,
+    };
+}
+
+public static class DispatchIncidentSeverities
+{
+    public const string Low = "low";
+
+    public const string Medium = "medium";
+
+    public const string High = "high";
+
+    public const string Critical = "critical";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        Low,
+        Medium,
+        High,
+        Critical,
+    };
+}
+
+public static class DispatchIncidentReviewStatuses
+{
+    public const string Open = "open";
+
+    public const string UnderReview = "under_review";
+
+    public const string Routed = "routed";
+
+    public const string Closed = "closed";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        Open,
+        UnderReview,
+        Routed,
+        Closed,
+    };
+}
+
+public static class DispatchIncidentRoutedProducts
+{
+    public const string RoutArr = "routarr";
+
+    public const string MaintainArr = "maintainarr";
+
+    public const string StaffArr = "staffarr";
+
+    public const string TrainArr = "trainarr";
+
+    public const string ComplianceCore = "compliancecore";
+
+    public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        RoutArr,
+        MaintainArr,
+        StaffArr,
+        TrainArr,
+        ComplianceCore,
     };
 }
 

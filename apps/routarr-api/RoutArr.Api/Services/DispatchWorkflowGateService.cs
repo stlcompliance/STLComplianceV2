@@ -75,33 +75,64 @@ public sealed class DispatchWorkflowGateService(
                 result.Outcome,
                 result.ReasonCode,
                 result.Message,
-                DispatchWorkflowGateRules.IsBlockingOutcome(result.Outcome)))
+                DispatchWorkflowGateRules.IsBlockingOutcome(result.Outcome),
+                result.CheckResultId,
+                result.GateLabel,
+                result.RuleEvaluationRunId,
+                result.Reasons
+                    .Select(reason => new DispatchWorkflowGateReasonSummary(
+                        reason.Code,
+                        reason.Message,
+                        reason.RuleKey,
+                        reason.FactKey))
+                    .ToList(),
+                result.CheckedAt,
+                result.AppliedWaiverId,
+                result.AppliedWaiverKey))
             .ToList();
 
         var outcome = DispatchWorkflowGateRules.MergeOutcome(gateSummaries.Select(x => x.Outcome));
         var (reasonCode, message) = DispatchWorkflowGateRules.BuildMergedReason(outcome, gateSummaries);
 
-        var response = new DispatchWorkflowGateCheckResponse(
-            trip.Id,
-            outcome,
-            reasonCode,
-            message,
-            DispatchWorkflowGateRules.IsBlockingOutcome(outcome),
-            gateSummaries);
+        var checkedAt = gateSummaries
+            .Where(x => x.CheckedAt.HasValue)
+            .Select(x => x.CheckedAt!.Value)
+            .DefaultIfEmpty(DateTimeOffset.UtcNow)
+            .Max();
+
+        DispatchWorkflowGateAuditSnapshotResponse? auditSnapshot = null;
 
         if (actorUserId.HasValue)
         {
-            await audit.WriteAsync(
+            var auditResult = await audit.WriteAsync(
                 CheckAction,
                 tenantId,
                 actorUserId.Value,
                 "trip",
                 trip.Id.ToString(),
                 outcome,
+                reasonCode,
                 cancellationToken: cancellationToken);
+
+            auditSnapshot = new DispatchWorkflowGateAuditSnapshotResponse(
+                auditResult.AuditEventId,
+                auditResult.OccurredAt,
+                auditResult.Action,
+                auditResult.Result,
+                auditResult.ReasonCode);
         }
 
-        return response;
+        return new DispatchWorkflowGateCheckResponse(
+            trip.Id,
+            outcome,
+            reasonCode,
+            message,
+            DispatchWorkflowGateRules.IsBlockingOutcome(outcome),
+            gateSummaries,
+            batch.BatchId,
+            checkedAt,
+            context,
+            auditSnapshot);
     }
 
     public async Task<DispatchWorkflowGateCheckResponse> CheckAsync(

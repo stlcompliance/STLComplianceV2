@@ -11,6 +11,17 @@ public sealed class IncidentService(
     IncidentRoutingService routingService,
     IStaffArrAuditService audit)
 {
+    private static readonly Guid ProductIncidentServiceActorId = Guid.Parse("00000000-0000-0000-0000-0000000005fa");
+
+    private static readonly HashSet<string> AllowedSourceProducts = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "compliancecore",
+        "maintainarr",
+        "routarr",
+        "supplyarr",
+        "trainarr"
+    };
+
     private static readonly HashSet<string> AllowedReasonCategories = new(StringComparer.OrdinalIgnoreCase)
     {
         "safety",
@@ -80,6 +91,104 @@ public sealed class IncidentService(
             cancellationToken: cancellationToken);
 
         return MapDetail(entity, null);
+    }
+
+    public async Task<IngestProductIncidentResponse> CreateProductIncidentAsync(
+        IngestProductIncidentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var sourceProduct = NormalizeSourceProduct(request.SourceProduct);
+        if (request.SourceIncidentId == Guid.Empty)
+        {
+            throw new StlApiException(
+                "incidents.validation",
+                "Source incident identifier must be a valid identifier.",
+                400);
+        }
+
+        if (request.PersonId == Guid.Empty)
+        {
+            throw new StlApiException(
+                "incidents.validation",
+                "Person identifier must be a valid identifier.",
+                400);
+        }
+
+        var sourceEventKind = NormalizeOptional(request.SourceEventKind, 64, "Source event kind");
+        var sourceReferenceKey = NormalizeOptional(request.SourceReferenceKey, 128, "Source reference key");
+
+        var existing = await db.PersonnelIncidents
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                x => x.TenantId == request.TenantId
+                    && x.SourceProduct == sourceProduct
+                    && x.SourceIncidentId == request.SourceIncidentId,
+                cancellationToken);
+        if (existing is not null)
+        {
+            return new IngestProductIncidentResponse(
+                existing.Id,
+                existing.PersonId,
+                sourceProduct,
+                request.SourceIncidentId,
+                existing.Status,
+                IdempotentReplay: true);
+        }
+
+        var personExists = await db.People.AnyAsync(
+            x => x.TenantId == request.TenantId && x.Id == request.PersonId,
+            cancellationToken);
+        if (!personExists)
+        {
+            throw new StlApiException("people.not_found", "Person was not found.", 404);
+        }
+
+        var reasonCategoryKey = NormalizeReasonCategoryKey(request.ReasonCategoryKey);
+        var severity = NormalizeSeverity(request.Severity);
+        var title = NormalizeTitle(request.Title);
+        var description = NormalizeDescription(request.Description);
+        ValidateOccurredAt(request.OccurredAt);
+
+        var now = DateTimeOffset.UtcNow;
+        var entity = new PersonnelIncident
+        {
+            Id = Guid.NewGuid(),
+            TenantId = request.TenantId,
+            PersonId = request.PersonId,
+            ReasonCategoryKey = reasonCategoryKey,
+            Severity = severity,
+            Status = "open",
+            Title = title,
+            Description = description,
+            OccurredAt = request.OccurredAt,
+            ReportedAt = now,
+            ReportedByUserId = ProductIncidentServiceActorId,
+            SourceProduct = sourceProduct,
+            SourceIncidentId = request.SourceIncidentId,
+            SourceEventKind = sourceEventKind,
+            SourceReferenceKey = sourceReferenceKey,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        db.PersonnelIncidents.Add(entity);
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "incident.product_intake",
+            request.TenantId,
+            ProductIncidentServiceActorId,
+            "personnel_incident",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return new IngestProductIncidentResponse(
+            entity.Id,
+            entity.PersonId,
+            sourceProduct,
+            request.SourceIncidentId,
+            entity.Status,
+            IdempotentReplay: false);
     }
 
     public async Task<PersonnelIncidentDetailResponse> CreateSelfReportAsync(
@@ -197,6 +306,39 @@ public sealed class IncidentService(
         return normalized;
     }
 
+    private static string NormalizeSourceProduct(string sourceProduct)
+    {
+        var normalized = (sourceProduct ?? string.Empty).Trim().ToLowerInvariant();
+        if (!AllowedSourceProducts.Contains(normalized))
+        {
+            throw new StlApiException(
+                "incidents.validation",
+                $"Source product must be one of: {string.Join(", ", AllowedSourceProducts.OrderBy(x => x))}.",
+                400);
+        }
+
+        return normalized;
+    }
+
+    private static string? NormalizeOptional(string? value, int maxLength, string displayName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length > maxLength)
+        {
+            throw new StlApiException(
+                "incidents.validation",
+                $"{displayName} must be {maxLength} characters or fewer.",
+                400);
+        }
+
+        return trimmed;
+    }
+
     private static string NormalizeSeverity(string severity)
     {
         var normalized = severity.Trim().ToLowerInvariant();
@@ -279,7 +421,11 @@ public sealed class IncidentService(
             entity.OccurredAt,
             entity.ReportedAt,
             entity.ReportedByUserId,
-            routing is null ? null : IncidentRoutingService.MapRouting(routing));
+            routing is null ? null : IncidentRoutingService.MapRouting(routing),
+            entity.SourceProduct,
+            entity.SourceIncidentId,
+            entity.SourceEventKind,
+            entity.SourceReferenceKey);
 
     private static PersonnelIncidentDetailResponse MapDetail(
         PersonnelIncident entity,
@@ -297,5 +443,9 @@ public sealed class IncidentService(
             entity.ReportedByUserId,
             entity.CreatedAt,
             entity.UpdatedAt,
-            routing);
+            routing,
+            entity.SourceProduct,
+            entity.SourceIncidentId,
+            entity.SourceEventKind,
+            entity.SourceReferenceKey);
 }

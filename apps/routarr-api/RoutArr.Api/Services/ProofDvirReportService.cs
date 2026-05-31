@@ -42,16 +42,24 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
             .Distinct()
             .ToHashSet();
 
-        var trips = tripIds.Count == 0
-            ? []
-            : await db.Trips
-                .AsNoTracking()
-                .Where(x => x.TenantId == tenantId && tripIds.Contains(x.Id))
-                .ToListAsync(cancellationToken);
+        var scopedTrips = await GetScopedTripsAsync(tenantId, windowStart, windowEnd, cancellationToken);
+        foreach (var tripId in scopedTrips.Select(x => x.Id))
+        {
+            tripIds.Add(tripId);
+        }
+
+        var trips = await db.Trips
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && tripIds.Contains(x.Id))
+            .ToListAsync(cancellationToken);
         var tripById = trips.ToDictionary(x => x.Id);
 
         var proofsByTrip = scopedProofs.GroupBy(x => x.TripId).ToDictionary(x => x.Key, x => x.ToList());
         var dvirsByTrip = scopedDvirs.GroupBy(x => x.TripId).ToDictionary(x => x.Key, x => x.ToList());
+        var missingRequiredProofByTrip = await CountMissingRequiredProofByTripAsync(
+            tenantId,
+            scopedTrips,
+            cancellationToken);
 
         var tripItems = tripIds
             .Where(tripById.ContainsKey)
@@ -74,6 +82,7 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
                         string.Equals(x.Phase, DvirInspectionPhases.PreTrip, StringComparison.OrdinalIgnoreCase)),
                     tripDvirs.Any(x =>
                         string.Equals(x.Phase, DvirInspectionPhases.PostTrip, StringComparison.OrdinalIgnoreCase)),
+                    missingRequiredProofByTrip.GetValueOrDefault(tripId),
                     tripDvirs.Count(x =>
                         string.Equals(x.Result, DvirInspectionResults.Fail, StringComparison.OrdinalIgnoreCase)
                         || string.Equals(x.Result, DvirInspectionResults.Conditional, StringComparison.OrdinalIgnoreCase)));
@@ -100,7 +109,8 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
             windowEnd,
             scopedProofs.Count,
             scopedDvirs.Count,
-            tripItems.Count,
+            tripItems.Count(x => x.ProofCount > 0 || x.HasPreTripDvir || x.HasPostTripDvir),
+            tripItems.Count(x => x.MissingRequiredProofCount > 0),
             scopedDvirs.Count(x =>
                 string.Equals(x.Phase, DvirInspectionPhases.PreTrip, StringComparison.OrdinalIgnoreCase)),
             scopedDvirs.Count(x =>
@@ -138,6 +148,11 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
             .OrderBy(x => x.Phase)
             .ToListAsync(cancellationToken);
 
+        var missingRequiredProofByTrip = await CountMissingRequiredProofByTripAsync(
+            tenantId,
+            [trip],
+            cancellationToken);
+
         return new ProofDvirReportTripDetailResponse(
             trip.Id,
             trip.TripNumber,
@@ -152,6 +167,7 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
                 string.Equals(x.Phase, DvirInspectionPhases.PreTrip, StringComparison.OrdinalIgnoreCase)),
             dvirs.Any(x =>
                 string.Equals(x.Phase, DvirInspectionPhases.PostTrip, StringComparison.OrdinalIgnoreCase)),
+            missingRequiredProofByTrip.GetValueOrDefault(trip.Id),
             dvirs.Count(x =>
                 string.Equals(x.Result, DvirInspectionResults.Fail, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(x.Result, DvirInspectionResults.Conditional, StringComparison.OrdinalIgnoreCase)),
@@ -243,13 +259,23 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
             .OrderByDescending(x => x.SubmittedAt)
             .ToListAsync(cancellationToken);
 
-        var tripIds = proofs.Select(x => x.TripId).Concat(dvirs.Select(x => x.TripId)).Distinct().ToList();
-        var tripNumbers = tripIds.Count == 0
-            ? new Dictionary<Guid, string>()
+        var scopedTrips = await GetScopedTripsAsync(tenantId, windowStart, windowEnd, cancellationToken);
+        var tripIds = proofs.Select(x => x.TripId)
+            .Concat(dvirs.Select(x => x.TripId))
+            .Concat(scopedTrips.Select(x => x.Id))
+            .Distinct()
+            .ToList();
+        var tripSummaries = tripIds.Count == 0
+            ? new Dictionary<Guid, TripExportSummary>()
             : await db.Trips
                 .AsNoTracking()
                 .Where(x => x.TenantId == tenantId && tripIds.Contains(x.Id))
-                .ToDictionaryAsync(x => x.Id, x => x.TripNumber, cancellationToken);
+                .Select(x => new TripExportSummary(x.Id, x.TripNumber, x.AssignedDriverPersonId, x.VehicleRefKey))
+                .ToDictionaryAsync(x => x.TripId, cancellationToken);
+        var missingRequiredProofByTrip = await CountMissingRequiredProofByTripAsync(
+            tenantId,
+            scopedTrips,
+            cancellationToken);
 
         var builder = new StringBuilder();
         builder.AppendLine(
@@ -257,12 +283,12 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
 
         foreach (var proof in proofs)
         {
-            tripNumbers.TryGetValue(proof.TripId, out var tripNumber);
+            tripSummaries.TryGetValue(proof.TripId, out var trip);
             AppendCsvRow(
                 builder,
                 "proof",
                 proof.Id,
-                tripNumber ?? string.Empty,
+                trip?.TripNumber ?? string.Empty,
                 proof.TripId,
                 proof.ProofType,
                 proof.ReferenceKey,
@@ -274,12 +300,12 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
 
         foreach (var dvir in dvirs)
         {
-            tripNumbers.TryGetValue(dvir.TripId, out var tripNumber);
+            tripSummaries.TryGetValue(dvir.TripId, out var trip);
             AppendCsvRow(
                 builder,
                 "dvir",
                 dvir.Id,
-                tripNumber ?? string.Empty,
+                trip?.TripNumber ?? string.Empty,
                 dvir.TripId,
                 dvir.Phase,
                 dvir.Result,
@@ -287,6 +313,23 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
                 dvir.VehicleRefKey,
                 dvir.SubmittedAt,
                 dvir.DefectNotes);
+        }
+
+        foreach (var missingProof in missingRequiredProofByTrip.Where(x => x.Value > 0).OrderBy(x => x.Key))
+        {
+            tripSummaries.TryGetValue(missingProof.Key, out var trip);
+            AppendCsvRow(
+                builder,
+                "missing_proof",
+                missingProof.Key,
+                trip?.TripNumber ?? string.Empty,
+                missingProof.Key,
+                "required_proof",
+                missingProof.Value.ToString(),
+                trip?.AssignedDriverPersonId ?? string.Empty,
+                trip?.VehicleRefKey ?? string.Empty,
+                now,
+                $"{missingProof.Value} required proof item(s) missing");
         }
 
         var fileName = $"routarr-proof-dvir-report-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv";
@@ -362,6 +405,78 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
             : (dayStart, dayStart.AddDays(1));
     }
 
+    private async Task<IReadOnlyList<Trip>> GetScopedTripsAsync(
+        Guid tenantId,
+        DateTimeOffset windowStart,
+        DateTimeOffset windowEnd,
+        CancellationToken cancellationToken)
+    {
+        var trips = await db.Trips
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .ToListAsync(cancellationToken);
+
+        return trips
+            .Where(x => TripDispatchStatuses.Active.Contains(x.DispatchStatus)
+                || OverlapsWindow(x.ScheduledStartAt, x.ScheduledEndAt, windowStart, windowEnd)
+                || (x.UpdatedAt >= windowStart && x.UpdatedAt < windowEnd))
+            .ToList();
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, int>> CountMissingRequiredProofByTripAsync(
+        Guid tenantId,
+        IReadOnlyList<Trip> trips,
+        CancellationToken cancellationToken)
+    {
+        if (trips.Count == 0)
+        {
+            return new Dictionary<Guid, int>();
+        }
+
+        var settingsEntity = await db.TenantTripExecutionSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId, cancellationToken);
+        var captureSettings = TripExecutionCaptureRules.ResolveSettings(settingsEntity);
+
+        var tripIds = trips.Select(x => x.Id).ToHashSet();
+        var proofTypesByTrip = await db.TripProofRecords
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && tripIds.Contains(x.TripId))
+            .Select(x => new { x.TripId, x.ProofType })
+            .ToListAsync(cancellationToken);
+        var proofLookup = proofTypesByTrip
+            .GroupBy(x => x.TripId)
+            .ToDictionary(
+                x => x.Key,
+                x => x.Select(y => y.ProofType).ToHashSet(StringComparer.OrdinalIgnoreCase));
+
+        return trips.ToDictionary(
+            x => x.Id,
+            x => DispatchBoardRules.CountMissingRequiredProof(x, captureSettings, proofLookup.GetValueOrDefault(x.Id)));
+    }
+
+    private static bool OverlapsWindow(
+        DateTimeOffset? startAt,
+        DateTimeOffset? endAt,
+        DateTimeOffset windowStart,
+        DateTimeOffset windowEnd)
+    {
+        if (startAt.HasValue && startAt.Value >= windowStart && startAt.Value < windowEnd)
+        {
+            return true;
+        }
+
+        if (endAt.HasValue && endAt.Value >= windowStart && endAt.Value < windowEnd)
+        {
+            return true;
+        }
+
+        return startAt.HasValue
+            && endAt.HasValue
+            && startAt.Value < windowEnd
+            && endAt.Value >= windowStart;
+    }
+
     private static IReadOnlyList<ProofDvirReportCountItem> CountBy(IEnumerable<string> keys) =>
         keys
             .GroupBy(x => x, StringComparer.OrdinalIgnoreCase)
@@ -378,4 +493,10 @@ public sealed class ProofDvirReportService(RoutArrDbContext db)
 
         return value;
     }
+
+    private sealed record TripExportSummary(
+        Guid TripId,
+        string TripNumber,
+        string? AssignedDriverPersonId,
+        string? VehicleRefKey);
 }

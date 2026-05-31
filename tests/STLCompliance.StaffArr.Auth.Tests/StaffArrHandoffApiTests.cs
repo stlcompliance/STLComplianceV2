@@ -72,6 +72,7 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
     private HttpClient _nexarrClient = null!;
     private HttpClient _staffarrClient = null!;
     private string _serviceToken = null!;
+    private RecordingComplianceCorePersonReadinessGateHandler _complianceCoreReadinessHandler = null!;
 
     public async Task InitializeAsync()
     {
@@ -107,6 +108,7 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
 
         var adminToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
         _serviceToken = await IssueServiceTokenAsync(adminToken, "staffarr");
+        _complianceCoreReadinessHandler = new RecordingComplianceCorePersonReadinessGateHandler();
 
         _staffarrFactory = new WebApplicationFactory<global::StaffArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -116,6 +118,11 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
             builder.UseSetting("Auth:SigningKey", signingKey);
             builder.UseSetting("NexArr:BaseUrl", _nexarrClient.BaseAddress!.ToString().TrimEnd('/'));
             builder.UseSetting("Handoff:ServiceToken", _serviceToken);
+            builder.UseSetting("ComplianceCore:BaseUrl", "http://compliancecore.test");
+            builder.UseSetting("ComplianceCore:ServiceToken", "staffarr-to-compliancecore-token");
+            builder.UseSetting("ComplianceCore:PersonReadinessActionKey", "can-use-person");
+            builder.UseSetting("ComplianceCore:PersonReadinessWorkflowKey", "can_use_person");
+            builder.UseSetting("ComplianceCore:PersonReadinessActivityContextKey", "person_readiness");
             builder.ConfigureServices(services =>
             {
                 var descriptors = services
@@ -134,6 +141,8 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
                 services.AddHttpClient<StlNexArrLaunchClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
+                services.AddHttpClient<global::StaffArr.Api.Services.ComplianceCorePersonReadinessGateClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _complianceCoreReadinessHandler);
             });
         });
 
@@ -1087,6 +1096,17 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
             readiness.Blockers,
             x => x.BlockerSource == "certification" && x.CertificationKey == "readiness.equipment_operator");
         Assert.All(readiness.Blockers, x => Assert.Equal("missing", x.BlockerType));
+        Assert.NotNull(readiness.AuditSnapshot);
+        Assert.Equal("person_readiness", readiness.AuditSnapshot.SnapshotKind);
+
+        await using var scope = _staffarrFactory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+        var auditEvent = await db.AuditEvents.SingleAsync(x => x.Id == readiness.AuditSnapshot.AuditEventId);
+        Assert.Equal("staffarr.readiness.read", auditEvent.Action);
+        Assert.Equal("person_readiness", auditEvent.TargetType);
+        Assert.Equal(personId.ToString(), auditEvent.TargetId);
+        Assert.Equal("not_ready", auditEvent.Result);
+        Assert.Equal("certifications", auditEvent.ReasonCode);
     }
 
     [Fact]
@@ -1217,6 +1237,72 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         Assert.Equal("manual_override", readiness.ReadinessBasis);
         Assert.NotNull(readiness.ActiveOverride);
         Assert.NotEmpty(readiness.Blockers);
+    }
+
+    [Fact]
+    public async Task Person_readiness_compliancecore_blocker_keeps_person_not_ready_even_with_manual_override()
+    {
+        var token = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var personId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Compliance Core Ready User", "readiness.compliancecore@example.com");
+
+        var definitionsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/certifications", token));
+        definitionsResponse.EnsureSuccessStatusCode();
+        var definitions = (await definitionsResponse.Content.ReadFromJsonAsync<IReadOnlyList<CertificationDefinitionResponse>>())!;
+
+        foreach (var definition in definitions.Where(x => x.Category == "readiness"))
+        {
+            var grantCertificationRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/certifications", token);
+            grantCertificationRequest.Content = JsonContent.Create(new GrantPersonCertificationRequest(
+                definition.CertificationDefinitionId,
+                null,
+                null,
+                "Compliance Core readiness test grant."));
+            var grantCertificationResponse = await _staffarrClient.SendAsync(grantCertificationRequest);
+            grantCertificationResponse.EnsureSuccessStatusCode();
+        }
+
+        var grantOverrideRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/readiness/override", token);
+        grantOverrideRequest.Content = JsonContent.Create(new GrantReadinessOverrideRequest(
+            "Temporary workforce override cannot waive Compliance Core product rules.",
+            null));
+        var grantOverrideResponse = await _staffarrClient.SendAsync(grantOverrideRequest);
+        grantOverrideResponse.EnsureSuccessStatusCode();
+
+        _complianceCoreReadinessHandler.Requests.Clear();
+        _complianceCoreReadinessHandler.NextOutcome = "block";
+        _complianceCoreReadinessHandler.NextReasonCode = "regulated_driver_credentials_missing";
+        _complianceCoreReadinessHandler.NextMessage = "Compliance Core requires regulated driver credential evidence before assignment.";
+
+        var response = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/people/{personId}/readiness", token));
+        response.EnsureSuccessStatusCode();
+        var readiness = (await response.Content.ReadFromJsonAsync<PersonReadinessResponse>())!;
+
+        Assert.Equal("not_ready", readiness.ReadinessStatus);
+        Assert.Equal("compliancecore", readiness.ReadinessBasis);
+        Assert.NotNull(readiness.ActiveOverride);
+        var complianceBlocker = Assert.Single(readiness.Blockers, x => x.BlockerSource == "compliancecore");
+        Assert.Equal("regulated_driver_credentials_missing", complianceBlocker.BlockerType);
+        Assert.Contains("regulated driver credential", complianceBlocker.Message, StringComparison.OrdinalIgnoreCase);
+
+        var gateRequest = Assert.Single(_complianceCoreReadinessHandler.Requests);
+        Assert.Equal("/api/v1/gates/can-use-person", gateRequest.Path);
+        Assert.Equal("Bearer", gateRequest.AuthorizationScheme);
+        Assert.Equal("staffarr-to-compliancecore-token", gateRequest.AuthorizationParameter);
+        Assert.Equal(PlatformSeeder.DemoTenantId, gateRequest.TenantId);
+        Assert.Equal("person_readiness", gateRequest.ActivityContextKey);
+        Assert.Equal("can_use_person", gateRequest.WorkflowKey);
+        Assert.Contains(gateRequest.Subjects, subject =>
+            subject.SubjectType == "person"
+            && subject.SubjectReference == personId.ToString("D")
+            && subject.SourceProduct == "staffarr"
+            && subject.DisplayLabel == "Compliance Core Ready User");
+        Assert.Equal(personId.ToString("D"), gateRequest.RuleContext["person_id"]);
+        Assert.Equal("active", gateRequest.RuleContext["person_status"]);
+        Assert.Equal("true", gateRequest.RuleContext["has_manual_override"]);
+        Assert.Equal("ready", gateRequest.RuleContext["local_readiness_status"]);
     }
 
     [Fact]
@@ -1767,7 +1853,7 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         await SeedStaffPersonAsync(personId, "Documents Subject", "documents.subject@example.com");
         var fileBytes = "Signed offer letter content"u8.ToArray();
 
-        var createRequest = Authorized(HttpMethod.Post, $"/api/people/{personId}/documents", token);
+        var createRequest = Authorized(HttpMethod.Post, $"/api/v1/documents?personId={personId}", token);
         createRequest.Content = JsonContent.Create(new CreatePersonnelDocumentRequest(
             "employment_contract",
             "Signed offer letter",
@@ -1778,16 +1864,24 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
             null));
         var createResponse = await _staffarrClient.SendAsync(createRequest);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        Assert.StartsWith($"/api/v1/documents/", createResponse.Headers.Location?.OriginalString);
+        Assert.Contains($"personId={personId}", createResponse.Headers.Location?.OriginalString);
         var created = (await createResponse.Content.ReadFromJsonAsync<PersonnelDocumentDetailResponse>())!;
 
         var listResponse = await _staffarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/people/{personId}/documents", token));
+            Authorized(HttpMethod.Get, $"/api/v1/documents?personId={personId}", token));
         listResponse.EnsureSuccessStatusCode();
         var documents = (await listResponse.Content.ReadFromJsonAsync<List<PersonnelDocumentSummaryResponse>>())!;
         Assert.Contains(documents, x => x.DocumentId == created.DocumentId);
 
+        var detailResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/documents/{created.DocumentId}?personId={personId}", token));
+        detailResponse.EnsureSuccessStatusCode();
+        var detail = (await detailResponse.Content.ReadFromJsonAsync<PersonnelDocumentDetailResponse>())!;
+        Assert.Equal(created.DocumentId, detail.DocumentId);
+
         var downloadResponse = await _staffarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/people/{personId}/documents/{created.DocumentId}/content", token));
+            Authorized(HttpMethod.Get, $"/api/v1/documents/{created.DocumentId}/content?personId={personId}", token));
         downloadResponse.EnsureSuccessStatusCode();
         var downloaded = await downloadResponse.Content.ReadAsByteArrayAsync();
         Assert.Equal(fileBytes, downloaded);
@@ -1942,6 +2036,119 @@ public class StaffArrHandoffApiTests : IAsyncLifetime
         });
 
         await db.SaveChangesAsync();
+    }
+
+    private sealed record RecordedComplianceCorePersonReadinessSubject(
+        string SubjectType,
+        string SubjectReference,
+        string? SourceProduct,
+        string? DisplayLabel);
+
+    private sealed record RecordedComplianceCorePersonReadinessGateRequest(
+        string Path,
+        string? AuthorizationScheme,
+        string? AuthorizationParameter,
+        Guid TenantId,
+        string ActivityContextKey,
+        string? WorkflowKey,
+        List<RecordedComplianceCorePersonReadinessSubject> Subjects,
+        Dictionary<string, string> RuleContext);
+
+    private sealed class RecordingComplianceCorePersonReadinessGateHandler : HttpMessageHandler
+    {
+        public List<RecordedComplianceCorePersonReadinessGateRequest> Requests { get; } = [];
+
+        public string NextOutcome { get; set; } = "allow";
+
+        public string NextReasonCode { get; set; } = "person_readiness_clear";
+
+        public string NextMessage { get; set; } = "Person satisfies Compliance Core readiness requirements.";
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var body = request.Content is null
+                ? "{}"
+                : await request.Content.ReadAsStringAsync(cancellationToken);
+            using var document = JsonDocument.Parse(body);
+            var root = document.RootElement;
+
+            var subjects = new List<RecordedComplianceCorePersonReadinessSubject>();
+            if (root.TryGetProperty("subjectReferences", out var subjectReferencesElement)
+                && subjectReferencesElement.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var subjectElement in subjectReferencesElement.EnumerateArray())
+                {
+                    subjects.Add(new RecordedComplianceCorePersonReadinessSubject(
+                        subjectElement.GetProperty("subjectType").GetString() ?? string.Empty,
+                        subjectElement.GetProperty("subjectReference").GetString() ?? string.Empty,
+                        subjectElement.TryGetProperty("sourceProduct", out var sourceProductElement)
+                            && sourceProductElement.ValueKind != JsonValueKind.Null
+                                ? sourceProductElement.GetString()
+                                : null,
+                        subjectElement.TryGetProperty("displayLabel", out var displayLabelElement)
+                            && displayLabelElement.ValueKind != JsonValueKind.Null
+                                ? displayLabelElement.GetString()
+                                : null));
+                }
+            }
+
+            var ruleContext = new Dictionary<string, string>();
+            if (root.TryGetProperty("ruleContext", out var ruleContextElement)
+                && ruleContextElement.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var property in ruleContextElement.EnumerateObject())
+                {
+                    ruleContext[property.Name] = property.Value.GetString() ?? string.Empty;
+                }
+            }
+
+            Requests.Add(new RecordedComplianceCorePersonReadinessGateRequest(
+                request.RequestUri?.AbsolutePath ?? string.Empty,
+                request.Headers.Authorization?.Scheme,
+                request.Headers.Authorization?.Parameter,
+                root.GetProperty("tenantId").GetGuid(),
+                root.GetProperty("activityContextKey").GetString() ?? string.Empty,
+                root.TryGetProperty("workflowKey", out var workflowKeyElement)
+                    && workflowKeyElement.ValueKind != JsonValueKind.Null
+                        ? workflowKeyElement.GetString()
+                        : null,
+                subjects,
+                ruleContext));
+
+            var traceId = Guid.NewGuid();
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new
+                {
+                    traceId,
+                    tenantId = root.GetProperty("tenantId").GetGuid(),
+                    workflowKey = root.TryGetProperty("workflowKey", out var responseWorkflowKey)
+                        && responseWorkflowKey.ValueKind != JsonValueKind.Null
+                            ? responseWorkflowKey.GetString()
+                            : "can_use_person",
+                    actionKey = "can_use_person",
+                    activityContextKey = root.GetProperty("activityContextKey").GetString(),
+                    subjectReferences = Array.Empty<object>(),
+                    checkResultId = traceId,
+                    ruleEvaluationRunId = (Guid?)null,
+                    outcome = NextOutcome,
+                    reasonCode = NextReasonCode,
+                    message = NextMessage,
+                    appliedRuleVersions = Array.Empty<object>(),
+                    citationReferences = Array.Empty<object>(),
+                    missingFacts = Array.Empty<string>(),
+                    staleFacts = Array.Empty<object>(),
+                    evidenceRequirements = Array.Empty<object>(),
+                    remediationHints = Array.Empty<object>(),
+                    appliedWaiverId = (Guid?)null,
+                    appliedWaiverKey = (string?)null,
+                    auditExportPath = (string?)null,
+                    evaluatedAt = DateTimeOffset.UtcNow
+                })
+            };
+        }
     }
 
     private async Task<Guid> SeedOrgUnitAsync(

@@ -29,7 +29,19 @@ public static class RoutArrServiceRegistration
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
 
+        builder.Services.AddHttpClient<TrainArrIncidentRemediationClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<TrainArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+
         builder.Services.AddHttpClient<StaffArrReadinessClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+
+        builder.Services.AddHttpClient<StaffArrProductIncidentClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<StaffArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
@@ -41,7 +53,19 @@ public static class RoutArrServiceRegistration
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
 
+        builder.Services.AddHttpClient<MaintainArrRoutarrEventClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<MaintainArrClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+
         builder.Services.AddHttpClient<ComplianceCoreWorkflowGateClient>((sp, client) =>
+        {
+            var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ComplianceCoreClientOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        });
+
+        builder.Services.AddHttpClient<ComplianceCoreProductFactClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ComplianceCoreClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
@@ -74,6 +98,7 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<VehicleRefService>();
         builder.Services.AddScoped<DispatchCommandCenterService>();
         builder.Services.AddScoped<DispatchExceptionService>();
+        builder.Services.AddScoped<DispatchMessageService>();
         builder.Services.AddScoped<ActiveTripsService>();
         builder.Services.AddScoped<UnassignedWorkQueueService>();
         builder.Services.AddScoped<DriverPortalService>();
@@ -101,6 +126,10 @@ public static class RoutArrServiceRegistration
         builder.Services.AddScoped<DispatchNotificationDispatchService>();
         builder.Services.AddScoped<IntegrationEventSettingsService>();
         builder.Services.AddScoped<IntegrationOutboxEnqueueService>();
+        builder.Services.AddScoped<StaffArrProductIncidentPublisherService>();
+        builder.Services.AddScoped<TrainArrIncidentRemediationPublisherService>();
+        builder.Services.AddScoped<MaintainArrRoutarrEventPublisherService>();
+        builder.Services.AddScoped<ComplianceCoreIncidentFactPublisherService>();
         builder.Services.AddScoped<IntegrationEventProcessingService>();
         builder.Services.AddScoped<TripCompletionRollupSettingsService>();
         builder.Services.AddScoped<TripCompletionRollupWorkerService>();

@@ -45,6 +45,7 @@ public static class NexArrServiceRegistration
         builder.Services.AddScoped<TenantLifecycleWorkerService>();
         builder.Services.AddScoped<PersonLoginDisableService>();
         builder.Services.AddScoped<PersonLoginEnableService>();
+        builder.Services.AddScoped<PlatformIdentityIntegrationService>();
         builder.Services.AddScoped<PlatformLifecycleOverviewService>();
         builder.Services.AddScoped<PlatformWorkerHealthOrchestrationService>();
         builder.Services.AddScoped<HybridDataPlaneService>();

@@ -80,7 +80,7 @@ public static class EntitlementEndpoints
                 tenantId,
                 request.ProductKey,
                 cancellationToken);
-            return Results.Created($"/api/entitlements/{granted.EntitlementId}", granted);
+            return Results.Created($"/api/v1/tenants/{tenantId}/entitlements/{granted.ProductKey}", granted);
         })
         .WithName("GrantTenantEntitlementV1");
 

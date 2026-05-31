@@ -19,6 +19,13 @@ public sealed record SupplierIncidentResponse(
     Guid? VendorRestrictionId,
     Guid ReportedByUserId,
     Guid? AssignedToUserId,
+    Guid? InvolvedStaffarrPersonId,
+    Guid? StaffarrPersonnelIncidentId,
+    DateTimeOffset? StaffarrIncidentRoutedAt,
+    string StaffarrIncidentRouteStatus,
+    Guid? TrainarrIncidentRemediationId,
+    DateTimeOffset? TrainarrIncidentRoutedAt,
+    string TrainarrIncidentRouteStatus,
     string ResolutionNotes,
     Guid? ResolvedByUserId,
     DateTimeOffset? ResolvedAt,
@@ -45,14 +52,16 @@ public sealed record CreateSupplierIncidentRequest(
     Guid? PurchaseOrderId,
     Guid? ReceivingReceiptId,
     Guid? ReceivingExceptionId,
-    Guid? AssignedToUserId);
+    Guid? AssignedToUserId,
+    Guid? InvolvedStaffarrPersonId = null);
 
 public sealed record UpdateSupplierIncidentRequest(
     string Title,
     string Description,
     string IncidentType,
     string Severity,
-    Guid? AssignedToUserId);
+    Guid? AssignedToUserId,
+    Guid? InvolvedStaffarrPersonId = null);
 
 public sealed record ResolveSupplierIncidentRequest(string ResolutionNotes);
 

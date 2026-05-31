@@ -16,6 +16,8 @@ public sealed class IntegrationEventProcessingService(
     StaffArrDemandIntakeService staffarrDemandIntake,
     ProcurementNotificationEnqueueService notificationEnqueue,
     ComplianceCoreFactPublisherService complianceCoreFactPublisher,
+    StaffArrProductIncidentPublisherService staffarrIncidentPublisher,
+    TrainArrSupplierIncidentPublisherService trainarrIncidentPublisher,
     ISupplyArrAuditService audit)
 {
     public const string ProcessEventsActionScope = "supplyarr.integration.events.process";
@@ -312,6 +314,8 @@ public sealed class IntegrationEventProcessingService(
             }
 
             await complianceCoreFactPublisher.TryPublishFromOutboxAsync(outboxEvent, cancellationToken);
+            await staffarrIncidentPublisher.TryPublishFromOutboxAsync(outboxEvent, cancellationToken);
+            await trainarrIncidentPublisher.TryPublishFromOutboxAsync(outboxEvent, cancellationToken);
 
             outboxEvent.ProcessingStatus = IntegrationEventStatuses.Processed;
             outboxEvent.ProcessedAt = now;

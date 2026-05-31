@@ -135,6 +135,13 @@ public sealed class ExternalPartyService(
             "Succeeded",
             cancellationToken: cancellationToken);
 
+        await EnqueuePartyEventAsync(
+            tenantId,
+            entity,
+            ResolvePartyUpdatedEventKind(entity.PartyType),
+            $"Party updated: {entity.DisplayName}",
+            cancellationToken);
+
         return Map(await LoadPartyAsync(tenantId, partyId, cancellationToken));
     }
 
@@ -166,6 +173,13 @@ public sealed class ExternalPartyService(
             entity.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
+
+        await EnqueuePartyEventAsync(
+            tenantId,
+            entity,
+            ResolvePartyApprovalEventKind(entity.PartyType, entity.ApprovalStatus),
+            $"Party approval status changed to {entity.ApprovalStatus}: {entity.DisplayName}",
+            cancellationToken);
 
         return Map(await LoadPartyAsync(tenantId, partyId, cancellationToken));
     }
@@ -319,7 +333,65 @@ public sealed class ExternalPartyService(
             new IntegrationOutboxPayload(tenantId, $"Party created: {entity.DisplayName}"),
             cancellationToken: cancellationToken);
 
+        await EnqueuePartyEventAsync(
+            tenantId,
+            entity,
+            ResolvePartyCreatedEventKind(entity.PartyType),
+            $"Party created: {entity.DisplayName}",
+            cancellationToken);
+
         return Map(entity);
+    }
+
+    private async Task EnqueuePartyEventAsync(
+        Guid tenantId,
+        ExternalParty entity,
+        string? eventKind,
+        string summary,
+        CancellationToken cancellationToken)
+    {
+        if (eventKind is null)
+        {
+            return;
+        }
+
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            eventKind,
+            "external_party",
+            entity.Id,
+            new IntegrationOutboxPayload(tenantId, summary, entity.Id),
+            cancellationToken: cancellationToken);
+    }
+
+    private static string? ResolvePartyCreatedEventKind(string partyType) =>
+        partyType switch
+        {
+            "vendor" or "supplier" or "dealer" => IntegrationOutboxEventKinds.SupplyArrVendorCreated,
+            "customer" => IntegrationOutboxEventKinds.SupplyArrCustomerCreated,
+            _ => null,
+        };
+
+    private static string? ResolvePartyUpdatedEventKind(string partyType) =>
+        partyType switch
+        {
+            "vendor" or "supplier" or "dealer" => IntegrationOutboxEventKinds.SupplyArrVendorUpdated,
+            _ => null,
+        };
+
+    private static string? ResolvePartyApprovalEventKind(string partyType, string approvalStatus)
+    {
+        if (partyType is not ("vendor" or "supplier" or "dealer"))
+        {
+            return null;
+        }
+
+        return approvalStatus switch
+        {
+            "approved" => IntegrationOutboxEventKinds.SupplyArrVendorApproved,
+            "restricted" or "inactive" => IntegrationOutboxEventKinds.SupplyArrVendorBlocked,
+            _ => null,
+        };
     }
 
     private async Task<ExternalParty> LoadPartyAsync(

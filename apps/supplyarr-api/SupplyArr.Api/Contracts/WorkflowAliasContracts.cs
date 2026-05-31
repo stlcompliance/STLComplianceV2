@@ -15,6 +15,12 @@ public sealed record StockTransactionItemResponse(
     string Result,
     DateTimeOffset OccurredAt);
 
+public sealed record CreateStockTransactionRequest(
+    Guid PartId,
+    Guid BinId,
+    decimal Quantity,
+    string TransactionType);
+
 public sealed record CycleCountItemResponse(
     Guid StockLevelId,
     Guid PartId,
@@ -29,3 +35,7 @@ public sealed record CycleCountItemResponse(
     decimal QuantityAvailable,
     DateTimeOffset UpdatedAt);
 
+public sealed record CreateCycleCountRequest(
+    Guid PartId,
+    Guid BinId,
+    decimal QuantityOnHand);

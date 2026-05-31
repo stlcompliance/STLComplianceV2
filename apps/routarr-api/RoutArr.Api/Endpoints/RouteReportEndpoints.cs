@@ -7,7 +7,13 @@ public static class RouteReportEndpoints
 {
     public static void MapRoutArrRouteReportEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/reports/routes")
+        MapGroup(app, "/api/reports/routes", string.Empty);
+        MapGroup(app, "/api/v1/reports/routes", "V1");
+    }
+
+    private static void MapGroup(WebApplication app, string routePrefix, string routeNameSuffix)
+    {
+        var group = app.MapGroup(routePrefix)
             .WithTags("RouteReports")
             .RequireAuthorization();
 
@@ -33,7 +39,7 @@ public static class RouteReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(summary);
         })
-        .WithName("GetRoutArrRouteReportSummary");
+        .WithName($"GetRoutArrRouteReportSummary{routeNameSuffix}");
 
         group.MapGet("/summary/export", async (
             string? scope,
@@ -57,7 +63,7 @@ public static class RouteReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportRoutArrRouteReportSummary");
+        .WithName($"ExportRoutArrRouteReportSummary{routeNameSuffix}");
 
         group.MapGet("/{routeId:guid}", async (
             Guid routeId,
@@ -81,7 +87,7 @@ public static class RouteReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(detail);
         })
-        .WithName("GetRoutArrRouteReportRouteDetail");
+        .WithName($"GetRoutArrRouteReportRouteDetail{routeNameSuffix}");
 
         group.MapGet("/stops/{stopId:guid}", async (
             Guid stopId,
@@ -105,6 +111,6 @@ public static class RouteReportEndpoints
                 cancellationToken: cancellationToken);
             return Results.Ok(detail);
         })
-        .WithName("GetRoutArrRouteReportStopDetail");
+        .WithName($"GetRoutArrRouteReportStopDetail{routeNameSuffix}");
     }
 }

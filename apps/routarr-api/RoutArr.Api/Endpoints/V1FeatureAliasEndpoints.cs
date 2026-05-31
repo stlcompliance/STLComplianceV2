@@ -60,6 +60,44 @@ public static class V1FeatureAliasEndpoints
         .RequireAuthorization()
         .WithName("ListRoutesV1Alias");
 
+        app.MapGet("/api/v1/routes/{routeId:guid}", async (
+            Guid routeId,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            RouteService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRoutesRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var access = await service.GetAccessContextAsync(tenantId, routeId, cancellationToken);
+            authorization.RequireRouteAccess(
+                context.User,
+                access.RouteCreatedByUserId,
+                access.TripCreatedByUserId,
+                access.TripAssignedDriverPersonId);
+            return Results.Ok(await service.GetAsync(tenantId, routeId, cancellationToken));
+        })
+        .WithTags("Routes")
+        .RequireAuthorization()
+        .WithName("GetRouteV1Alias");
+
+        app.MapPost("/api/v1/routes", async (
+            CreateRouteRequest request,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            RouteService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRoutesCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
+            return Results.Created($"/api/v1/routes/{created.RouteId}", created);
+        })
+        .WithTags("Routes")
+        .RequireAuthorization()
+        .WithName("CreateRouteV1Alias");
+
         app.MapGet("/api/v1/trips", async (
             string? dispatchStatus,
             HttpContext context,
@@ -83,6 +121,43 @@ public static class V1FeatureAliasEndpoints
         .WithTags("Trips")
         .RequireAuthorization()
         .WithName("ListTripsV1Alias");
+
+        app.MapGet("/api/v1/trips/{tripId:guid}", async (
+            Guid tripId,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            TripService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTripsRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var detail = await service.GetAsync(tenantId, tripId, cancellationToken);
+            authorization.RequireTripAccess(
+                context.User,
+                detail.CreatedByUserId,
+                detail.AssignedDriverPersonId);
+            return Results.Ok(detail);
+        })
+        .WithTags("Trips")
+        .RequireAuthorization()
+        .WithName("GetTripV1Alias");
+
+        app.MapPost("/api/v1/trips", async (
+            CreateTripRequest request,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            TripService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTripsCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
+            return Results.Created($"/api/v1/trips/{created.TripId}", created);
+        })
+        .WithTags("Trips")
+        .RequireAuthorization()
+        .WithName("CreateTripV1Alias");
 
         app.MapGet("/api/v1/stops", async (
             Guid routeId,
@@ -122,15 +197,63 @@ public static class V1FeatureAliasEndpoints
         .RequireAuthorization()
         .WithName("ListTripLoadsV1Alias");
 
-        app.MapGet("/api/v1/route-templates", () => Results.Ok(new
+        app.MapGet("/api/v1/route-templates", async (
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            RouteService service,
+            CancellationToken cancellationToken) =>
         {
-            items = Array.Empty<object>(),
-            source = "/api/v1/routes",
-            description = "Route templates are represented through reusable route definitions in v1."
-        }))
+            authorization.RequireRoutesRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var viewAll = authorization.CanViewAllTrips(context.User);
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.ListTemplatesAsync(
+                tenantId,
+                viewAll,
+                actorUserId,
+                cancellationToken));
+        })
         .WithTags("Routes")
         .RequireAuthorization()
         .WithName("ListRouteTemplatesV1Alias");
+
+        app.MapGet("/api/v1/route-templates/{routeTemplateId:guid}", async (
+            Guid routeTemplateId,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            RouteService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRoutesRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var access = await service.GetAccessContextAsync(tenantId, routeTemplateId, cancellationToken);
+            authorization.RequireRouteAccess(
+                context.User,
+                access.RouteCreatedByUserId,
+                access.TripCreatedByUserId,
+                access.TripAssignedDriverPersonId);
+            return Results.Ok(await service.GetTemplateAsync(tenantId, routeTemplateId, cancellationToken));
+        })
+        .WithTags("Routes")
+        .RequireAuthorization()
+        .WithName("GetRouteTemplateV1Alias");
+
+        app.MapPost("/api/v1/route-templates", async (
+            CreateRouteTemplateRequest request,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            RouteService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRoutesCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var created = await service.CreateTemplateAsync(tenantId, actorUserId, request, cancellationToken);
+            return Results.Created($"/api/v1/route-templates/{created.RouteId}", created);
+        })
+        .WithTags("Routes")
+        .RequireAuthorization()
+        .WithName("CreateRouteTemplateV1Alias");
     }
 
     private static void MapOperationsAliases(WebApplication app)
@@ -255,6 +378,20 @@ public static class V1FeatureAliasEndpoints
         .WithTags("Dispatch")
         .RequireAuthorization()
         .WithName("ListIncidentsV1Alias");
+
+        app.MapPost("/api/v1/incidents", async (
+            CreateDispatchIncidentRequest request,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            DispatchExceptionService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireDispatchExceptionTriage(context.User);
+            return Results.Ok(await service.CreateIncidentAsync(context.User, request, cancellationToken));
+        })
+        .WithTags("Dispatch")
+        .RequireAuthorization()
+        .WithName("CreateIncidentV1Alias");
     }
 
     private static void MapComplianceAndAvailabilityAliases(WebApplication app)
@@ -361,10 +498,11 @@ public static class V1FeatureAliasEndpoints
             authorization.RequireDispatchReportRead(context.User);
             var items = new[]
             {
-                new { key = "dispatch", path = "/api/reports/dispatch" },
-                new { key = "routes", path = "/api/reports/routes" },
-                new { key = "proof-dvir", path = "/api/reports/proof-dvir" },
-                new { key = "dispatch-overrides", path = "/api/reports/dispatch-overrides" }
+                new { key = "dispatch", path = "/api/v1/reports/dispatch" },
+                new { key = "time-summary", path = "/api/v1/reports/dispatch/time-summary" },
+                new { key = "routes", path = "/api/v1/reports/routes" },
+                new { key = "proof-dvir", path = "/api/v1/reports/proof-dvir" },
+                new { key = "dispatch-overrides", path = "/api/v1/reports/dispatch-overrides" }
             };
             return Results.Ok(new { items });
         })

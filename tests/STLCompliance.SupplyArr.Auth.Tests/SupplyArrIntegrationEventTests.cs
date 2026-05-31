@@ -235,6 +235,122 @@ public sealed class SupplyArrIntegrationEventTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Product_qualified_outbound_events_are_enqueued_for_core_supply_workflows()
+    {
+        await EnableIntegrationSettingsAsync();
+
+        using var scope = _supplyarrFactory.Services.CreateScope();
+        var parties = scope.ServiceProvider.GetRequiredService<ExternalPartyService>();
+        var parts = scope.ServiceProvider.GetRequiredService<PartRegistryService>();
+        var reservations = scope.ServiceProvider.GetRequiredService<StockReservationService>();
+        var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
+        var actorUserId = PlatformSeeder.DemoAdminUserId;
+
+        var vendor = await parties.CreateTypedAsync(
+            PlatformSeeder.DemoTenantId,
+            actorUserId,
+            "vendor",
+            new CreateTypedExternalPartyRequest(
+                $"vendor-{Guid.NewGuid():N}"[..16],
+                "Qualified Event Vendor",
+                "Qualified Event Vendor LLC",
+                null,
+                string.Empty));
+        await parties.UpdateAsync(
+            PlatformSeeder.DemoTenantId,
+            actorUserId,
+            vendor.PartyId,
+            new UpdateExternalPartyRequest(
+                "Qualified Event Vendor Updated",
+                "Qualified Event Vendor LLC",
+                null,
+                "updated"));
+        await parties.UpdateApprovalStatusAsync(
+            PlatformSeeder.DemoTenantId,
+            actorUserId,
+            vendor.PartyId,
+            new UpdateExternalPartyApprovalStatusRequest("approved"));
+        await parties.UpdateApprovalStatusAsync(
+            PlatformSeeder.DemoTenantId,
+            actorUserId,
+            vendor.PartyId,
+            new UpdateExternalPartyApprovalStatusRequest("restricted"));
+
+        var customer = await parties.CreateTypedAsync(
+            PlatformSeeder.DemoTenantId,
+            actorUserId,
+            "customer",
+            new CreateTypedExternalPartyRequest(
+                $"customer-{Guid.NewGuid():N}"[..16],
+                "Qualified Event Customer",
+                "Qualified Event Customer LLC",
+                null,
+                string.Empty));
+
+        var part = await parts.CreateAsync(
+            PlatformSeeder.DemoTenantId,
+            actorUserId,
+            new CreatePartRequest(
+                $"part-{Guid.NewGuid():N}"[..16],
+                null,
+                "Qualified Event Part",
+                "Evented inventory part",
+                "maintenance",
+                "each",
+                "Acme",
+                "ACME-100"));
+        await parts.UpdateAsync(
+            PlatformSeeder.DemoTenantId,
+            actorUserId,
+            part.PartId,
+            new UpdatePartRequest(
+                null,
+                "Qualified Event Part Updated",
+                "Evented inventory part",
+                "maintenance",
+                "each",
+                "Acme",
+                "ACME-101"));
+
+        var (binId, stockLevelId) = await SeedStockAsync(part.PartId);
+        var reservation = await reservations.CreateAsync(
+            PlatformSeeder.DemoTenantId,
+            actorUserId,
+            new CreateStockReservationRequest(
+                $"reservation-{Guid.NewGuid():N}"[..24],
+                part.PartId,
+                binId,
+                2m,
+                "manual",
+                null,
+                "needed for work order"));
+
+        var outbox = await db.IntegrationOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId)
+            .ToListAsync();
+
+        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrVendorCreated
+            && x.RelatedEntityId == vendor.PartyId);
+        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrVendorUpdated
+            && x.RelatedEntityId == vendor.PartyId);
+        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrVendorApproved
+            && x.RelatedEntityId == vendor.PartyId);
+        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrVendorBlocked
+            && x.RelatedEntityId == vendor.PartyId);
+        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrCustomerCreated
+            && x.RelatedEntityId == customer.PartyId);
+        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrItemCreated
+            && x.RelatedEntityId == part.PartId);
+        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrItemUpdated
+            && x.RelatedEntityId == part.PartId);
+        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrInventoryReserved
+            && x.RelatedEntityId == reservation.ReservationId);
+
+        var stock = await db.PartStockLevels.SingleAsync(x => x.Id == stockLevelId);
+        Assert.Equal(2m, stock.QuantityReserved);
+    }
+
+    [Fact]
     public async Task Settings_endpoints_require_authenticated_user()
     {
         var response = await _supplyarrClient.GetAsync("/api/integration-event-settings");
@@ -251,6 +367,53 @@ public sealed class SupplyArrIntegrationEventTests : IAsyncLifetime
         request.Content = JsonContent.Create(new UpsertIntegrationEventSettingsRequest(true, 5, 15));
         var response = await _supplyarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
+    }
+
+    private async Task<(Guid BinId, Guid StockLevelId)> SeedStockAsync(Guid partId)
+    {
+        using var scope = _supplyarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        var location = new InventoryLocation
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            LocationKey = $"loc-{Guid.NewGuid():N}"[..16],
+            Name = "Qualified Event Location",
+            LocationType = "warehouse",
+            AddressLine = "100 Event Way",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var bin = new InventoryBin
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            InventoryLocationId = location.Id,
+            BinKey = $"bin-{Guid.NewGuid():N}"[..16],
+            Name = "Qualified Event Bin",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var stock = new PartStockLevel
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            PartId = partId,
+            InventoryBinId = bin.Id,
+            QuantityOnHand = 10m,
+            QuantityReserved = 0m,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.InventoryLocations.Add(location);
+        db.InventoryBins.Add(bin);
+        db.PartStockLevels.Add(stock);
+        await db.SaveChangesAsync();
+        return (bin.Id, stock.Id);
     }
 
     private async Task<string> CreateHandoffAsync(string token)

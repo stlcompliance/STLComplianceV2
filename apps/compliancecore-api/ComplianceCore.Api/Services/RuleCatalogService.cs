@@ -11,6 +11,8 @@ public sealed class RuleCatalogService(
     ComplianceCoreDbContext db,
     IComplianceCoreAuditService auditService)
 {
+    public const string RuleChangedEventAction = "compliancecore.rule.changed";
+
     public async Task<IReadOnlyList<RuleCatalogItemResponse>> ListAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
         var packs = await db.RulePacks
@@ -59,7 +61,9 @@ public sealed class RuleCatalogService(
             NormalizeType(request.Type),
             NormalizeKey(request.FactKey, "Fact key"),
             request.ExpectedValue,
-            request.NonWaivable);
+            request.NonWaivable,
+            request.RemediationRequired,
+            request.ReviewRequired);
 
         var updated = new RulePackContentBody(content.SchemaVersion, content.Logic, [.. content.Rules, rule]);
         pack.RuleContentJson = RuleEvaluator.SerializeContent(updated);
@@ -73,6 +77,16 @@ public sealed class RuleCatalogService(
             "rule",
             BuildRuleId(pack.Id, rule.RuleKey),
             "success",
+            cancellationToken: cancellationToken);
+
+        await auditService.WriteAsync(
+            RuleChangedEventAction,
+            tenantId,
+            actorUserId,
+            "rule",
+            BuildRuleId(pack.Id, rule.RuleKey),
+            "created",
+            reasonCode: rule.RuleKey,
             cancellationToken: cancellationToken);
 
         return MapRule(pack, rule);
@@ -103,7 +117,9 @@ public sealed class RuleCatalogService(
             request.Type is null ? current.Type : NormalizeType(request.Type),
             request.FactKey is null ? current.FactKey : NormalizeKey(request.FactKey, "Fact key"),
             request.ExpectedValue ?? current.ExpectedValue,
-            request.NonWaivable ?? current.NonWaivable);
+            request.NonWaivable ?? current.NonWaivable,
+            request.RemediationRequired ?? current.RemediationRequired,
+            request.ReviewRequired ?? current.ReviewRequired);
 
         rules[index] = updatedRule;
         var updatedContent = new RulePackContentBody(content.SchemaVersion, content.Logic, rules);
@@ -118,6 +134,16 @@ public sealed class RuleCatalogService(
             "rule",
             BuildRuleId(pack.Id, updatedRule.RuleKey),
             "success",
+            cancellationToken: cancellationToken);
+
+        await auditService.WriteAsync(
+            RuleChangedEventAction,
+            tenantId,
+            actorUserId,
+            "rule",
+            BuildRuleId(pack.Id, updatedRule.RuleKey),
+            "updated",
+            reasonCode: updatedRule.RuleKey,
             cancellationToken: cancellationToken);
 
         return MapRule(pack, updatedRule);
@@ -251,6 +277,8 @@ public sealed class RuleCatalogService(
             rule.FactKey,
             rule.ExpectedValue,
             rule.NonWaivable,
+            rule.RemediationRequired,
+            rule.ReviewRequired,
             pack.UpdatedAt);
 
     private static string BuildRuleId(Guid rulePackId, string ruleKey) => $"{rulePackId:N}:{ruleKey}";

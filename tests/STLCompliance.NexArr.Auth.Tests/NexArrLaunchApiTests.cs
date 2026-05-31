@@ -177,16 +177,55 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         var catalog = await response.Content.ReadFromJsonAsync<LaunchCatalogResponse>();
         Assert.NotNull(catalog);
         Assert.Equal(PlatformSeeder.DemoTenantId, catalog.TenantId);
+        Assert.Equal(PlatformSeeder.DemoTenantAdminUserId, catalog.UserId);
+        Assert.Equal(PlatformSeeder.DemoTenantAdminEmail, catalog.UserEmail);
+        Assert.False(string.IsNullOrWhiteSpace(catalog.UserDisplayName));
         Assert.Equal("staffarr", catalog.CurrentProductKey);
+        Assert.False(string.IsNullOrWhiteSpace(catalog.CatalogVersion));
+        Assert.True(catalog.CacheExpiresAt > catalog.GeneratedAt);
         Assert.NotEmpty(catalog.Products);
 
         var staffarr = catalog.Products.FirstOrDefault(x => x.ProductKey == "staffarr");
         Assert.NotNull(staffarr);
         Assert.True(staffarr.IsCurrentProduct);
+        Assert.Equal("workforce", staffarr.ProductCategory);
+        Assert.Equal("People Operations", staffarr.ProductOwner);
+        Assert.Equal("stl:staffarr:api", staffarr.ServiceAudience);
         Assert.Equal("/launch/staffarr", staffarr.LaunchUrl);
 
         Assert.DoesNotContain(catalog.Products, x => x.ProductKey == "shared-worker");
         Assert.DoesNotContain(catalog.Products, x => x.ProductKey == "nexarr-worker");
+    }
+
+    [Fact]
+    public async Task Launch_catalog_version_changes_after_entitlement_revocation()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var firstResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/launch/catalog?currentProductKey=staffarr", token));
+        firstResponse.EnsureSuccessStatusCode();
+        var firstCatalog = (await firstResponse.Content.ReadFromJsonAsync<LaunchCatalogResponse>())!;
+        Assert.Contains(firstCatalog.Products, x => x.ProductKey == "staffarr");
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var entitlement = await db.Entitlements.SingleAsync(e =>
+                e.TenantId == PlatformSeeder.DemoTenantId && e.ProductKey == "staffarr");
+            entitlement.Status = EntitlementStatuses.Revoked;
+            entitlement.RevokedAt = DateTimeOffset.UtcNow;
+            await db.SaveChangesAsync();
+        }
+
+        var secondResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/launch/catalog?currentProductKey=staffarr", token));
+        secondResponse.EnsureSuccessStatusCode();
+        var secondCatalog = (await secondResponse.Content.ReadFromJsonAsync<LaunchCatalogResponse>())!;
+
+        Assert.NotEqual(firstCatalog.CatalogVersion, secondCatalog.CatalogVersion);
+        Assert.DoesNotContain(secondCatalog.Products, x => x.ProductKey == "staffarr");
     }
 
     [Fact]
@@ -202,12 +241,15 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         var catalog = await response.Content.ReadFromJsonAsync<LaunchCatalogResponse>();
         Assert.NotNull(catalog);
         Assert.Equal(PlatformSeeder.DemoTenantId, catalog.TenantId);
+        Assert.Equal(PlatformSeeder.DemoTenantAdminUserId, catalog.UserId);
         Assert.Equal("staffarr", catalog.CurrentProductKey);
+        Assert.False(string.IsNullOrWhiteSpace(catalog.CatalogVersion));
         Assert.NotEmpty(catalog.Products);
 
         var staffarr = catalog.Products.FirstOrDefault(x => x.ProductKey == "staffarr");
         Assert.NotNull(staffarr);
         Assert.True(staffarr.IsCurrentProduct);
+        Assert.Equal("workforce", staffarr.ProductCategory);
         Assert.Equal("/launch/staffarr", staffarr.LaunchUrl);
     }
 
@@ -239,6 +281,98 @@ public class NexArrLaunchApiTests : IClassFixture<WebApplicationFactory<global::
         Assert.Equal("STL Demo Tenant", redeemed.TenantDisplayName);
         Assert.Equal("demo-stl", redeemed.TenantSlug);
         Assert.Equal(callbackUrl, redeemed.CallbackUrl);
+    }
+
+    [Fact]
+    public async Task Handoff_create_and_redeem_enqueue_platform_launch_events()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        const string callbackUrl = "http://localhost:5173/app/staffarr";
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest("staffarr", callbackUrl));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+        handoffResponse.EnsureSuccessStatusCode();
+        var handoff = (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
+
+        var serviceToken = await IssueServiceTokenAsync(token, "staffarr");
+        var redeemRequest = Authorized(HttpMethod.Post, "/api/v1/handoff/redeem", token);
+        redeemRequest.Content = JsonContent.Create(new RedeemHandoffRequest(handoff.HandoffCode, serviceToken));
+        var redeemResponse = await _client.SendAsync(redeemRequest);
+        redeemResponse.EnsureSuccessStatusCode();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        var outboxEvents = await db.PlatformOutboxEvents
+            .AsNoTracking()
+            .Where(x => x.PayloadJson.Contains(handoff.HandoffId.ToString()))
+            .ToListAsync();
+
+        var launchEvent = Assert.Single(outboxEvents, x => x.EventType == PlatformOutboxEventKinds.LaunchSucceeded);
+        Assert.Equal(PlatformOutboxEventStatuses.Pending, launchEvent.ProcessingStatus);
+        Assert.Equal(PlatformSeeder.DemoTenantId, launchEvent.TenantId);
+        Assert.Equal("staffarr", launchEvent.ProductCode);
+        Assert.Contains("\"callbackConfigured\":\"true\"", launchEvent.PayloadJson);
+        Assert.DoesNotContain(handoff.HandoffCode, launchEvent.PayloadJson);
+
+        var redeemedEvent = Assert.Single(outboxEvents, x => x.EventType == PlatformOutboxEventKinds.HandoffRedeemed);
+        Assert.Equal(PlatformOutboxEventStatuses.Pending, redeemedEvent.ProcessingStatus);
+        Assert.Equal(PlatformSeeder.DemoTenantId, redeemedEvent.TenantId);
+        Assert.Equal("staffarr", redeemedEvent.ProductCode);
+        Assert.Contains("\"tenantRoleKey\":\"platform_admin\"", redeemedEvent.PayloadJson);
+        Assert.DoesNotContain(handoff.HandoffCode, redeemedEvent.PayloadJson);
+        Assert.DoesNotContain(serviceToken, redeemedEvent.PayloadJson);
+    }
+
+    [Fact]
+    public async Task Launch_and_handoff_failures_enqueue_platform_events()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var blockedHandoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
+        blockedHandoffRequest.Content = JsonContent.Create(new CreateHandoffRequest("staffarr", "https://evil.example/callback"));
+        var blockedHandoffResponse = await _client.SendAsync(blockedHandoffRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, blockedHandoffResponse.StatusCode);
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", token);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest("staffarr", "http://localhost:5173/app/staffarr"));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+        handoffResponse.EnsureSuccessStatusCode();
+        var handoff = (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
+
+        var serviceToken = await IssueServiceTokenAsync(token, "staffarr");
+        var firstRedeemRequest = Authorized(HttpMethod.Post, "/api/v1/handoff/redeem", token);
+        firstRedeemRequest.Content = JsonContent.Create(new RedeemHandoffRequest(handoff.HandoffCode, serviceToken));
+        (await _client.SendAsync(firstRedeemRequest)).EnsureSuccessStatusCode();
+
+        var secondRedeemRequest = Authorized(HttpMethod.Post, "/api/v1/handoff/redeem", token);
+        secondRedeemRequest.Content = JsonContent.Create(new RedeemHandoffRequest(handoff.HandoffCode, serviceToken));
+        var secondRedeemResponse = await _client.SendAsync(secondRedeemRequest);
+        Assert.Equal(HttpStatusCode.Conflict, secondRedeemResponse.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+
+        var launchFailedEvent = await db.PlatformOutboxEvents
+            .AsNoTracking()
+            .SingleAsync(x =>
+                x.EventType == PlatformOutboxEventKinds.LaunchFailed
+                && x.ProductCode == "staffarr"
+                && x.PayloadJson.Contains("callback_not_allowed"));
+        Assert.Equal(PlatformOutboxEventStatuses.Pending, launchFailedEvent.ProcessingStatus);
+        Assert.DoesNotContain("https://evil.example", launchFailedEvent.PayloadJson);
+
+        var handoffFailedEvent = await db.PlatformOutboxEvents
+            .AsNoTracking()
+            .SingleAsync(x =>
+                x.EventType == PlatformOutboxEventKinds.HandoffFailed
+                && x.PayloadJson.Contains(handoff.HandoffId.ToString())
+                && x.PayloadJson.Contains("already_redeemed"));
+        Assert.Equal(PlatformOutboxEventStatuses.Pending, handoffFailedEvent.ProcessingStatus);
+        Assert.DoesNotContain(handoff.HandoffCode, handoffFailedEvent.PayloadJson);
+        Assert.DoesNotContain(serviceToken, handoffFailedEvent.PayloadJson);
     }
 
     [Fact]

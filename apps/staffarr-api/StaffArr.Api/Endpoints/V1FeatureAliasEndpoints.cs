@@ -120,7 +120,12 @@ public static class V1FeatureAliasEndpoints
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             await overrideService.GrantOverrideAsync(tenantId, actorUserId, personId, request, cancellationToken);
-            return Results.Ok(await readinessService.GetPersonReadinessAsync(tenantId, personId, cancellationToken));
+            return Results.Ok(await readinessService.GetPersonReadinessAsync(
+                tenantId,
+                personId,
+                cancellationToken,
+                actorUserId,
+                ReadinessService.PersonReadinessSnapshotKind));
         })
         .WithTags("Readiness")
         .RequireAuthorization()
@@ -143,7 +148,12 @@ public static class V1FeatureAliasEndpoints
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             await overrideService.ClearOverrideAsync(tenantId, actorUserId, personId, cancellationToken);
-            return Results.Ok(await readinessService.GetPersonReadinessAsync(tenantId, personId, cancellationToken));
+            return Results.Ok(await readinessService.GetPersonReadinessAsync(
+                tenantId,
+                personId,
+                cancellationToken,
+                actorUserId,
+                ReadinessService.PersonReadinessSnapshotKind));
         })
         .WithTags("Readiness")
         .RequireAuthorization()
@@ -205,6 +215,81 @@ public static class V1FeatureAliasEndpoints
         .WithTags("Personnel Documents")
         .RequireAuthorization()
         .WithName("ListDocumentsV1Alias");
+
+        app.MapPost("/api/v1/documents", async (
+            Guid personId,
+            CreatePersonnelDocumentRequest request,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            PersonnelDocumentService service,
+            CancellationToken cancellationToken) =>
+        {
+            if (personId == Guid.Empty)
+            {
+                return Results.BadRequest(new { code = "documents.validation", message = "personId query parameter is required." });
+            }
+
+            authorization.RequirePersonnelDocumentsManageWrite(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var created = await service.CreateDocumentAsync(
+                tenantId,
+                personId,
+                actorUserId,
+                request,
+                cancellationToken);
+            return Results.Created($"/api/v1/documents/{created.DocumentId}?personId={personId}", created);
+        })
+        .WithTags("Personnel Documents")
+        .RequireAuthorization()
+        .WithName("CreateDocumentV1Alias");
+
+        app.MapGet("/api/v1/documents/{documentId:guid}", async (
+            Guid documentId,
+            Guid personId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            PersonnelDocumentService service,
+            CancellationToken cancellationToken) =>
+        {
+            if (personId == Guid.Empty)
+            {
+                return Results.BadRequest(new { code = "documents.validation", message = "personId query parameter is required." });
+            }
+
+            authorization.RequirePersonnelDocumentsRead(context.User, personId);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetDocumentAsync(tenantId, personId, documentId, cancellationToken));
+        })
+        .WithTags("Personnel Documents")
+        .RequireAuthorization()
+        .WithName("GetDocumentV1Alias");
+
+        app.MapGet("/api/v1/documents/{documentId:guid}/content", async (
+            Guid documentId,
+            Guid personId,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            PersonnelDocumentService service,
+            CancellationToken cancellationToken) =>
+        {
+            if (personId == Guid.Empty)
+            {
+                return Results.BadRequest(new { code = "documents.validation", message = "personId query parameter is required." });
+            }
+
+            authorization.RequirePersonnelDocumentsRead(context.User, personId);
+            var tenantId = context.User.GetTenantId();
+            var (metadata, stream) = await service.OpenDocumentContentAsync(
+                tenantId,
+                personId,
+                documentId,
+                cancellationToken);
+            return Results.File(stream, metadata.ContentType, metadata.FileName);
+        })
+        .WithTags("Personnel Documents")
+        .RequireAuthorization()
+        .WithName("DownloadDocumentContentV1Alias");
     }
 
     private static void MapReportsIndexAlias(WebApplication app)

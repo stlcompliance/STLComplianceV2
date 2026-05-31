@@ -11,7 +11,10 @@ public sealed class WorkOrderService(
     IMaintainArrAuditService audit,
     MaintenanceNotificationEnqueueService notificationEnqueueService,
     TechnicianRefService technicianRefService,
-    AssetDowntimeService assetDowntimeService)
+    AssetDowntimeService assetDowntimeService,
+    TrainArrQualificationCheckClient trainArrQualificationCheckClient,
+    ComplianceCoreWorkOrderGateClient complianceCoreWorkOrderGateClient,
+    MaintenancePlatformOutboxEnqueueService platformOutboxEnqueue)
 {
     public async Task<IReadOnlyList<WorkOrderSummaryResponse>> ListAsync(
         Guid tenantId,
@@ -78,6 +81,10 @@ public sealed class WorkOrderService(
         ValidateTitle(request.Title);
         ValidatePriority(request.Priority);
         ValidateAssignedPersonId(request.AssignedTechnicianPersonId);
+        await EnsureAssignedTechnicianQualifiedAsync(
+            tenantId,
+            request.AssignedTechnicianPersonId,
+            cancellationToken);
 
         if (request.PmScheduleId.HasValue)
         {
@@ -133,6 +140,15 @@ public sealed class WorkOrderService(
             entity.AssignedTechnicianPersonId,
             cancellationToken);
 
+        await EnqueueWorkOrderLifecycleEventsAsync(
+            tenantId,
+            actorUserId,
+            entity,
+            now,
+            emitCreated: true,
+            emitAssigned: !string.IsNullOrWhiteSpace(entity.AssignedTechnicianPersonId),
+            cancellationToken);
+
         return await MapDetailAsync(tenantId, entity, cancellationToken);
     }
 
@@ -180,6 +196,10 @@ public sealed class WorkOrderService(
 
         ValidatePriority(priority);
         ValidateAssignedPersonId(request.AssignedTechnicianPersonId);
+        await EnsureAssignedTechnicianQualifiedAsync(
+            tenantId,
+            request.AssignedTechnicianPersonId,
+            cancellationToken);
 
         var title = string.IsNullOrWhiteSpace(request.Title)
             ? $"Repair: {defect.Title}"
@@ -225,6 +245,15 @@ public sealed class WorkOrderService(
             entity.AssetId,
             "work_order",
             entity.Id,
+            cancellationToken);
+
+        await EnqueueWorkOrderLifecycleEventsAsync(
+            tenantId,
+            actorUserId,
+            entity,
+            now,
+            emitCreated: true,
+            emitAssigned: !string.IsNullOrWhiteSpace(entity.AssignedTechnicianPersonId),
             cancellationToken);
 
         return await MapDetailAsync(tenantId, entity, cancellationToken);
@@ -318,6 +347,15 @@ public sealed class WorkOrderService(
             entity.Id,
             cancellationToken);
 
+        await EnqueueWorkOrderLifecycleEventsAsync(
+            schedule.TenantId,
+            actorUserId,
+            entity,
+            now,
+            emitCreated: true,
+            emitAssigned: false,
+            cancellationToken);
+
         return new PmWorkOrderGenerationResult(entity.Id, entity.WorkOrderNumber, LinkedExisting: false);
     }
 
@@ -328,7 +366,10 @@ public sealed class WorkOrderService(
         UpdateWorkOrderRequest request,
         CancellationToken cancellationToken = default)
     {
-        var workOrder = await db.WorkOrders.FirstOrDefaultAsync(
+        var workOrder = await db.WorkOrders
+            .Include(x => x.Asset)
+                .ThenInclude(x => x.AssetType)
+            .FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.Id == workOrderId,
             cancellationToken);
 
@@ -362,9 +403,14 @@ public sealed class WorkOrderService(
             workOrder.Priority = NormalizePriority(request.Priority);
         }
 
+        var previousAssignedTechnicianPersonId = workOrder.AssignedTechnicianPersonId;
         if (request.AssignedTechnicianPersonId is not null)
         {
             ValidateAssignedPersonId(request.AssignedTechnicianPersonId);
+            await EnsureAssignedTechnicianQualifiedAsync(
+                tenantId,
+                request.AssignedTechnicianPersonId,
+                cancellationToken);
             workOrder.AssignedTechnicianPersonId = NormalizeAssignedPersonId(request.AssignedTechnicianPersonId);
         }
 
@@ -385,6 +431,22 @@ public sealed class WorkOrderService(
             actorUserId,
             workOrder.AssignedTechnicianPersonId,
             cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId)
+            && !string.Equals(
+                previousAssignedTechnicianPersonId,
+                workOrder.AssignedTechnicianPersonId,
+                StringComparison.Ordinal))
+        {
+            await EnqueueWorkOrderLifecycleEventsAsync(
+                tenantId,
+                actorUserId,
+                workOrder,
+                workOrder.UpdatedAt,
+                emitCreated: false,
+                emitAssigned: true,
+                cancellationToken);
+        }
 
         return await MapDetailAsync(tenantId, workOrder, cancellationToken);
     }
@@ -429,6 +491,12 @@ public sealed class WorkOrderService(
         {
             EnsureTechnicianCanTransition(workOrder, normalized, actorUserId, actorPersonId);
         }
+
+        await EnsureComplianceCoreAllowsStatusTransitionAsync(
+            workOrder,
+            normalized,
+            actorPersonId,
+            cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         workOrder.Status = normalized;
@@ -480,8 +548,213 @@ public sealed class WorkOrderService(
             workOrder.Status,
             cancellationToken: cancellationToken);
 
+        await EnqueueWorkOrderStatusEventAsync(
+            tenantId,
+            actorUserId,
+            workOrder,
+            normalized,
+            now,
+            cancellationToken);
+
         return await MapDetailAsync(tenantId, workOrder, cancellationToken, downtimeFollowUp);
     }
+
+    private async Task EnqueueWorkOrderLifecycleEventsAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        WorkOrder workOrder,
+        DateTimeOffset occurredAt,
+        bool emitCreated,
+        bool emitAssigned,
+        CancellationToken cancellationToken)
+    {
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == workOrder.AssetId, cancellationToken);
+        if (asset is null)
+        {
+            return;
+        }
+
+        if (emitCreated)
+        {
+            await platformOutboxEnqueue.TryEnqueueWorkOrderEventAsync(
+                tenantId,
+                MaintenancePlatformOutboxEventKinds.WorkOrderCreated,
+                workOrder,
+                asset,
+                actorUserId,
+                occurredAt,
+                $"Work order {workOrder.WorkOrderNumber} created for asset {asset.AssetTag}.",
+                eventResult: workOrder.Source,
+                cancellationToken: cancellationToken);
+        }
+
+        if (emitAssigned && !string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId))
+        {
+            await platformOutboxEnqueue.TryEnqueueWorkOrderEventAsync(
+                tenantId,
+                MaintenancePlatformOutboxEventKinds.WorkOrderAssigned,
+                workOrder,
+                asset,
+                actorUserId,
+                occurredAt,
+                $"Work order {workOrder.WorkOrderNumber} assigned for asset {asset.AssetTag}.",
+                eventResult: workOrder.AssignedTechnicianPersonId,
+                idempotencyDiscriminator: workOrder.AssignedTechnicianPersonId,
+                cancellationToken: cancellationToken);
+        }
+    }
+
+    private async Task EnqueueWorkOrderStatusEventAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        WorkOrder workOrder,
+        string status,
+        DateTimeOffset occurredAt,
+        CancellationToken cancellationToken)
+    {
+        var eventKind = status switch
+        {
+            WorkOrderStatuses.InProgress => MaintenancePlatformOutboxEventKinds.WorkOrderStarted,
+            WorkOrderStatuses.Completed => MaintenancePlatformOutboxEventKinds.WorkOrderCompleted,
+            _ => null,
+        };
+
+        if (eventKind is null)
+        {
+            return;
+        }
+
+        var asset = await db.Assets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == workOrder.AssetId, cancellationToken);
+        if (asset is null)
+        {
+            return;
+        }
+
+        await platformOutboxEnqueue.TryEnqueueWorkOrderEventAsync(
+            tenantId,
+            eventKind,
+            workOrder,
+            asset,
+            actorUserId,
+            occurredAt,
+            $"Work order {workOrder.WorkOrderNumber} changed to {status} for asset {asset.AssetTag}.",
+            eventResult: status,
+            cancellationToken: cancellationToken);
+    }
+
+    private async Task EnsureComplianceCoreAllowsStatusTransitionAsync(
+        WorkOrder workOrder,
+        string toStatus,
+        string? actorPersonId,
+        CancellationToken cancellationToken)
+    {
+        if (!complianceCoreWorkOrderGateClient.IsConfigured
+            || !IsComplianceCoreGatedStatus(toStatus))
+        {
+            return;
+        }
+
+        var asset = workOrder.Asset
+            ?? await db.Assets
+                .AsNoTracking()
+                .Include(x => x.AssetType)
+                .FirstOrDefaultAsync(
+                    x => x.TenantId == workOrder.TenantId && x.Id == workOrder.AssetId,
+                    cancellationToken)
+            ?? throw new StlApiException(
+                "work_order.asset_not_found",
+                "Work order asset was not found.",
+                404);
+        var assetTypeKey = asset.AssetType?.TypeKey ?? string.Empty;
+
+        var context = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["product"] = "maintainarr",
+            ["action"] = "work_order_status_transition",
+            ["fromStatus"] = workOrder.Status,
+            ["from_status"] = workOrder.Status,
+            ["toStatus"] = toStatus,
+            ["to_status"] = toStatus,
+            ["workOrderId"] = workOrder.Id.ToString("D"),
+            ["work_order_id"] = workOrder.Id.ToString("D"),
+            ["workOrderNumber"] = workOrder.WorkOrderNumber,
+            ["work_order_number"] = workOrder.WorkOrderNumber,
+            ["workOrderPriority"] = workOrder.Priority,
+            ["work_order_priority"] = workOrder.Priority,
+            ["workOrderSource"] = workOrder.Source,
+            ["work_order_source"] = workOrder.Source,
+            ["assetId"] = workOrder.AssetId.ToString("D"),
+            ["asset_id"] = workOrder.AssetId.ToString("D"),
+            ["assetTag"] = asset.AssetTag,
+            ["asset_tag"] = asset.AssetTag,
+            ["assetTypeKey"] = assetTypeKey,
+            ["asset_type_key"] = assetTypeKey,
+        };
+
+        if (!string.IsNullOrWhiteSpace(actorPersonId))
+        {
+            context["actorPersonId"] = actorPersonId.Trim();
+            context["actor_person_id"] = actorPersonId.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(workOrder.AssignedTechnicianPersonId))
+        {
+            context["assignedTechnicianPersonId"] = workOrder.AssignedTechnicianPersonId;
+            context["assigned_technician_person_id"] = workOrder.AssignedTechnicianPersonId;
+        }
+
+        if (workOrder.DefectId.HasValue)
+        {
+            context["defectId"] = workOrder.DefectId.Value.ToString("D");
+            context["defect_id"] = workOrder.DefectId.Value.ToString("D");
+        }
+
+        if (workOrder.PmScheduleId.HasValue)
+        {
+            context["pmScheduleId"] = workOrder.PmScheduleId.Value.ToString("D");
+            context["pm_schedule_id"] = workOrder.PmScheduleId.Value.ToString("D");
+        }
+
+        var result = await complianceCoreWorkOrderGateClient.CheckWorkOrderAsync(
+            workOrder.TenantId,
+            workOrder.Id,
+            workOrder.AssetId,
+            asset.AssetTag,
+            context,
+            cancellationToken);
+
+        if (result is null || IsPermissiveComplianceCoreGateOutcome(result.Outcome))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "work_order.compliancecore_gate_blocked",
+            result.Message,
+            409,
+            new Dictionary<string, object?>
+            {
+                ["outcome"] = result.Outcome,
+                ["reasonCode"] = result.ReasonCode,
+                ["checkResultId"] = result.CheckResultId,
+                ["traceId"] = result.TraceId,
+                ["appliedWaiverId"] = result.AppliedWaiverId,
+                ["appliedWaiverKey"] = result.AppliedWaiverKey,
+            });
+    }
+
+    private static bool IsComplianceCoreGatedStatus(string status) =>
+        string.Equals(status, WorkOrderStatuses.InProgress, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(status, WorkOrderStatuses.Completed, StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsPermissiveComplianceCoreGateOutcome(string outcome) =>
+        string.Equals(outcome, "allow", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(outcome, "warn", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(outcome, "waived", StringComparison.OrdinalIgnoreCase);
 
     private static void EnsureTechnicianCanTransition(
         WorkOrder workOrder,
@@ -768,6 +1041,40 @@ public sealed class WorkOrderService(
         }
 
         return personId.Trim();
+    }
+
+    private async Task EnsureAssignedTechnicianQualifiedAsync(
+        Guid tenantId,
+        string? assignedTechnicianPersonId,
+        CancellationToken cancellationToken)
+    {
+        if (!trainArrQualificationCheckClient.IsConfigured || string.IsNullOrWhiteSpace(assignedTechnicianPersonId))
+        {
+            return;
+        }
+
+        if (!Guid.TryParse(assignedTechnicianPersonId.Trim(), out var staffarrPersonId))
+        {
+            throw new StlApiException(
+                "work_order.technician_person_id_invalid",
+                "Assigned technician person id must be a StaffArr person GUID when TrainArr qualification checks are enabled.",
+                400);
+        }
+
+        var check = await trainArrQualificationCheckClient.CheckTechnicianAsync(
+            tenantId,
+            staffarrPersonId,
+            cancellationToken);
+
+        if (check is null || string.Equals(check.Outcome, "allow", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "work_order.technician_qualification_blocked",
+            $"TrainArr technician qualification check returned {check.Outcome}: {check.Message}",
+            409);
     }
 
     private async Task MirrorAssignedTechnicianAsync(

@@ -57,6 +57,11 @@ public sealed record CreateRouteRequest(
     Guid? TripId,
     IReadOnlyList<CreateRouteStopRequest>? Stops);
 
+public sealed record CreateRouteTemplateRequest(
+    string Title,
+    string Description,
+    IReadOnlyList<CreateRouteStopRequest>? Stops);
+
 public sealed record LinkRouteTripRequest(Guid TripId);
 
 public sealed record ReorderRouteStopsRequest(IReadOnlyList<Guid> StopIds);
@@ -70,3 +75,5 @@ public sealed record AddRouteStopRequest(
     DateTimeOffset? ScheduledArrivalAt);
 
 public sealed record UpdateRouteStopStatusRequest(string StopStatus);
+
+public sealed record UpdateRouteStatusRequest(string RouteStatus);

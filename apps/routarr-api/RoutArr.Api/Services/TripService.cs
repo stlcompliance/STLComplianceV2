@@ -103,6 +103,8 @@ public sealed class TripService(
             entity.DispatchStatus,
             cancellationToken: cancellationToken);
 
+        await integrationOutboxEnqueueService.TryEnqueueTripCreatedAsync(entity, cancellationToken);
+
         return MapDetail(entity);
     }
 
@@ -141,6 +143,7 @@ public sealed class TripService(
             request.IgnoreWorkflowGateBlocks,
             cancellationToken);
 
+        var previousDriverPersonId = trip.AssignedDriverPersonId;
         var now = DateTimeOffset.UtcNow;
         trip.AssignedDriverPersonId = driverPersonId;
         trip.UpdatedAt = now;
@@ -177,9 +180,24 @@ public sealed class TripService(
                 cancellationToken);
         }
 
+        if (!string.IsNullOrWhiteSpace(previousDriverPersonId)
+            && !string.Equals(previousDriverPersonId, driverPersonId, StringComparison.Ordinal))
+        {
+            await notificationEnqueueService.TryEnqueueDriverAssignmentChangedAsync(
+                trip,
+                cancellationToken);
+        }
+
         await integrationOutboxEnqueueService.TryEnqueueDriverAssignmentChangedAsync(
             trip,
             driverPersonId,
+            cancellationToken);
+
+        await integrationOutboxEnqueueService.TryEnqueueComplianceOverridePerformedAsync(
+            trip,
+            "driver",
+            driverPersonId,
+            GetAssignDriverOverrideKinds(request),
             cancellationToken);
 
         return MapDetail(trip);
@@ -240,6 +258,18 @@ public sealed class TripService(
             trip.Id.ToString(),
             BuildAssignVehicleAuditResult(vehicleRefKey, request),
             cancellationToken: cancellationToken);
+
+        await integrationOutboxEnqueueService.TryEnqueueEquipmentAssignmentChangedAsync(
+            trip,
+            vehicleRefKey,
+            cancellationToken);
+
+        await integrationOutboxEnqueueService.TryEnqueueComplianceOverridePerformedAsync(
+            trip,
+            "equipment",
+            vehicleRefKey,
+            GetAssignVehicleOverrideKinds(request),
+            cancellationToken);
 
         return MapDetail(trip);
     }
@@ -307,6 +337,18 @@ public sealed class TripService(
                 400);
         }
 
+        if (string.Equals(normalized, TripDispatchStatuses.Dispatched, StringComparison.OrdinalIgnoreCase))
+        {
+            await dispatchAssignment.EnsureDriverAssignmentAllowedAsync(
+                tenantId,
+                trip,
+                trip.AssignedDriverPersonId!,
+                ignoreAvailabilityConflicts: false,
+                ignoreEligibilityBlocks: false,
+                ignoreWorkflowGateBlocks: false,
+                cancellationToken);
+        }
+
         if (!canManageAny)
         {
             EnsureDriverCanTransition(trip, normalized, actorUserId, actorPersonId);
@@ -372,13 +414,79 @@ public sealed class TripService(
 
             if (string.Equals(normalized, TripDispatchStatuses.Dispatched, StringComparison.OrdinalIgnoreCase))
             {
+                await integrationOutboxEnqueueService.TryEnqueueTripReleasedAsync(trip, cancellationToken);
                 await integrationOutboxEnqueueService.TryEnqueueTripDispatchedAsync(trip, cancellationToken);
+            }
+            else if (string.Equals(normalized, TripDispatchStatuses.InProgress, StringComparison.OrdinalIgnoreCase))
+            {
+                await integrationOutboxEnqueueService.TryEnqueueTripStartedAsync(trip, cancellationToken);
             }
             else if (string.Equals(normalized, TripDispatchStatuses.Completed, StringComparison.OrdinalIgnoreCase))
             {
                 await integrationOutboxEnqueueService.TryEnqueueTripCompletedAsync(trip, cancellationToken);
             }
+            else if (string.Equals(normalized, TripDispatchStatuses.Cancelled, StringComparison.OrdinalIgnoreCase))
+            {
+                await integrationOutboxEnqueueService.TryEnqueueTripCancelledAsync(trip, cancellationToken);
+            }
         }
+
+        return MapDetail(trip);
+    }
+
+    public async Task<TripDetailResponse> AcceptDriverAssignmentAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid tripId,
+        string actorPersonId,
+        CancellationToken cancellationToken = default)
+    {
+        var trip = await db.Trips
+            .Include(x => x.Loads)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
+
+        if (trip is null)
+        {
+            throw new StlApiException("trip.not_found", "Trip was not found.", 404);
+        }
+
+        if (!string.Equals(trip.AssignedDriverPersonId?.Trim(), actorPersonId.Trim(), StringComparison.Ordinal))
+        {
+            throw new StlApiException(
+                "driver_portal.not_assigned",
+                "You can only execute trips assigned to you.",
+                403);
+        }
+
+        if (!string.Equals(trip.DispatchStatus, TripDispatchStatuses.Assigned, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "driver_portal.accept_requires_assigned",
+                "Accept is only available while the trip is assigned.",
+                400);
+        }
+
+        if (trip.AcceptedAt.HasValue)
+        {
+            return MapDetail(trip);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        trip.AcceptedAt = now;
+        trip.UpdatedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "trip.accept",
+            tenantId,
+            actorUserId,
+            "trip",
+            trip.Id.ToString(),
+            "accepted",
+            cancellationToken: cancellationToken);
+
+        await integrationOutboxEnqueueService.TryEnqueueTripAcceptedAsync(trip, cancellationToken);
+        await notificationEnqueueService.TryEnqueueTripAcceptedAsync(trip, cancellationToken);
 
         return MapDetail(trip);
     }
@@ -549,6 +657,7 @@ public sealed class TripService(
             trip.CreatedAt,
             trip.UpdatedAt,
             trip.AssignedAt,
+            trip.AcceptedAt,
             trip.DispatchedAt,
             trip.StartedAt,
             trip.CompletedAt,
@@ -638,6 +747,7 @@ public sealed class TripService(
             trip.CreatedAt,
             trip.UpdatedAt,
             trip.AssignedAt,
+            trip.AcceptedAt,
             trip.DispatchedAt,
             trip.StartedAt,
             trip.CompletedAt,
@@ -645,6 +755,25 @@ public sealed class TripService(
             trip.CancelledAt);
 
     private static string BuildAssignDriverAuditResult(string driverPersonId, AssignTripDriverRequest request)
+    {
+        var overrides = GetAssignDriverOverrideKinds(request);
+
+        return overrides.Count == 0
+            ? driverPersonId
+            : $"{driverPersonId} (override:{string.Join(',', overrides)})";
+    }
+
+    private static string BuildAssignVehicleAuditResult(string? vehicleRefKey, AssignTripVehicleRequest request)
+    {
+        var key = vehicleRefKey ?? string.Empty;
+        var overrides = GetAssignVehicleOverrideKinds(request);
+
+        return overrides.Count == 0
+            ? key
+            : $"{key} (override:{string.Join(',', overrides)})";
+    }
+
+    private static IReadOnlyList<string> GetAssignDriverOverrideKinds(AssignTripDriverRequest request)
     {
         var overrides = new List<string>();
         if (request.IgnoreAvailabilityConflicts)
@@ -662,14 +791,11 @@ public sealed class TripService(
             overrides.Add("workflow");
         }
 
-        return overrides.Count == 0
-            ? driverPersonId
-            : $"{driverPersonId} (override:{string.Join(',', overrides)})";
+        return overrides;
     }
 
-    private static string BuildAssignVehicleAuditResult(string? vehicleRefKey, AssignTripVehicleRequest request)
+    private static IReadOnlyList<string> GetAssignVehicleOverrideKinds(AssignTripVehicleRequest request)
     {
-        var key = vehicleRefKey ?? string.Empty;
         var overrides = new List<string>();
         if (request.IgnoreAvailabilityConflicts)
         {
@@ -686,8 +812,6 @@ public sealed class TripService(
             overrides.Add("workflow");
         }
 
-        return overrides.Count == 0
-            ? key
-            : $"{key} (override:{string.Join(',', overrides)})";
+        return overrides;
     }
 }

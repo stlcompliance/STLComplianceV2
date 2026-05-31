@@ -15,6 +15,8 @@ public static class IntegrationEndpoints
 
     public const string RoutarrReadinessDispatchActionScope = "staffarr.readiness.dispatch_gate";
 
+    public const string ProductIncidentIngestActionScope = "staffarr.product_incidents.write";
+
     public const string TrainarrPersonLookupActionScope = "staffarr.person.lookup";
 
     public const string MaintainarrPersonLookupActionScope = "staffarr.person.lookup";
@@ -31,6 +33,7 @@ public static class IntegrationEndpoints
     public const string TrainingAcknowledgementReadActionScope = "staffarr.training_acknowledgements.read";
     public const string PermissionCheckReadActionScope = "staffarr.permission_check.read";
     public const string ReadinessRollupReadActionScope = "staffarr.readiness_rollups.read";
+    public const string EventFeedReadActionScope = StaffArrEventFeedService.IntegrationReadActionScope;
 
     public static void MapStaffArrIntegrationEndpoints(this WebApplication app)
     {
@@ -227,7 +230,11 @@ public static class IntegrationEndpoints
                     RequiredActionScope = RoutarrReadinessDispatchActionScope
                 });
 
-            var result = await service.GetPersonReadinessAsync(tenantId, personId, cancellationToken);
+            var result = await service.GetPersonReadinessAsync(
+                tenantId,
+                personId,
+                cancellationToken,
+                auditSnapshotKind: ReadinessService.RoutarrDispatchSnapshotKind);
             return Results.Ok(result);
         })
         .WithName("RoutarrReadinessCheck");
@@ -249,10 +256,37 @@ public static class IntegrationEndpoints
                     RequiredActionScope = RoutarrReadinessDispatchActionScope
                 });
 
-            var result = await service.GetPersonReadinessAsync(tenantId, personId, cancellationToken);
+            var result = await service.GetPersonReadinessAsync(
+                tenantId,
+                personId,
+                cancellationToken,
+                auditSnapshotKind: ReadinessService.RoutarrDispatchSnapshotKind);
             return Results.Ok(result);
         })
         .WithName("RoutarrReadinessCheckV1");
+
+        integrations.MapPost("/product-incidents", async (
+            IngestProductIncidentRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            IncidentService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateProductIncidentServiceToken(tokenValidator, context, request);
+            return Results.Ok(await service.CreateProductIncidentAsync(request, cancellationToken));
+        })
+        .WithName("IngestProductIncident");
+        integrationsV1.MapPost("/product-incidents", async (
+            IngestProductIncidentRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            IncidentService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateProductIncidentServiceToken(tokenValidator, context, request);
+            return Results.Ok(await service.CreateProductIncidentAsync(request, cancellationToken));
+        })
+        .WithName("IngestProductIncidentV1");
 
         integrations.MapGet("/person-lookup", async (
             Guid tenantId,
@@ -714,6 +748,12 @@ public static class IntegrationEndpoints
         integrationsV1.MapGet("/permission-check", CheckPermissionsAsync)
         .WithName("IntegrationPermissionCheckV1");
 
+        integrations.MapGet("/event-feed", ListEventFeedAsync)
+        .WithName("IntegrationEventFeed");
+
+        integrationsV1.MapGet("/event-feed", ListEventFeedAsync)
+        .WithName("IntegrationEventFeedV1");
+
         integrations.MapGet("/readiness-rollups/teams", async (
             Guid tenantId,
             Guid? siteOrgUnitId,
@@ -819,6 +859,29 @@ public static class IntegrationEndpoints
         return Results.Ok(result);
     }
 
+    private static async Task<IResult> ListEventFeedAsync(
+        Guid tenantId,
+        DateTimeOffset? from,
+        DateTimeOffset? to,
+        int? page,
+        int? pageSize,
+        HttpContext context,
+        StlServiceTokenValidator tokenValidator,
+        StaffArrEventFeedService service,
+        CancellationToken cancellationToken)
+    {
+        ValidateEventFeedServiceToken(tokenValidator, context, tenantId);
+
+        var result = await service.ListAsync(
+            tenantId,
+            from,
+            to,
+            page ?? 1,
+            pageSize ?? 50,
+            cancellationToken);
+        return Results.Ok(result);
+    }
+
     private static void ValidatePersonLookupServiceToken(
         StlServiceTokenValidator tokenValidator,
         HttpContext context,
@@ -849,6 +912,48 @@ public static class IntegrationEndpoints
                 RequiredTargetProduct = "staffarr",
                 TenantId = tenantId,
                 RequiredActionScope = TrainarrPersonLookupActionScope
+            });
+    }
+
+    private static void ValidateProductIncidentServiceToken(
+        StlServiceTokenValidator tokenValidator,
+        HttpContext context,
+        IngestProductIncidentRequest request)
+    {
+        var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+            context.Request.Headers.Authorization.ToString());
+        var preview = tokenValidator.TryValidate(bearer)
+            ?? throw new StlApiException(
+                "auth.service_token_invalid",
+                "Service token is invalid.",
+                401);
+
+        var tokenSource = preview.SourceProductKey?.Trim().ToLowerInvariant();
+        var requestSource = (request.SourceProduct ?? string.Empty).Trim().ToLowerInvariant();
+        if (tokenSource is not "maintainarr" and not "routarr" and not "supplyarr" and not "trainarr" and not "compliancecore")
+        {
+            throw new StlApiException(
+                "auth.service_token_scope",
+                "Service token source product is not authorized for product incident ingestion.",
+                403);
+        }
+
+        if (!string.Equals(tokenSource, requestSource, StringComparison.Ordinal))
+        {
+            throw new StlApiException(
+                "auth.service_token_scope",
+                "Service token source product must match the incident source product.",
+                403);
+        }
+
+        tokenValidator.ValidateOrThrow(
+            bearer,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = tokenSource,
+                RequiredTargetProduct = "staffarr",
+                TenantId = request.TenantId,
+                RequiredActionScope = ProductIncidentIngestActionScope
             });
     }
 
@@ -915,6 +1020,39 @@ public static class IntegrationEndpoints
                 RequiredTargetProduct = "staffarr",
                 TenantId = tenantId,
                 RequiredActionScope = ReadinessRollupReadActionScope
+            });
+    }
+
+    private static void ValidateEventFeedServiceToken(
+        StlServiceTokenValidator tokenValidator,
+        HttpContext context,
+        Guid tenantId)
+    {
+        var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+            context.Request.Headers.Authorization.ToString());
+        var preview = tokenValidator.TryValidate(bearer)
+            ?? throw new StlApiException(
+                "auth.service_token_invalid",
+                "Service token is invalid.",
+                401);
+
+        var source = preview.SourceProductKey?.Trim().ToLowerInvariant();
+        if (source is not "maintainarr" and not "routarr" and not "supplyarr" and not "trainarr" and not "compliancecore")
+        {
+            throw new StlApiException(
+                "auth.service_token_scope",
+                "Service token source product is not authorized for StaffArr event feed reads.",
+                403);
+        }
+
+        tokenValidator.ValidateOrThrow(
+            bearer,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = source,
+                RequiredTargetProduct = "staffarr",
+                TenantId = tenantId,
+                RequiredActionScope = EventFeedReadActionScope
             });
     }
 }

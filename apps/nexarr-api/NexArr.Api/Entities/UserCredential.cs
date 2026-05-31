@@ -8,5 +8,9 @@ public sealed class UserCredential
 
     public DateTimeOffset PasswordChangedAt { get; set; }
 
+    public int FailedLoginCount { get; set; }
+
+    public DateTimeOffset? LockedUntil { get; set; }
+
     public PlatformUser User { get; set; } = null!;
 }

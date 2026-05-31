@@ -2,6 +2,7 @@ using STLCompliance.Shared.Integration;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -31,6 +32,8 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
     private WebApplicationFactory<global::MaintainArr.Api.Program> _maintainarrFactory = null!;
     private HttpClient _nexarrClient = null!;
     private HttpClient _maintainarrClient = null!;
+    private RecordingTrainArrQualificationCheckHandler _trainarrQualificationHandler = null!;
+    private RecordingComplianceCoreWorkOrderGateHandler _complianceCoreGateHandler = null!;
 
     public async Task InitializeAsync()
     {
@@ -57,6 +60,8 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
 
         var adminToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
         var serviceToken = await IssueServiceTokenAsync(adminToken, "maintainarr");
+        _trainarrQualificationHandler = new RecordingTrainArrQualificationCheckHandler();
+        _complianceCoreGateHandler = new RecordingComplianceCoreWorkOrderGateHandler();
 
         _maintainarrFactory = new WebApplicationFactory<global::MaintainArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -66,6 +71,15 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
             builder.UseSetting("Auth:SigningKey", signingKey);
             builder.UseSetting("NexArr:BaseUrl", _nexarrClient.BaseAddress!.ToString().TrimEnd('/'));
             builder.UseSetting("Handoff:ServiceToken", serviceToken);
+            builder.UseSetting("TrainArr:BaseUrl", "http://trainarr.test");
+            builder.UseSetting("TrainArr:ServiceToken", "maintainarr-to-trainarr-token");
+            builder.UseSetting("TrainArr:TechnicianQualificationKey", "maintenance_technician");
+            builder.UseSetting("TrainArr:TechnicianRulePackKey", "maintenance_qualification");
+            builder.UseSetting("ComplianceCore:BaseUrl", "http://compliancecore.test");
+            builder.UseSetting("ComplianceCore:ServiceToken", "maintainarr-to-compliancecore-token");
+            builder.UseSetting("ComplianceCore:WorkOrderActionKey", "can-perform-maintenance");
+            builder.UseSetting("ComplianceCore:WorkOrderWorkflowKey", "can_perform_maintenance");
+            builder.UseSetting("ComplianceCore:WorkOrderActivityContextKey", "maintenance_work_order");
             builder.ConfigureServices(services =>
             {
                 RemoveDbContext<MaintainArrDbContext>(services);
@@ -73,6 +87,10 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
 
                 services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
+                services.AddHttpClient<TrainArrQualificationCheckClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _trainarrQualificationHandler);
+                services.AddHttpClient<ComplianceCoreWorkOrderGateClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _complianceCoreGateHandler);
             });
         });
 
@@ -154,6 +172,7 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         var createResponse = await _maintainarrClient.SendAsync(createRequest);
         createResponse.EnsureSuccessStatusCode();
         var created = (await createResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+        Assert.StartsWith($"/api/v1/work-orders/{created.WorkOrderId}", createResponse.Headers.Location?.OriginalString);
 
         var getRequest = Authorized(HttpMethod.Get, $"/api/v1/work-orders/{created.WorkOrderId}", managerToken);
         var getResponse = await _maintainarrClient.SendAsync(getRequest);
@@ -216,12 +235,14 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         var firstResponse = await _maintainarrClient.SendAsync(firstRequest);
         firstResponse.EnsureSuccessStatusCode();
         var first = (await firstResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+        Assert.StartsWith($"/api/v1/work-orders/{first.WorkOrderId}", firstResponse.Headers.Location?.OriginalString);
 
         var secondRequest = Authorized(HttpMethod.Post, $"/api/v1/defects/{defect.DefectId}/work-orders", managerToken);
         secondRequest.Content = JsonContent.Create(new CreateWorkOrderFromDefectRequest(null, null, null, null));
         var secondResponse = await _maintainarrClient.SendAsync(secondRequest);
         secondResponse.EnsureSuccessStatusCode();
         var second = (await secondResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+        Assert.StartsWith($"/api/v1/work-orders/{second.WorkOrderId}", secondResponse.Headers.Location?.OriginalString);
 
         Assert.Equal(first.WorkOrderId, second.WorkOrderId);
     }
@@ -289,6 +310,124 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         completeResponse.EnsureSuccessStatusCode();
         var completed = (await completeResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
         Assert.Equal("completed", completed.Status);
+    }
+
+    [Fact]
+    public async Task Work_order_start_checks_compliancecore_maintenance_gate()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/work-orders", managerToken);
+        createRequest.Content = JsonContent.Create(new CreateWorkOrderRequest(
+            assetId,
+            "Compliance-gated repair",
+            "Verify Compliance Core before starting maintenance work.",
+            "high",
+            null,
+            null));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+
+        _complianceCoreGateHandler.NextOutcome = "block";
+        _complianceCoreGateHandler.NextReasonCode = "missing_permit";
+        _complianceCoreGateHandler.NextMessage = "A maintenance permit is required before work can start.";
+
+        var blockedStartRequest = Authorized(HttpMethod.Patch, $"/api/work-orders/{created.WorkOrderId}/status", managerToken);
+        blockedStartRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest("in_progress"));
+        var blockedStartResponse = await _maintainarrClient.SendAsync(blockedStartRequest);
+        Assert.Equal(HttpStatusCode.Conflict, blockedStartResponse.StatusCode);
+
+        var unchangedRequest = Authorized(HttpMethod.Get, $"/api/work-orders/{created.WorkOrderId}", managerToken);
+        var unchangedResponse = await _maintainarrClient.SendAsync(unchangedRequest);
+        unchangedResponse.EnsureSuccessStatusCode();
+        var unchanged = (await unchangedResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+        Assert.Equal("open", unchanged.Status);
+        Assert.Null(unchanged.StartedAt);
+
+        var blockedGate = Assert.Single(_complianceCoreGateHandler.Requests);
+        Assert.Equal("/api/v1/gates/can-perform-maintenance", blockedGate.Path);
+        Assert.Equal("Bearer", blockedGate.AuthorizationScheme);
+        Assert.Equal("maintainarr-to-compliancecore-token", blockedGate.AuthorizationParameter);
+        Assert.Equal(PlatformSeeder.DemoTenantId, blockedGate.TenantId);
+        Assert.Equal("maintenance_work_order", blockedGate.ActivityContextKey);
+        Assert.Equal("can_perform_maintenance", blockedGate.WorkflowKey);
+        Assert.Contains(blockedGate.Subjects, subject =>
+            subject.SubjectType == "work_order"
+            && subject.SubjectReference == created.WorkOrderId.ToString("D")
+            && subject.SourceProduct == "maintainarr");
+        Assert.Contains(blockedGate.Subjects, subject =>
+            subject.SubjectType == "asset"
+            && subject.SubjectReference == assetId.ToString("D")
+            && subject.SourceProduct == "maintainarr");
+        Assert.Equal(created.WorkOrderId.ToString("D"), blockedGate.RuleContext["work_order_id"]);
+        Assert.Equal(assetId.ToString("D"), blockedGate.RuleContext["asset_id"]);
+        Assert.Equal("open", blockedGate.RuleContext["from_status"]);
+        Assert.Equal("in_progress", blockedGate.RuleContext["to_status"]);
+
+        _complianceCoreGateHandler.NextOutcome = "allow";
+        _complianceCoreGateHandler.NextReasonCode = "maintenance_clear";
+        _complianceCoreGateHandler.NextMessage = "Maintenance work may proceed.";
+
+        var allowedStartRequest = Authorized(HttpMethod.Patch, $"/api/work-orders/{created.WorkOrderId}/status", managerToken);
+        allowedStartRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest("in_progress"));
+        var allowedStartResponse = await _maintainarrClient.SendAsync(allowedStartRequest);
+        allowedStartResponse.EnsureSuccessStatusCode();
+        var started = (await allowedStartResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+        Assert.Equal("in_progress", started.Status);
+        Assert.NotNull(started.StartedAt);
+        Assert.Equal(2, _complianceCoreGateHandler.Requests.Count);
+    }
+
+    [Fact]
+    public async Task Assigned_work_order_requests_trainarr_technician_qualification_check()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+        var technicianPersonId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/work-orders", managerToken);
+        createRequest.Content = JsonContent.Create(new CreateWorkOrderRequest(
+            assetId,
+            "Qualified technician repair",
+            "Verify TrainArr qualification before assignment",
+            "medium",
+            technicianPersonId.ToString(),
+            null));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+
+        Assert.Equal("/api/v1/integrations/qualification-check", _trainarrQualificationHandler.RequestPath);
+        Assert.Equal("Bearer", _trainarrQualificationHandler.AuthorizationScheme);
+        Assert.Equal("maintainarr-to-trainarr-token", _trainarrQualificationHandler.AuthorizationParameter);
+        Assert.NotNull(_trainarrQualificationHandler.Payload);
+        var payload = _trainarrQualificationHandler.Payload.Value;
+        Assert.Equal(PlatformSeeder.DemoTenantId, payload.GetProperty("tenantId").GetGuid());
+        Assert.Equal(technicianPersonId, payload.GetProperty("staffarrPersonId").GetGuid());
+        Assert.Equal("maintenance_technician", payload.GetProperty("qualificationKey").GetString());
+        Assert.Equal("maintenance_qualification", payload.GetProperty("rulePackKey").GetString());
+    }
+
+    [Fact]
+    public async Task Assigned_work_order_blocks_when_trainarr_technician_qualification_fails()
+    {
+        _trainarrQualificationHandler.Outcome = "block";
+        _trainarrQualificationHandler.Message = "Technician qualification is expired.";
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/work-orders", managerToken);
+        createRequest.Content = JsonContent.Create(new CreateWorkOrderRequest(
+            assetId,
+            "Blocked technician repair",
+            "This assignment should be blocked by TrainArr.",
+            "medium",
+            Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb").ToString(),
+            null));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+
+        Assert.Equal(HttpStatusCode.Conflict, createResponse.StatusCode);
     }
 
     [Fact]
@@ -474,5 +613,154 @@ public sealed class MaintainArrWorkOrderTests : IAsyncLifetime
         var request = new HttpRequestMessage(method, path);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
+    }
+
+    private sealed class RecordingTrainArrQualificationCheckHandler : HttpMessageHandler
+    {
+        public string Outcome { get; set; } = "allow";
+
+        public string Message { get; set; } = "Technician qualification is active.";
+
+        public string? RequestPath { get; private set; }
+
+        public string? AuthorizationScheme { get; private set; }
+
+        public string? AuthorizationParameter { get; private set; }
+
+        public JsonElement? Payload { get; private set; }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            RequestPath = request.RequestUri?.AbsolutePath;
+            AuthorizationScheme = request.Headers.Authorization?.Scheme;
+            AuthorizationParameter = request.Headers.Authorization?.Parameter;
+            var body = await request.Content!.ReadAsStringAsync(cancellationToken);
+            using var document = JsonDocument.Parse(body);
+            Payload = document.RootElement.Clone();
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new
+                {
+                    checkId = Guid.NewGuid(),
+                    staffarrPersonId = Payload.Value.GetProperty("staffarrPersonId").GetGuid(),
+                    qualificationKey = Payload.Value.GetProperty("qualificationKey").GetString(),
+                    outcome = Outcome,
+                    reasonCode = Outcome == "allow" ? "local_issued" : "local_expired",
+                    message = Message,
+                })
+            };
+        }
+    }
+
+    private sealed record RecordedComplianceCoreSubject(
+        string SubjectType,
+        string SubjectReference,
+        string? SourceProduct,
+        string? DisplayLabel);
+
+    private sealed record RecordedComplianceCoreWorkOrderGateRequest(
+        string Path,
+        string? AuthorizationScheme,
+        string? AuthorizationParameter,
+        Guid TenantId,
+        string ActivityContextKey,
+        string? WorkflowKey,
+        List<RecordedComplianceCoreSubject> Subjects,
+        Dictionary<string, string> RuleContext);
+
+    private sealed class RecordingComplianceCoreWorkOrderGateHandler : HttpMessageHandler
+    {
+        public List<RecordedComplianceCoreWorkOrderGateRequest> Requests { get; } = [];
+
+        public string NextOutcome { get; set; } = "allow";
+
+        public string NextReasonCode { get; set; } = "maintenance_clear";
+
+        public string NextMessage { get; set; } = "Maintenance work may proceed.";
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var body = await request.Content!.ReadAsStringAsync(cancellationToken);
+            using var document = JsonDocument.Parse(body);
+            var root = document.RootElement;
+
+            var subjects = new List<RecordedComplianceCoreSubject>();
+            if (root.TryGetProperty("subjectReferences", out var subjectReferencesElement)
+                && subjectReferencesElement.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var subjectElement in subjectReferencesElement.EnumerateArray())
+                {
+                    subjects.Add(new RecordedComplianceCoreSubject(
+                        subjectElement.GetProperty("subjectType").GetString() ?? string.Empty,
+                        subjectElement.GetProperty("subjectReference").GetString() ?? string.Empty,
+                        subjectElement.TryGetProperty("sourceProduct", out var sourceProductElement)
+                            && sourceProductElement.ValueKind != JsonValueKind.Null
+                                ? sourceProductElement.GetString()
+                                : null,
+                        subjectElement.TryGetProperty("displayLabel", out var displayLabelElement)
+                            && displayLabelElement.ValueKind != JsonValueKind.Null
+                                ? displayLabelElement.GetString()
+                                : null));
+                }
+            }
+
+            var ruleContext = new Dictionary<string, string>();
+            if (root.TryGetProperty("ruleContext", out var ruleContextElement)
+                && ruleContextElement.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var property in ruleContextElement.EnumerateObject())
+                {
+                    ruleContext[property.Name] = property.Value.GetString() ?? string.Empty;
+                }
+            }
+
+            Requests.Add(new RecordedComplianceCoreWorkOrderGateRequest(
+                request.RequestUri?.AbsolutePath ?? string.Empty,
+                request.Headers.Authorization?.Scheme,
+                request.Headers.Authorization?.Parameter,
+                root.GetProperty("tenantId").GetGuid(),
+                root.GetProperty("activityContextKey").GetString() ?? string.Empty,
+                root.TryGetProperty("workflowKey", out var workflowKeyElement)
+                    && workflowKeyElement.ValueKind != JsonValueKind.Null
+                        ? workflowKeyElement.GetString()
+                        : null,
+                subjects,
+                ruleContext));
+
+            var traceId = Guid.NewGuid();
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new
+                {
+                    traceId,
+                    tenantId = root.GetProperty("tenantId").GetGuid(),
+                    workflowKey = root.TryGetProperty("workflowKey", out var responseWorkflowKey)
+                        && responseWorkflowKey.ValueKind != JsonValueKind.Null
+                            ? responseWorkflowKey.GetString()
+                            : "can_perform_maintenance",
+                    actionKey = "can_perform_maintenance",
+                    activityContextKey = root.GetProperty("activityContextKey").GetString(),
+                    subjectReferences = Array.Empty<object>(),
+                    checkResultId = traceId,
+                    ruleEvaluationRunId = (Guid?)null,
+                    outcome = NextOutcome,
+                    reasonCode = NextReasonCode,
+                    message = NextMessage,
+                    appliedRuleVersions = Array.Empty<object>(),
+                    citationReferences = Array.Empty<object>(),
+                    missingFacts = Array.Empty<string>(),
+                    staleFacts = Array.Empty<object>(),
+                    evidenceRequirements = Array.Empty<object>(),
+                    remediationHints = Array.Empty<object>(),
+                    appliedWaiverId = (Guid?)null,
+                    appliedWaiverKey = (string?)null,
+                    auditExportPath = (string?)null,
+                    evaluatedAt = DateTimeOffset.UtcNow
+                })
+            };
+        }
     }
 }

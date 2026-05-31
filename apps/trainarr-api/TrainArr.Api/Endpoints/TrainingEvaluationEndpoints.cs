@@ -12,17 +12,20 @@ public static class TrainingEvaluationEndpoints
             app.MapGroup("/api/evaluations")
                 .WithTags("Evaluations")
                 .RequireAuthorization(),
-            string.Empty);
+            string.Empty,
+            "/api/evaluations");
         MapTopLevelRoutes(
             app.MapGroup("/api/v1/evaluations")
                 .WithTags("Evaluations")
                 .RequireAuthorization(),
-            "V1Evaluations");
+            "V1Evaluations",
+            "/api/v1/evaluations");
         MapTopLevelRoutes(
             app.MapGroup("/api/v1/attempts")
                 .WithTags("Evaluations")
                 .RequireAuthorization(),
-            "V1Attempts");
+            "V1Attempts",
+            "/api/v1/attempts");
 
         var nested = app.MapGroup("/api/training-assignments/{assignmentId:guid}/evaluations")
             .WithTags("Evaluations")
@@ -87,7 +90,7 @@ public static class TrainingEvaluationEndpoints
         .WithName("SubmitTrainingEvaluationForAssignment");
     }
 
-    private static void MapTopLevelRoutes(RouteGroupBuilder evaluations, string nameSuffix)
+    private static void MapTopLevelRoutes(RouteGroupBuilder evaluations, string nameSuffix, string routePrefix)
     {
         evaluations.MapGet("/", async (
             Guid? trainingAssignmentId,
@@ -149,7 +152,7 @@ public static class TrainingEvaluationEndpoints
             var assignment = await assignmentService.GetAsync(tenantId, request.TrainingAssignmentId, cancellationToken);
             authorization.RequireEvaluationsRead(context.User, assignment.StaffarrPersonId);
             var created = await evaluationService.SubmitAsync(tenantId, actorUserId, request, cancellationToken);
-            return Results.Created($"/api/evaluations?trainingAssignmentId={created.TrainingAssignmentId}", created);
+            return Results.Created($"{routePrefix}?trainingAssignmentId={created.TrainingAssignmentId}", created);
         })
         .WithName($"SubmitTrainingEvaluation{nameSuffix}");
     }

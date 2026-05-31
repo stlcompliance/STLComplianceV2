@@ -121,6 +121,22 @@ public static class IntegrationOutboxEventKinds
 
     public const string PartCreated = "part.created";
 
+    public const string SupplyArrVendorCreated = "supplyarr.vendor.created";
+
+    public const string SupplyArrVendorUpdated = "supplyarr.vendor.updated";
+
+    public const string SupplyArrVendorApproved = "supplyarr.vendor.approved";
+
+    public const string SupplyArrVendorBlocked = "supplyarr.vendor.blocked";
+
+    public const string SupplyArrCustomerCreated = "supplyarr.customer.created";
+
+    public const string SupplyArrItemCreated = "supplyarr.item.created";
+
+    public const string SupplyArrItemUpdated = "supplyarr.item.updated";
+
+    public const string SupplyArrInventoryReserved = "supplyarr.inventory.reserved";
+
     public const string PurchaseRequestSubmitted = "purchase_request.submitted";
 
     public const string PurchaseRequestApproved = "purchase_request.approved";
@@ -128,6 +144,10 @@ public static class IntegrationOutboxEventKinds
     public const string PurchaseOrderIssued = "purchase_order.issued";
 
     public const string ReceivingReceiptPosted = "receiving_receipt.posted";
+
+    public const string ReceivingExceptionCreated = "receiving_exception.created";
+
+    public const string ReceivingExceptionResolved = "receiving_exception.resolved";
 
     public const string MaintainarrDemandReceived = "maintainarr.demand.received";
 
@@ -152,6 +172,12 @@ public static class IntegrationOutboxEventKinds
     public const string SupplierOnboardingRejected = "supplier_onboarding.rejected";
 
     public const string SupplierOnboardingSuspended = "supplier_onboarding.suspended";
+
+    public const string PartyComplianceDocumentRegistered = "party_compliance_document.registered";
+
+    public const string PartyComplianceDocumentApproved = "party_compliance_document.approved";
+
+    public const string PartyComplianceDocumentRejected = "party_compliance_document.rejected";
 
     public const string VendorRestrictionCreated = "vendor_restriction.created";
 

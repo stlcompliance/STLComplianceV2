@@ -12,6 +12,18 @@ public sealed class RuleEvaluationService(
     ComplianceFindingService findingService,
     IComplianceCoreAuditService auditService)
 {
+    public const string EvaluationCompletedEventAction = "compliancecore.evaluation.completed";
+
+    public const string EvaluationBlockedEventAction = "compliancecore.evaluation.blocked";
+
+    public const string EvaluationWarnedEventAction = "compliancecore.evaluation.warned";
+
+    public const string EvidenceMissingEventAction = "compliancecore.evidence.missing";
+
+    public const string RemediationRequiredEventAction = "compliancecore.remediation.required";
+
+    public const string ReviewRequiredEventAction = "compliancecore.evaluation.review_required";
+
     public async Task<RuleEvaluationRunResponse> EvaluateAsync(
         Guid tenantId,
         Guid? actorUserId,
@@ -69,6 +81,36 @@ public sealed class RuleEvaluationService(
             "success",
             reasonCode: overallResult,
             cancellationToken: cancellationToken);
+
+        var (mappedOutcome, _, _, _) = RuleEvaluationOutcomeMapper.Map(overallResult, [], ruleResults);
+        await WriteEvaluationLifecycleEventsAsync(
+            tenantId,
+            actorUserId,
+            run.Id,
+            rulePackId,
+            mappedOutcome,
+            null,
+            [],
+            ruleResults,
+            cancellationToken);
+
+        await WriteReviewRequiredEventIfNeededAsync(
+            tenantId,
+            actorUserId,
+            run.Id,
+            null,
+            mappedOutcome,
+            ruleResults,
+            cancellationToken);
+
+        await WriteRemediationRequiredEventIfNeededAsync(
+            tenantId,
+            actorUserId,
+            run.Id,
+            null,
+            ComplianceEvaluationOutcomes.NeedsRemediation,
+            ruleResults,
+            cancellationToken);
 
         IReadOnlyList<ComplianceFindingResponse> findingsEmitted = [];
         if (request.EmitFindings &&
@@ -459,5 +501,162 @@ public sealed class RuleEvaluationService(
 
         return JsonSerializer.Deserialize<List<RuleEvaluationItemResponse>>(json, RuleEvaluationJson.Options)
             ?? [];
+    }
+
+    public async Task WriteRemediationRequiredEventIfNeededAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        Guid? evaluationRunId,
+        Guid? rulePackId,
+        string result,
+        IReadOnlyList<RuleEvaluationItemResponse> ruleResults,
+        CancellationToken cancellationToken = default)
+    {
+        var remediationRuleKeys = ruleResults
+            .Where(rule => rule.RemediationRequired
+                && !string.Equals(rule.Result, RuleEvaluationResults.Pass, StringComparison.OrdinalIgnoreCase))
+            .Select(rule => rule.RuleKey)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(ruleKey => ruleKey)
+            .ToList();
+
+        if (remediationRuleKeys.Count == 0)
+        {
+            return;
+        }
+
+        await auditService.WriteAsync(
+            RemediationRequiredEventAction,
+            tenantId,
+            actorUserId,
+            evaluationRunId is not null ? "rule_evaluation_run" : "rule_pack",
+            (evaluationRunId ?? rulePackId)?.ToString(),
+            result,
+            reasonCode: string.Join(",", remediationRuleKeys),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task WriteEvaluationLifecycleEventsAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        Guid? evaluationRunId,
+        Guid? rulePackId,
+        string outcome,
+        string? reasonCode,
+        IReadOnlyList<string> unresolvedFactKeys,
+        IReadOnlyList<RuleEvaluationItemResponse> ruleResults,
+        CancellationToken cancellationToken = default)
+    {
+        var targetType = evaluationRunId is not null ? "rule_evaluation_run" : "rule_pack";
+        var targetId = (evaluationRunId ?? rulePackId)?.ToString();
+
+        await auditService.WriteAsync(
+            EvaluationCompletedEventAction,
+            tenantId,
+            actorUserId,
+            targetType,
+            targetId,
+            outcome,
+            reasonCode: reasonCode,
+            cancellationToken: cancellationToken);
+
+        if (string.Equals(outcome, ComplianceEvaluationOutcomes.Block, StringComparison.OrdinalIgnoreCase))
+        {
+            await auditService.WriteAsync(
+                EvaluationBlockedEventAction,
+                tenantId,
+                actorUserId,
+                targetType,
+                targetId,
+                outcome,
+                reasonCode: reasonCode,
+                cancellationToken: cancellationToken);
+        }
+        else if (string.Equals(outcome, ComplianceEvaluationOutcomes.Warn, StringComparison.OrdinalIgnoreCase))
+        {
+            await auditService.WriteAsync(
+                EvaluationWarnedEventAction,
+                tenantId,
+                actorUserId,
+                targetType,
+                targetId,
+                outcome,
+                reasonCode: reasonCode,
+                cancellationToken: cancellationToken);
+        }
+
+        var missingKeys = ResolveMissingEvidenceKeys(unresolvedFactKeys, ruleResults);
+        if (missingKeys.Count == 0)
+        {
+            return;
+        }
+
+        await auditService.WriteAsync(
+            EvidenceMissingEventAction,
+            tenantId,
+            actorUserId,
+            targetType,
+            targetId,
+            outcome,
+            reasonCode: string.Join(",", missingKeys),
+            cancellationToken: cancellationToken);
+    }
+
+    public async Task WriteReviewRequiredEventIfNeededAsync(
+        Guid tenantId,
+        Guid? actorUserId,
+        Guid? evaluationRunId,
+        Guid? rulePackId,
+        string outcome,
+        IReadOnlyList<RuleEvaluationItemResponse> ruleResults,
+        CancellationToken cancellationToken = default)
+    {
+        if (!string.Equals(outcome, ComplianceEvaluationOutcomes.Review, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var reviewRuleKeys = ruleResults
+            .Where(rule => rule.ReviewRequired
+                && !string.Equals(rule.Result, RuleEvaluationResults.Pass, StringComparison.OrdinalIgnoreCase))
+            .Select(rule => rule.RuleKey)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(ruleKey => ruleKey)
+            .ToList();
+
+        if (reviewRuleKeys.Count == 0)
+        {
+            return;
+        }
+
+        await auditService.WriteAsync(
+            ReviewRequiredEventAction,
+            tenantId,
+            actorUserId,
+            evaluationRunId is not null ? "rule_evaluation_run" : "rule_pack",
+            (evaluationRunId ?? rulePackId)?.ToString(),
+            ComplianceEvaluationOutcomes.Review,
+            reasonCode: string.Join(",", reviewRuleKeys),
+            cancellationToken: cancellationToken);
+    }
+
+    private static IReadOnlyList<string> ResolveMissingEvidenceKeys(
+        IReadOnlyList<string> unresolvedFactKeys,
+        IReadOnlyList<RuleEvaluationItemResponse> ruleResults)
+    {
+        var missing = unresolvedFactKeys
+            .Where(factKey => !string.IsNullOrWhiteSpace(factKey))
+            .Select(factKey => factKey.Trim())
+            .ToList();
+
+        missing.AddRange(ruleResults
+            .Where(rule => !string.Equals(rule.Result, RuleEvaluationResults.Pass, StringComparison.OrdinalIgnoreCase)
+                && rule.Message.Contains("was not provided", StringComparison.OrdinalIgnoreCase))
+            .Select(rule => rule.RuleKey));
+
+        return missing
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(key => key)
+            .ToList();
     }
 }

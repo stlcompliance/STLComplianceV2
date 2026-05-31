@@ -25,28 +25,30 @@ public sealed class RoutArrEntityBulkExportService(
         "routarr-{entity}-export-{timestamp}.csv",
         "Comma-separated values for spreadsheets and operational analysis.");
 
-    public EntityExportManifestResponse GetManifest() =>
+    public EntityExportManifestResponse GetManifest(
+        string exportBasePath = "/api/exports",
+        string reportBasePath = "/api/reports") =>
         new(
             PackageVersion: "1",
             Entities:
             [
                 new(
                     "trips",
-                    "/api/exports/trips",
+                    $"{exportBasePath}/trips",
                     "Trips",
                     TripsCsvHeader,
                     "Tenant trip registry with dispatch status and schedule timestamps.",
                     [CsvFormat]),
                 new(
                     "routes",
-                    "/api/exports/routes",
+                    $"{exportBasePath}/routes",
                     "Routes",
                     RoutesCsvHeader,
                     "Route definitions with linked trip numbers and stop counts.",
                     [CsvFormat]),
                 new(
                     "dispatch_exceptions",
-                    "/api/exports/dispatch-exceptions",
+                    $"{exportBasePath}/dispatch-exceptions",
                     "Dispatch exceptions",
                     DispatchExceptionsCsvHeader,
                     "Dispatch exception queue including delay-category rows.",
@@ -56,22 +58,27 @@ public sealed class RoutArrEntityBulkExportService(
             [
                 new(
                     "dispatch",
-                    "/api/reports/dispatch/summary/export",
+                    $"{reportBasePath}/dispatch/summary/export",
                     "Dispatch report CSV",
                     "Scoped trip rollups with late/at-risk flags (Worker 214)."),
                 new(
+                    "time_summary",
+                    $"{reportBasePath}/dispatch/time-summary/export",
+                    "Short-haul/time summary report CSV",
+                    "Scoped driver route/time summary with scheduled, actual, and variance minutes."),
+                new(
                     "routes_report",
-                    "/api/reports/routes/summary/export",
+                    $"{reportBasePath}/routes/summary/export",
                     "Route execution report CSV",
                     "Scoped route and stop completion metrics (Worker 215)."),
                 new(
                     "proof_dvir_report",
-                    "/api/reports/proof-dvir/summary/export",
+                    $"{reportBasePath}/proof-dvir/summary/export",
                     "Proof & DVIR report CSV",
                     "Scoped pickup/delivery proof and pre/post-trip DVIR rows (Worker 218)."),
                 new(
                     "dispatch_override_report",
-                    "/api/reports/dispatch-overrides/summary/export",
+                    $"{reportBasePath}/dispatch-overrides/summary/export",
                     "Dispatch override report CSV",
                     "Scoped driver/vehicle assignment overrides with gate and eligibility bypass reasons."),
             ],

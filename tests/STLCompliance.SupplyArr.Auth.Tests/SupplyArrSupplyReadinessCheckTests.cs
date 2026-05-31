@@ -28,6 +28,8 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
 
     private Guid _partId;
     private Guid _vendorId;
+    private Guid _partVendorLinkId;
+    private Guid _substitutePartId;
     private Guid _purchaseOrderId;
     private Guid _receivingReceiptId;
     private Guid _warrantyClaimId;
@@ -82,7 +84,7 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
         });
 
         _supplyarrClient = _supplyarrFactory.CreateClient();
-        (_partId, _vendorId, _purchaseOrderId, _receivingReceiptId, _warrantyClaimId) =
+        (_partId, _vendorId, _partVendorLinkId, _substitutePartId, _purchaseOrderId, _receivingReceiptId, _warrantyClaimId) =
             await SeedReadinessCheckScenarioAsync();
     }
 
@@ -105,6 +107,23 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
         var readiness = (await response.Content.ReadFromJsonAsync<PartSupplyReadinessResponse>())!;
         Assert.Equal("not_ready", readiness.ReadinessStatus);
         Assert.Contains(readiness.Blockers, x => x.ReasonCode == SupplyReadinessReasonCodes.PartStockout);
+        Assert.NotNull(readiness.SourceSnapshot);
+        Assert.NotNull(readiness.SourceSnapshot.SourceTimestamp);
+        Assert.Contains(readiness.SubstituteRecommendations, x =>
+            x.PartId == _substitutePartId
+            && x.QuantityAvailable == 12m
+            && x.RecommendationBasis == "same_catalog_available_stock");
+        Assert.NotNull(readiness.AuditSnapshot);
+        Assert.Equal("part_supply_readiness", readiness.AuditSnapshot.SnapshotKind);
+
+        await using var scope = _supplyarrFactory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
+        var audit = await db.AuditEvents.SingleAsync(x => x.Id == readiness.AuditSnapshot.AuditEventId);
+        Assert.Equal(SupplyReadinessService.PartReadinessAction, audit.Action);
+        Assert.Equal("part", audit.TargetType);
+        Assert.Equal(_partId.ToString(), audit.TargetId);
+        Assert.Equal("not_ready", audit.Result);
+        Assert.Equal("supply_blockers", audit.ReasonCode);
     }
 
     [Fact]
@@ -181,8 +200,14 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
 
         var readiness = (await response.Content.ReadFromJsonAsync<ProcurementPathReadinessResponse>())!;
         Assert.Equal("not_ready", readiness.ReadinessStatus);
-        Assert.Contains(readiness.Blockers, x => x.ReasonCode == SupplyReadinessReasonCodes.NoVendorPartLink);
         Assert.Contains(readiness.Blockers, x => x.ReasonCode == SupplyReadinessReasonCodes.InsufficientAvailableQuantity);
+        Assert.NotNull(readiness.PricingLeadTime);
+        Assert.Equal(_partVendorLinkId, readiness.PricingLeadTime.PartVendorLinkId);
+        Assert.Equal(42.50m, readiness.PricingLeadTime.UnitPrice);
+        Assert.Equal("USD", readiness.PricingLeadTime.CurrencyCode);
+        Assert.Equal(2m, readiness.PricingLeadTime.MinimumOrderQuantity);
+        Assert.Equal(5, readiness.PricingLeadTime.LeadTimeDays);
+        Assert.False(readiness.PricingLeadTime.IsCatalogFallback);
     }
 
     [Fact]
@@ -198,6 +223,8 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
 
         var readiness = (await response.Content.ReadFromJsonAsync<PartSupplyReadinessResponse>())!;
         Assert.Equal("not_ready", readiness.ReadinessStatus);
+        Assert.NotNull(readiness.AuditSnapshot);
+        Assert.Equal("part_supply_readiness", readiness.AuditSnapshot.SnapshotKind);
     }
 
     [Fact]
@@ -293,6 +320,8 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
     private async Task<(
         Guid PartId,
         Guid VendorId,
+        Guid PartVendorLinkId,
+        Guid SubstitutePartId,
         Guid PurchaseOrderId,
         Guid ReceivingReceiptId,
         Guid WarrantyClaimId)> SeedReadinessCheckScenarioAsync()
@@ -303,20 +332,48 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
         var now = DateTimeOffset.UtcNow;
 
         var partId = Guid.NewGuid();
+        var substitutePartId = Guid.NewGuid();
         var vendorId = Guid.NewGuid();
+        var partVendorLinkId = Guid.NewGuid();
+        var catalogId = Guid.NewGuid();
         var purchaseRequestId = Guid.NewGuid();
         var purchaseOrderId = Guid.NewGuid();
         var receivingReceiptId = Guid.NewGuid();
         var warrantyClaimId = Guid.NewGuid();
 
+        db.PartCatalogs.Add(new PartCatalog
+        {
+            Id = catalogId,
+            TenantId = tenantId,
+            CatalogKey = "readiness-check-catalog",
+            Name = "Readiness check catalog",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
         db.Parts.Add(new Part
         {
             Id = partId,
             TenantId = tenantId,
+            PartCatalogId = catalogId,
             PartKey = "check-part",
             DisplayName = "Readiness check part",
             Status = "active",
             ReorderPoint = 10m,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.Parts.Add(new Part
+        {
+            Id = substitutePartId,
+            TenantId = tenantId,
+            PartCatalogId = catalogId,
+            PartKey = "check-part-sub",
+            DisplayName = "Readiness check substitute part",
+            Status = "active",
+            ReorderPoint = 5m,
             CreatedAt = now,
             UpdatedAt = now,
         });
@@ -333,6 +390,18 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
             UpdatedAt = now,
         });
 
+        db.PartStockLevels.Add(new PartStockLevel
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartId = substitutePartId,
+            InventoryBinId = Guid.NewGuid(),
+            QuantityOnHand = 15m,
+            QuantityReserved = 3m,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
         db.ExternalParties.Add(new ExternalParty
         {
             Id = vendorId,
@@ -343,6 +412,52 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
             LegalName = "Restricted vendor LLC",
             ApprovalStatus = "restricted",
             Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.PartVendorLinks.Add(new PartVendorLink
+        {
+            Id = partVendorLinkId,
+            TenantId = tenantId,
+            PartId = partId,
+            ExternalPartyId = vendorId,
+            VendorPartNumber = "VP-CHECK",
+            IsPreferred = true,
+            CatalogUnitPrice = 99m,
+            CatalogCurrencyCode = "USD",
+            CatalogMinimumOrderQuantity = 5m,
+            CatalogLeadTimeDays = 14,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.PartVendorPricingSnapshots.Add(new PartVendorPricingSnapshot
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartVendorLinkId = partVendorLinkId,
+            SnapshotKey = "price-check",
+            UnitPrice = 42.50m,
+            CurrencyCode = "USD",
+            MinimumOrderQuantity = 2m,
+            EffectiveFrom = now.AddDays(-1),
+            Source = SnapshotSources.Manual,
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.PartVendorLeadTimeSnapshots.Add(new PartVendorLeadTimeSnapshot
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartVendorLinkId = partVendorLinkId,
+            SnapshotKey = "lead-check",
+            LeadTimeDays = 5,
+            EffectiveFrom = now.AddDays(-1),
+            Source = SnapshotSources.Manual,
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
             CreatedAt = now,
             UpdatedAt = now,
         });
@@ -412,7 +527,7 @@ public sealed class SupplyArrSupplyReadinessCheckTests : IAsyncLifetime
         });
 
         await db.SaveChangesAsync();
-        return (partId, vendorId, purchaseOrderId, receivingReceiptId, warrantyClaimId);
+        return (partId, vendorId, partVendorLinkId, substitutePartId, purchaseOrderId, receivingReceiptId, warrantyClaimId);
     }
 
     private string CreateSupplyArrAccessToken(

@@ -8,14 +8,14 @@ public static class WorkOrderEndpoints
 {
     public static void MapMaintainArrWorkOrderEndpoints(this WebApplication app)
     {
-        MapWorkOrderRoutes(app.MapGroup("/api/work-orders").WithTags("WorkOrders").RequireAuthorization(), string.Empty);
-        MapWorkOrderRoutes(app.MapGroup("/api/v1/work-orders").WithTags("WorkOrders").RequireAuthorization(), "V1");
+        MapWorkOrderRoutes(app.MapGroup("/api/work-orders").WithTags("WorkOrders").RequireAuthorization(), string.Empty, "/api/work-orders");
+        MapWorkOrderRoutes(app.MapGroup("/api/v1/work-orders").WithTags("WorkOrders").RequireAuthorization(), "V1", "/api/v1/work-orders");
 
-        MapDefectWorkOrderRoutes(app.MapGroup("/api/defects").WithTags("Defects").RequireAuthorization(), string.Empty);
-        MapDefectWorkOrderRoutes(app.MapGroup("/api/v1/defects").WithTags("Defects").RequireAuthorization(), "V1");
+        MapDefectWorkOrderRoutes(app.MapGroup("/api/defects").WithTags("Defects").RequireAuthorization(), string.Empty, "/api/work-orders");
+        MapDefectWorkOrderRoutes(app.MapGroup("/api/v1/defects").WithTags("Defects").RequireAuthorization(), "V1", "/api/v1/work-orders");
     }
 
-    private static void MapWorkOrderRoutes(RouteGroupBuilder group, string nameSuffix)
+    private static void MapWorkOrderRoutes(RouteGroupBuilder group, string nameSuffix, string workOrderRoutePrefix)
     {
         group.MapGet("/", async (
             Guid? assetId,
@@ -72,7 +72,7 @@ public static class WorkOrderEndpoints
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
-            return Results.Created($"/api/work-orders/{created.WorkOrderId}", created);
+            return Results.Created($"{workOrderRoutePrefix}/{created.WorkOrderId}", created);
         })
         .WithName($"CreateWorkOrder{nameSuffix}");
 
@@ -134,7 +134,7 @@ public static class WorkOrderEndpoints
         .WithName($"UpdateWorkOrderStatus{nameSuffix}");
     }
 
-    private static void MapDefectWorkOrderRoutes(RouteGroupBuilder defectGroup, string nameSuffix)
+    private static void MapDefectWorkOrderRoutes(RouteGroupBuilder defectGroup, string nameSuffix, string workOrderRoutePrefix)
     {
         defectGroup.MapPost("/{defectId:guid}/work-orders", async (
             Guid defectId,
@@ -156,7 +156,7 @@ public static class WorkOrderEndpoints
                 defectId,
                 request,
                 cancellationToken);
-            return Results.Created($"/api/work-orders/{created.WorkOrderId}", created);
+            return Results.Created($"{workOrderRoutePrefix}/{created.WorkOrderId}", created);
         })
         .WithName($"CreateWorkOrderFromDefect{nameSuffix}");
     }

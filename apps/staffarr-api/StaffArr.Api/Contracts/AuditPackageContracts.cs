@@ -104,7 +104,11 @@ public sealed record AuditPackagePersonnelIncidentItem(
     DateTimeOffset ReportedAt,
     Guid ReportedByUserId,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    string? SourceProduct = null,
+    Guid? SourceIncidentId = null,
+    string? SourceEventKind = null,
+    string? SourceReferenceKey = null);
 
 public sealed record AuditPackageReadinessOverrideItem(
     Guid ReadinessOverrideId,

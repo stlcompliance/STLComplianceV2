@@ -11,6 +11,7 @@ using NexArr.Api.Data;
 using NexArr.Api.Services;
 using RoutArr.Api.Contracts;
 using RoutArr.Api.Data;
+using RoutArr.Api.Entities;
 using RoutArr.Api.Services;
 using RoutArrRedeemRequest = RoutArr.Api.Contracts.RedeemHandoffRequest;
 using RoutArrHandoffSessionResponse = RoutArr.Api.Contracts.HandoffSessionResponse;
@@ -136,6 +137,19 @@ public sealed class RoutArrTripProofDvirTests : IAsyncLifetime
         listProofsResponse.EnsureSuccessStatusCode();
         var proofList = (await listProofsResponse.Content.ReadFromJsonAsync<TripProofListResponse>())!;
         Assert.Single(proofList.Items);
+
+        using var scope = _routarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+        var defectDvirId = Assert.Single(
+            summary.DvirInspections,
+            x => x.Result == "conditional").DvirId;
+        var outboxEvents = await db.IntegrationOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && (x.RelatedEntityId == proof.ProofId || x.RelatedEntityId == defectDvirId))
+            .ToListAsync();
+        Assert.Contains(outboxEvents, x => x.EventKind == RoutArrIntegrationOutboxEventKinds.ProofCreated);
+        Assert.Contains(outboxEvents, x => x.EventKind == RoutArrIntegrationOutboxEventKinds.ProofCaptured);
+        Assert.Contains(outboxEvents, x => x.EventKind == RoutArrIntegrationOutboxEventKinds.DriverReportedDefect);
     }
 
     [Fact]

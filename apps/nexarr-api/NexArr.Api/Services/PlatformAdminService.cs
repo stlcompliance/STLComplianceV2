@@ -466,11 +466,14 @@ public sealed class PlatformAdminService(
             "callback_not_allowed" => "Add or correct the product callback allowlist entry for this tenant and environment.",
             "not_entitled" or "entitlement_inactive" or "entitlement_revoked" => "Grant or reactivate the tenant entitlement for the requested product.",
             "tenant_suspended" => "Reactivate the tenant before retrying product launch.",
+            "user_inactive" => "Reactivate the user account before retrying product launch.",
             "profile_missing" => "Configure an active launch profile with a base URL for the product.",
             "already_redeemed" => "Start a new launch; handoff codes are one-time use.",
             "expired" => "Start a new launch; the previous handoff code expired.",
             "service_token_invalid" or "auth.service_token_invalid" => "Rotate or reissue the product service token.",
             "auth.service_token_scope" => "Update the service client audience or allowed product scope.",
+            "auth.tenant_forbidden" => "Use a service token scoped to the handoff tenant.",
+            "auth.forbidden" => "Redeem with a valid product service token or platform administrator account.",
             _ => null
         };
 

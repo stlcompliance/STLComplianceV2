@@ -786,6 +786,10 @@ namespace NexArr.Api.Migrations
 
             modelBuilder.Entity("NexArr.Api.Entities.ProductCatalogItem", b =>
                 {
+                    b.Property<string>("ProductKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<string>("ApiBaseUrl")
                         .IsRequired()
                         .HasMaxLength(512)
@@ -795,10 +799,6 @@ namespace NexArr.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
-
-                    b.Property<string>("ProductKey")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
@@ -1331,6 +1331,14 @@ namespace NexArr.Api.Migrations
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("FailedLoginCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTimeOffset?>("LockedUntil")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset>("PasswordChangedAt")
                         .HasColumnType("timestamp with time zone");

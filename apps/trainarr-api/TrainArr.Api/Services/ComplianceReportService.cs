@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using TrainArr.Api.Contracts;
 using TrainArr.Api.Data;
+using TrainArr.Api.Entities;
 
 namespace TrainArr.Api.Services;
 
@@ -82,6 +83,61 @@ public sealed class ComplianceReportService(TrainArrDbContext db)
             "text/csv",
             $"trainarr-compliance-report-{timestamp}.csv",
             Encoding.UTF8.GetBytes(builder.ToString()));
+    }
+
+    public async Task<TrainingGapReportResponse> GetGapReportAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var assignments = await db.TrainingAssignments
+            .AsNoTracking()
+            .Include(x => x.TrainingDefinition)
+            .Include(x => x.QualificationIssue)
+            .Where(x => x.TenantId == tenantId
+                && AssignmentDueReminderRules.OpenAssignmentStatuses.Contains(x.Status))
+            .OrderBy(x => x.DueAt ?? DateTimeOffset.MaxValue)
+            .Take(25)
+            .ToListAsync(cancellationToken);
+
+        var personQualificationKeys = assignments
+            .Select(x => (x.StaffarrPersonId, x.TrainingDefinition.QualificationKey))
+            .Where(x => !string.IsNullOrWhiteSpace(x.QualificationKey))
+            .Distinct()
+            .ToList();
+
+        var personIds = personQualificationKeys.Select(x => x.StaffarrPersonId).Distinct().ToList();
+        var qualificationKeys = personQualificationKeys.Select(x => x.QualificationKey).Distinct().ToList();
+        var issuedQualifications = await db.QualificationIssues
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && personIds.Contains(x.StaffarrPersonId)
+                && qualificationKeys.Contains(x.QualificationKey)
+                && x.Status == "issued"
+                && (x.ExpiresAt == null || x.ExpiresAt > DateTimeOffset.UtcNow))
+            .Select(x => new { x.StaffarrPersonId, x.QualificationKey })
+            .ToListAsync(cancellationToken);
+
+        var issuedLookup = issuedQualifications
+            .Select(x => (x.StaffarrPersonId, x.QualificationKey))
+            .ToHashSet();
+
+        var gaps = assignments
+            .Where(x => !issuedLookup.Contains((x.StaffarrPersonId, x.TrainingDefinition.QualificationKey)))
+            .Select(x => new TrainingGapReportItem(
+                x.Id,
+                x.StaffarrPersonId,
+                x.TrainingDefinitionId,
+                x.TrainingDefinition.DefinitionKey,
+                x.TrainingDefinition.Name,
+                x.TrainingDefinition.QualificationKey,
+                x.TrainingDefinition.QualificationName,
+                x.Status,
+                x.DueAt,
+                "missing_issued_qualification",
+                $"No current issued qualification exists for {x.TrainingDefinition.QualificationKey}."))
+            .ToList();
+
+        return new TrainingGapReportResponse(DateTimeOffset.UtcNow, gaps.Count, gaps);
     }
 
     private static string CsvEscape(string value)

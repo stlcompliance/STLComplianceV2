@@ -199,6 +199,116 @@ public class ComplianceCoreRuleEvaluationTests : IAsyncLifetime
         var result = (await response.Content.ReadFromJsonAsync<RuleEvaluationRunResponse>())!;
         Assert.Equal("fail", result.OverallResult);
         Assert.Contains(result.RuleResults, item => item.Message.Contains("was not provided", StringComparison.OrdinalIgnoreCase));
+
+        using var scope = _complianceCoreFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var events = await db.AuditEvents
+            .AsNoTracking()
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.TargetId == result.EvaluationRunId.ToString())
+            .ToListAsync();
+
+        Assert.Single(events, x => x.Action == RuleEvaluationService.EvaluationCompletedEventAction);
+        Assert.Single(events, x => x.Action == RuleEvaluationService.EvaluationBlockedEventAction);
+        var missingEvent = Assert.Single(events, x => x.Action == RuleEvaluationService.EvidenceMissingEventAction);
+        Assert.Equal("license_valid", missingEvent.ReasonCode);
+    }
+
+    [Fact]
+    public async Task Rule_evaluation_failed_remediation_rule_emits_canonical_event()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await CreateSampleRulePackAsync(adminToken);
+
+        var content = new RulePackContentBody(
+            1,
+            "all",
+            [
+                new RuleDefinitionDto(
+                    "license_valid",
+                    "Valid license",
+                    "fact_boolean",
+                    "driver_license_valid",
+                    true,
+                    RemediationRequired: true),
+            ]);
+
+        var updateRequest = Authorized(HttpMethod.Put, $"/api/rule-packs/{rulePackId}/content", adminToken);
+        updateRequest.Content = JsonContent.Create(new UpdateRulePackContentRequest(content));
+        (await _complianceCoreClient.SendAsync(updateRequest)).EnsureSuccessStatusCode();
+
+        var request = Authorized(HttpMethod.Post, $"/api/rule-packs/{rulePackId}/evaluate", adminToken);
+        request.Content = JsonContent.Create(new EvaluateRulePackRequest(new Dictionary<string, bool>
+        {
+            ["driver_license_valid"] = false,
+        }));
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<RuleEvaluationRunResponse>())!;
+        Assert.Equal("fail", result.OverallResult);
+        var failedRule = Assert.Single(result.RuleResults);
+        Assert.True(failedRule.RemediationRequired);
+
+        using var scope = _complianceCoreFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var remediationEvent = await db.AuditEvents.SingleAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.Action == RuleEvaluationService.RemediationRequiredEventAction
+                && x.TargetId == result.EvaluationRunId.ToString());
+        Assert.Equal("rule_evaluation_run", remediationEvent.TargetType);
+        Assert.Equal(ComplianceEvaluationOutcomes.NeedsRemediation, remediationEvent.Result);
+        Assert.Equal("license_valid", remediationEvent.ReasonCode);
+    }
+
+    [Fact]
+    public async Task Rule_pack_batch_evaluate_review_required_rule_returns_review_and_emits_event()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await CreateSampleRulePackAsync(adminToken);
+
+        var content = new RulePackContentBody(
+            1,
+            "all",
+            [
+                new RuleDefinitionDto(
+                    "license_review",
+                    "License requires review",
+                    "fact_boolean",
+                    "driver_license_valid",
+                    true,
+                    ReviewRequired: true),
+            ]);
+
+        var updateRequest = Authorized(HttpMethod.Put, $"/api/rule-packs/{rulePackId}/content", adminToken);
+        updateRequest.Content = JsonContent.Create(new UpdateRulePackContentRequest(content));
+        (await _complianceCoreClient.SendAsync(updateRequest)).EnsureSuccessStatusCode();
+
+        var request = Authorized(HttpMethod.Post, "/api/rule-packs/evaluate/batch", adminToken);
+        request.Content = JsonContent.Create(new EvaluateRulePackBatchRequest(
+            [new EvaluateRulePackBatchItem("driver_qualification")],
+            new Dictionary<string, bool>
+            {
+                ["driver_license_valid"] = false,
+            }));
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var batch = (await response.Content.ReadFromJsonAsync<EvaluateRulePackBatchResponse>())!;
+        var item = Assert.Single(batch.Results);
+        Assert.Equal(ComplianceEvaluationOutcomes.Review, item.Outcome);
+        Assert.Equal("review_required", item.ReasonCode);
+        Assert.Equal(1, batch.Summary.BlockCount);
+        var rule = Assert.Single(item.RuleResults);
+        Assert.True(rule.ReviewRequired);
+
+        using var scope = _complianceCoreFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var reviewEvent = await db.AuditEvents.SingleAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.Action == RuleEvaluationService.ReviewRequiredEventAction
+                && x.TargetId == item.EvaluationRunId!.Value.ToString());
+        Assert.Equal("rule_evaluation_run", reviewEvent.TargetType);
+        Assert.Equal(ComplianceEvaluationOutcomes.Review, reviewEvent.Result);
+        Assert.Equal("license_review", reviewEvent.ReasonCode);
     }
 
     [Fact]
@@ -505,6 +615,19 @@ public class ComplianceCoreRuleEvaluationTests : IAsyncLifetime
         Assert.Equal("medical_cert_rule", history.RuleKey);
         Assert.True(history.History.Count >= 1);
         Assert.Contains(history.History, item => item.ExistsInVersion);
+
+        using var scope = _complianceCoreFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var changedEvents = await db.AuditEvents
+            .AsNoTracking()
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.Action == RuleCatalogService.RuleChangedEventAction
+                && x.TargetId == patched.RuleId)
+            .ToListAsync();
+
+        Assert.Single(changedEvents, x => x.Result == "created");
+        Assert.Single(changedEvents, x => x.Result == "updated");
+        Assert.All(changedEvents, changedEvent => Assert.Equal("medical_cert_rule", changedEvent.ReasonCode));
     }
 
     [Fact]

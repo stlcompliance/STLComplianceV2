@@ -54,4 +54,8 @@ public static class ComplianceEvaluationOutcomes
     public const string Block = "block";
 
     public const string Waived = "waived";
+
+    public const string NeedsRemediation = "needs_remediation";
+
+    public const string Review = "review";
 }

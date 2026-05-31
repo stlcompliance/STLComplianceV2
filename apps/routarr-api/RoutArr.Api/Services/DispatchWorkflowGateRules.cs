@@ -8,6 +8,7 @@ public static class DispatchWorkflowGateRules
     {
         var hasBlock = false;
         var hasWarn = false;
+        var hasWaived = false;
 
         foreach (var outcome in gateOutcomes)
         {
@@ -19,6 +20,10 @@ public static class DispatchWorkflowGateRules
             {
                 hasWarn = true;
             }
+            else if (string.Equals(outcome, DispatchWorkflowGateOutcomes.Waived, StringComparison.OrdinalIgnoreCase))
+            {
+                hasWaived = true;
+            }
         }
 
         if (hasBlock)
@@ -29,6 +34,11 @@ public static class DispatchWorkflowGateRules
         if (hasWarn)
         {
             return DispatchWorkflowGateOutcomes.Warn;
+        }
+
+        if (hasWaived)
+        {
+            return DispatchWorkflowGateOutcomes.Waived;
         }
 
         return DispatchWorkflowGateOutcomes.Allow;
@@ -64,6 +74,18 @@ public static class DispatchWorkflowGateRules
             return ("workflow_gate_warn", "Compliance workflow gate returned warnings.");
         }
 
+        if (string.Equals(outcome, DispatchWorkflowGateOutcomes.Waived, StringComparison.OrdinalIgnoreCase))
+        {
+            var waived = gates.FirstOrDefault(g =>
+                string.Equals(g.Outcome, DispatchWorkflowGateOutcomes.Waived, StringComparison.OrdinalIgnoreCase));
+            if (waived is not null)
+            {
+                return (waived.ReasonCode, waived.Message);
+            }
+
+            return ("compliance_waiver_applied", "Compliance workflow gate allowed dispatch by waiver.");
+        }
+
         return ("workflow_gate_clear", "Compliance workflow gates passed.");
     }
 
@@ -81,7 +103,11 @@ public static class DispatchWorkflowGateRules
             workflowGates.ReasonCode,
             workflowGates.Message,
             workflowGates.IsBlocking,
-            workflowGates.Gates);
+            workflowGates.Gates,
+            workflowGates.BatchId,
+            workflowGates.CheckedAt,
+            workflowGates.ContextSnapshot,
+            workflowGates.AuditSnapshot);
 
         var hasBlocking = preview.HasBlockingConflicts || workflowGates.IsBlocking;
 

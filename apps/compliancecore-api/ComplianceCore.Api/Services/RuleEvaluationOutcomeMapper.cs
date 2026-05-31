@@ -26,7 +26,7 @@ public static class RuleEvaluationOutcomeMapper
                      !string.Equals(item.Result, RuleEvaluationResults.Pass, StringComparison.OrdinalIgnoreCase)))
         {
             reasons.Add(new WorkflowGateReasonResponse(
-                rule.NonWaivable ? "non_waivable_rule_failed" : "rule_failed",
+                ResolveFailureReasonCode(rule),
                 rule.Message,
                 rule.RuleKey,
                 null));
@@ -59,10 +59,41 @@ public static class RuleEvaluationOutcomeMapper
             ? "Rule evaluation did not pass."
             : $"Rule evaluation failed for: {string.Join(", ", failedRules)}.";
 
+        if (ShouldRequireReview(ruleResults))
+        {
+            return (
+                ComplianceEvaluationOutcomes.Review,
+                "review_required",
+                failedRules.Count == 0
+                    ? "Rule evaluation requires compliance review."
+                    : $"Compliance review is required for: {string.Join(", ", failedRules)}.",
+                reasons);
+        }
+
         return (
             ComplianceEvaluationOutcomes.Block,
             "rule_evaluation_failed",
             message,
             reasons);
+    }
+
+    private static string ResolveFailureReasonCode(RuleEvaluationItemResponse rule)
+    {
+        if (rule.NonWaivable)
+        {
+            return "non_waivable_rule_failed";
+        }
+
+        return rule.ReviewRequired ? "review_required_rule_failed" : "rule_failed";
+    }
+
+    private static bool ShouldRequireReview(IReadOnlyList<RuleEvaluationItemResponse> ruleResults)
+    {
+        var failedRules = ruleResults
+            .Where(item => !string.Equals(item.Result, RuleEvaluationResults.Pass, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        return failedRules.Count > 0
+            && failedRules.All(rule => rule.ReviewRequired && !rule.NonWaivable);
     }
 }

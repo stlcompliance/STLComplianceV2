@@ -21,18 +21,22 @@ public static class PersonTimelineBuilder
 
         foreach (var incident in incidents)
         {
+            var sourceSuffix = string.IsNullOrWhiteSpace(incident.SourceProduct)
+                ? string.Empty
+                : $" · source: {incident.SourceProduct}";
+
             entries.Add(new PersonTimelineEntryResponse(
                 $"incident:{incident.Id}:reported",
                 personId,
                 "incident",
                 "incident_reported",
                 $"Incident reported: {incident.Title}",
-                $"{incident.ReasonCategoryKey} · {incident.Severity} · {incident.Status}",
+                $"{incident.ReasonCategoryKey} · {incident.Severity} · {incident.Status}{sourceSuffix}",
                 incident.ReportedAt,
                 incident.ReportedByUserId,
                 "personnel_incident",
                 incident.Id.ToString(),
-                null));
+                incident.SourceIncidentId?.ToString()));
         }
 
         var routings = await (

@@ -2,6 +2,7 @@ using STLCompliance.Shared.Integration;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -34,6 +35,8 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     private string _handoffServiceToken = null!;
     private string _pmScanServiceToken = null!;
     private string _routarrAssetReadinessToken = null!;
+    private string _routarrDispatchAssetReadinessToken = null!;
+    private RecordingComplianceCoreAssetReadinessGateHandler _complianceCoreReadinessGateHandler = null!;
 
     public async Task InitializeAsync()
     {
@@ -62,6 +65,10 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
         _handoffServiceToken = await IssueHandoffServiceTokenAsync(adminToken, "maintainarr");
         _pmScanServiceToken = await IssuePmScanServiceTokenAsync(adminToken);
         _routarrAssetReadinessToken = await IssueAssetReadinessIntegrationTokenAsync(adminToken);
+        _routarrDispatchAssetReadinessToken = await IssueAssetReadinessIntegrationTokenAsync(
+            adminToken,
+            global::MaintainArr.Api.Endpoints.IntegrationEndpoints.RoutarrAssetReadinessDispatchActionScope);
+        _complianceCoreReadinessGateHandler = new RecordingComplianceCoreAssetReadinessGateHandler();
 
         _maintainarrFactory = new WebApplicationFactory<global::MaintainArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -72,6 +79,11 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
             builder.UseSetting("NexArr:BaseUrl", _nexarrClient.BaseAddress!.ToString().TrimEnd('/'));
             builder.UseSetting("Handoff:ServiceToken", _handoffServiceToken);
             builder.UseSetting("ServiceToken:SigningKey", signingKey);
+            builder.UseSetting("ComplianceCore:BaseUrl", "http://compliancecore.test");
+            builder.UseSetting("ComplianceCore:ServiceToken", "maintainarr-to-compliancecore-token");
+            builder.UseSetting("ComplianceCore:AssetReadinessActionKey", "can-dispatch-asset");
+            builder.UseSetting("ComplianceCore:AssetReadinessWorkflowKey", "can_dispatch_asset");
+            builder.UseSetting("ComplianceCore:AssetReadinessActivityContextKey", "asset_readiness");
             builder.ConfigureServices(services =>
             {
                 RemoveDbContext<MaintainArrDbContext>(services);
@@ -79,6 +91,8 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
 
                 services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
+                services.AddHttpClient<ComplianceCoreAssetReadinessGateClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _complianceCoreReadinessGateHandler);
             });
         });
 
@@ -150,6 +164,51 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
         Assert.False(readiness.Dispatchability.IsDispatchable);
         Assert.Equal("block", readiness.Dispatchability.Outcome);
         Assert.Equal("critical_defect", readiness.Dispatchability.PrimaryBlockerType);
+    }
+
+    [Fact]
+    public async Task Asset_readiness_includes_compliancecore_blocker_and_reference()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(token);
+
+        _complianceCoreReadinessGateHandler.NextOutcome = "block";
+        _complianceCoreReadinessGateHandler.NextReasonCode = "annual_inspection_rule_failed";
+        _complianceCoreReadinessGateHandler.NextMessage = "Compliance Core requires annual inspection evidence before dispatch.";
+
+        var response = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/asset-readiness?assetId={assetId}", token));
+        response.EnsureSuccessStatusCode();
+        var readiness = (await response.Content.ReadFromJsonAsync<AssetReadinessResponse>())!;
+
+        Assert.Equal("not_ready", readiness.ReadinessStatus);
+        Assert.Equal("compliancecore", readiness.ReadinessBasis);
+        var complianceBlocker = Assert.Single(readiness.Blockers, blocker => blocker.BlockerType == "compliancecore_rule");
+        Assert.Equal("compliancecore_check", complianceBlocker.SourceEntityType);
+        Assert.Contains("annual inspection evidence", complianceBlocker.Message, StringComparison.OrdinalIgnoreCase);
+        var reference = Assert.Single(readiness.ComplianceCoreReferences ?? []);
+        Assert.Equal("check_result", reference.ReferenceType);
+        Assert.Equal("block", reference.Outcome);
+        Assert.Contains(reference.ReferenceId, reference.DeepLinkPath, StringComparison.OrdinalIgnoreCase);
+        Assert.NotNull(readiness.Dispatchability);
+        Assert.False(readiness.Dispatchability.IsDispatchable);
+        Assert.Equal("block", readiness.Dispatchability.Outcome);
+        Assert.Equal("compliancecore_rule", readiness.Dispatchability.PrimaryBlockerType);
+
+        var gateRequest = Assert.Single(_complianceCoreReadinessGateHandler.Requests);
+        Assert.Equal("/api/v1/gates/can-dispatch-asset", gateRequest.Path);
+        Assert.Equal("Bearer", gateRequest.AuthorizationScheme);
+        Assert.Equal("maintainarr-to-compliancecore-token", gateRequest.AuthorizationParameter);
+        Assert.Equal(PlatformSeeder.DemoTenantId, gateRequest.TenantId);
+        Assert.Equal("asset_readiness", gateRequest.ActivityContextKey);
+        Assert.Equal("can_dispatch_asset", gateRequest.WorkflowKey);
+        Assert.Contains(gateRequest.Subjects, subject =>
+            subject.SubjectType == "asset"
+            && subject.SubjectReference == assetId.ToString("D")
+            && subject.SourceProduct == "maintainarr");
+        Assert.Equal(assetId.ToString("D"), gateRequest.RuleContext["asset_id"]);
+        Assert.Equal("ready", gateRequest.RuleContext["local_readiness_status"]);
+        Assert.Equal("maintenance_clear", gateRequest.RuleContext["local_readiness_basis"]);
     }
 
     [Fact]
@@ -313,6 +372,46 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
         Assert.Equal(readiness.ReadinessStatus, v1Readiness.ReadinessStatus);
     }
 
+    [Fact]
+    public async Task Integration_asset_readiness_supports_asset_id_lookup_for_product_contracts()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(token);
+
+        var response = await _maintainarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/v1/integrations/asset-readiness?tenantId={PlatformSeeder.DemoTenantId:D}&assetId={assetId:D}",
+            _routarrAssetReadinessToken));
+        response.EnsureSuccessStatusCode();
+        var readiness = (await response.Content.ReadFromJsonAsync<AssetReadinessResponse>())!;
+
+        Assert.Equal(assetId, readiness.AssetId);
+        Assert.Equal("ready", readiness.ReadinessStatus);
+        Assert.NotNull(readiness.Dispatchability);
+        Assert.True(readiness.Dispatchability.IsDispatchable);
+        Assert.NotNull(readiness.AuditSnapshot);
+        Assert.NotEqual(Guid.Empty, readiness.AuditSnapshot.AuditEventId);
+    }
+
+    [Fact]
+    public async Task Routarr_asset_readiness_dispatch_gate_supports_asset_id_lookup()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(token);
+
+        var response = await _maintainarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/v1/integrations/routarr-asset-readiness?tenantId={PlatformSeeder.DemoTenantId:D}&assetId={assetId:D}",
+            _routarrDispatchAssetReadinessToken));
+        response.EnsureSuccessStatusCode();
+        var readiness = (await response.Content.ReadFromJsonAsync<AssetReadinessResponse>())!;
+
+        Assert.Equal(assetId, readiness.AssetId);
+        Assert.Equal("ready", readiness.ReadinessStatus);
+        Assert.NotNull(readiness.Dispatchability);
+        Assert.True(readiness.Dispatchability.IsDispatchable);
+    }
+
     private async Task<Guid> SeedAssetOnlyAsync(string token)
     {
         var assetTypeId = await SeedAssetTypeAsync(token);
@@ -431,7 +530,9 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
         return issued.AccessToken;
     }
 
-    private async Task<string> IssueAssetReadinessIntegrationTokenAsync(string adminToken)
+    private async Task<string> IssueAssetReadinessIntegrationTokenAsync(
+        string adminToken,
+        string actionScope = global::MaintainArr.Api.Endpoints.IntegrationEndpoints.AssetReadinessReadActionScope)
     {
         var registerRequest = Authorized(HttpMethod.Post, "/api/service-tokens/clients", adminToken);
         registerRequest.Content = JsonContent.Create(new NexArr.Api.Contracts.RegisterServiceClientRequest(
@@ -448,7 +549,7 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
             client.ServiceClientId,
             PlatformSeeder.DemoTenantId,
             ["maintainarr"],
-            global::MaintainArr.Api.Endpoints.IntegrationEndpoints.AssetReadinessReadActionScope,
+            actionScope,
             30));
         var issueResponse = await _nexarrClient.SendAsync(issueRequest);
         issueResponse.EnsureSuccessStatusCode();
@@ -505,6 +606,119 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
         foreach (var descriptor in descriptors)
         {
             services.Remove(descriptor);
+        }
+    }
+
+    private sealed record RecordedComplianceCoreAssetReadinessSubject(
+        string SubjectType,
+        string SubjectReference,
+        string? SourceProduct,
+        string? DisplayLabel);
+
+    private sealed record RecordedComplianceCoreAssetReadinessGateRequest(
+        string Path,
+        string? AuthorizationScheme,
+        string? AuthorizationParameter,
+        Guid TenantId,
+        string ActivityContextKey,
+        string? WorkflowKey,
+        List<RecordedComplianceCoreAssetReadinessSubject> Subjects,
+        Dictionary<string, string> RuleContext);
+
+    private sealed class RecordingComplianceCoreAssetReadinessGateHandler : HttpMessageHandler
+    {
+        public List<RecordedComplianceCoreAssetReadinessGateRequest> Requests { get; } = [];
+
+        public string NextOutcome { get; set; } = "allow";
+
+        public string NextReasonCode { get; set; } = "asset_readiness_clear";
+
+        public string NextMessage { get; set; } = "Asset satisfies Compliance Core readiness requirements.";
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var body = request.Content is null
+                ? "{}"
+                : await request.Content.ReadAsStringAsync(cancellationToken);
+            using var document = JsonDocument.Parse(body);
+            var root = document.RootElement;
+
+            var subjects = new List<RecordedComplianceCoreAssetReadinessSubject>();
+            if (root.TryGetProperty("subjectReferences", out var subjectReferencesElement)
+                && subjectReferencesElement.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var subjectElement in subjectReferencesElement.EnumerateArray())
+                {
+                    subjects.Add(new RecordedComplianceCoreAssetReadinessSubject(
+                        subjectElement.GetProperty("subjectType").GetString() ?? string.Empty,
+                        subjectElement.GetProperty("subjectReference").GetString() ?? string.Empty,
+                        subjectElement.TryGetProperty("sourceProduct", out var sourceProductElement)
+                            && sourceProductElement.ValueKind != JsonValueKind.Null
+                                ? sourceProductElement.GetString()
+                                : null,
+                        subjectElement.TryGetProperty("displayLabel", out var displayLabelElement)
+                            && displayLabelElement.ValueKind != JsonValueKind.Null
+                                ? displayLabelElement.GetString()
+                                : null));
+                }
+            }
+
+            var ruleContext = new Dictionary<string, string>();
+            if (root.TryGetProperty("ruleContext", out var ruleContextElement)
+                && ruleContextElement.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var property in ruleContextElement.EnumerateObject())
+                {
+                    ruleContext[property.Name] = property.Value.GetString() ?? string.Empty;
+                }
+            }
+
+            Requests.Add(new RecordedComplianceCoreAssetReadinessGateRequest(
+                request.RequestUri?.AbsolutePath ?? string.Empty,
+                request.Headers.Authorization?.Scheme,
+                request.Headers.Authorization?.Parameter,
+                root.GetProperty("tenantId").GetGuid(),
+                root.GetProperty("activityContextKey").GetString() ?? string.Empty,
+                root.TryGetProperty("workflowKey", out var workflowKeyElement)
+                    && workflowKeyElement.ValueKind != JsonValueKind.Null
+                        ? workflowKeyElement.GetString()
+                        : null,
+                subjects,
+                ruleContext));
+
+            var traceId = Guid.NewGuid();
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new
+                {
+                    traceId,
+                    tenantId = root.GetProperty("tenantId").GetGuid(),
+                    workflowKey = root.TryGetProperty("workflowKey", out var responseWorkflowKey)
+                        && responseWorkflowKey.ValueKind != JsonValueKind.Null
+                            ? responseWorkflowKey.GetString()
+                            : "can_dispatch_asset",
+                    actionKey = "can_dispatch_asset",
+                    activityContextKey = root.GetProperty("activityContextKey").GetString(),
+                    subjectReferences = Array.Empty<object>(),
+                    checkResultId = traceId,
+                    ruleEvaluationRunId = (Guid?)null,
+                    outcome = NextOutcome,
+                    reasonCode = NextReasonCode,
+                    message = NextMessage,
+                    appliedRuleVersions = Array.Empty<object>(),
+                    citationReferences = Array.Empty<object>(),
+                    missingFacts = Array.Empty<string>(),
+                    staleFacts = Array.Empty<object>(),
+                    evidenceRequirements = Array.Empty<object>(),
+                    remediationHints = Array.Empty<object>(),
+                    appliedWaiverId = (Guid?)null,
+                    appliedWaiverKey = (string?)null,
+                    auditExportPath = (string?)null,
+                    evaluatedAt = DateTimeOffset.UtcNow
+                })
+            };
         }
     }
 

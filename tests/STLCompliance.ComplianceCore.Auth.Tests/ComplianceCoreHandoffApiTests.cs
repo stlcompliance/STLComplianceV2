@@ -159,7 +159,7 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
     [Fact]
     public async Task Session_bootstrap_returns_claim_backed_identity()
     {
-        var token = CreateComplianceCoreAccessToken(["compliancecore"], "compliance_admin");
+        var token = CreateComplianceCoreAccessToken(["compliancecore"], "compliance_admin", isPlatformAdmin: true);
         var request = Authorized(HttpMethod.Get, "/api/session", token);
         var response = await _complianceClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
@@ -167,10 +167,35 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
         Assert.NotNull(payload);
         Assert.Equal(PlatformSeeder.DemoAdminUserId, payload.UserId);
         Assert.True(payload.HasComplianceCoreEntitlement);
+        Assert.True(payload.IsPlatformAdmin);
     }
 
     [Fact]
-    public async Task Me_forbids_users_without_compliancecore_entitlement_claim()
+    public async Task Session_and_me_forbid_entitled_non_platform_admin_users()
+    {
+        var token = CreateComplianceCoreAccessToken(["compliancecore"], "compliance_admin");
+
+        var sessionResponse = await _complianceClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/session", token));
+        Assert.Equal(HttpStatusCode.Forbidden, sessionResponse.StatusCode);
+
+        var meResponse = await _complianceClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/me", token));
+        Assert.Equal(HttpStatusCode.Forbidden, meResponse.StatusCode);
+
+        using var scope = _complianceFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var deniedEvents = await db.AuditEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.Action == "compliancecore.admin_access.denied")
+            .ToListAsync();
+
+        Assert.Contains(deniedEvents, x => x.TargetType == "session" && x.ReasonCode == "auth.platform_admin_required");
+        Assert.Contains(deniedEvents, x => x.TargetType == "me" && x.ReasonCode == "auth.platform_admin_required");
+    }
+
+    [Fact]
+    public async Task Me_forbids_users_without_platform_admin_access()
     {
         var token = CreateComplianceCoreAccessToken(["nexarr"], "compliance_admin");
         var request = Authorized(HttpMethod.Get, "/api/me", token);
@@ -216,7 +241,8 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
 
     private string CreateComplianceCoreAccessToken(
         IReadOnlyList<string> entitlements,
-        string tenantRoleKey)
+        string tenantRoleKey,
+        bool isPlatformAdmin = false)
     {
         using var scope = _complianceFactory.Services.CreateScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<ComplianceCoreTokenService>();
@@ -229,7 +255,7 @@ public sealed class ComplianceCoreHandoffApiTests : IAsyncLifetime
             Guid.NewGuid(),
             tenantRoleKey,
             entitlements,
-            isPlatformAdmin: false);
+            isPlatformAdmin);
         return token;
     }
 

@@ -141,12 +141,14 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
             2000m));
         var createMeterResponse = await _maintainarrClient.SendAsync(createMeterRequest);
         createMeterResponse.EnsureSuccessStatusCode();
+        Assert.StartsWith($"/api/v1/meters/", createMeterResponse.Headers.Location?.ToString());
         var meter = (await createMeterResponse.Content.ReadFromJsonAsync<AssetMeterResponse>())!;
 
         var recordRequest = Authorized(HttpMethod.Post, $"/api/v1/meters/{meter.AssetMeterId}/readings", token);
         recordRequest.Content = JsonContent.Create(new RecordMeterReadingRequest(2050m, null, "v1 monthly", false));
         var recordResponse = await _maintainarrClient.SendAsync(recordRequest);
         recordResponse.EnsureSuccessStatusCode();
+        Assert.StartsWith($"/api/v1/meters/{meter.AssetMeterId}/readings/", recordResponse.Headers.Location?.ToString());
 
         var listRequest = Authorized(HttpMethod.Get, $"/api/v1/meters/{meter.AssetMeterId}/readings", token);
         var listResponse = await _maintainarrClient.SendAsync(listRequest);
@@ -159,6 +161,53 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
         listByAssetResponse.EnsureSuccessStatusCode();
         var meters = (await listByAssetResponse.Content.ReadFromJsonAsync<List<AssetMeterResponse>>())!;
         Assert.Contains(meters, x => x.AssetMeterId == meter.AssetMeterId);
+    }
+
+    [Fact]
+    public async Task Correction_workflow_records_audited_v1_meter_correction()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetAsync(token);
+        var meter = await CreateMeterAsync(token, assetId, 500m);
+
+        var correctionRequest = Authorized(HttpMethod.Post, $"/api/v1/meters/{meter.AssetMeterId}/readings/corrections", token);
+        correctionRequest.Content = JsonContent.Create(new CorrectMeterReadingRequest(450m, null, "Odometer rollover correction"));
+        var correctionResponse = await _maintainarrClient.SendAsync(correctionRequest);
+        correctionResponse.EnsureSuccessStatusCode();
+        Assert.StartsWith($"/api/v1/meters/{meter.AssetMeterId}/readings/", correctionResponse.Headers.Location?.ToString());
+
+        var correction = (await correctionResponse.Content.ReadFromJsonAsync<MeterReadingResponse>())!;
+        Assert.True(correction.IsCorrection);
+        Assert.Equal(0m, correction.DeltaFromPrevious);
+        Assert.Equal("Odometer rollover correction", correction.Notes);
+
+        var getMeterRequest = Authorized(HttpMethod.Get, $"/api/v1/meters/{meter.AssetMeterId}", token);
+        var getMeterResponse = await _maintainarrClient.SendAsync(getMeterRequest);
+        getMeterResponse.EnsureSuccessStatusCode();
+        var correctedMeter = (await getMeterResponse.Content.ReadFromJsonAsync<AssetMeterResponse>())!;
+        Assert.Equal(450m, correctedMeter.CurrentReading);
+        Assert.Equal(450m, correctedMeter.BaselineReading);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        Assert.True(await db.AuditEvents.AnyAsync(x =>
+            x.Action == "meter_reading.correction" &&
+            x.TargetType == "meter_reading" &&
+            x.TargetId == correction.MeterReadingId.ToString()));
+    }
+
+    [Fact]
+    public async Task Correction_workflow_requires_reason()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetAsync(token);
+        var meter = await CreateMeterAsync(token, assetId, 500m);
+
+        var correctionRequest = Authorized(HttpMethod.Post, $"/api/v1/meters/{meter.AssetMeterId}/readings/corrections", token);
+        correctionRequest.Content = JsonContent.Create(new CorrectMeterReadingRequest(450m, null, " "));
+        var correctionResponse = await _maintainarrClient.SendAsync(correctionRequest);
+
+        Assert.Equal(HttpStatusCode.BadRequest, correctionResponse.StatusCode);
     }
 
     [Fact]

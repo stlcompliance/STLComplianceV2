@@ -1,5 +1,6 @@
 using ComplianceCore.Api.Contracts;
 using ComplianceCore.Api.Services;
+using STLCompliance.Shared.Auth;
 
 namespace ComplianceCore.Api.Endpoints;
 
@@ -18,8 +19,8 @@ public static class AuthEndpoints
         }
 
         auth.MapPost("/handoff/redeem", RedeemHandoffAsync)
-        .AllowAnonymous()
-        .WithName("ComplianceCoreRedeemHandoff");
+            .AllowAnonymous()
+            .WithName("ComplianceCoreRedeemHandoff");
         auth.MapPost("/nexarr/redeem", RedeemHandoffAsync)
             .AllowAnonymous()
             .ExcludeFromDescription();
@@ -36,10 +37,18 @@ public static class AuthEndpoints
         session.MapGet("/", async (
             MeService service,
             ComplianceCoreAuthorizationService authorization,
+            IComplianceCoreAuditService audit,
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireAuthenticated(context.User);
+            await AuditDeniedPlatformAdminHydrationAsync(
+                context,
+                audit,
+                "session",
+                cancellationToken);
+            authorization.RequirePlatformAdmin(
+                context.User,
+                "Compliance Core session hydration requires NexArr-confirmed platform administrator access.");
             return Results.Ok(await service.GetSessionBootstrapAsync(context.User, cancellationToken));
         })
         .WithName("ComplianceCoreGetSessionBootstrap");
@@ -48,10 +57,18 @@ public static class AuthEndpoints
         sessionV1.MapGet("/", async (
             MeService service,
             ComplianceCoreAuthorizationService authorization,
+            IComplianceCoreAuditService audit,
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireAuthenticated(context.User);
+            await AuditDeniedPlatformAdminHydrationAsync(
+                context,
+                audit,
+                "session",
+                cancellationToken);
+            authorization.RequirePlatformAdmin(
+                context.User,
+                "Compliance Core session hydration requires NexArr-confirmed platform administrator access.");
             return Results.Ok(await service.GetSessionBootstrapAsync(context.User, cancellationToken));
         })
         .WithName("ComplianceCoreGetSessionBootstrapV1");
@@ -61,10 +78,18 @@ public static class AuthEndpoints
         me.MapGet("/", async (
             MeService service,
             ComplianceCoreAuthorizationService authorization,
+            IComplianceCoreAuditService audit,
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireComplianceCoreEntitlement(context.User);
+            await AuditDeniedPlatformAdminHydrationAsync(
+                context,
+                audit,
+                "me",
+                cancellationToken);
+            authorization.RequirePlatformAdmin(
+                context.User,
+                "Compliance Core user hydration requires NexArr-confirmed platform administrator access.");
             return Results.Ok(await service.GetMeAsync(context.User, cancellationToken));
         })
         .WithName("ComplianceCoreGetMe");
@@ -73,12 +98,52 @@ public static class AuthEndpoints
         meV1.MapGet("/", async (
             MeService service,
             ComplianceCoreAuthorizationService authorization,
+            IComplianceCoreAuditService audit,
             HttpContext context,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireComplianceCoreEntitlement(context.User);
+            await AuditDeniedPlatformAdminHydrationAsync(
+                context,
+                audit,
+                "me",
+                cancellationToken);
+            authorization.RequirePlatformAdmin(
+                context.User,
+                "Compliance Core user hydration requires NexArr-confirmed platform administrator access.");
             return Results.Ok(await service.GetMeAsync(context.User, cancellationToken));
         })
         .WithName("ComplianceCoreGetMeV1");
+    }
+
+    private static async Task AuditDeniedPlatformAdminHydrationAsync(
+        HttpContext context,
+        IComplianceCoreAuditService audit,
+        string targetType,
+        CancellationToken cancellationToken)
+    {
+        var principal = context.User;
+        if (principal.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        if (principal.HasProductEntitlement("compliancecore") && principal.IsPlatformAdmin())
+        {
+            return;
+        }
+
+        var reasonCode = principal.HasProductEntitlement("compliancecore")
+            ? "auth.platform_admin_required"
+            : "auth.not_entitled";
+
+        await audit.WriteAsync(
+            "compliancecore.admin_access.denied",
+            principal.GetTenantId(),
+            principal.GetUserId(),
+            targetType,
+            principal.GetSessionId().ToString(),
+            "denied",
+            reasonCode,
+            cancellationToken);
     }
 }

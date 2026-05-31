@@ -100,6 +100,46 @@ public sealed class StaffArrReportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Entity_export_v1_manifest_and_csv_aliases_work()
+    {
+        var manifestResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports/manifest", _adminToken));
+        manifestResponse.EnsureSuccessStatusCode();
+
+        var manifest = (await manifestResponse.Content.ReadFromJsonAsync<EntityExportManifestResponse>())!;
+        Assert.Equal(3, manifest.Entities.Count);
+        Assert.Contains(manifest.Entities, entity =>
+            entity.EntityKey == "people"
+            && entity.ExportPath == "/api/v1/exports/people");
+        Assert.Contains(manifest.ReportExports, report =>
+            report.ReportKey == "personnel"
+            && report.ExportPath == "/api/v1/reports/personnel/summary/export");
+
+        var peopleResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports/people?employmentStatus=active", _adminToken));
+        peopleResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", peopleResponse.Content.Headers.ContentType?.MediaType);
+        var peopleCsv = await peopleResponse.Content.ReadAsStringAsync();
+        Assert.Contains(StaffArrEntityBulkExportService.PeopleCsvHeader, peopleCsv, StringComparison.Ordinal);
+        Assert.Contains("Report Worker", peopleCsv, StringComparison.Ordinal);
+
+        var incidentsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports/personnel-incidents?status=open", _adminToken));
+        incidentsResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", incidentsResponse.Content.Headers.ContentType?.MediaType);
+        var incidentsCsv = await incidentsResponse.Content.ReadAsStringAsync();
+        Assert.Contains(StaffArrEntityBulkExportService.IncidentsCsvHeader, incidentsCsv, StringComparison.Ordinal);
+        Assert.Contains("Report test incident", incidentsCsv, StringComparison.Ordinal);
+
+        var certificationsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports/person-certifications", _adminToken));
+        certificationsResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", certificationsResponse.Content.Headers.ContentType?.MediaType);
+        var certificationsCsv = await certificationsResponse.Content.ReadAsStringAsync();
+        Assert.Contains(StaffArrEntityBulkExportService.CertificationsCsvHeader, certificationsCsv, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Supervisor_can_read_personnel_report_but_cannot_export_manifest()
     {
         var supervisorToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "supervisor");
@@ -151,6 +191,34 @@ public sealed class StaffArrReportTests : IAsyncLifetime
         Assert.Contains(items.EnumerateArray(), item => item.GetProperty("key").GetString() == "readiness-rollups-teams");
         Assert.Contains(items.EnumerateArray(), item => item.GetProperty("key").GetString() == "readiness-rollups-sites");
         Assert.Contains(items.EnumerateArray(), item => item.GetProperty("key").GetString() == "readiness-rollups-departments");
+    }
+
+    [Fact]
+    public async Task Staffarr_v1_report_groups_expose_summaries_and_exports()
+    {
+        var personnelResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/personnel/summary", _adminToken));
+        personnelResponse.EnsureSuccessStatusCode();
+        var personnel = (await personnelResponse.Content.ReadFromJsonAsync<PersonnelReportSummaryResponse>())!;
+        Assert.True(personnel.TotalPeople >= 1);
+
+        var readinessResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/readiness/summary", _adminToken));
+        readinessResponse.EnsureSuccessStatusCode();
+        var readiness = (await readinessResponse.Content.ReadFromJsonAsync<ReadinessReportSummaryResponse>())!;
+        Assert.Equal(1, readiness.TotalRollups);
+
+        var incidentsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/incidents/summary?openOnly=true", _adminToken));
+        incidentsResponse.EnsureSuccessStatusCode();
+        var incidents = (await incidentsResponse.Content.ReadFromJsonAsync<IncidentReportSummaryResponse>())!;
+        Assert.Equal(1, incidents.TotalIncidents);
+        Assert.Equal(1, incidents.OpenCount);
+
+        var exportResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/personnel/summary/export", _adminToken));
+        exportResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", exportResponse.Content.Headers.ContentType?.MediaType);
     }
 
     private async Task SeedWorkforceDataAsync()

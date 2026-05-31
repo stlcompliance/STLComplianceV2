@@ -1472,6 +1472,30 @@
         }
       }
     },
+    "/api/driver-portal/trips/{tripId}/accept": {
+      "post": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalAcceptTrip",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/driver-portal/trips/{tripId}/capture-readiness": {
       "get": {
         "tags": [
@@ -1761,6 +1785,95 @@
         "parameters": [
           {
             "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/trips/{tripId}/messages": {
+      "get": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalGetTripDispatchMessages",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalCreateTripDispatchMessage",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDispatchMessageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/driver-portal/trips/{tripId}/messages/{messageId}/acknowledge": {
+      "post": {
+        "tags": [
+          "DriverPortal"
+        ],
+        "operationId": "DriverPortalAcknowledgeTripDispatchMessage",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "messageId",
             "in": "path",
             "required": true,
             "schema": {
@@ -3273,6 +3386,40 @@
         }
       }
     },
+    "/api/routes/{routeId}/status": {
+      "patch": {
+        "tags": [
+          "Routes"
+        ],
+        "operationId": "UpdateRouteStatus",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRouteStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/routes/{routeId}/stops": {
       "post": {
         "tags": [
@@ -3962,6 +4109,62 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}/messages": {
+      "get": {
+        "tags": [
+          "DispatchMessages"
+        ],
+        "operationId": "GetTripDispatchMessages",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "DispatchMessages"
+        ],
+        "operationId": "CreateTripDispatchMessage",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDispatchMessageRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -4676,6 +4879,27 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Dispatch"
+        ],
+        "operationId": "CreateIncidentV1Alias",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDispatchIncidentRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -5412,6 +5636,81 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "CreateDispatchIncidentRequest": {
+        "required": [
+          "title",
+          "description",
+          "incidentType",
+          "incidentSeverity",
+          "tripId",
+          "assignedToUserId",
+          "slaDueAt",
+          "routedProduct"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "incidentType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "incidentSeverity": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tripId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "assignedToUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "slaDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "routedProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateDispatchMessageRequest": {
+        "required": [
+          "body"
+        ],
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "requiresAcknowledgement": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -6388,6 +6687,17 @@
           }
         }
       },
+      "UpdateRouteStatusRequest": {
+        "required": [
+          "routeStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "routeStatus": {
+            "type": "string"
+          }
+        }
+      },
       "UpdateRouteStopStatusRequest": {
         "required": [
           "stopStatus"
@@ -6506,6 +6816,18 @@
           },
           "notifyOnTripCancelled": {
             "type": "boolean"
+          },
+          "notifyOnTripAccepted": {
+            "type": "boolean",
+            "default": true
+          },
+          "notifyOnDriverAssignmentChanged": {
+            "type": "boolean",
+            "default": true
+          },
+          "notifyOnRouteCancelled": {
+            "type": "boolean",
+            "default": true
           },
           "clearNotificationWebhookOnDisable": {
             "type": "boolean",
@@ -6756,6 +7078,9 @@
     },
     {
       "name": "Integrations"
+    },
+    {
+      "name": "DispatchMessages"
     },
     {
       "name": "DriverPortal"

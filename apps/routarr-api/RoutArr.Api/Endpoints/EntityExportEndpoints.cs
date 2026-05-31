@@ -7,19 +7,26 @@ public static class EntityExportEndpoints
 {
     public static void MapRoutArrEntityExportEndpoints(this WebApplication app)
     {
-        var exports = app.MapGroup("/api/exports")
-            .WithTags("Exports")
-            .RequireAuthorization();
+        MapEntityExportRoutes(app.MapGroup("/api/exports"), string.Empty, "/api/exports", "/api/reports");
+        MapEntityExportRoutes(app.MapGroup("/api/v1/exports"), "V1", "/api/v1/exports", "/api/v1/reports");
+    }
 
+    private static void MapEntityExportRoutes(
+        RouteGroupBuilder exports,
+        string suffix,
+        string exportBasePath,
+        string reportBasePath)
+    {
+        exports.WithTags("Exports").RequireAuthorization();
         exports.MapGet("/manifest", (
             RoutArrAuthorizationService authorization,
             RoutArrEntityBulkExportService service,
             HttpContext context) =>
         {
             authorization.RequireEntityExport(context.User);
-            return Results.Ok(service.GetManifest());
+            return Results.Ok(service.GetManifest(exportBasePath, reportBasePath));
         })
-        .WithName("GetRoutArrEntityExportManifest");
+        .WithName($"GetRoutArrEntityExportManifest{suffix}");
 
         exports.MapGet("/trips", async (
             string? dispatchStatus,
@@ -38,7 +45,7 @@ public static class EntityExportEndpoints
                 cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportRoutArrTripsCsv");
+        .WithName($"ExportRoutArrTripsCsv{suffix}");
 
         exports.MapGet("/routes", async (
             string? routeStatus,
@@ -57,7 +64,7 @@ public static class EntityExportEndpoints
                 cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportRoutArrRoutesCsv");
+        .WithName($"ExportRoutArrRoutesCsv{suffix}");
 
         exports.MapGet("/dispatch-exceptions", async (
             string? status,
@@ -76,6 +83,6 @@ public static class EntityExportEndpoints
                 cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportRoutArrDispatchExceptionsCsv");
+        .WithName($"ExportRoutArrDispatchExceptionsCsv{suffix}");
     }
 }

@@ -13,7 +13,7 @@ public sealed class StaffArrEntityBulkExportService(
         "personId,displayName,primaryEmail,employmentStatus,primaryOrgUnitName,jobTitle,createdAt,updatedAt";
 
     public const string IncidentsCsvHeader =
-        "incidentId,personId,reasonCategoryKey,severity,status,title,occurredAt,reportedAt";
+        "incidentId,personId,reasonCategoryKey,severity,status,title,occurredAt,reportedAt,sourceProduct,sourceIncidentId,sourceEventKind,sourceReferenceKey";
 
     public const string CertificationsCsvHeader =
         "personCertificationId,personId,certificationDefinitionKey,certificationName,status,issuedAt,expiresAt";
@@ -24,28 +24,30 @@ public sealed class StaffArrEntityBulkExportService(
         "staffarr-{entity}-export-{timestamp}.csv",
         "Comma-separated values for spreadsheets and operational analysis.");
 
-    public EntityExportManifestResponse GetManifest() =>
+    public EntityExportManifestResponse GetManifest(
+        string exportBasePath = "/api/exports",
+        string reportBasePath = "/api/reports") =>
         new(
             PackageVersion: "1",
             Entities:
             [
                 new(
                     "people",
-                    "/api/exports/people",
+                    $"{exportBasePath}/people",
                     "People directory",
                     PeopleCsvHeader,
                     "Tenant workforce directory with employment status and org linkage.",
                     [CsvFormat]),
                 new(
                     "personnel_incidents",
-                    "/api/exports/personnel-incidents",
+                    $"{exportBasePath}/personnel-incidents",
                     "Personnel incidents",
                     IncidentsCsvHeader,
                     "Incident registry with severity, status, and occurrence timestamps.",
                     [CsvFormat]),
                 new(
                     "person_certifications",
-                    "/api/exports/person-certifications",
+                    $"{exportBasePath}/person-certifications",
                     "Person certifications",
                     CertificationsCsvHeader,
                     "Granted certifications with lifecycle status and expiry.",
@@ -55,17 +57,17 @@ public sealed class StaffArrEntityBulkExportService(
             [
                 new(
                     "personnel",
-                    "/api/reports/personnel/summary/export",
+                    $"{reportBasePath}/personnel/summary/export",
                     "Personnel report CSV",
                     "Scoped workforce rollups by employment status."),
                 new(
                     "readiness",
-                    "/api/reports/readiness/summary/export",
+                    $"{reportBasePath}/readiness/summary/export",
                     "Readiness report CSV",
                     "Org-unit readiness rollups with attention filters."),
                 new(
                     "incidents",
-                    "/api/reports/incidents/summary/export",
+                    $"{reportBasePath}/incidents/summary/export",
                     "Incident report CSV",
                     "Scoped incident metrics with open and severity filters."),
             ],
@@ -166,7 +168,16 @@ public sealed class StaffArrEntityBulkExportService(
             builder.Append(CsvEscape(incident.Title));
             builder.Append(',');
             builder.Append(CsvEscape(incident.OccurredAt.ToString("O")));
-            builder.AppendLine(CsvEscape(incident.ReportedAt.ToString("O")));
+            builder.Append(',');
+            builder.Append(CsvEscape(incident.ReportedAt.ToString("O")));
+            builder.Append(',');
+            builder.Append(CsvEscape(incident.SourceProduct ?? string.Empty));
+            builder.Append(',');
+            builder.Append(CsvEscape(incident.SourceIncidentId?.ToString() ?? string.Empty));
+            builder.Append(',');
+            builder.Append(CsvEscape(incident.SourceEventKind ?? string.Empty));
+            builder.Append(',');
+            builder.AppendLine(CsvEscape(incident.SourceReferenceKey ?? string.Empty));
         }
 
         await auditService.WriteAsync(

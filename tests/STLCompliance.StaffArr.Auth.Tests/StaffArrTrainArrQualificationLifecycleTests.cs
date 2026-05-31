@@ -326,6 +326,47 @@ public class StaffArrTrainArrQualificationLifecycleTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Qualifications_person_scoped_reads_allow_self_but_not_other_members()
+    {
+        var issue = await IssueQualificationAsync("lifecycle_self_read", "Lifecycle Self Read");
+        var memberToken = CreateTrainArrAccessToken(
+            ["trainarr"],
+            tenantRoleKey: "tenant_member",
+            personId: issue.StaffarrPersonId);
+
+        var selfListResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/qualifications?personId={issue.StaffarrPersonId:D}", memberToken));
+        selfListResponse.EnsureSuccessStatusCode();
+        var selfList = (await selfListResponse.Content.ReadFromJsonAsync<IReadOnlyList<QualificationIssueListItemResponse>>())!;
+        var selfIssue = Assert.Single(selfList, x => x.QualificationIssueId == issue.QualificationIssueId);
+        Assert.Equal(issue.StaffarrPersonId, selfIssue.StaffarrPersonId);
+
+        var selfDetailResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/qualifications/{issue.QualificationIssueId:D}", memberToken));
+        selfDetailResponse.EnsureSuccessStatusCode();
+        var selfDetail = (await selfDetailResponse.Content.ReadFromJsonAsync<QualificationIssueResponse>())!;
+        Assert.Equal(issue.QualificationIssueId, selfDetail.QualificationIssueId);
+
+        var selfHistoryResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/qualifications/{issue.QualificationIssueId:D}/history", memberToken));
+        selfHistoryResponse.EnsureSuccessStatusCode();
+        var selfHistory = (await selfHistoryResponse.Content.ReadFromJsonAsync<IReadOnlyList<QualificationIssueHistoryItemResponse>>())!;
+        Assert.Contains(selfHistory, x => x.EventType == "qualification_issue.issued");
+
+        var otherMemberToken = CreateTrainArrAccessToken(
+            ["trainarr"],
+            tenantRoleKey: "tenant_member",
+            personId: Guid.NewGuid());
+        var otherListResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/qualifications?personId={issue.StaffarrPersonId:D}", otherMemberToken));
+        Assert.Equal(HttpStatusCode.Forbidden, otherListResponse.StatusCode);
+
+        var otherDetailResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/qualifications/{issue.QualificationIssueId:D}", otherMemberToken));
+        Assert.Equal(HttpStatusCode.Forbidden, otherDetailResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Certification_lifecycle_ingest_rejects_missing_service_token()
     {
         var personId = Guid.NewGuid();

@@ -11,6 +11,8 @@ public sealed class MissingEvidenceWarningService(
     FactResolveService factResolveService,
     IComplianceCoreAuditService auditService)
 {
+    public const string EvidenceMissingEventAction = "compliancecore.evidence.missing";
+
     public async Task<EvaluateMissingEvidenceWarningsResponse> EvaluateAsync(
         Guid tenantId,
         Guid? actorUserId,
@@ -101,6 +103,24 @@ public sealed class MissingEvidenceWarningService(
             "success",
             reasonCode: $"{scopeKey}:{warnings.Count}:{highestSeverity}",
             cancellationToken: cancellationToken);
+
+        if (warnings.Count > 0)
+        {
+            await auditService.WriteAsync(
+                EvidenceMissingEventAction,
+                tenantId,
+                actorUserId,
+                "missing_evidence_warning_run",
+                run.Id.ToString(),
+                "warnings_emitted",
+                reasonCode: string.Join(
+                    ",",
+                    warnings
+                        .Select(warning => warning.FactKey)
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .OrderBy(factKey => factKey)),
+                cancellationToken: cancellationToken);
+        }
 
         return new EvaluateMissingEvidenceWarningsResponse(
             run.Id,

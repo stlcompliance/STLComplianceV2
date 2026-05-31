@@ -8,7 +8,7 @@ public sealed class TrainArrAuditService(
     TrainArrDbContext db,
     ICorrelationIdAccessor correlationIdAccessor) : ITrainArrAuditService
 {
-    public async Task WriteAsync(
+    public async Task<TrainArrAuditWriteResult> WriteAsync(
         string action,
         Guid tenantId,
         Guid? actorUserId,
@@ -18,9 +18,12 @@ public sealed class TrainArrAuditService(
         string? reasonCode = null,
         CancellationToken cancellationToken = default)
     {
+        var auditEventId = Guid.NewGuid();
+        var occurredAt = DateTimeOffset.UtcNow;
+
         db.AuditEvents.Add(new TrainArrAuditEvent
         {
-            Id = Guid.NewGuid(),
+            Id = auditEventId,
             TenantId = tenantId,
             ActorUserId = actorUserId,
             Action = action,
@@ -29,9 +32,10 @@ public sealed class TrainArrAuditService(
             Result = result,
             ReasonCode = reasonCode,
             CorrelationId = correlationIdAccessor.CorrelationId,
-            OccurredAt = DateTimeOffset.UtcNow
+            OccurredAt = occurredAt
         });
 
         await db.SaveChangesAsync(cancellationToken);
+        return new TrainArrAuditWriteResult(auditEventId, occurredAt);
     }
 }

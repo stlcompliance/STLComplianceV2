@@ -8,6 +8,7 @@ namespace SupplyArr.Api.Services;
 
 public sealed class ReceivingExceptionService(
     SupplyArrDbContext db,
+    IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
     public async Task<IReadOnlyList<ReceivingExceptionResponse>> ListForReceiptAsync(
@@ -104,6 +105,13 @@ public sealed class ReceivingExceptionService(
             entity.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.ReceivingExceptionCreated,
+            "receiving_exception",
+            entity.Id,
+            new IntegrationOutboxPayload(tenantId, $"Receiving discrepancy recorded: {exceptionType}"),
+            cancellationToken: cancellationToken);
 
         return Map(entity, line);
     }
@@ -160,6 +168,13 @@ public sealed class ReceivingExceptionService(
             "receiving_exception",
             entity.Id.ToString(),
             "Succeeded",
+            cancellationToken: cancellationToken);
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.ReceivingExceptionResolved,
+            "receiving_exception",
+            entity.Id,
+            new IntegrationOutboxPayload(tenantId, $"Receiving discrepancy resolved: {entity.ExceptionType}"),
             cancellationToken: cancellationToken);
 
         return Map(entity, entity.ReceivingReceiptLine);

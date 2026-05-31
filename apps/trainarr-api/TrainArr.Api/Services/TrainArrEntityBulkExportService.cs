@@ -24,28 +24,30 @@ public sealed class TrainArrEntityBulkExportService(
         "trainarr-{entity}-export-{timestamp}.csv",
         "Comma-separated values for spreadsheets and operational analysis.");
 
-    public EntityExportManifestResponse GetManifest() =>
+    public EntityExportManifestResponse GetManifest(
+        string exportBasePath = "/api/exports",
+        string reportBasePath = "/api/reports") =>
         new(
             PackageVersion: "1",
             Entities:
             [
                 new(
                     "training_assignments",
-                    "/api/exports/training-assignments",
+                    $"{exportBasePath}/training-assignments",
                     "Training assignments",
                     AssignmentsCsvHeader,
                     "Tenant training assignment registry with status and due timestamps.",
                     [CsvFormat]),
                 new(
                     "qualification_issues",
-                    "/api/exports/qualification-issues",
+                    $"{exportBasePath}/qualification-issues",
                     "Qualification issues",
                     QualificationsCsvHeader,
                     "Issued qualifications with lifecycle status and expiry.",
                     [CsvFormat]),
                 new(
                     "training_definitions",
-                    "/api/exports/training-definitions",
+                    $"{exportBasePath}/training-definitions",
                     "Training definitions",
                     TrainingDefinitionsCsvHeader,
                     "Training definition catalog with qualification mapping.",
@@ -55,17 +57,17 @@ public sealed class TrainArrEntityBulkExportService(
             [
                 new(
                     "assignments",
-                    "/api/reports/assignments/summary/export",
+                    $"{reportBasePath}/assignments/summary/export",
                     "Assignment report CSV",
                     "Scoped assignment rollups with overdue flags."),
                 new(
                     "qualifications",
-                    "/api/reports/qualifications/summary/export",
+                    $"{reportBasePath}/qualifications/summary/export",
                     "Qualification report CSV",
                     "Scoped qualification lifecycle metrics."),
                 new(
                     "compliance",
-                    "/api/reports/compliance/summary/export",
+                    $"{reportBasePath}/compliance/summary/export",
                     "Compliance report CSV",
                     "Citation, rule-pack, and remediation attention rows."),
             ],

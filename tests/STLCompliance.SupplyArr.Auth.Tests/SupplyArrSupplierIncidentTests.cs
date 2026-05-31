@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -12,6 +13,7 @@ using NexArr.Api.Services;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
+using SupplyArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
 using CreateTypedExternalPartyRequest = SupplyArr.Api.Contracts.CreateTypedExternalPartyRequest;
@@ -28,6 +30,8 @@ public sealed class SupplyArrSupplierIncidentTests : IAsyncLifetime
     private HttpClient _nexarrClient = null!;
     private HttpClient _supplyarrClient = null!;
     private string _userToken = null!;
+    private RecordingStaffArrProductIncidentHandler _staffarrIncidentHandler = null!;
+    private RecordingTrainArrIncidentRemediationHandler _trainarrIncidentHandler = null!;
 
     public async Task InitializeAsync()
     {
@@ -55,6 +59,8 @@ public sealed class SupplyArrSupplierIncidentTests : IAsyncLifetime
         var adminToken = await LoginNexArrAsync(PlatformSeeder.DemoAdminEmail);
         var handoffToken = await IssueHandoffServiceTokenAsync(adminToken);
         var handoffCode = await CreateHandoffAsync(adminToken);
+        _staffarrIncidentHandler = new RecordingStaffArrProductIncidentHandler();
+        _trainarrIncidentHandler = new RecordingTrainArrIncidentRemediationHandler();
 
         _supplyarrFactory = new WebApplicationFactory<global::SupplyArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -65,12 +71,20 @@ public sealed class SupplyArrSupplierIncidentTests : IAsyncLifetime
             builder.UseSetting("ServiceToken:SigningKey", signingKey);
             builder.UseSetting("NexArr:BaseUrl", _nexarrClient.BaseAddress!.ToString().TrimEnd('/'));
             builder.UseSetting("Handoff:ServiceToken", handoffToken);
+            builder.UseSetting("StaffArr:BaseUrl", "http://staffarr.test");
+            builder.UseSetting("StaffArr:ServiceToken", "supplyarr-to-staffarr-token");
+            builder.UseSetting("TrainArr:BaseUrl", "http://trainarr.test");
+            builder.UseSetting("TrainArr:ServiceToken", "supplyarr-to-trainarr-token");
             builder.ConfigureServices(services =>
             {
                 RemoveDbContext<SupplyArrDbContext>(services);
                 services.AddDbContext<SupplyArrDbContext>(options => options.UseInMemoryDatabase(supplyArrDbName));
                 services.AddHttpClient<StlNexArrHandoffClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _nexarrFactory.Server.CreateHandler());
+                services.AddHttpClient<StaffArrProductIncidentClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _staffarrIncidentHandler);
+                services.AddHttpClient<TrainArrIncidentRemediationClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => _trainarrIncidentHandler);
             });
         });
 
@@ -189,6 +203,111 @@ public sealed class SupplyArrSupplierIncidentTests : IAsyncLifetime
         Assert.NotEmpty(outbox);
     }
 
+    [Fact]
+    public async Task Supplier_incident_with_involved_staffarr_person_routes_to_staffarr_from_outbox()
+    {
+        var supplier = await CreateSupplierAsync();
+        var staffarrPersonId = Guid.NewGuid();
+
+        var createIncidentRequest = Authorized(HttpMethod.Post, "/api/supplier-incidents", _userToken);
+        createIncidentRequest.Content = JsonContent.Create(new CreateSupplierIncidentRequest(
+            supplier.PartyId,
+            "SI-POL-003",
+            "Unauthorized vendor purchase",
+            "Purchase was made with an unauthorized supplier and requires personnel review.",
+            SupplierIncidentTypes.Compliance,
+            SupplierIncidentSeverities.High,
+            null,
+            null,
+            null,
+            null,
+            null,
+            staffarrPersonId));
+        var createResponse = await _supplyarrClient.SendAsync(createIncidentRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var incident = (await createResponse.Content.ReadFromJsonAsync<SupplierIncidentResponse>())!;
+        Assert.Equal(staffarrPersonId, incident.InvolvedStaffarrPersonId);
+
+        using var scope = _supplyarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
+        var processor = scope.ServiceProvider.GetRequiredService<IntegrationEventProcessingService>();
+        var outbox = await db.IntegrationOutboxEvents.SingleAsync(
+            x => x.EventKind == IntegrationOutboxEventKinds.SupplierIncidentCreated
+                && x.RelatedEntityId == incident.IncidentId);
+
+        await processor.TryProcessSingleOutboxAsync(outbox);
+
+        Assert.Equal("/api/v1/integrations/product-incidents", _staffarrIncidentHandler.RequestPath);
+        Assert.Equal("Bearer", _staffarrIncidentHandler.AuthorizationScheme);
+        Assert.Equal("supplyarr-to-staffarr-token", _staffarrIncidentHandler.AuthorizationParameter);
+        Assert.NotNull(_staffarrIncidentHandler.Payload);
+        var payload = _staffarrIncidentHandler.Payload.Value;
+        Assert.Equal("supplyarr", payload.GetProperty("sourceProduct").GetString());
+        Assert.Equal(incident.IncidentId, payload.GetProperty("sourceIncidentId").GetGuid());
+        Assert.Equal(staffarrPersonId, payload.GetProperty("personId").GetGuid());
+        Assert.Equal("policy", payload.GetProperty("reasonCategoryKey").GetString());
+        Assert.Equal("SI-POL-003", payload.GetProperty("sourceReferenceKey").GetString());
+
+        var routed = await db.SupplierIncidents.SingleAsync(x => x.Id == incident.IncidentId);
+        Assert.Equal(_staffarrIncidentHandler.ResponseIncidentId, routed.StaffarrPersonnelIncidentId);
+        Assert.Equal("routed", routed.StaffarrIncidentRouteStatus);
+        Assert.NotNull(routed.StaffarrIncidentRoutedAt);
+    }
+
+    [Fact]
+    public async Task Supplier_incident_with_training_implication_routes_to_trainarr_from_outbox()
+    {
+        var supplier = await CreateSupplierAsync();
+        var staffarrPersonId = Guid.NewGuid();
+
+        var createIncidentRequest = Authorized(HttpMethod.Post, "/api/supplier-incidents", _userToken);
+        createIncidentRequest.Content = JsonContent.Create(new CreateSupplierIncidentRequest(
+            supplier.PartyId,
+            "SI-SAFE-004",
+            "Forklift handling incident",
+            "Receiving operator struck a pallet rack while unloading hazardous material.",
+            SupplierIncidentTypes.Safety,
+            SupplierIncidentSeverities.High,
+            null,
+            null,
+            null,
+            null,
+            null,
+            staffarrPersonId));
+        var createResponse = await _supplyarrClient.SendAsync(createIncidentRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var incident = (await createResponse.Content.ReadFromJsonAsync<SupplierIncidentResponse>())!;
+        Assert.Null(incident.TrainarrIncidentRemediationId);
+
+        using var scope = _supplyarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
+        var processor = scope.ServiceProvider.GetRequiredService<IntegrationEventProcessingService>();
+        var outbox = await db.IntegrationOutboxEvents.SingleAsync(
+            x => x.EventKind == IntegrationOutboxEventKinds.SupplierIncidentCreated
+                && x.RelatedEntityId == incident.IncidentId);
+
+        await processor.TryProcessSingleOutboxAsync(outbox);
+
+        Assert.Equal("/api/v1/integrations/supplyarr-incident-remediations", _trainarrIncidentHandler.RequestPath);
+        Assert.Equal("Bearer", _trainarrIncidentHandler.AuthorizationScheme);
+        Assert.Equal("supplyarr-to-trainarr-token", _trainarrIncidentHandler.AuthorizationParameter);
+        Assert.NotNull(_trainarrIncidentHandler.Payload);
+        var payload = _trainarrIncidentHandler.Payload.Value;
+        Assert.Equal(PlatformSeeder.DemoTenantId, payload.GetProperty("tenantId").GetGuid());
+        Assert.Equal(incident.IncidentId, payload.GetProperty("sourceEventId").GetGuid());
+        Assert.Equal(incident.IncidentId, payload.GetProperty("supplierIncidentId").GetGuid());
+        Assert.Equal(staffarrPersonId, payload.GetProperty("staffarrPersonId").GetGuid());
+        var incidentPayload = payload.GetProperty("payload");
+        Assert.Equal(SupplierIncidentTypes.Safety, incidentPayload.GetProperty("incidentType").GetString());
+        Assert.Equal(SupplierIncidentSeverities.High, incidentPayload.GetProperty("severity").GetString());
+        Assert.Equal("Incident Supplier", incidentPayload.GetProperty("partyDisplayName").GetString());
+
+        var routed = await db.SupplierIncidents.SingleAsync(x => x.Id == incident.IncidentId);
+        Assert.Equal(_trainarrIncidentHandler.ResponseRemediationId, routed.TrainarrIncidentRemediationId);
+        Assert.Equal("routed", routed.TrainarrIncidentRouteStatus);
+        Assert.NotNull(routed.TrainarrIncidentRoutedAt);
+    }
+
     private async Task<ExternalPartyResponse> CreateSupplierAsync()
     {
         var createSupplier = Authorized(HttpMethod.Post, "/api/suppliers", _userToken);
@@ -298,5 +417,77 @@ public sealed class SupplyArrSupplierIncidentTests : IAsyncLifetime
         var request = new HttpRequestMessage(method, path);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
+    }
+
+    private sealed class RecordingStaffArrProductIncidentHandler : HttpMessageHandler
+    {
+        public Guid ResponseIncidentId { get; } = Guid.NewGuid();
+
+        public string? RequestPath { get; private set; }
+
+        public string? AuthorizationScheme { get; private set; }
+
+        public string? AuthorizationParameter { get; private set; }
+
+        public JsonElement? Payload { get; private set; }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            RequestPath = request.RequestUri?.AbsolutePath;
+            AuthorizationScheme = request.Headers.Authorization?.Scheme;
+            AuthorizationParameter = request.Headers.Authorization?.Parameter;
+            var body = await request.Content!.ReadAsStringAsync(cancellationToken);
+            using var document = JsonDocument.Parse(body);
+            Payload = document.RootElement.Clone();
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new
+                {
+                    incidentId = ResponseIncidentId,
+                    personId = Payload.Value.GetProperty("personId").GetGuid(),
+                    sourceProduct = "supplyarr",
+                    sourceIncidentId = Payload.Value.GetProperty("sourceIncidentId").GetGuid(),
+                    status = "open",
+                    idempotentReplay = false,
+                })
+            };
+        }
+    }
+
+    private sealed class RecordingTrainArrIncidentRemediationHandler : HttpMessageHandler
+    {
+        public Guid ResponseRemediationId { get; } = Guid.NewGuid();
+
+        public string? RequestPath { get; private set; }
+
+        public string? AuthorizationScheme { get; private set; }
+
+        public string? AuthorizationParameter { get; private set; }
+
+        public JsonElement? Payload { get; private set; }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            RequestPath = request.RequestUri?.AbsolutePath;
+            AuthorizationScheme = request.Headers.Authorization?.Scheme;
+            AuthorizationParameter = request.Headers.Authorization?.Parameter;
+            var body = await request.Content!.ReadAsStringAsync(cancellationToken);
+            using var document = JsonDocument.Parse(body);
+            Payload = document.RootElement.Clone();
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = JsonContent.Create(new
+                {
+                    remediationId = ResponseRemediationId,
+                    tenantId = Payload.Value.GetProperty("tenantId").GetGuid(),
+                    sourceEventId = Payload.Value.GetProperty("sourceEventId").GetGuid(),
+                    staffarrPersonId = Payload.Value.GetProperty("staffarrPersonId").GetGuid(),
+                    status = "intake_received",
+                    idempotentReplay = false,
+                })
+            };
+        }
     }
 }

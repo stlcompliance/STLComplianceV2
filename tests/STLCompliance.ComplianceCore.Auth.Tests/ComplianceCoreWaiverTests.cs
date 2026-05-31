@@ -337,6 +337,66 @@ public sealed class ComplianceCoreWaiverTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Waiver_lifecycle_writes_canonical_compliance_events()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await GetDriverQualificationRulePackIdAsync(adminToken);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/waivers", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateComplianceWaiverRequest(
+            "canonical-event-waiver",
+            rulePackId,
+            "tenant",
+            "temporary_ops_override",
+            "Waiver used to prove canonical Compliance Core event names.",
+            DateTimeOffset.UtcNow.AddMinutes(-5),
+            DateTimeOffset.UtcNow.AddDays(3)));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<ComplianceWaiverResponse>())!;
+
+        (await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/waivers/{created.WaiverId}/approve", adminToken))).EnsureSuccessStatusCode();
+
+        var expiringRequest = ServiceAuthorized(HttpMethod.Post, "/api/internal/waivers/expire-batch", _workerExpireToken);
+        expiringRequest.Content = JsonContent.Create(new ProcessExpiredWaiversRequest(
+            PlatformSeeder.DemoTenantId,
+            DateTimeOffset.UtcNow,
+            50));
+        var expiringResponse = await _complianceCoreClient.SendAsync(expiringRequest);
+        expiringResponse.EnsureSuccessStatusCode();
+
+        var secondExpiringRequest = ServiceAuthorized(HttpMethod.Post, "/api/internal/waivers/expire-batch", _workerExpireToken);
+        secondExpiringRequest.Content = JsonContent.Create(new ProcessExpiredWaiversRequest(
+            PlatformSeeder.DemoTenantId,
+            DateTimeOffset.UtcNow,
+            50));
+        (await _complianceCoreClient.SendAsync(secondExpiringRequest)).EnsureSuccessStatusCode();
+
+        var revokeRequest = Authorized(HttpMethod.Post, $"/api/waivers/{created.WaiverId}/revoke", adminToken);
+        revokeRequest.Content = JsonContent.Create(new RevokeComplianceWaiverRequest("canonical event test complete"));
+        (await _complianceCoreClient.SendAsync(revokeRequest)).EnsureSuccessStatusCode();
+
+        using var scope = _complianceCoreFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var targetId = created.WaiverId.ToString();
+        var events = await db.AuditEvents
+            .AsNoTracking()
+            .Where(x => x.TargetType == "compliance_waiver" && x.TargetId == targetId)
+            .ToListAsync();
+
+        Assert.Contains(events, x =>
+            x.Action == ComplianceWaiverService.WaiverApprovedEventAction
+            && x.Result == "approved"
+            && x.ReasonCode == "canonical-event-waiver");
+        Assert.Single(events, x => x.Action == ComplianceWaiverService.WaiverExpiringEventAction);
+        Assert.Contains(events, x =>
+            x.Action == ComplianceWaiverService.WaiverRevokedEventAction
+            && x.Result == "revoked"
+            && x.ReasonCode == "canonical-event-waiver");
+    }
+
+    [Fact]
     public async Task V1_waiver_routes_create_patch_and_get_round_trip()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");

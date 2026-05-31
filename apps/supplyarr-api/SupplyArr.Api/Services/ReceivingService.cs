@@ -14,6 +14,7 @@ public sealed class ReceivingService(
     SupplyArrDemandStatusCallbackCoordinator demandStatusCallbacks,
     ProcurementNotificationEnqueueService notificationEnqueue,
     IntegrationOutboxEnqueueService integrationOutbox,
+    TrainArrQualificationCheckClient trainArrQualificationCheckClient,
     ISupplyArrAuditService audit)
 {
     public async Task<IReadOnlyList<ReceivingReceiptResponse>> ListAsync(
@@ -246,6 +247,7 @@ public sealed class ReceivingService(
     public async Task<ReceivingReceiptResponse> PostAsync(
         Guid tenantId,
         Guid actorUserId,
+        Guid actorPersonId,
         Guid receivingReceiptId,
         CancellationToken cancellationToken = default)
     {
@@ -289,6 +291,12 @@ public sealed class ReceivingService(
                 "At least one line item with quantity or exceptions is required before posting.",
                 400);
         }
+
+        await EnsureReceivingPersonQualifiedAsync(
+            tenantId,
+            actorPersonId,
+            entity,
+            cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         foreach (var line in entity.Lines)
@@ -519,5 +527,48 @@ public sealed class ReceivingService(
         }
 
         return decimal.Round(quantity, 4, MidpointRounding.AwayFromZero);
+    }
+
+    private async Task EnsureReceivingPersonQualifiedAsync(
+        Guid tenantId,
+        Guid actorPersonId,
+        ReceivingReceipt entity,
+        CancellationToken cancellationToken)
+    {
+        if (!trainArrQualificationCheckClient.IsReceivingCheckConfigured)
+        {
+            return;
+        }
+
+        var context = new Dictionary<string, string>
+        {
+            ["product"] = "supplyarr",
+            ["action"] = "receiving_post",
+            ["receivingReceiptId"] = entity.Id.ToString("D"),
+            ["purchaseOrderId"] = entity.PurchaseOrderId.ToString("D"),
+            ["inventoryBinId"] = entity.InventoryBinId.ToString("D"),
+            ["receiptKey"] = entity.ReceiptKey
+        };
+
+        if (entity.InventoryBin?.InventoryLocationId is Guid locationId)
+        {
+            context["inventoryLocationId"] = locationId.ToString("D");
+        }
+
+        var check = await trainArrQualificationCheckClient.CheckReceivingAsync(
+            tenantId,
+            actorPersonId,
+            context,
+            cancellationToken);
+
+        if (check is null || string.Equals(check.Outcome, "allow", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "receiving.person_qualification_blocked",
+            $"TrainArr receiving qualification check returned {check.Outcome}: {check.Message}",
+            409);
     }
 }

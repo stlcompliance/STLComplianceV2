@@ -71,6 +71,20 @@ public sealed class ComplianceCoreMissingEvidenceWarningTests : IAsyncLifetime
             evaluateResult.Warnings,
             warning => warning.FactKey == "missing_evidence_license_valid");
 
+        using (var scope = _complianceCoreFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+            var missingEvent = await db.AuditEvents
+                .AsNoTracking()
+                .SingleAsync(x => x.TenantId == PlatformSeeder.DemoTenantId
+                    && x.Action == MissingEvidenceWarningService.EvidenceMissingEventAction
+                    && x.TargetId == evaluateResult.RunId.ToString());
+
+            Assert.Equal("missing_evidence_warning_run", missingEvent.TargetType);
+            Assert.Equal("warnings_emitted", missingEvent.Result);
+            Assert.Contains("missing_evidence_license_valid", missingEvent.ReasonCode);
+        }
+
         var listResponse = await _complianceCoreClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/missing-evidence-warnings?rulePackKey={packKey}", adminToken));
         listResponse.EnsureSuccessStatusCode();

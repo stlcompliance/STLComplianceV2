@@ -8,7 +8,7 @@ public sealed class SupplyArrAuditService(
     SupplyArrDbContext db,
     ICorrelationIdAccessor correlationIdAccessor) : ISupplyArrAuditService
 {
-    public async Task WriteAsync(
+    public async Task<SupplyArrAuditWriteResult> WriteAsync(
         string action,
         Guid tenantId,
         Guid? actorUserId,
@@ -18,9 +18,12 @@ public sealed class SupplyArrAuditService(
         string? reasonCode = null,
         CancellationToken cancellationToken = default)
     {
+        var auditEventId = Guid.NewGuid();
+        var occurredAt = DateTimeOffset.UtcNow;
+
         db.AuditEvents.Add(new SupplyArrAuditEvent
         {
-            Id = Guid.NewGuid(),
+            Id = auditEventId,
             TenantId = tenantId,
             ActorUserId = actorUserId,
             Action = action,
@@ -29,9 +32,10 @@ public sealed class SupplyArrAuditService(
             Result = result,
             ReasonCode = reasonCode,
             CorrelationId = correlationIdAccessor.CorrelationId,
-            OccurredAt = DateTimeOffset.UtcNow
+            OccurredAt = occurredAt
         });
 
         await db.SaveChangesAsync(cancellationToken);
+        return new SupplyArrAuditWriteResult(auditEventId, occurredAt);
     }
 }

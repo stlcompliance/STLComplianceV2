@@ -8,7 +8,9 @@ namespace RoutArr.Api.Services;
 
 public sealed class RouteService(
     RoutArrDbContext db,
-    IRoutArrAuditService audit)
+    IRoutArrAuditService audit,
+    IntegrationOutboxEnqueueService integrationOutbox,
+    DispatchNotificationEnqueueService notificationEnqueueService)
 {
     public async Task<IReadOnlyList<RouteSummaryResponse>> ListAsync(
         Guid tenantId,
@@ -62,6 +64,61 @@ public sealed class RouteService(
         var route = await GetRouteEntityAsync(tenantId, routeId, cancellationToken);
         return MapDetail(route);
     }
+
+    public async Task<IReadOnlyList<RouteSummaryResponse>> ListTemplatesAsync(
+        Guid tenantId,
+        bool viewAll,
+        Guid? actorUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var query = db.Routes
+            .AsNoTracking()
+            .Include(x => x.Stops)
+            .Where(x => x.TenantId == tenantId && x.TripId == null);
+
+        if (!viewAll && actorUserId.HasValue)
+        {
+            query = query.Where(x => x.CreatedByUserId == actorUserId.Value);
+        }
+
+        var routes = await query
+            .OrderByDescending(x => x.UpdatedAt)
+            .ToListAsync(cancellationToken);
+
+        return routes.Select(MapSummary).ToList();
+    }
+
+    public async Task<RouteDetailResponse> GetTemplateAsync(
+        Guid tenantId,
+        Guid routeId,
+        CancellationToken cancellationToken = default)
+    {
+        var route = await GetRouteEntityAsync(tenantId, routeId, cancellationToken);
+        if (route.TripId is not null)
+        {
+            throw new StlApiException(
+                "route_template.not_found",
+                "Route template was not found.",
+                404);
+        }
+
+        return MapDetail(route);
+    }
+
+    public Task<RouteDetailResponse> CreateTemplateAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        CreateRouteTemplateRequest request,
+        CancellationToken cancellationToken = default) =>
+        CreateAsync(
+            tenantId,
+            actorUserId,
+            new CreateRouteRequest(
+                request.Title,
+                request.Description,
+                null,
+                request.Stops),
+            cancellationToken);
 
     public async Task<RouteAccessContext> GetAccessContextAsync(
         Guid tenantId,
@@ -133,6 +190,8 @@ public sealed class RouteService(
             entity.RouteStatus,
             cancellationToken: cancellationToken);
 
+        await integrationOutbox.TryEnqueueRouteCreatedAsync(entity, cancellationToken);
+
         return MapDetail(entity);
     }
 
@@ -182,6 +241,8 @@ public sealed class RouteService(
             route.Id.ToString(),
             request.TripId.ToString(),
             cancellationToken: cancellationToken);
+
+        await integrationOutbox.TryEnqueueRouteUpdatedAsync(route, "Route linked to trip", cancellationToken);
 
         return MapDetail(route);
     }
@@ -258,6 +319,8 @@ public sealed class RouteService(
             string.Join(',', stopIds),
             cancellationToken: cancellationToken);
 
+        await integrationOutbox.TryEnqueueRouteUpdatedAsync(route, "Route stops reordered", cancellationToken);
+
         return MapDetail(route);
     }
 
@@ -310,6 +373,8 @@ public sealed class RouteService(
             route.Id.ToString(),
             cancellationToken: cancellationToken);
 
+        await integrationOutbox.TryEnqueueRouteUpdatedAsync(route, "Route stop added", cancellationToken);
+
         return MapDetail(route);
     }
 
@@ -361,6 +426,7 @@ public sealed class RouteService(
         }
 
         var now = DateTimeOffset.UtcNow;
+        var previousStatus = stop.StopStatus;
         stop.StopStatus = normalized;
         stop.UpdatedAt = now;
 
@@ -397,7 +463,101 @@ public sealed class RouteService(
             normalized,
             cancellationToken: cancellationToken);
 
+        if (!string.Equals(previousStatus, normalized, StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.Equals(normalized, RouteStopStatuses.Arrived, StringComparison.OrdinalIgnoreCase))
+            {
+                await integrationOutbox.TryEnqueueStopArrivedAsync(stop, cancellationToken);
+            }
+            else if (string.Equals(normalized, RouteStopStatuses.Completed, StringComparison.OrdinalIgnoreCase))
+            {
+                await integrationOutbox.TryEnqueueStopCompletedAsync(stop, cancellationToken);
+            }
+            else if (string.Equals(normalized, RouteStopStatuses.Skipped, StringComparison.OrdinalIgnoreCase))
+            {
+                await integrationOutbox.TryEnqueueStopMissedAsync(stop, cancellationToken);
+            }
+        }
+
         return MapStop(stop);
+    }
+
+    public async Task<RouteDetailResponse> UpdateRouteStatusAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid routeId,
+        UpdateRouteStatusRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var status = request.RouteStatus?.Trim().ToLowerInvariant() ?? string.Empty;
+        if (!RouteStatuses.All.Contains(status))
+        {
+            throw new StlApiException(
+                "route.invalid_status",
+                "Route status must be draft, planned, active, completed, or cancelled.",
+                400);
+        }
+
+        var route = await db.Routes
+            .Include(x => x.Stops)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == routeId, cancellationToken);
+
+        if (route is null)
+        {
+            throw new StlApiException("route.not_found", "Route was not found.", 404);
+        }
+
+        if (string.Equals(route.RouteStatus, RouteStatuses.Completed, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(status, RouteStatuses.Completed, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "route.completed_terminal",
+                "Completed routes cannot be moved to another status.",
+                400);
+        }
+
+        var previousStatus = route.RouteStatus;
+        if (string.Equals(previousStatus, status, StringComparison.OrdinalIgnoreCase))
+        {
+            return MapDetail(route);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        route.RouteStatus = status;
+        route.UpdatedAt = now;
+
+        if (string.Equals(status, RouteStatuses.Active, StringComparison.OrdinalIgnoreCase))
+        {
+            route.ActivatedAt ??= now;
+        }
+        else if (string.Equals(status, RouteStatuses.Completed, StringComparison.OrdinalIgnoreCase))
+        {
+            route.CompletedAt ??= now;
+        }
+        else if (string.Equals(status, RouteStatuses.Cancelled, StringComparison.OrdinalIgnoreCase))
+        {
+            route.CancelledAt ??= now;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "route.status",
+            tenantId,
+            actorUserId,
+            "route",
+            route.Id.ToString(),
+            status,
+            cancellationToken: cancellationToken);
+
+        await integrationOutbox.TryEnqueueRouteUpdatedAsync(route, $"Route status changed to {status}", cancellationToken);
+
+        if (string.Equals(status, RouteStatuses.Cancelled, StringComparison.OrdinalIgnoreCase))
+        {
+            await notificationEnqueueService.TryEnqueueRouteCancelledAsync(route, cancellationToken);
+        }
+
+        return MapDetail(route);
     }
 
     public async Task<IReadOnlyList<RouteStopSummaryResponse>> ListStopsAsync(

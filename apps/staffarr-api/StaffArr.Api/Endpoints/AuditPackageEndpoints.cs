@@ -8,7 +8,13 @@ public static class AuditPackageEndpoints
 {
     public static void MapStaffArrAuditPackageEndpoints(this WebApplication app)
     {
-        var packages = app.MapGroup("/api/audit-packages")
+        MapRoutes(app.MapGroup("/api/audit-packages"), string.Empty, "/api/audit-packages");
+        MapRoutes(app.MapGroup("/api/v1/audit-packages"), "V1", "/api/v1/audit-packages");
+    }
+
+    private static void MapRoutes(RouteGroupBuilder packages, string nameSuffix, string routePrefix)
+    {
+        packages = packages
             .WithTags("AuditPackages")
             .RequireAuthorization();
 
@@ -20,7 +26,7 @@ public static class AuditPackageEndpoints
             authorization.RequireAuditPackageRead(context.User);
             return Results.Ok(service.GetManifest());
         })
-        .WithName("GetStaffArrAuditPackageManifest");
+        .WithName($"GetStaffArrAuditPackageManifest{nameSuffix}");
 
         packages.MapGet("/filter-options", async (
             StaffArrAuthorizationService authorization,
@@ -32,7 +38,7 @@ public static class AuditPackageEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetFilterOptionsAsync(tenantId, cancellationToken));
         })
-        .WithName("GetStaffArrAuditPackageFilterOptions");
+        .WithName($"GetStaffArrAuditPackageFilterOptions{nameSuffix}");
 
         packages.MapGet("/summary", async (
             DateTimeOffset? from,
@@ -53,7 +59,7 @@ public static class AuditPackageEndpoints
                 BuildFilter(from, to, action, result, targetType, actorUserId),
                 cancellationToken));
         })
-        .WithName("GetStaffArrAuditPackageExportSummary");
+        .WithName($"GetStaffArrAuditPackageExportSummary{nameSuffix}");
 
         packages.MapGet("/timeline", async (
             DateTimeOffset? from,
@@ -79,7 +85,7 @@ public static class AuditPackageEndpoints
                 cancellationToken);
             return Results.Ok(resultPage);
         })
-        .WithName("GetStaffArrAuditPackageTimeline");
+        .WithName($"GetStaffArrAuditPackageTimeline{nameSuffix}");
 
         packages.MapGet("/export", async (
             string? format,
@@ -120,7 +126,7 @@ public static class AuditPackageEndpoints
                 "application/zip",
                 $"staffarr-audit-package-{DateTime.UtcNow:yyyyMMddHHmmss}.zip");
         })
-        .WithName("ExportStaffArrAuditPackage");
+        .WithName($"ExportStaffArrAuditPackage{nameSuffix}");
 
         packages.MapPost("/jobs", async (
             CreateAuditPackageGenerationJobRequest request,
@@ -137,9 +143,9 @@ public static class AuditPackageEndpoints
                 actorUserId,
                 request,
                 cancellationToken);
-            return Results.Accepted($"/api/audit-packages/jobs/{job.JobId}", job);
+            return Results.Accepted($"{routePrefix}/jobs/{job.JobId}", job);
         })
-        .WithName("CreateStaffArrAuditPackageGenerationJob");
+        .WithName($"CreateStaffArrAuditPackageGenerationJob{nameSuffix}");
 
         packages.MapGet("/jobs/{jobId:guid}", async (
             Guid jobId,
@@ -153,7 +159,7 @@ public static class AuditPackageEndpoints
             var job = await generationService.GetJobAsync(tenantId, jobId, cancellationToken);
             return Results.Ok(job);
         })
-        .WithName("GetStaffArrAuditPackageGenerationJob");
+        .WithName($"GetStaffArrAuditPackageGenerationJob{nameSuffix}");
 
         packages.MapGet("/jobs/{jobId:guid}/download", async (
             Guid jobId,
@@ -178,7 +184,7 @@ public static class AuditPackageEndpoints
                 cancellationToken);
             return Results.File(content, contentType, fileName);
         })
-        .WithName("DownloadStaffArrAuditPackageGenerationJob");
+        .WithName($"DownloadStaffArrAuditPackageGenerationJob{nameSuffix}");
     }
 
     private static AuditPackageFilter BuildFilter(

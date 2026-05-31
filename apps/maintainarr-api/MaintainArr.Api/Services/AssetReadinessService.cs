@@ -8,6 +8,7 @@ namespace MaintainArr.Api.Services;
 
 public sealed class AssetReadinessService(
     MaintainArrDbContext db,
+    ComplianceCoreAssetReadinessGateClient complianceCoreAssetReadinessGate,
     IMaintainArrAuditService audit)
 {
     public const int DefaultMaterializedReadStalenessHours = AssetStatusRollupDefaults.StalenessHours;
@@ -59,12 +60,13 @@ public sealed class AssetReadinessService(
 
     public async Task<AssetReadinessResponse> GetByDispatchRefAsync(
         Guid tenantId,
+        Guid? assetId,
         string? vehicleRefKey,
         string? assetTag,
         CancellationToken cancellationToken = default,
         Guid? actorUserId = null)
     {
-        var asset = await ResolveAssetForDispatchAsync(tenantId, vehicleRefKey, assetTag, cancellationToken);
+        var asset = await ResolveAssetForDispatchAsync(tenantId, assetId, vehicleRefKey, assetTag, cancellationToken);
         var context = await LoadReadinessContextAsync(tenantId, [asset.Id], cancellationToken);
         var response = BuildDetailResponse(asset, context);
         return await AttachDecisionMetadataAsync(
@@ -79,6 +81,7 @@ public sealed class AssetReadinessService(
 
     public async Task<Asset> ResolveAssetForDispatchAsync(
         Guid tenantId,
+        Guid? assetId,
         string? vehicleRefKey,
         string? assetTag,
         CancellationToken cancellationToken = default)
@@ -86,12 +89,35 @@ public sealed class AssetReadinessService(
         var normalizedTag = NormalizeOptionalKey(assetTag);
         var normalizedVehicleRef = NormalizeOptionalKey(vehicleRefKey);
 
-        if (string.IsNullOrWhiteSpace(normalizedTag) && string.IsNullOrWhiteSpace(normalizedVehicleRef))
+        if (assetId is null
+            && string.IsNullOrWhiteSpace(normalizedTag)
+            && string.IsNullOrWhiteSpace(normalizedVehicleRef))
         {
             throw new StlApiException(
                 "asset_readiness.ref_required",
-                "Vehicle reference key or asset tag is required.",
+                "Asset id, vehicle reference key, or asset tag is required.",
                 400);
+        }
+
+        if (assetId is Guid id)
+        {
+            if (id == Guid.Empty)
+            {
+                throw new StlApiException(
+                    "asset_readiness.ref_required",
+                    "Asset id must be a non-empty GUID when provided.",
+                    400);
+            }
+
+            var byAssetId = await db.Assets
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == id, cancellationToken);
+            if (byAssetId is null)
+            {
+                throw new StlApiException("assets.not_found", "Asset was not found.", 404);
+            }
+
+            return byAssetId;
         }
 
         if (!string.IsNullOrWhiteSpace(normalizedTag))
@@ -109,11 +135,11 @@ public sealed class AssetReadinessService(
             return byTag;
         }
 
-        if (Guid.TryParse(normalizedVehicleRef, out var assetId))
+        if (Guid.TryParse(normalizedVehicleRef, out var parsedAssetId))
         {
             var byId = await db.Assets
                 .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == assetId, cancellationToken);
+                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == parsedAssetId, cancellationToken);
             if (byId is not null)
             {
                 return byId;
@@ -285,29 +311,106 @@ public sealed class AssetReadinessService(
         int? stalenessThresholdHours,
         CancellationToken cancellationToken)
     {
+        var evaluatedResponse = await ApplyComplianceCoreGateAsync(
+            tenantId,
+            response,
+            dataSource,
+            auditAction,
+            cancellationToken);
+
         var auditEventId = await audit.WriteAsync(
             auditAction,
             tenantId,
             actorUserId,
             "asset",
-            response.AssetId.ToString(),
-            response.ReadinessStatus,
-            reasonCode: response.ReadinessBasis,
+            evaluatedResponse.AssetId.ToString(),
+            evaluatedResponse.ReadinessStatus,
+            reasonCode: evaluatedResponse.ReadinessBasis,
             cancellationToken: cancellationToken);
 
-        return response with
+        return evaluatedResponse with
         {
-            Dispatchability = BuildDispatchabilitySummary(response),
+            Dispatchability = BuildDispatchabilitySummary(evaluatedResponse),
             Confidence = new AssetReadinessConfidenceResponse(
                 dataSource,
                 "fresh",
                 stalenessThresholdHours,
-                response.CalculatedAt),
+                evaluatedResponse.CalculatedAt),
             AuditSnapshot = new AssetReadinessAuditSnapshotResponse(
                 auditEventId,
                 "asset_readiness_decision",
                 DateTimeOffset.UtcNow),
-            ComplianceCoreReferences = [],
+            ComplianceCoreReferences = evaluatedResponse.ComplianceCoreReferences ?? [],
+        };
+    }
+
+    private async Task<AssetReadinessResponse> ApplyComplianceCoreGateAsync(
+        Guid tenantId,
+        AssetReadinessResponse response,
+        string dataSource,
+        string auditAction,
+        CancellationToken cancellationToken)
+    {
+        var result = await complianceCoreAssetReadinessGate.CheckAssetReadinessAsync(
+            tenantId,
+            response.AssetId,
+            response.AssetTag,
+            response.AssetName,
+            new Dictionary<string, string>
+            {
+                ["product"] = "maintainarr",
+                ["action"] = "asset_readiness",
+                ["audit_action"] = auditAction,
+                ["data_source"] = dataSource,
+                ["asset_id"] = response.AssetId.ToString("D"),
+                ["assetId"] = response.AssetId.ToString("D"),
+                ["asset_tag"] = response.AssetTag,
+                ["assetTag"] = response.AssetTag,
+                ["lifecycle_status"] = response.LifecycleStatus,
+                ["lifecycleStatus"] = response.LifecycleStatus,
+                ["local_readiness_status"] = response.ReadinessStatus,
+                ["localReadinessStatus"] = response.ReadinessStatus,
+                ["local_readiness_basis"] = response.ReadinessBasis,
+                ["localReadinessBasis"] = response.ReadinessBasis,
+                ["local_blocker_count"] = response.Blockers.Count.ToString(),
+                ["localBlockerCount"] = response.Blockers.Count.ToString()
+            },
+            cancellationToken);
+        if (result is null)
+        {
+            return response;
+        }
+
+        var references = (response.ComplianceCoreReferences ?? [])
+            .Append(new AssetReadinessComplianceCoreReferenceResponse(
+                "check_result",
+                result.CheckResultId.ToString("D"),
+                result.Outcome,
+                $"/compliancecore/check-results/{result.CheckResultId:D}"))
+            .ToList();
+
+        if (IsPermissiveComplianceCoreGateOutcome(result.Outcome))
+        {
+            return response with { ComplianceCoreReferences = references };
+        }
+
+        var blockers = response.Blockers
+            .Append(new AssetReadinessBlockerResponse(
+                "compliancecore_rule",
+                string.IsNullOrWhiteSpace(result.Message)
+                    ? "Compliance Core rules prevent this asset from being dispatched."
+                    : result.Message,
+                "compliancecore_check",
+                result.CheckResultId.ToString("D"),
+                result.AppliedWaiverId?.ToString("D") ?? result.AppliedWaiverKey))
+            .ToList();
+
+        return response with
+        {
+            ReadinessStatus = "not_ready",
+            ReadinessBasis = "compliancecore",
+            Blockers = blockers,
+            ComplianceCoreReferences = references,
         };
     }
 
@@ -436,6 +539,7 @@ public sealed class AssetReadinessService(
 
     private static int BlockerSortOrder(string blockerType) => blockerType switch
     {
+        "compliancecore_rule" => 0,
         "critical_defect" => 0,
         "high_defect" => 1,
         "failed_inspection" => 2,
@@ -444,6 +548,11 @@ public sealed class AssetReadinessService(
         "active_work_order" => 5,
         _ => 99,
     };
+
+    private static bool IsPermissiveComplianceCoreGateOutcome(string outcome) =>
+        string.Equals(outcome, "allow", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(outcome, "warn", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(outcome, "waived", StringComparison.OrdinalIgnoreCase);
 
     private async Task<AssetReadinessContext> LoadReadinessContextAsync(
         Guid tenantId,

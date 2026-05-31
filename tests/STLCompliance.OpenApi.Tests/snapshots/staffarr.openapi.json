@@ -21,6 +21,90 @@
         }
       }
     },
+    "/api/audit": {
+      "get": {
+        "tags": [
+          "EventAndAudit"
+        ],
+        "operationId": "ListStaffArrAudit",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/audit-packages/export": {
       "get": {
         "tags": [
@@ -386,6 +470,66 @@
         }
       }
     },
+    "/api/config": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/events": {
+      "get": {
+        "tags": [
+          "EventAndAudit"
+        ],
+        "operationId": "ListStaffArrEvents",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/exports/manifest": {
       "get": {
         "tags": [
@@ -716,6 +860,50 @@
         }
       }
     },
+    "/api/integrations/permission-check": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationPermissionCheck",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "permissionKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/person-history": {
       "get": {
         "tags": [
@@ -871,6 +1059,117 @@
           },
           {
             "name": "externalUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/product-incidents": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestProductIncident",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestProductIncidentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/readiness-rollups/departments": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationReadinessRollupsDepartments",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "siteOrgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/readiness-rollups/sites": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationReadinessRollupsSites",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/readiness-rollups/teams": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationReadinessRollupsTeams",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "siteOrgUnitId",
             "in": "query",
             "schema": {
               "type": "string",
@@ -1547,6 +1846,332 @@
         }
       }
     },
+    "/api/me/incidents": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "StaffArrListMyPersonnelIncidents",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "StaffArrSubmitSelfReportedPersonnelIncident",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitSelfReportedPersonnelIncidentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me/incidents/{incidentId}": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "StaffArrGetMyPersonnelIncident",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me/portal": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "StaffArrGetMePortalSummary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me/subordinates": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "StaffArrListMyDirectReports",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me/team": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "StaffArrGetMyTeamDashboard",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me/team/update-requests/{requestId}/review": {
+      "post": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "StaffArrReviewMyTeamPersonnelUpdateRequest",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewPersonnelUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me/update-requests": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "StaffArrListMyPersonnelUpdateRequests",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "StaffArrSubmitPersonnelUpdateRequest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitPersonnelUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me/update-requests/{requestId}": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "StaffArrGetMyPersonnelUpdateRequest",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/offboarding": {
+      "post": {
+        "tags": [
+          "Offboarding"
+        ],
+        "operationId": "StartPersonOffboarding",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartPersonOffboardingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/offboarding/{offboardingId}": {
+      "get": {
+        "tags": [
+          "Offboarding"
+        ],
+        "operationId": "GetPersonOffboarding",
+        "parameters": [
+          {
+            "name": "offboardingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/offboarding/{offboardingId}/execute": {
+      "post": {
+        "tags": [
+          "Offboarding"
+        ],
+        "operationId": "ExecutePersonOffboarding",
+        "parameters": [
+          {
+            "name": "offboardingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecutePersonOffboardingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/org-units": {
       "get": {
         "tags": [
@@ -1755,6 +2380,46 @@
           "People"
         ],
         "operationId": "ListStaffArrPeopleExportDeliveryNotifications",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export/delivery-pending": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryPending",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/export/delivery-runs": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryRuns",
         "parameters": [
           {
             "name": "limit",
@@ -2362,6 +3027,30 @@
         }
       }
     },
+    "/api/people/{personId}/offboarding": {
+      "get": {
+        "tags": [
+          "Offboarding"
+        ],
+        "operationId": "GetPersonOffboardingForPerson",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/people/{personId}/org-assignments": {
       "get": {
         "tags": [
@@ -2930,6 +3619,13 @@
               ],
               "format": "int32"
             }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2965,6 +3661,30 @@
                 "string"
               ],
               "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/people/{personId}/workforce-onboarding-journey": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetWorkforceOnboardingJourney",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -3111,6 +3831,91 @@
         }
       }
     },
+    "/api/personnel-update-requests": {
+      "get": {
+        "tags": [
+          "PersonnelUpdateRequests"
+        ],
+        "operationId": "StaffArrListPendingPersonnelUpdateRequests",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/personnel-update-requests/{requestId}": {
+      "get": {
+        "tags": [
+          "PersonnelUpdateRequests"
+        ],
+        "operationId": "StaffArrGetPersonnelUpdateRequest",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/personnel-update-requests/{requestId}/review": {
+      "post": {
+        "tags": [
+          "PersonnelUpdateRequests"
+        ],
+        "operationId": "StaffArrReviewPersonnelUpdateRequest",
+        "parameters": [
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewPersonnelUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/readiness": {
       "get": {
         "tags": [
@@ -3125,6 +3930,84 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/readiness-rollups/departments": {
+      "get": {
+        "tags": [
+          "ReadinessRollups"
+        ],
+        "operationId": "ListDepartmentReadinessRollups",
+        "parameters": [
+          {
+            "name": "siteOrgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/readiness-rollups/departments/{departmentOrgUnitId}": {
+      "get": {
+        "tags": [
+          "ReadinessRollups"
+        ],
+        "operationId": "GetDepartmentReadinessRollup",
+        "parameters": [
+          {
+            "name": "departmentOrgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/readiness-rollups/departments/{departmentOrgUnitId}/members": {
+      "get": {
+        "tags": [
+          "ReadinessRollups"
+        ],
+        "operationId": "ListDepartmentReadinessRollupMembers",
+        "parameters": [
+          {
+            "name": "departmentOrgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "readinessStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -3172,6 +4055,37 @@
         }
       }
     },
+    "/api/readiness-rollups/sites/{siteOrgUnitId}/members": {
+      "get": {
+        "tags": [
+          "ReadinessRollups"
+        ],
+        "operationId": "ListSiteReadinessRollupMembers",
+        "parameters": [
+          {
+            "name": "siteOrgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "readinessStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/readiness-rollups/teams": {
       "get": {
         "tags": [
@@ -3209,6 +4123,37 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/readiness-rollups/teams/{teamOrgUnitId}/members": {
+      "get": {
+        "tags": [
+          "ReadinessRollups"
+        ],
+        "operationId": "ListTeamReadinessRollupMembers",
+        "parameters": [
+          {
+            "name": "teamOrgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "readinessStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -3474,6 +4419,18 @@
         }
       }
     },
+    "/api/settings": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/training-acknowledgements": {
       "get": {
         "tags": [
@@ -3521,6 +4478,2688 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit": {
+      "get": {
+        "tags": [
+          "EventAndAudit"
+        ],
+        "operationId": "ListStaffArrAuditV1",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "StaffArrRedeemHandoffV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/certifications": {
+      "get": {
+        "tags": [
+          "Certifications"
+        ],
+        "operationId": "ListCertificationDefinitionsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Certifications"
+        ],
+        "operationId": "UpsertCertificationDefinitionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertCertificationDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/config": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/departments": {
+      "get": {
+        "tags": [
+          "OrgUnits"
+        ],
+        "operationId": "ListDepartmentsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/documents": {
+      "get": {
+        "tags": [
+          "Personnel Documents"
+        ],
+        "operationId": "ListDocumentsV1Alias",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/events": {
+      "get": {
+        "tags": [
+          "EventAndAudit"
+        ],
+        "operationId": "ListStaffArrEventsV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealthV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/hierarchy": {
+      "get": {
+        "tags": [
+          "ManagerHierarchy"
+        ],
+        "operationId": "GetHierarchyV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/incidents": {
+      "get": {
+        "tags": [
+          "Incidents"
+        ],
+        "operationId": "ListPersonnelIncidentsV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Incidents"
+        ],
+        "operationId": "CreatePersonnelIncidentV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonnelIncidentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{incidentId}": {
+      "get": {
+        "tags": [
+          "Incidents"
+        ],
+        "operationId": "GetPersonnelIncidentV1",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{incidentId}/route-to-trainarr": {
+      "post": {
+        "tags": [
+          "Incidents"
+        ],
+        "operationId": "RoutePersonnelIncidentToTrainarrV1",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{incidentId}/supply-demand": {
+      "get": {
+        "tags": [
+          "IncidentSupplyDemand"
+        ],
+        "operationId": "ListIncidentSupplyDemandV1",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "IncidentSupplyDemand"
+        ],
+        "operationId": "CreateIncidentSupplyDemandLineV1",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIncidentSupplyDemandLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/incidents/{incidentId}/supply-demand/publish": {
+      "post": {
+        "tags": [
+          "IncidentSupplyDemand"
+        ],
+        "operationId": "PublishIncidentSupplyDemandV1",
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishIncidentSupplyDemandRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetIntegrationsIndexV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/certification-grants": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestCertificationGrantV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestCertificationGrantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/certification-lifecycle": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestCertificationLifecycleV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestCertificationLifecycleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/permission-check": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationPermissionCheckV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "permissionKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/person-history": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "TrainarrPersonHistoryV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/person-history/summary": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "TrainarrPersonHistorySummaryV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/person-lookup": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "TrainarrPersonLookupV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/procurement-approval-authority": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SupplyarrProcurementApprovalAuthorityV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "externalUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/product-incidents": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestProductIncidentV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestProductIncidentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/readiness-rollups/departments": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationReadinessRollupsDepartmentsV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "siteOrgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/readiness-rollups/sites": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationReadinessRollupsSitesV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/readiness-rollups/teams": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IntegrationReadinessRollupsTeamsV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "siteOrgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/routarr-readiness": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RoutarrReadinessCheckV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/supplyarr-demand-status": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestSupplyarrDemandStatusV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestSupplyarrDemandStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/training-acknowledgements": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestTrainingAcknowledgementV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestTrainingAcknowledgementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/training-acknowledgements/status": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "GetTrainingAcknowledgementStatusV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "trainarrAcknowledgementRequestId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/training-acknowledgements/supersede": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SupersedeTrainingAcknowledgementV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupersedeTrainingAcknowledgementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/training-blockers": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "IngestTrainingBlockerV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestTrainingBlockerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/training-blockers/clear": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ClearTrainingBlockerV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClearTrainingBlockerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetProductLaunchContextV1",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateProductLaunchHandoffV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "StaffArrGetMeV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/offboarding": {
+      "post": {
+        "tags": [
+          "Offboarding"
+        ],
+        "operationId": "StartPersonOffboardingV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartPersonOffboardingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/offboarding/{offboardingId}": {
+      "get": {
+        "tags": [
+          "Offboarding"
+        ],
+        "operationId": "GetPersonOffboardingV1",
+        "parameters": [
+          {
+            "name": "offboardingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/offboarding/{offboardingId}/execute": {
+      "post": {
+        "tags": [
+          "Offboarding"
+        ],
+        "operationId": "ExecutePersonOffboardingV1",
+        "parameters": [
+          {
+            "name": "offboardingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecutePersonOffboardingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/onboarding": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetOnboardingV1Alias",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/org-units": {
+      "get": {
+        "tags": [
+          "OrgUnits"
+        ],
+        "operationId": "ListOrgUnitsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "OrgUnits"
+        ],
+        "operationId": "CreateOrgUnitV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrgUnitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/org-units/{orgUnitId}": {
+      "put": {
+        "tags": [
+          "OrgUnits"
+        ],
+        "operationId": "UpdateOrgUnitV1",
+        "parameters": [
+          {
+            "name": "orgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrgUnitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/org-units/{orgUnitId}/status": {
+      "patch": {
+        "tags": [
+          "OrgUnits"
+        ],
+        "operationId": "UpdateOrgUnitStatusV1",
+        "parameters": [
+          {
+            "name": "orgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrgUnitStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/overrides": {
+      "post": {
+        "tags": [
+          "Readiness"
+        ],
+        "operationId": "GrantReadinessOverrideV1Alias",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantReadinessOverrideRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Readiness"
+        ],
+        "operationId": "ClearReadinessOverrideV1Alias",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffPeopleV1",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "orgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "CreateStaffPersonV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStaffPersonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ExportStaffArrPeopleV1",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "employmentStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "orgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/delivery-notifications": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryNotificationsV1",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/delivery-pending": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryPendingV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/delivery-runs": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "ListStaffArrPeopleExportDeliveryRunsV1",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/manifest": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportManifestV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/preset": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportPresetV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "UpsertStaffArrPeopleExportPresetV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPersonExportPresetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/export/schedule": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffArrPeopleExportScheduleV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "UpsertStaffArrPeopleExportScheduleV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPersonExportScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/import": {
+      "post": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "BulkImportStaffPeopleV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkPersonImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffPersonV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "UpdateStaffPersonV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStaffPersonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/employment-status": {
+      "patch": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "UpdateStaffPersonEmploymentStatusV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonEmploymentStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/lookup": {
+      "get": {
+        "tags": [
+          "PersonLookup"
+        ],
+        "operationId": "GetPersonLookupV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/manager": {
+      "put": {
+        "tags": [
+          "ManagerHierarchy"
+        ],
+        "operationId": "UpdatePersonManagerV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonManagerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/manager-chain": {
+      "get": {
+        "tags": [
+          "ManagerHierarchy"
+        ],
+        "operationId": "GetManagerChainV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/org-assignments": {
+      "get": {
+        "tags": [
+          "OrgUnitAssignments"
+        ],
+        "operationId": "ListPersonOrgAssignmentsV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "OrgUnitAssignments"
+        ],
+        "operationId": "CreatePersonOrgAssignmentV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrgUnitAssignmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/org-assignments/{assignmentId}": {
+      "put": {
+        "tags": [
+          "OrgUnitAssignments"
+        ],
+        "operationId": "UpdatePersonOrgAssignmentV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrgUnitAssignmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/org-assignments/{assignmentId}/status": {
+      "patch": {
+        "tags": [
+          "OrgUnitAssignments"
+        ],
+        "operationId": "UpdatePersonOrgAssignmentStatusV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assignmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrgUnitAssignmentStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/readiness": {
+      "get": {
+        "tags": [
+          "Readiness"
+        ],
+        "operationId": "GetPersonReadinessV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/readiness/override": {
+      "post": {
+        "tags": [
+          "Readiness"
+        ],
+        "operationId": "GrantPersonReadinessOverrideV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantReadinessOverrideRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Readiness"
+        ],
+        "operationId": "ClearPersonReadinessOverrideV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/subordinates": {
+      "get": {
+        "tags": [
+          "ManagerHierarchy"
+        ],
+        "operationId": "ListSubordinatesV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "includeIndirect",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/subordinates/{subordinatePersonId}": {
+      "get": {
+        "tags": [
+          "ManagerHierarchy"
+        ],
+        "operationId": "GetSubordinateDetailV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "subordinatePersonId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/timeline": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetPersonTimelineV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/trainarr-training-history": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetStaffPersonTrainarrTrainingHistoryV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/workforce-onboarding-journey": {
+      "get": {
+        "tags": [
+          "People"
+        ],
+        "operationId": "GetWorkforceOnboardingJourneyV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/permission-templates": {
+      "get": {
+        "tags": [
+          "PermissionTemplates"
+        ],
+        "operationId": "ListPermissionTemplatesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/permissions": {
+      "get": {
+        "tags": [
+          "PermissionTemplates"
+        ],
+        "operationId": "ListPermissionsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/person-lookup": {
+      "get": {
+        "tags": [
+          "PersonLookup"
+        ],
+        "operationId": "GetPersonLookupByQueryV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/positions": {
+      "get": {
+        "tags": [
+          "OrgUnits"
+        ],
+        "operationId": "ListPositionsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/readiness": {
+      "get": {
+        "tags": [
+          "Readiness"
+        ],
+        "operationId": "GetPersonReadinessByQueryV1",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/readiness-rollups/departments": {
+      "get": {
+        "tags": [
+          "ReadinessRollups"
+        ],
+        "operationId": "ListDepartmentReadinessRollupsV1",
+        "parameters": [
+          {
+            "name": "siteOrgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/readiness-rollups/departments/{departmentOrgUnitId}": {
+      "get": {
+        "tags": [
+          "ReadinessRollups"
+        ],
+        "operationId": "GetDepartmentReadinessRollupV1",
+        "parameters": [
+          {
+            "name": "departmentOrgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/readiness-rollups/departments/{departmentOrgUnitId}/members": {
+      "get": {
+        "tags": [
+          "ReadinessRollups"
+        ],
+        "operationId": "ListDepartmentReadinessRollupMembersV1",
+        "parameters": [
+          {
+            "name": "departmentOrgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "readinessStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/readiness-rollups/sites": {
+      "get": {
+        "tags": [
+          "ReadinessRollups"
+        ],
+        "operationId": "ListSiteReadinessRollupsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/readiness-rollups/sites/{siteOrgUnitId}": {
+      "get": {
+        "tags": [
+          "ReadinessRollups"
+        ],
+        "operationId": "GetSiteReadinessRollupV1",
+        "parameters": [
+          {
+            "name": "siteOrgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/readiness-rollups/sites/{siteOrgUnitId}/members": {
+      "get": {
+        "tags": [
+          "ReadinessRollups"
+        ],
+        "operationId": "ListSiteReadinessRollupMembersV1",
+        "parameters": [
+          {
+            "name": "siteOrgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "readinessStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/readiness-rollups/teams": {
+      "get": {
+        "tags": [
+          "ReadinessRollups"
+        ],
+        "operationId": "ListTeamReadinessRollupsV1",
+        "parameters": [
+          {
+            "name": "siteOrgUnitId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/readiness-rollups/teams/{teamOrgUnitId}": {
+      "get": {
+        "tags": [
+          "ReadinessRollups"
+        ],
+        "operationId": "GetTeamReadinessRollupV1",
+        "parameters": [
+          {
+            "name": "teamOrgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/readiness-rollups/teams/{teamOrgUnitId}/members": {
+      "get": {
+        "tags": [
+          "ReadinessRollups"
+        ],
+        "operationId": "ListTeamReadinessRollupMembersV1",
+        "parameters": [
+          {
+            "name": "teamOrgUnitId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "readinessStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "GetReportsIndexV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/session": {
+      "get": {
+        "tags": [
+          "Session"
+        ],
+        "operationId": "StaffArrGetSessionBootstrapV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/settings": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/sites": {
+      "get": {
+        "tags": [
+          "OrgUnits"
+        ],
+        "operationId": "ListSitesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/teams": {
+      "get": {
+        "tags": [
+          "OrgUnits"
+        ],
+        "operationId": "ListTeamsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/worker-admin/{workerKey}/pending": {
+      "get": {
+        "tags": [
+          "StaffArrWorkerAdmin"
+        ],
+        "operationId": "ListStaffArrWorkerAdminPending",
+        "parameters": [
+          {
+            "name": "workerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/worker-admin/{workerKey}/runs": {
+      "get": {
+        "tags": [
+          "StaffArrWorkerAdmin"
+        ],
+        "operationId": "ListStaffArrWorkerAdminRuns",
+        "parameters": [
+          {
+            "name": "workerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/worker-admin/{workerKey}/settings": {
+      "get": {
+        "tags": [
+          "StaffArrWorkerAdmin"
+        ],
+        "operationId": "GetStaffArrWorkerAdminSettings",
+        "parameters": [
+          {
+            "name": "workerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "StaffArrWorkerAdmin"
+        ],
+        "operationId": "UpsertStaffArrWorkerAdminSettings",
+        "parameters": [
+          {
+            "name": "workerKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertStaffArrWorkerSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -3996,6 +7635,21 @@
           }
         }
       },
+      "ExecutePersonOffboardingRequest": {
+        "required": [
+          "newManagerPersonIdForReports"
+        ],
+        "type": "object",
+        "properties": {
+          "newManagerPersonIdForReports": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "GrantPersonCertificationRequest": {
         "required": [
           "certificationDefinitionId",
@@ -4157,6 +7811,66 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "IngestProductIncidentRequest": {
+        "required": [
+          "tenantId",
+          "sourceProduct",
+          "sourceIncidentId",
+          "sourceEventKind",
+          "personId",
+          "reasonCategoryKey",
+          "severity",
+          "title",
+          "description",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceIncidentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sourceEventKind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "personId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reasonCategoryKey": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sourceReferenceKey": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -4583,6 +8297,28 @@
           }
         }
       },
+      "ReviewPersonnelUpdateRequest": {
+        "required": [
+          "decision",
+          "reviewNotes"
+        ],
+        "type": "object",
+        "properties": {
+          "decision": {
+            "type": "string"
+          },
+          "reviewNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "applyToProfile": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "RoleTemplatePermissionInput": {
         "required": [
           "permissionTemplateId",
@@ -4603,6 +8339,107 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "StartPersonOffboardingRequest": {
+        "required": [
+          "personId",
+          "separationDate",
+          "separationReason",
+          "targetEmploymentStatus",
+          "disableLoginRequested",
+          "newManagerPersonIdForReports"
+        ],
+        "type": "object",
+        "properties": {
+          "personId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "separationDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "separationReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "targetEmploymentStatus": {
+            "type": "string"
+          },
+          "disableLoginRequested": {
+            "type": "boolean"
+          },
+          "newManagerPersonIdForReports": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "SubmitPersonnelUpdateRequest": {
+        "required": [
+          "requestType",
+          "fieldKey",
+          "currentValue",
+          "requestedValue",
+          "details"
+        ],
+        "type": "object",
+        "properties": {
+          "requestType": {
+            "type": "string"
+          },
+          "fieldKey": {
+            "type": "string"
+          },
+          "currentValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requestedValue": {
+            "type": "string"
+          },
+          "details": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SubmitSelfReportedPersonnelIncidentRequest": {
+        "required": [
+          "reasonCategoryKey",
+          "severity",
+          "title",
+          "description",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "reasonCategoryKey": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -4962,6 +8799,45 @@
             "type": "boolean"
           }
         }
+      },
+      "UpsertStaffArrWorkerSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "scanIntervalMinutes",
+          "batchSize",
+          "stalenessHours"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "scanIntervalMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stalenessHours": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
       }
     }
   },
@@ -4973,6 +8849,33 @@
       "name": "StaffArr.Api"
     },
     {
+      "name": "Offboarding"
+    },
+    {
+      "name": "OrgUnits"
+    },
+    {
+      "name": "ManagerHierarchy"
+    },
+    {
+      "name": "PermissionTemplates"
+    },
+    {
+      "name": "Readiness"
+    },
+    {
+      "name": "People"
+    },
+    {
+      "name": "Personnel Documents"
+    },
+    {
+      "name": "Reports"
+    },
+    {
+      "name": "Integrations"
+    },
+    {
       "name": "Auth"
     },
     {
@@ -4982,28 +8885,25 @@
       "name": "Me"
     },
     {
-      "name": "Launch"
+      "name": "Settings"
     },
     {
-      "name": "People"
+      "name": "PersonnelUpdateRequests"
+    },
+    {
+      "name": "Launch"
     },
     {
       "name": "PersonLookup"
     },
     {
-      "name": "ManagerHierarchy"
-    },
-    {
-      "name": "OrgUnits"
+      "name": "StaffArrWorkerAdmin"
     },
     {
       "name": "OrgUnitAssignments"
     },
     {
       "name": "RoleTemplates"
-    },
-    {
-      "name": "PermissionTemplates"
     },
     {
       "name": "PersonRoleAssignments"
@@ -5016,9 +8916,6 @@
     },
     {
       "name": "PersonCertifications"
-    },
-    {
-      "name": "Readiness"
     },
     {
       "name": "ReadinessRollups"
@@ -5036,12 +8933,6 @@
       "name": "Personnel Notes"
     },
     {
-      "name": "Personnel Documents"
-    },
-    {
-      "name": "Integrations"
-    },
-    {
       "name": "Internal"
     },
     {
@@ -5052,6 +8943,9 @@
     },
     {
       "name": "AuditPackages"
+    },
+    {
+      "name": "EventAndAudit"
     },
     {
       "name": "PersonnelReports"

@@ -11,6 +11,9 @@ using NexArr.Api.Services;
 using StaffArr.Api.Contracts;
 using StaffArr.Api.Data;
 using StaffArr.Api.Entities;
+using TrainArr.Api.Contracts;
+using TrainArr.Api.Entities;
+using StaffArrIntegration = StaffArr.Api.Endpoints.IntegrationEndpoints;
 using TrainArrIncidentIntegration = TrainArr.Api.Endpoints.IntegrationEndpoints;
 using STLCompliance.Shared.Contracts;
 
@@ -25,6 +28,9 @@ public class StaffArrTrainArrIncidentRoutingTests : IAsyncLifetime
     private HttpClient _staffarrClient = null!;
     private HttpClient _trainarrClient = null!;
     private string _staffarrToTrainarrToken = null!;
+    private string _routarrToTrainarrToken = null!;
+    private string _supplyarrToTrainarrToken = null!;
+    private string _routarrToStaffarrToken = null!;
 
     public async Task InitializeAsync()
     {
@@ -55,7 +61,22 @@ public class StaffArrTrainArrIncidentRoutingTests : IAsyncLifetime
             adminToken,
             "staffarr",
             ["trainarr"],
-            TrainArrIncidentIntegration.IncidentRemediationIngestActionScope);
+            $"{TrainArrIncidentIntegration.IncidentRemediationIngestActionScope},{TrainArrIncidentIntegration.IncidentRemediationReadActionScope}");
+        _routarrToTrainarrToken = await IssueServiceTokenAsync(
+            adminToken,
+            "routarr",
+            ["trainarr"],
+            TrainArrIncidentIntegration.RoutarrIncidentRemediationIngestActionScope);
+        _supplyarrToTrainarrToken = await IssueServiceTokenAsync(
+            adminToken,
+            "supplyarr",
+            ["trainarr"],
+            TrainArrIncidentIntegration.SupplyarrIncidentRemediationIngestActionScope);
+        _routarrToStaffarrToken = await IssueServiceTokenAsync(
+            adminToken,
+            "routarr",
+            ["staffarr"],
+            StaffArrIntegration.ProductIncidentIngestActionScope);
 
         _trainarrFactory = new WebApplicationFactory<global::TrainArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -125,6 +146,8 @@ public class StaffArrTrainArrIncidentRoutingTests : IAsyncLifetime
         createResponse.EnsureSuccessStatusCode();
         var created = (await createResponse.Content.ReadFromJsonAsync<PersonnelIncidentDetailResponse>())!;
 
+        await EnableTrainArrNotificationFanoutAsync();
+
         var routeRequest = Authorized(
             HttpMethod.Post,
             $"/api/incidents/{created.IncidentId}/route-to-trainarr",
@@ -142,6 +165,10 @@ public class StaffArrTrainArrIncidentRoutingTests : IAsyncLifetime
         var detail = (await detailResponse.Content.ReadFromJsonAsync<PersonnelIncidentDetailResponse>())!;
         Assert.NotNull(detail.TrainarrRouting);
         Assert.Equal(routed.TrainarrRouting.TrainarrRemediationId, detail.TrainarrRouting!.TrainarrRemediationId);
+        Assert.NotNull(detail.TrainarrRouting.RemediationResult);
+        Assert.Equal("intake_received", detail.TrainarrRouting.RemediationResult!.Status);
+        Assert.Equal("training_compliance", detail.TrainarrRouting.RemediationResult.ReasonCategoryKey);
+        Assert.Equal(created.Title, detail.TrainarrRouting.RemediationResult.Title);
 
         using (var staffScope = _staffarrFactory.Services.CreateScope())
         {
@@ -158,6 +185,20 @@ public class StaffArrTrainArrIncidentRoutingTests : IAsyncLifetime
                 x => x.TenantId == PlatformSeeder.DemoTenantId && x.StaffarrIncidentId == created.IncidentId);
             Assert.NotNull(remediation);
             Assert.Equal("intake_received", remediation!.Status);
+            var domainEvent = await trainDb.TrainingDomainEvents.SingleAsync(
+                x => x.TenantId == PlatformSeeder.DemoTenantId
+                    && x.EventKind == TrainingDomainEventKinds.RemediationRequired
+                    && x.RelatedEntityId == remediation.Id);
+            Assert.Equal(TrainingDomainEventStatuses.Processed, domainEvent.ProcessingStatus);
+            var history = await trainDb.PersonTrainingHistoryEntries.SingleAsync(
+                x => x.TenantId == PlatformSeeder.DemoTenantId && x.SourceDomainEventId == domainEvent.Id);
+            Assert.Equal(personId, history.StaffarrPersonId);
+            Assert.Contains("Remediation required", history.Summary);
+            var notification = await trainDb.TrainingNotificationDispatches.SingleAsync(
+                x => x.TenantId == PlatformSeeder.DemoTenantId
+                    && x.EventKind == TrainingNotificationEventKinds.RemediationRequired
+                    && x.RelatedEntityId == remediation.Id);
+            Assert.Equal(TrainingNotificationDispatchStatuses.Pending, notification.DispatchStatus);
             var audit = await trainDb.AuditEvents.CountAsync(
                 x => x.TenantId == PlatformSeeder.DemoTenantId && x.Action == "incident_remediation.intake");
             Assert.True(audit >= 1);
@@ -242,6 +283,195 @@ public class StaffArrTrainArrIncidentRoutingTests : IAsyncLifetime
 
         var response = await _trainarrClient.SendAsync(request);
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Routarr_training_incident_ingest_creates_remediation_idempotently()
+    {
+        var driverPersonId = Guid.NewGuid();
+        var sourceEventId = Guid.NewGuid();
+        var exceptionId = Guid.NewGuid();
+        var ingest = new IngestRoutarrIncidentRemediationRequest(
+            PlatformSeeder.DemoTenantId,
+            sourceEventId,
+            "incident.created",
+            exceptionId,
+            Guid.NewGuid(),
+            new RoutarrIncidentPayload(
+                PlatformSeeder.DemoTenantId,
+                "Transportation incident created",
+                Guid.NewGuid(),
+                "TRIP-2001",
+                driverPersonId.ToString(),
+                "VAN-42",
+                "completed",
+                ExceptionId: exceptionId,
+                ExceptionKey: "TRAIN-INC-1",
+                ExceptionCategory: "driver",
+                IncidentType: "training_related",
+                IncidentSeverity: "high",
+                IncidentReviewStatus: "routed",
+                IncidentRoutedProduct: "trainarr"));
+
+        var firstRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/routarr-incident-remediations", _routarrToTrainarrToken);
+        firstRequest.Content = JsonContent.Create(ingest);
+        var firstResponse = await _trainarrClient.SendAsync(firstRequest);
+        firstResponse.EnsureSuccessStatusCode();
+        var first = (await firstResponse.Content.ReadFromJsonAsync<IngestRoutarrIncidentRemediationResponse>())!;
+
+        Assert.False(first.IdempotentReplay);
+        Assert.Equal(driverPersonId, first.StaffarrPersonId);
+        Assert.Equal("intake_received", first.Status);
+
+        var replayRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/routarr-incident-remediations", _routarrToTrainarrToken);
+        replayRequest.Content = JsonContent.Create(ingest);
+        var replayResponse = await _trainarrClient.SendAsync(replayRequest);
+        replayResponse.EnsureSuccessStatusCode();
+        var replay = (await replayResponse.Content.ReadFromJsonAsync<IngestRoutarrIncidentRemediationResponse>())!;
+
+        Assert.True(replay.IdempotentReplay);
+        Assert.Equal(first.RemediationId, replay.RemediationId);
+
+        using var trainScope = _trainarrFactory.Services.CreateScope();
+        var trainDb = trainScope.ServiceProvider.GetRequiredService<TrainArr.Api.Data.TrainArrDbContext>();
+        var remediation = await trainDb.StaffarrIncidentRemediations.SingleAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId && x.SourceProduct == "routarr" && x.SourceIncidentId == sourceEventId);
+        Assert.Equal("training_compliance", remediation.ReasonCategoryKey);
+        Assert.Equal("high", remediation.Severity);
+        Assert.Contains("TRAIN-INC-1", remediation.Title, StringComparison.OrdinalIgnoreCase);
+        var domainEventCount = await trainDb.TrainingDomainEvents.CountAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.EventKind == TrainingDomainEventKinds.RemediationRequired
+                && x.RelatedEntityId == remediation.Id);
+        Assert.Equal(1, domainEventCount);
+    }
+
+    [Fact]
+    public async Task Supplyarr_supplier_incident_ingest_creates_remediation_idempotently()
+    {
+        var staffarrPersonId = Guid.NewGuid();
+        var sourceEventId = Guid.NewGuid();
+        var supplierIncidentId = Guid.NewGuid();
+        var ingest = new IngestSupplyarrIncidentRemediationRequest(
+            PlatformSeeder.DemoTenantId,
+            sourceEventId,
+            "supplier_incident.created",
+            supplierIncidentId,
+            Guid.NewGuid(),
+            staffarrPersonId,
+            new SupplyarrIncidentPayload(
+                PlatformSeeder.DemoTenantId,
+                "Supplier safety issue requires operator retraining before receiving work resumes.",
+                supplierIncidentId,
+                "SUP-INC-2001",
+                "safety",
+                "high",
+                "open",
+                Guid.NewGuid(),
+                "Contoso Safety Supply",
+                PurchaseOrderId: Guid.NewGuid()));
+
+        var firstRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/supplyarr-incident-remediations", _supplyarrToTrainarrToken);
+        firstRequest.Content = JsonContent.Create(ingest);
+        var firstResponse = await _trainarrClient.SendAsync(firstRequest);
+        firstResponse.EnsureSuccessStatusCode();
+        var first = (await firstResponse.Content.ReadFromJsonAsync<IngestSupplyarrIncidentRemediationResponse>())!;
+
+        Assert.False(first.IdempotentReplay);
+        Assert.Equal(staffarrPersonId, first.StaffarrPersonId);
+        Assert.Equal("intake_received", first.Status);
+
+        var replayRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/supplyarr-incident-remediations", _supplyarrToTrainarrToken);
+        replayRequest.Content = JsonContent.Create(ingest);
+        var replayResponse = await _trainarrClient.SendAsync(replayRequest);
+        replayResponse.EnsureSuccessStatusCode();
+        var replay = (await replayResponse.Content.ReadFromJsonAsync<IngestSupplyarrIncidentRemediationResponse>())!;
+
+        Assert.True(replay.IdempotentReplay);
+        Assert.Equal(first.RemediationId, replay.RemediationId);
+
+        using var trainScope = _trainarrFactory.Services.CreateScope();
+        var trainDb = trainScope.ServiceProvider.GetRequiredService<TrainArr.Api.Data.TrainArrDbContext>();
+        var remediation = await trainDb.StaffarrIncidentRemediations.SingleAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId && x.SourceProduct == "supplyarr" && x.SourceIncidentId == sourceEventId);
+        Assert.Equal(sourceEventId, remediation.StaffarrIncidentId);
+        Assert.Equal(staffarrPersonId, remediation.StaffarrPersonId);
+        Assert.Equal("supplier_incident.created", remediation.SourceEventKind);
+        Assert.Equal("training_compliance", remediation.ReasonCategoryKey);
+        Assert.Equal("high", remediation.Severity);
+        Assert.Contains("SUP-INC-2001", remediation.Title, StringComparison.OrdinalIgnoreCase);
+        var domainEventCount = await trainDb.TrainingDomainEvents.CountAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.EventKind == TrainingDomainEventKinds.RemediationRequired
+                && x.RelatedEntityId == remediation.Id);
+        Assert.Equal(1, domainEventCount);
+    }
+
+    [Fact]
+    public async Task Product_incident_ingest_creates_staffarr_incident_idempotently()
+    {
+        var personId = Guid.NewGuid();
+        var sourceIncidentId = Guid.NewGuid();
+        await SeedStaffPersonAsync(personId, "Driver Incident Subject", "driver.incident.subject@example.com");
+
+        var ingest = new IngestProductIncidentRequest(
+            PlatformSeeder.DemoTenantId,
+            "routarr",
+            sourceIncidentId,
+            "routarr.incident.created",
+            personId,
+            "safety",
+            "high",
+            "Driver roadway incident",
+            "RoutArr reported a driver roadway incident requiring StaffArr workforce follow-up.",
+            DateTimeOffset.UtcNow.AddMinutes(-30),
+            "ROUT-INC-9001");
+
+        var firstRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/product-incidents", _routarrToStaffarrToken);
+        firstRequest.Content = JsonContent.Create(ingest);
+        var firstResponse = await _staffarrClient.SendAsync(firstRequest);
+        firstResponse.EnsureSuccessStatusCode();
+        var first = (await firstResponse.Content.ReadFromJsonAsync<IngestProductIncidentResponse>())!;
+
+        Assert.False(first.IdempotentReplay);
+        Assert.Equal(personId, first.PersonId);
+        Assert.Equal("routarr", first.SourceProduct);
+        Assert.Equal(sourceIncidentId, first.SourceIncidentId);
+        Assert.Equal("open", first.Status);
+
+        var adminToken = CreateStaffArrAccessToken(["staffarr"], tenantRoleKey: "tenant_admin");
+        var detailResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/incidents/{first.IncidentId}", adminToken));
+        detailResponse.EnsureSuccessStatusCode();
+        var detail = (await detailResponse.Content.ReadFromJsonAsync<PersonnelIncidentDetailResponse>())!;
+        Assert.Equal("routarr", detail.SourceProduct);
+        Assert.Equal(sourceIncidentId, detail.SourceIncidentId);
+        Assert.Equal("routarr.incident.created", detail.SourceEventKind);
+        Assert.Equal("ROUT-INC-9001", detail.SourceReferenceKey);
+
+        var replayRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/product-incidents", _routarrToStaffarrToken);
+        replayRequest.Content = JsonContent.Create(ingest);
+        var replayResponse = await _staffarrClient.SendAsync(replayRequest);
+        replayResponse.EnsureSuccessStatusCode();
+        var replay = (await replayResponse.Content.ReadFromJsonAsync<IngestProductIncidentResponse>())!;
+
+        Assert.True(replay.IdempotentReplay);
+        Assert.Equal(first.IncidentId, replay.IncidentId);
+
+        using var staffScope = _staffarrFactory.Services.CreateScope();
+        var staffDb = staffScope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+        var incident = await staffDb.PersonnelIncidents.SingleAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.SourceProduct == "routarr"
+                && x.SourceIncidentId == sourceIncidentId);
+        Assert.Equal(personId, incident.PersonId);
+        Assert.Equal("safety", incident.ReasonCategoryKey);
+        Assert.Equal("high", incident.Severity);
+        Assert.Equal("ROUT-INC-9001", incident.SourceReferenceKey);
+
+        var audit = await staffDb.AuditEvents.CountAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId && x.Action == "incident.product_intake");
+        Assert.True(audit >= 1);
     }
 
     [Fact]
@@ -364,6 +594,23 @@ public class StaffArrTrainArrIncidentRoutingTests : IAsyncLifetime
         await db.Database.EnsureCreatedAsync();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         await PlatformSeeder.SeedAsync(db, hasher);
+    }
+
+    private async Task EnableTrainArrNotificationFanoutAsync()
+    {
+        using var scope = _trainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<TrainArr.Api.Data.TrainArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        db.TenantTrainingNotificationSettings.Add(new TenantTrainingNotificationSettings
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            IsEnabled = true,
+            NotificationWebhookUrl = "https://hooks.example.test/trainarr-remediation",
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+        await db.SaveChangesAsync();
     }
 
     private async Task SeedStaffPersonAsync(Guid personId, string displayName, string email)

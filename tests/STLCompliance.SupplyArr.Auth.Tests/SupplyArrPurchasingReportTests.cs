@@ -149,6 +149,26 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Report_index_requires_auth_and_advertises_v1_report_paths()
+    {
+        var unauthenticatedResponse = await _supplyarrClient.GetAsync("/api/v1/reports");
+        Assert.Equal(HttpStatusCode.Unauthorized, unauthenticatedResponse.StatusCode);
+
+        var response = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports", _userToken));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var json = await response.Content.ReadAsStringAsync();
+        Assert.Contains("/api/v1/reports/vendors", json, StringComparison.Ordinal);
+        Assert.Contains("/api/v1/reports/parts-inventory", json, StringComparison.Ordinal);
+        Assert.Contains("/api/v1/reports/purchasing", json, StringComparison.Ordinal);
+        Assert.Contains("/api/v1/reports/compliance", json, StringComparison.Ordinal);
+
+        var purchasingResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/purchasing/summary", _userToken));
+        Assert.Equal(HttpStatusCode.OK, purchasingResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Purchasing_summary_denied_without_auth()
     {
         var response = await _supplyarrClient.GetAsync("/api/reports/purchasing/summary");

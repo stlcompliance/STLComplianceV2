@@ -12,6 +12,7 @@ using NexArr.Api.Data;
 using NexArr.Api.Services;
 using RoutArr.Api.Contracts;
 using RoutArr.Api.Data;
+using RoutArr.Api.Entities;
 using RoutArr.Api.Services;
 using RoutArrRedeemRequest = RoutArr.Api.Contracts.RedeemHandoffRequest;
 using RoutArrHandoffSessionResponse = RoutArr.Api.Contracts.HandoffSessionResponse;
@@ -155,12 +156,123 @@ public sealed class RoutArrRouteTests : IAsyncLifetime
         var stops = (await listStopsResponse.Content.ReadFromJsonAsync<List<RouteStopSummaryResponse>>())!;
         Assert.Equal(2, stops.Count);
 
+        using (var scope = _routarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+            var routeEvents = await db.IntegrationOutboxEvents
+                .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                    && x.RelatedEntityId == created.RouteId)
+                .ToListAsync();
+            Assert.Contains(routeEvents, x => x.EventKind == RoutArrIntegrationOutboxEventKinds.RouteCreated);
+            Assert.True(
+                routeEvents.Count(x => x.EventKind == RoutArrIntegrationOutboxEventKinds.RouteUpdated) >= 2);
+
+            var stopEvents = await db.IntegrationOutboxEvents
+                .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                    && x.RelatedEntityId == firstStopId)
+                .ToListAsync();
+            Assert.Contains(stopEvents, x => x.EventKind == RoutArrIntegrationOutboxEventKinds.StopArrived);
+            Assert.Contains(stopEvents, x => x.EventKind == RoutArrIntegrationOutboxEventKinds.StopCompleted);
+        }
+
         var listRoutesRequest = Authorized(HttpMethod.Get, $"/api/routes?tripId={trip.TripId}", dispatcherToken);
         var listRoutesResponse = await _routarrClient.SendAsync(listRoutesRequest);
         listRoutesResponse.EnsureSuccessStatusCode();
         var routes = (await listRoutesResponse.Content.ReadFromJsonAsync<List<RouteSummaryResponse>>())!;
         Assert.Single(routes);
         Assert.Equal(created.RouteId, routes[0].RouteId);
+    }
+
+    [Fact]
+    public async Task Route_v1_alias_create_and_get_return_v1_location()
+    {
+        var dispatcherToken = await RedeemRoutArrTokenAsync();
+
+        var createRouteRequest = Authorized(HttpMethod.Post, "/api/v1/routes", dispatcherToken);
+        createRouteRequest.Content = JsonContent.Create(new CreateRouteRequest(
+            "V1 customer delivery loop",
+            "Created through the documented v1 route surface.",
+            null,
+            [
+                new CreateRouteStopRequest("pickup", "Pickup", "Warehouse", "pickup", 1, null),
+                new CreateRouteStopRequest("delivery", "Delivery", "Customer", "delivery", 2, null),
+            ]));
+        var createRouteResponse = await _routarrClient.SendAsync(createRouteRequest);
+        createRouteResponse.EnsureSuccessStatusCode();
+        var created = (await createRouteResponse.Content.ReadFromJsonAsync<RouteDetailResponse>())!;
+        Assert.StartsWith($"/api/v1/routes/{created.RouteId}", createRouteResponse.Headers.Location?.OriginalString);
+
+        var getRouteResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/routes/{created.RouteId}", dispatcherToken));
+        getRouteResponse.EnsureSuccessStatusCode();
+        var fetched = (await getRouteResponse.Content.ReadFromJsonAsync<RouteDetailResponse>())!;
+        Assert.Equal(created.RouteId, fetched.RouteId);
+        Assert.Equal(2, fetched.Stops.Count);
+    }
+
+    [Fact]
+    public async Task Route_template_v1_alias_create_list_and_get_use_unlinked_routes()
+    {
+        var dispatcherToken = await RedeemRoutArrTokenAsync();
+
+        var createTemplateRequest = Authorized(HttpMethod.Post, "/api/v1/route-templates", dispatcherToken);
+        createTemplateRequest.Content = JsonContent.Create(new CreateRouteTemplateRequest(
+            "Reusable quarry loop",
+            "Template for recurring aggregate pickup and yard delivery.",
+            [
+                new CreateRouteStopRequest("quarry", "Quarry pickup", "North quarry", "pickup", 1, null),
+                new CreateRouteStopRequest("yard", "Yard delivery", "South yard", "delivery", 2, null),
+            ]));
+        var createTemplateResponse = await _routarrClient.SendAsync(createTemplateRequest);
+        createTemplateResponse.EnsureSuccessStatusCode();
+        var created = (await createTemplateResponse.Content.ReadFromJsonAsync<RouteDetailResponse>())!;
+        Assert.Null(created.TripId);
+        Assert.Equal("draft", created.RouteStatus);
+        Assert.StartsWith($"/api/v1/route-templates/{created.RouteId}", createTemplateResponse.Headers.Location?.OriginalString);
+
+        var listTemplatesResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/route-templates", dispatcherToken));
+        listTemplatesResponse.EnsureSuccessStatusCode();
+        var templates = (await listTemplatesResponse.Content.ReadFromJsonAsync<List<RouteSummaryResponse>>())!;
+        Assert.Contains(templates, x => x.RouteId == created.RouteId && x.TripId is null && x.StopCount == 2);
+
+        var getTemplateResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/route-templates/{created.RouteId}", dispatcherToken));
+        getTemplateResponse.EnsureSuccessStatusCode();
+        var fetched = (await getTemplateResponse.Content.ReadFromJsonAsync<RouteDetailResponse>())!;
+        Assert.Equal(created.RouteId, fetched.RouteId);
+        Assert.Null(fetched.TripId);
+        Assert.Equal(["quarry", "yard"], fetched.Stops.Select(x => x.StopKey).ToArray());
+
+        var createTripRequest = Authorized(HttpMethod.Post, "/api/v1/trips", dispatcherToken);
+        createTripRequest.Content = JsonContent.Create(new CreateTripRequest(
+            "Template exclusion trip",
+            "Trip used to ensure linked routes do not appear as templates.",
+            null,
+            null,
+            null,
+            null));
+        var createTripResponse = await _routarrClient.SendAsync(createTripRequest);
+        createTripResponse.EnsureSuccessStatusCode();
+        var trip = (await createTripResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        var createLinkedRouteRequest = Authorized(HttpMethod.Post, "/api/v1/routes", dispatcherToken);
+        createLinkedRouteRequest.Content = JsonContent.Create(new CreateRouteRequest(
+            "Linked operational route",
+            "Should not be listed as a route template.",
+            trip.TripId,
+            [
+                new CreateRouteStopRequest("linked", "Linked stop", "Depot", "depot", 1, null),
+            ]));
+        var createLinkedRouteResponse = await _routarrClient.SendAsync(createLinkedRouteRequest);
+        createLinkedRouteResponse.EnsureSuccessStatusCode();
+        var linkedRoute = (await createLinkedRouteResponse.Content.ReadFromJsonAsync<RouteDetailResponse>())!;
+
+        var refreshedTemplatesResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/route-templates", dispatcherToken));
+        refreshedTemplatesResponse.EnsureSuccessStatusCode();
+        var refreshedTemplates = (await refreshedTemplatesResponse.Content.ReadFromJsonAsync<List<RouteSummaryResponse>>())!;
+        Assert.DoesNotContain(refreshedTemplates, x => x.RouteId == linkedRoute.RouteId);
     }
 
     [Fact]

@@ -105,6 +105,7 @@ public sealed class SupplierIncidentService(
             ReceivingExceptionId = request.ReceivingExceptionId,
             ReportedByUserId = actorUserId,
             AssignedToUserId = request.AssignedToUserId,
+            InvolvedStaffarrPersonId = request.InvolvedStaffarrPersonId,
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -139,6 +140,7 @@ public sealed class SupplierIncidentService(
         entity.IncidentType = SupplierIncidentRules.NormalizeIncidentType(request.IncidentType);
         entity.Severity = SupplierIncidentRules.NormalizeSeverity(request.Severity);
         entity.AssignedToUserId = request.AssignedToUserId;
+        entity.InvolvedStaffarrPersonId = request.InvolvedStaffarrPersonId;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -517,6 +519,13 @@ public sealed class SupplierIncidentService(
             entity.VendorRestrictionId,
             entity.ReportedByUserId,
             entity.AssignedToUserId,
+            entity.InvolvedStaffarrPersonId,
+            entity.StaffarrPersonnelIncidentId,
+            entity.StaffarrIncidentRoutedAt,
+            entity.StaffarrIncidentRouteStatus,
+            entity.TrainarrIncidentRemediationId,
+            entity.TrainarrIncidentRoutedAt,
+            entity.TrainarrIncidentRouteStatus,
             entity.ResolutionNotes,
             entity.ResolvedByUserId,
             entity.ResolvedAt,

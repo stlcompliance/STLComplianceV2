@@ -149,6 +149,38 @@ public sealed class FactDefinitionService(
             requirements.Where(x => x.CitationId.HasValue).Select(x => x.CitationId!.Value).Distinct().Count());
     }
 
+    public async Task<IReadOnlyList<FactDefinitionHistoryItemResponse>> ListHistoryByKeyAsync(
+        Guid tenantId,
+        string factKey,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedKey = GoverningBodyService.NormalizeKey(factKey, "fact_definitions.validation", "Fact key");
+        var entity = await db.FactDefinitions
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.FactKey == normalizedKey, cancellationToken);
+        if (entity is null)
+        {
+            throw new StlApiException("fact_definitions.not_found", "Fact definition was not found.", 404);
+        }
+
+        return await db.AuditEvents
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.TargetType == "fact_definition"
+                && x.TargetId == entity.Id.ToString())
+            .OrderByDescending(x => x.OccurredAt)
+            .Select(x => new FactDefinitionHistoryItemResponse(
+                x.Id,
+                entity.Id,
+                entity.FactKey,
+                x.Action,
+                x.Result,
+                x.ActorUserId,
+                x.CorrelationId,
+                x.OccurredAt))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<ValidateFactPayloadResponse> ValidatePayloadAsync(
         Guid tenantId,
         ValidateFactPayloadRequest request,

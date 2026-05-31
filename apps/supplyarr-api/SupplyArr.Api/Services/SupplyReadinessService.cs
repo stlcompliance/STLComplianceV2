@@ -8,10 +8,24 @@ namespace SupplyArr.Api.Services;
 
 public sealed class SupplyReadinessService(
     SupplyArrDbContext db,
-    VendorProcurementGuardService vendorProcurementGuard)
+    VendorProcurementGuardService vendorProcurementGuard,
+    ISupplyArrAuditService audit)
 {
     private const int AttentionItemLimit = 25;
+    private static readonly TimeSpan StaleSourceWindow = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan ComplianceExpiringSoonWindow = TimeSpan.FromDays(30);
+
+    public const string PartReadinessAction = "supplyarr.supply_readiness.part";
+
+    public const string VendorReadinessAction = "supplyarr.supply_readiness.vendor";
+
+    public const string ProcurementPathReadinessAction = "supplyarr.supply_readiness.procurement_path";
+
+    public const string PartSnapshotKind = "part_supply_readiness";
+
+    public const string VendorSnapshotKind = "vendor_supply_readiness";
+
+    public const string ProcurementPathSnapshotKind = "procurement_path_supply_readiness";
 
     private static readonly HashSet<string> OpenPurchaseRequestStatuses =
     [
@@ -221,7 +235,9 @@ public sealed class SupplyReadinessService(
         Guid tenantId,
         Guid partId,
         decimal? requestedQuantity = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? actorUserId = null,
+        string? auditSnapshotKind = null)
     {
         var part = await db.Parts
             .AsNoTracking()
@@ -231,24 +247,52 @@ public sealed class SupplyReadinessService(
         var asOf = DateTimeOffset.UtcNow;
         var availability = await LoadPartAvailabilityAsync(tenantId, partId, part.ReorderPoint, cancellationToken);
         var blockers = BuildPartBlockers(part, availability, requestedQuantity);
+        var substitutes = await LoadSubstituteRecommendationsAsync(tenantId, part, cancellationToken);
+        var substituteSourceTimestamp = substitutes
+            .Select(x => x.SourceTimestamp)
+            .Where(x => x is not null)
+            .DefaultIfEmpty()
+            .Max();
+        var sourceTimestamp = MaxTimestamp(
+            MaxTimestamp(part.UpdatedAt, availability.SourceTimestamp),
+            substituteSourceTimestamp);
+        var sourceSnapshot = BuildSourceSnapshot(sourceTimestamp, asOf);
 
         var isReady = SupplyReadinessRules.IsReady(blockers.Count);
+        var readinessStatus = SupplyReadinessRules.ResolveReadinessStatus(isReady);
+        var readinessBasis = SupplyReadinessRules.ResolveReadinessBasis(isReady);
+        var auditSnapshot = await WriteDecisionSnapshotAsync(
+            auditSnapshotKind,
+            PartReadinessAction,
+            tenantId,
+            actorUserId,
+            "part",
+            partId.ToString(),
+            readinessStatus,
+            readinessBasis,
+            cancellationToken);
+
         return new PartSupplyReadinessResponse(
             part.Id,
             part.PartKey,
             part.DisplayName,
             part.Status,
-            SupplyReadinessRules.ResolveReadinessStatus(isReady),
-            SupplyReadinessRules.ResolveReadinessBasis(isReady),
+            readinessStatus,
+            readinessBasis,
             asOf,
             blockers,
-            availability);
+            availability,
+            substitutes,
+            sourceSnapshot,
+            auditSnapshot);
     }
 
     public async Task<VendorSupplyReadinessResponse> GetVendorReadinessAsync(
         Guid tenantId,
         Guid externalPartyId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? actorUserId = null,
+        string? auditSnapshotKind = null)
     {
         var party = await db.ExternalParties
             .AsNoTracking()
@@ -266,6 +310,19 @@ public sealed class SupplyReadinessService(
         var asOf = DateTimeOffset.UtcNow;
         var blockers = await BuildVendorBlockersAsync(tenantId, party, asOf, cancellationToken);
         var isReady = SupplyReadinessRules.IsReady(blockers.Count);
+        var readinessStatus = SupplyReadinessRules.ResolveReadinessStatus(isReady);
+        var readinessBasis = SupplyReadinessRules.ResolveReadinessBasis(isReady);
+        var sourceSnapshot = BuildSourceSnapshot(party.UpdatedAt, asOf);
+        var auditSnapshot = await WriteDecisionSnapshotAsync(
+            auditSnapshotKind,
+            VendorReadinessAction,
+            tenantId,
+            actorUserId,
+            "external_party",
+            externalPartyId.ToString(),
+            readinessStatus,
+            readinessBasis,
+            cancellationToken);
 
         return new VendorSupplyReadinessResponse(
             party.Id,
@@ -274,10 +331,12 @@ public sealed class SupplyReadinessService(
             party.PartyType,
             party.ApprovalStatus,
             party.Status,
-            SupplyReadinessRules.ResolveReadinessStatus(isReady),
-            SupplyReadinessRules.ResolveReadinessBasis(isReady),
+            readinessStatus,
+            readinessBasis,
             asOf,
-            blockers);
+            blockers,
+            sourceSnapshot,
+            auditSnapshot);
     }
 
     public async Task<ProcurementPathReadinessResponse> GetProcurementPathReadinessAsync(
@@ -285,7 +344,9 @@ public sealed class SupplyReadinessService(
         Guid partId,
         Guid externalPartyId,
         decimal? requestedQuantity = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? actorUserId = null,
+        string? auditSnapshotKind = null)
     {
         var partReadiness = await GetPartReadinessAsync(tenantId, partId, requestedQuantity, cancellationToken);
         var vendorReadiness = await GetVendorReadinessAsync(tenantId, externalPartyId, cancellationToken);
@@ -294,10 +355,12 @@ public sealed class SupplyReadinessService(
         blockers.AddRange(partReadiness.Blockers);
         blockers.AddRange(vendorReadiness.Blockers);
 
-        var hasVendorLink = await db.PartVendorLinks.AnyAsync(
+        var vendorLink = await db.PartVendorLinks
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.PartId == partId && x.ExternalPartyId == externalPartyId,
             cancellationToken);
-        if (!hasVendorLink)
+        if (vendorLink is null)
         {
             blockers.Add(new SupplyReadinessBlockerResponse(
                 SupplyReadinessReasonCodes.NoVendorPartLink,
@@ -307,8 +370,32 @@ public sealed class SupplyReadinessService(
                 partId.ToString()));
         }
 
+        var pricingLeadTime = vendorLink is null
+            ? null
+            : await LoadPricingLeadTimeSnapshotAsync(tenantId, vendorLink, cancellationToken);
         var isReady = SupplyReadinessRules.IsReady(blockers.Count);
         var asOf = DateTimeOffset.UtcNow;
+        var readinessStatus = SupplyReadinessRules.ResolveReadinessStatus(isReady);
+        var readinessBasis = SupplyReadinessRules.ResolveReadinessBasis(isReady);
+        var sourceSnapshot = BuildSourceSnapshot(
+            MaxTimestamp(
+                MaxTimestamp(
+                    partReadiness.SourceSnapshot?.SourceTimestamp,
+                    vendorReadiness.SourceSnapshot?.SourceTimestamp),
+                MaxTimestamp(
+                    pricingLeadTime?.PriceSourceTimestamp,
+                    pricingLeadTime?.LeadTimeSourceTimestamp)),
+            asOf);
+        var auditSnapshot = await WriteDecisionSnapshotAsync(
+            auditSnapshotKind,
+            ProcurementPathReadinessAction,
+            tenantId,
+            actorUserId,
+            "procurement_path",
+            $"{partId}:{externalPartyId}",
+            readinessStatus,
+            readinessBasis,
+            cancellationToken);
 
         return new ProcurementPathReadinessResponse(
             partId,
@@ -316,10 +403,118 @@ public sealed class SupplyReadinessService(
             externalPartyId,
             vendorReadiness.PartyKey,
             requestedQuantity,
-            SupplyReadinessRules.ResolveReadinessStatus(isReady),
-            SupplyReadinessRules.ResolveReadinessBasis(isReady),
+            readinessStatus,
+            readinessBasis,
             asOf,
-            blockers);
+            blockers,
+            pricingLeadTime,
+            sourceSnapshot,
+            auditSnapshot);
+    }
+
+    private async Task<IReadOnlyList<SupplyReadinessSubstituteRecommendationResponse>> LoadSubstituteRecommendationsAsync(
+        Guid tenantId,
+        Part part,
+        CancellationToken cancellationToken)
+    {
+        if (part.PartCatalogId is null)
+        {
+            return [];
+        }
+
+        var candidateParts = await db.Parts
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.PartCatalogId == part.PartCatalogId
+                && x.Id != part.Id
+                && x.Status == "active")
+            .Select(x => new { x.Id, x.PartKey, x.DisplayName, x.UpdatedAt })
+            .ToListAsync(cancellationToken);
+
+        var candidateIds = candidateParts.Select(x => x.Id).ToList();
+        if (candidateIds.Count == 0)
+        {
+            return [];
+        }
+
+        var stockRows = await db.PartStockLevels
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && candidateIds.Contains(x.PartId))
+            .Select(x => new { x.PartId, x.QuantityOnHand, x.QuantityReserved, x.UpdatedAt })
+            .ToListAsync(cancellationToken);
+
+        var stockByPart = stockRows
+            .GroupBy(x => x.PartId)
+            .ToDictionary(
+                g => g.Key,
+                g => new
+                {
+                    QuantityAvailable = g.Sum(x => x.QuantityOnHand - x.QuantityReserved),
+                    SourceTimestamp = g.Max(x => (DateTimeOffset?)x.UpdatedAt)
+                });
+
+        return candidateParts
+            .Select(candidate =>
+            {
+                stockByPart.TryGetValue(candidate.Id, out var stock);
+                var quantityAvailable = stock?.QuantityAvailable ?? 0m;
+                return new SupplyReadinessSubstituteRecommendationResponse(
+                    candidate.Id,
+                    candidate.PartKey,
+                    candidate.DisplayName,
+                    quantityAvailable,
+                    "same_catalog_available_stock",
+                    MaxTimestamp(candidate.UpdatedAt, stock?.SourceTimestamp));
+            })
+            .Where(x => x.QuantityAvailable > 0m)
+            .OrderByDescending(x => x.QuantityAvailable)
+            .ThenBy(x => x.PartKey)
+            .Take(5)
+            .ToList();
+    }
+
+    private async Task<SupplyReadinessPricingLeadTimeSnapshotResponse> LoadPricingLeadTimeSnapshotAsync(
+        Guid tenantId,
+        PartVendorLink vendorLink,
+        CancellationToken cancellationToken)
+    {
+        var pricing = await db.PartVendorPricingSnapshots
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.PartVendorLinkId == vendorLink.Id
+                && x.EffectiveFrom <= DateTimeOffset.UtcNow
+                && (x.EffectiveTo == null || x.EffectiveTo > DateTimeOffset.UtcNow))
+            .OrderByDescending(x => x.EffectiveFrom)
+            .ThenByDescending(x => x.UpdatedAt)
+            .Select(x => new
+            {
+                x.UnitPrice,
+                x.CurrencyCode,
+                x.MinimumOrderQuantity,
+                x.UpdatedAt
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var leadTime = await db.PartVendorLeadTimeSnapshots
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.PartVendorLinkId == vendorLink.Id
+                && x.EffectiveFrom <= DateTimeOffset.UtcNow
+                && (x.EffectiveTo == null || x.EffectiveTo > DateTimeOffset.UtcNow))
+            .OrderByDescending(x => x.EffectiveFrom)
+            .ThenByDescending(x => x.UpdatedAt)
+            .Select(x => new { x.LeadTimeDays, x.UpdatedAt })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return new SupplyReadinessPricingLeadTimeSnapshotResponse(
+            vendorLink.Id,
+            pricing?.UnitPrice ?? vendorLink.CatalogUnitPrice,
+            pricing?.CurrencyCode ?? vendorLink.CatalogCurrencyCode,
+            pricing?.MinimumOrderQuantity ?? vendorLink.CatalogMinimumOrderQuantity,
+            leadTime?.LeadTimeDays ?? vendorLink.CatalogLeadTimeDays,
+            pricing?.UpdatedAt ?? (vendorLink.CatalogUnitPrice is null ? null : vendorLink.UpdatedAt),
+            leadTime?.UpdatedAt ?? (vendorLink.CatalogLeadTimeDays is null ? null : vendorLink.UpdatedAt),
+            pricing is null || leadTime is null);
     }
 
     private async Task<SupplyReadinessAvailabilitySnapshotResponse> LoadPartAvailabilityAsync(
@@ -331,12 +526,15 @@ public sealed class SupplyReadinessService(
         var stockRows = await db.PartStockLevels
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId && x.PartId == partId)
-            .Select(x => new { x.QuantityOnHand, x.QuantityReserved })
+            .Select(x => new { x.QuantityOnHand, x.QuantityReserved, x.UpdatedAt })
             .ToListAsync(cancellationToken);
 
         var onHand = stockRows.Sum(x => x.QuantityOnHand);
         var reserved = stockRows.Sum(x => x.QuantityReserved);
         var available = onHand - reserved;
+        DateTimeOffset? sourceTimestamp = stockRows.Count == 0
+            ? null
+            : stockRows.Max(x => x.UpdatedAt);
 
         var activeReservationCount = await db.PartStockReservations.CountAsync(
             x => x.TenantId == tenantId
@@ -354,7 +552,8 @@ public sealed class SupplyReadinessService(
             available,
             reorderPoint,
             activeReservationCount,
-            openBackorderCount);
+            openBackorderCount,
+            sourceTimestamp);
     }
 
     private static List<SupplyReadinessBlockerResponse> BuildPartBlockers(
@@ -416,6 +615,60 @@ public sealed class SupplyReadinessService(
 
         return blockers;
     }
+
+    private async Task<SupplyReadinessDecisionSnapshotResponse?> WriteDecisionSnapshotAsync(
+        string? auditSnapshotKind,
+        string action,
+        Guid tenantId,
+        Guid? actorUserId,
+        string targetType,
+        string targetId,
+        string result,
+        string reasonCode,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(auditSnapshotKind))
+        {
+            return null;
+        }
+
+        var auditResult = await audit.WriteAsync(
+            action,
+            tenantId,
+            actorUserId,
+            targetType,
+            targetId,
+            result,
+            reasonCode,
+            cancellationToken);
+        return new SupplyReadinessDecisionSnapshotResponse(
+            auditResult.AuditEventId,
+            auditSnapshotKind,
+            auditResult.OccurredAt);
+    }
+
+    private static SupplyReadinessSourceSnapshotResponse BuildSourceSnapshot(
+        DateTimeOffset? sourceTimestamp,
+        DateTimeOffset calculatedAt)
+    {
+        TimeSpan? staleness = sourceTimestamp is null
+            ? null
+            : calculatedAt - sourceTimestamp.Value;
+        return new SupplyReadinessSourceSnapshotResponse(
+            sourceTimestamp,
+            staleness is null || staleness.Value > StaleSourceWindow,
+            staleness is null ? null : Math.Max(0, (int)Math.Ceiling(staleness.Value.TotalMinutes)));
+    }
+
+    private static DateTimeOffset? MaxTimestamp(DateTimeOffset? left, DateTimeOffset? right) =>
+        left is null
+            ? right
+            : right is null || left.Value >= right.Value
+                ? left
+                : right;
+
+    private static DateTimeOffset MaxTimestamp(DateTimeOffset left, DateTimeOffset? right) =>
+        right is null || left >= right.Value ? left : right.Value;
 
     private async Task<List<SupplyReadinessBlockerResponse>> BuildVendorBlockersAsync(
         Guid tenantId,
@@ -692,4 +945,5 @@ public sealed class SupplyReadinessService(
         string ReviewStatus,
         DateTimeOffset? ExpiresAt,
         DateTimeOffset UpdatedAt);
+
 }

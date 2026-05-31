@@ -31,16 +31,27 @@ public static class ServiceTokenEndpoints
             RegisterServiceClientRequest request,
             HttpContext context,
             ServiceTokenAdminService service,
+            string locationPrefix,
             CancellationToken cancellationToken)
         {
             var created = await service.RegisterClientAsync(context.User, request, cancellationToken);
-            return Results.Created($"/api/service-tokens/clients/{created.ServiceClientId}", created);
+            return Results.Created($"{locationPrefix}/{created.ServiceClientId}", created);
         }
 
-        group.MapPost("/clients", RegisterClientEndpoint)
+        group.MapPost("/clients", (
+            RegisterServiceClientRequest request,
+            HttpContext context,
+            ServiceTokenAdminService service,
+            CancellationToken cancellationToken) =>
+            RegisterClientEndpoint(request, context, service, "/api/service-tokens/clients", cancellationToken))
         .WithName("RegisterServiceClient");
 
-        v1Clients.MapPost("/", RegisterClientEndpoint)
+        v1Clients.MapPost("/", (
+            RegisterServiceClientRequest request,
+            HttpContext context,
+            ServiceTokenAdminService service,
+            CancellationToken cancellationToken) =>
+            RegisterClientEndpoint(request, context, service, "/api/v1/service-clients", cancellationToken))
         .WithName("RegisterServiceClientV1");
 
         static async Task<IResult> RotateClientEndpoint(
@@ -92,16 +103,27 @@ public static class ServiceTokenEndpoints
             IssueServiceTokenRequest request,
             HttpContext context,
             ServiceTokenAdminService service,
+            string locationPrefix,
             CancellationToken cancellationToken)
         {
             var issued = await service.IssueAsync(context.User, request, cancellationToken);
-            return Results.Created($"/api/service-tokens/{issued.TokenId}", issued);
+            return Results.Created($"{locationPrefix}/{issued.TokenId}", issued);
         }
 
-        group.MapPost("/", IssueTokenEndpoint)
+        group.MapPost("/", (
+            IssueServiceTokenRequest request,
+            HttpContext context,
+            ServiceTokenAdminService service,
+            CancellationToken cancellationToken) =>
+            IssueTokenEndpoint(request, context, service, "/api/service-tokens", cancellationToken))
         .WithName("IssueServiceToken");
 
-        app.MapPost("/api/v1/service-token", IssueTokenEndpoint)
+        app.MapPost("/api/v1/service-token", (
+            IssueServiceTokenRequest request,
+            HttpContext context,
+            ServiceTokenAdminService service,
+            CancellationToken cancellationToken) =>
+            IssueTokenEndpoint(request, context, service, "/api/v1/service-token", cancellationToken))
             .WithTags("ServiceTokens")
             .RequireAuthorization()
             .WithName("IssueServiceTokenV1");

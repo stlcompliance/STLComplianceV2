@@ -58,11 +58,32 @@ public sealed record ExecutiveReportDowntimeTrend(
     decimal AvailabilityPercentDelta,
     DateTimeOffset? FleetSnapshotComputedAt);
 
+public sealed record ExecutiveReportReliabilityAssetItem(
+    Guid AssetId,
+    string AssetTag,
+    string AssetName,
+    int DowntimeEventCount,
+    decimal DowntimeHours,
+    decimal AvailabilityPercent,
+    bool HasActiveDowntime,
+    DateTimeOffset? LastDowntimeStartedAt);
+
+public sealed record ExecutiveReportReliabilitySummary(
+    int PeriodDays,
+    int ClosedRepairEventCount,
+    int FailureEventCount,
+    int RepeatDowntimeAssetCount,
+    int ChronicAssetCount,
+    decimal MeanTimeToRepairHours,
+    decimal MeanTimeBetweenFailuresHours,
+    IReadOnlyList<ExecutiveReportReliabilityAssetItem> ChronicAssets);
+
 public sealed record ExecutiveReportSummaryResponse(
     DateTimeOffset GeneratedAt,
     ExecutiveReportFleetReadiness FleetReadiness,
     ExecutiveReportOperationalTotals OperationalTotals,
     ExecutiveReportDowntimeTrend DowntimeTrend,
+    ExecutiveReportReliabilitySummary Reliability,
     ExecutiveReportSupplyDemandSummary SupplyDemand,
     IReadOnlyList<ExecutiveReportScopeReadinessItem> ScopeReadiness,
     IReadOnlyList<ExecutiveReportCountItem> WorkOrderStatusCounts,

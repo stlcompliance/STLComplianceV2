@@ -8,7 +8,7 @@ public sealed class RoutArrAuditService(
     RoutArrDbContext db,
     ICorrelationIdAccessor correlationIdAccessor) : IRoutArrAuditService
 {
-    public async Task WriteAsync(
+    public async Task<RoutArrAuditWriteResult> WriteAsync(
         string action,
         Guid tenantId,
         Guid? actorUserId,
@@ -18,7 +18,7 @@ public sealed class RoutArrAuditService(
         string? reasonCode = null,
         CancellationToken cancellationToken = default)
     {
-        db.AuditEvents.Add(new RoutArrAuditEvent
+        var auditEvent = new RoutArrAuditEvent
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
@@ -30,8 +30,17 @@ public sealed class RoutArrAuditService(
             ReasonCode = reasonCode,
             CorrelationId = correlationIdAccessor.CorrelationId,
             OccurredAt = DateTimeOffset.UtcNow
-        });
+        };
+
+        db.AuditEvents.Add(auditEvent);
 
         await db.SaveChangesAsync(cancellationToken);
+
+        return new RoutArrAuditWriteResult(
+            auditEvent.Id,
+            auditEvent.OccurredAt,
+            auditEvent.Action,
+            auditEvent.Result,
+            auditEvent.ReasonCode);
     }
 }

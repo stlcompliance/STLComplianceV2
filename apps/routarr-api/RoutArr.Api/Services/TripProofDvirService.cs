@@ -13,7 +13,8 @@ public sealed class TripProofDvirService(
     TripService tripService,
     TripCaptureAttachmentService attachmentService,
     RoutArrAuthorizationService authorization,
-    IRoutArrAuditService audit)
+    IRoutArrAuditService audit,
+    IntegrationOutboxEnqueueService integrationOutbox)
 {
     public const string ProofCreateAction = "trip_proof.create";
     public const string ProofListAction = "trip_proof.list";
@@ -65,6 +66,9 @@ public sealed class TripProofDvirService(
             entity.Id.ToString(),
             proofType,
             cancellationToken: cancellationToken);
+
+        await integrationOutbox.TryEnqueueProofCapturedAsync(entity, trip, cancellationToken);
+        await integrationOutbox.TryEnqueueProofCreatedAsync(entity, trip, cancellationToken);
 
         return MapProof(entity, []);
     }
@@ -157,6 +161,11 @@ public sealed class TripProofDvirService(
             existing.Id.ToString(),
             $"{phase}:{result}",
             cancellationToken: cancellationToken);
+
+        if (!string.Equals(result, DvirInspectionResults.Pass, StringComparison.OrdinalIgnoreCase))
+        {
+            await integrationOutbox.TryEnqueueDriverReportedDefectAsync(existing, trip, cancellationToken);
+        }
 
         return MapDvir(existing, []);
     }
@@ -370,6 +379,10 @@ public sealed class TripProofDvirService(
             entity.Result,
             entity.OdometerReading,
             entity.DefectNotes,
+            entity.MaintainarrInboundEventId,
+            entity.MaintainarrDefectId,
+            entity.MaintainarrEventRoutedAt,
+            entity.MaintainarrEventRouteStatus,
             entity.SubmittedByPersonId,
             entity.SubmittedAt,
             attachments);

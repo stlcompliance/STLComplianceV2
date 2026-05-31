@@ -11,6 +11,7 @@ public static class IntegrationEndpoints
 
     public const string RoutarrAssetReadinessDispatchActionScope = "maintainarr.asset_readiness.dispatch_gate";
     public const string AssetReadinessReadActionScope = "maintainarr.asset_readiness.read";
+    public const string RoutarrEventIngestActionScope = "maintainarr.routarr_events.ingest";
 
     public const string StaffarrPersonSyncActionScope = "maintainarr.technician_refs.sync";
 
@@ -22,6 +23,7 @@ public static class IntegrationEndpoints
 
         integrations.MapGet("/routarr-asset-readiness", async (
             Guid tenantId,
+            Guid? assetId,
             string? vehicleRefKey,
             string? assetTag,
             HttpContext context,
@@ -41,6 +43,7 @@ public static class IntegrationEndpoints
 
             var result = await service.GetByDispatchRefAsync(
                 tenantId,
+                assetId,
                 vehicleRefKey,
                 assetTag,
                 cancellationToken);
@@ -50,6 +53,7 @@ public static class IntegrationEndpoints
 
         integrations.MapGet("/asset-readiness", async (
             Guid tenantId,
+            Guid? assetId,
             string? vehicleRefKey,
             string? assetTag,
             HttpContext context,
@@ -61,12 +65,35 @@ public static class IntegrationEndpoints
 
             var result = await service.GetByDispatchRefAsync(
                 tenantId,
+                assetId,
                 vehicleRefKey,
                 assetTag,
                 cancellationToken);
             return Results.Ok(result);
         })
         .WithName($"AssetReadinessIntegration{nameSuffix}");
+
+        integrations.MapPost("/routarr-events", async (
+            IngestRoutarrEventRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            RoutarrEventIngestionService service,
+            CancellationToken cancellationToken) =>
+        {
+            tokenValidator.ValidateOrThrow(
+                ServiceTokenBearerParser.ParseAuthorizationHeader(context.Request.Headers.Authorization.ToString()),
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = "routarr",
+                    RequiredTargetProduct = "maintainarr",
+                    TenantId = request.TenantId,
+                    RequiredActionScope = RoutarrEventIngestActionScope
+                });
+
+            var result = await service.IngestAsync(request, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName($"IngestRoutarrEvent{nameSuffix}");
 
         integrations.MapPost("/supplyarr-demand-status", async (
             IngestSupplyarrDemandStatusRequest request,

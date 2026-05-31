@@ -234,6 +234,8 @@ public static class TrainArrServiceRegistration
         builder.Services.AddScoped<AssignmentReportService>();
         builder.Services.AddScoped<QualificationReportService>();
         builder.Services.AddScoped<ComplianceReportService>();
+        builder.Services.AddScoped<TrainArrCommandCenterService>();
+        builder.Services.AddScoped<PersonalTrainingDashboardService>();
         builder.Services.AddScoped<TrainArrEntityBulkExportService>();
 
         var frontendOrigin = builder.Configuration["Cors:TrainArrFrontendOrigin"] ?? "http://localhost:5176";

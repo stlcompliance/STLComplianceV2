@@ -48,7 +48,36 @@ public sealed record SupplyReadinessAvailabilitySnapshotResponse(
     decimal QuantityAvailable,
     decimal? ReorderPoint,
     int ActiveReservationCount,
-    int OpenBackorderCount);
+    int OpenBackorderCount,
+    DateTimeOffset? SourceTimestamp = null);
+
+public sealed record SupplyReadinessSourceSnapshotResponse(
+    DateTimeOffset? SourceTimestamp,
+    bool IsStale,
+    int? StalenessMinutes);
+
+public sealed record SupplyReadinessPricingLeadTimeSnapshotResponse(
+    Guid PartVendorLinkId,
+    decimal? UnitPrice,
+    string? CurrencyCode,
+    decimal? MinimumOrderQuantity,
+    int? LeadTimeDays,
+    DateTimeOffset? PriceSourceTimestamp,
+    DateTimeOffset? LeadTimeSourceTimestamp,
+    bool IsCatalogFallback);
+
+public sealed record SupplyReadinessSubstituteRecommendationResponse(
+    Guid PartId,
+    string PartKey,
+    string DisplayName,
+    decimal QuantityAvailable,
+    string RecommendationBasis,
+    DateTimeOffset? SourceTimestamp);
+
+public sealed record SupplyReadinessDecisionSnapshotResponse(
+    Guid AuditEventId,
+    string SnapshotKind,
+    DateTimeOffset CapturedAt);
 
 public sealed record PartSupplyReadinessResponse(
     Guid PartId,
@@ -59,7 +88,10 @@ public sealed record PartSupplyReadinessResponse(
     string ReadinessBasis,
     DateTimeOffset CalculatedAt,
     IReadOnlyList<SupplyReadinessBlockerResponse> Blockers,
-    SupplyReadinessAvailabilitySnapshotResponse Availability);
+    SupplyReadinessAvailabilitySnapshotResponse Availability,
+    IReadOnlyList<SupplyReadinessSubstituteRecommendationResponse> SubstituteRecommendations,
+    SupplyReadinessSourceSnapshotResponse? SourceSnapshot = null,
+    SupplyReadinessDecisionSnapshotResponse? AuditSnapshot = null);
 
 public sealed record VendorSupplyReadinessResponse(
     Guid ExternalPartyId,
@@ -71,7 +103,9 @@ public sealed record VendorSupplyReadinessResponse(
     string ReadinessStatus,
     string ReadinessBasis,
     DateTimeOffset CalculatedAt,
-    IReadOnlyList<SupplyReadinessBlockerResponse> Blockers);
+    IReadOnlyList<SupplyReadinessBlockerResponse> Blockers,
+    SupplyReadinessSourceSnapshotResponse? SourceSnapshot = null,
+    SupplyReadinessDecisionSnapshotResponse? AuditSnapshot = null);
 
 public sealed record ProcurementPathReadinessResponse(
     Guid PartId,
@@ -82,4 +116,7 @@ public sealed record ProcurementPathReadinessResponse(
     string ReadinessStatus,
     string ReadinessBasis,
     DateTimeOffset CalculatedAt,
-    IReadOnlyList<SupplyReadinessBlockerResponse> Blockers);
+    IReadOnlyList<SupplyReadinessBlockerResponse> Blockers,
+    SupplyReadinessPricingLeadTimeSnapshotResponse? PricingLeadTime,
+    SupplyReadinessSourceSnapshotResponse? SourceSnapshot = null,
+    SupplyReadinessDecisionSnapshotResponse? AuditSnapshot = null);

@@ -9,17 +9,29 @@ namespace StaffArr.Api.Services;
 public sealed class ReadinessService(
     StaffArrDbContext db,
     ReadinessOverrideService overrideService,
-    TrainingBlockerIngestionService trainingBlockerService)
+    TrainingBlockerIngestionService trainingBlockerService,
+    ComplianceCorePersonReadinessGateClient complianceCoreReadinessGate,
+    IStaffArrAuditService audit)
 {
+    public const string ReadAction = "staffarr.readiness.read";
+
+    public const string PersonReadinessSnapshotKind = "person_readiness";
+
+    public const string RoutarrDispatchSnapshotKind = "routarr_dispatch_readiness";
+
     public async Task<PersonReadinessResponse> GetPersonReadinessAsync(
         Guid tenantId,
         Guid personId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? actorUserId = null,
+        string? auditSnapshotKind = null)
     {
-        var exists = await db.People.AnyAsync(
+        var person = await db.People
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.Id == personId,
             cancellationToken);
-        if (!exists)
+        if (person is null)
         {
             throw new StlApiException("people.not_found", "Person was not found.", 404);
         }
@@ -87,14 +99,82 @@ public sealed class ReadinessService(
         }
 
         var hasTrainingBlockers = trainingBlockers.Count > 0;
-        var readinessStatus = (!hasTrainingBlockers && certificationReady) || activeOverride is not null
+        var localReadinessStatus = (!hasTrainingBlockers && certificationReady) || activeOverride is not null
             ? "ready"
             : "not_ready";
-        var readinessBasis = activeOverride is not null && (!certificationReady || hasTrainingBlockers)
+        var localReadinessBasis = activeOverride is not null && (!certificationReady || hasTrainingBlockers)
             ? "manual_override"
             : hasTrainingBlockers
                 ? "training_blockers"
                 : "certifications";
+
+        var complianceCoreResult = await complianceCoreReadinessGate.CheckPersonReadinessAsync(
+            tenantId,
+            personId,
+            person.DisplayName,
+            new Dictionary<string, string>
+            {
+                ["product"] = "staffarr",
+                ["action"] = "person_readiness",
+                ["person_id"] = personId.ToString("D"),
+                ["personId"] = personId.ToString("D"),
+                ["person_status"] = person.EmploymentStatus,
+                ["personStatus"] = person.EmploymentStatus,
+                ["local_readiness_status"] = localReadinessStatus,
+                ["localReadinessStatus"] = localReadinessStatus,
+                ["local_readiness_basis"] = localReadinessBasis,
+                ["localReadinessBasis"] = localReadinessBasis,
+                ["certification_ready"] = certificationReady ? "true" : "false",
+                ["certificationReady"] = certificationReady ? "true" : "false",
+                ["has_training_blockers"] = hasTrainingBlockers ? "true" : "false",
+                ["hasTrainingBlockers"] = hasTrainingBlockers ? "true" : "false",
+                ["has_manual_override"] = activeOverride is null ? "false" : "true",
+                ["hasManualOverride"] = activeOverride is null ? "false" : "true"
+            },
+            cancellationToken);
+
+        if (complianceCoreResult is not null && IsBlockingComplianceCoreOutcome(complianceCoreResult))
+        {
+            blockers.Add(new ReadinessBlockerResponse(
+                "compliancecore",
+                string.IsNullOrWhiteSpace(complianceCoreResult.ReasonCode)
+                    ? complianceCoreResult.Outcome
+                    : complianceCoreResult.ReasonCode,
+                string.IsNullOrWhiteSpace(complianceCoreResult.Message)
+                    ? "Compliance Core rules prevent this person from being used for the requested activity."
+                    : complianceCoreResult.Message,
+                null,
+                null,
+                null,
+                null));
+        }
+
+        var hasComplianceCoreBlockers = blockers.Any(x =>
+            string.Equals(x.BlockerSource, "compliancecore", StringComparison.OrdinalIgnoreCase));
+        var readinessStatus = hasComplianceCoreBlockers
+            ? "not_ready"
+            : localReadinessStatus;
+        var readinessBasis = hasComplianceCoreBlockers
+            ? "compliancecore"
+            : localReadinessBasis;
+
+        ReadinessAuditSnapshotResponse? auditSnapshot = null;
+        if (!string.IsNullOrWhiteSpace(auditSnapshotKind))
+        {
+            var auditResult = await audit.WriteAsync(
+                ReadAction,
+                tenantId,
+                actorUserId,
+                "person_readiness",
+                personId.ToString(),
+                readinessStatus,
+                readinessBasis,
+                cancellationToken);
+            auditSnapshot = new ReadinessAuditSnapshotResponse(
+                auditResult.AuditEventId,
+                auditSnapshotKind,
+                auditResult.OccurredAt);
+        }
 
         return new PersonReadinessResponse(
             personId,
@@ -103,7 +183,8 @@ public sealed class ReadinessService(
             DateTimeOffset.UtcNow,
             requirementStatuses,
             blockers,
-            overrideSummary);
+            overrideSummary,
+            auditSnapshot);
     }
 
     private static (ReadinessRequirementStatusResponse RequirementStatus, ReadinessBlockerResponse? Blocker)
@@ -206,4 +287,16 @@ public sealed class ReadinessService(
             null,
             blocker.QualificationKey,
             blocker.QualificationName);
+
+    private static bool IsBlockingComplianceCoreOutcome(ComplianceCoreProductGateResponse? result)
+    {
+        if (result is null)
+        {
+            return false;
+        }
+
+        return !string.Equals(result.Outcome, "allow", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(result.Outcome, "warn", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(result.Outcome, "waived", StringComparison.OrdinalIgnoreCase);
+    }
 }

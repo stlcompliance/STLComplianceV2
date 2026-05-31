@@ -16,19 +16,31 @@ public sealed record ComplianceCoreInternalWorkflowGateBatchCheckRequest(
     IReadOnlyDictionary<string, string>? Context = null,
     bool EmitFindings = false);
 
+public sealed record ComplianceCoreWorkflowGateReasonResponse(
+    string Code,
+    string Message,
+    string? RuleKey,
+    string? FactKey);
+
 public sealed record ComplianceCoreWorkflowGateCheckResult(
     Guid CheckResultId,
     string GateKey,
     string GateLabel,
     string Outcome,
     string ReasonCode,
-    string Message);
+    string Message,
+    Guid? RuleEvaluationRunId,
+    IReadOnlyList<ComplianceCoreWorkflowGateReasonResponse> Reasons,
+    DateTimeOffset CheckedAt,
+    Guid? AppliedWaiverId = null,
+    string? AppliedWaiverKey = null);
 
 public sealed record ComplianceCoreWorkflowGateBatchCheckSummary(
     int Total,
     int AllowCount,
     int WarnCount,
-    int BlockCount);
+    int BlockCount,
+    int WaivedCount = 0);
 
 public sealed record ComplianceCoreWorkflowGateBatchCheckResponse(
     Guid BatchId,

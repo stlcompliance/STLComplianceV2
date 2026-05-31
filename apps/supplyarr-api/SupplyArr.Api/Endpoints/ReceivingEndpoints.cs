@@ -90,9 +90,11 @@ public static class ReceivingEndpoints
             authorization.RequireReceivingPerform(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId();
             return Results.Ok(await service.PostAsync(
                 tenantId,
                 actorUserId,
+                actorPersonId,
                 receivingReceiptId,
                 cancellationToken));
         })

@@ -34,7 +34,13 @@ public static class ReadinessEndpoints
 
                 authorization.RequireReadinessRead(context.User, personId);
                 var tenantId = context.User.GetTenantId();
-                return Results.Ok(await service.GetPersonReadinessAsync(tenantId, personId, cancellationToken));
+                var actorUserId = context.User.GetUserId();
+                return Results.Ok(await service.GetPersonReadinessAsync(
+                    tenantId,
+                    personId,
+                    cancellationToken,
+                    actorUserId,
+                    ReadinessService.PersonReadinessSnapshotKind));
             })
             .WithName($"GetPersonReadinessByQuery{suffix}");
         }
@@ -60,7 +66,13 @@ public static class ReadinessEndpoints
             {
                 authorization.RequireReadinessRead(context.User, personId);
                 var tenantId = context.User.GetTenantId();
-                return Results.Ok(await service.GetPersonReadinessAsync(tenantId, personId, cancellationToken));
+                var actorUserId = context.User.GetUserId();
+                return Results.Ok(await service.GetPersonReadinessAsync(
+                    tenantId,
+                    personId,
+                    cancellationToken,
+                    actorUserId,
+                    ReadinessService.PersonReadinessSnapshotKind));
             })
             .WithName($"GetPersonReadiness{suffix}");
 
@@ -77,7 +89,12 @@ public static class ReadinessEndpoints
                 var tenantId = context.User.GetTenantId();
                 var actorUserId = context.User.GetUserId();
                 await overrideService.GrantOverrideAsync(tenantId, actorUserId, personId, request, cancellationToken);
-                return Results.Ok(await readinessService.GetPersonReadinessAsync(tenantId, personId, cancellationToken));
+                return Results.Ok(await readinessService.GetPersonReadinessAsync(
+                    tenantId,
+                    personId,
+                    cancellationToken,
+                    actorUserId,
+                    ReadinessService.PersonReadinessSnapshotKind));
             })
             .WithName($"GrantPersonReadinessOverride{suffix}");
 
@@ -93,7 +110,12 @@ public static class ReadinessEndpoints
                 var tenantId = context.User.GetTenantId();
                 var actorUserId = context.User.GetUserId();
                 await overrideService.ClearOverrideAsync(tenantId, actorUserId, personId, cancellationToken);
-                return Results.Ok(await readinessService.GetPersonReadinessAsync(tenantId, personId, cancellationToken));
+                return Results.Ok(await readinessService.GetPersonReadinessAsync(
+                    tenantId,
+                    personId,
+                    cancellationToken,
+                    actorUserId,
+                    ReadinessService.PersonReadinessSnapshotKind));
             })
             .WithName($"ClearPersonReadinessOverride{suffix}");
         }

@@ -15,11 +15,41 @@ public sealed record SubmitSelfReportedPersonnelIncidentRequest(
     string Description,
     DateTimeOffset OccurredAt);
 
+public sealed record IngestProductIncidentRequest(
+    Guid TenantId,
+    string SourceProduct,
+    Guid SourceIncidentId,
+    string? SourceEventKind,
+    Guid PersonId,
+    string ReasonCategoryKey,
+    string Severity,
+    string Title,
+    string Description,
+    DateTimeOffset OccurredAt,
+    string? SourceReferenceKey = null);
+
+public sealed record IngestProductIncidentResponse(
+    Guid IncidentId,
+    Guid PersonId,
+    string SourceProduct,
+    Guid SourceIncidentId,
+    string Status,
+    bool IdempotentReplay);
+
 public sealed record IncidentTrainarrRoutingResponse(
     string RoutingStatus,
     Guid TrainarrRemediationId,
     DateTimeOffset RoutedAt,
-    Guid RoutedByUserId);
+    Guid RoutedByUserId,
+    IncidentTrainarrRemediationResultResponse? RemediationResult = null);
+
+public sealed record IncidentTrainarrRemediationResultResponse(
+    Guid RemediationId,
+    string Status,
+    string ReasonCategoryKey,
+    string Severity,
+    string Title,
+    DateTimeOffset CreatedAt);
 
 public sealed record PersonnelIncidentSummaryResponse(
     Guid IncidentId,
@@ -31,7 +61,11 @@ public sealed record PersonnelIncidentSummaryResponse(
     DateTimeOffset OccurredAt,
     DateTimeOffset ReportedAt,
     Guid ReportedByUserId,
-    IncidentTrainarrRoutingResponse? TrainarrRouting);
+    IncidentTrainarrRoutingResponse? TrainarrRouting,
+    string? SourceProduct = null,
+    Guid? SourceIncidentId = null,
+    string? SourceEventKind = null,
+    string? SourceReferenceKey = null);
 
 public sealed record PersonnelIncidentDetailResponse(
     Guid IncidentId,
@@ -46,7 +80,11 @@ public sealed record PersonnelIncidentDetailResponse(
     Guid ReportedByUserId,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt,
-    IncidentTrainarrRoutingResponse? TrainarrRouting);
+    IncidentTrainarrRoutingResponse? TrainarrRouting,
+    string? SourceProduct = null,
+    Guid? SourceIncidentId = null,
+    string? SourceEventKind = null,
+    string? SourceReferenceKey = null);
 
 public sealed record RouteIncidentToTrainarrResponse(
     Guid IncidentId,

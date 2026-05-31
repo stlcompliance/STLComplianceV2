@@ -35,7 +35,15 @@ public static class QualificationIssueEndpoints
             QualificationIssueService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireQualificationsManage(context.User);
+            if (personId is Guid staffarrPersonId)
+            {
+                authorization.RequireQualificationChecks(context.User, staffarrPersonId);
+            }
+            else
+            {
+                authorization.RequireQualificationsManage(context.User);
+            }
+
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(
                 tenantId,
@@ -52,9 +60,10 @@ public static class QualificationIssueEndpoints
             QualificationIssueService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireQualificationsManage(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetByIdAsync(tenantId, qualificationIssueId, cancellationToken));
+            var issue = await service.GetByIdAsync(tenantId, qualificationIssueId, cancellationToken);
+            authorization.RequireQualificationChecks(context.User, issue.StaffarrPersonId);
+            return Results.Ok(issue);
         })
         .WithName($"GetQualificationIssue{nameSuffix}");
 
@@ -65,8 +74,9 @@ public static class QualificationIssueEndpoints
             QualificationIssueService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireQualificationsManage(context.User);
             var tenantId = context.User.GetTenantId();
+            var issue = await service.GetByIdAsync(tenantId, qualificationIssueId, cancellationToken);
+            authorization.RequireQualificationChecks(context.User, issue.StaffarrPersonId);
             return Results.Ok(await service.GetHistoryAsync(tenantId, qualificationIssueId, cancellationToken));
         })
         .WithName($"GetQualificationIssueHistory{nameSuffix}");

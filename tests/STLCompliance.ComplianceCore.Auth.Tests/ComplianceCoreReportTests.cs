@@ -79,6 +79,34 @@ public sealed class ComplianceCoreReportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task V1_reports_index_summaries_and_export_are_available()
+    {
+        var indexResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports", _adminToken));
+        indexResponse.EnsureSuccessStatusCode();
+        var indexJson = await indexResponse.Content.ReadAsStringAsync();
+        Assert.Contains("/api/v1/reports/findings", indexJson, StringComparison.Ordinal);
+        Assert.Contains("/api/v1/reports/operator", indexJson, StringComparison.Ordinal);
+
+        var findingsResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/findings/summary?openOnly=true", _adminToken));
+        findingsResponse.EnsureSuccessStatusCode();
+        var findings = (await findingsResponse.Content.ReadFromJsonAsync<FindingsReportSummaryResponse>())!;
+        Assert.True(findings.OpenCount >= 1);
+
+        var operatorResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/operator/summary?attentionOnly=true", _adminToken));
+        operatorResponse.EnsureSuccessStatusCode();
+        var operatorSummary = (await operatorResponse.Content.ReadFromJsonAsync<OperatorReportSummaryResponse>())!;
+        Assert.True(operatorSummary.EvaluationFailCount >= 1);
+
+        var exportResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/findings/summary/export?openOnly=true", _adminToken));
+        exportResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", exportResponse.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
     public async Task Entity_export_manifest_lists_current_entities()
     {
         var response = await _complianceCoreClient.SendAsync(

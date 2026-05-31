@@ -9,7 +9,3 @@ public sealed record PersonLoginEnableRequest(
 public sealed record PersonLoginEnableResponse(
     Guid ExternalUserId,
     bool WasAlreadyEnabled);
-
-public sealed record PlatformUserEnableResponse(
-    Guid UserId,
-    bool WasAlreadyEnabled);

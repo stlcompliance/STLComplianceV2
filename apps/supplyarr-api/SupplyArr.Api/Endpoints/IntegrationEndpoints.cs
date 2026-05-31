@@ -119,7 +119,12 @@ public static class IntegrationEndpoints
             CancellationToken cancellationToken) =>
         {
             ValidateReadinessServiceToken(tokenValidator, context, tenantId);
-            return Results.Ok(await service.GetPartReadinessAsync(tenantId, partId, quantity, cancellationToken));
+            return Results.Ok(await service.GetPartReadinessAsync(
+                tenantId,
+                partId,
+                quantity,
+                cancellationToken,
+                auditSnapshotKind: SupplyReadinessService.PartSnapshotKind));
         })
         .WithName($"IntegrationGetPartSupplyReadiness{nameSuffix}");
 
@@ -132,7 +137,11 @@ public static class IntegrationEndpoints
             CancellationToken cancellationToken) =>
         {
             ValidateReadinessServiceToken(tokenValidator, context, tenantId);
-            return Results.Ok(await service.GetVendorReadinessAsync(tenantId, externalPartyId, cancellationToken));
+            return Results.Ok(await service.GetVendorReadinessAsync(
+                tenantId,
+                externalPartyId,
+                cancellationToken,
+                auditSnapshotKind: SupplyReadinessService.VendorSnapshotKind));
         })
         .WithName($"IntegrationGetVendorSupplyReadiness{nameSuffix}");
 
@@ -152,7 +161,8 @@ public static class IntegrationEndpoints
                 partId,
                 externalPartyId,
                 quantity,
-                cancellationToken));
+                cancellationToken,
+                auditSnapshotKind: SupplyReadinessService.ProcurementPathSnapshotKind));
         })
         .WithName($"IntegrationGetProcurementPathReadiness{nameSuffix}");
 

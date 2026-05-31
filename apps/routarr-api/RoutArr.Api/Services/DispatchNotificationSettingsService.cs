@@ -25,9 +25,12 @@ public sealed class DispatchNotificationSettingsService(
                 NotificationWebhookUrl: null,
                 NotifyOnTripAssigned: true,
                 NotifyOnTripDispatched: true,
+                NotifyOnTripAccepted: true,
                 NotifyOnTripInProgress: true,
                 NotifyOnTripCompleted: true,
                 NotifyOnTripCancelled: true,
+                NotifyOnDriverAssignmentChanged: true,
+                NotifyOnRouteCancelled: true,
                 UpdatedAt: null);
         }
 
@@ -73,9 +76,12 @@ public sealed class DispatchNotificationSettingsService(
         entity.NotificationWebhookUrl = normalizedWebhook;
         entity.NotifyOnTripAssigned = request.NotifyOnTripAssigned;
         entity.NotifyOnTripDispatched = request.NotifyOnTripDispatched;
+        entity.NotifyOnTripAccepted = request.NotifyOnTripAccepted;
         entity.NotifyOnTripInProgress = request.NotifyOnTripInProgress;
         entity.NotifyOnTripCompleted = request.NotifyOnTripCompleted;
         entity.NotifyOnTripCancelled = request.NotifyOnTripCancelled;
+        entity.NotifyOnDriverAssignmentChanged = request.NotifyOnDriverAssignmentChanged;
+        entity.NotifyOnRouteCancelled = request.NotifyOnRouteCancelled;
         entity.UpdatedByUserId = actorUserId;
         entity.UpdatedAt = now;
 
@@ -111,9 +117,12 @@ public sealed class DispatchNotificationSettingsService(
             settings.NotificationWebhookUrl,
             settings.NotifyOnTripAssigned,
             settings.NotifyOnTripDispatched,
+            settings.NotifyOnTripAccepted,
             settings.NotifyOnTripInProgress,
             settings.NotifyOnTripCompleted,
-            settings.NotifyOnTripCancelled);
+            settings.NotifyOnTripCancelled,
+            settings.NotifyOnDriverAssignmentChanged,
+            settings.NotifyOnRouteCancelled);
 
     private static DispatchNotificationSettingsResponse MapResponse(
         TenantDispatchNotificationSettings settings) =>
@@ -122,8 +131,11 @@ public sealed class DispatchNotificationSettingsService(
             settings.NotificationWebhookUrl,
             settings.NotifyOnTripAssigned,
             settings.NotifyOnTripDispatched,
+            settings.NotifyOnTripAccepted,
             settings.NotifyOnTripInProgress,
             settings.NotifyOnTripCompleted,
             settings.NotifyOnTripCancelled,
+            settings.NotifyOnDriverAssignmentChanged,
+            settings.NotifyOnRouteCancelled,
             settings.UpdatedAt);
 }

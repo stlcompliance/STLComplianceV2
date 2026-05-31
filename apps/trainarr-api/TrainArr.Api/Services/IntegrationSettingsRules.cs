@@ -14,6 +14,9 @@ public static class IntegrationSettingsRules
 
     public static bool ResolveRoutarrQualificationDispatchEnabled(TenantIntegrationSettingsSnapshot? snapshot) =>
         snapshot?.RoutarrIntegrationEnabled != false && snapshot?.RoutarrQualificationDispatchEnabled != false;
+
+    public static bool ResolveRoutarrIncidentIntakeEnabled(TenantIntegrationSettingsSnapshot? snapshot) =>
+        snapshot?.RoutarrIntegrationEnabled != false;
 }
 
 public sealed record TenantIntegrationSettingsSnapshot(

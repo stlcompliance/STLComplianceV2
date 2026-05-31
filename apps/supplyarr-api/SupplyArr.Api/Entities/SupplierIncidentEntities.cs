@@ -36,6 +36,20 @@ public sealed class SupplierIncident : IHasTenant
 
     public Guid? AssignedToUserId { get; set; }
 
+    public Guid? InvolvedStaffarrPersonId { get; set; }
+
+    public Guid? StaffarrPersonnelIncidentId { get; set; }
+
+    public DateTimeOffset? StaffarrIncidentRoutedAt { get; set; }
+
+    public string StaffarrIncidentRouteStatus { get; set; } = string.Empty;
+
+    public Guid? TrainarrIncidentRemediationId { get; set; }
+
+    public DateTimeOffset? TrainarrIncidentRoutedAt { get; set; }
+
+    public string TrainarrIncidentRouteStatus { get; set; } = string.Empty;
+
     public string ResolutionNotes { get; set; } = string.Empty;
 
     public Guid? ResolvedByUserId { get; set; }

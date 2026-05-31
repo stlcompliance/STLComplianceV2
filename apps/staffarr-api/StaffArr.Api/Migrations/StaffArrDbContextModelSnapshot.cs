@@ -1516,6 +1516,21 @@ namespace StaffArr.Api.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<string>("SourceEventKind")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("SourceIncidentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SourceProduct")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("SourceReferenceKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -1539,6 +1554,11 @@ namespace StaffArr.Api.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("TenantId", "PersonId", "ReportedAt");
+
+                    b.HasIndex("TenantId", "SourceProduct", "SourceIncidentId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_staffarr_personnel_incidents_source_incident")
+                        .HasFilter("\"SourceIncidentId\" IS NOT NULL");
 
                     b.HasIndex("TenantId", "Status", "ReportedAt");
 

@@ -41,7 +41,8 @@ public sealed record DispatchBoardStopsSummary(
 public sealed record DispatchBoardWorkQueueSummary(
     int UnassignedDriverTripCount,
     int UnlinkedRouteCount,
-    int PendingStopCount);
+    int PendingStopCount,
+    int MissingProofTripCount);
 
 public sealed record DispatchBoardTripRow(
     Guid TripId,
@@ -55,4 +56,5 @@ public sealed record DispatchBoardTripRow(
     bool IsLate,
     bool IsAtRisk,
     int RouteCount,
-    int PendingStopCount);
+    int PendingStopCount,
+    int MissingRequiredProofCount);

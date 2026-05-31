@@ -30,6 +30,7 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
     private HttpClient _complianceCoreClient = null!;
     private HttpClient _routarrClient = null!;
     private string _routarrToComplianceCoreToken = null!;
+    private Guid _driverQualificationRulePackId;
 
     public async Task InitializeAsync()
     {
@@ -87,7 +88,7 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
         }
 
         var complianceAdminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
-        await SeedDriverQualificationRulePackAsync(complianceAdminToken);
+        _driverQualificationRulePackId = await SeedDriverQualificationRulePackAsync(complianceAdminToken);
         await SeedDispatchWorkflowGatesAsync(complianceAdminToken);
 
         _routarrFactory = new WebApplicationFactory<global::RoutArr.Api.Program>().WithWebHostBuilder(builder =>
@@ -148,7 +149,74 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
 
         Assert.Equal(DispatchWorkflowGateOutcomes.Block, check.Outcome);
         Assert.True(check.IsBlocking);
-        Assert.Contains(check.Gates, gate => gate.GateKey == "dispatch_driver_qualification");
+        Assert.NotEqual(Guid.Empty, check.BatchId);
+        Assert.NotNull(check.CheckedAt);
+        Assert.NotNull(check.ContextSnapshot);
+        Assert.Equal(trip.TripId.ToString(), check.ContextSnapshot!["tripId"]);
+        Assert.Equal(driverPersonId, check.ContextSnapshot["personId"]);
+        Assert.NotNull(check.AuditSnapshot);
+        Assert.NotEqual(Guid.Empty, check.AuditSnapshot!.AuditEventId);
+        Assert.Equal(DispatchWorkflowGateService.CheckAction, check.AuditSnapshot.Action);
+        Assert.Equal(DispatchWorkflowGateOutcomes.Block, check.AuditSnapshot.Result);
+        Assert.Equal(check.ReasonCode, check.AuditSnapshot.ReasonCode);
+
+        Assert.True(check.Gates.Count >= 1);
+        var gate = Assert.Single(check.Gates, x => x.GateKey == "dispatch_driver_qualification");
+        Assert.NotEqual(Guid.Empty, gate.CheckResultId);
+        Assert.False(string.IsNullOrWhiteSpace(gate.GateLabel));
+        Assert.NotNull(gate.CheckedAt);
+        Assert.NotEmpty(gate.Reasons!);
+        Assert.Contains(gate.Reasons!, reason => reason.RuleKey == "license_valid");
+
+        using var scope = _routarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+        var auditEvent = await db.AuditEvents.AsNoTracking().SingleAsync(x => x.Id == check.AuditSnapshot.AuditEventId);
+        Assert.Equal(DispatchWorkflowGateService.CheckAction, auditEvent.Action);
+        Assert.Equal(check.ReasonCode, auditEvent.ReasonCode);
+    }
+
+    [Fact]
+    public async Task Dispatch_workflow_gate_check_reports_compliance_core_waiver()
+    {
+        var complianceAdminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var waiverRequest = Authorized(HttpMethod.Post, "/api/waivers", complianceAdminToken);
+        waiverRequest.Content = JsonContent.Create(new CreateComplianceWaiverRequest(
+            "routarr-dispatch-driver-waiver",
+            _driverQualificationRulePackId,
+            "tenant",
+            "temporary_dispatch_policy_exception",
+            "Temporary compliance waiver for dispatch workflow gate testing.",
+            DateTimeOffset.UtcNow.AddMinutes(-5),
+            DateTimeOffset.UtcNow.AddDays(5)));
+        var waiverResponse = await _complianceCoreClient.SendAsync(waiverRequest);
+        waiverResponse.EnsureSuccessStatusCode();
+        var waiver = (await waiverResponse.Content.ReadFromJsonAsync<ComplianceWaiverResponse>())!;
+
+        (await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/waivers/{waiver.WaiverId}/approve", complianceAdminToken)))
+            .EnsureSuccessStatusCode();
+
+        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
+        var now = DateTimeOffset.UtcNow;
+        var trip = await CreateTripAsync(dispatcherToken, now.AddHours(2), now.AddHours(6));
+
+        var checkRequest = Authorized(HttpMethod.Post, "/api/dispatch-workflow-gates/check", dispatcherToken);
+        checkRequest.Content = JsonContent.Create(new DispatchWorkflowGateCheckRequest(
+            trip.TripId,
+            driverPersonId,
+            AssignmentKind: "driver"));
+        var checkResponse = await _routarrClient.SendAsync(checkRequest);
+        checkResponse.EnsureSuccessStatusCode();
+        var check = (await checkResponse.Content.ReadFromJsonAsync<DispatchWorkflowGateCheckResponse>())!;
+
+        Assert.Equal(DispatchWorkflowGateOutcomes.Waived, check.Outcome);
+        Assert.False(check.IsBlocking);
+        Assert.Equal("compliance_waiver_applied", check.ReasonCode);
+        var gate = Assert.Single(check.Gates, x => x.GateKey == "dispatch_driver_qualification");
+        Assert.Equal(DispatchWorkflowGateOutcomes.Waived, gate.Outcome);
+        Assert.Equal(waiver.WaiverId, gate.AppliedWaiverId);
+        Assert.Equal("routarr-dispatch-driver-waiver", gate.AppliedWaiverKey);
     }
 
     [Fact]
@@ -223,14 +291,17 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
         (await _complianceCoreClient.SendAsync(request)).EnsureSuccessStatusCode();
     }
 
-    private async Task SeedDriverQualificationRulePackAsync(string adminToken)
+    private async Task<Guid> SeedDriverQualificationRulePackAsync(
+        string adminToken,
+        string packKey = "driver_qualification",
+        string sourceKey = "default_license_flag")
     {
         var programId = await CreateSampleProgramAsync(adminToken);
 
         var createPackRequest = Authorized(HttpMethod.Post, "/api/rule-packs", adminToken);
         createPackRequest.Content = JsonContent.Create(new CreateRulePackRequest(
             programId,
-            "driver_qualification",
+            packKey,
             "Driver Qualification Rules",
             "Baseline driver qualification rule pack."));
         var createPackResponse = await _complianceCoreClient.SendAsync(createPackRequest);
@@ -242,7 +313,7 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
         var licenseSourceRequest = Authorized(HttpMethod.Post, "/api/fact-sources", adminToken);
         licenseSourceRequest.Content = JsonContent.Create(new CreateFactSourceRequest(
             licenseFactId,
-            "default_license_flag",
+            sourceKey,
             "static_config",
             "Default license valid",
             "Static default for driver license validity checks.",
@@ -262,7 +333,9 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
         var updateRequest = Authorized(HttpMethod.Put, $"/api/rule-packs/{pack.RulePackId}/content", adminToken);
         updateRequest.Content = JsonContent.Create(new UpdateRulePackContentRequest(content));
         (await _complianceCoreClient.SendAsync(updateRequest)).EnsureSuccessStatusCode();
+        return pack.RulePackId;
     }
+
 
     private async Task<Guid> CreateBooleanFactDefinitionAsync(string adminToken, string factKey)
     {

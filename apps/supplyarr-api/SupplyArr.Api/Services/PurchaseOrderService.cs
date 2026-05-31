@@ -9,6 +9,7 @@ namespace SupplyArr.Api.Services;
 public sealed class PurchaseOrderService(
     SupplyArrDbContext db,
     VendorProcurementGuardService vendorProcurementGuard,
+    ComplianceCoreVendorUseGateClient complianceCoreVendorUseGate,
     StaffarrProcurementApprovalAuthorityService approvalAuthority,
     SupplyArrDemandStatusCallbackCoordinator demandStatusCallbacks,
     ProcurementNotificationEnqueueService notificationEnqueue,
@@ -376,6 +377,8 @@ public sealed class PurchaseOrderService(
             entity,
             cancellationToken);
 
+        await EnsureComplianceCoreVendorUseAllowedAsync(entity, cancellationToken);
+
         var now = DateTimeOffset.UtcNow;
         entity.Status = PurchaseOrderStatuses.Issued;
         entity.IssuedAt = now;
@@ -416,6 +419,75 @@ public sealed class PurchaseOrderService(
 
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
+
+    private async Task EnsureComplianceCoreVendorUseAllowedAsync(
+        PurchaseOrder purchaseOrder,
+        CancellationToken cancellationToken)
+    {
+        if (!complianceCoreVendorUseGate.IsConfigured)
+        {
+            return;
+        }
+
+        var context = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["product"] = "supplyarr",
+            ["action"] = "purchase_order_issue",
+            ["purchaseOrderId"] = purchaseOrder.Id.ToString("D"),
+            ["purchase_order_id"] = purchaseOrder.Id.ToString("D"),
+            ["purchaseOrderKey"] = purchaseOrder.OrderKey,
+            ["purchase_order_key"] = purchaseOrder.OrderKey,
+            ["vendorPartyId"] = purchaseOrder.VendorPartyId.ToString("D"),
+            ["vendor_party_id"] = purchaseOrder.VendorPartyId.ToString("D"),
+            ["vendorPartyKey"] = purchaseOrder.VendorParty.PartyKey,
+            ["vendor_party_key"] = purchaseOrder.VendorParty.PartyKey,
+        };
+
+        context["purchaseRequestId"] = purchaseOrder.PurchaseRequestId.ToString("D");
+        context["purchase_request_id"] = purchaseOrder.PurchaseRequestId.ToString("D");
+
+        var partIds = purchaseOrder.Lines
+            .Select(line => line.PartId.ToString("D"))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(id => id, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        if (partIds.Count > 0)
+        {
+            context["partIds"] = string.Join(",", partIds);
+            context["part_ids"] = string.Join(",", partIds);
+        }
+
+        var result = await complianceCoreVendorUseGate.CheckVendorUseAsync(
+            purchaseOrder.TenantId,
+            purchaseOrder.VendorPartyId,
+            purchaseOrder.VendorParty.DisplayName,
+            context,
+            cancellationToken);
+
+        if (result is null || IsPermissiveComplianceCoreGateOutcome(result.Outcome))
+        {
+            return;
+        }
+
+        throw new StlApiException(
+            "purchase_orders.compliancecore_vendor_gate_blocked",
+            result.Message,
+            409,
+            new Dictionary<string, object?>
+            {
+                ["outcome"] = result.Outcome,
+                ["reasonCode"] = result.ReasonCode,
+                ["checkResultId"] = result.CheckResultId,
+                ["traceId"] = result.TraceId,
+                ["appliedWaiverId"] = result.AppliedWaiverId,
+                ["appliedWaiverKey"] = result.AppliedWaiverKey,
+            });
+    }
+
+    private static bool IsPermissiveComplianceCoreGateOutcome(string outcome) =>
+        string.Equals(outcome, "allow", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(outcome, "warn", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(outcome, "waived", StringComparison.OrdinalIgnoreCase);
 
     public async Task<PurchaseOrderResponse> CancelAsync(
         Guid tenantId,

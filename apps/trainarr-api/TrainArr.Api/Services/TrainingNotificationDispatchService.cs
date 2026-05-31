@@ -851,6 +851,19 @@ public sealed class TrainingNotificationDispatchService(
                 qualificationIssueId = item.RelatedEntityId,
 
             },
+            TrainingNotificationEventKinds.RemediationRequired => new
+
+            {
+
+                @event = "trainarr.remediation.required",
+
+                tenantId = item.TenantId,
+
+                staffarrPersonId = item.StaffarrPersonId,
+
+                remediationId = item.RelatedEntityId,
+
+            },
 
             TrainingNotificationEventKinds.QualificationExpired => new
 

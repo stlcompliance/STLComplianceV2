@@ -9,11 +9,11 @@ public static class EntityExportEndpoints
     {
         var groups = new[]
         {
-            app.MapGroup("/api/exports"),
-            app.MapGroup("/api/v1/exports"),
+            (Group: app.MapGroup("/api/exports"), ExportBasePath: "/api/exports", ReportBasePath: "/api/reports"),
+            (Group: app.MapGroup("/api/v1/exports"), ExportBasePath: "/api/v1/exports", ReportBasePath: "/api/v1/reports"),
         };
 
-        foreach (var exports in groups)
+        foreach (var (exports, exportBasePath, reportBasePath) in groups)
         {
             exports.WithTags("Exports").RequireAuthorization();
 
@@ -23,7 +23,7 @@ public static class EntityExportEndpoints
                 HttpContext context) =>
             {
                 authorization.RequireEntityExport(context.User);
-                return Results.Ok(service.GetManifest());
+                return Results.Ok(service.GetManifest(exportBasePath, reportBasePath));
             });
 
             exports.MapGet("/assets", async (

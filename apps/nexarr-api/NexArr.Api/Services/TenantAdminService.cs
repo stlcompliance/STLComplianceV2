@@ -170,20 +170,29 @@ public sealed class TenantAdminService(
     {
         await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
 
-        if (request.Status is not TenantStatuses.Active and not TenantStatuses.Suspended)
+        if (request.Status is not TenantStatuses.Active
+            and not TenantStatuses.Suspended
+            and not TenantStatuses.Archived)
         {
-            throw new StlApiException("tenant.invalid_status", "Status must be Active or Suspended.", 400);
+            throw new StlApiException("tenant.invalid_status", "Status must be Active, Suspended, or Archived.", 400);
         }
 
         var tenant = await db.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken)
             ?? throw new StlApiException("tenant.not_found", "Tenant was not found.", 404);
 
+        if (tenant.Status == TenantStatuses.Archived && request.Status != TenantStatuses.Archived)
+        {
+            throw new StlApiException("tenant.archived", "Archived tenants cannot be re-enabled or suspended.", 409);
+        }
+
+        var previousStatus = tenant.Status;
         tenant.Status = request.Status;
         tenant.ModifiedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
 
+        var isArchive = request.Status == TenantStatuses.Archived;
         await audit.WriteAsync(
-            "tenant.status_change",
+            isArchive ? "tenant.archive" : "tenant.status_change",
             "tenant",
             tenant.Id.ToString(),
             "Success",
@@ -191,9 +200,12 @@ public sealed class TenantAdminService(
             actorUserId: principal.GetUserId(),
             cancellationToken: cancellationToken);
 
-        var eventType = request.Status == TenantStatuses.Active
-            ? PlatformOutboxEventKinds.TenantEnabled
-            : PlatformOutboxEventKinds.TenantDisabled;
+        var eventType = request.Status switch
+        {
+            TenantStatuses.Active => PlatformOutboxEventKinds.TenantEnabled,
+            TenantStatuses.Archived => PlatformOutboxEventKinds.TenantArchived,
+            _ => PlatformOutboxEventKinds.TenantDisabled,
+        };
 
         await outboxEnqueue.TryEnqueueAsync(
             eventType,
@@ -211,6 +223,7 @@ public sealed class TenantAdminService(
                 {
                     ["slug"] = tenant.Slug,
                     ["status"] = tenant.Status,
+                    ["previousStatus"] = previousStatus,
                 }),
             cancellationToken: cancellationToken);
 

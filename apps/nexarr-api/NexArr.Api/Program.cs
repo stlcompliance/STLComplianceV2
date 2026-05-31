@@ -34,6 +34,7 @@ await StlApiHost.RunAsync<NexArrDbContext>(
         app.MapNexArrInternalTenantLifecycleEndpoints();
         app.MapNexArrInternalPersonLoginDisableEndpoints();
         app.MapNexArrInternalPersonLoginEnableEndpoints();
+        app.MapNexArrInternalPlatformIdentityEndpoints();
         app.MapPlatformLifecycleOverviewEndpoints();
         app.MapPlatformWorkerHealthOrchestrationEndpoints();
         app.MapHybridDataPlaneEndpoints();

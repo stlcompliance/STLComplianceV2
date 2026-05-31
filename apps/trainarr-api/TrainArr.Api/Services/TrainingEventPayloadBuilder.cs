@@ -55,4 +55,12 @@ public static class TrainingEventPayloadBuilder
             issue.QualificationKey,
             issue.QualificationName,
             QualificationIssueId: issue.Id);
+
+    public static TrainingDomainEventPayload ForRemediationRequired(StaffarrIncidentRemediation remediation) =>
+        new(
+            remediation.StaffarrPersonId,
+            "incident_remediation",
+            remediation.Id,
+            $"Remediation required after {remediation.SourceProduct} incident: {remediation.Title}.",
+            remediation.OccurredAt);
 }

@@ -923,6 +923,18 @@ namespace TrainArr.Api.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<string>("SourceEventKind")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("SourceIncidentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SourceProduct")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
                     b.Property<Guid>("StaffarrIncidentId")
                         .HasColumnType("uuid");
 
@@ -950,6 +962,9 @@ namespace TrainArr.Api.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("TenantId", "StaffarrIncidentId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "SourceProduct", "SourceIncidentId")
                         .IsUnique();
 
                     b.HasIndex("TenantId", "StaffarrPersonId", "CreatedAt");

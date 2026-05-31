@@ -28,6 +28,7 @@ public static class ReportIndexEndpoints
                 {
                     Reports = new[]
                     {
+                        new { Key = "dashboard", Path = "/api/v1/dashboard" },
                         new { Key = "maintenance", Path = "/api/v1/reports/maintenance" },
                         new { Key = "executive", Path = "/api/v1/reports/executive" },
                         new { Key = "compliance", Path = "/api/v1/reports/compliance" }

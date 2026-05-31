@@ -12,6 +12,12 @@ public sealed class StaffarrIncidentRemediation : IHasTenant
 
     public Guid StaffarrPersonId { get; set; }
 
+    public string SourceProduct { get; set; } = "staffarr";
+
+    public Guid SourceIncidentId { get; set; }
+
+    public string? SourceEventKind { get; set; }
+
     public string ReasonCategoryKey { get; set; } = string.Empty;
 
     public string Severity { get; set; } = "medium";

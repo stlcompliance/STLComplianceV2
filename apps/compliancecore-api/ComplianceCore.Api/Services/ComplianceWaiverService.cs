@@ -12,6 +12,14 @@ public sealed class ComplianceWaiverService(
 {
     public const string ExpireBatchActionScope = "compliancecore.waivers.expire_batch";
 
+    public const string WaiverApprovedEventAction = "compliancecore.waiver.approved";
+
+    public const string WaiverExpiringEventAction = "compliancecore.waiver.expiring";
+
+    public const string WaiverRevokedEventAction = "compliancecore.waiver.revoked";
+
+    private static readonly TimeSpan ExpiringEventLeadTime = TimeSpan.FromDays(7);
+
     public async Task<IReadOnlyList<ComplianceWaiverResponse>> ListAsync(
         Guid tenantId,
         string? status,
@@ -160,6 +168,16 @@ public sealed class ComplianceWaiverService(
             reasonCode: entity.WaiverKey,
             cancellationToken: cancellationToken);
 
+        await auditService.WriteAsync(
+            WaiverApprovedEventAction,
+            tenantId,
+            actorUserId,
+            "compliance_waiver",
+            entity.Id.ToString(),
+            entity.Status,
+            reasonCode: entity.WaiverKey,
+            cancellationToken: cancellationToken);
+
         return MapResponse(entity);
     }
 
@@ -230,6 +248,16 @@ public sealed class ComplianceWaiverService(
             reasonCode: request?.Notes ?? entity.WaiverKey,
             cancellationToken: cancellationToken);
 
+        await auditService.WriteAsync(
+            WaiverRevokedEventAction,
+            tenantId,
+            actorUserId,
+            "compliance_waiver",
+            entity.Id.ToString(),
+            entity.Status,
+            reasonCode: entity.WaiverKey,
+            cancellationToken: cancellationToken);
+
         return MapResponse(entity);
     }
 
@@ -282,6 +310,48 @@ public sealed class ComplianceWaiverService(
     {
         var asOf = request.AsOfUtc ?? DateTimeOffset.UtcNow;
         var batchSize = ComplianceWaiverRules.NormalizeBatchSize(request.BatchSize);
+        var expiringUntil = asOf.Add(ExpiringEventLeadTime);
+
+        var expiringCandidates = await db.ComplianceWaivers
+            .AsNoTracking()
+            .Where(x =>
+                x.Status == WaiverStatuses.Approved
+                && x.ExpiresAt.HasValue
+                && x.ExpiresAt.Value > asOf
+                && x.ExpiresAt.Value <= expiringUntil)
+            .OrderBy(x => x.ExpiresAt)
+            .Take(batchSize)
+            .ToListAsync(cancellationToken);
+
+        var expiringTargetIds = expiringCandidates.Select(x => x.Id.ToString()).ToList();
+        var existingExpiringTargetIds = expiringTargetIds.Count == 0
+            ? new List<string>()
+            : await db.AuditEvents
+                .AsNoTracking()
+                .Where(audit =>
+                    audit.Action == WaiverExpiringEventAction
+                    && audit.TargetType == "compliance_waiver"
+                    && audit.TargetId != null
+                    && expiringTargetIds.Contains(audit.TargetId))
+                .Select(audit => audit.TargetId!)
+                .ToListAsync(cancellationToken);
+        var existingExpiringTargetIdSet = existingExpiringTargetIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var expiring = expiringCandidates
+            .Where(waiver => !existingExpiringTargetIdSet.Contains(waiver.Id.ToString()))
+            .ToList();
+
+        foreach (var waiver in expiring)
+        {
+            await auditService.WriteAsync(
+                WaiverExpiringEventAction,
+                waiver.TenantId,
+                actorUserId: null,
+                "compliance_waiver",
+                waiver.Id.ToString(),
+                waiver.Status,
+                reasonCode: waiver.WaiverKey,
+                cancellationToken: cancellationToken);
+        }
 
         var query = db.ComplianceWaivers.Where(x =>
             x.Status == WaiverStatuses.Approved

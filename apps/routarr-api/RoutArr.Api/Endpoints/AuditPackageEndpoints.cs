@@ -8,7 +8,13 @@ public static class AuditPackageEndpoints
 {
     public static void MapRoutArrAuditPackageEndpoints(this WebApplication app)
     {
-        var packages = app.MapGroup("/api/audit-packages")
+        MapRoutes(app.MapGroup("/api/audit-packages"), string.Empty, "/api/audit-packages");
+        MapRoutes(app.MapGroup("/api/v1/audit-packages"), "V1", "/api/v1/audit-packages");
+    }
+
+    private static void MapRoutes(RouteGroupBuilder packages, string nameSuffix, string routePrefix)
+    {
+        packages = packages
             .WithTags("AuditPackages")
             .RequireAuthorization();
 
@@ -20,7 +26,7 @@ public static class AuditPackageEndpoints
             authorization.RequireAuditPackageRead(context.User);
             return Results.Ok(service.GetManifest());
         })
-        .WithName("GetRoutArrAuditPackageManifest");
+        .WithName($"GetRoutArrAuditPackageManifest{nameSuffix}");
 
         packages.MapGet("/filter-options", async (
             RoutArrAuthorizationService authorization,
@@ -32,7 +38,7 @@ public static class AuditPackageEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetFilterOptionsAsync(tenantId, cancellationToken));
         })
-        .WithName("GetRoutArrAuditPackageFilterOptions");
+        .WithName($"GetRoutArrAuditPackageFilterOptions{nameSuffix}");
 
         packages.MapGet("/summary", async (
             DateTimeOffset? from,
@@ -53,7 +59,7 @@ public static class AuditPackageEndpoints
                 BuildFilter(from, to, action, result, targetType, actorUserId),
                 cancellationToken));
         })
-        .WithName("GetRoutArrAuditPackageExportSummary");
+        .WithName($"GetRoutArrAuditPackageExportSummary{nameSuffix}");
 
         packages.MapGet("/timeline", async (
             DateTimeOffset? from,
@@ -79,7 +85,7 @@ public static class AuditPackageEndpoints
                 cancellationToken);
             return Results.Ok(resultPage);
         })
-        .WithName("GetRoutArrAuditPackageTimeline");
+        .WithName($"GetRoutArrAuditPackageTimeline{nameSuffix}");
 
         packages.MapGet("/export", async (
             string? format,
@@ -120,7 +126,7 @@ public static class AuditPackageEndpoints
                 "application/zip",
                 $"routarr-audit-package-{DateTime.UtcNow:yyyyMMddHHmmss}.zip");
         })
-        .WithName("ExportRoutArrAuditPackage");
+        .WithName($"ExportRoutArrAuditPackage{nameSuffix}");
 
         packages.MapPost("/jobs", async (
             CreateAuditPackageGenerationJobRequest request,
@@ -133,9 +139,9 @@ public static class AuditPackageEndpoints
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             var job = await generationService.CreateJobAsync(tenantId, actorUserId, request, cancellationToken);
-            return Results.Accepted($"/api/audit-packages/jobs/{job.JobId}", job);
+            return Results.Accepted($"{routePrefix}/jobs/{job.JobId}", job);
         })
-        .WithName("CreateRoutArrAuditPackageGenerationJob");
+        .WithName($"CreateRoutArrAuditPackageGenerationJob{nameSuffix}");
 
         packages.MapGet("/jobs/{jobId:guid}", async (
             Guid jobId,
@@ -149,7 +155,7 @@ public static class AuditPackageEndpoints
             var job = await generationService.GetJobAsync(tenantId, jobId, cancellationToken);
             return Results.Ok(job);
         })
-        .WithName("GetRoutArrAuditPackageGenerationJob");
+        .WithName($"GetRoutArrAuditPackageGenerationJob{nameSuffix}");
 
         packages.MapGet("/jobs/{jobId:guid}/download", async (
             Guid jobId,
@@ -174,7 +180,7 @@ public static class AuditPackageEndpoints
                 cancellationToken);
             return Results.File(content, contentType, fileName);
         })
-        .WithName("DownloadRoutArrAuditPackageGenerationJob");
+        .WithName($"DownloadRoutArrAuditPackageGenerationJob{nameSuffix}");
     }
 
     private static AuditPackageFilter BuildFilter(

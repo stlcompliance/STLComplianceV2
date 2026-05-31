@@ -37,7 +37,9 @@ public sealed record ProductGateAppliedRuleVersion(
     string Result,
     string Message,
     int RulePackVersion,
-    bool NonWaivable);
+    bool NonWaivable,
+    bool RemediationRequired = false,
+    bool ReviewRequired = false);
 
 public sealed record ProductGateCitationReference(
     Guid CitationId,
@@ -88,3 +90,10 @@ public sealed record ProductGateEvaluationResponse(
     string? AppliedWaiverKey,
     string? AuditExportPath,
     DateTimeOffset EvaluatedAt);
+
+public static class ProductGateEvaluationOutcomes
+{
+    public const string MissingEvidence = "missing-evidence";
+
+    public const string StaleEvidence = "stale-evidence";
+}

@@ -24,6 +24,7 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
     {
 
         app.MapTrainArrAuthEndpoints();
+        app.MapTrainArrPersonalTrainingDashboardEndpoints();
 
         app.MapStlProductLaunchEndpoints();
 
@@ -101,6 +102,7 @@ await StlApiHost.RunAsync<TrainArrDbContext>(
         app.MapTrainArrEventAndAuditEndpoints();
         app.MapTrainArrInternalAuditPackageGenerationEndpoints();
         app.MapTrainArrIntegrationSettingsEndpoints();
+        app.MapTrainArrCommandCenterEndpoints();
         app.MapTrainArrReportIndexEndpoints();
         app.MapTrainArrAssignmentReportEndpoints();
         app.MapTrainArrQualificationReportEndpoints();

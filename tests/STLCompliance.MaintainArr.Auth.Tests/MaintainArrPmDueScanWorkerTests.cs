@@ -217,6 +217,51 @@ public sealed class MaintainArrPmDueScanWorkerTests : IAsyncLifetime
         Assert.Equal(WorkOrderSources.PmSchedule, workOrder.Source);
         Assert.Equal(WorkOrderStatuses.Open, workOrder.Status);
         Assert.StartsWith("PM:", workOrder.Title);
+
+        var outbox = await db.MaintenancePlatformOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId)
+            .ToListAsync();
+        Assert.Contains(outbox, x =>
+            x.EventKind == MaintenancePlatformOutboxEventKinds.PmDue
+            && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.PmSchedule
+            && x.RelatedEntityId == schedule.Id
+            && x.ProcessingStatus == MaintenancePlatformEventStatuses.Processed);
+        Assert.Contains(outbox, x =>
+            x.EventKind == MaintenancePlatformOutboxEventKinds.WorkOrderCreated
+            && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.WorkOrder
+            && x.RelatedEntityId == workOrder.Id);
+    }
+
+    [Fact]
+    public async Task Process_due_scan_enqueues_pm_overdue_platform_event()
+    {
+        var schedule = await SeedPastDuePmScheduleAsync(daysPastDue: 3);
+
+        var processRequest = new HttpRequestMessage(HttpMethod.Post, "/api/internal/pm/process-due-scan");
+        processRequest.Headers.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            _sharedWorkerToMaintainArrToken);
+        processRequest.Content = JsonContent.Create(new ProcessPmDueScanRequest(
+            PlatformSeeder.DemoTenantId,
+            DateTimeOffset.UtcNow,
+            50,
+            1));
+
+        var processResponse = await _maintainarrClient.SendAsync(processRequest);
+        processResponse.EnsureSuccessStatusCode();
+        var body = (await processResponse.Content.ReadFromJsonAsync<ProcessPmDueScanResponse>())!;
+        Assert.Equal(1, body.MarkedOverdueCount);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var outbox = await db.MaintenancePlatformOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.PmSchedule
+                && x.RelatedEntityId == schedule.Id)
+            .ToListAsync();
+
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.PmOverdue);
+        Assert.All(outbox, x => Assert.Equal(MaintenancePlatformEventStatuses.Processed, x.ProcessingStatus));
     }
 
     [Fact]

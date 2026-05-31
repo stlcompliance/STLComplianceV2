@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
+using MaintainArr.Api.Endpoints;
 using MaintainArr.Api.Entities;
 using MaintainArr.Api.Services;
 using NexArr.Api.Contracts;
@@ -24,6 +25,7 @@ public sealed class MaintainArrPlatformEventTests : IAsyncLifetime
     private HttpClient _maintainarrClient = null!;
     private string _sharedWorkerRollupToken = null!;
     private string _sharedWorkerPlatformEventToken = null!;
+    private string _routarrEventToken = null!;
 
     public async Task InitializeAsync()
     {
@@ -59,6 +61,11 @@ public sealed class MaintainArrPlatformEventTests : IAsyncLifetime
             "shared-worker",
             ["maintainarr"],
             MaintenancePlatformEventProcessingService.ProcessEventsActionScope);
+        _routarrEventToken = await IssueServiceTokenAsync(
+            adminToken,
+            "routarr",
+            ["maintainarr"],
+            IntegrationEndpoints.RoutarrEventIngestActionScope);
 
         _maintainarrFactory = new WebApplicationFactory<global::MaintainArr.Api.Program>().WithWebHostBuilder(builder =>
         {
@@ -190,6 +197,190 @@ public sealed class MaintainArrPlatformEventTests : IAsyncLifetime
         Assert.Equal(outbox.Items.Count, eventsAlias.Items.Count);
     }
 
+    [Fact]
+    public async Task Routarr_incident_ingest_creates_equipment_defect_idempotently()
+    {
+        var assetId = await SeedActiveAssetAsync("ROUTARR-001");
+        var sourceEventId = Guid.NewGuid();
+        var exceptionId = Guid.NewGuid();
+        var ingestRequest = new IngestRoutarrEventRequest(
+            PlatformSeeder.DemoTenantId,
+            sourceEventId,
+            "incident.created",
+            "dispatch_exception",
+            exceptionId,
+            Guid.NewGuid(),
+            new RoutarrEventPayload(
+                PlatformSeeder.DemoTenantId,
+                "Transportation incident created",
+                Guid.NewGuid(),
+                "TRIP-1001",
+                "driver-42",
+                "ROUTARR-001",
+                "in_progress",
+                ExceptionId: exceptionId,
+                ExceptionKey: "INC-1001",
+                ExceptionCategory: "vehicle",
+                IncidentType: "equipment_abuse",
+                IncidentSeverity: "high",
+                IncidentReviewStatus: "routed",
+                IncidentRoutedProduct: "maintainarr"));
+        var request = Authorized(HttpMethod.Post, "/api/v1/integrations/routarr-events", _routarrEventToken);
+        request.Content = JsonContent.Create(ingestRequest);
+
+        var response = await _maintainarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var ingested = (await response.Content.ReadFromJsonAsync<IngestRoutarrEventResponse>())!;
+        Assert.Equal("processed", ingested.Outcome);
+        Assert.False(ingested.IdempotentReplay);
+        Assert.NotNull(ingested.DefectId);
+
+        var replayRequest = Authorized(HttpMethod.Post, "/api/v1/integrations/routarr-events", _routarrEventToken);
+        replayRequest.Content = JsonContent.Create(ingestRequest);
+        var replayResponse = await _maintainarrClient.SendAsync(replayRequest);
+        replayResponse.EnsureSuccessStatusCode();
+        var replay = (await replayResponse.Content.ReadFromJsonAsync<IngestRoutarrEventResponse>())!;
+        Assert.True(replay.IdempotentReplay);
+        Assert.Equal(ingested.DefectId, replay.DefectId);
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var defects = await db.Defects
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId && x.AssetId == assetId && x.Source == DefectSources.RoutArr)
+            .ToListAsync();
+
+        var defect = Assert.Single(defects);
+        Assert.Equal("high", defect.Severity);
+        Assert.Contains("INC-1001", defect.Title, StringComparison.OrdinalIgnoreCase);
+
+        var inbound = await db.MaintenanceInboundPlatformEvents.SingleAsync(
+            x => x.TenantId == PlatformSeeder.DemoTenantId && x.SourceEventId == sourceEventId);
+        Assert.Equal(defect.Id, inbound.CreatedDefectId);
+    }
+
+    [Fact]
+    public async Task Defect_lifecycle_enqueues_platform_events()
+    {
+        var assetId = await SeedActiveAssetAsync("DEFECT-EVT-001");
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/defects", token);
+        createRequest.Content = JsonContent.Create(new CreateDefectRequest(
+            assetId,
+            "Hydraulic leak",
+            "Leak at lift cylinder.",
+            DefectSeverities.High));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var defect = (await createResponse.Content.ReadFromJsonAsync<DefectDetailResponse>())!;
+
+        var repairedRequest = Authorized(HttpMethod.Patch, $"/api/v1/defects/{defect.DefectId}/status", token);
+        repairedRequest.Content = JsonContent.Create(new UpdateDefectStatusRequest(DefectStatuses.Resolved));
+        (await _maintainarrClient.SendAsync(repairedRequest)).EnsureSuccessStatusCode();
+
+        var closedRequest = Authorized(HttpMethod.Patch, $"/api/v1/defects/{defect.DefectId}/status", token);
+        closedRequest.Content = JsonContent.Create(new UpdateDefectStatusRequest(DefectStatuses.Closed));
+        (await _maintainarrClient.SendAsync(closedRequest)).EnsureSuccessStatusCode();
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var outbox = await db.MaintenancePlatformOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.Defect
+                && x.RelatedEntityId == defect.DefectId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync();
+
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.DefectCreated);
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.DefectRepaired);
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.DefectClosed);
+        Assert.All(outbox, x => Assert.Equal(MaintenancePlatformEventStatuses.Processed, x.ProcessingStatus));
+        Assert.Contains(outbox, x => x.PayloadJson.Contains("\"targetEntityType\":\"defect\"", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Inspection_lifecycle_enqueues_platform_events()
+    {
+        var assetId = await SeedActiveAssetAsync("INSPECT-EVT-001");
+        var checklistItemId = Guid.NewGuid();
+        var templateId = await SeedInspectionTemplateAsync(checklistItemId);
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+
+        var startRequest = Authorized(HttpMethod.Post, "/api/v1/inspections", token);
+        startRequest.Content = JsonContent.Create(new StartInspectionRunRequest(assetId, templateId));
+        var startResponse = await _maintainarrClient.SendAsync(startRequest);
+        startResponse.EnsureSuccessStatusCode();
+        var run = (await startResponse.Content.ReadFromJsonAsync<InspectionRunDetailResponse>())!;
+
+        var answersRequest = Authorized(HttpMethod.Put, $"/api/v1/inspections/{run.InspectionRunId}/answers", token);
+        answersRequest.Content = JsonContent.Create(new SubmitInspectionRunAnswersRequest(
+            [new InspectionRunAnswerInput(checklistItemId, InspectionAnswerPassFailValues.Fail, null, null)]));
+        (await _maintainarrClient.SendAsync(answersRequest)).EnsureSuccessStatusCode();
+
+        var completeResponse = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/inspections/{run.InspectionRunId}/complete", token));
+        completeResponse.EnsureSuccessStatusCode();
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var outbox = await db.MaintenancePlatformOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.InspectionRun
+                && x.RelatedEntityId == run.InspectionRunId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync();
+
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.InspectionStarted);
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.InspectionAnswerSubmitted);
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.InspectionCompleted);
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.InspectionFailed);
+        Assert.All(outbox, x => Assert.Equal(MaintenancePlatformEventStatuses.Processed, x.ProcessingStatus));
+    }
+
+    [Fact]
+    public async Task Work_order_lifecycle_enqueues_platform_events()
+    {
+        var assetId = await SeedActiveAssetAsync("WO-EVT-001");
+        var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
+        var assignedPersonId = PlatformSeeder.DemoAdminUserId.ToString("D");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/work-orders", token);
+        createRequest.Content = JsonContent.Create(new CreateWorkOrderRequest(
+            assetId,
+            "Replace lift cylinder",
+            "Repair hydraulic lift cylinder.",
+            WorkOrderPriorities.High,
+            assignedPersonId,
+            null));
+        var createResponse = await _maintainarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var workOrder = (await createResponse.Content.ReadFromJsonAsync<WorkOrderDetailResponse>())!;
+
+        var startRequest = Authorized(HttpMethod.Patch, $"/api/v1/work-orders/{workOrder.WorkOrderId}/status", token);
+        startRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest(WorkOrderStatuses.InProgress));
+        (await _maintainarrClient.SendAsync(startRequest)).EnsureSuccessStatusCode();
+
+        var completeRequest = Authorized(HttpMethod.Patch, $"/api/v1/work-orders/{workOrder.WorkOrderId}/status", token);
+        completeRequest.Content = JsonContent.Create(new UpdateWorkOrderStatusRequest(WorkOrderStatuses.Completed));
+        (await _maintainarrClient.SendAsync(completeRequest)).EnsureSuccessStatusCode();
+
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var outbox = await db.MaintenancePlatformOutboxEvents
+            .Where(x => x.TenantId == PlatformSeeder.DemoTenantId
+                && x.RelatedEntityType == MaintenancePlatformEventRelatedEntityTypes.WorkOrder
+                && x.RelatedEntityId == workOrder.WorkOrderId)
+            .OrderBy(x => x.CreatedAt)
+            .ToListAsync();
+
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.WorkOrderCreated);
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.WorkOrderAssigned);
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.WorkOrderStarted);
+        Assert.Contains(outbox, x => x.EventKind == MaintenancePlatformOutboxEventKinds.WorkOrderCompleted);
+        Assert.All(outbox, x => Assert.Equal(MaintenancePlatformEventStatuses.Processed, x.ProcessingStatus));
+        Assert.Contains(outbox, x => x.PayloadJson.Contains("\"targetEntityType\":\"work_order\"", StringComparison.Ordinal));
+    }
+
     private async Task UpsertRollupSettingsAsync()
     {
         var token = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_admin");
@@ -268,6 +459,89 @@ public sealed class MaintainArrPlatformEventTests : IAsyncLifetime
         db.Defects.Add(defect);
         await db.SaveChangesAsync();
         return asset.Id;
+    }
+
+    private async Task<Guid> SeedActiveAssetAsync(string assetTag)
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+
+        var assetClass = new AssetClass
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            ClassKey = $"class-{assetTag}",
+            Name = $"Class {assetTag}",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var assetType = new AssetType
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            AssetClassId = assetClass.Id,
+            TypeKey = $"type-{assetTag}",
+            Name = $"Type {assetTag}",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var asset = new Asset
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            AssetTypeId = assetType.Id,
+            AssetTag = assetTag,
+            Name = $"Asset {assetTag}",
+            LifecycleStatus = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.AssetClasses.Add(assetClass);
+        db.AssetTypes.Add(assetType);
+        db.Assets.Add(asset);
+        await db.SaveChangesAsync();
+        return asset.Id;
+    }
+
+    private async Task<Guid> SeedInspectionTemplateAsync(Guid checklistItemId)
+    {
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        var template = new InspectionTemplate
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            TemplateKey = $"inspection-event-{Guid.NewGuid():N}"[..32],
+            Name = "Inspection Event Template",
+            Description = "Used by platform event tests.",
+            Version = 1,
+            Status = InspectionTemplateStatuses.Active,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        var item = new InspectionChecklistItem
+        {
+            Id = checklistItemId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            InspectionTemplateId = template.Id,
+            ItemKey = "brakes",
+            Prompt = "Brakes pass inspection",
+            ItemType = InspectionChecklistItemTypes.PassFail,
+            IsRequired = true,
+            SortOrder = 1,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        db.InspectionTemplates.Add(template);
+        db.InspectionChecklistItems.Add(item);
+        await db.SaveChangesAsync();
+        return template.Id;
     }
 
     private string CreateMaintainArrAccessToken(

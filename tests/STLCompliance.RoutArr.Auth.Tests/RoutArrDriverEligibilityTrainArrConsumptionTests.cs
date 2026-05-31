@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
@@ -161,6 +162,58 @@ public sealed class RoutArrDriverEligibilityTrainArrConsumptionTests : IAsyncLif
         var payload = await response.Content.ReadFromJsonAsync<TrainArr.Api.Contracts.QualificationCheckResponse>();
         Assert.NotNull(payload);
         Assert.Equal("driver_qualification", payload!.QualificationKey);
+    }
+
+    [Fact]
+    public async Task Cross_product_batch_qualification_check_endpoint_supports_assignment_boards()
+    {
+        var firstPersonId = Guid.NewGuid();
+        var secondPersonId = Guid.NewGuid();
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/integrations/qualification-check/batch");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _crossProductToTrainarrQualificationToken);
+        request.Content = JsonContent.Create(new TrainArr.Api.Contracts.CreateIntegrationBatchQualificationCheckRequest(
+            PlatformSeeder.DemoTenantId,
+            "driver_qualification",
+            null,
+            [
+                new TrainArr.Api.Contracts.BatchQualificationCheckSubject(
+                    firstPersonId,
+                    new Dictionary<string, string> { ["board"] = "dispatch" }),
+                new TrainArr.Api.Contracts.BatchQualificationCheckSubject(
+                    secondPersonId,
+                    new Dictionary<string, string> { ["board"] = "dispatch" }),
+            ]));
+
+        var response = await _trainarrClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException(
+                $"Batch qualification-check integration failed: {(int)response.StatusCode} {error}");
+        }
+
+        var payload = (await response.Content.ReadFromJsonAsync<TrainArr.Api.Contracts.BatchQualificationCheckResponse>())!;
+        Assert.Equal("driver_qualification", payload.QualificationKey);
+        Assert.Equal(2, payload.Summary.Total);
+        Assert.Equal(2, payload.Results.Count);
+        Assert.Contains(payload.Results, x => x.StaffarrPersonId == firstPersonId);
+        Assert.Contains(payload.Results, x => x.StaffarrPersonId == secondPersonId);
+    }
+
+    [Fact]
+    public async Task Cross_product_batch_qualification_check_requires_read_scope()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/integrations/qualification-check/batch");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _routarrToTrainarrToken);
+        request.Content = JsonContent.Create(new TrainArr.Api.Contracts.CreateIntegrationBatchQualificationCheckRequest(
+            PlatformSeeder.DemoTenantId,
+            "driver_qualification",
+            null,
+            [new TrainArr.Api.Contracts.BatchQualificationCheckSubject(Guid.NewGuid(), null)]));
+
+        var response = await _trainarrClient.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     private async Task<string> RedeemRoutArrTokenAsync()

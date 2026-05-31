@@ -17,7 +17,34 @@ public sealed record QualificationCheckResponse(
     string ReasonCode,
     string Message,
     QualificationLocalStateResponse? LocalQualification,
-    ComplianceCoreCheckSummaryResponse? ComplianceCore);
+    ComplianceCoreCheckSummaryResponse? ComplianceCore,
+    IReadOnlyList<QualificationDependencyFactResponse>? DependencyFacts = null,
+    QualificationCheckAuditSnapshotResponse? AuditSnapshot = null,
+    QualificationAuthorizationGuidanceResponse? AuthorizationGuidance = null);
+
+public sealed record QualificationAuthorizationGuidanceResponse(
+    string BlockReason,
+    string MissingQualification,
+    Guid? RequiredTrainingDefinitionId,
+    string? RequiredTrainingDefinitionName,
+    Guid? RequiredTrainingProgramId,
+    string? RequiredTrainingProgramName,
+    string PersonAssignmentStatus,
+    Guid? TrainingAssignmentId,
+    DateTimeOffset? AssignmentDueAt,
+    string NextAction,
+    string SupervisorAction,
+    string EstimatedPathToQualification);
+
+public sealed record QualificationDependencyFactResponse(
+    string FactKey,
+    string Status,
+    string Message);
+
+public sealed record QualificationCheckAuditSnapshotResponse(
+    Guid AuditEventId,
+    string SnapshotKind,
+    DateTimeOffset CapturedAt);
 
 public sealed record QualificationLocalStateResponse(
     Guid? QualificationIssueId,
@@ -30,7 +57,9 @@ public sealed record ComplianceCoreCheckSummaryResponse(
     string ReasonCode,
     string Message,
     string EvaluationResult,
-    IReadOnlyList<string> UnresolvedFactKeys);
+    IReadOnlyList<string> UnresolvedFactKeys,
+    Guid? AppliedWaiverId = null,
+    string? AppliedWaiverKey = null);
 
 public sealed record BatchQualificationCheckSubject(
     Guid StaffarrPersonId,
@@ -44,17 +73,28 @@ public sealed record CreateBatchQualificationCheckRequest(
     Guid? TrainingDefinitionId = null,
     Guid? TrainingProgramId = null);
 
+public sealed record CreateIntegrationBatchQualificationCheckRequest(
+    Guid TenantId,
+    string QualificationKey,
+    string? RulePackKey,
+    IReadOnlyList<BatchQualificationCheckSubject> Subjects,
+    DateTimeOffset? EffectiveAt = null,
+    Guid? TrainingDefinitionId = null,
+    Guid? TrainingProgramId = null);
+
 public sealed record BatchQualificationCheckSummary(
     int Total,
     int AllowCount,
     int WarnCount,
-    int BlockCount);
+    int BlockCount,
+    int WaivedCount = 0);
 
 public sealed record BatchQualificationCheckResponse(
     Guid BatchId,
     string QualificationKey,
     IReadOnlyList<QualificationCheckResponse> Results,
-    BatchQualificationCheckSummary Summary);
+    BatchQualificationCheckSummary Summary,
+    QualificationCheckAuditSnapshotResponse? AuditSnapshot = null);
 
 public sealed record QualificationCheckHistoryItemResponse(
     Guid CheckId,
@@ -75,4 +115,6 @@ public static class QualificationCheckOutcomes
     public const string Warn = "warn";
 
     public const string Block = "block";
+
+    public const string Waived = "waived";
 }

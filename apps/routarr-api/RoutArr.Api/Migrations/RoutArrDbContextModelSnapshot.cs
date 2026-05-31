@@ -144,6 +144,17 @@ namespace RoutArr.Api.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<Guid?>("CompliancecoreFactPublicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CompliancecoreIncidentRouteStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("CompliancecoreIncidentRoutedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -159,6 +170,40 @@ namespace RoutArr.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<string>("IncidentReviewStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("IncidentRoutedProduct")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("IncidentSeverity")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("IncidentType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("MaintainarrDefectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("MaintainarrInboundEventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MaintainarrIncidentRouteStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("MaintainarrIncidentRoutedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ResolutionNotes")
                         .IsRequired()
@@ -179,6 +224,17 @@ namespace RoutArr.Api.Migrations
                     b.Property<DateTimeOffset?>("SlaDueAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("StaffarrIncidentRouteStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("StaffarrIncidentRoutedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("StaffarrPersonnelIncidentId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -192,6 +248,17 @@ namespace RoutArr.Api.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<Guid?>("TrainarrIncidentRemediationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TrainarrIncidentRouteStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("TrainarrIncidentRoutedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid?>("TripId")
                         .HasColumnType("uuid");
 
@@ -204,16 +271,91 @@ namespace RoutArr.Api.Migrations
 
                     b.HasIndex("TenantId", "AssignedToUserId");
 
+                    b.HasIndex("TenantId", "CompliancecoreFactPublicationId")
+                        .HasDatabaseName("IX_routarr_dispatch_exceptions_compliancecore_publication");
+
                     b.HasIndex("TenantId", "ExceptionKey")
                         .IsUnique();
 
+                    b.HasIndex("TenantId", "MaintainarrDefectId")
+                        .HasDatabaseName("IX_routarr_dispatch_exceptions_maintainarr_defect");
+
                     b.HasIndex("TenantId", "SlaDueAt");
 
+                    b.HasIndex("TenantId", "StaffarrPersonnelIncidentId")
+                        .HasDatabaseName("IX_routarr_dispatch_exceptions_staffarr_incident");
+
+                    b.HasIndex("TenantId", "TrainarrIncidentRemediationId")
+                        .HasDatabaseName("IX_routarr_dispatch_exceptions_trainarr_remediation");
+
                     b.HasIndex("TenantId", "TripId");
+
+                    b.HasIndex("TenantId", "IncidentReviewStatus", "UpdatedAt");
+
+                    b.HasIndex("TenantId", "IncidentType", "UpdatedAt");
 
                     b.HasIndex("TenantId", "Status", "UpdatedAt");
 
                     b.ToTable("routarr_dispatch_exceptions", (string)null);
+                });
+
+            modelBuilder.Entity("RoutArr.Api.Entities.DispatchMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("AcknowledgedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("AcknowledgedByPersonId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid?>("AcknowledgedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("RequiresAcknowledgement")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SenderPersonId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SenderRole")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("SenderUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TripId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TripId");
+
+                    b.HasIndex("TenantId", "TripId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "TripId", "RequiresAcknowledgement", "AcknowledgedAt");
+
+                    b.ToTable("routarr_dispatch_messages", (string)null);
                 });
 
             modelBuilder.Entity("RoutArr.Api.Entities.DispatchNotificationDispatch", b =>
@@ -257,10 +399,13 @@ namespace RoutArr.Api.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<Guid?>("RouteId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TripId")
+                    b.Property<Guid?>("TripId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("WebhookHost")
@@ -807,6 +952,15 @@ namespace RoutArr.Api.Migrations
                         .HasMaxLength(2048)
                         .HasColumnType("character varying(2048)");
 
+                    b.Property<bool>("NotifyOnDriverAssignmentChanged")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyOnRouteCancelled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("NotifyOnTripAccepted")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("NotifyOnTripAssigned")
                         .HasColumnType("boolean");
 
@@ -971,6 +1125,9 @@ namespace RoutArr.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTimeOffset?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTimeOffset?>("AssignedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1038,6 +1195,8 @@ namespace RoutArr.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "AcceptedAt");
 
                     b.HasIndex("TenantId", "AssignedDriverPersonId");
 
@@ -1326,6 +1485,20 @@ namespace RoutArr.Api.Migrations
                         .HasMaxLength(1024)
                         .HasColumnType("character varying(1024)");
 
+                    b.Property<Guid?>("MaintainarrDefectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MaintainarrEventRouteStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("MaintainarrEventRoutedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("MaintainarrInboundEventId")
+                        .HasColumnType("uuid");
+
                     b.Property<long?>("OdometerReading")
                         .HasColumnType("bigint");
 
@@ -1366,6 +1539,9 @@ namespace RoutArr.Api.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("TripId");
+
+                    b.HasIndex("TenantId", "MaintainarrDefectId")
+                        .HasDatabaseName("IX_routarr_trip_dvir_inspections_maintainarr_defect");
 
                     b.HasIndex("TenantId", "TripId");
 
@@ -1706,6 +1882,17 @@ namespace RoutArr.Api.Migrations
                     b.ToTable("platform_metadata", (string)null);
                 });
 
+            modelBuilder.Entity("RoutArr.Api.Entities.DispatchMessage", b =>
+                {
+                    b.HasOne("RoutArr.Api.Entities.Trip", "Trip")
+                        .WithMany("DispatchMessages")
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Trip");
+                });
+
             modelBuilder.Entity("RoutArr.Api.Entities.DispatchRoute", b =>
                 {
                     b.HasOne("RoutArr.Api.Entities.Trip", "Trip")
@@ -1800,6 +1987,8 @@ namespace RoutArr.Api.Migrations
 
             modelBuilder.Entity("RoutArr.Api.Entities.Trip", b =>
                 {
+                    b.Navigation("DispatchMessages");
+
                     b.Navigation("Loads");
 
                     b.Navigation("PartsDemandLines");

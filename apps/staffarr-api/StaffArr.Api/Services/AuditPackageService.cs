@@ -387,7 +387,11 @@ public sealed class AuditPackageService(
                 x.ReportedAt,
                 x.ReportedByUserId,
                 x.CreatedAt,
-                x.UpdatedAt))
+                x.UpdatedAt,
+                x.SourceProduct,
+                x.SourceIncidentId,
+                x.SourceEventKind,
+                x.SourceReferenceKey))
             .ToListAsync(cancellationToken);
 
         var overrides = await overridesQuery

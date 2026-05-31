@@ -1,8 +1,12 @@
 namespace StaffArr.Api.Services;
 
+public sealed record StaffArrAuditWriteResult(
+    Guid AuditEventId,
+    DateTimeOffset OccurredAt);
+
 public interface IStaffArrAuditService
 {
-    Task WriteAsync(
+    Task<StaffArrAuditWriteResult> WriteAsync(
         string action,
         Guid tenantId,
         Guid? actorUserId,

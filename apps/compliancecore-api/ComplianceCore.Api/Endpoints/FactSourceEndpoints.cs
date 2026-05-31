@@ -12,15 +12,17 @@ public static class FactSourceEndpoints
             app.MapGroup("/api/fact-sources")
                 .WithTags("FactSources")
                 .RequireAuthorization(),
-            string.Empty);
+            string.Empty,
+            "/api/fact-sources");
         MapRoutes(
             app.MapGroup("/api/v1/fact-sources")
                 .WithTags("FactSources")
                 .RequireAuthorization(),
-            "V1");
+            "V1",
+            "/api/v1/fact-sources");
     }
 
-    private static void MapRoutes(RouteGroupBuilder factSources, string suffix)
+    private static void MapRoutes(RouteGroupBuilder factSources, string suffix, string routePrefix)
     {
         factSources.MapGet("/", async (
             Guid? factDefinitionId,
@@ -49,7 +51,7 @@ public static class FactSourceEndpoints
                 context.User.GetUserId(),
                 request,
                 cancellationToken);
-            return Results.Created($"/api/fact-sources/{created.FactSourceId}", created);
+            return Results.Created($"{routePrefix}/{created.FactSourceId}", created);
         })
         .WithName($"CreateFactSource{suffix}");
 

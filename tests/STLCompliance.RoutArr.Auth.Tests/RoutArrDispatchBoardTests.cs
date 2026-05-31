@@ -107,6 +107,21 @@ public sealed class RoutArrDispatchBoardTests : IAsyncLifetime
         var driverPersonId = Guid.NewGuid().ToString();
         var now = DateTimeOffset.UtcNow;
 
+        var settingsRequest = Authorized(HttpMethod.Put, "/api/trip-execution-settings", dispatcherToken);
+        settingsRequest.Content = JsonContent.Create(new UpsertTripExecutionSettingsRequest(
+            RequirePreTripDvirBeforeStart: false,
+            RequirePostTripDvirBeforeComplete: false,
+            RequireDeliveryProofBeforeComplete: true,
+            RequirePickupProofBeforeStart: false,
+            BlockTripStartOnDvirFail: false,
+            BlockTripCompleteOnDvirFail: false,
+            RequirePickupProofPhotoBeforeStart: false,
+            RequireDeliveryProofPhotoBeforeComplete: false,
+            RequireDeliverySignatureBeforeComplete: false,
+            RequirePreTripDvirPhotoBeforeStart: false,
+            RequirePostTripDvirPhotoBeforeComplete: false));
+        (await _routarrClient.SendAsync(settingsRequest)).EnsureSuccessStatusCode();
+
         var createTripRequest = Authorized(HttpMethod.Post, "/api/trips", dispatcherToken);
         createTripRequest.Content = JsonContent.Create(new CreateTripRequest(
             "Board test trip",
@@ -162,9 +177,13 @@ public sealed class RoutArrDispatchBoardTests : IAsyncLifetime
         Assert.True(board.Routes.TotalCount >= 2);
         Assert.True(board.Stops.TotalCount >= 2);
         Assert.Equal(1, board.WorkQueue.UnlinkedRouteCount);
+        Assert.Equal(1, board.WorkQueue.MissingProofTripCount);
         Assert.NotEmpty(board.AssignedTrips);
         Assert.NotEmpty(board.ActiveTrips);
-        Assert.Contains(board.ActiveTrips, x => x.TripId == trip.TripId && x.IsAtRisk);
+        Assert.Contains(board.ActiveTrips, x =>
+            x.TripId == trip.TripId
+            && x.IsAtRisk
+            && x.MissingRequiredProofCount == 1);
     }
 
     [Fact]

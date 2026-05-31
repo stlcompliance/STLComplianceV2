@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
+using NexArr.Api.Entities;
 using NexArr.Api.Services;
 using STLCompliance.Shared.Contracts;
 
@@ -162,6 +163,87 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
     }
 
     [Fact]
+    public async Task Platform_admin_can_diagnose_handoff_redeem_after_entitlement_revoked()
+    {
+        await SeedDatabaseAsync();
+        var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var tenantAdminToken = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", tenantAdminToken);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest(
+            "staffarr",
+            "http://localhost:5173/app/staffarr"));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+        handoffResponse.EnsureSuccessStatusCode();
+        var handoff = (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
+        var serviceToken = await IssueServiceTokenAsync(platformAdminToken, "staffarr");
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var entitlement = await db.Entitlements.SingleAsync(
+                x => x.TenantId == PlatformSeeder.DemoTenantId && x.ProductKey == "staffarr");
+            entitlement.Status = EntitlementStatuses.Revoked;
+            await db.SaveChangesAsync();
+        }
+
+        var redeemRequest = Authorized(HttpMethod.Post, "/api/v1/handoff/redeem", platformAdminToken);
+        redeemRequest.Content = JsonContent.Create(new RedeemHandoffRequest(handoff.HandoffCode, serviceToken));
+        var redeemResponse = await _client.SendAsync(redeemRequest);
+        Assert.Equal(HttpStatusCode.Unauthorized, redeemResponse.StatusCode);
+
+        var attemptsResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/platform-admin/launch-attempts?productKey=staffarr&result=Denied",
+                platformAdminToken));
+        attemptsResponse.EnsureSuccessStatusCode();
+        var attempts = (await attemptsResponse.Content.ReadFromJsonAsync<PagedResult<LaunchAttemptTimelineItemResponse>>())!;
+        var redeemAttempt = Assert.Single(attempts.Items, x => x.Action == "launch.handoff.redeem");
+
+        Assert.Equal("entitlement_revoked", redeemAttempt.ReasonCode);
+        Assert.Equal("staffarr", redeemAttempt.ProductKey);
+        Assert.Equal(PlatformSeeder.DemoTenantId, redeemAttempt.TenantId);
+        Assert.Equal(PlatformSeeder.DemoTenantAdminEmail, redeemAttempt.ActorEmail);
+        Assert.Contains("entitlement", redeemAttempt.RemediationHint, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Platform_admin_can_diagnose_handoff_redeem_without_service_token()
+    {
+        await SeedDatabaseAsync();
+        var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var tenantAdminToken = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", tenantAdminToken);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest(
+            "staffarr",
+            "http://localhost:5173/app/staffarr"));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+        handoffResponse.EnsureSuccessStatusCode();
+        var handoff = (await handoffResponse.Content.ReadFromJsonAsync<HandoffCreatedResponse>())!;
+
+        var redeemRequest = Authorized(HttpMethod.Post, "/api/v1/handoff/redeem", tenantAdminToken);
+        redeemRequest.Content = JsonContent.Create(new RedeemHandoffRequest(handoff.HandoffCode, null));
+        var redeemResponse = await _client.SendAsync(redeemRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, redeemResponse.StatusCode);
+
+        var attemptsResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                "/api/platform-admin/launch-attempts?productKey=staffarr&result=Denied",
+                platformAdminToken));
+        attemptsResponse.EnsureSuccessStatusCode();
+        var attempts = (await attemptsResponse.Content.ReadFromJsonAsync<PagedResult<LaunchAttemptTimelineItemResponse>>())!;
+        var redeemAttempt = Assert.Single(attempts.Items, x => x.Action == "launch.handoff.redeem");
+
+        Assert.Equal("auth.forbidden", redeemAttempt.ReasonCode);
+        Assert.Equal("staffarr", redeemAttempt.ProductKey);
+        Assert.Equal(PlatformSeeder.DemoTenantAdminEmail, redeemAttempt.ActorEmail);
+        Assert.Contains("service token", redeemAttempt.RemediationHint, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Tenant_admin_cannot_read_launch_attempts()
     {
         await SeedDatabaseAsync();
@@ -171,6 +253,136 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
             Authorized(HttpMethod.Get, "/api/platform-admin/launch-attempts", token));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Platform_admin_can_create_and_update_user_with_outbox_events()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/platform-admin/users", token);
+        createRequest.Content = JsonContent.Create(new CreatePlatformUserRequest(
+            "Ops-Lead@Example.test",
+            "Ops Lead",
+            "StrongPass1234",
+            IsPlatformAdmin: false));
+
+        var createResponse = await _client.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = (await createResponse.Content.ReadFromJsonAsync<PlatformUserDetailResponse>())!;
+
+        Assert.Equal("ops-lead@example.test", created.Email);
+        Assert.Equal("Ops Lead", created.DisplayName);
+        Assert.True(created.IsActive);
+        Assert.False(created.IsPlatformAdmin);
+
+        var updateRequest = Authorized(HttpMethod.Patch, $"/api/v1/platform-admin/users/{created.UserId}", token);
+        updateRequest.Content = JsonContent.Create(new UpdatePlatformUserRequest(
+            "ops-admin@example.test",
+            "Ops Admin",
+            IsPlatformAdmin: true));
+
+        var updateResponse = await _client.SendAsync(updateRequest);
+        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+        var updated = (await updateResponse.Content.ReadFromJsonAsync<PlatformUserDetailResponse>())!;
+
+        Assert.Equal(created.UserId, updated.UserId);
+        Assert.Equal("ops-admin@example.test", updated.Email);
+        Assert.Equal("Ops Admin", updated.DisplayName);
+        Assert.True(updated.IsPlatformAdmin);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        var user = await db.Users.AsNoTracking().SingleAsync(x => x.Id == created.UserId);
+        Assert.Equal("ops-admin@example.test", user.Email);
+        Assert.True(user.IsPlatformAdmin);
+
+        var outboxEvents = await db.PlatformOutboxEvents
+            .AsNoTracking()
+            .Where(x => x.PayloadJson.Contains(created.UserId.ToString()))
+            .ToListAsync();
+
+        var createdEvent = Assert.Single(outboxEvents, x => x.EventType == PlatformOutboxEventKinds.UserCreated);
+        Assert.Contains("ops-lead@example.test", createdEvent.PayloadJson);
+
+        var updatedEvent = Assert.Single(outboxEvents, x => x.EventType == PlatformOutboxEventKinds.UserUpdated);
+        Assert.Contains("ops-admin@example.test", updatedEvent.PayloadJson);
+        Assert.Contains("Ops Lead", updatedEvent.PayloadJson);
+    }
+
+    [Fact]
+    public async Task Tenant_admin_cannot_create_platform_user()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var request = Authorized(HttpMethod.Post, "/api/v1/platform-admin/users", token);
+        request.Content = JsonContent.Create(new CreatePlatformUserRequest(
+            "tenant-user@example.test",
+            "Tenant User",
+            "StrongPass1234"));
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Platform_admin_can_lock_and_unlock_user_with_outbox_events()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var lockResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/platform-admin/users/{PlatformSeeder.DemoTenantAdminUserId}/lock", token));
+
+        Assert.Equal(HttpStatusCode.OK, lockResponse.StatusCode);
+        var locked = (await lockResponse.Content.ReadFromJsonAsync<PlatformUserLockResponse>())!;
+        Assert.False(locked.WasAlreadyLocked);
+        Assert.True(locked.LockedUntil > DateTimeOffset.UtcNow);
+
+        var blockedLoginResponse = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                PlatformSeeder.DemoTenantAdminEmail,
+                PlatformSeeder.DemoAdminPassword,
+                PlatformSeeder.DemoTenantId));
+
+        Assert.Equal(HttpStatusCode.Locked, blockedLoginResponse.StatusCode);
+
+        var unlockResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/platform-admin/users/{PlatformSeeder.DemoTenantAdminUserId}/unlock", token));
+
+        Assert.Equal(HttpStatusCode.OK, unlockResponse.StatusCode);
+        var unlocked = (await unlockResponse.Content.ReadFromJsonAsync<PlatformUserUnlockResponse>())!;
+        Assert.False(unlocked.WasAlreadyUnlocked);
+
+        var loginResponse = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                PlatformSeeder.DemoTenantAdminEmail,
+                PlatformSeeder.DemoAdminPassword,
+                PlatformSeeder.DemoTenantId));
+
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        var user = await db.Users
+            .Include(x => x.Credential)
+            .SingleAsync(x => x.Id == PlatformSeeder.DemoTenantAdminUserId);
+
+        Assert.Null(user.Credential!.LockedUntil);
+        Assert.Equal(0, user.Credential.FailedLoginCount);
+
+        var outboxEvents = await db.PlatformOutboxEvents
+            .AsNoTracking()
+            .Where(x => x.PayloadJson.Contains(PlatformSeeder.DemoTenantAdminUserId.ToString()))
+            .ToListAsync();
+
+        Assert.Single(outboxEvents, x => x.EventType == PlatformOutboxEventKinds.UserLocked);
+        Assert.Single(outboxEvents, x => x.EventType == PlatformOutboxEventKinds.UserUnlocked);
     }
 
     [Fact]
@@ -230,6 +442,30 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         response.EnsureSuccessStatusCode();
         var payload = (await response.Content.ReadFromJsonAsync<AuthTokenResponse>())!;
         return payload.AccessToken;
+    }
+
+    private async Task<string> IssueServiceTokenAsync(string adminToken, string productKey)
+    {
+        var registerRequest = Authorized(HttpMethod.Post, "/api/service-tokens/clients", adminToken);
+        registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
+            $"{productKey}-platform-admin-test",
+            $"{productKey} Platform Admin Test",
+            productKey,
+            [productKey]));
+        var registerResponse = await _client.SendAsync(registerRequest);
+        registerResponse.EnsureSuccessStatusCode();
+        var client = (await registerResponse.Content.ReadFromJsonAsync<ServiceClientResponse>())!;
+
+        var issueRequest = Authorized(HttpMethod.Post, "/api/service-tokens", adminToken);
+        issueRequest.Content = JsonContent.Create(new IssueServiceTokenRequest(
+            client.ServiceClientId,
+            PlatformSeeder.DemoTenantId,
+            [productKey],
+            "launch.redeem",
+            30));
+        var issueResponse = await _client.SendAsync(issueRequest);
+        issueResponse.EnsureSuccessStatusCode();
+        return (await issueResponse.Content.ReadFromJsonAsync<ServiceTokenIssueResponse>())!.AccessToken;
     }
 
     private async Task SeedDatabaseAsync()

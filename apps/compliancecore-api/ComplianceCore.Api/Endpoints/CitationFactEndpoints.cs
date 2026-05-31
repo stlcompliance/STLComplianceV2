@@ -247,6 +247,19 @@ public static class CitationFactEndpoints
         })
         .WithName($"GetFactDefinitionUsage{nameSuffix}");
 
+        factDefinitions.MapGet("/{factKey}/history", async (
+            string factKey,
+            ComplianceCoreAuthorizationService authorization,
+            FactDefinitionService service,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRegulatoryRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListHistoryByKeyAsync(tenantId, factKey, cancellationToken));
+        })
+        .WithName($"ListFactDefinitionHistory{nameSuffix}");
+
         factDefinitions.MapPost("/validate-payload", async (
             ValidateFactPayloadRequest request,
             ComplianceCoreAuthorizationService authorization,

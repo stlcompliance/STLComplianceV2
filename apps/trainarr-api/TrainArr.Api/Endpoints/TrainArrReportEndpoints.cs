@@ -5,6 +5,47 @@ namespace TrainArr.Api.Endpoints;
 
 public static class TrainArrReportEndpoints
 {
+    public static void MapTrainArrCommandCenterEndpoints(this WebApplication app)
+    {
+        var routes = new[]
+        {
+            (Route: "/api/dashboard", Suffix: string.Empty),
+            (Route: "/api/v1/dashboard", Suffix: "V1"),
+            (Route: "/api/command-center", Suffix: "CommandCenter"),
+            (Route: "/api/v1/command-center", Suffix: "CommandCenterV1"),
+        };
+
+        foreach (var (route, suffix) in routes)
+        {
+            var group = app.MapGroup(route)
+                .WithTags("Dashboard")
+                .RequireAuthorization();
+
+            group.MapGet("/", async (
+                TrainArrAuthorizationService authorization,
+                TrainArrCommandCenterService commandCenter,
+                ITrainArrAuditService audit,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireAssignmentReportRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var summary = await commandCenter.GetSummaryAsync(tenantId, cancellationToken);
+                await audit.WriteAsync(
+                    "trainarr.dashboard.command_center",
+                    tenantId,
+                    actorUserId,
+                    "trainarr_dashboard",
+                    null,
+                    "success",
+                    cancellationToken: cancellationToken);
+                return Results.Ok(summary);
+            })
+            .WithName($"GetTrainArrCommandCenter{suffix}");
+        }
+    }
+
     public static void MapTrainArrReportIndexEndpoints(this WebApplication app)
     {
         var routes = new[] { "/api/reports", "/api/v1/reports" };
@@ -21,6 +62,7 @@ public static class TrainArrReportEndpoints
                 authorization.RequireAssignmentReportRead(context.User);
                 var items = new[]
                 {
+                    new { key = "dashboard", path = route.Replace("/reports", "/dashboard"), description = "Tenant training command-center dashboard snapshot." },
                     new { key = "assignments", path = $"{route}/assignments", description = "Training assignment summaries and exports." },
                     new { key = "qualifications", path = $"{route}/qualifications", description = "Qualification issue and status summaries." },
                     new { key = "compliance", path = $"{route}/compliance", description = "Compliance coverage and remediation summaries." },
@@ -101,6 +143,29 @@ public static class TrainArrReportEndpoints
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
         .WithName($"ExportTrainArrAssignmentReportSummary{suffix}");
+
+            group.MapGet("/overdue", async (
+            TrainArrAuthorizationService authorization,
+            AssignmentReportService reportService,
+            ITrainArrAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAssignmentReportRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var report = await reportService.GetOverdueReportAsync(tenantId, cancellationToken);
+            await audit.WriteAsync(
+                "trainarr.reports.assignments.overdue",
+                tenantId,
+                actorUserId,
+                "assignment_report",
+                "overdue",
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.Ok(report);
+        })
+        .WithName($"GetTrainArrAssignmentOverdueReport{suffix}");
         }
     }
 
@@ -164,6 +229,30 @@ public static class TrainArrReportEndpoints
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
         .WithName($"ExportTrainArrQualificationReportSummary{suffix}");
+
+            group.MapGet("/expiring", async (
+            int? windowDays,
+            TrainArrAuthorizationService authorization,
+            QualificationReportService reportService,
+            ITrainArrAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireQualificationReportRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var report = await reportService.GetExpiringReportAsync(tenantId, windowDays, cancellationToken);
+            await audit.WriteAsync(
+                "trainarr.reports.qualifications.expiring",
+                tenantId,
+                actorUserId,
+                "qualification_report",
+                "expiring",
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.Ok(report);
+        })
+        .WithName($"GetTrainArrQualificationExpiringReport{suffix}");
         }
     }
 
@@ -233,24 +322,54 @@ public static class TrainArrReportEndpoints
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
         .WithName($"ExportTrainArrComplianceReportSummary{suffix}");
+
+            group.MapGet("/gaps", async (
+            TrainArrAuthorizationService authorization,
+            ComplianceReportService reportService,
+            ITrainArrAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireComplianceReportRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var report = await reportService.GetGapReportAsync(tenantId, cancellationToken);
+            await audit.WriteAsync(
+                "trainarr.reports.compliance.gaps",
+                tenantId,
+                actorUserId,
+                "compliance_report",
+                "gaps",
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.Ok(report);
+        })
+        .WithName($"GetTrainArrComplianceGapReport{suffix}");
         }
     }
 
     public static void MapTrainArrEntityExportEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/exports")
-            .WithTags("EntityExports")
-            .RequireAuthorization();
+        MapEntityExportRoutes(app.MapGroup("/api/exports"), string.Empty, "/api/exports", "/api/reports");
+        MapEntityExportRoutes(app.MapGroup("/api/v1/exports"), "V1", "/api/v1/exports", "/api/v1/reports");
+    }
 
+    private static void MapEntityExportRoutes(
+        RouteGroupBuilder group,
+        string suffix,
+        string exportBasePath,
+        string reportBasePath)
+    {
+        group.WithTags("EntityExports").RequireAuthorization();
         group.MapGet("/manifest", (
             TrainArrAuthorizationService authorization,
             TrainArrEntityBulkExportService exportService,
             HttpContext context) =>
         {
             authorization.RequireAssignmentReportExport(context.User);
-            return Results.Ok(exportService.GetManifest());
+            return Results.Ok(exportService.GetManifest(exportBasePath, reportBasePath));
         })
-        .WithName("GetTrainArrEntityExportManifest");
+        .WithName($"GetTrainArrEntityExportManifest{suffix}");
 
         group.MapGet("/training-assignments", async (
             string? status,
@@ -269,7 +388,7 @@ public static class TrainArrReportEndpoints
                 cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportTrainArrTrainingAssignmentsCsv");
+        .WithName($"ExportTrainArrTrainingAssignmentsCsv{suffix}");
 
         group.MapGet("/qualification-issues", async (
             string? status,
@@ -288,7 +407,7 @@ public static class TrainArrReportEndpoints
                 cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportTrainArrQualificationIssuesCsv");
+        .WithName($"ExportTrainArrQualificationIssuesCsv{suffix}");
 
         group.MapGet("/training-definitions", async (
             TrainArrAuthorizationService authorization,
@@ -305,6 +424,6 @@ public static class TrainArrReportEndpoints
                 cancellationToken);
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
-        .WithName("ExportTrainArrTrainingDefinitionsCsv");
+        .WithName($"ExportTrainArrTrainingDefinitionsCsv{suffix}");
     }
 }

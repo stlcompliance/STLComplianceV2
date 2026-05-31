@@ -54,10 +54,11 @@ public static class TrainingEvidenceEndpoints
             app.MapGroup("/api/v1/evidence")
                 .WithTags("TrainingEvidence")
                 .RequireAuthorization(),
-            "V1Evidence");
+            "V1Evidence",
+            "/api/v1/evidence");
     }
 
-    private static void MapV1EvidenceRoutes(RouteGroupBuilder group, string nameSuffix)
+    private static void MapV1EvidenceRoutes(RouteGroupBuilder group, string nameSuffix, string routePrefix)
     {
         group.MapGet("/", async (
             Guid trainingAssignmentId,
@@ -93,7 +94,7 @@ public static class TrainingEvidenceEndpoints
                 assignmentId,
                 request,
                 cancellationToken);
-            return Results.Created($"/api/training-assignments/{assignmentId}/evidence/{created.EvidenceId}", created);
+            return Results.Created($"{routePrefix}/{assignmentId}/{created.EvidenceId}", created);
         })
         .WithName($"CreateTrainingEvidence{nameSuffix}");
     }

@@ -20,7 +20,9 @@ public sealed record ComplianceCoreInternalEvaluateResult(
     string ReasonCode,
     string Message,
     string EvaluationResult,
-    IReadOnlyList<string> UnresolvedFactKeys);
+    IReadOnlyList<string> UnresolvedFactKeys,
+    Guid? AppliedWaiverId = null,
+    string? AppliedWaiverKey = null);
 
 public sealed record ComplianceCoreInternalEvaluateBatchItem(
     string RulePackKey,
@@ -83,7 +85,9 @@ public sealed class ComplianceCoreRuleEvaluationClient(
             result.ReasonCode,
             result.Message,
             result.EvaluationResult,
-            result.UnresolvedFactKeys);
+            result.UnresolvedFactKeys,
+            result.AppliedWaiverId,
+            result.AppliedWaiverKey);
     }
 
     public async Task<ComplianceCoreInternalEvaluateBatchResult> EvaluateRulePackBatchAsync(
@@ -131,7 +135,9 @@ public sealed class ComplianceCoreRuleEvaluationClient(
                 item.ReasonCode,
                 item.Message,
                 item.EvaluationResult,
-                item.UnresolvedFactKeys))
+                item.UnresolvedFactKeys,
+                item.AppliedWaiverId,
+                item.AppliedWaiverKey))
             .ToList();
 
         return new ComplianceCoreInternalEvaluateBatchResult(result.BatchId, evaluations);
@@ -145,7 +151,9 @@ public sealed class ComplianceCoreRuleEvaluationClient(
         string ReasonCode,
         string Message,
         string EvaluationResult,
-        IReadOnlyList<string> UnresolvedFactKeys);
+        IReadOnlyList<string> UnresolvedFactKeys,
+        Guid? AppliedWaiverId = null,
+        string? AppliedWaiverKey = null);
 
     private sealed record ComplianceCoreEvaluateBatchResponse(
         Guid BatchId,

@@ -36,6 +36,7 @@ public sealed class DispatchNotificationDispatchService(
                 x.TenantId,
                 x.EventKind,
                 x.TripId,
+                x.RouteId,
                 x.CreatedAt)).ToList());
     }
 
@@ -103,6 +104,7 @@ public sealed class DispatchNotificationDispatchService(
                 x.EventKind,
                 x.DispatchStatus,
                 x.TripId,
+                x.RouteId,
                 x.DriverPersonId,
                 x.RelatedEntityType,
                 x.RelatedEntityId,
@@ -216,6 +218,13 @@ public sealed class DispatchNotificationDispatchService(
                 tripId = item.TripId,
                 driverPersonId = item.DriverPersonId,
             },
+            DispatchNotificationEventKinds.TripAccepted => new
+            {
+                @event = "routarr.trip.accepted",
+                tenantId = item.TenantId,
+                tripId = item.TripId,
+                driverPersonId = item.DriverPersonId,
+            },
             DispatchNotificationEventKinds.TripInProgress => new
             {
                 @event = "routarr.trip.in_progress",
@@ -237,12 +246,27 @@ public sealed class DispatchNotificationDispatchService(
                 tripId = item.TripId,
                 driverPersonId = item.DriverPersonId,
             },
+            DispatchNotificationEventKinds.DriverAssignmentChanged => new
+            {
+                @event = "routarr.driver.assignment.changed",
+                tenantId = item.TenantId,
+                tripId = item.TripId,
+                driverPersonId = item.DriverPersonId,
+            },
+            DispatchNotificationEventKinds.RouteCancelled => new
+            {
+                @event = "routarr.route.cancelled",
+                tenantId = item.TenantId,
+                routeId = item.RouteId,
+                tripId = item.TripId,
+            },
             _ => new
             {
                 @event = "routarr.notification.unknown",
                 tenantId = item.TenantId,
                 eventKind = item.EventKind,
                 tripId = item.TripId,
+                routeId = item.RouteId,
             },
         };
 

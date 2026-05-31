@@ -25,6 +25,14 @@ public static class DriverPortalEndpoints
             Results.Ok(await service.DispatchTripAsync(context.User, tripId, cancellationToken)))
         .WithName("DriverPortalDispatchTrip");
 
+        group.MapPost("/trips/{tripId:guid}/accept", async (
+            Guid tripId,
+            HttpContext context,
+            DriverPortalService service,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await service.AcceptTripAsync(context.User, tripId, cancellationToken)))
+        .WithName("DriverPortalAcceptTrip");
+
         group.MapPost("/trips/{tripId:guid}/start", async (
             Guid tripId,
             HttpContext context,

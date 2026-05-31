@@ -66,6 +66,16 @@ public sealed record FactDefinitionUsageResponse(
     int RulePackCount,
     int CitationCount);
 
+public sealed record FactDefinitionHistoryItemResponse(
+    Guid AuditEventId,
+    Guid FactDefinitionId,
+    string FactKey,
+    string Action,
+    string Result,
+    Guid? ActorUserId,
+    Guid CorrelationId,
+    DateTimeOffset OccurredAt);
+
 public sealed record ValidateFactPayloadItemRequest(
     string FactKey,
     string? Value);

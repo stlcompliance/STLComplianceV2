@@ -5,9 +5,12 @@ public sealed record DispatchNotificationSettingsResponse(
     string? NotificationWebhookUrl,
     bool NotifyOnTripAssigned,
     bool NotifyOnTripDispatched,
+    bool NotifyOnTripAccepted,
     bool NotifyOnTripInProgress,
     bool NotifyOnTripCompleted,
     bool NotifyOnTripCancelled,
+    bool NotifyOnDriverAssignmentChanged,
+    bool NotifyOnRouteCancelled,
     DateTimeOffset? UpdatedAt);
 
 public sealed record UpsertDispatchNotificationSettingsRequest(
@@ -18,13 +21,17 @@ public sealed record UpsertDispatchNotificationSettingsRequest(
     bool NotifyOnTripInProgress,
     bool NotifyOnTripCompleted,
     bool NotifyOnTripCancelled,
+    bool NotifyOnTripAccepted = true,
+    bool NotifyOnDriverAssignmentChanged = true,
+    bool NotifyOnRouteCancelled = true,
     bool ClearNotificationWebhookOnDisable = false);
 
 public sealed record DispatchNotificationDispatchItem(
     Guid NotificationId,
     string EventKind,
     string DispatchStatus,
-    Guid TripId,
+    Guid? TripId,
+    Guid? RouteId,
     string? DriverPersonId,
     string RelatedEntityType,
     Guid RelatedEntityId,
@@ -41,7 +48,8 @@ public sealed record PendingDispatchNotificationItem(
     Guid NotificationId,
     Guid TenantId,
     string EventKind,
-    Guid TripId,
+    Guid? TripId,
+    Guid? RouteId,
     DateTimeOffset CreatedAt);
 
 public sealed record PendingDispatchNotificationsResponse(

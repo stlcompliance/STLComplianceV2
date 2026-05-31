@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using ComplianceCore.Api.Contracts;
 using ComplianceCore.Api.Data;
+using ComplianceCore.Api.Entities;
 using ComplianceCore.Api.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -64,6 +65,73 @@ public class ComplianceCoreVocabularySpineTests : IAsyncLifetime
         Assert.Contains(types, t => t.TypeKey == "material_hazard");
         Assert.Contains(types, t => t.TypeKey == "incident_reason");
         Assert.Contains(types, t => t.TypeKey == "evidence_type");
+    }
+
+    [Fact]
+    public async Task Core_vocabulary_key_registry_returns_documented_fourteen_keys()
+    {
+        var token = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "tenant_admin");
+        var response = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/vocabulary/core-keys", token));
+
+        response.EnsureSuccessStatusCode();
+        var registry = (await response.Content.ReadFromJsonAsync<CoreVocabularyKeyRegistryResponse>())!;
+        Assert.Equal(14, registry.Keys.Count);
+        Assert.Equal(
+            [
+                "governing_body_key",
+                "regulatory_program_key",
+                "regulated_context_key",
+                "subject_type_key",
+                "activity_context_key",
+                "material_key",
+                "hazard_class_key",
+                "equipment_class_key",
+                "training_requirement_key",
+                "inspection_type_key",
+                "permit_type_key",
+                "incident_report_type_key",
+                "evidence_type_key",
+                "record_retention_key"
+            ],
+            registry.Keys.Select(key => key.Key).ToArray());
+    }
+
+    [Fact]
+    public async Task Core_vocabulary_key_validation_reports_unknown_keys()
+    {
+        var token = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "tenant_admin");
+        var request = Authorized(HttpMethod.Post, "/api/v1/vocabulary/core-keys/validate", token);
+        request.Content = JsonContent.Create(new ValidateCoreVocabularyKeysRequest([
+            "material_key",
+            "dispatch_category",
+            ""
+        ]));
+
+        var response = await _complianceCoreClient.SendAsync(request);
+
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<ValidateCoreVocabularyKeysResponse>())!;
+        Assert.Collection(
+            result.Items,
+            item =>
+            {
+                Assert.Equal("material_key", item.Key);
+                Assert.True(item.IsKnown);
+                Assert.Null(item.ReasonCode);
+            },
+            item =>
+            {
+                Assert.Equal("dispatch_category", item.Key);
+                Assert.False(item.IsKnown);
+                Assert.Equal("unknown_core_key", item.ReasonCode);
+            },
+            item =>
+            {
+                Assert.Equal(string.Empty, item.Key);
+                Assert.False(item.IsKnown);
+                Assert.Equal("empty_key", item.ReasonCode);
+            });
     }
 
     [Fact]
@@ -185,6 +253,172 @@ public class ComplianceCoreVocabularySpineTests : IAsyncLifetime
         v1TermsResponse.EnsureSuccessStatusCode();
         var v1Terms = (await v1TermsResponse.Content.ReadFromJsonAsync<IReadOnlyList<VocabularyTermResponse>>())!;
         Assert.Equal(legacyTerms.Count, v1Terms.Count);
+    }
+
+    [Fact]
+    public async Task V1_vocabulary_family_routes_create_list_and_validate_family()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/vocabulary/material_hazard", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateVocabularyTermRequest(
+            "corrosive",
+            "Corrosive",
+            "material_hazard",
+            "Can damage materials or tissue on contact."));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<VocabularyTermResponse>())!;
+        Assert.Equal("material_hazard", created.VocabularyTypeKey);
+
+        var listResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/vocabulary/material_hazard", adminToken));
+        listResponse.EnsureSuccessStatusCode();
+        var terms = (await listResponse.Content.ReadFromJsonAsync<IReadOnlyList<VocabularyTermResponse>>())!;
+        Assert.Contains(terms, term => term.TermKey == "corrosive");
+
+        var mismatchRequest = Authorized(HttpMethod.Post, "/api/v1/vocabulary/evidence_type", adminToken);
+        mismatchRequest.Content = JsonContent.Create(new CreateVocabularyTermRequest(
+            "not_evidence",
+            "Not Evidence",
+            "material_hazard",
+            "This intentionally mismatches the route family."));
+        var mismatchResponse = await _complianceCoreClient.SendAsync(mismatchRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, mismatchResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task V1_vocabulary_key_routes_patch_and_validate_keys()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/vocabulary/material_hazard", adminToken);
+        createRequest.Content = JsonContent.Create(new CreateVocabularyTermRequest(
+            "corrosive",
+            "Corrosive",
+            "material_hazard",
+            "Can damage materials or tissue on contact."));
+        var createResponse = await _complianceCoreClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+
+        var updateRequest = Authorized(HttpMethod.Patch, "/api/v1/vocabulary/material_hazard/corrosive", adminToken);
+        updateRequest.Content = JsonContent.Create(new UpdateVocabularyTermRequest(
+            "Corrosive material",
+            "Can damage materials, equipment, or tissue on contact.",
+            IsActive: true));
+        var updateResponse = await _complianceCoreClient.SendAsync(updateRequest);
+        updateResponse.EnsureSuccessStatusCode();
+        var updated = (await updateResponse.Content.ReadFromJsonAsync<VocabularyTermResponse>())!;
+        Assert.Equal("corrosive", updated.TermKey);
+        Assert.Equal("Corrosive material", updated.Label);
+        Assert.Equal("Can damage materials, equipment, or tissue on contact.", updated.Description);
+
+        var validateRequest = Authorized(HttpMethod.Post, "/api/v1/vocabulary/validate-keys", adminToken);
+        validateRequest.Content = JsonContent.Create(new ValidateVocabularyKeysRequest([
+            new ValidateVocabularyKeyItem("material_hazard", "corrosive"),
+            new ValidateVocabularyKeyItem("material_hazard", "unknown"),
+            new ValidateVocabularyKeyItem("unknown_family", "corrosive")
+        ]));
+        var validateResponse = await _complianceCoreClient.SendAsync(validateRequest);
+        validateResponse.EnsureSuccessStatusCode();
+        var validation = (await validateResponse.Content.ReadFromJsonAsync<ValidateVocabularyKeysResponse>())!;
+        Assert.Collection(
+            validation.Items,
+            item =>
+            {
+                Assert.Equal("material_hazard", item.Family);
+                Assert.Equal("corrosive", item.Key);
+                Assert.True(item.IsValid);
+                Assert.Null(item.ReasonCode);
+                Assert.Equal(updated.TermId, item.TermId);
+            },
+            item =>
+            {
+                Assert.Equal("material_hazard", item.Family);
+                Assert.Equal("unknown", item.Key);
+                Assert.False(item.IsValid);
+                Assert.Equal("unknown_key", item.ReasonCode);
+                Assert.Null(item.TermId);
+            },
+            item =>
+            {
+                Assert.Equal("unknown_family", item.Family);
+                Assert.Equal("corrosive", item.Key);
+                Assert.False(item.IsValid);
+                Assert.Equal("unknown_family", item.ReasonCode);
+                Assert.Null(item.TermId);
+            });
+
+        var createAliasRequest = Authorized(HttpMethod.Post, "/api/v1/vocabulary/aliases", adminToken);
+        createAliasRequest.Content = JsonContent.Create(new CreateVocabularyAliasRequest(
+            updated.TermId,
+            "Caustic material"));
+        var createAliasResponse = await _complianceCoreClient.SendAsync(createAliasRequest);
+        createAliasResponse.EnsureSuccessStatusCode();
+
+        await CreateFactRequirementForVocabularyTermAsync(updated.TermKey);
+
+        var usageResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/vocabulary/material_hazard/corrosive/usage", adminToken));
+        usageResponse.EnsureSuccessStatusCode();
+        var usage = (await usageResponse.Content.ReadFromJsonAsync<VocabularyTermUsageResponse>())!;
+        Assert.Equal("material_hazard", usage.Family);
+        Assert.Equal("corrosive", usage.Key);
+        Assert.Equal(1, usage.AliasCount);
+        Assert.Equal(1, usage.FactRequirementCount);
+
+        var historyResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/vocabulary/material_hazard/corrosive/history", adminToken));
+        historyResponse.EnsureSuccessStatusCode();
+        var history = (await historyResponse.Content.ReadFromJsonAsync<IReadOnlyList<VocabularyTermHistoryItemResponse>>())!;
+        Assert.Contains(history, item => item.Action == "vocabulary.term.create" && item.TermId == updated.TermId);
+        Assert.Contains(history, item => item.Action == "vocabulary.term.update" && item.TermId == updated.TermId);
+    }
+
+    private async Task CreateFactRequirementForVocabularyTermAsync(string termKey)
+    {
+        using var scope = _complianceCoreFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        var factDefinitionId = Guid.NewGuid();
+        db.FactDefinitions.Add(new FactDefinition
+        {
+            Id = factDefinitionId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            FactKey = "material_hazard_key",
+            Label = "Material hazard key",
+            Description = "Material hazard controlled vocabulary value.",
+            ValueType = FactValueTypes.String,
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+        db.FactRequirements.Add(new FactRequirement
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            FactDefinitionId = factDefinitionId,
+            RequirementKey = "material_hazard_matches",
+            Label = "Material hazard matches",
+            Description = "Requires the material hazard controlled vocabulary value.",
+            ApplicabilityKey = "material_hazard",
+            SourceProduct = "supplyarr",
+            SourceEntity = "material",
+            SourceFieldOrRecordType = "hazard_key",
+            ValueType = FactValueTypes.String,
+            Operator = FactRequirementOperators.Equal,
+            ExpectedValue = termKey,
+            EvidenceKind = FactRequirementEvidenceKinds.SystemFact,
+            RequiredDocumentType = "none",
+            RetentionPeriod = "P1Y",
+            AuditQuestion = "Is the material hazard key approved?",
+            FailureSeverity = FactRequirementFailureSeverities.Major,
+            IsRequired = true,
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+        await db.SaveChangesAsync();
     }
 
     private string CreateComplianceCoreAccessToken(

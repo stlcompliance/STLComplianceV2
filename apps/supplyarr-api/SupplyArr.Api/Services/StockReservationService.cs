@@ -8,6 +8,7 @@ namespace SupplyArr.Api.Services;
 
 public sealed class StockReservationService(
     SupplyArrDbContext db,
+    IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
     public async Task<IReadOnlyList<StockReservationResponse>> ListAsync(
@@ -135,6 +136,14 @@ public sealed class StockReservationService(
             "stock_reservation",
             entity.Id.ToString(),
             "Succeeded",
+            cancellationToken: cancellationToken);
+
+        await integrationOutbox.TryEnqueueAsync(
+            tenantId,
+            IntegrationOutboxEventKinds.SupplyArrInventoryReserved,
+            "stock_reservation",
+            entity.Id,
+            new IntegrationOutboxPayload(tenantId, $"Inventory reserved: {part.PartKey} ({quantity})"),
             cancellationToken: cancellationToken);
 
         entity.Part = part;

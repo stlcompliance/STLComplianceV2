@@ -45,14 +45,22 @@ public sealed record LaunchCatalogResponse(
     Guid TenantId,
     string TenantSlug,
     string TenantDisplayName,
+    Guid UserId,
+    string UserEmail,
+    string UserDisplayName,
     string? CurrentProductKey,
+    string CatalogVersion,
+    DateTimeOffset CacheExpiresAt,
     IReadOnlyList<LaunchCatalogItemResponse> Products,
     DateTimeOffset GeneratedAt);
 
 public sealed record LaunchCatalogItemResponse(
     string ProductKey,
     string DisplayName,
+    string ProductCategory,
+    string ProductOwner,
     string ProductStatus,
+    string ServiceAudience,
     string LaunchUrl,
     bool IsCurrentProduct);
 

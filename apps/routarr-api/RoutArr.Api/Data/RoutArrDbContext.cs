@@ -50,6 +50,8 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
 
     public DbSet<DispatchException> DispatchExceptions => Set<DispatchException>();
 
+    public DbSet<DispatchMessage> DispatchMessages => Set<DispatchMessage>();
+
     public DbSet<TripProofRecord> TripProofRecords => Set<TripProofRecord>();
 
     public DbSet<TripDvirInspection> TripDvirInspections => Set<TripDvirInspection>();
@@ -86,6 +88,7 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.HasIndex(x => new { x.TenantId, x.TripNumber }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.UpdatedAt });
             entity.HasIndex(x => new { x.TenantId, x.AssignedDriverPersonId });
+            entity.HasIndex(x => new { x.TenantId, x.AcceptedAt });
         });
 
         modelBuilder.Entity<TripLoad>(entity =>
@@ -352,10 +355,13 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.Property(x => x.VehicleRefKey).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Result).HasMaxLength(32).IsRequired();
             entity.Property(x => x.DefectNotes).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.MaintainarrEventRouteStatus).HasMaxLength(32).IsRequired();
             entity.Property(x => x.SubmittedByPersonId).HasMaxLength(128).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.TripId });
             entity.HasIndex(x => new { x.TenantId, x.TripId, x.Phase }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.MaintainarrDefectId })
+                .HasDatabaseName("IX_routarr_trip_dvir_inspections_maintainarr_defect");
             entity.HasOne(x => x.Trip)
                 .WithMany()
                 .HasForeignKey(x => x.TripId)
@@ -409,14 +415,49 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.Property(x => x.Description).HasMaxLength(1024).IsRequired();
             entity.Property(x => x.Category).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.IncidentType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.IncidentSeverity).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.IncidentReviewStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.IncidentRoutedProduct).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.StaffarrIncidentRouteStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.TrainarrIncidentRouteStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.MaintainarrIncidentRouteStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.CompliancecoreIncidentRouteStatus).HasMaxLength(32).IsRequired();
             entity.Property(x => x.ResolutionTemplateKey).HasMaxLength(64).IsRequired();
             entity.Property(x => x.ResolutionNotes).HasMaxLength(1024).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.ExceptionKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.Status, x.UpdatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.IncidentType, x.UpdatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.IncidentReviewStatus, x.UpdatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.StaffarrPersonnelIncidentId })
+                .HasDatabaseName("IX_routarr_dispatch_exceptions_staffarr_incident");
+            entity.HasIndex(x => new { x.TenantId, x.TrainarrIncidentRemediationId })
+                .HasDatabaseName("IX_routarr_dispatch_exceptions_trainarr_remediation");
+            entity.HasIndex(x => new { x.TenantId, x.MaintainarrDefectId })
+                .HasDatabaseName("IX_routarr_dispatch_exceptions_maintainarr_defect");
+            entity.HasIndex(x => new { x.TenantId, x.CompliancecoreFactPublicationId })
+                .HasDatabaseName("IX_routarr_dispatch_exceptions_compliancecore_publication");
             entity.HasIndex(x => new { x.TenantId, x.TripId });
             entity.HasIndex(x => new { x.TenantId, x.AssignedToUserId });
             entity.HasIndex(x => new { x.TenantId, x.SlaDueAt });
+        });
+
+        modelBuilder.Entity<DispatchMessage>(entity =>
+        {
+            entity.ToTable("routarr_dispatch_messages");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SenderPersonId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SenderRole).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Body).HasMaxLength(2000).IsRequired();
+            entity.Property(x => x.AcknowledgedByPersonId).HasMaxLength(128);
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TripId, x.CreatedAt });
+            entity.HasIndex(x => new { x.TenantId, x.TripId, x.RequiresAcknowledgement, x.AcknowledgedAt });
+            entity.HasOne(x => x.Trip)
+                .WithMany(x => x.DispatchMessages)
+                .HasForeignKey(x => x.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<AuditPackageGenerationJob>(entity =>

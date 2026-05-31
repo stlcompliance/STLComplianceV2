@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
@@ -9,6 +10,154 @@ namespace SupplyArr.Api.Endpoints;
 
 public static class CoverageAliasEndpoints
 {
+    private static readonly IReadOnlyDictionary<string, string[]> ImportHeaders =
+        new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["part_catalog_csv"] =
+            [
+                "catalog_key",
+                "catalog_name",
+                "catalog_description",
+                "part_key",
+                "part_name",
+                "part_description",
+                "category_key",
+                "unit_of_measure",
+                "manufacturer_name",
+                "manufacturer_part_number"
+            ],
+            ["vendor_catalog_csv"] =
+            [
+                "vendor_party_key",
+                "part_key",
+                "vendor_part_number",
+                "is_preferred",
+                "catalog_unit_price",
+                "catalog_currency_code",
+                "catalog_minimum_order_quantity",
+                "catalog_lead_time_days",
+                "catalog_quantity_available",
+                "catalog_availability_status"
+            ],
+            ["vendor_documents_csv"] =
+            [
+                "party_key",
+                "document_key",
+                "document_type_key",
+                "title",
+                "effective_at",
+                "expires_at",
+                "file_name",
+                "content_type",
+                "size_bytes",
+                "storage_uri"
+            ],
+            ["inventory_counts_csv"] =
+            [
+                "part_key",
+                "location_key",
+                "bin_key",
+                "quantity_on_hand"
+            ],
+            ["price_list_csv"] =
+            [
+                "vendor_party_key",
+                "part_key",
+                "snapshot_key",
+                "unit_price",
+                "currency_code",
+                "minimum_order_quantity",
+                "effective_from",
+                "source",
+                "notes"
+            ],
+            ["lead_time_list_csv"] =
+            [
+                "vendor_party_key",
+                "part_key",
+                "snapshot_key",
+                "lead_time_days",
+                "effective_from",
+                "source",
+                "notes"
+            ],
+            ["availability_list_csv"] =
+            [
+                "vendor_party_key",
+                "part_key",
+                "snapshot_key",
+                "quantity_available",
+                "availability_status",
+                "effective_from",
+                "source",
+                "notes"
+            ],
+            ["contracts_csv"] =
+            [
+                "vendor_party_key",
+                "contract_key",
+                "contract_type",
+                "title",
+                "effective_from",
+                "effective_to",
+                "renewal_notice_at",
+                "payment_terms",
+                "freight_terms",
+                "warranty_terms",
+                "minimum_spend",
+                "service_level_notes",
+                "approval_status",
+                "status",
+                "notes"
+            ],
+            ["external_parties_csv"] =
+            [
+                "party_key",
+                "party_type",
+                "display_name",
+                "legal_name",
+                "tax_identifier",
+                "approval_status",
+                "status",
+                "notes"
+            ],
+            ["contacts_csv"] =
+            [
+                "party_key",
+                "contact_name",
+                "email",
+                "phone",
+                "role_label",
+                "is_primary"
+            ],
+            ["open_purchase_orders_csv"] =
+            [
+                "order_key",
+                "request_key",
+                "vendor_party_key",
+                "part_key",
+                "quantity_ordered",
+                "title",
+                "line_notes",
+                "order_notes"
+            ],
+            ["purchase_history_csv"] =
+            [
+                "order_key",
+                "request_key",
+                "receipt_key",
+                "vendor_party_key",
+                "part_key",
+                "quantity_ordered",
+                "quantity_received",
+                "inventory_bin_key",
+                "title",
+                "line_notes",
+                "order_notes",
+                "receipt_notes"
+            ]
+        };
+
     public static void MapSupplyArrCoverageAliasEndpoints(this WebApplication app)
     {
         MapSubstitutions(app);
@@ -219,13 +368,425 @@ public static class CoverageAliasEndpoints
             var items = new[]
             {
                 new ImportOptionResponse("part_catalog_csv", "Import part catalogs and parts from CSV."),
-                new ImportOptionResponse("vendor_documents_csv", "Import vendor compliance document metadata.")
+                new ImportOptionResponse("vendor_catalog_csv", "Import vendor catalog links and catalog facts from CSV."),
+                new ImportOptionResponse("vendor_documents_csv", "Import vendor compliance document metadata."),
+                new ImportOptionResponse("inventory_counts_csv", "Import inventory count quantities by location, bin, and part."),
+                new ImportOptionResponse("price_list_csv", "Import vendor price list snapshots by vendor and part."),
+                new ImportOptionResponse("lead_time_list_csv", "Import vendor lead-time snapshots by vendor and part."),
+                new ImportOptionResponse("availability_list_csv", "Import vendor availability snapshots by vendor and part."),
+                new ImportOptionResponse("contracts_csv", "Import vendor and supplier contracts from CSV."),
+                new ImportOptionResponse("external_parties_csv", "Import vendors, suppliers, dealers, and customers from CSV."),
+                new ImportOptionResponse("contacts_csv", "Import party contacts from CSV."),
+                new ImportOptionResponse("open_purchase_orders_csv", "Import open purchase orders from CSV."),
+                new ImportOptionResponse("purchase_history_csv", "Import fully received historical purchases from CSV.")
             };
             return Results.Ok(items);
         })
         .WithTags("Imports")
         .RequireAuthorization()
         .WithName("ListImportsV1");
+
+        app.MapGet("/api/v1/imports/history", async (
+            string? importType,
+            int? limit,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var take = Math.Clamp(limit ?? 50, 1, 100);
+            var query = db.AuditEvents
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && x.TargetType == "import");
+            if (!string.IsNullOrWhiteSpace(importType))
+            {
+                var normalizedImportType = importType.Trim().ToLowerInvariant();
+                query = query.Where(x => x.TargetId == normalizedImportType);
+            }
+
+            var events = await query
+                .OrderByDescending(x => x.OccurredAt)
+                .Take(take)
+                .ToListAsync(cancellationToken);
+            return Results.Ok(new ImportHistoryListResponse(events.Select(MapImportHistory).ToList()));
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ListImportHistoryV1");
+
+        app.MapPost("/api/v1/imports/errors/export", async (
+            ImportErrorExportRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ISupplyArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var importType = NormalizeImportType(request.ImportType);
+            var builder = new StringBuilder();
+            builder.AppendLine("importType,lineNumber,code,message");
+            foreach (var issue in request.Issues.OrderBy(x => x.LineNumber).ThenBy(x => x.Code, StringComparer.OrdinalIgnoreCase))
+            {
+                builder.Append(CsvEscape(importType));
+                builder.Append(',');
+                builder.Append(issue.LineNumber);
+                builder.Append(',');
+                builder.Append(CsvEscape(issue.Code));
+                builder.Append(',');
+                builder.AppendLine(CsvEscape(issue.Message));
+            }
+
+            await audit.WriteAsync(
+                "import.errors.export",
+                tenantId,
+                actorUserId,
+                "import",
+                importType,
+                "success",
+                reasonCode: $"issues:{request.Issues.Count}",
+                cancellationToken: cancellationToken);
+            var fileName = $"supplyarr-import-errors-{importType}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv";
+            return Results.File(Encoding.UTF8.GetBytes(builder.ToString()), "text/csv", fileName);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ExportImportErrorsV1");
+
+        app.MapPost("/api/v1/imports/map-fields", (
+            ImportFieldMappingRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var importType = NormalizeImportType(request.ImportType);
+            if (!ImportHeaders.TryGetValue(importType, out var canonicalHeaders))
+            {
+                return Results.BadRequest(new ImportFieldMappingResponse(
+                    importType,
+                    false,
+                    [],
+                    [],
+                    [],
+                    [],
+                    string.Empty));
+            }
+
+            var sourceRows = ParseCsvRows(request.Csv);
+            if (sourceRows.Count == 0)
+            {
+                return Results.BadRequest(new ImportFieldMappingResponse(
+                    importType,
+                    false,
+                    [],
+                    canonicalHeaders,
+                    canonicalHeaders,
+                    [],
+                    string.Empty));
+            }
+
+            var sourceHeaders = sourceRows[0].Select(x => x.Trim()).ToList();
+            var mappedByCanonical = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var mappedSourceHeaders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var mapping in request.FieldMappings)
+            {
+                var sourceHeader = mapping.Key.Trim();
+                var canonicalHeader = mapping.Value.Trim().ToLowerInvariant();
+                var sourceIndex = sourceHeaders.FindIndex(x => string.Equals(x, sourceHeader, StringComparison.OrdinalIgnoreCase));
+                if (sourceIndex < 0 || !canonicalHeaders.Contains(canonicalHeader, StringComparer.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                mappedByCanonical[canonicalHeader] = sourceIndex;
+                mappedSourceHeaders.Add(sourceHeaders[sourceIndex]);
+            }
+
+            for (var index = 0; index < sourceHeaders.Count; index++)
+            {
+                var sourceHeader = sourceHeaders[index].Trim().ToLowerInvariant();
+                if (canonicalHeaders.Contains(sourceHeader, StringComparer.OrdinalIgnoreCase)
+                    && !mappedByCanonical.ContainsKey(sourceHeader))
+                {
+                    mappedByCanonical[sourceHeader] = index;
+                    mappedSourceHeaders.Add(sourceHeaders[index]);
+                }
+            }
+
+            var missingRequiredHeaders = canonicalHeaders
+                .Where(header => !mappedByCanonical.ContainsKey(header))
+                .ToList();
+            var unmappedSourceHeaders = sourceHeaders
+                .Where(header => !mappedSourceHeaders.Contains(header))
+                .ToList();
+            var builder = new StringBuilder();
+            builder.AppendLine(string.Join(',', canonicalHeaders.Select(CsvEscape)));
+            foreach (var row in sourceRows.Skip(1))
+            {
+                for (var index = 0; index < canonicalHeaders.Length; index++)
+                {
+                    if (index > 0)
+                    {
+                        builder.Append(',');
+                    }
+
+                    if (mappedByCanonical.TryGetValue(canonicalHeaders[index], out var sourceIndex)
+                        && sourceIndex < row.Count)
+                    {
+                        builder.Append(CsvEscape(row[sourceIndex]));
+                    }
+                }
+
+                builder.AppendLine();
+            }
+
+            var response = new ImportFieldMappingResponse(
+                importType,
+                missingRequiredHeaders.Count == 0,
+                sourceHeaders,
+                canonicalHeaders,
+                missingRequiredHeaders,
+                unmappedSourceHeaders,
+                builder.ToString());
+            return response.Succeeded ? Results.Ok(response) : Results.BadRequest(response);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("MapImportFieldsV1");
+
+        app.MapPost("/api/v1/imports/part-catalog-csv", async (
+            PartCatalogCsvImportRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PartCatalogCsvImportService service,
+            ISupplyArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var result = await service.ImportAsync(tenantId, actorUserId, request, cancellationToken);
+            await WriteImportHistoryAsync(audit, tenantId, actorUserId, result.ImportType, result.DryRun, result.Succeeded, result.RowsRead, result.Issues.Count, cancellationToken);
+            return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ImportPartCatalogCsvV1");
+
+        app.MapPost("/api/v1/imports/vendor-catalog-csv", async (
+            VendorCatalogCsvImportRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            VendorCatalogCsvImportService service,
+            ISupplyArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var result = await service.ImportAsync(tenantId, actorUserId, request, cancellationToken);
+            await WriteImportHistoryAsync(audit, tenantId, actorUserId, result.ImportType, result.DryRun, result.Succeeded, result.RowsRead, result.Issues.Count, cancellationToken);
+            return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ImportVendorCatalogCsvV1");
+
+        app.MapPost("/api/v1/imports/vendor-documents-csv", async (
+            VendorDocumentsCsvImportRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            VendorDocumentsCsvImportService service,
+            ISupplyArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireSupplierOnboardingManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var result = await service.ImportAsync(tenantId, actorUserId, request, cancellationToken);
+            await WriteImportHistoryAsync(audit, tenantId, actorUserId, result.ImportType, result.DryRun, result.Succeeded, result.RowsRead, result.Issues.Count, cancellationToken);
+            return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ImportVendorDocumentsCsvV1");
+
+        app.MapPost("/api/v1/imports/inventory-counts-csv", async (
+            InventoryCountsCsvImportRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            InventoryCountsCsvImportService service,
+            ISupplyArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInventoryManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var result = await service.ImportAsync(tenantId, actorUserId, request, cancellationToken);
+            await WriteImportHistoryAsync(audit, tenantId, actorUserId, result.ImportType, result.DryRun, result.Succeeded, result.RowsRead, result.Issues.Count, cancellationToken);
+            return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ImportInventoryCountsCsvV1");
+
+        app.MapPost("/api/v1/imports/price-list-csv", async (
+            PriceListCsvImportRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PriceListCsvImportService service,
+            ISupplyArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var result = await service.ImportAsync(tenantId, actorUserId, request, cancellationToken);
+            await WriteImportHistoryAsync(audit, tenantId, actorUserId, result.ImportType, result.DryRun, result.Succeeded, result.RowsRead, result.Issues.Count, cancellationToken);
+            return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ImportPriceListCsvV1");
+
+        app.MapPost("/api/v1/imports/lead-time-list-csv", async (
+            LeadTimeListCsvImportRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            LeadTimeListCsvImportService service,
+            ISupplyArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var result = await service.ImportAsync(tenantId, actorUserId, request, cancellationToken);
+            await WriteImportHistoryAsync(audit, tenantId, actorUserId, result.ImportType, result.DryRun, result.Succeeded, result.RowsRead, result.Issues.Count, cancellationToken);
+            return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ImportLeadTimeListCsvV1");
+
+        app.MapPost("/api/v1/imports/availability-list-csv", async (
+            AvailabilityListCsvImportRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            AvailabilityListCsvImportService service,
+            ISupplyArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var result = await service.ImportAsync(tenantId, actorUserId, request, cancellationToken);
+            await WriteImportHistoryAsync(audit, tenantId, actorUserId, result.ImportType, result.DryRun, result.Succeeded, result.RowsRead, result.Issues.Count, cancellationToken);
+            return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ImportAvailabilityListCsvV1");
+
+        app.MapPost("/api/v1/imports/contracts-csv", async (
+            ContractsCsvImportRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ContractsCsvImportService service,
+            ISupplyArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePurchaseRequestCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var result = await service.ImportAsync(tenantId, actorUserId, request, cancellationToken);
+            await WriteImportHistoryAsync(audit, tenantId, actorUserId, result.ImportType, result.DryRun, result.Succeeded, result.RowsRead, result.Issues.Count, cancellationToken);
+            return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ImportContractsCsvV1");
+
+        app.MapPost("/api/v1/imports/external-parties-csv", async (
+            ExternalPartiesCsvImportRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ExternalPartiesCsvImportService service,
+            ISupplyArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartiesManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var result = await service.ImportAsync(tenantId, actorUserId, request, cancellationToken);
+            await WriteImportHistoryAsync(audit, tenantId, actorUserId, result.ImportType, result.DryRun, result.Succeeded, result.RowsRead, result.Issues.Count, cancellationToken);
+            return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ImportExternalPartiesCsvV1");
+
+        app.MapPost("/api/v1/imports/contacts-csv", async (
+            ContactsCsvImportRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ContactsCsvImportService service,
+            ISupplyArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartiesManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var result = await service.ImportAsync(tenantId, actorUserId, request, cancellationToken);
+            await WriteImportHistoryAsync(audit, tenantId, actorUserId, result.ImportType, result.DryRun, result.Succeeded, result.RowsRead, result.Issues.Count, cancellationToken);
+            return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ImportContactsCsvV1");
+
+        app.MapPost("/api/v1/imports/open-purchase-orders-csv", async (
+            OpenPurchaseOrdersCsvImportRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            OpenPurchaseOrdersCsvImportService service,
+            ISupplyArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePurchaseOrderCreate(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId();
+            var result = await service.ImportAsync(tenantId, actorUserId, actorPersonId, request, cancellationToken);
+            await WriteImportHistoryAsync(audit, tenantId, actorUserId, result.ImportType, result.DryRun, result.Succeeded, result.RowsRead, result.Issues.Count, cancellationToken);
+            return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ImportOpenPurchaseOrdersCsvV1");
+
+        app.MapPost("/api/v1/imports/purchase-history-csv", async (
+            PurchaseHistoryCsvImportRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            PurchaseHistoryCsvImportService service,
+            ISupplyArrAuditService audit,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePurchaseOrderCreate(context.User);
+            authorization.RequireReceivingPerform(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var actorPersonId = context.User.GetPersonId();
+            var result = await service.ImportAsync(tenantId, actorUserId, actorPersonId, request, cancellationToken);
+            await WriteImportHistoryAsync(audit, tenantId, actorUserId, result.ImportType, result.DryRun, result.Succeeded, result.RowsRead, result.Issues.Count, cancellationToken);
+            return result.Succeeded ? Results.Ok(result) : Results.BadRequest(result);
+        })
+        .WithTags("Imports")
+        .RequireAuthorization()
+        .WithName("ImportPurchaseHistoryCsvV1");
 
         app.MapGet("/api/v1/exports", (
             HttpContext context,
@@ -235,6 +796,17 @@ public static class CoverageAliasEndpoints
             var items = new[]
             {
                 new ExportOptionResponse("vendors_summary_csv", "Vendor report summary export", "/api/v1/reports/vendors/summary/export"),
+                new ExportOptionResponse("vendor_list_csv", "Vendor list export", "/api/v1/exports/vendors.csv"),
+                new ExportOptionResponse("approved_vendor_list_csv", "Approved vendor list export", "/api/v1/exports/approved-vendors.csv"),
+                new ExportOptionResponse("customer_list_csv", "Customer list export", "/api/v1/exports/customers.csv"),
+                new ExportOptionResponse("parts_catalog_csv", "Parts catalog export", "/api/v1/exports/parts-catalog.csv"),
+                new ExportOptionResponse("inventory_valuation_csv", "Inventory valuation export", "/api/v1/exports/inventory-valuation.csv"),
+                new ExportOptionResponse("purchase_orders_csv", "Purchase order line export", "/api/v1/exports/purchase-orders.csv"),
+                new ExportOptionResponse("receipts_csv", "Receiving receipt line export", "/api/v1/exports/receipts.csv"),
+                new ExportOptionResponse("invoice_support_csv", "Invoice-support export for accounting reconciliation", "/api/v1/exports/invoice-support.csv"),
+                new ExportOptionResponse("supplier_document_report_csv", "Supplier document report export", "/api/v1/exports/supplier-documents.csv"),
+                new ExportOptionResponse("compliance_evidence_packet_csv", "Procurement compliance evidence packet export", "/api/v1/exports/compliance-evidence-packet.csv"),
+                new ExportOptionResponse("spend_report_csv", "Spend report export", "/api/v1/exports/spend.csv"),
                 new ExportOptionResponse("parts_inventory_summary_csv", "Parts inventory summary export", "/api/v1/reports/parts-inventory/summary/export"),
                 new ExportOptionResponse("purchasing_summary_csv", "Purchasing summary export", "/api/v1/reports/purchasing/summary/export"),
                 new ExportOptionResponse("compliance_summary_csv", "Compliance summary export", "/api/v1/reports/compliance/summary/export")
@@ -244,6 +816,331 @@ public static class CoverageAliasEndpoints
         .WithTags("Exports")
         .RequireAuthorization()
         .WithName("ListExportsV1");
+
+        app.MapGet("/api/v1/exports/vendors.csv", async (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartiesRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var vendors = await db.ExternalParties
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && (x.PartyType == "vendor" || x.PartyType == "supplier"))
+                .OrderBy(x => x.PartyKey)
+                .ToListAsync(cancellationToken);
+            return Results.File(BuildPartiesCsv(vendors), "text/csv", $"supplyarr-vendors-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
+        })
+        .WithTags("Exports")
+        .RequireAuthorization()
+        .WithName("ExportVendorListV1");
+
+        app.MapGet("/api/v1/exports/approved-vendors.csv", async (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartiesRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var vendors = await db.ExternalParties
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId
+                    && (x.PartyType == "vendor" || x.PartyType == "supplier")
+                    && x.ApprovalStatus == "approved")
+                .OrderBy(x => x.PartyKey)
+                .ToListAsync(cancellationToken);
+            return Results.File(BuildPartiesCsv(vendors), "text/csv", $"supplyarr-approved-vendors-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
+        })
+        .WithTags("Exports")
+        .RequireAuthorization()
+        .WithName("ExportApprovedVendorListV1");
+
+        app.MapGet("/api/v1/exports/customers.csv", async (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartiesRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var customers = await db.ExternalParties
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && x.PartyType == "customer")
+                .OrderBy(x => x.PartyKey)
+                .ToListAsync(cancellationToken);
+            return Results.File(BuildPartiesCsv(customers), "text/csv", $"supplyarr-customers-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
+        })
+        .WithTags("Exports")
+        .RequireAuthorization()
+        .WithName("ExportCustomerListV1");
+
+        app.MapGet("/api/v1/exports/parts-catalog.csv", async (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePartsRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var parts = await db.Parts
+                .AsNoTracking()
+                .Include(x => x.PartCatalog)
+                .OrderBy(x => x.PartKey)
+                .Where(x => x.TenantId == tenantId)
+                .ToListAsync(cancellationToken);
+            return Results.File(BuildPartsCatalogCsv(parts), "text/csv", $"supplyarr-parts-catalog-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
+        })
+        .WithTags("Exports")
+        .RequireAuthorization()
+        .WithName("ExportPartsCatalogV1");
+
+        app.MapGet("/api/v1/exports/inventory-valuation.csv", async (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireInventoryRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var stockRows = await db.PartStockLevels
+                .AsNoTracking()
+                .Include(x => x.Part)
+                .Include(x => x.InventoryBin)
+                .ThenInclude(x => x!.InventoryLocation)
+                .Where(x => x.TenantId == tenantId)
+                .OrderBy(x => x.Part!.PartKey)
+                .ThenBy(x => x.InventoryBin!.BinKey)
+                .ToListAsync(cancellationToken);
+            var unitPrices = await ResolveLatestPartPricesAsync(db, tenantId, stockRows.Select(x => x.PartId).Distinct().ToList(), cancellationToken);
+            return Results.File(BuildInventoryValuationCsv(stockRows, unitPrices), "text/csv", $"supplyarr-inventory-valuation-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
+        })
+        .WithTags("Exports")
+        .RequireAuthorization()
+        .WithName("ExportInventoryValuationV1");
+
+        app.MapGet("/api/v1/exports/purchase-orders.csv", async (
+            string? status,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePurchaseOrderRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var query = db.PurchaseOrders
+                .AsNoTracking()
+                .Include(x => x.VendorParty)
+                .Include(x => x.PurchaseRequest)
+                .Include(x => x.Lines)
+                .ThenInclude(x => x.Part)
+                .Where(x => x.TenantId == tenantId);
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                var normalizedStatus = status.Trim().ToLowerInvariant();
+                query = query.Where(x => x.Status == normalizedStatus);
+            }
+
+            var orders = await query.OrderBy(x => x.OrderKey).ToListAsync(cancellationToken);
+            return Results.File(BuildPurchaseOrdersCsv(orders), "text/csv", $"supplyarr-purchase-orders-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
+        })
+        .WithTags("Exports")
+        .RequireAuthorization()
+        .WithName("ExportPurchaseOrdersV1");
+
+        app.MapGet("/api/v1/exports/receipts.csv", async (
+            string? status,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var query = db.ReceivingReceipts
+                .AsNoTracking()
+                .Include(x => x.PurchaseOrder)
+                .ThenInclude(x => x.VendorParty)
+                .Include(x => x.InventoryBin)
+                .ThenInclude(x => x.InventoryLocation)
+                .Include(x => x.Lines)
+                .ThenInclude(x => x.Part)
+                .Where(x => x.TenantId == tenantId);
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                var normalizedStatus = status.Trim().ToLowerInvariant();
+                query = query.Where(x => x.Status == normalizedStatus);
+            }
+
+            var receipts = await query.OrderBy(x => x.ReceiptKey).ToListAsync(cancellationToken);
+            return Results.File(BuildReceiptsCsv(receipts), "text/csv", $"supplyarr-receipts-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
+        })
+        .WithTags("Exports")
+        .RequireAuthorization()
+        .WithName("ExportReceiptsV1");
+
+        app.MapGet("/api/v1/exports/invoice-support.csv", async (
+            string? status,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var query = db.ReceivingReceipts
+                .AsNoTracking()
+                .Include(x => x.PurchaseOrder)
+                .ThenInclude(x => x.VendorParty)
+                .Include(x => x.PurchaseOrder)
+                .ThenInclude(x => x.PurchaseRequest)
+                .Include(x => x.InventoryBin)
+                .ThenInclude(x => x.InventoryLocation)
+                .Include(x => x.Lines)
+                .ThenInclude(x => x.Part)
+                .Where(x => x.TenantId == tenantId);
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                var normalizedStatus = status.Trim().ToLowerInvariant();
+                query = query.Where(x => x.Status == normalizedStatus);
+            }
+
+            var receipts = await query
+                .OrderBy(x => x.ReceiptKey)
+                .ToListAsync(cancellationToken);
+            var partIds = receipts
+                .SelectMany(x => x.Lines)
+                .Select(x => x.PartId)
+                .Distinct()
+                .ToList();
+            var unitPrices = await ResolveLatestPartPricesAsync(db, tenantId, partIds, cancellationToken);
+            return Results.File(BuildInvoiceSupportCsv(receipts, unitPrices), "text/csv", $"supplyarr-invoice-support-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
+        })
+        .WithTags("Exports")
+        .RequireAuthorization()
+        .WithName("ExportInvoiceSupportV1");
+
+        app.MapGet("/api/v1/exports/supplier-documents.csv", async (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireSupplierOnboardingRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var documents = await db.PartyComplianceDocuments
+                .AsNoTracking()
+                .Include(x => x.ExternalParty)
+                .Where(x => x.TenantId == tenantId)
+                .OrderBy(x => x.ExternalParty.PartyKey)
+                .ThenBy(x => x.DocumentKey)
+                .ThenByDescending(x => x.Version)
+                .ToListAsync(cancellationToken);
+            return Results.File(BuildSupplierDocumentsCsv(documents), "text/csv", $"supplyarr-supplier-documents-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
+        })
+        .WithTags("Exports")
+        .RequireAuthorization()
+        .WithName("ExportSupplierDocumentsV1");
+
+        app.MapGet("/api/v1/exports/compliance-evidence-packet.csv", async (
+            Guid? vendorPartyId,
+            Guid? purchaseOrderId,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireComplianceReportExport(context.User);
+            var tenantId = context.User.GetTenantId();
+            var ordersQuery = db.PurchaseOrders
+                .AsNoTracking()
+                .Include(x => x.VendorParty)
+                .Include(x => x.PurchaseRequest)
+                .Include(x => x.Lines)
+                .ThenInclude(x => x.Part)
+                .Where(x => x.TenantId == tenantId);
+            if (purchaseOrderId is not null)
+            {
+                ordersQuery = ordersQuery.Where(x => x.Id == purchaseOrderId.Value);
+            }
+
+            if (vendorPartyId is not null)
+            {
+                ordersQuery = ordersQuery.Where(x => x.VendorPartyId == vendorPartyId.Value);
+            }
+
+            var orders = await ordersQuery
+                .OrderBy(x => x.OrderKey)
+                .ToListAsync(cancellationToken);
+            var scopedVendorIds = orders.Select(x => x.VendorPartyId).Distinct().ToList();
+            if (vendorPartyId is not null && !scopedVendorIds.Contains(vendorPartyId.Value))
+            {
+                scopedVendorIds.Add(vendorPartyId.Value);
+            }
+
+            var orderIds = orders.Select(x => x.Id).ToList();
+            var receipts = await db.ReceivingReceipts
+                .AsNoTracking()
+                .Include(x => x.PurchaseOrder)
+                .ThenInclude(x => x.VendorParty)
+                .Include(x => x.InventoryBin)
+                .ThenInclude(x => x.InventoryLocation)
+                .Include(x => x.Lines)
+                .ThenInclude(x => x.Part)
+                .Where(x => x.TenantId == tenantId && orderIds.Contains(x.PurchaseOrderId))
+                .OrderBy(x => x.ReceiptKey)
+                .ToListAsync(cancellationToken);
+            IReadOnlyList<PartyComplianceDocument> documents = scopedVendorIds.Count == 0
+                ? []
+                : await db.PartyComplianceDocuments
+                    .AsNoTracking()
+                    .Include(x => x.ExternalParty)
+                    .Where(x => x.TenantId == tenantId && scopedVendorIds.Contains(x.ExternalPartyId))
+                    .OrderBy(x => x.ExternalParty.PartyKey)
+                    .ThenBy(x => x.DocumentKey)
+                    .ToListAsync(cancellationToken);
+            var targetIds = orderIds.Select(x => x.ToString("D")).ToList();
+            targetIds.AddRange(receipts.Select(x => x.Id.ToString("D")));
+            targetIds.AddRange(documents.Select(x => x.Id.ToString("D")));
+            IReadOnlyList<SupplyArrAuditEvent> auditEvents = targetIds.Count == 0
+                ? []
+                : await db.AuditEvents
+                    .AsNoTracking()
+                    .Where(x => x.TenantId == tenantId && x.TargetId != null && targetIds.Contains(x.TargetId))
+                    .OrderByDescending(x => x.OccurredAt)
+                    .Take(100)
+                    .ToListAsync(cancellationToken);
+            return Results.File(BuildComplianceEvidencePacketCsv(orders, receipts, documents, auditEvents), "text/csv", $"supplyarr-compliance-evidence-packet-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
+        })
+        .WithTags("Exports")
+        .RequireAuthorization()
+        .WithName("ExportComplianceEvidencePacketV1");
+
+        app.MapGet("/api/v1/exports/spend.csv", async (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequirePurchaseOrderRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var orders = await db.PurchaseOrders
+                .AsNoTracking()
+                .Include(x => x.VendorParty)
+                .Include(x => x.PurchaseRequest)
+                .Include(x => x.Lines)
+                .ThenInclude(x => x.Part)
+                .Where(x => x.TenantId == tenantId)
+                .OrderBy(x => x.OrderKey)
+                .ToListAsync(cancellationToken);
+            var partIds = orders.SelectMany(x => x.Lines).Select(x => x.PartId).Distinct().ToList();
+            var unitPrices = await ResolveLatestPartPricesAsync(db, tenantId, partIds, cancellationToken);
+            return Results.File(BuildSpendCsv(orders, unitPrices), "text/csv", $"supplyarr-spend-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
+        })
+        .WithTags("Exports")
+        .RequireAuthorization()
+        .WithName("ExportSpendV1");
     }
 
     private static void MapAdmin(WebApplication app)
@@ -265,5 +1162,550 @@ public static class CoverageAliasEndpoints
         .RequireAuthorization()
         .WithName("GetAdminOverviewV1");
     }
-}
 
+    private static Task WriteImportHistoryAsync(
+        ISupplyArrAuditService audit,
+        Guid tenantId,
+        Guid actorUserId,
+        string importType,
+        bool dryRun,
+        bool succeeded,
+        int rowsRead,
+        int issueCount,
+        CancellationToken cancellationToken) =>
+        audit.WriteAsync(
+            dryRun ? "import.preview" : "import.commit",
+            tenantId,
+            actorUserId,
+            "import",
+            importType,
+            succeeded ? "success" : "failed",
+            reasonCode: $"rows:{rowsRead};issues:{issueCount}",
+            cancellationToken: cancellationToken);
+
+    private static string NormalizeImportType(string importType) =>
+        string.IsNullOrWhiteSpace(importType) ? "unknown" : importType.Trim().ToLowerInvariant();
+
+    private static ImportHistoryItemResponse MapImportHistory(SupplyArrAuditEvent auditEvent)
+    {
+        var (rowsRead, issueCount) = ParseImportHistoryReason(auditEvent.ReasonCode);
+        return new ImportHistoryItemResponse(
+            auditEvent.Id,
+            auditEvent.TargetId ?? string.Empty,
+            string.Equals(auditEvent.Action, "import.preview", StringComparison.OrdinalIgnoreCase),
+            string.Equals(auditEvent.Result, "success", StringComparison.OrdinalIgnoreCase),
+            rowsRead,
+            issueCount,
+            auditEvent.ActorUserId,
+            auditEvent.OccurredAt);
+    }
+
+    private static (int RowsRead, int IssueCount) ParseImportHistoryReason(string? reasonCode)
+    {
+        var rowsRead = 0;
+        var issueCount = 0;
+        if (string.IsNullOrWhiteSpace(reasonCode))
+        {
+            return (rowsRead, issueCount);
+        }
+
+        foreach (var part in reasonCode.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var separator = part.IndexOf(':', StringComparison.Ordinal);
+            if (separator <= 0 || separator == part.Length - 1)
+            {
+                continue;
+            }
+
+            var key = part[..separator];
+            var value = part[(separator + 1)..];
+            if (string.Equals(key, "rows", StringComparison.OrdinalIgnoreCase)
+                && int.TryParse(value, out var parsedRows))
+            {
+                rowsRead = parsedRows;
+            }
+            else if (string.Equals(key, "issues", StringComparison.OrdinalIgnoreCase)
+                && int.TryParse(value, out var parsedIssues))
+            {
+                issueCount = parsedIssues;
+            }
+        }
+
+        return (rowsRead, issueCount);
+    }
+
+    private static string CsvEscape(string value)
+    {
+        if (value.Contains('"', StringComparison.Ordinal)
+            || value.Contains(',', StringComparison.Ordinal)
+            || value.Contains('\n', StringComparison.Ordinal)
+            || value.Contains('\r', StringComparison.Ordinal))
+        {
+            return $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
+        }
+
+        return value;
+    }
+
+    private static byte[] BuildPartiesCsv(IReadOnlyList<ExternalParty> parties)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("partyKey,partyType,displayName,legalName,taxIdentifier,approvalStatus,status,notes,createdAt,updatedAt");
+        foreach (var party in parties)
+        {
+            AppendCsvRow(
+                builder,
+                party.PartyKey,
+                party.PartyType,
+                party.DisplayName,
+                party.LegalName,
+                party.TaxIdentifier ?? string.Empty,
+                party.ApprovalStatus,
+                party.Status,
+                party.Notes,
+                party.CreatedAt.ToString("O"),
+                party.UpdatedAt.ToString("O"));
+        }
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    private static byte[] BuildPartsCatalogCsv(IReadOnlyList<Part> parts)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("partKey,catalogKey,displayName,description,categoryKey,unitOfMeasure,manufacturerName,manufacturerPartNumber,status,reorderPoint,reorderQuantity,createdAt,updatedAt");
+        foreach (var part in parts)
+        {
+            AppendCsvRow(
+                builder,
+                part.PartKey,
+                part.PartCatalog?.CatalogKey ?? string.Empty,
+                part.DisplayName,
+                part.Description,
+                part.CategoryKey,
+                part.UnitOfMeasure,
+                part.ManufacturerName,
+                part.ManufacturerPartNumber,
+                part.Status,
+                part.ReorderPoint?.ToString() ?? string.Empty,
+                part.ReorderQuantity?.ToString() ?? string.Empty,
+                part.CreatedAt.ToString("O"),
+                part.UpdatedAt.ToString("O"));
+        }
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    private static byte[] BuildInventoryValuationCsv(
+        IReadOnlyList<PartStockLevel> stockRows,
+        IReadOnlyDictionary<Guid, decimal> unitPrices)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("partKey,partDisplayName,locationKey,binKey,quantityOnHand,quantityReserved,quantityAvailable,unitPrice,extendedValue,updatedAt");
+        foreach (var stock in stockRows)
+        {
+            var unitPrice = unitPrices.GetValueOrDefault(stock.PartId);
+            var available = stock.QuantityOnHand - stock.QuantityReserved;
+            AppendCsvRow(
+                builder,
+                stock.Part?.PartKey ?? string.Empty,
+                stock.Part?.DisplayName ?? string.Empty,
+                stock.InventoryBin?.InventoryLocation?.LocationKey ?? string.Empty,
+                stock.InventoryBin?.BinKey ?? string.Empty,
+                stock.QuantityOnHand.ToString(),
+                stock.QuantityReserved.ToString(),
+                available.ToString(),
+                unitPrice.ToString(),
+                (stock.QuantityOnHand * unitPrice).ToString(),
+                stock.UpdatedAt.ToString("O"));
+        }
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    private static byte[] BuildPurchaseOrdersCsv(IReadOnlyList<PurchaseOrder> orders)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("orderKey,status,requestKey,vendorPartyKey,vendorDisplayName,title,lineNumber,partKey,partDisplayName,quantityOrdered,quantityReceived,quantityRemaining,unitOfMeasure,lineNotes,approvedAt,issuedAt,createdAt,updatedAt");
+        foreach (var order in orders)
+        {
+            foreach (var line in order.Lines.OrderBy(x => x.LineNumber))
+            {
+                AppendCsvRow(
+                    builder,
+                    order.OrderKey,
+                    order.Status,
+                    order.PurchaseRequest.RequestKey,
+                    order.VendorParty.PartyKey,
+                    order.VendorParty.DisplayName,
+                    order.Title,
+                    line.LineNumber.ToString(),
+                    line.Part.PartKey,
+                    line.Part.DisplayName,
+                    line.QuantityOrdered.ToString(),
+                    line.QuantityReceived.ToString(),
+                    (line.QuantityOrdered - line.QuantityReceived).ToString(),
+                    line.Part.UnitOfMeasure,
+                    line.Notes,
+                    order.ApprovedAt?.ToString("O") ?? string.Empty,
+                    order.IssuedAt?.ToString("O") ?? string.Empty,
+                    order.CreatedAt.ToString("O"),
+                    order.UpdatedAt.ToString("O"));
+            }
+        }
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    private static byte[] BuildReceiptsCsv(IReadOnlyList<ReceivingReceipt> receipts)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("receiptKey,status,orderKey,vendorPartyKey,locationKey,binKey,lineNumber,partKey,partDisplayName,quantityExpected,quantityReceived,postedAt,notes,createdAt,updatedAt");
+        foreach (var receipt in receipts)
+        {
+            foreach (var line in receipt.Lines.OrderBy(x => x.LineNumber))
+            {
+                AppendCsvRow(
+                    builder,
+                    receipt.ReceiptKey,
+                    receipt.Status,
+                    receipt.PurchaseOrder.OrderKey,
+                    receipt.PurchaseOrder.VendorParty.PartyKey,
+                    receipt.InventoryBin.InventoryLocation?.LocationKey ?? string.Empty,
+                    receipt.InventoryBin.BinKey,
+                    line.LineNumber.ToString(),
+                    line.Part.PartKey,
+                    line.Part.DisplayName,
+                    line.QuantityExpected.ToString(),
+                    line.QuantityReceived.ToString(),
+                    receipt.PostedAt?.ToString("O") ?? string.Empty,
+                    receipt.Notes,
+                    receipt.CreatedAt.ToString("O"),
+                    receipt.UpdatedAt.ToString("O"));
+            }
+        }
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    private static byte[] BuildInvoiceSupportCsv(
+        IReadOnlyList<ReceivingReceipt> receipts,
+        IReadOnlyDictionary<Guid, decimal> unitPrices)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("receiptKey,receiptStatus,postedAt,orderKey,orderStatus,requestKey,vendorPartyKey,vendorDisplayName,locationKey,binKey,lineNumber,partKey,partDisplayName,quantityReceived,unitOfMeasure,unitPrice,receivedAmount,receiptNotes,orderIssuedAt");
+        foreach (var receipt in receipts)
+        {
+            foreach (var line in receipt.Lines.OrderBy(x => x.LineNumber))
+            {
+                var unitPrice = unitPrices.GetValueOrDefault(line.PartId);
+                AppendCsvRow(
+                    builder,
+                    receipt.ReceiptKey,
+                    receipt.Status,
+                    receipt.PostedAt?.ToString("O") ?? string.Empty,
+                    receipt.PurchaseOrder.OrderKey,
+                    receipt.PurchaseOrder.Status,
+                    receipt.PurchaseOrder.PurchaseRequest.RequestKey,
+                    receipt.PurchaseOrder.VendorParty.PartyKey,
+                    receipt.PurchaseOrder.VendorParty.DisplayName,
+                    receipt.InventoryBin.InventoryLocation?.LocationKey ?? string.Empty,
+                    receipt.InventoryBin.BinKey,
+                    line.LineNumber.ToString(),
+                    line.Part.PartKey,
+                    line.Part.DisplayName,
+                    line.QuantityReceived.ToString(),
+                    line.Part.UnitOfMeasure,
+                    unitPrice.ToString(),
+                    (line.QuantityReceived * unitPrice).ToString(),
+                    receipt.Notes,
+                    receipt.PurchaseOrder.IssuedAt?.ToString("O") ?? string.Empty);
+            }
+        }
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    private static byte[] BuildSupplierDocumentsCsv(IReadOnlyList<PartyComplianceDocument> documents)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("partyKey,partyType,partyDisplayName,documentKey,documentTypeKey,title,version,reviewStatus,effectiveAt,expiresAt,fileName,contentType,sizeBytes,reviewedAt,createdAt,updatedAt");
+        foreach (var document in documents)
+        {
+            AppendCsvRow(
+                builder,
+                document.ExternalParty.PartyKey,
+                document.ExternalParty.PartyType,
+                document.ExternalParty.DisplayName,
+                document.DocumentKey,
+                document.DocumentTypeKey,
+                document.Title,
+                document.Version.ToString(),
+                document.ReviewStatus,
+                document.EffectiveAt?.ToString("O") ?? string.Empty,
+                document.ExpiresAt?.ToString("O") ?? string.Empty,
+                document.FileName,
+                document.ContentType,
+                document.SizeBytes.ToString(),
+                document.ReviewedAt?.ToString("O") ?? string.Empty,
+                document.CreatedAt.ToString("O"),
+                document.UpdatedAt.ToString("O"));
+        }
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    private static byte[] BuildSpendCsv(
+        IReadOnlyList<PurchaseOrder> orders,
+        IReadOnlyDictionary<Guid, decimal> unitPrices)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("orderKey,status,requestKey,vendorPartyKey,vendorDisplayName,lineNumber,partKey,partDisplayName,quantityOrdered,quantityReceived,unitPrice,orderedAmount,receivedAmount,issuedAt,createdAt");
+        foreach (var order in orders)
+        {
+            foreach (var line in order.Lines.OrderBy(x => x.LineNumber))
+            {
+                var unitPrice = unitPrices.GetValueOrDefault(line.PartId);
+                AppendCsvRow(
+                    builder,
+                    order.OrderKey,
+                    order.Status,
+                    order.PurchaseRequest.RequestKey,
+                    order.VendorParty.PartyKey,
+                    order.VendorParty.DisplayName,
+                    line.LineNumber.ToString(),
+                    line.Part.PartKey,
+                    line.Part.DisplayName,
+                    line.QuantityOrdered.ToString(),
+                    line.QuantityReceived.ToString(),
+                    unitPrice.ToString(),
+                    (line.QuantityOrdered * unitPrice).ToString(),
+                    (line.QuantityReceived * unitPrice).ToString(),
+                    order.IssuedAt?.ToString("O") ?? string.Empty,
+                    order.CreatedAt.ToString("O"));
+            }
+        }
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    private static byte[] BuildComplianceEvidencePacketCsv(
+        IReadOnlyList<PurchaseOrder> orders,
+        IReadOnlyList<ReceivingReceipt> receipts,
+        IReadOnlyList<PartyComplianceDocument> documents,
+        IReadOnlyList<SupplyArrAuditEvent> auditEvents)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("recordType,entityType,entityKey,status,relatedKey,description,evidenceAt,sourcePath");
+        foreach (var order in orders)
+        {
+            AppendCsvRow(
+                builder,
+                "purchase_order",
+                "purchase_order",
+                order.OrderKey,
+                order.Status,
+                order.PurchaseRequest.RequestKey,
+                $"{order.VendorParty.PartyKey} · {order.Title}",
+                (order.IssuedAt ?? order.UpdatedAt).ToString("O"),
+                $"/api/v1/purchase-orders/{order.Id}");
+            foreach (var line in order.Lines.OrderBy(x => x.LineNumber))
+            {
+                AppendCsvRow(
+                    builder,
+                    "purchase_order_line",
+                    "purchase_order",
+                    order.OrderKey,
+                    order.Status,
+                    line.Part.PartKey,
+                    $"{line.QuantityOrdered} {line.Part.UnitOfMeasure} ordered · {line.QuantityReceived} received",
+                    line.UpdatedAt.ToString("O"),
+                    $"/api/v1/purchase-orders/{order.Id}");
+            }
+        }
+
+        foreach (var receipt in receipts)
+        {
+            AppendCsvRow(
+                builder,
+                "receipt",
+                "receiving_receipt",
+                receipt.ReceiptKey,
+                receipt.Status,
+                receipt.PurchaseOrder.OrderKey,
+                $"{receipt.PurchaseOrder.VendorParty.PartyKey} · {receipt.InventoryBin.BinKey}",
+                (receipt.PostedAt ?? receipt.UpdatedAt).ToString("O"),
+                $"/api/v1/receipts/{receipt.Id}");
+            foreach (var line in receipt.Lines.OrderBy(x => x.LineNumber))
+            {
+                AppendCsvRow(
+                    builder,
+                    "receipt_line",
+                    "receiving_receipt",
+                    receipt.ReceiptKey,
+                    receipt.Status,
+                    line.Part.PartKey,
+                    $"{line.QuantityReceived} {line.Part.UnitOfMeasure} received",
+                    line.UpdatedAt.ToString("O"),
+                    $"/api/v1/receipts/{receipt.Id}");
+            }
+        }
+
+        foreach (var document in documents)
+        {
+            AppendCsvRow(
+                builder,
+                "supplier_document",
+                "party_compliance_document",
+                document.DocumentKey,
+                document.ReviewStatus,
+                document.ExternalParty.PartyKey,
+                $"{document.DocumentTypeKey} · {document.Title}",
+                (document.ReviewedAt ?? document.UpdatedAt).ToString("O"),
+                $"/api/v1/supplier-onboarding/parties/{document.ExternalPartyId}/documents");
+        }
+
+        foreach (var auditEvent in auditEvents)
+        {
+            AppendCsvRow(
+                builder,
+                "audit_event",
+                auditEvent.TargetType,
+                auditEvent.TargetId ?? string.Empty,
+                auditEvent.Result,
+                auditEvent.Action,
+                auditEvent.ReasonCode ?? string.Empty,
+                auditEvent.OccurredAt.ToString("O"),
+                $"/api/v1/audit-history?targetType={auditEvent.TargetType}&targetId={auditEvent.TargetId}");
+        }
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    private static async Task<IReadOnlyDictionary<Guid, decimal>> ResolveLatestPartPricesAsync(
+        SupplyArrDbContext db,
+        Guid tenantId,
+        IReadOnlyList<Guid> partIds,
+        CancellationToken cancellationToken)
+    {
+        if (partIds.Count == 0)
+        {
+            return new Dictionary<Guid, decimal>();
+        }
+
+        var snapshotPrices = await db.PartVendorPricingSnapshots
+            .AsNoTracking()
+            .Include(x => x.PartVendorLink)
+            .Where(x => x.TenantId == tenantId && partIds.Contains(x.PartVendorLink.PartId))
+            .OrderByDescending(x => x.EffectiveFrom)
+            .ThenByDescending(x => x.UpdatedAt)
+            .Select(x => new { x.PartVendorLink.PartId, x.UnitPrice })
+            .ToListAsync(cancellationToken);
+        var prices = snapshotPrices
+            .GroupBy(x => x.PartId)
+            .ToDictionary(x => x.Key, x => x.First().UnitPrice);
+
+        var missingPartIds = partIds.Where(x => !prices.ContainsKey(x)).ToList();
+        if (missingPartIds.Count == 0)
+        {
+            return prices;
+        }
+
+        var catalogPrices = await db.PartVendorLinks
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && missingPartIds.Contains(x.PartId)
+                && x.CatalogUnitPrice != null)
+            .OrderByDescending(x => x.IsPreferred)
+            .ThenByDescending(x => x.UpdatedAt)
+            .Select(x => new { x.PartId, UnitPrice = x.CatalogUnitPrice!.Value })
+            .ToListAsync(cancellationToken);
+        foreach (var price in catalogPrices.GroupBy(x => x.PartId).Select(x => x.First()))
+        {
+            prices[price.PartId] = price.UnitPrice;
+        }
+
+        return prices;
+    }
+
+    private static void AppendCsvRow(StringBuilder builder, params string[] values)
+    {
+        for (var index = 0; index < values.Length; index++)
+        {
+            if (index > 0)
+            {
+                builder.Append(',');
+            }
+
+            builder.Append(CsvEscape(values[index]));
+        }
+
+        builder.AppendLine();
+    }
+
+    private static IReadOnlyList<IReadOnlyList<string>> ParseCsvRows(string csv)
+    {
+        if (string.IsNullOrWhiteSpace(csv))
+        {
+            return [];
+        }
+
+        return csv
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(ParseCsvRow)
+            .ToList();
+    }
+
+    private static IReadOnlyList<string> ParseCsvRow(string line)
+    {
+        var fields = new List<string>();
+        var current = new StringBuilder();
+        var inQuotes = false;
+
+        for (var index = 0; index < line.Length; index++)
+        {
+            var character = line[index];
+            if (inQuotes)
+            {
+                if (character == '"')
+                {
+                    if (index + 1 < line.Length && line[index + 1] == '"')
+                    {
+                        current.Append('"');
+                        index++;
+                    }
+                    else
+                    {
+                        inQuotes = false;
+                    }
+                }
+                else
+                {
+                    current.Append(character);
+                }
+
+                continue;
+            }
+
+            if (character == '"')
+            {
+                inQuotes = true;
+                continue;
+            }
+
+            if (character == ',')
+            {
+                fields.Add(current.ToString().Trim());
+                current.Clear();
+                continue;
+            }
+
+            current.Append(character);
+        }
+
+        fields.Add(current.ToString().Trim());
+        return fields;
+    }
+}

@@ -71,7 +71,9 @@ public static class RuleEvaluator
                 rule.Label,
                 RuleEvaluationResults.Fail,
                 $"Unsupported rule type '{rule.Type}'.",
-                rule.NonWaivable);
+                rule.NonWaivable,
+                rule.RemediationRequired,
+                rule.ReviewRequired);
         }
 
         if (!facts.TryGetValue(rule.FactKey, out var actualValue))
@@ -81,7 +83,9 @@ public static class RuleEvaluator
                 rule.Label,
                 RuleEvaluationResults.Fail,
                 $"Fact '{rule.FactKey}' was not provided.",
-                rule.NonWaivable);
+                rule.NonWaivable,
+                rule.RemediationRequired,
+                rule.ReviewRequired);
         }
 
         var passed = actualValue == rule.ExpectedValue;
@@ -92,7 +96,9 @@ public static class RuleEvaluator
             passed
                 ? $"Fact '{rule.FactKey}' matched expected value {rule.ExpectedValue.ToString().ToLowerInvariant()}."
                 : $"Fact '{rule.FactKey}' was {actualValue.ToString().ToLowerInvariant()} but expected {rule.ExpectedValue.ToString().ToLowerInvariant()}.",
-            rule.NonWaivable);
+            rule.NonWaivable,
+            rule.RemediationRequired,
+            rule.ReviewRequired);
     }
 
     private static void ValidateContent(RulePackContentBody content)

@@ -8,11 +8,11 @@ public static class MeterEndpoints
 {
     public static void MapMaintainArrMeterEndpoints(this WebApplication app)
     {
-        MapRoutes(app.MapGroup("/api").WithTags("Meters").RequireAuthorization(), string.Empty);
-        MapRoutes(app.MapGroup("/api/v1").WithTags("Meters").RequireAuthorization(), "V1");
+        MapRoutes(app.MapGroup("/api").WithTags("Meters").RequireAuthorization(), string.Empty, "/api");
+        MapRoutes(app.MapGroup("/api/v1").WithTags("Meters").RequireAuthorization(), "V1", "/api/v1");
     }
 
-    private static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+    private static void MapRoutes(RouteGroupBuilder group, string nameSuffix, string routePrefix)
     {
         group.MapGet("/meters", async (
             Guid assetId,
@@ -52,7 +52,7 @@ public static class MeterEndpoints
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             var created = await service.CreateAsync(tenantId, actorUserId, assetId, request, cancellationToken);
-            return Results.Created($"/api/meters/{created.AssetMeterId}", created);
+            return Results.Created($"{routePrefix}/meters/{created.AssetMeterId}", created);
         })
         .WithName($"CreateAssetMeter{nameSuffix}");
 
@@ -100,9 +100,30 @@ public static class MeterEndpoints
                 assetMeterId,
                 request,
                 cancellationToken);
-            return Results.Created($"/api/meters/{assetMeterId}/readings/{recorded.MeterReadingId}", recorded);
+            return Results.Created($"{routePrefix}/meters/{assetMeterId}/readings/{recorded.MeterReadingId}", recorded);
         })
         .WithName($"RecordMeterReading{nameSuffix}");
+
+        group.MapPost("/meters/{assetMeterId:guid}/readings/corrections", async (
+            Guid assetMeterId,
+            CorrectMeterReadingRequest request,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            MeterReadingService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireMetersRecord(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var corrected = await service.CorrectAsync(
+                tenantId,
+                actorUserId,
+                assetMeterId,
+                request,
+                cancellationToken);
+            return Results.Created($"{routePrefix}/meters/{assetMeterId}/readings/{corrected.MeterReadingId}", corrected);
+        })
+        .WithName($"CorrectMeterReading{nameSuffix}");
 
         group.MapGet("/meters/{assetMeterId:guid}/pm-forecast", async (
             Guid assetMeterId,

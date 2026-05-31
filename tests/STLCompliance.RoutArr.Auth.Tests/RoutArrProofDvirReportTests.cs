@@ -99,7 +99,8 @@ public sealed class RoutArrProofDvirReportTests : IAsyncLifetime
         var summary = (await response.Content.ReadFromJsonAsync<ProofDvirReportSummaryResponse>())!;
         Assert.True(summary.TotalProofCount >= 1);
         Assert.True(summary.TotalDvirCount >= 1);
-        Assert.Contains(summary.Trips, x => x.TripId == _tripId);
+        Assert.True(summary.MissingProofTripCount >= 1);
+        Assert.Contains(summary.Trips, x => x.TripId == _tripId && x.MissingRequiredProofCount == 1);
         Assert.Contains(summary.ProofTypeCounts, x =>
             string.Equals(x.Key, TripProofTypes.Pickup, StringComparison.OrdinalIgnoreCase));
         Assert.Contains(summary.DvirPhaseCounts, x =>
@@ -116,6 +117,7 @@ public sealed class RoutArrProofDvirReportTests : IAsyncLifetime
         Assert.Equal(_tripId, trip.TripId);
         Assert.True(trip.ProofCount >= 1);
         Assert.True(trip.HasPreTripDvir);
+        Assert.Equal(1, trip.MissingRequiredProofCount);
 
         var proofResponse = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/reports/proof-dvir/proofs/{_proofId:D}", _dispatcherToken));
@@ -145,6 +147,8 @@ public sealed class RoutArrProofDvirReportTests : IAsyncLifetime
         Assert.Contains("recordType,recordId", csv, StringComparison.Ordinal);
         Assert.Contains("proof", csv, StringComparison.Ordinal);
         Assert.Contains("dvir", csv, StringComparison.Ordinal);
+        Assert.Contains("missing_proof", csv, StringComparison.Ordinal);
+        Assert.Contains("required proof item(s) missing", csv, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -163,6 +167,22 @@ public sealed class RoutArrProofDvirReportTests : IAsyncLifetime
     {
         var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
         var now = DateTimeOffset.UtcNow;
+
+        var settingsRequest = Authorized(HttpMethod.Put, "/api/trip-execution-settings", _dispatcherToken);
+        settingsRequest.Content = JsonContent.Create(new UpsertTripExecutionSettingsRequest(
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false));
+        var settingsResponse = await _routarrClient.SendAsync(settingsRequest);
+        settingsResponse.EnsureSuccessStatusCode();
 
         var createTripRequest = Authorized(HttpMethod.Post, "/api/trips", _dispatcherToken);
         createTripRequest.Content = JsonContent.Create(new CreateTripRequest(

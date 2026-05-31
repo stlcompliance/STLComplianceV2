@@ -76,6 +76,8 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
 
     public DbSet<WarrantyClaim> WarrantyClaims => Set<WarrantyClaim>();
 
+    public DbSet<SupplyContract> SupplyContracts => Set<SupplyContract>();
+
     public DbSet<PartVendorPricingSnapshot> PartVendorPricingSnapshots => Set<PartVendorPricingSnapshot>();
 
     public DbSet<PartVendorLeadTimeSnapshot> PartVendorLeadTimeSnapshots => Set<PartVendorLeadTimeSnapshot>();
@@ -322,11 +324,19 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.Property(x => x.ResolutionNotes).HasMaxLength(2048).IsRequired();
             entity.Property(x => x.CancellationReason).HasMaxLength(512).IsRequired();
             entity.Property(x => x.LastReopenReason).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.StaffarrIncidentRouteStatus).HasMaxLength(32).HasDefaultValue(string.Empty).IsRequired();
+            entity.Property(x => x.TrainarrIncidentRouteStatus).HasMaxLength(32).HasDefaultValue(string.Empty).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.IncidentKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.ExternalPartyId });
             entity.HasIndex(x => new { x.TenantId, x.Status, x.UpdatedAt });
             entity.HasIndex(x => new { x.TenantId, x.Severity });
+            entity.HasIndex(x => new { x.TenantId, x.InvolvedStaffarrPersonId })
+                .HasDatabaseName("IX_supplyarr_supplier_incidents_staffarr_person");
+            entity.HasIndex(x => new { x.TenantId, x.StaffarrPersonnelIncidentId })
+                .HasDatabaseName("IX_supplyarr_supplier_incidents_staffarr_incident");
+            entity.HasIndex(x => new { x.TenantId, x.TrainarrIncidentRemediationId })
+                .HasDatabaseName("IX_supplyarr_supplier_incidents_trainarr_remediation");
             entity.HasOne(x => x.ExternalParty)
                 .WithMany()
                 .HasForeignKey(x => x.ExternalPartyId)
@@ -787,6 +797,31 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
                 .WithMany()
                 .HasForeignKey(x => x.ReceivingReceiptLineId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<SupplyContract>(entity =>
+        {
+            entity.ToTable("supplyarr_contracts");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ContractKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ContractType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.PaymentTerms).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.FreightTerms).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.WarrantyTerms).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.MinimumSpend).HasPrecision(18, 2);
+            entity.Property(x => x.ServiceLevelAgreement).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.ApprovalStatus).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.ContractKey }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.VendorPartyId });
+            entity.HasIndex(x => new { x.TenantId, x.Status, x.ExpiresAt });
+            entity.HasOne(x => x.VendorParty)
+                .WithMany()
+                .HasForeignKey(x => x.VendorPartyId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<PartVendorPricingSnapshot>(entity =>

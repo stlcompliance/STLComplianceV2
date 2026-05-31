@@ -28,6 +28,7 @@ public sealed class RoutArrDispatchReportTests : IAsyncLifetime
     private HttpClient _routarrClient = null!;
     private string _dispatcherToken = null!;
     private Guid _tripId;
+    private Guid _completedTripId;
     private Guid _exceptionId;
 
     public async Task InitializeAsync()
@@ -75,7 +76,7 @@ public sealed class RoutArrDispatchReportTests : IAsyncLifetime
 
         _routarrClient = _routarrFactory.CreateClient();
         _dispatcherToken = await RedeemRoutArrTokenAsync();
-        (_tripId, _exceptionId) = await SeedDispatchReportDataAsync();
+        (_tripId, _completedTripId, _exceptionId) = await SeedDispatchReportDataAsync();
     }
 
     public async Task DisposeAsync()
@@ -95,7 +96,8 @@ public sealed class RoutArrDispatchReportTests : IAsyncLifetime
 
         var summary = (await response.Content.ReadFromJsonAsync<DispatchReportSummaryResponse>())!;
         Assert.True(summary.TotalTripCount >= 1);
-        Assert.Contains(summary.Trips, x => x.TripId == _tripId);
+        Assert.True(summary.MissingProofTripCount >= 1);
+        Assert.Contains(summary.Trips, x => x.TripId == _tripId && x.MissingRequiredProofCount == 1);
         Assert.True(summary.DelayExceptionCount >= 1);
         Assert.Contains(summary.ExceptionCategoryCounts, x =>
             string.Equals(x.Key, DispatchExceptionCategories.Delay, StringComparison.OrdinalIgnoreCase));
@@ -110,6 +112,7 @@ public sealed class RoutArrDispatchReportTests : IAsyncLifetime
         var trip = (await tripResponse.Content.ReadFromJsonAsync<DispatchReportTripDetailResponse>())!;
         Assert.Equal(_tripId, trip.TripId);
         Assert.True(trip.DelayExceptionCount >= 1);
+        Assert.Equal(1, trip.MissingRequiredProofCount);
 
         var exceptionResponse = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/reports/dispatch/exceptions/{_exceptionId:D}", _dispatcherToken));
@@ -131,7 +134,47 @@ public sealed class RoutArrDispatchReportTests : IAsyncLifetime
 
         var csv = await response.Content.ReadAsStringAsync();
         Assert.Contains("tripNumber,title", csv, StringComparison.Ordinal);
+        Assert.Contains("missingRequiredProofCount", csv, StringComparison.Ordinal);
         Assert.Contains("Report trip", csv, StringComparison.Ordinal);
+        Assert.Contains(",1,1", csv, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Dispatch_time_summary_returns_driver_route_time_metrics()
+    {
+        var response = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/dispatch/time-summary?scope=daily", _dispatcherToken));
+        response.EnsureSuccessStatusCode();
+
+        var summary = (await response.Content.ReadFromJsonAsync<DispatchTimeSummaryResponse>())!;
+        Assert.True(summary.TripCount >= 1);
+        Assert.True(summary.CompletedTripCount >= 1);
+        Assert.Equal(120, summary.TotalScheduledMinutes);
+        Assert.Equal(150, summary.TotalActualMinutes);
+        Assert.Equal(30, summary.TotalVarianceMinutes);
+
+        var trip = Assert.Single(summary.Trips, x => x.TripId == _completedTripId);
+        Assert.Equal("Completed time trip", trip.Title);
+        Assert.Equal(120, trip.ScheduledDurationMinutes);
+        Assert.Equal(150, trip.ActualDurationMinutes);
+        Assert.Equal(30, trip.VarianceMinutes);
+        Assert.True(trip.IsCompleted);
+        Assert.True(trip.IsClosed);
+    }
+
+    [Fact]
+    public async Task Dispatch_time_summary_export_returns_csv()
+    {
+        var managerToken = CreateRoutArrAccessToken(["routarr"], "routarr_manager");
+        var response = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/dispatch/time-summary/export?scope=daily", managerToken));
+        response.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
+
+        var csv = await response.Content.ReadAsStringAsync();
+        Assert.Contains("scheduledDurationMinutes,actualDurationMinutes,varianceMinutes", csv, StringComparison.Ordinal);
+        Assert.Contains("Completed time trip", csv, StringComparison.Ordinal);
+        Assert.Contains(",120,150,30,true,true", csv, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -185,15 +228,63 @@ public sealed class RoutArrDispatchReportTests : IAsyncLifetime
         var reportsResponse = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/reports", _dispatcherToken));
         reportsResponse.EnsureSuccessStatusCode();
+        var reportsIndex = await reportsResponse.Content.ReadAsStringAsync();
+        Assert.Contains("/api/v1/reports/dispatch", reportsIndex, StringComparison.Ordinal);
+        Assert.Contains("/api/v1/reports/dispatch/time-summary", reportsIndex, StringComparison.Ordinal);
+        Assert.Contains("/api/v1/reports/routes", reportsIndex, StringComparison.Ordinal);
+        Assert.Contains("/api/v1/reports/proof-dvir", reportsIndex, StringComparison.Ordinal);
+        Assert.Contains("/api/v1/reports/dispatch-overrides", reportsIndex, StringComparison.Ordinal);
+
+        var dispatchReportResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/dispatch/summary?scope=daily", _dispatcherToken));
+        dispatchReportResponse.EnsureSuccessStatusCode();
+
+        var routeReportResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/routes/summary?scope=daily", _dispatcherToken));
+        routeReportResponse.EnsureSuccessStatusCode();
+
+        var proofDvirReportResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/proof-dvir/summary?scope=daily", _dispatcherToken));
+        proofDvirReportResponse.EnsureSuccessStatusCode();
+
+        var overrideReportResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/dispatch-overrides/summary?scope=daily", _dispatcherToken));
+        overrideReportResponse.EnsureSuccessStatusCode();
+
+        var timeSummaryResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/dispatch/time-summary?scope=daily", _dispatcherToken));
+        timeSummaryResponse.EnsureSuccessStatusCode();
+
+        var managerToken = CreateRoutArrAccessToken(["routarr"], "routarr_manager");
+        var dispatchReportExportResponse = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/dispatch/summary/export?scope=daily", managerToken));
+        dispatchReportExportResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", dispatchReportExportResponse.Content.Headers.ContentType?.MediaType);
 
         var availabilityResponse = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/availability", _dispatcherToken));
         availabilityResponse.EnsureSuccessStatusCode();
     }
 
-    private async Task<(Guid TripId, Guid ExceptionId)> SeedDispatchReportDataAsync()
+    private async Task<(Guid TripId, Guid CompletedTripId, Guid ExceptionId)> SeedDispatchReportDataAsync()
     {
         var now = DateTimeOffset.UtcNow;
+
+        var settingsRequest = Authorized(HttpMethod.Put, "/api/trip-execution-settings", _dispatcherToken);
+        settingsRequest.Content = JsonContent.Create(new UpsertTripExecutionSettingsRequest(
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false));
+        var settingsResponse = await _routarrClient.SendAsync(settingsRequest);
+        settingsResponse.EnsureSuccessStatusCode();
 
         var createTripRequest = Authorized(HttpMethod.Post, "/api/trips", _dispatcherToken);
         createTripRequest.Content = JsonContent.Create(new CreateTripRequest(
@@ -219,7 +310,38 @@ public sealed class RoutArrDispatchReportTests : IAsyncLifetime
         createExceptionResponse.EnsureSuccessStatusCode();
         var exception = (await createExceptionResponse.Content.ReadFromJsonAsync<DispatchExceptionSummaryResponse>())!;
 
-        return (trip.TripId, exception.ExceptionId);
+        var completedScheduledStart = new DateTimeOffset(now.UtcDateTime.Date.AddHours(8), TimeSpan.Zero);
+        var completedScheduledEnd = completedScheduledStart.AddHours(2);
+        var completedActualStart = completedScheduledStart.AddMinutes(15);
+        var completedActualEnd = completedActualStart.AddMinutes(150);
+
+        using var scope = _routarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+        var completedTrip = new Trip
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            TripNumber = "TRIP-TIME-001",
+            Title = "Completed time trip",
+            Description = "Short-haul time report seed",
+            DispatchStatus = TripDispatchStatuses.Completed,
+            AssignedDriverPersonId = "driver-time-1",
+            VehicleRefKey = "VEH-TIME",
+            ScheduledStartAt = completedScheduledStart,
+            ScheduledEndAt = completedScheduledEnd,
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = completedScheduledStart.AddHours(-1),
+            UpdatedAt = completedActualEnd,
+            AssignedAt = completedScheduledStart.AddHours(-1),
+            DispatchedAt = completedScheduledStart.AddMinutes(-10),
+            StartedAt = completedActualStart,
+            CompletedAt = completedActualEnd,
+            ClosedAt = completedActualEnd.AddMinutes(5)
+        };
+        db.Trips.Add(completedTrip);
+        await db.SaveChangesAsync();
+
+        return (trip.TripId, completedTrip.Id, exception.ExceptionId);
     }
 
     private string CreateRoutArrAccessToken(

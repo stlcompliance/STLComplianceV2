@@ -123,6 +123,180 @@ public sealed class MaintenancePlatformOutboxEnqueueService(
         return enqueued;
     }
 
+    public async Task<Guid?> TryEnqueueInspectionRunEventAsync(
+        Guid tenantId,
+        string eventKind,
+        InspectionRun run,
+        AssetResponse asset,
+        Guid actorUserId,
+        DateTimeOffset occurredAt,
+        string summary,
+        string? eventResult = null,
+        CancellationToken cancellationToken = default)
+    {
+        var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!MaintenancePlatformEventRules.ShouldEmitForTenant(settings))
+        {
+            return null;
+        }
+
+        var payload = BuildEntityPayload(
+            asset,
+            occurredAt,
+            summary,
+            MaintenancePlatformEventRelatedEntityTypes.InspectionRun,
+            run.Id,
+            eventResult,
+            actorUserId);
+
+        return await TryEnqueueAsync(
+            tenantId,
+            eventKind,
+            MaintenancePlatformEventRelatedEntityTypes.InspectionRun,
+            run.Id,
+            MaintenancePlatformEventRules.BuildEntityEventIdempotencyKey(
+                eventKind,
+                MaintenancePlatformEventRelatedEntityTypes.InspectionRun,
+                run.Id),
+            payload,
+            cancellationToken);
+    }
+
+    public async Task<Guid?> TryEnqueueDefectEventAsync(
+        Guid tenantId,
+        string eventKind,
+        Defect defect,
+        Asset asset,
+        Guid actorUserId,
+        DateTimeOffset occurredAt,
+        string summary,
+        string? eventResult = null,
+        CancellationToken cancellationToken = default)
+    {
+        var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!MaintenancePlatformEventRules.ShouldEmitForTenant(settings))
+        {
+            return null;
+        }
+
+        var payload = BuildEntityPayload(
+            asset.Id,
+            asset.AssetTag,
+            asset.Name,
+            asset.LifecycleStatus,
+            occurredAt,
+            summary,
+            MaintenancePlatformEventRelatedEntityTypes.Defect,
+            defect.Id,
+            eventResult,
+            actorUserId);
+
+        return await TryEnqueueAsync(
+            tenantId,
+            eventKind,
+            MaintenancePlatformEventRelatedEntityTypes.Defect,
+            defect.Id,
+            MaintenancePlatformEventRules.BuildEntityEventIdempotencyKey(
+                eventKind,
+                MaintenancePlatformEventRelatedEntityTypes.Defect,
+                defect.Id),
+            payload,
+            cancellationToken);
+    }
+
+    public async Task<Guid?> TryEnqueueWorkOrderEventAsync(
+        Guid tenantId,
+        string eventKind,
+        WorkOrder workOrder,
+        Asset asset,
+        Guid actorUserId,
+        DateTimeOffset occurredAt,
+        string summary,
+        string? eventResult = null,
+        string? idempotencyDiscriminator = null,
+        CancellationToken cancellationToken = default)
+    {
+        var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!MaintenancePlatformEventRules.ShouldEmitForTenant(settings))
+        {
+            return null;
+        }
+
+        var payload = BuildEntityPayload(
+            asset.Id,
+            asset.AssetTag,
+            asset.Name,
+            asset.LifecycleStatus,
+            occurredAt,
+            summary,
+            MaintenancePlatformEventRelatedEntityTypes.WorkOrder,
+            workOrder.Id,
+            eventResult,
+            actorUserId);
+
+        var idempotencyKey = string.IsNullOrWhiteSpace(idempotencyDiscriminator)
+            ? MaintenancePlatformEventRules.BuildEntityEventIdempotencyKey(
+                eventKind,
+                MaintenancePlatformEventRelatedEntityTypes.WorkOrder,
+                workOrder.Id)
+            : MaintenancePlatformEventRules.BuildEntityEventIdempotencyKey(
+                eventKind,
+                MaintenancePlatformEventRelatedEntityTypes.WorkOrder,
+                workOrder.Id,
+                idempotencyDiscriminator);
+
+        return await TryEnqueueAsync(
+            tenantId,
+            eventKind,
+            MaintenancePlatformEventRelatedEntityTypes.WorkOrder,
+            workOrder.Id,
+            idempotencyKey,
+            payload,
+            cancellationToken);
+    }
+
+    public async Task<Guid?> TryEnqueuePmScheduleEventAsync(
+        Guid tenantId,
+        string eventKind,
+        PmSchedule schedule,
+        Asset asset,
+        Guid actorUserId,
+        DateTimeOffset occurredAt,
+        string summary,
+        string? eventResult = null,
+        CancellationToken cancellationToken = default)
+    {
+        var settings = await settingsService.LoadSnapshotAsync(tenantId, cancellationToken);
+        if (!MaintenancePlatformEventRules.ShouldEmitForTenant(settings))
+        {
+            return null;
+        }
+
+        var payload = BuildEntityPayload(
+            asset.Id,
+            asset.AssetTag,
+            asset.Name,
+            asset.LifecycleStatus,
+            occurredAt,
+            summary,
+            MaintenancePlatformEventRelatedEntityTypes.PmSchedule,
+            schedule.Id,
+            eventResult,
+            actorUserId);
+
+        return await TryEnqueueAsync(
+            tenantId,
+            eventKind,
+            MaintenancePlatformEventRelatedEntityTypes.PmSchedule,
+            schedule.Id,
+            MaintenancePlatformEventRules.BuildEntityEventIdempotencyKey(
+                eventKind,
+                MaintenancePlatformEventRelatedEntityTypes.PmSchedule,
+                schedule.Id),
+            payload,
+            cancellationToken);
+    }
+
     private async Task<Guid?> TryEnqueueAsync(
         Guid tenantId,
         string eventKind,
@@ -181,4 +355,53 @@ public sealed class MaintenancePlatformOutboxEnqueueService(
         return
             $"Asset {readiness.AssetTag} readiness changed from {previousReadinessStatus ?? "unknown"} to {readiness.ReadinessStatus} (lifecycle {previousLifecycleStatus ?? "unknown"} -> {readiness.LifecycleStatus}).";
     }
+
+    private static MaintenancePlatformEventPayload BuildEntityPayload(
+        AssetResponse asset,
+        DateTimeOffset occurredAt,
+        string summary,
+        string targetEntityType,
+        Guid targetEntityId,
+        string? eventResult,
+        Guid actorUserId) =>
+        BuildEntityPayload(
+            asset.AssetId,
+            asset.AssetTag,
+            asset.Name,
+            asset.LifecycleStatus,
+            occurredAt,
+            summary,
+            targetEntityType,
+            targetEntityId,
+            eventResult,
+            actorUserId);
+
+    private static MaintenancePlatformEventPayload BuildEntityPayload(
+        Guid assetId,
+        string assetTag,
+        string assetName,
+        string lifecycleStatus,
+        DateTimeOffset occurredAt,
+        string summary,
+        string targetEntityType,
+        Guid targetEntityId,
+        string? eventResult,
+        Guid actorUserId) =>
+        new(
+            assetId,
+            assetTag,
+            assetName,
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            lifecycleStatus,
+            string.Empty,
+            0,
+            null,
+            occurredAt,
+            summary,
+            targetEntityType,
+            targetEntityId,
+            eventResult,
+            actorUserId);
 }
