@@ -275,6 +275,32 @@ public class StaffArrTrainArrQualificationBatchCheckTests : IAsyncLifetime
         Assert.Equal(primary.Results[0].ReasonCode, v1.Results[0].ReasonCode);
     }
 
+    [Fact]
+    public async Task Batch_qualification_check_gate_alias_matches_primary_endpoint()
+    {
+        var personId = Guid.NewGuid();
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+
+        var primary = await RunBatchQualificationCheckAsync(
+            adminToken,
+            "hazmat_endorsement",
+            "driver_qualification",
+            "/api/qualification-checks/batch",
+            personId);
+        var gateAlias = await RunBatchQualificationCheckAsync(
+            adminToken,
+            "hazmat_endorsement",
+            "driver_qualification",
+            "/api/v1/qualifications/check/batch",
+            personId);
+
+        Assert.Equal(primary.Summary.Total, gateAlias.Summary.Total);
+        Assert.Equal(primary.Summary.WarnCount, gateAlias.Summary.WarnCount);
+        Assert.Equal(primary.Summary.BlockCount, gateAlias.Summary.BlockCount);
+        Assert.Equal(primary.Results[0].Outcome, gateAlias.Results[0].Outcome);
+        Assert.Equal(primary.Results[0].ReasonCode, gateAlias.Results[0].ReasonCode);
+    }
+
     private async Task<BatchQualificationCheckResponse> RunBatchQualificationCheckAsync(
         string trainarrToken,
         string qualificationKey,

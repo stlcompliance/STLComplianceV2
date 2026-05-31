@@ -20,6 +20,23 @@ public static class AuditPackageEndpoints
                 .WithTags("AuditPackages")
                 .RequireAuthorization();
 
+        packages.MapGet("/", (
+            TrainArrAuthorizationService authorization,
+            HttpContext context) =>
+        {
+            authorization.RequireAuditPackageRead(context.User);
+            return Results.Ok(new
+            {
+                items = new[]
+                {
+                    new { key = "manifest", path = $"{route}/manifest" },
+                    new { key = "export", path = $"{route}/export" },
+                    new { key = "jobs", path = $"{route}/jobs" },
+                }
+            });
+        })
+        .WithName($"GetTrainArrAuditPackageIndex{suffix}");
+
         packages.MapGet("/manifest", (
             TrainArrAuthorizationService authorization,
             AuditPackageService service,

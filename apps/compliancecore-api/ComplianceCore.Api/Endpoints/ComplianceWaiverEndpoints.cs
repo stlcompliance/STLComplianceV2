@@ -59,8 +59,8 @@ public static class ComplianceWaiverEndpoints
         })
         .WithName("ListComplianceWaiversV1");
 
-        group.MapGet("/{waiverId:guid}", async (
-            Guid waiverId,
+        group.MapGet("/{id:guid}", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             ComplianceWaiverService service,
             HttpContext context,
@@ -68,12 +68,12 @@ public static class ComplianceWaiverEndpoints
         {
             authorization.RequireWaiverRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetAsync(tenantId, waiverId, cancellationToken));
+            return Results.Ok(await service.GetAsync(tenantId, id, cancellationToken));
         })
         .WithName("GetComplianceWaiver");
 
-        v1.MapGet("/{waiverId:guid}", async (
-            Guid waiverId,
+        v1.MapGet("/{id:guid}", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             ComplianceWaiverService service,
             HttpContext context,
@@ -81,7 +81,7 @@ public static class ComplianceWaiverEndpoints
         {
             authorization.RequireWaiverRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetAsync(tenantId, waiverId, cancellationToken));
+            return Results.Ok(await service.GetAsync(tenantId, id, cancellationToken));
         })
         .WithName("GetComplianceWaiverV1");
 
@@ -121,8 +121,8 @@ public static class ComplianceWaiverEndpoints
         })
         .WithName("CreateComplianceWaiverV1");
 
-        v1.MapPatch("/{waiverId:guid}", async (
-            Guid waiverId,
+        v1.MapPatch("/{id:guid}", async (
+            Guid id,
             UpdateComplianceWaiverRequest request,
             ComplianceCoreAuthorizationService authorization,
             ComplianceWaiverService service,
@@ -144,7 +144,7 @@ public static class ComplianceWaiverEndpoints
             async Task<ComplianceWaiverResponse> ApproveAsync()
             {
                 authorization.RequireWaiverApprove(context.User);
-                return await service.ApproveAsync(tenantId, actorUserId, waiverId, cancellationToken);
+                return await service.ApproveAsync(tenantId, actorUserId, id, cancellationToken);
             }
 
             async Task<ComplianceWaiverResponse> RejectAsync()
@@ -153,7 +153,7 @@ public static class ComplianceWaiverEndpoints
                 return await service.RejectAsync(
                     tenantId,
                     actorUserId,
-                    waiverId,
+                    id,
                     new RejectComplianceWaiverRequest(request.Notes),
                     cancellationToken);
             }
@@ -164,15 +164,15 @@ public static class ComplianceWaiverEndpoints
                 return await service.RevokeAsync(
                     tenantId,
                     actorUserId,
-                    waiverId,
+                    id,
                     new RevokeComplianceWaiverRequest(request.Notes),
                     cancellationToken);
             }
         })
         .WithName("UpdateComplianceWaiverV1");
 
-        group.MapPost("/{waiverId:guid}/approve", async (
-            Guid waiverId,
+        group.MapPost("/{id:guid}/approve", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             ComplianceWaiverService service,
             HttpContext context,
@@ -183,13 +183,13 @@ public static class ComplianceWaiverEndpoints
             return Results.Ok(await service.ApproveAsync(
                 tenantId,
                 context.User.GetUserId(),
-                waiverId,
+                id,
                 cancellationToken));
         })
         .WithName("ApproveComplianceWaiver");
 
-        v1.MapPost("/{waiverId:guid}/approve", async (
-            Guid waiverId,
+        v1.MapPost("/{id:guid}/approve", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             ComplianceWaiverService service,
             HttpContext context,
@@ -200,13 +200,13 @@ public static class ComplianceWaiverEndpoints
             return Results.Ok(await service.ApproveAsync(
                 tenantId,
                 context.User.GetUserId(),
-                waiverId,
+                id,
                 cancellationToken));
         })
         .WithName("ApproveComplianceWaiverV1");
 
-        group.MapPost("/{waiverId:guid}/reject", async (
-            Guid waiverId,
+        group.MapPost("/{id:guid}/reject", async (
+            Guid id,
             RejectComplianceWaiverRequest? request,
             ComplianceCoreAuthorizationService authorization,
             ComplianceWaiverService service,
@@ -218,14 +218,14 @@ public static class ComplianceWaiverEndpoints
             return Results.Ok(await service.RejectAsync(
                 tenantId,
                 context.User.GetUserId(),
-                waiverId,
+                id,
                 request,
                 cancellationToken));
         })
         .WithName("RejectComplianceWaiver");
 
-        v1.MapPost("/{waiverId:guid}/reject", async (
-            Guid waiverId,
+        v1.MapPost("/{id:guid}/reject", async (
+            Guid id,
             RejectComplianceWaiverRequest? request,
             ComplianceCoreAuthorizationService authorization,
             ComplianceWaiverService service,
@@ -237,14 +237,14 @@ public static class ComplianceWaiverEndpoints
             return Results.Ok(await service.RejectAsync(
                 tenantId,
                 context.User.GetUserId(),
-                waiverId,
+                id,
                 request,
                 cancellationToken));
         })
         .WithName("RejectComplianceWaiverV1");
 
-        group.MapPost("/{waiverId:guid}/revoke", async (
-            Guid waiverId,
+        group.MapPost("/{id:guid}/revoke", async (
+            Guid id,
             RevokeComplianceWaiverRequest? request,
             ComplianceCoreAuthorizationService authorization,
             ComplianceWaiverService service,
@@ -256,14 +256,14 @@ public static class ComplianceWaiverEndpoints
             return Results.Ok(await service.RevokeAsync(
                 tenantId,
                 context.User.GetUserId(),
-                waiverId,
+                id,
                 request,
                 cancellationToken));
         })
         .WithName("RevokeComplianceWaiver");
 
-        v1.MapPost("/{waiverId:guid}/revoke", async (
-            Guid waiverId,
+        v1.MapPost("/{id:guid}/revoke", async (
+            Guid id,
             RevokeComplianceWaiverRequest? request,
             ComplianceCoreAuthorizationService authorization,
             ComplianceWaiverService service,
@@ -275,14 +275,14 @@ public static class ComplianceWaiverEndpoints
             return Results.Ok(await service.RevokeAsync(
                 tenantId,
                 context.User.GetUserId(),
-                waiverId,
+                id,
                 request,
                 cancellationToken));
         })
         .WithName("RevokeComplianceWaiverV1");
 
-        v1.MapPost("/{waiverId:guid}/renew", async (
-            Guid waiverId,
+        v1.MapPost("/{id:guid}/renew", async (
+            Guid id,
             RenewComplianceWaiverRequest request,
             ComplianceCoreAuthorizationService authorization,
             ComplianceWaiverService service,
@@ -294,7 +294,7 @@ public static class ComplianceWaiverEndpoints
             return Results.Ok(await service.RenewAsync(
                 tenantId,
                 context.User.GetUserId(),
-                waiverId,
+                id,
                 request,
                 cancellationToken));
         })

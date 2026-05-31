@@ -13,6 +13,7 @@ using StaffArr.Api.Contracts;
 using StaffArr.Api.Data;
 using StaffArr.Api.Endpoints;
 using StaffArr.Api.Entities;
+using StaffArr.Api.Services;
 
 namespace STLCompliance.StaffArr.Auth.Tests;
 
@@ -151,6 +152,33 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
             HttpMethod.Get,
             $"/api/integrations/permission-check?tenantId={PlatformSeeder.DemoTenantId}&personId={_personId}&permissionKey=maintainarr.work_order.close",
             staffarrToken));
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task V1_permissions_check_supports_user_scoped_access()
+    {
+        var userToken = CreateStaffArrAccessToken(_personId, "tenant_member");
+        var response = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/v1/permissions/check?personId={_personId}&permissionKey=maintainarr.work_order.close&permissionKey=maintainarr.work_order.create",
+            userToken));
+        response.EnsureSuccessStatusCode();
+
+        var check = (await response.Content.ReadFromJsonAsync<IntegrationPermissionCheckResponse>())!;
+        Assert.Equal(_personId, check.PersonId);
+        Assert.True(check.IsAuthorizedAny);
+        Assert.False(check.IsAuthorizedAll);
+    }
+
+    [Fact]
+    public async Task V1_permissions_check_denies_tenant_member_for_other_person()
+    {
+        var userToken = CreateStaffArrAccessToken(_personId, "tenant_member");
+        var response = await _staffarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            $"/api/v1/permissions/check?personId={_inactivePersonId}&permissionKey=maintainarr.work_order.close",
+            userToken));
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
@@ -301,5 +329,22 @@ public sealed class StaffArrIntegrationPermissionCheckTests : IAsyncLifetime
         var request = new HttpRequestMessage(method, path);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
+    }
+
+    private string CreateStaffArrAccessToken(Guid personId, string tenantRoleKey)
+    {
+        using var scope = _staffarrFactory.Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<StaffArrTokenService>();
+        var (accessToken, _) = tokenService.CreateAccessToken(
+            PlatformSeeder.DemoAdminUserId,
+            personId,
+            PlatformSeeder.DemoAdminEmail,
+            "StaffArr Test User",
+            PlatformSeeder.DemoTenantId,
+            Guid.NewGuid(),
+            tenantRoleKey,
+            ["staffarr"],
+            isPlatformAdmin: false);
+        return accessToken;
     }
 }

@@ -308,6 +308,21 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Asset_readiness_v1_asset_path_returns_asset_status()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(token);
+
+        var response = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/readiness/assets/{assetId}", token));
+        response.EnsureSuccessStatusCode();
+        var readiness = (await response.Content.ReadFromJsonAsync<AssetReadinessResponse>())!;
+
+        Assert.Equal(assetId, readiness.AssetId);
+        Assert.Equal("ready", readiness.ReadinessStatus);
+    }
+
+    [Fact]
     public async Task Asset_readiness_v1_fleet_list_returns_assets()
     {
         var token = await RedeemMaintainArrTokenAsync();
@@ -410,6 +425,27 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
         Assert.Equal("ready", readiness.ReadinessStatus);
         Assert.NotNull(readiness.Dispatchability);
         Assert.True(readiness.Dispatchability.IsDispatchable);
+    }
+
+    [Fact]
+    public async Task Integrations_v1_index_lists_expected_integration_paths()
+    {
+        var response = await _maintainarrClient.SendAsync(Authorized(
+            HttpMethod.Get,
+            "/api/v1/integrations",
+            _routarrAssetReadinessToken));
+        response.EnsureSuccessStatusCode();
+
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var paths = json.RootElement.GetProperty("items")
+            .EnumerateArray()
+            .Select(x => x.GetProperty("path").GetString())
+            .ToList();
+
+        Assert.Contains("/api/v1/integrations/asset-readiness", paths);
+        Assert.Contains("/api/v1/integrations/routarr-events", paths);
+        Assert.Contains("/api/v1/integrations/supplyarr-demand-status", paths);
+        Assert.Contains("/api/v1/integrations/staffarr-person-sync", paths);
     }
 
     private async Task<Guid> SeedAssetOnlyAsync(string token)

@@ -50,6 +50,7 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
         app.MapComplianceCoreExceptionExemptionEndpoints();
         app.MapComplianceCoreWorkflowGateEndpoints();
         app.MapComplianceCoreProductGateEndpoints();
+        app.MapComplianceCoreProductGateResponseEndpoints();
         app.MapComplianceCoreAuditRequirementEndpoints();
         app.MapComplianceCoreCsvImportExportEndpoints();
         app.MapComplianceCoreStagedImportEndpoints();

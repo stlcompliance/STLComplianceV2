@@ -36,8 +36,8 @@ public static class RulePackEndpoints
         })
         .WithName($"ListRulePacks{nameSuffix}");
 
-        rulePacks.MapGet("/{rulePackId:guid}", async (
-            Guid rulePackId,
+        rulePacks.MapGet("/{id:guid}", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             RulePackService service,
             HttpContext context,
@@ -45,7 +45,7 @@ public static class RulePackEndpoints
         {
             authorization.RequireRulePacksRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetAsync(tenantId, rulePackId, cancellationToken));
+            return Results.Ok(await service.GetAsync(tenantId, id, cancellationToken));
         })
         .WithName($"GetRulePack{nameSuffix}");
 
@@ -67,8 +67,8 @@ public static class RulePackEndpoints
         })
         .WithName($"CreateRulePack{nameSuffix}");
 
-        rulePacks.MapPatch("/{rulePackId:guid}", async (
-            Guid rulePackId,
+        rulePacks.MapPatch("/{id:guid}", async (
+            Guid id,
             PatchRulePackRequest request,
             ComplianceCoreAuthorizationService authorization,
             RulePackService service,
@@ -99,15 +99,15 @@ public static class RulePackEndpoints
             var updated = await service.PatchAsync(
                 tenantId,
                 context.User.GetUserId(),
-                rulePackId,
+                id,
                 request,
                 cancellationToken);
             return Results.Ok(updated);
         })
         .WithName($"PatchRulePack{nameSuffix}");
 
-        rulePacks.MapPatch("/{rulePackId:guid}/status", async (
-            Guid rulePackId,
+        rulePacks.MapPatch("/{id:guid}/status", async (
+            Guid id,
             UpdateRulePackStatusRequest request,
             ComplianceCoreAuthorizationService authorization,
             RulePackService service,
@@ -131,15 +131,15 @@ public static class RulePackEndpoints
             var updated = await service.UpdateStatusAsync(
                 tenantId,
                 context.User.GetUserId(),
-                rulePackId,
+                id,
                 request,
                 cancellationToken);
             return Results.Ok(updated);
         })
         .WithName($"UpdateRulePackStatus{nameSuffix}");
 
-        rulePacks.MapPost("/{rulePackId:guid}/submit-review", async (
-            Guid rulePackId,
+        rulePacks.MapPost("/{id:guid}/submit-review", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             RulePackService service,
             HttpContext context,
@@ -150,15 +150,15 @@ public static class RulePackEndpoints
             var updated = await service.UpdateStatusAsync(
                 tenantId,
                 context.User.GetUserId(),
-                rulePackId,
+                id,
                 new UpdateRulePackStatusRequest(RulePackStatuses.Review),
                 cancellationToken);
             return Results.Ok(updated);
         })
         .WithName($"SubmitRulePackReview{nameSuffix}");
 
-        rulePacks.MapPost("/{rulePackId:guid}/approve", async (
-            Guid rulePackId,
+        rulePacks.MapPost("/{id:guid}/approve", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             RuleVersionService service,
             HttpContext context,
@@ -169,13 +169,13 @@ public static class RulePackEndpoints
             return Results.Ok(await service.PublishAsync(
                 tenantId,
                 context.User.GetUserId(),
-                rulePackId,
+                id,
                 cancellationToken));
         })
         .WithName($"ApproveRulePack{nameSuffix}");
 
-        rulePacks.MapPost("/{rulePackId:guid}/publish", async (
-            Guid rulePackId,
+        rulePacks.MapPost("/{id:guid}/publish", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             RuleVersionService service,
             HttpContext context,
@@ -186,13 +186,13 @@ public static class RulePackEndpoints
             return Results.Ok(await service.PublishAsync(
                 tenantId,
                 context.User.GetUserId(),
-                rulePackId,
+                id,
                 cancellationToken));
         })
         .WithName($"PublishRulePack{nameSuffix}");
 
-        rulePacks.MapPost("/{rulePackId:guid}/retire", async (
-            Guid rulePackId,
+        rulePacks.MapPost("/{id:guid}/retire", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             RulePackService service,
             HttpContext context,
@@ -203,15 +203,15 @@ public static class RulePackEndpoints
             var updated = await service.UpdateStatusAsync(
                 tenantId,
                 context.User.GetUserId(),
-                rulePackId,
+                id,
                 new UpdateRulePackStatusRequest(RulePackStatuses.Archived),
                 cancellationToken);
             return Results.Ok(updated);
         })
         .WithName($"RetireRulePack{nameSuffix}");
 
-        rulePacks.MapPost("/{rulePackId:guid}/clone", async (
-            Guid rulePackId,
+        rulePacks.MapPost("/{id:guid}/clone", async (
+            Guid id,
             CloneRulePackRequest request,
             ComplianceCoreAuthorizationService authorization,
             RulePackService service,
@@ -223,15 +223,15 @@ public static class RulePackEndpoints
             var cloned = await service.CloneAsync(
                 tenantId,
                 context.User.GetUserId(),
-                rulePackId,
+                id,
                 request,
                 cancellationToken);
             return Results.Created($"/api/rule-packs/{cloned.RulePackId}", cloned);
         })
         .WithName($"CloneRulePack{nameSuffix}");
 
-        rulePacks.MapGet("/{rulePackId:guid}/versions", async (
-            Guid rulePackId,
+        rulePacks.MapGet("/{id:guid}/versions", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             RuleVersionService service,
             HttpContext context,
@@ -239,12 +239,12 @@ public static class RulePackEndpoints
         {
             authorization.RequireRulePacksRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListForRulePackIdAsync(tenantId, rulePackId, cancellationToken));
+            return Results.Ok(await service.ListForRulePackIdAsync(tenantId, id, cancellationToken));
         })
         .WithName($"ListRulePackVersions{nameSuffix}");
 
-        rulePacks.MapGet("/{rulePackId:guid}/diff", async (
-            Guid rulePackId,
+        rulePacks.MapGet("/{id:guid}/diff", async (
+            Guid id,
             Guid? compareRulePackId,
             ComplianceCoreAuthorizationService authorization,
             RulePackService service,
@@ -255,7 +255,7 @@ public static class RulePackEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.DiffAsync(
                 tenantId,
-                rulePackId,
+                id,
                 compareRulePackId,
                 cancellationToken));
         })

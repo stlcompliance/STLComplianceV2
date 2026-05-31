@@ -21,6 +21,22 @@ public static class AssetImportEndpoints
                 .WithTags("Imports")
                 .RequireAuthorization();
 
+            group.MapGet("/", (
+                MaintainArrAuthorizationService authorization,
+                HttpContext context) =>
+            {
+                authorization.RequireAssetImportManage(context.User);
+                return Results.Ok(new
+                {
+                    items = new[]
+                    {
+                        new { key = "assets-validate", path = $"{route}/assets/validate" },
+                        new { key = "assets-commit", path = $"{route}/assets/commit" },
+                    }
+                });
+            })
+            .WithName($"GetMaintainArrImportIndex{suffix}");
+
             group.MapPost("/assets/validate", async (
                 AssetBulkImportRequest? request,
                 HttpRequest httpRequest,

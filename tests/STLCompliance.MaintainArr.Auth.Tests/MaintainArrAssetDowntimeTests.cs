@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -173,6 +174,24 @@ public sealed class MaintainArrAssetDowntimeTests : IAsyncLifetime
         var closed = (await closeResponse.Content.ReadFromJsonAsync<AssetDowntimeEventResponse>())!;
         Assert.False(closed.IsActive);
         Assert.NotNull(closed.EndedAt);
+    }
+
+    [Fact]
+    public async Task Downtime_v1_index_lists_events_and_availability_paths()
+    {
+        var managerToken = CreateMaintainArrAccessToken(["maintainarr"], "maintainarr_manager");
+        var response = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/downtime", managerToken));
+        response.EnsureSuccessStatusCode();
+
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var paths = json.RootElement.GetProperty("items")
+            .EnumerateArray()
+            .Select(x => x.GetProperty("path").GetString())
+            .ToList();
+
+        Assert.Contains("/api/v1/downtime/events", paths);
+        Assert.Contains("/api/v1/downtime/availability/fleet", paths);
     }
 
     [Fact]

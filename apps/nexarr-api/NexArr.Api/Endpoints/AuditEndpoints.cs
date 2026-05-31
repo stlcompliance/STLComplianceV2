@@ -46,8 +46,8 @@ public static class AuditEndpoints
         })
         .WithName("GetAuditEventsV1");
 
-        group.MapGet("/events/{eventId:guid}", async (
-            Guid eventId,
+        group.MapGet("/events/{id:guid}", async (
+            Guid id,
             HttpContext context,
             PlatformAuthorizationService authorization,
             NexArrDbContext db,
@@ -55,7 +55,7 @@ public static class AuditEndpoints
         {
             await authorization.RequirePlatformAdminAsync(context.User, cancellationToken);
             var item = await db.AuditEvents.AsNoTracking()
-                .Where(x => x.Id == eventId)
+                .Where(x => x.Id == id)
                 .Select(x => new PlatformAuditEventExportItem(
                     x.Id,
                     x.TenantId,
@@ -73,8 +73,8 @@ public static class AuditEndpoints
         })
         .WithName("GetAuditEventByIdV1");
 
-        group.MapGet("/tenants/{tenantId:guid}", async (
-            Guid tenantId,
+        group.MapGet("/tenants/{tenantid:guid}", async (
+            Guid tenantid,
             HttpContext context,
             PlatformAuthorizationService authorization,
             PlatformAuditPackageService service,
@@ -91,7 +91,7 @@ public static class AuditEndpoints
             await authorization.RequirePlatformAdminAsync(context.User, cancellationToken);
             var timeline = await service.ListAuditTimelineAsync(
                 new PlatformAuditPackageFilter(
-                    TenantId: tenantId,
+                    TenantId: tenantid,
                     From: from,
                     To: to,
                     Action: action,
@@ -105,8 +105,8 @@ public static class AuditEndpoints
         })
         .WithName("GetTenantAuditEventsV1");
 
-        group.MapGet("/users/{personId:guid}", async (
-            Guid personId,
+        group.MapGet("/users/{personid:guid}", async (
+            Guid personid,
             HttpContext context,
             PlatformAuthorizationService authorization,
             PlatformAuditPackageService service,
@@ -127,7 +127,7 @@ public static class AuditEndpoints
                     Action: action,
                     Result: result,
                     TargetType: targetType,
-                    ActorUserId: personId),
+                    ActorUserId: personid),
                 page ?? 1,
                 pageSize ?? 25,
                 cancellationToken);
@@ -135,8 +135,8 @@ public static class AuditEndpoints
         })
         .WithName("GetUserAuditEventsV1");
 
-        group.MapGet("/products/{productCode}", async (
-            string productCode,
+        group.MapGet("/products/{productcode}", async (
+            string productcode,
             HttpContext context,
             PlatformAuthorizationService authorization,
             NexArrDbContext db,
@@ -145,7 +145,7 @@ public static class AuditEndpoints
             CancellationToken cancellationToken) =>
         {
             await authorization.RequirePlatformAdminAsync(context.User, cancellationToken);
-            var normalizedProductCode = productCode.Trim().ToLowerInvariant();
+            var normalizedProductCode = productcode.Trim().ToLowerInvariant();
             var resolvedPage = page is null or < 1 ? 1 : page.Value;
             var resolvedPageSize = pageSize switch
             {

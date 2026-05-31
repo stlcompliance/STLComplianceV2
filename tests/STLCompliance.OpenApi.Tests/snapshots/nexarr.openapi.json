@@ -21,6 +21,19 @@
         }
       }
     },
+    "/.well-known/jwks.json": {
+      "get": {
+        "tags": [
+          "ServiceTokenDiscovery"
+        ],
+        "operationId": "GetRootServiceTokenJwks",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -55,6 +68,52 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/LogoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/password/forgot": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "AuthPasswordForgot",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/auth/password/reset": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "AuthPasswordReset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
               }
             }
           },
@@ -126,6 +185,29 @@
         }
       }
     },
+    "/api/companion/field-tasks/dvir": {
+      "post": {
+        "tags": [
+          "CompanionFieldDvir"
+        ],
+        "operationId": "SubmitCompanionFieldDvir",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitCompanionFieldDvirRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/companion/field-tasks/evidence": {
       "post": {
         "tags": [
@@ -137,6 +219,144 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SubmitCompanionFieldEvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/field-tasks/inspection": {
+      "get": {
+        "tags": [
+          "CompanionFieldInspection"
+        ],
+        "operationId": "GetCompanionFieldInspectionDetail",
+        "parameters": [
+          {
+            "name": "taskKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/field-tasks/inspection/answers": {
+      "post": {
+        "tags": [
+          "CompanionFieldInspection"
+        ],
+        "operationId": "SubmitCompanionFieldInspectionAnswers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitCompanionFieldInspectionAnswersRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/field-tasks/inspection/complete": {
+      "post": {
+        "tags": [
+          "CompanionFieldInspection"
+        ],
+        "operationId": "CompleteCompanionFieldInspection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteCompanionFieldInspectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/field-tasks/receiving": {
+      "get": {
+        "tags": [
+          "CompanionFieldReceiving"
+        ],
+        "operationId": "GetCompanionFieldReceivingDetail",
+        "parameters": [
+          {
+            "name": "taskKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/field-tasks/receiving/line": {
+      "post": {
+        "tags": [
+          "CompanionFieldReceiving"
+        ],
+        "operationId": "UpdateCompanionFieldReceivingLine",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanionFieldReceivingLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/field-tasks/receiving/post": {
+      "post": {
+        "tags": [
+          "CompanionFieldReceiving"
+        ],
+        "operationId": "PostCompanionFieldReceiving",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostCompanionFieldReceivingRequest"
               }
             }
           },
@@ -182,6 +402,75 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ValidateCompanionFieldTaskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/field-tasks/work-order": {
+      "get": {
+        "tags": [
+          "CompanionFieldWorkOrder"
+        ],
+        "operationId": "GetCompanionFieldWorkOrderDetail",
+        "parameters": [
+          {
+            "name": "taskKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/field-tasks/work-order/labor": {
+      "post": {
+        "tags": [
+          "CompanionFieldWorkOrder"
+        ],
+        "operationId": "LogCompanionFieldWorkOrderLabor",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogCompanionFieldWorkOrderLaborRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/companion/field-tasks/work-order/status": {
+      "post": {
+        "tags": [
+          "CompanionFieldWorkOrder"
+        ],
+        "operationId": "UpdateCompanionFieldWorkOrderStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanionFieldWorkOrderStatusRequest"
               }
             }
           },
@@ -391,6 +680,18 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/config": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -639,6 +940,52 @@
         }
       }
     },
+    "/api/internal/person-login-disable": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalPersonLoginDisable",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonLoginDisableRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/person-login-enable": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalPersonLoginEnable",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonLoginEnableRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/platform-audit-package-jobs/pending": {
       "get": {
         "tags": [
@@ -698,6 +1045,133 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/platform-identities": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalCreatePlatformIdentity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlatformIdentityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/platform-identities/{personId}": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalResolvePlatformIdentity",
+        "parameters": [
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/platform-outbox/pending": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalListPendingPlatformOutboxEvents",
+        "parameters": [
+          {
+            "name": "asOfUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/platform-outbox/process-batch": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProcessPlatformOutboxPublisher",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessPlatformOutboxPublisherRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/internal/platform-outbox/status": {
+      "get": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalGetPlatformOutboxPublisherStatus",
         "responses": {
           "200": {
             "description": "OK"
@@ -920,6 +1394,28 @@
         }
       }
     },
+    "/api/launch/catalog": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetLaunchCatalog",
+        "parameters": [
+          {
+            "name": "currentProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/launch/context": {
       "get": {
         "tags": [
@@ -989,6 +1485,29 @@
         }
       }
     },
+    "/api/launch/validate": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "ValidateLaunch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateLaunchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/me": {
       "get": {
         "tags": [
@@ -1021,6 +1540,52 @@
           "Me"
         ],
         "operationId": "GetMyNavigation",
+        "parameters": [
+          {
+            "name": "currentProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me/sessions": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "GetMySessions",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/me/sessions/{sessionId}": {
+      "delete": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "RevokeMySession",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1417,6 +1982,137 @@
         }
       }
     },
+    "/api/platform-admin/data-plane": {
+      "get": {
+        "tags": [
+          "HybridDataPlane"
+        ],
+        "operationId": "ListDataPlaneProfiles",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "productKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "HybridDataPlane"
+        ],
+        "operationId": "UpsertDataPlaneProfile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertDataPlaneProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/data-plane/effective": {
+      "get": {
+        "tags": [
+          "HybridDataPlane"
+        ],
+        "operationId": "ListEffectiveDataPlaneProfiles",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/data-plane/{tenantId}/{productKey}": {
+      "delete": {
+        "tags": [
+          "HybridDataPlane"
+        ],
+        "operationId": "DeleteDataPlaneProfile",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "productKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/platform-admin/entitlement-reconciliation/licenses": {
       "get": {
         "tags": [
@@ -1557,6 +2253,99 @@
         }
       }
     },
+    "/api/platform-admin/launch-attempts": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminLaunchAttempts",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "productKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "correlationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "fromUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "toUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/platform-admin/launch-diagnostics": {
       "get": {
         "tags": [
@@ -1669,6 +2458,161 @@
           "PlatformAdmin"
         ],
         "operationId": "GetPlatformLifecycleOverview",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/platform-outbox/events": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "ListPlatformOutboxEvents",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/platform-outbox/runs": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "ListPlatformOutboxPublisherRuns",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/platform-outbox/settings": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "GetPlatformOutboxPublisherSettings",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "UpsertPlatformOutboxPublisherSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertPlatformOutboxPublisherSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/platform-outbox/status": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "GetPlatformOutboxPublisherStatus",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/product-manifests": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminProductManifests",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "productKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -1833,6 +2777,135 @@
         }
       }
     },
+    "/api/platform-admin/users": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminCreateUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlatformUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/users/{userId}": {
+      "patch": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminUpdateUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlatformUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/users/{userId}/enable": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminEnableUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/users/{userId}/lock": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminLockUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/users/{userId}/unlock": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminUnlockUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/platform-admin/worker-health-orchestration": {
       "get": {
         "tags": [
@@ -1852,6 +2925,19 @@
           "PlatformAdmin"
         ],
         "operationId": "TriggerPlatformEntitlementReconciliationOrchestration",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/platform-admin/worker-health-orchestration/trigger-platform-outbox": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "TriggerPlatformOutboxPublisherOrchestration",
         "responses": {
           "200": {
             "description": "OK"
@@ -2146,6 +3232,54 @@
         }
       }
     },
+    "/api/service-tokens/clients/{serviceClientId}/revoke": {
+      "post": {
+        "tags": [
+          "ServiceTokens"
+        ],
+        "operationId": "RevokeServiceClient",
+        "parameters": [
+          {
+            "name": "serviceClientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/service-tokens/clients/{serviceClientId}/rotate": {
+      "post": {
+        "tags": [
+          "ServiceTokens"
+        ],
+        "operationId": "RotateServiceClient",
+        "parameters": [
+          {
+            "name": "serviceClientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/service-tokens/validate": {
       "post": {
         "tags": [
@@ -2185,6 +3319,18 @@
               "format": "uuid"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "tags": [
+          "Settings"
         ],
         "responses": {
           "200": {
@@ -2311,6 +3457,95 @@
         }
       }
     },
+    "/api/tenants/{tenantId}/members": {
+      "get": {
+        "tags": [
+          "Tenants"
+        ],
+        "operationId": "ListTenantMembers",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tenants"
+        ],
+        "operationId": "AddTenantMember",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddTenantMemberRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/tenants/{tenantId}/members/{userId}": {
+      "delete": {
+        "tags": [
+          "Tenants"
+        ],
+        "operationId": "RemoveTenantMember",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/tenants/{tenantId}/status": {
       "patch": {
         "tags": [
@@ -2345,6 +3580,1979 @@
         }
       }
     },
+    "/api/v1/.well-known/jwks.json": {
+      "get": {
+        "tags": [
+          "ServiceTokenDiscovery"
+        ],
+        "operationId": "GetServiceTokenJwks",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/.well-known/service-token-configuration": {
+      "get": {
+        "tags": [
+          "ServiceTokenDiscovery"
+        ],
+        "operationId": "GetServiceTokenDiscovery",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit/events": {
+      "get": {
+        "tags": [
+          "Audit"
+        ],
+        "operationId": "GetAuditEventsV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit/events/{id}": {
+      "get": {
+        "tags": [
+          "Audit"
+        ],
+        "operationId": "GetAuditEventByIdV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit/products/{productcode}": {
+      "get": {
+        "tags": [
+          "Audit"
+        ],
+        "operationId": "GetProductAuditEventsV1",
+        "parameters": [
+          {
+            "name": "productcode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit/tenants/{tenantid}": {
+      "get": {
+        "tags": [
+          "Audit"
+        ],
+        "operationId": "GetTenantAuditEventsV1",
+        "parameters": [
+          {
+            "name": "tenantid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit/users/{personid}": {
+      "get": {
+        "tags": [
+          "Audit"
+        ],
+        "operationId": "GetUserAuditEventsV1",
+        "parameters": [
+          {
+            "name": "personid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "AuthLoginV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "AuthLogoutV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "GetMeV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password/forgot": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "AuthPasswordForgotV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password/reset": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "AuthPasswordResetV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "AuthRefreshV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenewSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sessions": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "GetMySessionsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/sessions/{id}": {
+      "delete": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "RevokeMySessionV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/config": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/entitlements/check": {
+      "get": {
+        "tags": [
+          "Entitlements"
+        ],
+        "operationId": "CheckEntitlementV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "productCode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "RedeemHandoffV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "operationId": "GetHealthV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/callback-allowlist": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "ListCallbackAllowlistV1",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateCallbackAllowlistEntryV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCallbackAllowlistEntryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/callback-allowlist/{entryId}": {
+      "delete": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "DeleteCallbackAllowlistEntryV1",
+        "parameters": [
+          {
+            "name": "entryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/callback/validate": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "ValidateLaunchCallbackV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateCallbackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/catalog": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetLaunchCatalogV1",
+        "parameters": [
+          {
+            "name": "currentProductKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/context": {
+      "get": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "GetLaunchContextV1",
+        "parameters": [
+          {
+            "name": "productKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/handoff": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "CreateHandoffV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/handoff/redeem": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "RedeemHandoffLaunchV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/launch/validate": {
+      "post": {
+        "tags": [
+          "Launch"
+        ],
+        "operationId": "ValidateLaunchV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateLaunchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/platform-admin/dashboard": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminDashboardV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/platform-admin/launch-attempts": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminLaunchAttemptsV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "productKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "correlationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "fromUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "toUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/platform-admin/launch-diagnostics": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminLaunchDiagnosticsV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "productKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/platform-admin/overview/products": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminProductOverviewV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/platform-admin/overview/tenants": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminTenantOverviewV1",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/platform-admin/product-manifests": {
+      "get": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminProductManifestsV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "productKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/platform-admin/users": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminCreateUserV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlatformUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/platform-admin/users/{userId}": {
+      "patch": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminUpdateUserV1",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlatformUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/platform-admin/users/{userId}/enable": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminEnableUserV1",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/platform-admin/users/{userId}/lock": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminLockUserV1",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/platform-admin/users/{userId}/unlock": {
+      "post": {
+        "tags": [
+          "PlatformAdmin"
+        ],
+        "operationId": "PlatformAdminUnlockUserV1",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/products": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "operationId": "ListProductsV1",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Products"
+        ],
+        "operationId": "CreateProductV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/products/{productCode}": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "operationId": "GetProductV1",
+        "parameters": [
+          {
+            "name": "productCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Products"
+        ],
+        "operationId": "UpdateProductV1",
+        "parameters": [
+          {
+            "name": "productCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/products/{productCode}/disable": {
+      "post": {
+        "tags": [
+          "Products"
+        ],
+        "operationId": "DisableProductV1",
+        "parameters": [
+          {
+            "name": "productCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/products/{productCode}/enable": {
+      "post": {
+        "tags": [
+          "Products"
+        ],
+        "operationId": "EnableProductV1",
+        "parameters": [
+          {
+            "name": "productCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/service-clients": {
+      "get": {
+        "tags": [
+          "ServiceTokens"
+        ],
+        "operationId": "ListServiceClientsV1",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ServiceTokens"
+        ],
+        "operationId": "RegisterServiceClientV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterServiceClientRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/service-clients/{id}/revoke": {
+      "post": {
+        "tags": [
+          "ServiceTokens"
+        ],
+        "operationId": "RevokeServiceClientV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/service-clients/{id}/rotate": {
+      "post": {
+        "tags": [
+          "ServiceTokens"
+        ],
+        "operationId": "RotateServiceClientV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/service-token": {
+      "post": {
+        "tags": [
+          "ServiceTokens"
+        ],
+        "operationId": "IssueServiceTokenV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueServiceTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/settings": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/system/status": {
+      "get": {
+        "tags": [
+          "PlatformHealth"
+        ],
+        "operationId": "GetSystemStatusV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants": {
+      "get": {
+        "tags": [
+          "Tenants"
+        ],
+        "operationId": "ListTenantsV1",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tenants"
+        ],
+        "operationId": "CreateTenantV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTenantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}": {
+      "get": {
+        "tags": [
+          "Tenants"
+        ],
+        "operationId": "GetTenantV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Tenants"
+        ],
+        "operationId": "UpdateTenantV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTenantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/archive": {
+      "post": {
+        "tags": [
+          "Tenants"
+        ],
+        "operationId": "ArchiveTenantV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/disable": {
+      "post": {
+        "tags": [
+          "Tenants"
+        ],
+        "operationId": "DisableTenantV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/enable": {
+      "post": {
+        "tags": [
+          "Tenants"
+        ],
+        "operationId": "EnableTenantV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/entitlements": {
+      "get": {
+        "tags": [
+          "Entitlements"
+        ],
+        "operationId": "ListTenantEntitlementsV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Entitlements"
+        ],
+        "operationId": "GrantTenantEntitlementV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantEntitlementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/entitlements/{productCode}": {
+      "patch": {
+        "tags": [
+          "Entitlements"
+        ],
+        "operationId": "UpdateTenantEntitlementV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "productCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTenantEntitlementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Entitlements"
+        ],
+        "operationId": "DeleteTenantEntitlementV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "productCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/members": {
+      "get": {
+        "tags": [
+          "Tenants"
+        ],
+        "operationId": "ListTenantMembersV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tenants"
+        ],
+        "operationId": "AddTenantMemberV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddTenantMemberRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/tenants/{tenantId}/members/{personId}": {
+      "delete": {
+        "tags": [
+          "Tenants"
+        ],
+        "operationId": "RemoveTenantMemberV1",
+        "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "personId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -2370,10 +5578,75 @@
           }
         }
       }
+    },
+    "/ready": {
+      "get": {
+        "tags": [
+          "PlatformHealth"
+        ],
+        "operationId": "ReadyShortcut",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AddTenantMemberRequest": {
+        "required": [
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roleKey": {
+            "type": "string",
+            "default": "tenant_user"
+          }
+        }
+      },
+      "CompanionFieldInspectionAnswerInput": {
+        "required": [
+          "checklistItemId",
+          "passFailValue",
+          "numericValue",
+          "textValue"
+        ],
+        "type": "object",
+        "properties": {
+          "checklistItemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "passFailValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "numericValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "textValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CompanionOfflineActionItem": {
         "required": [
           "idempotencyKey",
@@ -2442,6 +5715,17 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CompleteCompanionFieldInspectionRequest": {
+        "required": [
+          "taskKey"
+        ],
+        "type": "object",
+        "properties": {
+          "taskKey": {
+            "type": "string"
           }
         }
       },
@@ -2556,6 +5840,60 @@
           }
         }
       },
+      "CreatePlatformIdentityRequest": {
+        "required": [
+          "tenantId",
+          "email",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "roleKey": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "default": "employee"
+          }
+        }
+      },
+      "CreatePlatformUserRequest": {
+        "required": [
+          "email",
+          "displayName",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "isPlatformAdmin": {
+            "type": "boolean",
+            "default": false
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
       "CreateProductRequest": {
         "required": [
           "productKey",
@@ -2595,6 +5933,17 @@
             "type": "string"
           },
           "displayName": {
+            "type": "string"
+          }
+        }
+      },
+      "ForgotPasswordRequest": {
+        "required": [
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
             "type": "string"
           }
         }
@@ -2662,6 +6011,45 @@
           }
         }
       },
+      "LogCompanionFieldWorkOrderLaborRequest": {
+        "required": [
+          "taskKey",
+          "hoursWorked",
+          "laborTypeKey",
+          "notes",
+          "workOrderTaskLineId"
+        ],
+        "type": "object",
+        "properties": {
+          "taskKey": {
+            "type": "string"
+          },
+          "hoursWorked": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "laborTypeKey": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workOrderTaskLineId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "email",
@@ -2692,6 +6080,72 @@
         "type": "object",
         "properties": {
           "refreshToken": {
+            "type": "string"
+          }
+        }
+      },
+      "PersonLoginDisableRequest": {
+        "required": [
+          "tenantId",
+          "staffarrPersonId",
+          "externalUserId",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "staffarrPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "externalUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "PersonLoginEnableRequest": {
+        "required": [
+          "tenantId",
+          "staffarrPersonId",
+          "externalUserId",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "staffarrPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "externalUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PostCompanionFieldReceivingRequest": {
+        "required": [
+          "taskKey"
+        ],
+        "type": "object",
+        "properties": {
+          "taskKey": {
             "type": "string"
           }
         }
@@ -2769,6 +6223,31 @@
             ],
             "format": "uuid"
           },
+          "asOfUtc": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "batchSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProcessPlatformOutboxPublisherRequest": {
+        "required": [
+          "asOfUtc",
+          "batchSize"
+        ],
+        "type": "object",
+        "properties": {
           "asOfUtc": {
             "type": [
               "null",
@@ -2892,6 +6371,64 @@
           }
         }
       },
+      "ResetPasswordRequest": {
+        "required": [
+          "token",
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string"
+          }
+        }
+      },
+      "SubmitCompanionFieldDvirRequest": {
+        "required": [
+          "taskKey",
+          "phase",
+          "result",
+          "odometerReading",
+          "defectNotes",
+          "vehicleRefKey"
+        ],
+        "type": "object",
+        "properties": {
+          "taskKey": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          },
+          "odometerReading": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "defectNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "vehicleRefKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "SubmitCompanionFieldEvidenceRequest": {
         "required": [
           "taskKey",
@@ -2926,6 +6463,24 @@
           }
         }
       },
+      "SubmitCompanionFieldInspectionAnswersRequest": {
+        "required": [
+          "taskKey",
+          "answers"
+        ],
+        "type": "object",
+        "properties": {
+          "taskKey": {
+            "type": "string"
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanionFieldInspectionAnswerInput"
+            }
+          }
+        }
+      },
       "SyncCompanionOfflineActionsRequest": {
         "required": [
           "actions"
@@ -2951,6 +6506,65 @@
           }
         }
       },
+      "UpdateCompanionFieldReceivingLineRequest": {
+        "required": [
+          "taskKey",
+          "lineId",
+          "quantityReceived"
+        ],
+        "type": "object",
+        "properties": {
+          "taskKey": {
+            "type": "string"
+          },
+          "lineId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantityReceived": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "UpdateCompanionFieldWorkOrderStatusRequest": {
+        "required": [
+          "taskKey",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "taskKey": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdatePlatformUserRequest": {
+        "required": [
+          "email",
+          "displayName",
+          "isPlatformAdmin"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "isPlatformAdmin": {
+            "type": "boolean"
+          }
+        }
+      },
       "UpdateProductRequest": {
         "required": [
           "displayName",
@@ -2972,6 +6586,17 @@
           },
           "isActive": {
             "type": "boolean"
+          }
+        }
+      },
+      "UpdateTenantEntitlementRequest": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
           }
         }
       },
@@ -3045,6 +6670,44 @@
           }
         }
       },
+      "UpsertDataPlaneProfileRequest": {
+        "required": [
+          "tenantId",
+          "productKey",
+          "deploymentMode",
+          "dataEndpointUrl",
+          "trustStatus",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productKey": {
+            "type": "string"
+          },
+          "deploymentMode": {
+            "type": "string"
+          },
+          "dataEndpointUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "trustStatus": {
+            "type": "string"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "UpsertEntitlementReconciliationSettingsRequest": {
         "required": [
           "isEnabled",
@@ -3061,6 +6724,35 @@
           },
           "autoRevokeStaleEntitlements": {
             "type": "boolean"
+          }
+        }
+      },
+      "UpsertPlatformOutboxPublisherSettingsRequest": {
+        "required": [
+          "isEnabled",
+          "maxRetryAttempts",
+          "retryIntervalMinutes"
+        ],
+        "type": "object",
+        "properties": {
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "maxRetryAttempts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "retryIntervalMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -3209,6 +6901,25 @@
           }
         }
       },
+      "ValidateLaunchRequest": {
+        "required": [
+          "productKey",
+          "tenantId"
+        ],
+        "type": "object",
+        "properties": {
+          "productKey": {
+            "type": "string"
+          },
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "ValidateServiceTokenRequest": {
         "required": [
           "token"
@@ -3230,7 +6941,19 @@
       "name": "NexArr.Api"
     },
     {
+      "name": "ServiceTokens"
+    },
+    {
+      "name": "ServiceTokenDiscovery"
+    },
+    {
       "name": "InternalIntegrationTokens"
+    },
+    {
+      "name": "Launch"
+    },
+    {
+      "name": "Internal"
     },
     {
       "name": "PlatformHealth"
@@ -3242,6 +6965,9 @@
       "name": "Me"
     },
     {
+      "name": "Settings"
+    },
+    {
       "name": "Tenants"
     },
     {
@@ -3251,10 +6977,7 @@
       "name": "Entitlements"
     },
     {
-      "name": "ServiceTokens"
-    },
-    {
-      "name": "Launch"
+      "name": "Audit"
     },
     {
       "name": "PlatformAdmin"
@@ -3263,7 +6986,7 @@
       "name": "PlatformAuditPackages"
     },
     {
-      "name": "Internal"
+      "name": "HybridDataPlane"
     },
     {
       "name": "CompanionAuth"
@@ -3282,6 +7005,18 @@
     },
     {
       "name": "CompanionFieldEvidence"
+    },
+    {
+      "name": "CompanionFieldDvir"
+    },
+    {
+      "name": "CompanionFieldInspection"
+    },
+    {
+      "name": "CompanionFieldWorkOrder"
+    },
+    {
+      "name": "CompanionFieldReceiving"
     },
     {
       "name": "CompanionFieldSubmissions"

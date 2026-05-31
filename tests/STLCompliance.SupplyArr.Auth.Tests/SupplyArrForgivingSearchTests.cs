@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -124,6 +125,106 @@ public sealed class SupplyArrForgivingSearchTests : IAsyncLifetime
     {
         var response = await _supplyarrClient.GetAsync("/api/search/forgiving?q=acme");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task V1_search_and_inventory_index_endpoints_are_available()
+    {
+        var searchIndexResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/search", _userToken));
+        searchIndexResponse.EnsureSuccessStatusCode();
+        var searchIndexJson = await searchIndexResponse.Content.ReadAsStringAsync();
+        using var searchDoc = JsonDocument.Parse(searchIndexJson);
+        Assert.Contains(
+            searchDoc.RootElement.GetProperty("items").EnumerateArray().Select(x => x.GetProperty("path").GetString()),
+            path => string.Equals(path, "/api/v1/search/forgiving", StringComparison.Ordinal));
+
+        var inventoryIndexResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/inventory", _userToken));
+        inventoryIndexResponse.EnsureSuccessStatusCode();
+        var inventoryIndexJson = await inventoryIndexResponse.Content.ReadAsStringAsync();
+        using var inventoryDoc = JsonDocument.Parse(inventoryIndexJson);
+        var inventoryPaths = inventoryDoc.RootElement
+            .GetProperty("items")
+            .EnumerateArray()
+            .Select(x => x.GetProperty("path").GetString())
+            .ToList();
+        Assert.Contains("/api/v1/inventory/locations", inventoryPaths);
+        Assert.Contains("/api/v1/inventory/stock", inventoryPaths);
+    }
+
+    [Fact]
+    public async Task External_reference_resolve_returns_part_and_vendor_matches()
+    {
+        var resolvePartResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/references/resolve?entityType=part&key=BRK-PAD-001", _userToken));
+        resolvePartResponse.EnsureSuccessStatusCode();
+        var partResolution = await resolvePartResponse.Content.ReadFromJsonAsync<ExternalReferenceResolutionResponse>();
+        Assert.NotNull(partResolution);
+        Assert.Equal("part", partResolution!.EntityType);
+        Assert.Equal(_partId, partResolution.EntityId);
+        Assert.Equal("BRK-PAD-001", partResolution.DisplayCode);
+
+        var resolveVendorResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/references/resolve?entityType=vendor&key=ACME-BRK", _userToken));
+        resolveVendorResponse.EnsureSuccessStatusCode();
+        var vendorResolution = await resolveVendorResponse.Content.ReadFromJsonAsync<ExternalReferenceResolutionResponse>();
+        Assert.NotNull(vendorResolution);
+        Assert.Equal("vendor", vendorResolution!.EntityType);
+        Assert.Equal(_vendorPartyId, vendorResolution.EntityId);
+        Assert.Equal("ACME-BRK", vendorResolution.DisplayCode);
+    }
+
+    [Fact]
+    public async Task External_reference_resolve_returns_not_found_for_unknown_key()
+    {
+        var response = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/references/resolve?entityType=part&key=DOES-NOT-EXIST", _userToken));
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task External_reference_contract_index_is_available_on_base_and_v1_routes()
+    {
+        var v1Response = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/references", _userToken));
+        v1Response.EnsureSuccessStatusCode();
+        var v1Index = await v1Response.Content.ReadFromJsonAsync<ExternalReferenceContractIndexResponse>();
+        Assert.NotNull(v1Index);
+        Assert.Contains(v1Index!.Items, item => item.EntityType == "part");
+        Assert.Contains(v1Index.Items, item => item.EntityType == "purchase_order");
+
+        var baseResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/references", _userToken));
+        baseResponse.EnsureSuccessStatusCode();
+        var baseIndex = await baseResponse.Content.ReadFromJsonAsync<ExternalReferenceContractIndexResponse>();
+        Assert.NotNull(baseIndex);
+        Assert.Equal(v1Index.Items.Count, baseIndex!.Items.Count);
+    }
+
+    [Fact]
+    public async Task External_reference_batch_resolve_returns_found_and_missing_items()
+    {
+        var request = new ExternalReferenceBatchResolveRequest(
+        [
+            new ExternalReferenceResolveRequest("part", "BRK-PAD-001"),
+            new ExternalReferenceResolveRequest("vendor", "ACME-BRK"),
+            new ExternalReferenceResolveRequest("purchase_order", "MISSING-PO")
+        ]);
+
+        var httpRequest = Authorized(HttpMethod.Post, "/api/v1/references/resolve-batch", _userToken);
+        httpRequest.Content = JsonContent.Create(request);
+        var response = await _supplyarrClient.SendAsync(httpRequest);
+        response.EnsureSuccessStatusCode();
+        var payload = await response.Content.ReadFromJsonAsync<ExternalReferenceBatchResolveResponse>();
+        Assert.NotNull(payload);
+        Assert.Equal(3, payload!.Items.Count);
+        Assert.True(payload.Items[0].Found);
+        Assert.Equal("part", payload.Items[0].Resolution!.EntityType);
+        Assert.True(payload.Items[1].Found);
+        Assert.Equal("vendor", payload.Items[1].Resolution!.EntityType);
+        Assert.False(payload.Items[2].Found);
+        Assert.Null(payload.Items[2].Resolution);
     }
 
     private async Task<(Guid PartId, Guid VendorPartyId)> SeedSearchCorpusAsync()

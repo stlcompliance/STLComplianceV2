@@ -67,7 +67,15 @@ public static class ServiceTokenEndpoints
         group.MapPost("/clients/{serviceClientId:guid}/rotate", RotateClientEndpoint)
             .WithName("RotateServiceClient");
 
-        v1Clients.MapPost("/{serviceClientId:guid}/rotate", RotateClientEndpoint)
+        v1Clients.MapPost("/{id:guid}/rotate", async (
+            Guid id,
+            HttpContext context,
+            ServiceTokenAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            await service.RotateClientAsync(context.User, id, cancellationToken);
+            return Results.NoContent();
+        })
             .WithName("RotateServiceClientV1");
 
         static async Task<IResult> RevokeClientEndpoint(
@@ -83,7 +91,15 @@ public static class ServiceTokenEndpoints
         group.MapPost("/clients/{serviceClientId:guid}/revoke", RevokeClientEndpoint)
             .WithName("RevokeServiceClient");
 
-        v1Clients.MapPost("/{serviceClientId:guid}/revoke", RevokeClientEndpoint)
+        v1Clients.MapPost("/{id:guid}/revoke", async (
+            Guid id,
+            HttpContext context,
+            ServiceTokenAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            await service.RevokeClientAsync(context.User, id, cancellationToken);
+            return Results.NoContent();
+        })
             .WithName("RevokeServiceClientV1");
 
         group.MapGet("/", async (

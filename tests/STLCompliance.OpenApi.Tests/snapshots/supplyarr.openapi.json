@@ -756,6 +756,19 @@
         }
       }
     },
+    "/api/command-center": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetSupplyArrCommandCenter",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/config": {
       "get": {
         "tags": [
@@ -987,6 +1000,19 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dashboard": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetSupplyArrDashboard",
         "responses": {
           "200": {
             "description": "OK"
@@ -2988,6 +3014,19 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/inventory": {
+      "get": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "GetInventoryIndex",
         "responses": {
           "200": {
             "description": "OK"
@@ -6606,6 +6645,73 @@
         }
       }
     },
+    "/api/references": {
+      "get": {
+        "tags": [
+          "ExternalReferences"
+        ],
+        "operationId": "ListSupplyArrExternalReferenceContracts",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/references/resolve": {
+      "get": {
+        "tags": [
+          "ExternalReferences"
+        ],
+        "operationId": "ResolveSupplyArrExternalReference",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/references/resolve-batch": {
+      "post": {
+        "tags": [
+          "ExternalReferences"
+        ],
+        "operationId": "ResolveBatchSupplyArrExternalReference",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalReferenceBatchResolveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reorder-evaluation": {
       "get": {
         "tags": [
@@ -7897,6 +8003,19 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/search": {
+      "get": {
+        "tags": [
+          "ForgivingSearch"
+        ],
+        "operationId": "GetSupplyArrSearchIndex",
         "responses": {
           "200": {
             "description": "OK"
@@ -9726,6 +9845,19 @@
         }
       }
     },
+    "/api/v1/command-center": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetSupplyArrCommandCenterV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/config": {
       "get": {
         "tags": [
@@ -9788,6 +9920,93 @@
           "Contracts"
         ],
         "operationId": "ListContractsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/records": {
+      "get": {
+        "tags": [
+          "Contracts"
+        ],
+        "operationId": "ListContractRecordsV1",
+        "parameters": [
+          {
+            "name": "vendorPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Contracts"
+        ],
+        "operationId": "CreateContractRecordV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupplyContractRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/contracts/records/{contractId}": {
+      "get": {
+        "tags": [
+          "Contracts"
+        ],
+        "operationId": "GetContractRecordV1",
+        "parameters": [
+          {
+            "name": "contractId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -10009,6 +10228,40 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "CreateCycleCountV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCycleCountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetSupplyArrDashboardV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -10703,6 +10956,194 @@
         }
       }
     },
+    "/api/v1/exports/approved-vendors.csv": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportApprovedVendorListV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/compliance-evidence-packet.csv": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportComplianceEvidencePacketV1",
+        "parameters": [
+          {
+            "name": "vendorPartyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "purchaseOrderId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/customers.csv": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportCustomerListV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/inventory-valuation.csv": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportInventoryValuationV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/invoice-support.csv": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportInvoiceSupportV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/parts-catalog.csv": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportPartsCatalogV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/purchase-orders.csv": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportPurchaseOrdersV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/receipts.csv": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportReceiptsV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/spend.csv": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportSpendV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/supplier-documents.csv": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportSupplierDocumentsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/vendors.csv": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportVendorListV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/external-parties": {
       "get": {
         "tags": [
@@ -10917,6 +11358,362 @@
           "Imports"
         ],
         "operationId": "ListImportsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/availability-list-csv": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ImportAvailabilityListCsvV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvailabilityListCsvImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/contacts-csv": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ImportContactsCsvV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactsCsvImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/contracts-csv": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ImportContractsCsvV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractsCsvImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/errors/export": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ExportImportErrorsV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportErrorExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/external-parties-csv": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ImportExternalPartiesCsvV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalPartiesCsvImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/history": {
+      "get": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ListImportHistoryV1",
+        "parameters": [
+          {
+            "name": "importType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/inventory-counts-csv": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ImportInventoryCountsCsvV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryCountsCsvImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/lead-time-list-csv": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ImportLeadTimeListCsvV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeadTimeListCsvImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/map-fields": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "MapImportFieldsV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportFieldMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/open-purchase-orders-csv": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ImportOpenPurchaseOrdersCsvV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenPurchaseOrdersCsvImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/part-catalog-csv": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ImportPartCatalogCsvV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartCatalogCsvImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/price-list-csv": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ImportPriceListCsvV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PriceListCsvImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/purchase-history-csv": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ImportPurchaseHistoryCsvV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurchaseHistoryCsvImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/vendor-catalog-csv": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ImportVendorCatalogCsvV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorCatalogCsvImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports/vendor-documents-csv": {
+      "post": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "ImportVendorDocumentsCsvV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorDocumentsCsvImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -11358,6 +12155,19 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/inventory": {
+      "get": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "GetInventoryIndexV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -15612,6 +16422,73 @@
         }
       }
     },
+    "/api/v1/references": {
+      "get": {
+        "tags": [
+          "ExternalReferences"
+        ],
+        "operationId": "ListSupplyArrExternalReferenceContractsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/references/resolve": {
+      "get": {
+        "tags": [
+          "ExternalReferences"
+        ],
+        "operationId": "ResolveSupplyArrExternalReferenceV1",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/references/resolve-batch": {
+      "post": {
+        "tags": [
+          "ExternalReferences"
+        ],
+        "operationId": "ResolveBatchSupplyArrExternalReferenceV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalReferenceBatchResolveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/reorder-evaluation": {
       "get": {
         "tags": [
@@ -16910,6 +17787,19 @@
         }
       }
     },
+    "/api/v1/search": {
+      "get": {
+        "tags": [
+          "ForgivingSearch"
+        ],
+        "operationId": "GetSupplyArrSearchIndexV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/search/forgiving": {
       "get": {
         "tags": [
@@ -17077,6 +17967,27 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "CreateStockTransactionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStockTransactionRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -19596,6 +20507,27 @@
           }
         }
       },
+      "AvailabilityListCsvImportRequest": {
+        "required": [
+          "csv"
+        ],
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": true
+          },
+          "fileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CancelBackorderRequest": {
         "required": [
           "reason"
@@ -19701,6 +20633,48 @@
           }
         }
       },
+      "ContactsCsvImportRequest": {
+        "required": [
+          "csv"
+        ],
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": true
+          },
+          "fileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ContractsCsvImportRequest": {
+        "required": [
+          "csv"
+        ],
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": true
+          },
+          "fileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateAvailabilitySnapshotRequest": {
         "required": [
           "snapshotKey",
@@ -19786,6 +20760,32 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CreateCycleCountRequest": {
+        "required": [
+          "partId",
+          "binId",
+          "quantityOnHand"
+        ],
+        "type": "object",
+        "properties": {
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "binId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantityOnHand": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },
@@ -20583,6 +21583,36 @@
           }
         }
       },
+      "CreateStockTransactionRequest": {
+        "required": [
+          "partId",
+          "binId",
+          "quantity",
+          "transactionType"
+        ],
+        "type": "object",
+        "properties": {
+          "partId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "binId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "transactionType": {
+            "type": "string"
+          }
+        }
+      },
       "CreateSupplierIncidentRequest": {
         "required": [
           "externalPartyId",
@@ -20659,6 +21689,92 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "CreateSupplyContractRequest": {
+        "required": [
+          "contractKey",
+          "contractType",
+          "title",
+          "vendorPartyId",
+          "effectiveAt",
+          "expiresAt",
+          "renewalAt",
+          "paymentTerms",
+          "freightTerms",
+          "warrantyTerms",
+          "minimumSpend",
+          "serviceLevelAgreement",
+          "approvalStatus",
+          "status",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "contractKey": {
+            "type": "string"
+          },
+          "contractType": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "vendorPartyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "renewalAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "paymentTerms": {
+            "type": "string"
+          },
+          "freightTerms": {
+            "type": "string"
+          },
+          "warrantyTerms": {
+            "type": "string"
+          },
+          "minimumSpend": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "serviceLevelAgreement": {
+            "type": "string"
+          },
+          "approvalStatus": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
           }
         }
       },
@@ -21066,6 +22182,120 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "ExternalPartiesCsvImportRequest": {
+        "required": [
+          "csv"
+        ],
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": true
+          },
+          "fileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ExternalReferenceBatchResolveRequest": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExternalReferenceResolveRequest"
+            }
+          }
+        }
+      },
+      "ExternalReferenceResolveRequest": {
+        "required": [
+          "entityType",
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "entityType": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          }
+        }
+      },
+      "ImportErrorExportIssueRequest": {
+        "required": [
+          "lineNumber",
+          "code",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "lineNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "ImportErrorExportRequest": {
+        "required": [
+          "importType",
+          "issues"
+        ],
+        "type": "object",
+        "properties": {
+          "importType": {
+            "type": "string"
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportErrorExportIssueRequest"
+            }
+          }
+        }
+      },
+      "ImportFieldMappingRequest": {
+        "required": [
+          "importType",
+          "csv",
+          "fieldMappings"
+        ],
+        "type": "object",
+        "properties": {
+          "importType": {
+            "type": "string"
+          },
+          "csv": {
+            "type": "string"
+          },
+          "fieldMappings": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         }
       },
@@ -21508,6 +22738,27 @@
           }
         }
       },
+      "InventoryCountsCsvImportRequest": {
+        "required": [
+          "csv"
+        ],
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": true
+          },
+          "fileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "InviteRfqVendorsRequest": {
         "required": [
           "vendorPartyIds"
@@ -21541,6 +22792,27 @@
             ]
           },
           "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "LeadTimeListCsvImportRequest": {
+        "required": [
+          "csv"
+        ],
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": true
+          },
+          "fileName": {
             "type": [
               "null",
               "string"
@@ -21593,6 +22865,69 @@
         "properties": {
           "justification": {
             "type": "string"
+          }
+        }
+      },
+      "OpenPurchaseOrdersCsvImportRequest": {
+        "required": [
+          "csv"
+        ],
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": true
+          },
+          "fileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PartCatalogCsvImportRequest": {
+        "required": [
+          "csv"
+        ],
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": true
+          },
+          "fileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PriceListCsvImportRequest": {
+        "required": [
+          "csv"
+        ],
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": true
+          },
+          "fileName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -21961,6 +23296,27 @@
           },
           "createDraftPurchaseRequests": {
             "type": "boolean"
+          }
+        }
+      },
+      "PurchaseHistoryCsvImportRequest": {
+        "required": [
+          "csv"
+        ],
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": true
+          },
+          "fileName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -23288,6 +24644,48 @@
             "type": "string"
           }
         }
+      },
+      "VendorCatalogCsvImportRequest": {
+        "required": [
+          "csv"
+        ],
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": true
+          },
+          "fileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "VendorDocumentsCsvImportRequest": {
+        "required": [
+          "csv"
+        ],
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean",
+            "default": true
+          },
+          "fileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
       }
     }
   },
@@ -23329,6 +24727,9 @@
       "name": "Reports"
     },
     {
+      "name": "Dashboard"
+    },
+    {
       "name": "LoadTestJourney"
     },
     {
@@ -23348,6 +24749,9 @@
     },
     {
       "name": "PartyRegistry"
+    },
+    {
+      "name": "ExternalReferences"
     },
     {
       "name": "StockReservations"

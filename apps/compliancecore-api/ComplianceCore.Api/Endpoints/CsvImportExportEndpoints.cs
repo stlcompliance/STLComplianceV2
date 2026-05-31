@@ -137,25 +137,25 @@ public static class CsvImportExportEndpoints
         .WithName("PublishDraftRulePackImportV1")
         .DisableAntiforgery();
 
-        rulePackImports.MapGet("/{importId:guid}", (
-            Guid importId,
+        rulePackImports.MapGet("/{id:guid}", (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             HttpContext context) =>
         {
             authorization.RequireCsvBundleRead(context.User);
-            return RulePackImports.TryGetValue(importId, out var importRun)
+            return RulePackImports.TryGetValue(id, out var importRun)
                 ? Results.Ok(importRun)
                 : Results.NotFound(new { code = "rule_pack_imports.not_found", message = "Rule pack import was not found." });
         })
         .WithName("GetRulePackImportV1");
 
-        rulePackImports.MapGet("/{importId:guid}/diff", (
-            Guid importId,
+        rulePackImports.MapGet("/{id:guid}/diff", (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             HttpContext context) =>
         {
             authorization.RequireCsvBundleRead(context.User);
-            if (!RulePackImports.TryGetValue(importId, out var importRun))
+            if (!RulePackImports.TryGetValue(id, out var importRun))
             {
                 return Results.NotFound(new { code = "rule_pack_imports.not_found", message = "Rule pack import was not found." });
             }
@@ -171,13 +171,13 @@ public static class CsvImportExportEndpoints
         })
         .WithName("DiffRulePackImportV1");
 
-        rulePackImports.MapGet("/{importId:guid}/test-results", (
-            Guid importId,
+        rulePackImports.MapGet("/{id:guid}/test-results", (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             HttpContext context) =>
         {
             authorization.RequireCsvBundleRead(context.User);
-            if (!RulePackImports.TryGetValue(importId, out var importRun))
+            if (!RulePackImports.TryGetValue(id, out var importRun))
             {
                 return Results.NotFound(new { code = "rule_pack_imports.not_found", message = "Rule pack import was not found." });
             }
@@ -191,13 +191,13 @@ public static class CsvImportExportEndpoints
         })
         .WithName("RulePackImportTestResultsV1");
 
-        rulePackImports.MapPost("/{importId:guid}/rollback", (
-            Guid importId,
+        rulePackImports.MapPost("/{id:guid}/rollback", (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             HttpContext context) =>
         {
             authorization.RequireCsvBundleManage(context.User);
-            if (!RulePackImports.TryGetValue(importId, out var importRun))
+            if (!RulePackImports.TryGetValue(id, out var importRun))
             {
                 return Results.NotFound(new { code = "rule_pack_imports.not_found", message = "Rule pack import was not found." });
             }

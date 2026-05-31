@@ -370,6 +370,19 @@
         }
       }
     },
+    "/api/audit-packages": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetTrainArrAuditPackageIndex",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/audit-packages/export": {
       "get": {
         "tags": [
@@ -538,11 +551,37 @@
         }
       }
     },
+    "/api/command-center": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetTrainArrCommandCenterCommandCenter",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/config": {
       "get": {
         "tags": [
           "Settings"
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dashboard": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetTrainArrCommandCenter",
         "responses": {
           "200": {
             "description": "OK"
@@ -971,6 +1010,19 @@
         }
       }
     },
+    "/api/integrations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListIntegrationEndpoints",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/incident-remediations": {
       "post": {
         "tags": [
@@ -1083,6 +1135,29 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RoutarrQualificationCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/qualification-check/batch": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "BatchQualificationCheckIntegration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntegrationBatchQualificationCheckRequest"
               }
             }
           },
@@ -2077,6 +2152,19 @@
         }
       }
     },
+    "/api/me/training": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "GetPersonalTrainingDashboard",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/notification-settings": {
       "get": {
         "tags": [
@@ -2830,6 +2918,19 @@
         }
       }
     },
+    "/api/reports/assignments/overdue": {
+      "get": {
+        "tags": [
+          "AssignmentReports"
+        ],
+        "operationId": "GetTrainArrAssignmentOverdueReport",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reports/assignments/summary": {
       "get": {
         "tags": [
@@ -2888,6 +2989,19 @@
         }
       }
     },
+    "/api/reports/compliance/gaps": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetTrainArrComplianceGapReport",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reports/compliance/summary": {
       "get": {
         "tags": [
@@ -2922,6 +3036,33 @@
             "in": "query",
             "schema": {
               "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/qualifications/expiring": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "GetTrainArrQualificationExpiringReport",
+        "parameters": [
+          {
+            "name": "windowDays",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
             }
           }
         ],
@@ -5283,6 +5424,19 @@
         }
       }
     },
+    "/api/v1/audit-packages": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetTrainArrAuditPackageIndexV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/audit-packages/export": {
       "get": {
         "tags": [
@@ -5560,11 +5714,37 @@
         }
       }
     },
+    "/api/v1/command-center": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetTrainArrCommandCenterCommandCenterV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/config": {
       "get": {
         "tags": [
           "Settings"
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetTrainArrCommandCenterV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -5743,6 +5923,76 @@
         }
       }
     },
+    "/api/v1/exports/manifest": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "GetTrainArrEntityExportManifestV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/qualification-issues": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "ExportTrainArrQualificationIssuesCsvV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/training-assignments": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "ExportTrainArrTrainingAssignmentsCsvV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/training-definitions": {
+      "get": {
+        "tags": [
+          "EntityExports"
+        ],
+        "operationId": "ExportTrainArrTrainingDefinitionsCsvV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -5795,6 +6045,19 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListIntegrationEndpointsV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -5914,6 +6177,29 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RoutarrQualificationCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/qualification-check/batch": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "BatchQualificationCheckIntegrationV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIntegrationBatchQualificationCheckRequest"
               }
             }
           },
@@ -6060,6 +6346,19 @@
           "Me"
         ],
         "operationId": "TrainArrGetMeV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/me/training": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "operationId": "GetPersonalTrainingDashboardV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -6683,6 +6982,92 @@
         }
       }
     },
+    "/api/v1/qualifications/check": {
+      "post": {
+        "tags": [
+          "QualificationChecks"
+        ],
+        "operationId": "CreateQualificationCheckV1QualificationGateChecks",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQualificationCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "QualificationChecks"
+        ],
+        "operationId": "ListQualificationChecksV1QualificationGateChecks",
+        "parameters": [
+          {
+            "name": "staffarrPersonId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "qualificationKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/qualifications/check/batch": {
+      "post": {
+        "tags": [
+          "QualificationChecks"
+        ],
+        "operationId": "CreateBatchQualificationCheckV1QualificationGateChecks",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBatchQualificationCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/qualifications/{qualificationIssueId}": {
       "get": {
         "tags": [
@@ -7048,6 +7433,19 @@
         }
       }
     },
+    "/api/v1/reports/assignments/overdue": {
+      "get": {
+        "tags": [
+          "AssignmentReports"
+        ],
+        "operationId": "GetTrainArrAssignmentOverdueReportV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/reports/assignments/summary": {
       "get": {
         "tags": [
@@ -7106,6 +7504,19 @@
         }
       }
     },
+    "/api/v1/reports/compliance/gaps": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetTrainArrComplianceGapReportV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/reports/compliance/summary": {
       "get": {
         "tags": [
@@ -7140,6 +7551,33 @@
             "in": "query",
             "schema": {
               "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/qualifications/expiring": {
+      "get": {
+        "tags": [
+          "QualificationReports"
+        ],
+        "operationId": "GetTrainArrQualificationExpiringReportV1",
+        "parameters": [
+          {
+            "name": "windowDays",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
             }
           }
         ],
@@ -7489,6 +7927,40 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/training-definitions": {
+      "get": {
+        "tags": [
+          "TrainingDefinitions"
+        ],
+        "operationId": "ListTrainingDefinitionsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TrainingDefinitions"
+        ],
+        "operationId": "CreateTrainingDefinitionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTrainingDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -7925,6 +8397,57 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "CreateIntegrationBatchQualificationCheckRequest": {
+        "required": [
+          "tenantId",
+          "qualificationKey",
+          "rulePackKey",
+          "subjects"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "qualificationKey": {
+            "type": "string"
+          },
+          "rulePackKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "subjects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BatchQualificationCheckSubject"
+            }
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "trainingDefinitionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "trainingProgramId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -10089,6 +10612,9 @@
     },
     {
       "name": "IntegrationSettings"
+    },
+    {
+      "name": "Dashboard"
     },
     {
       "name": "Reports"

@@ -98,6 +98,45 @@ public static class V1FeatureAliasEndpoints
         .WithTags("PermissionTemplates")
         .RequireAuthorization()
         .WithName("ListPermissionTemplatesV1");
+
+        app.MapGet("/api/v1/permissions/check", async (
+            Guid personId,
+            string[] permissionKey,
+            HttpContext context,
+            StaffArrAuthorizationService authorization,
+            IntegrationPermissionCheckService service,
+            CancellationToken cancellationToken) =>
+        {
+            if (personId == Guid.Empty)
+            {
+                return Results.BadRequest(new
+                {
+                    code = "permission_check.validation",
+                    message = "personId query parameter is required."
+                });
+            }
+
+            if (permissionKey.Length == 0 || permissionKey.All(string.IsNullOrWhiteSpace))
+            {
+                return Results.BadRequest(new
+                {
+                    code = "permission_check.validation",
+                    message = "At least one permissionKey query parameter is required."
+                });
+            }
+
+            authorization.RequirePermissionProjectionRead(context.User, personId);
+            var tenantId = context.User.GetTenantId();
+            var result = await service.CheckAsync(
+                tenantId,
+                personId,
+                permissionKey,
+                cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithTags("PermissionTemplates")
+        .RequireAuthorization()
+        .WithName("CheckPermissionsV1");
     }
 
     private static void MapOverrideAlias(WebApplication app)

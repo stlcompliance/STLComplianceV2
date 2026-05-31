@@ -401,7 +401,8 @@ public static class V1FeatureAliasEndpoints
             items = new[]
             {
                 new { key = "driver-eligibility", path = "/api/v1/compliance-checks/driver-eligibility" },
-                new { key = "asset-dispatchability", path = "/api/v1/compliance-checks/asset-dispatchability" }
+                new { key = "asset-dispatchability", path = "/api/v1/compliance-checks/asset-dispatchability" },
+                new { key = "dispatch-workflow-gate", path = "/api/v1/compliance-checks/dispatch-workflow-gate" }
             }
         }))
         .WithTags("ComplianceChecks")
@@ -450,6 +451,30 @@ public static class V1FeatureAliasEndpoints
         .WithTags("ComplianceChecks")
         .RequireAuthorization()
         .WithName("CheckAssetDispatchabilityV1Alias");
+
+        app.MapPost("/api/v1/compliance-checks/dispatch-workflow-gate", async (
+            DispatchWorkflowGateCheckRequest request,
+            HttpContext context,
+            RoutArrAuthorizationService authorization,
+            DispatchWorkflowGateService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireTripsAssign(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var result = await service.CheckAsync(
+                tenantId,
+                actorUserId,
+                request.TripId,
+                request.DriverPersonId,
+                request.VehicleRefKey,
+                request.AssignmentKind,
+                cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithTags("ComplianceChecks")
+        .RequireAuthorization()
+        .WithName("CheckDispatchWorkflowGateV1Alias");
 
         app.MapGet("/api/v1/availability", async (
             string? scope,

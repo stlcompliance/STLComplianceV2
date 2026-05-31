@@ -220,6 +220,28 @@ public sealed class RoutArrDispatchWorkflowGateTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Dispatch_workflow_gate_v1_compliance_alias_returns_expected_gate_result()
+    {
+        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var driverPersonId = PlatformSeeder.DemoAdminUserId.ToString();
+        var now = DateTimeOffset.UtcNow;
+        var trip = await CreateTripAsync(dispatcherToken, now.AddHours(2), now.AddHours(6));
+
+        var checkRequest = Authorized(HttpMethod.Post, "/api/v1/compliance-checks/dispatch-workflow-gate", dispatcherToken);
+        checkRequest.Content = JsonContent.Create(new DispatchWorkflowGateCheckRequest(
+            trip.TripId,
+            driverPersonId,
+            AssignmentKind: "driver"));
+        var checkResponse = await _routarrClient.SendAsync(checkRequest);
+        checkResponse.EnsureSuccessStatusCode();
+        var check = (await checkResponse.Content.ReadFromJsonAsync<DispatchWorkflowGateCheckResponse>())!;
+
+        Assert.Equal(DispatchWorkflowGateOutcomes.Block, check.Outcome);
+        Assert.True(check.IsBlocking);
+        Assert.Contains(check.Gates, x => x.GateKey == "dispatch_driver_qualification");
+    }
+
+    [Fact]
     public async Task Assign_driver_blocked_when_workflow_gate_blocks_and_override_succeeds()
     {
         var dispatcherToken = await RedeemRoutArrTokenAsync();

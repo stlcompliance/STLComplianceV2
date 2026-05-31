@@ -57,6 +57,8 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
 
     public DbSet<WorkflowGateCheckResult> WorkflowGateCheckResults => Set<WorkflowGateCheckResult>();
 
+    public DbSet<ProductGateResponse> ProductGateResponses => Set<ProductGateResponse>();
+
     public DbSet<SdsReference> SdsReferences => Set<SdsReference>();
 
     public DbSet<HazComReference> HazComReferences => Set<HazComReference>();
@@ -831,6 +833,24 @@ public sealed class ComplianceCoreDbContext(DbContextOptions<ComplianceCoreDbCon
                 .WithMany()
                 .HasForeignKey(x => x.RuleEvaluationRunId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<ProductGateResponse>(entity =>
+        {
+            entity.ToTable("compliancecore_product_gate_responses");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SourceProduct).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ResponseOutcome).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.ResponseCode).HasMaxLength(64);
+            entity.Property(x => x.ResponseMessage).HasMaxLength(1024);
+            entity.Property(x => x.ResponsePayloadJson).HasColumnType("jsonb").IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => x.WorkflowGateCheckResultId);
+            entity.HasIndex(x => new { x.TenantId, x.WorkflowGateCheckResultId, x.RespondedAt });
+            entity.HasOne(x => x.WorkflowGateCheckResult)
+                .WithMany()
+                .HasForeignKey(x => x.WorkflowGateCheckResultId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<SdsReference>(entity =>

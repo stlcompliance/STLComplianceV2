@@ -179,6 +179,26 @@ public sealed class TrainArrAuditPackageTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Audit_package_v1_index_lists_manifest_export_and_jobs_paths()
+    {
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_admin");
+        var response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/audit-packages", adminToken));
+        response.EnsureSuccessStatusCode();
+
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var paths = json.RootElement
+            .GetProperty("items")
+            .EnumerateArray()
+            .Select(x => x.GetProperty("path").GetString())
+            .ToList();
+
+        Assert.Contains("/api/v1/audit-packages/manifest", paths);
+        Assert.Contains("/api/v1/audit-packages/export", paths);
+        Assert.Contains("/api/v1/audit-packages/jobs", paths);
+    }
+
+    [Fact]
     public async Task Audit_v1_alias_matches_primary_audit_timeline()
     {
         var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "tenant_admin");

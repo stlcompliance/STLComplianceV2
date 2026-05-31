@@ -2,6 +2,7 @@ using STLCompliance.Shared.Integration;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -169,6 +170,25 @@ public sealed class MaintainArrEntityBulkExportTests : IAsyncLifetime
         inspectionRunsResponse.EnsureSuccessStatusCode();
         var inspectionRunsCsv = await inspectionRunsResponse.Content.ReadAsStringAsync();
         Assert.Contains(EntityBulkExportService.InspectionRunsCsvHeader, inspectionRunsCsv, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Exports_v1_index_lists_manifest_and_entity_export_paths()
+    {
+        var response = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports", _managerToken));
+        response.EnsureSuccessStatusCode();
+
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var paths = json.RootElement.GetProperty("items")
+            .EnumerateArray()
+            .Select(x => x.GetProperty("path").GetString())
+            .ToList();
+
+        Assert.Contains("/api/v1/exports/manifest", paths);
+        Assert.Contains("/api/v1/exports/assets", paths);
+        Assert.Contains("/api/v1/exports/work-orders", paths);
+        Assert.Contains("/api/v1/exports/inspection-runs", paths);
     }
 
     [Fact]

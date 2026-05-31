@@ -694,6 +694,7 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
         var item = await eventResponse.Content.ReadFromJsonAsync<PlatformAuditEventExportItem>();
         Assert.NotNull(item);
         Assert.Equal(eventId, item.AuditEventId);
+
     }
 
     [Fact]

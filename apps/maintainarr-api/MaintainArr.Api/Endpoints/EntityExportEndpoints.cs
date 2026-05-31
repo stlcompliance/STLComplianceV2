@@ -17,6 +17,23 @@ public static class EntityExportEndpoints
         {
             exports.WithTags("Exports").RequireAuthorization();
 
+            exports.MapGet("/", (
+                MaintainArrAuthorizationService authorization,
+                HttpContext context) =>
+            {
+                authorization.RequireEntityExport(context.User);
+                return Results.Ok(new
+                {
+                    items = new[]
+                    {
+                        new { key = "manifest", path = $"{exportBasePath}/manifest" },
+                        new { key = "assets", path = $"{exportBasePath}/assets" },
+                        new { key = "work-orders", path = $"{exportBasePath}/work-orders" },
+                        new { key = "inspection-runs", path = $"{exportBasePath}/inspection-runs" },
+                    }
+                });
+            });
+
             exports.MapGet("/manifest", (
                 MaintainArrAuthorizationService authorization,
                 EntityBulkExportService service,

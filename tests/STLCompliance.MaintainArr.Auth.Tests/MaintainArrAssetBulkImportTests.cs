@@ -2,6 +2,7 @@ using STLCompliance.Shared.Integration;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -153,6 +154,23 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
         using var scope = _maintainarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
         Assert.False(await db.Assets.AnyAsync(x => x.AssetTag == tag));
+    }
+
+    [Fact]
+    public async Task Imports_v1_index_lists_validate_and_commit_paths()
+    {
+        var response = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/imports", _managerToken));
+        response.EnsureSuccessStatusCode();
+
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var paths = json.RootElement.GetProperty("items")
+            .EnumerateArray()
+            .Select(x => x.GetProperty("path").GetString())
+            .ToList();
+
+        Assert.Contains("/api/v1/imports/assets/validate", paths);
+        Assert.Contains("/api/v1/imports/assets/commit", paths);
     }
 
     [Fact]

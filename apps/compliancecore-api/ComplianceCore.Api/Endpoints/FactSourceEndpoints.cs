@@ -55,8 +55,8 @@ public static class FactSourceEndpoints
         })
         .WithName($"CreateFactSource{suffix}");
 
-        factSources.MapPatch("/{factSourceId:guid}", async (
-            Guid factSourceId,
+        factSources.MapPatch("/{id:guid}", async (
+            Guid id,
             UpdateFactSourceRequest request,
             ComplianceCoreAuthorizationService authorization,
             FactSourceService service,
@@ -68,7 +68,7 @@ public static class FactSourceEndpoints
             return Results.Ok(await service.UpdateAsync(
                 tenantId,
                 context.User.GetUserId(),
-                factSourceId,
+                id,
                 request,
                 cancellationToken));
         })

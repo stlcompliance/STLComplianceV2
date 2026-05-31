@@ -257,7 +257,7 @@
         }
       }
     },
-    "/api/citations/{citationId}": {
+    "/api/citations/{id}": {
       "get": {
         "tags": [
           "Citations"
@@ -265,7 +265,7 @@
         "operationId": "GetRegulatoryCitation",
         "parameters": [
           {
-            "name": "citationId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -287,7 +287,7 @@
         "operationId": "UpdateRegulatoryCitation",
         "parameters": [
           {
-            "name": "citationId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -313,7 +313,7 @@
         }
       }
     },
-    "/api/citations/{citationId}/history": {
+    "/api/citations/{id}/history": {
       "get": {
         "tags": [
           "Citations"
@@ -321,7 +321,7 @@
         "operationId": "ListRegulatoryCitationHistory",
         "parameters": [
           {
-            "name": "citationId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -337,7 +337,7 @@
         }
       }
     },
-    "/api/citations/{citationId}/rules": {
+    "/api/citations/{id}/rules": {
       "get": {
         "tags": [
           "Citations"
@@ -345,7 +345,7 @@
         "operationId": "ListRegulatoryCitationRules",
         "parameters": [
           {
-            "name": "citationId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -786,7 +786,7 @@
         }
       }
     },
-    "/api/fact-definitions/{factKey}": {
+    "/api/fact-definitions/{key}": {
       "get": {
         "tags": [
           "FactCatalog"
@@ -794,7 +794,7 @@
         "operationId": "GetFactDefinition",
         "parameters": [
           {
-            "name": "factKey",
+            "name": "key",
             "in": "path",
             "required": true,
             "schema": {
@@ -815,7 +815,7 @@
         "operationId": "UpdateFactDefinition",
         "parameters": [
           {
-            "name": "factKey",
+            "name": "key",
             "in": "path",
             "required": true,
             "schema": {
@@ -840,7 +840,30 @@
         }
       }
     },
-    "/api/fact-definitions/{factKey}/usage": {
+    "/api/fact-definitions/{key}/history": {
+      "get": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "ListFactDefinitionHistory",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/fact-definitions/{key}/usage": {
       "get": {
         "tags": [
           "FactCatalog"
@@ -848,7 +871,7 @@
         "operationId": "GetFactDefinitionUsage",
         "parameters": [
           {
-            "name": "factKey",
+            "name": "key",
             "in": "path",
             "required": true,
             "schema": {
@@ -884,6 +907,27 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "sourceProduct",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceEntity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "factKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -1006,7 +1050,7 @@
         }
       }
     },
-    "/api/fact-sources/{factSourceId}": {
+    "/api/fact-sources/{id}": {
       "patch": {
         "tags": [
           "FactSources"
@@ -1014,7 +1058,7 @@
         "operationId": "UpdateFactSource",
         "parameters": [
           {
-            "name": "factSourceId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -1121,6 +1165,362 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateComplianceFindingStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/can-accept-evidence": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanacceptevidence",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/can-approve-purchase": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanapprovepurchase",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/can-assign-person": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanassignperson",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/can-close-work-order": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecancloseworkorder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/can-dispatch-route": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecandispatchroute",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/can-issue-training-qualification": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanissuetrainingqualification",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/can-operate-asset": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanoperateasset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/can-release-trip": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanreleasetrip",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/can-serve-customer": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanservecustomer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/can-start-work": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanstartwork",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/can-use-asset": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanuseasset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/can-use-vendor": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanusevendor",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/evaluate": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateEvaluationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/responses": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "RecordProductGateResponse",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductGateResponseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/gates/{actionKey}": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGateByHyphenatedActionKey",
+        "parameters": [
+          {
+            "name": "actionKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^can-[a-z0-9-]\u002B$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
               }
             }
           },
@@ -2386,6 +2786,19 @@
         }
       }
     },
+    "/api/reports": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "ListComplianceCoreReportGroups",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reports/findings/summary": {
       "get": {
         "tags": [
@@ -2811,7 +3224,7 @@
         }
       }
     },
-    "/api/rule-packs/{rulePackId}": {
+    "/api/rule-packs/{id}": {
       "get": {
         "tags": [
           "RulePacks"
@@ -2819,7 +3232,7 @@
         "operationId": "GetRulePack",
         "parameters": [
           {
-            "name": "rulePackId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -2841,7 +3254,7 @@
         "operationId": "PatchRulePack",
         "parameters": [
           {
-            "name": "rulePackId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -2867,7 +3280,7 @@
         }
       }
     },
-    "/api/rule-packs/{rulePackId}/approve": {
+    "/api/rule-packs/{id}/approve": {
       "post": {
         "tags": [
           "RulePacks"
@@ -2875,7 +3288,7 @@
         "operationId": "ApproveRulePack",
         "parameters": [
           {
-            "name": "rulePackId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -2891,7 +3304,7 @@
         }
       }
     },
-    "/api/rule-packs/{rulePackId}/clone": {
+    "/api/rule-packs/{id}/clone": {
       "post": {
         "tags": [
           "RulePacks"
@@ -2899,7 +3312,7 @@
         "operationId": "CloneRulePack",
         "parameters": [
           {
-            "name": "rulePackId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -2918,6 +3331,168 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/{id}/diff": {
+      "get": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "DiffRulePack",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "compareRulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/{id}/publish": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "PublishRulePack",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/{id}/retire": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "RetireRulePack",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/{id}/status": {
+      "patch": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "UpdateRulePackStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRulePackStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/{id}/submit-review": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "SubmitRulePackReview",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/rule-packs/{id}/versions": {
+      "get": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "ListRulePackVersions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2981,38 +3556,6 @@
         }
       }
     },
-    "/api/rule-packs/{rulePackId}/diff": {
-      "get": {
-        "tags": [
-          "RulePacks"
-        ],
-        "operationId": "DiffRulePack",
-        "parameters": [
-          {
-            "name": "rulePackId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "compareRulePackId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/rule-packs/{rulePackId}/evaluate": {
       "post": {
         "tags": [
@@ -3040,136 +3583,6 @@
           },
           "required": true
         },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/rule-packs/{rulePackId}/publish": {
-      "post": {
-        "tags": [
-          "RulePacks"
-        ],
-        "operationId": "PublishRulePack",
-        "parameters": [
-          {
-            "name": "rulePackId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/rule-packs/{rulePackId}/retire": {
-      "post": {
-        "tags": [
-          "RulePacks"
-        ],
-        "operationId": "RetireRulePack",
-        "parameters": [
-          {
-            "name": "rulePackId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/rule-packs/{rulePackId}/status": {
-      "patch": {
-        "tags": [
-          "RulePacks"
-        ],
-        "operationId": "UpdateRulePackStatus",
-        "parameters": [
-          {
-            "name": "rulePackId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateRulePackStatusRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/rule-packs/{rulePackId}/submit-review": {
-      "post": {
-        "tags": [
-          "RulePacks"
-        ],
-        "operationId": "SubmitRulePackReview",
-        "parameters": [
-          {
-            "name": "rulePackId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/rule-packs/{rulePackId}/versions": {
-      "get": {
-        "tags": [
-          "RulePacks"
-        ],
-        "operationId": "ListRulePackVersions",
-        "parameters": [
-          {
-            "name": "rulePackId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -3487,6 +3900,121 @@
         }
       }
     },
+    "/api/v1/audit-requirements/evaluate": {
+      "post": {
+        "tags": [
+          "AuditRequirements"
+        ],
+        "operationId": "EvaluateAuditRequirementsV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditRequirementEvaluationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-requirements/matrix/by-citation/{citationKey}": {
+      "get": {
+        "tags": [
+          "AuditRequirements"
+        ],
+        "operationId": "GetAuditRequirementMatrixByCitationV1",
+        "parameters": [
+          {
+            "name": "citationKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-requirements/matrix/by-entity/{sourceEntity}": {
+      "get": {
+        "tags": [
+          "AuditRequirements"
+        ],
+        "operationId": "GetAuditRequirementMatrixByEntityV1",
+        "parameters": [
+          {
+            "name": "sourceEntity",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-requirements/matrix/by-pack/{packKey}": {
+      "get": {
+        "tags": [
+          "AuditRequirements"
+        ],
+        "operationId": "GetAuditRequirementMatrixByPackV1",
+        "parameters": [
+          {
+            "name": "packKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-requirements/matrix/by-source-product/{sourceProduct}": {
+      "get": {
+        "tags": [
+          "AuditRequirements"
+        ],
+        "operationId": "GetAuditRequirementMatrixBySourceProductV1",
+        "parameters": [
+          {
+            "name": "sourceProduct",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/audit/events": {
       "get": {
         "tags": [
@@ -3602,7 +4130,7 @@
         }
       }
     },
-    "/api/v1/audit/packages/{jobId}": {
+    "/api/v1/audit/packages/{id}": {
       "get": {
         "tags": [
           "AuditPackages"
@@ -3610,7 +4138,7 @@
         "operationId": "GetComplianceCoreAuditPackageV1",
         "parameters": [
           {
-            "name": "jobId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -3626,7 +4154,7 @@
         }
       }
     },
-    "/api/v1/audit/packages/{jobId}/download": {
+    "/api/v1/audit/packages/{id}/download": {
       "get": {
         "tags": [
           "AuditPackages"
@@ -3634,7 +4162,7 @@
         "operationId": "DownloadComplianceCoreAuditPackageV1",
         "parameters": [
           {
-            "name": "jobId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -3725,7 +4253,7 @@
         }
       }
     },
-    "/api/v1/citations/{citationId}": {
+    "/api/v1/citations/{id}": {
       "get": {
         "tags": [
           "Citations"
@@ -3733,7 +4261,7 @@
         "operationId": "GetRegulatoryCitationV1Citations",
         "parameters": [
           {
-            "name": "citationId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -3755,7 +4283,7 @@
         "operationId": "UpdateRegulatoryCitationV1Citations",
         "parameters": [
           {
-            "name": "citationId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -3781,7 +4309,7 @@
         }
       }
     },
-    "/api/v1/citations/{citationId}/history": {
+    "/api/v1/citations/{id}/history": {
       "get": {
         "tags": [
           "Citations"
@@ -3789,7 +4317,7 @@
         "operationId": "ListRegulatoryCitationHistoryV1Citations",
         "parameters": [
           {
-            "name": "citationId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -3805,7 +4333,7 @@
         }
       }
     },
-    "/api/v1/citations/{citationId}/rules": {
+    "/api/v1/citations/{id}/rules": {
       "get": {
         "tags": [
           "Citations"
@@ -3813,7 +4341,7 @@
         "operationId": "ListRegulatoryCitationRulesV1Citations",
         "parameters": [
           {
-            "name": "citationId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -4011,7 +4539,7 @@
         }
       }
     },
-    "/api/v1/evaluations/{evaluationRunId}": {
+    "/api/v1/evaluations/{id}": {
       "get": {
         "tags": [
           "RuleEvaluation"
@@ -4019,7 +4547,7 @@
         "operationId": "GetRuleEvaluationV1",
         "parameters": [
           {
-            "name": "evaluationRunId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -4035,7 +4563,7 @@
         }
       }
     },
-    "/api/v1/evaluations/{evaluationRunId}/audit-export": {
+    "/api/v1/evaluations/{id}/audit-export": {
       "get": {
         "tags": [
           "RuleEvaluation"
@@ -4043,7 +4571,7 @@
         "operationId": "ExportRuleEvaluationAuditPackageV1",
         "parameters": [
           {
-            "name": "evaluationRunId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -4059,7 +4587,7 @@
         }
       }
     },
-    "/api/v1/evaluations/{evaluationRunId}/explanation": {
+    "/api/v1/evaluations/{id}/explanation": {
       "get": {
         "tags": [
           "RuleEvaluation"
@@ -4067,7 +4595,7 @@
         "operationId": "GetRuleEvaluationExplanationV1",
         "parameters": [
           {
-            "name": "evaluationRunId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -4083,7 +4611,7 @@
         }
       }
     },
-    "/api/v1/evaluations/{evaluationRunId}/re-evaluate": {
+    "/api/v1/evaluations/{id}/re-evaluate": {
       "post": {
         "tags": [
           "RuleEvaluation"
@@ -4091,7 +4619,7 @@
         "operationId": "ReEvaluateRuleEvaluationV1",
         "parameters": [
           {
-            "name": "evaluationRunId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -4172,6 +4700,220 @@
         }
       }
     },
+    "/api/v1/evidence-references": {
+      "post": {
+        "tags": [
+          "AuditEvidence"
+        ],
+        "operationId": "CreateEvidenceReferenceV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvidenceReferenceCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exception-exemptions": {
+      "get": {
+        "tags": [
+          "ExceptionExemptions"
+        ],
+        "operationId": "ListExceptionExemptionsV1",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "packKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "citationKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeInactive",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ExceptionExemptions"
+        ],
+        "operationId": "CreateExceptionExemptionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateComplianceExceptionExemptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exception-exemptions/options/effects": {
+      "get": {
+        "tags": [
+          "ExceptionExemptions"
+        ],
+        "operationId": "ListExceptionExemptionEffectsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exception-exemptions/options/types": {
+      "get": {
+        "tags": [
+          "ExceptionExemptions"
+        ],
+        "operationId": "ListExceptionExemptionTypesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exception-exemptions/{id}": {
+      "get": {
+        "tags": [
+          "ExceptionExemptions"
+        ],
+        "operationId": "GetExceptionExemptionV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "ExceptionExemptions"
+        ],
+        "operationId": "UpdateExceptionExemptionV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateComplianceExceptionExemptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ExceptionExemptions"
+        ],
+        "operationId": "DeactivateExceptionExemptionV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/fact-assertions": {
+      "post": {
+        "tags": [
+          "AuditEvidence"
+        ],
+        "operationId": "CreateFactAssertionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FactAssertionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/fact-sources": {
       "get": {
         "tags": [
@@ -4216,7 +4958,7 @@
         }
       }
     },
-    "/api/v1/fact-sources/{factSourceId}": {
+    "/api/v1/fact-sources/{id}": {
       "patch": {
         "tags": [
           "FactSources"
@@ -4224,7 +4966,7 @@
         "operationId": "UpdateFactSourceV1",
         "parameters": [
           {
-            "name": "factSourceId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -4307,7 +5049,7 @@
         }
       }
     },
-    "/api/v1/facts/{factKey}": {
+    "/api/v1/facts/{key}": {
       "get": {
         "tags": [
           "FactCatalog"
@@ -4315,7 +5057,7 @@
         "operationId": "GetFactDefinitionV1Facts",
         "parameters": [
           {
-            "name": "factKey",
+            "name": "key",
             "in": "path",
             "required": true,
             "schema": {
@@ -4336,7 +5078,7 @@
         "operationId": "UpdateFactDefinitionV1Facts",
         "parameters": [
           {
-            "name": "factKey",
+            "name": "key",
             "in": "path",
             "required": true,
             "schema": {
@@ -4361,15 +5103,15 @@
         }
       }
     },
-    "/api/v1/facts/{factKey}/usage": {
+    "/api/v1/facts/{key}/history": {
       "get": {
         "tags": [
           "FactCatalog"
         ],
-        "operationId": "GetFactDefinitionUsageV1Facts",
+        "operationId": "ListFactDefinitionHistoryV1Facts",
         "parameters": [
           {
-            "name": "factKey",
+            "name": "key",
             "in": "path",
             "required": true,
             "schema": {
@@ -4384,12 +5126,311 @@
         }
       }
     },
+    "/api/v1/facts/{key}/usage": {
+      "get": {
+        "tags": [
+          "FactCatalog"
+        ],
+        "operationId": "GetFactDefinitionUsageV1Facts",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/can-accept-evidence": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanacceptevidenceV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/can-approve-purchase": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanapprovepurchaseV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/can-assign-person": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanassignpersonV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/can-close-work-order": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecancloseworkorderV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/can-dispatch-route": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecandispatchrouteV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/can-issue-training-qualification": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanissuetrainingqualificationV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/can-operate-asset": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanoperateassetV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/can-release-trip": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanreleasetripV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/can-serve-customer": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanservecustomerV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/can-start-work": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanstartworkV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/can-use-asset": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanuseassetV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/can-use-vendor": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "EvaluateProductGatecanusevendorV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductGateCompatibilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/gates/evaluate": {
       "post": {
         "tags": [
           "ProductGates"
         ],
-        "operationId": "EvaluateProductGate",
+        "operationId": "EvaluateProductGateV1",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4407,12 +5448,120 @@
         }
       }
     },
+    "/api/v1/gates/events": {
+      "get": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "ListProductGateEventsV1",
+        "parameters": [
+          {
+            "name": "checkResultId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/gates/responses": {
+      "post": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "RecordProductGateResponseV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductGateResponseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "ProductGates"
+        ],
+        "operationId": "ListProductGateResponsesV1",
+        "parameters": [
+          {
+            "name": "checkResultId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/gates/{actionKey}": {
       "post": {
         "tags": [
           "ProductGates"
         ],
-        "operationId": "EvaluateProductGateByHyphenatedActionKey",
+        "operationId": "EvaluateProductGateByHyphenatedActionKeyV1",
         "parameters": [
           {
             "name": "actionKey",
@@ -4447,6 +5596,1183 @@
           "Health"
         ],
         "operationId": "GetHealthV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "CreateImportSessionV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateImportSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}": {
+      "get": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "GetImportSessionV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/audit-log": {
+      "get": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "GetImportSessionAuditLogV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/commit": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "CommitImportSessionV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/commit-preview": {
+      "get": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "GetImportSessionCommitPreviewV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/generate-mapping-candidates": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "GenerateImportMappingCandidatesV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/mapping-candidates": {
+      "get": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "GetImportSessionMappingCandidatesV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/parse": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "ParseImportSessionV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/reject": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "RejectImportSessionV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/upload": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "UploadImportSessionBundleV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/validate": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "ValidateImportSessionV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/validation-results": {
+      "get": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "GetImportSessionValidationResultsV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/bulk-confirm": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "BulkConfirmImportWizardMappingsV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkConfirmMappingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/commit": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "CommitImportWizardV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/commit-preview": {
+      "get": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "GetImportWizardCommitPreviewV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}": {
+      "get": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "GetImportWizardItemV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/add-supporting-evidence": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "AddImportWizardSupportingEvidenceV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportingEvidenceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/confirm": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "ConfirmImportWizardItemV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/create-exception-exemption": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "CreateImportWizardExceptionExemptionV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExceptionProofMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/create-target": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "CreateImportWizardTargetV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTargetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/evidence-options": {
+      "get": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "GetImportWizardItemEvidenceOptionsV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/force-map": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "ForceMapImportWizardItemV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForceMapRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/map-as-exception-proof": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "MapImportWizardItemAsExceptionProofV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExceptionProofMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/map-as-exemption-proof": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "MapImportWizardItemAsExemptionProofV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExceptionProofMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/map-as-normal-evidence": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "MapImportWizardItemAsNormalEvidenceV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/map-as-special-permit-approval-proof": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "MapImportWizardItemAsSpecialPermitApprovalProofV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExceptionProofMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/mark-exception-not-applicable": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "MarkImportWizardExceptionNotApplicableV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/mark-no-document-required": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "MarkImportWizardNoDocumentRequiredV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/not-applicable": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "MarkImportWizardNotApplicableV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/reference-only": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "MarkImportWizardReferenceOnlyV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/reject": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "RejectImportWizardItemV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/select-evidence-option": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "SelectImportWizardEvidenceOptionV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectEvidenceOptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/select-exception-exemption": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "SelectImportWizardExceptionExemptionV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExceptionProofMappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/select-target": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "SelectImportWizardTargetV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectTargetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/items/{itemId}/skip": {
+      "post": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "SkipImportWizardItemV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/next": {
+      "get": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "GetNextImportWizardItemV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/import-sessions/{id}/wizard/summary": {
+      "get": {
+        "tags": [
+          "ImportSessions"
+        ],
+        "operationId": "GetImportWizardSummaryV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -4648,6 +6974,135 @@
         }
       }
     },
+    "/api/v1/reports": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "operationId": "ListComplianceCoreReportGroupsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/findings/summary": {
+      "get": {
+        "tags": [
+          "FindingsReports"
+        ],
+        "operationId": "GetComplianceCoreFindingsReportSummaryV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "openOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/findings/summary/export": {
+      "get": {
+        "tags": [
+          "FindingsReports"
+        ],
+        "operationId": "ExportComplianceCoreFindingsReportSummaryV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "openOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/operator/summary": {
+      "get": {
+        "tags": [
+          "OperatorReports"
+        ],
+        "operationId": "GetComplianceCoreOperatorReportSummaryV1",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/operator/summary/export": {
+      "get": {
+        "tags": [
+          "OperatorReports"
+        ],
+        "operationId": "ExportComplianceCoreOperatorReportSummaryV1",
+        "parameters": [
+          {
+            "name": "attentionOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/rule-pack-imports/preview": {
       "post": {
         "tags": [
@@ -4687,7 +7142,7 @@
         }
       }
     },
-    "/api/v1/rule-pack-imports/{importId}": {
+    "/api/v1/rule-pack-imports/{id}": {
       "get": {
         "tags": [
           "RulePackImports"
@@ -4695,7 +7150,7 @@
         "operationId": "GetRulePackImportV1",
         "parameters": [
           {
-            "name": "importId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -4711,7 +7166,7 @@
         }
       }
     },
-    "/api/v1/rule-pack-imports/{importId}/diff": {
+    "/api/v1/rule-pack-imports/{id}/diff": {
       "get": {
         "tags": [
           "RulePackImports"
@@ -4719,7 +7174,7 @@
         "operationId": "DiffRulePackImportV1",
         "parameters": [
           {
-            "name": "importId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -4735,7 +7190,7 @@
         }
       }
     },
-    "/api/v1/rule-pack-imports/{importId}/rollback": {
+    "/api/v1/rule-pack-imports/{id}/rollback": {
       "post": {
         "tags": [
           "RulePackImports"
@@ -4743,7 +7198,7 @@
         "operationId": "RollbackRulePackImportV1",
         "parameters": [
           {
-            "name": "importId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -4759,7 +7214,7 @@
         }
       }
     },
-    "/api/v1/rule-pack-imports/{importId}/test-results": {
+    "/api/v1/rule-pack-imports/{id}/test-results": {
       "get": {
         "tags": [
           "RulePackImports"
@@ -4767,7 +7222,7 @@
         "operationId": "RulePackImportTestResultsV1",
         "parameters": [
           {
-            "name": "importId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -4850,7 +7305,7 @@
         }
       }
     },
-    "/api/v1/rule-packs/{rulePackId}": {
+    "/api/v1/rule-packs/{id}": {
       "get": {
         "tags": [
           "RulePacks"
@@ -4858,7 +7313,7 @@
         "operationId": "GetRulePackV1RulePacks",
         "parameters": [
           {
-            "name": "rulePackId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -4880,7 +7335,7 @@
         "operationId": "PatchRulePackV1RulePacks",
         "parameters": [
           {
-            "name": "rulePackId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -4906,7 +7361,7 @@
         }
       }
     },
-    "/api/v1/rule-packs/{rulePackId}/approve": {
+    "/api/v1/rule-packs/{id}/approve": {
       "post": {
         "tags": [
           "RulePacks"
@@ -4914,7 +7369,7 @@
         "operationId": "ApproveRulePackV1RulePacks",
         "parameters": [
           {
-            "name": "rulePackId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -4930,7 +7385,7 @@
         }
       }
     },
-    "/api/v1/rule-packs/{rulePackId}/clone": {
+    "/api/v1/rule-packs/{id}/clone": {
       "post": {
         "tags": [
           "RulePacks"
@@ -4938,7 +7393,7 @@
         "operationId": "CloneRulePackV1RulePacks",
         "parameters": [
           {
-            "name": "rulePackId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -4957,6 +7412,168 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{id}/diff": {
+      "get": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "DiffRulePackV1RulePacks",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "compareRulePackId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{id}/publish": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "PublishRulePackV1RulePacks",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{id}/retire": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "RetireRulePackV1RulePacks",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{id}/status": {
+      "patch": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "UpdateRulePackStatusV1RulePacks",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRulePackStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{id}/submit-review": {
+      "post": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "SubmitRulePackReviewV1RulePacks",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/rule-packs/{id}/versions": {
+      "get": {
+        "tags": [
+          "RulePacks"
+        ],
+        "operationId": "ListRulePackVersionsV1RulePacks",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -5020,38 +7637,6 @@
         }
       }
     },
-    "/api/v1/rule-packs/{rulePackId}/diff": {
-      "get": {
-        "tags": [
-          "RulePacks"
-        ],
-        "operationId": "DiffRulePackV1RulePacks",
-        "parameters": [
-          {
-            "name": "rulePackId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "compareRulePackId",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/v1/rule-packs/{rulePackId}/evaluate": {
       "post": {
         "tags": [
@@ -5079,136 +7664,6 @@
           },
           "required": true
         },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/rule-packs/{rulePackId}/publish": {
-      "post": {
-        "tags": [
-          "RulePacks"
-        ],
-        "operationId": "PublishRulePackV1RulePacks",
-        "parameters": [
-          {
-            "name": "rulePackId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/rule-packs/{rulePackId}/retire": {
-      "post": {
-        "tags": [
-          "RulePacks"
-        ],
-        "operationId": "RetireRulePackV1RulePacks",
-        "parameters": [
-          {
-            "name": "rulePackId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/rule-packs/{rulePackId}/status": {
-      "patch": {
-        "tags": [
-          "RulePacks"
-        ],
-        "operationId": "UpdateRulePackStatusV1RulePacks",
-        "parameters": [
-          {
-            "name": "rulePackId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateRulePackStatusRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/rule-packs/{rulePackId}/submit-review": {
-      "post": {
-        "tags": [
-          "RulePacks"
-        ],
-        "operationId": "SubmitRulePackReviewV1RulePacks",
-        "parameters": [
-          {
-            "name": "rulePackId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/rule-packs/{rulePackId}/versions": {
-      "get": {
-        "tags": [
-          "RulePacks"
-        ],
-        "operationId": "ListRulePackVersionsV1RulePacks",
-        "parameters": [
-          {
-            "name": "rulePackId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -5250,7 +7705,7 @@
         }
       }
     },
-    "/api/v1/rules/{ruleId}": {
+    "/api/v1/rules/{id}": {
       "get": {
         "tags": [
           "Rules"
@@ -5258,7 +7713,7 @@
         "operationId": "GetRuleV1",
         "parameters": [
           {
-            "name": "ruleId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5279,7 +7734,7 @@
         "operationId": "PatchRuleV1",
         "parameters": [
           {
-            "name": "ruleId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5304,7 +7759,7 @@
         }
       }
     },
-    "/api/v1/rules/{ruleId}/history": {
+    "/api/v1/rules/{id}/history": {
       "get": {
         "tags": [
           "Rules"
@@ -5312,7 +7767,7 @@
         "operationId": "GetRuleHistoryV1",
         "parameters": [
           {
-            "name": "ruleId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5327,7 +7782,7 @@
         }
       }
     },
-    "/api/v1/rules/{ruleId}/test": {
+    "/api/v1/rules/{id}/test": {
       "post": {
         "tags": [
           "Rules"
@@ -5335,7 +7790,7 @@
         "operationId": "TestRuleV1",
         "parameters": [
           {
-            "name": "ruleId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5360,7 +7815,7 @@
         }
       }
     },
-    "/api/v1/rules/{ruleId}/usage": {
+    "/api/v1/rules/{id}/usage": {
       "get": {
         "tags": [
           "Rules"
@@ -5368,7 +7823,7 @@
         "operationId": "GetRuleUsageV1",
         "parameters": [
           {
-            "name": "ruleId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5383,7 +7838,7 @@
         }
       }
     },
-    "/api/v1/rules/{ruleId}/validate": {
+    "/api/v1/rules/{id}/validate": {
       "post": {
         "tags": [
           "Rules"
@@ -5391,7 +7846,7 @@
         "operationId": "ValidateRuleV1",
         "parameters": [
           {
-            "name": "ruleId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5423,6 +7878,638 @@
       "get": {
         "tags": [
           "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations": {
+      "post": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "CreateTheoreticalSituationV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTheoreticalSituationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "ListTheoreticalSituationsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/from-template/{templateId}": {
+      "post": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "CreateTheoreticalSituationFromTemplateV1",
+        "parameters": [
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/options/assets": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalAssetsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/options/context-fields": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalContextFieldsV1",
+        "parameters": [
+          {
+            "name": "situationKind",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/options/context-values": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalContextValuesV1",
+        "parameters": [
+          {
+            "name": "contextKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/options/document-types": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalDocumentTypesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/options/evidence-options": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalEvidenceOptionsV1",
+        "parameters": [
+          {
+            "name": "requirementKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/options/evidence-states": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalEvidenceStatesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/options/exception-exemptions": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalExceptionExemptionOptionsV1",
+        "parameters": [
+          {
+            "name": "requirementKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "packKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "citationKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/options/incidents": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalIncidentOptionsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/options/material-classes": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalMaterialClassesV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/options/parts": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalPartsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/options/situation-kinds": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalSituationKindsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/options/systems": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalSystemsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/{id}": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalSituationV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "UpdateTheoreticalSituationV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTheoreticalSituationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "DeleteTheoreticalSituationV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/{id}/applicability-results": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalSituationApplicabilityResultsV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/{id}/context": {
+      "post": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "SetTheoreticalSituationContextV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TheoreticalSituationContextRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/{id}/evaluate": {
+      "post": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "EvaluateTheoreticalSituationV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TheoreticalEvaluateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/{id}/evaluations": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "ListTheoreticalSituationEvaluationsV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/{id}/evaluations/{evaluationId}": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalSituationEvaluationV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "evaluationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/{id}/facts": {
+      "post": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "SetTheoreticalSituationFactsV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TheoreticalSituationFactRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/{id}/incidents": {
+      "post": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "SetTheoreticalSituationIncidentsV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TheoreticalSituationIncidentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/{id}/options/next-context": {
+      "get": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "GetTheoreticalSituationNextContextV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/{id}/resolve-applicability": {
+      "post": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "ResolveTheoreticalSituationApplicabilityV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/theoretical-situations/{id}/save-template": {
+      "post": {
+        "tags": [
+          "TheoreticalSituations"
+        ],
+        "operationId": "SaveTheoreticalSituationTemplateV1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -5497,12 +8584,228 @@
         }
       }
     },
+    "/api/v1/vocabulary/core-keys": {
+      "get": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "ListCoreVocabularyKeysV1Vocabulary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vocabulary/core-keys/validate": {
+      "post": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "ValidateCoreVocabularyKeysV1Vocabulary",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateCoreVocabularyKeysRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/vocabulary/types": {
       "get": {
         "tags": [
           "Vocabulary"
         ],
         "operationId": "ListVocabularyTypesV1Vocabulary",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vocabulary/validate-keys": {
+      "post": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "ValidateVocabularyKeysV1Vocabulary",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateVocabularyKeysRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vocabulary/{family}": {
+      "get": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "ListVocabularyTermsByFamilyV1Vocabulary",
+        "parameters": [
+          {
+            "name": "family",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "CreateVocabularyTermByFamilyV1Vocabulary",
+        "parameters": [
+          {
+            "name": "family",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVocabularyTermRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vocabulary/{family}/{key}": {
+      "patch": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "UpdateVocabularyTermByFamilyV1Vocabulary",
+        "parameters": [
+          {
+            "name": "family",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVocabularyTermRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vocabulary/{family}/{key}/history": {
+      "get": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "ListVocabularyTermHistoryV1Vocabulary",
+        "parameters": [
+          {
+            "name": "family",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/vocabulary/{family}/{key}/usage": {
+      "get": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "GetVocabularyTermUsageV1Vocabulary",
+        "parameters": [
+          {
+            "name": "family",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -5579,7 +8882,7 @@
         }
       }
     },
-    "/api/v1/waivers/{waiverId}": {
+    "/api/v1/waivers/{id}": {
       "get": {
         "tags": [
           "Waivers"
@@ -5587,7 +8890,7 @@
         "operationId": "GetComplianceWaiverV1",
         "parameters": [
           {
-            "name": "waiverId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5609,7 +8912,7 @@
         "operationId": "UpdateComplianceWaiverV1",
         "parameters": [
           {
-            "name": "waiverId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5635,7 +8938,7 @@
         }
       }
     },
-    "/api/v1/waivers/{waiverId}/approve": {
+    "/api/v1/waivers/{id}/approve": {
       "post": {
         "tags": [
           "Waivers"
@@ -5643,7 +8946,7 @@
         "operationId": "ApproveComplianceWaiverV1",
         "parameters": [
           {
-            "name": "waiverId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5659,7 +8962,7 @@
         }
       }
     },
-    "/api/v1/waivers/{waiverId}/reject": {
+    "/api/v1/waivers/{id}/reject": {
       "post": {
         "tags": [
           "Waivers"
@@ -5667,7 +8970,7 @@
         "operationId": "RejectComplianceWaiverV1",
         "parameters": [
           {
-            "name": "waiverId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5699,7 +9002,7 @@
         }
       }
     },
-    "/api/v1/waivers/{waiverId}/renew": {
+    "/api/v1/waivers/{id}/renew": {
       "post": {
         "tags": [
           "Waivers"
@@ -5707,7 +9010,7 @@
         "operationId": "RenewComplianceWaiverV1",
         "parameters": [
           {
-            "name": "waiverId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5733,7 +9036,7 @@
         }
       }
     },
-    "/api/v1/waivers/{waiverId}/revoke": {
+    "/api/v1/waivers/{id}/revoke": {
       "post": {
         "tags": [
           "Waivers"
@@ -5741,7 +9044,7 @@
         "operationId": "RevokeComplianceWaiverV1",
         "parameters": [
           {
-            "name": "waiverId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5839,12 +9142,228 @@
         }
       }
     },
+    "/api/vocabulary/core-keys": {
+      "get": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "ListCoreVocabularyKeys",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vocabulary/core-keys/validate": {
+      "post": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "ValidateCoreVocabularyKeys",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateCoreVocabularyKeysRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/vocabulary/types": {
       "get": {
         "tags": [
           "Vocabulary"
         ],
         "operationId": "ListVocabularyTypes",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vocabulary/validate-keys": {
+      "post": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "ValidateVocabularyKeys",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateVocabularyKeysRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vocabulary/{family}": {
+      "get": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "ListVocabularyTermsByFamily",
+        "parameters": [
+          {
+            "name": "family",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "CreateVocabularyTermByFamily",
+        "parameters": [
+          {
+            "name": "family",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVocabularyTermRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vocabulary/{family}/{key}": {
+      "patch": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "UpdateVocabularyTermByFamily",
+        "parameters": [
+          {
+            "name": "family",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVocabularyTermRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vocabulary/{family}/{key}/history": {
+      "get": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "ListVocabularyTermHistory",
+        "parameters": [
+          {
+            "name": "family",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/vocabulary/{family}/{key}/usage": {
+      "get": {
+        "tags": [
+          "Vocabulary"
+        ],
+        "operationId": "GetVocabularyTermUsage",
+        "parameters": [
+          {
+            "name": "family",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -5921,7 +9440,7 @@
         }
       }
     },
-    "/api/waivers/{waiverId}": {
+    "/api/waivers/{id}": {
       "get": {
         "tags": [
           "Waivers"
@@ -5929,7 +9448,7 @@
         "operationId": "GetComplianceWaiver",
         "parameters": [
           {
-            "name": "waiverId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5945,7 +9464,7 @@
         }
       }
     },
-    "/api/waivers/{waiverId}/approve": {
+    "/api/waivers/{id}/approve": {
       "post": {
         "tags": [
           "Waivers"
@@ -5953,7 +9472,7 @@
         "operationId": "ApproveComplianceWaiver",
         "parameters": [
           {
-            "name": "waiverId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -5969,7 +9488,7 @@
         }
       }
     },
-    "/api/waivers/{waiverId}/reject": {
+    "/api/waivers/{id}/reject": {
       "post": {
         "tags": [
           "Waivers"
@@ -5977,7 +9496,7 @@
         "operationId": "RejectComplianceWaiver",
         "parameters": [
           {
-            "name": "waiverId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -6009,7 +9528,7 @@
         }
       }
     },
-    "/api/waivers/{waiverId}/revoke": {
+    "/api/waivers/{id}/revoke": {
       "post": {
         "tags": [
           "Waivers"
@@ -6017,7 +9536,7 @@
         "operationId": "RevokeComplianceWaiver",
         "parameters": [
           {
-            "name": "waiverId",
+            "name": "id",
             "in": "path",
             "required": true,
             "schema": {
@@ -6171,6 +9690,56 @@
   },
   "components": {
     "schemas": {
+      "AuditRequirementEvaluationRequest": {
+        "required": [
+          "packKey",
+          "subjectKind",
+          "subjectId"
+        ],
+        "type": "object",
+        "properties": {
+          "packKey": {
+            "type": "string"
+          },
+          "subjectKind": {
+            "type": "string"
+          },
+          "subjectId": {
+            "type": "string"
+          },
+          "overrideReasons": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "overridePersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "BulkConfirmMappingsRequest": {
+        "required": [
+          "confidenceBand"
+        ],
+        "type": "object",
+        "properties": {
+          "confidenceBand": {
+            "type": "string"
+          },
+          "summaryConfirmed": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "CloneRulePackRequest": {
         "type": "object",
         "properties": {
@@ -6222,6 +9791,126 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "CreateComplianceExceptionExemptionRequest": {
+        "required": [
+          "key",
+          "label",
+          "type",
+          "effectType"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "effectType": {
+            "type": "string"
+          },
+          "governingBody": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "programKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "packKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "citationKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "applicabilityKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "appliesToSubjectKind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "appliesToSourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "appliesToSourceEntity": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "conditionLogicJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requiredEvidenceOptionGroupId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "issuingAuthority": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "authorizationNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "active": {
+            "type": "boolean",
+            "default": true
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -6419,6 +10108,106 @@
           },
           "isRequired": {
             "type": "boolean"
+          },
+          "applicabilityKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceEntity": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceFieldOrRecordType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "valueType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "operator": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "expectedValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceKind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requiredDocumentType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "retentionPeriod": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "auditQuestion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "failureSeverity": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "automaticFailureFlag": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "overrideAllowed": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "overridePermission": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "remediationRequired": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "externallyAssertable": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -6534,6 +10323,29 @@
           }
         }
       },
+      "CreateImportSessionRequest": {
+        "type": "object",
+        "properties": {
+          "importType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceFilename": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateJurisdictionRequest": {
         "required": [
           "governingBodyId",
@@ -6578,6 +10390,48 @@
           },
           "description": {
             "type": "string"
+          }
+        }
+      },
+      "CreateProductGateResponseRequest": {
+        "required": [
+          "tenantId",
+          "checkResultId",
+          "responseOutcome"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "checkResultId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "responseOutcome": {
+            "type": "string"
+          },
+          "responseCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "responseMessage": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "responsePayload": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
           }
         }
       },
@@ -6750,6 +10604,14 @@
           "nonWaivable": {
             "type": "boolean",
             "default": false
+          },
+          "remediationRequired": {
+            "type": "boolean",
+            "default": false
+          },
+          "reviewRequired": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -6817,6 +10679,41 @@
           "isActive": {
             "type": "boolean",
             "default": true
+          }
+        }
+      },
+      "CreateTargetRequest": {
+        "required": [
+          "targetKind",
+          "payload"
+        ],
+        "type": "object",
+        "properties": {
+          "targetKind": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateTheoreticalSituationRequest": {
+        "required": [
+          "situationKind"
+        ],
+        "type": "object",
+        "properties": {
+          "situationKind": {
+            "type": "string"
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -7171,6 +11068,218 @@
           }
         }
       },
+      "EvidenceReferenceCreateRequest": {
+        "required": [
+          "tenantId",
+          "evidenceId",
+          "factKey",
+          "sourceProduct",
+          "sourceEntity",
+          "sourceRecordId",
+          "sourceField",
+          "documentType",
+          "documentUrl",
+          "storageKey",
+          "fileHash",
+          "capturedAt",
+          "effectiveAt",
+          "expiresAt",
+          "createdByPersonId",
+          "reviewedByPersonId",
+          "reviewStatus",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "evidenceId": {
+            "type": "string"
+          },
+          "factKey": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceEntity": {
+            "type": "string"
+          },
+          "sourceRecordId": {
+            "type": "string"
+          },
+          "sourceField": {
+            "type": "string"
+          },
+          "documentType": {
+            "type": "string"
+          },
+          "documentUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "storageKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fileHash": {
+            "type": "string"
+          },
+          "capturedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "createdByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reviewedByPersonId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "reviewStatus": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "ExceptionProofMappingRequest": {
+        "required": [
+          "exceptionExemptionKey",
+          "targetKind",
+          "targetKey",
+          "targetLabel"
+        ],
+        "type": "object",
+        "properties": {
+          "exceptionExemptionKey": {
+            "type": "string"
+          },
+          "targetKind": {
+            "type": "string"
+          },
+          "targetKey": {
+            "type": "string"
+          },
+          "targetLabel": {
+            "type": "string"
+          },
+          "payload": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "residualRequirements": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "FactAssertionCreateRequest": {
+        "required": [
+          "tenantId",
+          "factKey",
+          "subjectKind",
+          "subjectId",
+          "value",
+          "valueType",
+          "sourceProduct",
+          "sourceRecordId",
+          "evidenceId",
+          "assertedAt",
+          "effectiveAt",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "factKey": {
+            "type": "string"
+          },
+          "subjectKind": {
+            "type": "string"
+          },
+          "subjectId": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "valueType": {
+            "type": "string"
+          },
+          "sourceProduct": {
+            "type": "string"
+          },
+          "sourceRecordId": {
+            "type": "string"
+          },
+          "evidenceId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "assertedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "FactSourceBulkIngestionRequest": {
         "required": [
           "sources"
@@ -7237,6 +11346,37 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "ForceMapRequest": {
+        "required": [
+          "targetKind",
+          "targetId",
+          "targetKey",
+          "targetLabel",
+          "overrideReason",
+          "riskAcknowledged"
+        ],
+        "type": "object",
+        "properties": {
+          "targetKind": {
+            "type": "string"
+          },
+          "targetId": {
+            "type": "string"
+          },
+          "targetKey": {
+            "type": "string"
+          },
+          "targetLabel": {
+            "type": "string"
+          },
+          "overrideReason": {
+            "type": "string"
+          },
+          "riskAcknowledged": {
+            "type": "boolean"
           }
         }
       },
@@ -7567,6 +11707,18 @@
             ]
           },
           "nonWaivable": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "remediationRequired": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "reviewRequired": {
             "type": [
               "null",
               "boolean"
@@ -8189,6 +12341,14 @@
           "nonWaivable": {
             "type": "boolean",
             "default": false
+          },
+          "remediationRequired": {
+            "type": "boolean",
+            "default": false
+          },
+          "reviewRequired": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -8216,6 +12376,358 @@
             "items": {
               "$ref": "#/components/schemas/RuleDefinitionDto"
             }
+          }
+        }
+      },
+      "SelectEvidenceOptionRequest": {
+        "required": [
+          "evidenceOptionKey"
+        ],
+        "type": "object",
+        "properties": {
+          "evidenceOptionKey": {
+            "type": "string"
+          }
+        }
+      },
+      "SelectTargetRequest": {
+        "required": [
+          "targetKind",
+          "targetId",
+          "targetKey",
+          "targetLabel"
+        ],
+        "type": "object",
+        "properties": {
+          "targetKind": {
+            "type": "string"
+          },
+          "targetId": {
+            "type": "string"
+          },
+          "targetKey": {
+            "type": "string"
+          },
+          "targetLabel": {
+            "type": "string"
+          }
+        }
+      },
+      "SupportingEvidenceRequest": {
+        "required": [
+          "targetKind",
+          "targetKey",
+          "targetLabel"
+        ],
+        "type": "object",
+        "properties": {
+          "targetKind": {
+            "type": "string"
+          },
+          "targetKey": {
+            "type": "string"
+          },
+          "targetLabel": {
+            "type": "string"
+          },
+          "payload": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "TheoreticalEvaluateRequest": {
+        "type": "object",
+        "properties": {
+          "includePossible": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "TheoreticalSituationContextRequest": {
+        "required": [
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "values": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TheoreticalSituationContextValueRequest"
+            }
+          }
+        }
+      },
+      "TheoreticalSituationContextValueRequest": {
+        "required": [
+          "contextKey",
+          "contextValueKey"
+        ],
+        "type": "object",
+        "properties": {
+          "contextKey": {
+            "type": "string"
+          },
+          "contextValueKey": {
+            "type": "string"
+          }
+        }
+      },
+      "TheoreticalSituationFactRequest": {
+        "required": [
+          "facts"
+        ],
+        "type": "object",
+        "properties": {
+          "facts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TheoreticalSituationFactValueRequest"
+            }
+          }
+        }
+      },
+      "TheoreticalSituationFactValueRequest": {
+        "required": [
+          "factKey",
+          "simulatedState"
+        ],
+        "type": "object",
+        "properties": {
+          "factKey": {
+            "type": "string"
+          },
+          "simulatedState": {
+            "type": "string"
+          },
+          "requirementKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "citationKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "packKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "simulatedValue": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "valueType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceOptionKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceKind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "targetKind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "TheoreticalSituationIncidentRequest": {
+        "required": [
+          "incidents"
+        ],
+        "type": "object",
+        "properties": {
+          "incidents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TheoreticalSituationIncidentValueRequest"
+            }
+          }
+        }
+      },
+      "TheoreticalSituationIncidentValueRequest": {
+        "required": [
+          "incidentTypeKey",
+          "severityKey",
+          "involvedSubjectKind",
+          "involvedSubjectState",
+          "triggerKey",
+          "triggerValue",
+          "reportabilityState",
+          "remediationState"
+        ],
+        "type": "object",
+        "properties": {
+          "incidentTypeKey": {
+            "type": "string"
+          },
+          "severityKey": {
+            "type": "string"
+          },
+          "involvedSubjectKind": {
+            "type": "string"
+          },
+          "involvedSubjectState": {
+            "type": "string"
+          },
+          "triggerKey": {
+            "type": "string"
+          },
+          "triggerValue": {
+            "type": "string"
+          },
+          "reportabilityState": {
+            "type": "string"
+          },
+          "remediationState": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateComplianceExceptionExemptionRequest": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "effectType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "governingBody": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "programKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "packKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "citationKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "applicabilityKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "appliesToSubjectKind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "appliesToSourceProduct": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "appliesToSourceEntity": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "conditionLogicJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requiredEvidenceOptionGroupId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "issuingAuthority": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "authorizationNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "effectiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "active": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -8475,6 +12987,52 @@
           }
         }
       },
+      "UpdateTheoreticalSituationRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "situationKind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateVocabularyTermRequest": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isActive": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
       "UpsertFactSourceSyncWorkerSettingsRequest": {
         "required": [
           "isEnabled",
@@ -8562,6 +13120,20 @@
           }
         }
       },
+      "ValidateCoreVocabularyKeysRequest": {
+        "required": [
+          "keys"
+        ],
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "ValidateFactPayloadItemRequest": {
         "required": [
           "factKey",
@@ -8590,6 +13162,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ValidateFactPayloadItemRequest"
+            }
+          }
+        }
+      },
+      "ValidateVocabularyKeyItem": {
+        "required": [
+          "family",
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "family": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          }
+        }
+      },
+      "ValidateVocabularyKeysRequest": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidateVocabularyKeyItem"
             }
           }
         }
@@ -8704,6 +13305,12 @@
       "name": "ComplianceCore.Api"
     },
     {
+      "name": "ProductGates"
+    },
+    {
+      "name": "AuditEvidence"
+    },
+    {
       "name": "LoadTestJourney"
     },
     {
@@ -8809,10 +13416,13 @@
       "name": "Waivers"
     },
     {
+      "name": "ExceptionExemptions"
+    },
+    {
       "name": "WorkflowGates"
     },
     {
-      "name": "ProductGates"
+      "name": "AuditRequirements"
     },
     {
       "name": "CsvBundle"
@@ -8821,10 +13431,19 @@
       "name": "RulePackImports"
     },
     {
+      "name": "ImportSessions"
+    },
+    {
+      "name": "TheoreticalSituations"
+    },
+    {
       "name": "AuditPackages"
     },
     {
       "name": "Dashboards"
+    },
+    {
+      "name": "Reports"
     },
     {
       "name": "FindingsReports"

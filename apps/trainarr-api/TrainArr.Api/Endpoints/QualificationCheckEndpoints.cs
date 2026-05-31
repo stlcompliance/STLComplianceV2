@@ -12,7 +12,8 @@ public static class QualificationCheckEndpoints
         {
             (Route: "/api/qualification-checks", Suffix: string.Empty),
             (Route: "/api/v1/qualification-checks", Suffix: "V1QualificationChecks"),
-            (Route: "/api/v1/authorization-checks", Suffix: "V1AuthorizationChecks")
+            (Route: "/api/v1/authorization-checks", Suffix: "V1AuthorizationChecks"),
+            (Route: "/api/v1/qualifications/check", Suffix: "V1QualificationGateChecks")
         };
 
         foreach (var (route, suffix) in routes)

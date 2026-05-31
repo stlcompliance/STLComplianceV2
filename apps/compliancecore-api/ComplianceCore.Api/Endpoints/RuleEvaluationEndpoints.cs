@@ -256,8 +256,8 @@ public static class RuleEvaluationEndpoints
         })
         .WithName("ListRuleEvaluationsV1");
 
-        v1Evaluations.MapGet("/{evaluationRunId:guid}", async (
-            Guid evaluationRunId,
+        v1Evaluations.MapGet("/{id:guid}", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             RuleEvaluationService service,
             HttpContext context,
@@ -265,12 +265,12 @@ public static class RuleEvaluationEndpoints
         {
             authorization.RequireRulePacksRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetAsync(tenantId, evaluationRunId, cancellationToken));
+            return Results.Ok(await service.GetAsync(tenantId, id, cancellationToken));
         })
         .WithName("GetRuleEvaluationV1");
 
-        v1Evaluations.MapGet("/{evaluationRunId:guid}/audit-export", async (
-            Guid evaluationRunId,
+        v1Evaluations.MapGet("/{id:guid}/audit-export", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             RuleEvaluationService service,
             HttpContext context,
@@ -281,7 +281,7 @@ public static class RuleEvaluationEndpoints
             return Results.Ok(await service.BuildAuditExportAsync(
                 tenantId,
                 context.User.GetUserId(),
-                evaluationRunId,
+                id,
                 cancellationToken));
         })
         .WithName("ExportRuleEvaluationAuditPackageV1");
@@ -303,8 +303,8 @@ public static class RuleEvaluationEndpoints
         })
         .WithName("SimulateRuleEvaluationV1");
 
-        v1Evaluations.MapPost("/{evaluationRunId:guid}/re-evaluate", async (
-            Guid evaluationRunId,
+        v1Evaluations.MapPost("/{id:guid}/re-evaluate", async (
+            Guid id,
             ReEvaluateRuleEvaluationRequest request,
             ComplianceCoreAuthorizationService authorization,
             RuleEvaluationService service,
@@ -316,15 +316,15 @@ public static class RuleEvaluationEndpoints
             var result = await service.ReEvaluateAsync(
                 tenantId,
                 context.User.GetUserId(),
-                evaluationRunId,
+                id,
                 request.EmitFindings,
                 cancellationToken);
             return Results.Created($"/api/v1/evaluations/{result.EvaluationRunId}", result);
         })
         .WithName("ReEvaluateRuleEvaluationV1");
 
-        v1Evaluations.MapGet("/{evaluationRunId:guid}/explanation", async (
-            Guid evaluationRunId,
+        v1Evaluations.MapGet("/{id:guid}/explanation", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             RuleEvaluationService service,
             HttpContext context,
@@ -334,7 +334,7 @@ public static class RuleEvaluationEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.BuildExplanationAsync(
                 tenantId,
-                evaluationRunId,
+                id,
                 cancellationToken));
         })
         .WithName("GetRuleEvaluationExplanationV1");

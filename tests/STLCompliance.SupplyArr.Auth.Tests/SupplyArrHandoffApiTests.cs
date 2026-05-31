@@ -4330,7 +4330,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Receiving_over_receive_requires_exception_before_post()
+    public async Task Receiving_over_receive_auto_creates_exception_on_post()
     {
         var token = await RedeemSupplyArrTokenAsync();
         var (part, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
@@ -4358,22 +4358,11 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             HttpMethod.Post,
             $"/api/receiving/{receipt.ReceivingReceiptId}/post",
             token);
-        var blockedPost = await _supplyarrClient.SendAsync(postWithoutException);
-        Assert.Equal(HttpStatusCode.BadRequest, blockedPost.StatusCode);
-
-        var createExceptionRequest = Authorized(
-            HttpMethod.Post,
-            $"/api/receiving/{receipt.ReceivingReceiptId}/lines/{line.LineId}/exceptions",
-            token);
-        createExceptionRequest.Content = JsonContent.Create(
-            new CreateReceivingExceptionRequest("over", 1m, "Vendor shipped one extra unit"));
-        (await _supplyarrClient.SendAsync(createExceptionRequest)).EnsureSuccessStatusCode();
-
-        var postWithException = Authorized(
-            HttpMethod.Post,
-            $"/api/receiving/{receipt.ReceivingReceiptId}/post",
-            token);
-        (await _supplyarrClient.SendAsync(postWithException)).EnsureSuccessStatusCode();
+        var postResponse = await _supplyarrClient.SendAsync(postWithoutException);
+        postResponse.EnsureSuccessStatusCode();
+        var posted = (await postResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
+        Assert.Equal("posted", posted.Status);
+        Assert.Contains(posted.Exceptions, ex => ex.ExceptionType == "over" && ex.Quantity == 1m);
 
         var stockLevels = await ListStockAsync(token, part.PartId, bin.BinId);
         Assert.Equal(6m, stockLevels[0].QuantityOnHand);

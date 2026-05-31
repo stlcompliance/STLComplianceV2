@@ -146,6 +146,30 @@
         }
       }
     },
+    "/api/asset-readiness/assets/{assetId}": {
+      "get": {
+        "tags": [
+          "AssetReadiness"
+        ],
+        "operationId": "GetAssetReadinessByAssetId",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/asset-status-rollup-settings": {
       "get": {
         "tags": [
@@ -1030,11 +1054,37 @@
         }
       }
     },
+    "/api/command-center": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetMaintainArrDashboardCommandCenter",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/config": {
       "get": {
         "tags": [
           "Settings"
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/dashboard": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetMaintainArrDashboard",
         "responses": {
           "200": {
             "description": "OK"
@@ -1345,6 +1395,19 @@
         }
       }
     },
+    "/api/downtime": {
+      "get": {
+        "tags": [
+          "Downtime"
+        ],
+        "operationId": "GetMaintainArrDowntimeIndex",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/downtime-tracking-settings": {
       "get": {
         "tags": [
@@ -1638,6 +1701,18 @@
         }
       }
     },
+    "/api/exports": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/exports/assets": {
       "get": {
         "tags": [
@@ -1735,6 +1810,19 @@
           "FieldInbox"
         ],
         "operationId": "GetMaintainArrFieldInbox",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/imports": {
+      "get": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "GetMaintainArrImportIndex",
         "responses": {
           "200": {
             "description": "OK"
@@ -2420,6 +2508,19 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListMaintainArrIntegrationEndpoints",
         "responses": {
           "200": {
             "description": "OK"
@@ -3533,6 +3634,40 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RecordMeterReadingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/meters/{assetMeterId}/readings/corrections": {
+      "post": {
+        "tags": [
+          "Meters"
+        ],
+        "operationId": "CorrectMeterReading",
+        "parameters": [
+          {
+            "name": "assetMeterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectMeterReadingRequest"
               }
             }
           },
@@ -5388,11 +5523,37 @@
         }
       }
     },
+    "/api/v1/command-center": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetMaintainArrDashboardCommandCenterV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/config": {
       "get": {
         "tags": [
           "Settings"
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetMaintainArrDashboardV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -5763,6 +5924,19 @@
         }
       }
     },
+    "/api/v1/downtime": {
+      "get": {
+        "tags": [
+          "Downtime"
+        ],
+        "operationId": "GetMaintainArrDowntimeIndexV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/downtime-tracking-settings": {
       "get": {
         "tags": [
@@ -6056,6 +6230,18 @@
         }
       }
     },
+    "/api/v1/exports": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/exports/assets": {
       "get": {
         "tags": [
@@ -6166,6 +6352,19 @@
           "Health"
         ],
         "operationId": "GetHealthV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/imports": {
+      "get": {
+        "tags": [
+          "Imports"
+        ],
+        "operationId": "GetMaintainArrImportIndexV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -7021,6 +7220,19 @@
         }
       }
     },
+    "/api/v1/integrations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListMaintainArrIntegrationEndpointsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/asset-readiness": {
       "get": {
         "tags": [
@@ -7546,6 +7758,40 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RecordMeterReadingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/meters/{assetMeterId}/readings/corrections": {
+      "post": {
+        "tags": [
+          "Meters"
+        ],
+        "operationId": "CorrectMeterReadingV1",
+        "parameters": [
+          {
+            "name": "assetMeterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectMeterReadingRequest"
               }
             }
           },
@@ -8289,6 +8535,30 @@
           {
             "name": "assetId",
             "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/readiness/assets/{assetId}": {
+      "get": {
+        "tags": [
+          "AssetReadiness"
+        ],
+        "operationId": "GetAssetReadinessV1ByAssetId",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
             "schema": {
               "type": "string",
               "format": "uuid"
@@ -9692,6 +9962,34 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CorrectMeterReadingRequest": {
+        "required": [
+          "readingValue",
+          "readAt",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "readingValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "readAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
           }
         }
       },
@@ -12153,6 +12451,9 @@
     },
     {
       "name": "MaintenanceHistoryRollupSettings"
+    },
+    {
+      "name": "Dashboard"
     },
     {
       "name": "MaintenanceReports"

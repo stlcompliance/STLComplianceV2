@@ -21,6 +21,41 @@ public static class IntegrationEndpoints
         {
             integrations = integrations.WithTags("Integrations");
 
+        integrations.MapGet("/", (
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator) =>
+        {
+            var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+                context.Request.Headers.Authorization.ToString());
+            var preview = tokenValidator.TryValidate(bearer)
+                ?? throw new StlApiException(
+                    "auth.service_token_invalid",
+                    "Service token is invalid.",
+                    401);
+
+            tokenValidator.ValidateOrThrow(
+                bearer,
+                new ServiceTokenRequirements
+                {
+                    ExpectedSourceProduct = preview.SourceProductKey,
+                    RequiredTargetProduct = "maintainarr",
+                    TenantId = preview.TenantScope ?? Guid.Empty
+                });
+
+            return Results.Ok(new
+            {
+                items = new[]
+                {
+                    new { key = "asset-readiness", path = "/api/v1/integrations/asset-readiness" },
+                    new { key = "routarr-asset-readiness", path = "/api/v1/integrations/routarr-asset-readiness" },
+                    new { key = "routarr-events", path = "/api/v1/integrations/routarr-events" },
+                    new { key = "supplyarr-demand-status", path = "/api/v1/integrations/supplyarr-demand-status" },
+                    new { key = "staffarr-person-sync", path = "/api/v1/integrations/staffarr-person-sync" },
+                }
+            });
+        })
+        .WithName($"ListMaintainArrIntegrationEndpoints{nameSuffix}");
+
         integrations.MapGet("/routarr-asset-readiness", async (
             Guid tenantId,
             Guid? assetId,

@@ -11,6 +11,21 @@ public static class ForgivingSearchEndpoints
         {
             group = group.WithTags("ForgivingSearch").RequireAuthorization();
 
+            group.MapGet("/", async (
+                HttpContext context,
+                SupplyArrAuthorizationService authorization) =>
+            {
+                authorization.RequireForgivingSearch(context.User);
+                return Results.Ok(new
+                {
+                    items = new[]
+                    {
+                        new { key = "forgiving", path = "/api/v1/search/forgiving" },
+                    }
+                });
+            })
+            .WithName($"GetSupplyArrSearchIndex{nameSuffix}");
+
             group.MapGet("/forgiving", async (
                 string q,
                 int? limit,

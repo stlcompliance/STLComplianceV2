@@ -253,6 +253,14 @@ public sealed class ReceivingService(
     {
         var entity = await LoadTrackedAsync(tenantId, receivingReceiptId, cancellationToken);
         EnsureEditable(entity);
+        var now = DateTimeOffset.UtcNow;
+
+        // Auto-create mismatch exceptions so posting can proceed without manual discrepancy entry.
+        // This aligns receipt posting with end-goal behavior for quantity mismatch handling.
+        foreach (var line in entity.Lines)
+        {
+            EnsureAutoMismatchExceptions(entity, line, tenantId, actorUserId, now);
+        }
 
         foreach (var line in entity.Lines)
         {
@@ -264,9 +272,7 @@ public sealed class ReceivingService(
                     400);
             }
 
-            var lineExceptions = await db.ReceivingExceptions
-                .Where(x => x.TenantId == tenantId && x.ReceivingReceiptLineId == line.Id)
-                .ToListAsync(cancellationToken);
+            var lineExceptions = line.Exceptions.ToList();
 
             if (line.QuantityReceived > 0 || lineExceptions.Count > 0)
             {
@@ -298,7 +304,6 @@ public sealed class ReceivingService(
             entity,
             cancellationToken);
 
-        var now = DateTimeOffset.UtcNow;
         foreach (var line in entity.Lines)
         {
             if (line.QuantityReceived > 0)
@@ -366,6 +371,85 @@ public sealed class ReceivingService(
             cancellationToken: cancellationToken);
 
         return await GetAsync(tenantId, entity.Id, cancellationToken);
+    }
+
+    private void EnsureAutoMismatchExceptions(
+        ReceivingReceipt receipt,
+        ReceivingReceiptLine line,
+        Guid tenantId,
+        Guid actorUserId,
+        DateTimeOffset now)
+    {
+        var existingOpenOrResolved = line.Exceptions.ToList();
+        var existingShort = existingOpenOrResolved
+            .Where(x => string.Equals(x.ExceptionType, ReceivingExceptionTypes.Short, StringComparison.OrdinalIgnoreCase))
+            .Sum(x => x.Quantity);
+        var existingOver = existingOpenOrResolved
+            .Where(x => string.Equals(x.ExceptionType, ReceivingExceptionTypes.Over, StringComparison.OrdinalIgnoreCase))
+            .Sum(x => x.Quantity);
+        var existingDamage = existingOpenOrResolved
+            .Where(x => string.Equals(x.ExceptionType, ReceivingExceptionTypes.Damage, StringComparison.OrdinalIgnoreCase))
+            .Sum(x => x.Quantity);
+
+        var remainingOnOrder = line.PurchaseOrderLine.QuantityOrdered - line.PurchaseOrderLine.QuantityReceived;
+        var overVariance = line.QuantityReceived > remainingOnOrder ? line.QuantityReceived - remainingOnOrder : 0m;
+        var missingOver = overVariance - existingOver;
+        if (missingOver > 0.0001m)
+        {
+            AddAutoException(
+                receipt,
+                line,
+                tenantId,
+                actorUserId,
+                ReceivingExceptionTypes.Over,
+                missingOver,
+                now);
+            existingOver += missingOver;
+        }
+
+        var shortVariance = line.QuantityExpected - (line.QuantityReceived + existingDamage + existingShort);
+        if (shortVariance > 0.0001m)
+        {
+            AddAutoException(
+                receipt,
+                line,
+                tenantId,
+                actorUserId,
+                ReceivingExceptionTypes.Short,
+                shortVariance,
+                now);
+        }
+    }
+
+    private void AddAutoException(
+        ReceivingReceipt receipt,
+        ReceivingReceiptLine line,
+        Guid tenantId,
+        Guid actorUserId,
+        string exceptionType,
+        decimal quantity,
+        DateTimeOffset now)
+    {
+        var entity = new ReceivingException
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            ReceivingReceiptId = receipt.Id,
+            ReceivingReceiptLineId = line.Id,
+            ExceptionType = exceptionType,
+            Quantity = decimal.Round(quantity, 4, MidpointRounding.AwayFromZero),
+            Notes = "Auto-created from receiving quantity mismatch during receipt posting.",
+            Status = ReceivingExceptionStatuses.Open,
+            CreatedByUserId = actorUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+            ReceivingReceiptLine = line
+        };
+
+        line.Exceptions.Add(entity);
+        db.ReceivingExceptions.Add(entity);
+        line.UpdatedAt = now;
+        receipt.UpdatedAt = now;
     }
 
     private static void EnsureEditable(ReceivingReceipt entity)

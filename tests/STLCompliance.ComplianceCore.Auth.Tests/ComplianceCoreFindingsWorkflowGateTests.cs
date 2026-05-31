@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
 using NexArr.Api.Services;
+using STLCompliance.Shared.Contracts;
 
 namespace STLCompliance.ComplianceCore.Auth.Tests;
 
@@ -24,6 +25,7 @@ public class ComplianceCoreFindingsWorkflowGateTests : IAsyncLifetime
     private HttpClient _nexarrClient = null!;
     private string _trainarrGateToken = null!;
     private string _trainarrProductGateToken = null!;
+    private string _trainarrProductGateResponseToken = null!;
 
     public async Task InitializeAsync()
     {
@@ -80,6 +82,11 @@ public class ComplianceCoreFindingsWorkflowGateTests : IAsyncLifetime
             sourceProduct: "trainarr",
             allowedProducts: ["compliancecore"],
             ProductGateEvaluationService.EvaluateActionScope);
+        _trainarrProductGateResponseToken = await IssueServiceTokenAsync(
+            adminToken,
+            sourceProduct: "trainarr",
+            allowedProducts: ["compliancecore"],
+            ProductGateResponseService.RecordResponseActionScope);
 
         var complianceAdminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
         await SeedDriverQualificationRulePackAsync(complianceAdminToken);
@@ -538,6 +545,216 @@ public class ComplianceCoreFindingsWorkflowGateTests : IAsyncLifetime
         Assert.Equal(ComplianceEvaluationOutcomes.Allow, result.Outcome);
         Assert.Equal("can_approve_purchase", result.ActionKey);
         Assert.Equal("can_approve_purchase", result.WorkflowKey);
+    }
+
+    [Fact]
+    public async Task Product_gate_can_assign_person_alias_maps_to_task_gate_key()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await GetDriverQualificationRulePackIdAsync(adminToken);
+        await CreateWorkflowGateAsync(adminToken, rulePackId, "can_assign_person_to_task");
+
+        var request = ServiceAuthorized(HttpMethod.Post, "/api/v1/gates/can-assign-person", _trainarrProductGateToken);
+        request.Content = JsonContent.Create(new ProductGateCompatibilityRequest(
+            PlatformSeeder.DemoTenantId,
+            "driver_assignment",
+            [new ProductGateSubjectReference("person", Guid.NewGuid().ToString(), "staffarr")],
+            new Dictionary<string, string>
+            {
+                ["driver_license_valid"] = "true",
+                ["medical_cert_on_file"] = "true",
+            }));
+
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<ProductGateEvaluationResponse>())!;
+        Assert.Equal(ComplianceEvaluationOutcomes.Allow, result.Outcome);
+        Assert.Equal("can_assign_person_to_task", result.ActionKey);
+        Assert.Equal("can_assign_person_to_task", result.WorkflowKey);
+    }
+
+    [Fact]
+    public async Task Product_gate_can_start_work_alias_maps_to_work_order_gate_key()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await GetDriverQualificationRulePackIdAsync(adminToken);
+        await CreateWorkflowGateAsync(adminToken, rulePackId, "can_start_work_order");
+
+        var request = ServiceAuthorized(HttpMethod.Post, "/api/v1/gates/can-start-work", _trainarrProductGateToken);
+        request.Content = JsonContent.Create(new ProductGateCompatibilityRequest(
+            PlatformSeeder.DemoTenantId,
+            "work_order_start",
+            [new ProductGateSubjectReference("person", Guid.NewGuid().ToString(), "staffarr")],
+            new Dictionary<string, string>
+            {
+                ["driver_license_valid"] = "true",
+                ["medical_cert_on_file"] = "true",
+            }));
+
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<ProductGateEvaluationResponse>())!;
+        Assert.Equal(ComplianceEvaluationOutcomes.Allow, result.Outcome);
+        Assert.Equal("can_start_work_order", result.ActionKey);
+        Assert.Equal("can_start_work_order", result.WorkflowKey);
+    }
+
+    [Fact]
+    public async Task Product_gate_can_use_vendor_static_alias_evaluates_with_service_token()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await GetDriverQualificationRulePackIdAsync(adminToken);
+        await CreateWorkflowGateAsync(adminToken, rulePackId, "can_use_vendor");
+
+        var request = ServiceAuthorized(HttpMethod.Post, "/api/v1/gates/can-use-vendor", _trainarrProductGateToken);
+        request.Content = JsonContent.Create(new ProductGateCompatibilityRequest(
+            PlatformSeeder.DemoTenantId,
+            "vendor_usage",
+            [new ProductGateSubjectReference("person", Guid.NewGuid().ToString(), "staffarr")],
+            new Dictionary<string, string>
+            {
+                ["driver_license_valid"] = "true",
+                ["medical_cert_on_file"] = "true",
+            }));
+
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<ProductGateEvaluationResponse>())!;
+        Assert.Equal(ComplianceEvaluationOutcomes.Allow, result.Outcome);
+        Assert.Equal("can_use_vendor", result.ActionKey);
+        Assert.Equal("can_use_vendor", result.WorkflowKey);
+    }
+
+    [Fact]
+    public async Task Product_gate_non_versioned_evaluate_alias_works_with_service_token()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await GetDriverQualificationRulePackIdAsync(adminToken);
+        await CreateWorkflowGateAsync(adminToken, rulePackId, "can_dispatch_route");
+
+        var request = ServiceAuthorized(HttpMethod.Post, "/api/gates/evaluate", _trainarrProductGateToken);
+        request.Content = JsonContent.Create(new ProductGateEvaluationRequest(
+            PlatformSeeder.DemoTenantId,
+            "can_dispatch_route",
+            "can_dispatch_route",
+            "route_dispatch",
+            [new ProductGateSubjectReference("person", Guid.NewGuid().ToString(), "staffarr")],
+            new Dictionary<string, string>
+            {
+                ["driver_license_valid"] = "true",
+                ["medical_cert_on_file"] = "true",
+            }));
+
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<ProductGateEvaluationResponse>())!;
+        Assert.Equal(ComplianceEvaluationOutcomes.Allow, result.Outcome);
+        Assert.Equal("can_dispatch_route", result.ActionKey);
+        Assert.Equal("can_dispatch_route", result.WorkflowKey);
+    }
+
+    [Fact]
+    public async Task Product_gate_response_tracking_records_and_lists_product_responses()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await GetDriverQualificationRulePackIdAsync(adminToken);
+        await CreateWorkflowGateAsync(adminToken, rulePackId, "can_assign_person_to_task");
+
+        var evaluateRequest = ServiceAuthorized(HttpMethod.Post, "/api/v1/gates/evaluate", _trainarrProductGateToken);
+        evaluateRequest.Content = JsonContent.Create(new ProductGateEvaluationRequest(
+            PlatformSeeder.DemoTenantId,
+            "can_assign_person_to_task",
+            "can_assign_person_to_task",
+            "driver_assignment",
+            [new ProductGateSubjectReference("person", Guid.NewGuid().ToString(), "staffarr")],
+            new Dictionary<string, string>
+            {
+                ["driver_license_valid"] = "true",
+                ["medical_cert_on_file"] = "true",
+            }));
+        var evaluateResponse = await _complianceCoreClient.SendAsync(evaluateRequest);
+        evaluateResponse.EnsureSuccessStatusCode();
+        var evaluation = (await evaluateResponse.Content.ReadFromJsonAsync<ProductGateEvaluationResponse>())!;
+
+        var trackResponseRequest = ServiceAuthorized(HttpMethod.Post, "/api/v1/gates/responses", _trainarrProductGateResponseToken);
+        trackResponseRequest.Content = JsonContent.Create(new CreateProductGateResponseRequest(
+            PlatformSeeder.DemoTenantId,
+            evaluation.CheckResultId,
+            "acknowledged",
+            "routed_for_dispatch",
+            "Dispatch operation accepted by source product.",
+            new Dictionary<string, string>
+            {
+                ["routeId"] = "route-123",
+                ["dispatcher"] = "ops-user",
+            }));
+        var trackResponse = await _complianceCoreClient.SendAsync(trackResponseRequest);
+        trackResponse.EnsureSuccessStatusCode();
+        var tracked = (await trackResponse.Content.ReadFromJsonAsync<ProductGateResponseItemResponse>())!;
+        Assert.Equal("trainarr", tracked.SourceProduct);
+        Assert.Equal(evaluation.CheckResultId, tracked.CheckResultId);
+        Assert.Equal("acknowledged", tracked.ResponseOutcome);
+        Assert.Equal("routed_for_dispatch", tracked.ResponseCode);
+
+        var listResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/gates/responses?checkResultId={evaluation.CheckResultId}", adminToken));
+        listResponse.EnsureSuccessStatusCode();
+        var listed = (await listResponse.Content.ReadFromJsonAsync<ProductGateResponseListResponse>())!;
+        Assert.Equal(evaluation.CheckResultId, listed.CheckResultId);
+        Assert.NotEmpty(listed.Items);
+        Assert.Contains(listed.Items, item =>
+            item.CheckResultId == evaluation.CheckResultId
+            && item.SourceProduct == "trainarr"
+            && item.ResponseCode == "routed_for_dispatch");
+    }
+
+    [Fact]
+    public async Task Product_gate_events_endpoint_lists_evaluation_and_response_events()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");
+        var rulePackId = await GetDriverQualificationRulePackIdAsync(adminToken);
+        await CreateWorkflowGateAsync(adminToken, rulePackId, "can_assign_person_to_task");
+
+        var evaluateRequest = ServiceAuthorized(HttpMethod.Post, "/api/v1/gates/evaluate", _trainarrProductGateToken);
+        evaluateRequest.Content = JsonContent.Create(new ProductGateEvaluationRequest(
+            PlatformSeeder.DemoTenantId,
+            "can_assign_person_to_task",
+            "can_assign_person_to_task",
+            "driver_assignment",
+            [new ProductGateSubjectReference("person", Guid.NewGuid().ToString(), "staffarr")],
+            new Dictionary<string, string>
+            {
+                ["driver_license_valid"] = "true",
+                ["medical_cert_on_file"] = "true",
+            }));
+        var evaluateResponse = await _complianceCoreClient.SendAsync(evaluateRequest);
+        evaluateResponse.EnsureSuccessStatusCode();
+        var evaluation = (await evaluateResponse.Content.ReadFromJsonAsync<ProductGateEvaluationResponse>())!;
+
+        var responseRequest = ServiceAuthorized(HttpMethod.Post, "/api/v1/gates/responses", _trainarrProductGateResponseToken);
+        responseRequest.Content = JsonContent.Create(new CreateProductGateResponseRequest(
+            PlatformSeeder.DemoTenantId,
+            evaluation.CheckResultId,
+            "acknowledged",
+            "dispatch_accepted",
+            "Accepted by source product.",
+            new Dictionary<string, string> { ["routeId"] = "route-events-1" }));
+        (await _complianceCoreClient.SendAsync(responseRequest)).EnsureSuccessStatusCode();
+
+        var eventsResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/gates/events?checkResultId={evaluation.CheckResultId}", adminToken));
+        eventsResponse.EnsureSuccessStatusCode();
+        var page = (await eventsResponse.Content.ReadFromJsonAsync<PagedResult<ProductGateEventResponse>>())!;
+        Assert.NotNull(page);
+        Assert.NotEmpty(page.Items);
+        Assert.Contains(page.Items, item =>
+            item.Action == "product_gates.evaluate"
+            && item.CheckResultId == evaluation.CheckResultId
+            && item.SourceProduct == "trainarr");
+        Assert.Contains(page.Items, item =>
+            item.Action == "product_gates.response.recorded"
+            && item.CheckResultId == evaluation.CheckResultId
+            && item.SourceProduct == "trainarr");
     }
 
     [Fact]

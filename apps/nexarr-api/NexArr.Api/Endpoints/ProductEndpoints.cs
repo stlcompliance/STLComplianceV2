@@ -37,7 +37,12 @@ public static class ProductEndpoints
         group.MapGet("/{productKey}", GetProductEndpoint)
         .WithName("GetProduct");
 
-        v1.MapGet("/{productKey}", GetProductEndpoint)
+        v1.MapGet("/{productCode}", async (
+            string productCode,
+            HttpContext context,
+            ProductCatalogService service,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await service.GetAsync(context.User, productCode, cancellationToken)))
         .WithName("GetProductV1");
 
         static async Task<IResult> CreateProductEndpoint(
@@ -78,23 +83,29 @@ public static class ProductEndpoints
         group.MapPut("/{productKey}", UpdateProductEndpoint)
         .WithName("UpdateProduct");
 
-        v1.MapPatch("/{productKey}", UpdateProductEndpoint)
+        v1.MapPatch("/{productCode}", async (
+            string productCode,
+            UpdateProductRequest request,
+            HttpContext context,
+            ProductCatalogService service,
+            CancellationToken cancellationToken) =>
+            Results.Ok(await service.UpdateAsync(context.User, productCode, request, cancellationToken)))
         .WithName("UpdateProductV1");
 
-        v1.MapPost("/{productKey}/disable", async (
-            string productKey,
+        v1.MapPost("/{productCode}/disable", async (
+            string productCode,
             HttpContext context,
             ProductCatalogService service,
             CancellationToken cancellationToken) =>
-            Results.Ok(await service.SetActiveAsync(context.User, productKey, false, cancellationToken)))
+            Results.Ok(await service.SetActiveAsync(context.User, productCode, false, cancellationToken)))
         .WithName("DisableProductV1");
 
-        v1.MapPost("/{productKey}/enable", async (
-            string productKey,
+        v1.MapPost("/{productCode}/enable", async (
+            string productCode,
             HttpContext context,
             ProductCatalogService service,
             CancellationToken cancellationToken) =>
-            Results.Ok(await service.SetActiveAsync(context.User, productKey, true, cancellationToken)))
+            Results.Ok(await service.SetActiveAsync(context.User, productCode, true, cancellationToken)))
         .WithName("EnableProductV1");
     }
 }

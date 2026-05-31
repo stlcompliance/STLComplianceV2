@@ -26,6 +26,42 @@ public static class IntegrationEndpoints
         {
             var integrations = app.MapGroup(route).WithTags("Integrations");
 
+            integrations.MapGet("/", (
+                HttpContext context,
+                StlServiceTokenValidator tokenValidator) =>
+            {
+                var bearer = ServiceTokenBearerParser.ParseAuthorizationHeader(
+                    context.Request.Headers.Authorization.ToString());
+                var preview = tokenValidator.TryValidate(bearer)
+                    ?? throw new StlApiException(
+                        "auth.service_token_invalid",
+                        "Service token is invalid.",
+                        401);
+
+                tokenValidator.ValidateOrThrow(
+                    bearer,
+                    new ServiceTokenRequirements
+                    {
+                        ExpectedSourceProduct = preview.SourceProductKey,
+                        RequiredTargetProduct = "trainarr",
+                        TenantId = preview.TenantScope ?? Guid.Empty
+                    });
+
+                return Results.Ok(new
+                {
+                    items = new[]
+                    {
+                        new { key = "incident-remediations", path = $"{route}/incident-remediations" },
+                        new { key = "routarr-incident-remediations", path = $"{route}/routarr-incident-remediations" },
+                        new { key = "supplyarr-incident-remediations", path = $"{route}/supplyarr-incident-remediations" },
+                        new { key = "qualification-check", path = $"{route}/qualification-check" },
+                        new { key = "qualification-check-batch", path = $"{route}/qualification-check/batch" },
+                        new { key = "person-training-history", path = $"{route}/person-training-history" },
+                    }
+                });
+            })
+            .WithName($"ListIntegrationEndpoints{(route.Contains("/v1/") ? "V1" : string.Empty)}");
+
             integrations.MapPost("/incident-remediations", async (
             IngestStaffarrIncidentRemediationRequest request,
             HttpContext context,

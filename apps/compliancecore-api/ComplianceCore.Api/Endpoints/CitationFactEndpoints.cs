@@ -111,8 +111,8 @@ public static class CitationFactEndpoints
         })
         .WithName($"CreateRegulatoryCitation{nameSuffix}");
 
-        citations.MapGet("/{citationId:guid}", async (
-            Guid citationId,
+        citations.MapGet("/{id:guid}", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             RegulatoryCitationService service,
             HttpContext context,
@@ -120,12 +120,12 @@ public static class CitationFactEndpoints
         {
             authorization.RequireRegulatoryRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetAsync(tenantId, citationId, cancellationToken));
+            return Results.Ok(await service.GetAsync(tenantId, id, cancellationToken));
         })
         .WithName($"GetRegulatoryCitation{nameSuffix}");
 
-        citations.MapPatch("/{citationId:guid}", async (
-            Guid citationId,
+        citations.MapPatch("/{id:guid}", async (
+            Guid id,
             UpdateRegulatoryCitationRequest request,
             ComplianceCoreAuthorizationService authorization,
             RegulatoryCitationService service,
@@ -137,14 +137,14 @@ public static class CitationFactEndpoints
             return Results.Ok(await service.UpdateAsync(
                 tenantId,
                 context.User.GetUserId(),
-                citationId,
+                id,
                 request,
                 cancellationToken));
         })
         .WithName($"UpdateRegulatoryCitation{nameSuffix}");
 
-        citations.MapGet("/{citationId:guid}/history", async (
-            Guid citationId,
+        citations.MapGet("/{id:guid}/history", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             RegulatoryCitationService service,
             HttpContext context,
@@ -152,12 +152,12 @@ public static class CitationFactEndpoints
         {
             authorization.RequireRegulatoryRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListHistoryAsync(tenantId, citationId, cancellationToken));
+            return Results.Ok(await service.ListHistoryAsync(tenantId, id, cancellationToken));
         })
         .WithName($"ListRegulatoryCitationHistory{nameSuffix}");
 
-        citations.MapGet("/{citationId:guid}/rules", async (
-            Guid citationId,
+        citations.MapGet("/{id:guid}/rules", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             RegulatoryCitationService service,
             HttpContext context,
@@ -165,7 +165,7 @@ public static class CitationFactEndpoints
         {
             authorization.RequireRegulatoryRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListRuleLinksAsync(tenantId, citationId, cancellationToken));
+            return Results.Ok(await service.ListRuleLinksAsync(tenantId, id, cancellationToken));
         })
         .WithName($"ListRegulatoryCitationRules{nameSuffix}");
     }
@@ -202,8 +202,8 @@ public static class CitationFactEndpoints
         })
         .WithName($"CreateFactDefinition{nameSuffix}");
 
-        factDefinitions.MapGet("/{factKey}", async (
-            string factKey,
+        factDefinitions.MapGet("/{key}", async (
+            string key,
             ComplianceCoreAuthorizationService authorization,
             FactDefinitionService service,
             HttpContext context,
@@ -211,12 +211,12 @@ public static class CitationFactEndpoints
         {
             authorization.RequireRegulatoryRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetByKeyAsync(tenantId, factKey, cancellationToken));
+            return Results.Ok(await service.GetByKeyAsync(tenantId, key, cancellationToken));
         })
         .WithName($"GetFactDefinition{nameSuffix}");
 
-        factDefinitions.MapPatch("/{factKey}", async (
-            string factKey,
+        factDefinitions.MapPatch("/{key}", async (
+            string key,
             UpdateFactDefinitionRequest request,
             ComplianceCoreAuthorizationService authorization,
             FactDefinitionService service,
@@ -228,14 +228,14 @@ public static class CitationFactEndpoints
             return Results.Ok(await service.UpdateByKeyAsync(
                 tenantId,
                 context.User.GetUserId(),
-                factKey,
+                key,
                 request,
                 cancellationToken));
         })
         .WithName($"UpdateFactDefinition{nameSuffix}");
 
-        factDefinitions.MapGet("/{factKey}/usage", async (
-            string factKey,
+        factDefinitions.MapGet("/{key}/usage", async (
+            string key,
             ComplianceCoreAuthorizationService authorization,
             FactDefinitionService service,
             HttpContext context,
@@ -243,12 +243,12 @@ public static class CitationFactEndpoints
         {
             authorization.RequireRegulatoryRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetUsageByKeyAsync(tenantId, factKey, cancellationToken));
+            return Results.Ok(await service.GetUsageByKeyAsync(tenantId, key, cancellationToken));
         })
         .WithName($"GetFactDefinitionUsage{nameSuffix}");
 
-        factDefinitions.MapGet("/{factKey}/history", async (
-            string factKey,
+        factDefinitions.MapGet("/{key}/history", async (
+            string key,
             ComplianceCoreAuthorizationService authorization,
             FactDefinitionService service,
             HttpContext context,
@@ -256,7 +256,7 @@ public static class CitationFactEndpoints
         {
             authorization.RequireRegulatoryRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListHistoryByKeyAsync(tenantId, factKey, cancellationToken));
+            return Results.Ok(await service.ListHistoryByKeyAsync(tenantId, key, cancellationToken));
         })
         .WithName($"ListFactDefinitionHistory{nameSuffix}");
 

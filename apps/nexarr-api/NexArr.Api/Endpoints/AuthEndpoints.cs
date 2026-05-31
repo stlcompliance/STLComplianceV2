@@ -170,7 +170,15 @@ public static class AuthEndpoints
         me.MapDelete("/sessions/{sessionId:guid}", RevokeSessionEndpoint)
         .WithName("RevokeMySession");
 
-        v1Me.MapDelete("/sessions/{sessionId:guid}", RevokeSessionEndpoint)
+        v1Me.MapDelete("/sessions/{id:guid}", async (
+            Guid id,
+            AuthService auth,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            await auth.RevokeMySessionAsync(context.User, id, cancellationToken);
+            return Results.NoContent();
+        })
         .WithName("RevokeMySessionV1");
     }
 }

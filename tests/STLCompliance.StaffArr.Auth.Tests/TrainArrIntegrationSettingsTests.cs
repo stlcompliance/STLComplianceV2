@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -274,6 +275,27 @@ public sealed class TrainArrIntegrationSettingsTests : IAsyncLifetime
 
         var response = await _trainarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Integrations_v1_index_lists_expected_integration_paths()
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "/api/v1/integrations");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _staffarrToTrainarrToken);
+
+        var response = await _trainarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var paths = json.RootElement
+            .GetProperty("items")
+            .EnumerateArray()
+            .Select(x => x.GetProperty("path").GetString())
+            .ToList();
+
+        Assert.Contains("/api/v1/integrations/incident-remediations", paths);
+        Assert.Contains("/api/v1/integrations/qualification-check", paths);
+        Assert.Contains("/api/v1/integrations/person-training-history", paths);
     }
 
     private async Task SeedTrainingDomainEventAsync()

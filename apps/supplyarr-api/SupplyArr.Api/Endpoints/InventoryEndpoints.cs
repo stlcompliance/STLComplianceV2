@@ -10,6 +10,23 @@ public static class InventoryEndpoints
     {
         static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
         {
+        group.MapGet("/", async (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization) =>
+        {
+            authorization.RequireInventoryRead(context.User);
+            return Results.Ok(new
+            {
+                items = new[]
+                {
+                    new { key = "locations", path = "/api/v1/inventory/locations" },
+                    new { key = "bins", path = "/api/v1/inventory/bins" },
+                    new { key = "stock", path = "/api/v1/inventory/stock" },
+                }
+            });
+        })
+        .WithName($"GetInventoryIndex{nameSuffix}");
+
         group.MapGet("/locations", async (
             HttpContext context,
             SupplyArrAuthorizationService authorization,

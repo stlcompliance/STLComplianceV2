@@ -271,8 +271,8 @@ public static class AuditPackageEndpoints
         })
         .WithName("ListComplianceCoreAuditPackagesV1");
 
-        v1Audit.MapGet("/packages/{jobId:guid}", async (
-            Guid jobId,
+        v1Audit.MapGet("/packages/{id:guid}", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             AuditPackageGenerationService generationService,
             HttpContext context,
@@ -280,13 +280,13 @@ public static class AuditPackageEndpoints
         {
             authorization.RequireAuditPackageRead(context.User);
             var tenantId = context.User.GetTenantId();
-            var job = await generationService.GetJobAsync(tenantId, jobId, cancellationToken);
+            var job = await generationService.GetJobAsync(tenantId, id, cancellationToken);
             return Results.Ok(job);
         })
         .WithName("GetComplianceCoreAuditPackageV1");
 
-        v1Audit.MapGet("/packages/{jobId:guid}/download", async (
-            Guid jobId,
+        v1Audit.MapGet("/packages/{id:guid}/download", async (
+            Guid id,
             ComplianceCoreAuthorizationService authorization,
             AuditPackageGenerationService generationService,
             HttpContext context,
@@ -294,17 +294,17 @@ public static class AuditPackageEndpoints
         {
             authorization.RequireAuditPackageExport(context.User);
             var tenantId = context.User.GetTenantId();
-            var job = await generationService.GetJobAsync(tenantId, jobId, cancellationToken);
+            var job = await generationService.GetJobAsync(tenantId, id, cancellationToken);
 
             if (string.Equals(job.Format, "json", StringComparison.OrdinalIgnoreCase))
             {
-                var package = await generationService.DownloadJsonAsync(tenantId, jobId, cancellationToken);
+                var package = await generationService.DownloadJsonAsync(tenantId, id, cancellationToken);
                 return Results.Ok(package);
             }
 
             var (content, contentType, fileName) = await generationService.DownloadZipAsync(
                 tenantId,
-                jobId,
+                id,
                 cancellationToken);
             return Results.File(content, contentType, fileName);
         })

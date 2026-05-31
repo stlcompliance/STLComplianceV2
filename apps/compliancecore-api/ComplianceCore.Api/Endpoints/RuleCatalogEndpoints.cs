@@ -24,8 +24,8 @@ public static class RuleCatalogEndpoints
         })
         .WithName("ListRulesV1");
 
-        rules.MapGet("/{ruleId}", async (
-            string ruleId,
+        rules.MapGet("/{id}", async (
+            string id,
             ComplianceCoreAuthorizationService authorization,
             RuleCatalogService service,
             HttpContext context,
@@ -33,7 +33,7 @@ public static class RuleCatalogEndpoints
         {
             authorization.RequireRulePacksRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetAsync(tenantId, ruleId, cancellationToken));
+            return Results.Ok(await service.GetAsync(tenantId, id, cancellationToken));
         })
         .WithName("GetRuleV1");
 
@@ -51,8 +51,8 @@ public static class RuleCatalogEndpoints
         })
         .WithName("CreateRuleV1");
 
-        rules.MapPatch("/{ruleId}", async (
-            string ruleId,
+        rules.MapPatch("/{id}", async (
+            string id,
             PatchRuleCatalogRequest request,
             ComplianceCoreAuthorizationService authorization,
             RuleCatalogService service,
@@ -61,12 +61,12 @@ public static class RuleCatalogEndpoints
         {
             authorization.RequireRulePacksCreate(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.PatchAsync(tenantId, context.User.GetUserId(), ruleId, request, cancellationToken));
+            return Results.Ok(await service.PatchAsync(tenantId, context.User.GetUserId(), id, request, cancellationToken));
         })
         .WithName("PatchRuleV1");
 
-        rules.MapPost("/{ruleId}/validate", async (
-            string ruleId,
+        rules.MapPost("/{id}/validate", async (
+            string id,
             ComplianceCoreAuthorizationService authorization,
             RuleCatalogService service,
             HttpContext context,
@@ -74,12 +74,12 @@ public static class RuleCatalogEndpoints
         {
             authorization.RequireRulePacksRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ValidateAsync(tenantId, ruleId, cancellationToken));
+            return Results.Ok(await service.ValidateAsync(tenantId, id, cancellationToken));
         })
         .WithName("ValidateRuleV1");
 
-        rules.MapPost("/{ruleId}/test", async (
-            string ruleId,
+        rules.MapPost("/{id}/test", async (
+            string id,
             RuleCatalogTestRequest request,
             ComplianceCoreAuthorizationService authorization,
             RuleCatalogService service,
@@ -88,12 +88,12 @@ public static class RuleCatalogEndpoints
         {
             authorization.RequireRuleEvaluation(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.TestAsync(tenantId, ruleId, request, cancellationToken));
+            return Results.Ok(await service.TestAsync(tenantId, id, request, cancellationToken));
         })
         .WithName("TestRuleV1");
 
-        rules.MapGet("/{ruleId}/usage", async (
-            string ruleId,
+        rules.MapGet("/{id}/usage", async (
+            string id,
             ComplianceCoreAuthorizationService authorization,
             RuleCatalogService service,
             HttpContext context,
@@ -101,12 +101,12 @@ public static class RuleCatalogEndpoints
         {
             authorization.RequireRulePacksRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetUsageAsync(tenantId, ruleId, cancellationToken));
+            return Results.Ok(await service.GetUsageAsync(tenantId, id, cancellationToken));
         })
         .WithName("GetRuleUsageV1");
 
-        rules.MapGet("/{ruleId}/history", async (
-            string ruleId,
+        rules.MapGet("/{id}/history", async (
+            string id,
             ComplianceCoreAuthorizationService authorization,
             RuleCatalogService service,
             HttpContext context,
@@ -114,7 +114,7 @@ public static class RuleCatalogEndpoints
         {
             authorization.RequireRulePacksRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.GetHistoryAsync(tenantId, ruleId, cancellationToken));
+            return Results.Ok(await service.GetHistoryAsync(tenantId, id, cancellationToken));
         })
         .WithName("GetRuleHistoryV1");
     }

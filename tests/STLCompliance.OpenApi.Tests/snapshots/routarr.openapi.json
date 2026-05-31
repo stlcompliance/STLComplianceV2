@@ -3032,6 +3032,50 @@
         }
       }
     },
+    "/api/reports/dispatch/time-summary": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchTimeSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/dispatch/time-summary/export": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "ExportRoutArrDispatchTimeSummary",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reports/dispatch/trips/{tripId}": {
       "get": {
         "tags": [
@@ -4552,6 +4596,314 @@
         }
       }
     },
+    "/api/v1/audit-packages/export": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "ExportRoutArrAuditPackageV1",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-packages/filter-options": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetRoutArrAuditPackageFilterOptionsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-packages/jobs": {
+      "post": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "CreateRoutArrAuditPackageGenerationJobV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditPackageGenerationJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-packages/jobs/{jobId}": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetRoutArrAuditPackageGenerationJobV1",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-packages/jobs/{jobId}/download": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "DownloadRoutArrAuditPackageGenerationJobV1",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-packages/manifest": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetRoutArrAuditPackageManifestV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-packages/summary": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetRoutArrAuditPackageExportSummaryV1",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/audit-packages/timeline": {
+      "get": {
+        "tags": [
+          "AuditPackages"
+        ],
+        "operationId": "GetRoutArrAuditPackageTimelineV1",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorUserId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/auth/handoff/redeem": {
       "post": {
         "tags": [
@@ -4635,6 +4987,29 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AssetDispatchabilityCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/compliance-checks/dispatch-workflow-gate": {
+      "post": {
+        "tags": [
+          "ComplianceChecks"
+        ],
+        "operationId": "CheckDispatchWorkflowGateV1Alias",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispatchWorkflowGateCheckRequest"
               }
             }
           },
@@ -4844,6 +5219,85 @@
         }
       }
     },
+    "/api/v1/exports/dispatch-exceptions": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportRoutArrDispatchExceptionsCsvV1",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/manifest": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "GetRoutArrEntityExportManifestV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/routes": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportRoutArrRoutesCsvV1",
+        "parameters": [
+          {
+            "name": "routeStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/exports/trips": {
+      "get": {
+        "tags": [
+          "Exports"
+        ],
+        "operationId": "ExportRoutArrTripsCsvV1",
+        "parameters": [
+          {
+            "name": "dispatchStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/health": {
       "get": {
         "tags": [
@@ -5040,12 +5494,445 @@
         }
       }
     },
+    "/api/v1/reports/dispatch-overrides/summary": {
+      "get": {
+        "tags": [
+          "DispatchOverrideReports"
+        ],
+        "operationId": "GetRoutArrDispatchOverrideReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch-overrides/summary/export": {
+      "get": {
+        "tags": [
+          "DispatchOverrideReports"
+        ],
+        "operationId": "ExportRoutArrDispatchOverrideReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch/exceptions/{exceptionId}": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportExceptionDetailV1",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch/summary": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch/summary/export": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "ExportRoutArrDispatchReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch/time-summary": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchTimeSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch/time-summary/export": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "ExportRoutArrDispatchTimeSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch/trips/{tripId}": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportTripDetailV1",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/proof-dvir/dvir/{dvirId}": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportDvirDetailV1",
+        "parameters": [
+          {
+            "name": "dvirId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/proof-dvir/proofs/{proofId}": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportProofDetailV1",
+        "parameters": [
+          {
+            "name": "proofId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/proof-dvir/summary": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/proof-dvir/summary/export": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "ExportRoutArrProofDvirReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/proof-dvir/trips/{tripId}": {
+      "get": {
+        "tags": [
+          "ProofDvirReports"
+        ],
+        "operationId": "GetRoutArrProofDvirReportTripDetailV1",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/routes/stops/{stopId}": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "GetRoutArrRouteReportStopDetailV1",
+        "parameters": [
+          {
+            "name": "stopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/routes/summary": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "GetRoutArrRouteReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/routes/summary/export": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "ExportRoutArrRouteReportSummaryV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/routes/{routeId}": {
+      "get": {
+        "tags": [
+          "RouteReports"
+        ],
+        "operationId": "GetRoutArrRouteReportRouteDetailV1",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/route-templates": {
       "get": {
         "tags": [
           "Routes"
         ],
         "operationId": "ListRouteTemplatesV1Alias",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Routes"
+        ],
+        "operationId": "CreateRouteTemplateV1Alias",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRouteTemplateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/route-templates/{routeTemplateId}": {
+      "get": {
+        "tags": [
+          "Routes"
+        ],
+        "operationId": "GetRouteTemplateV1Alias",
+        "parameters": [
+          {
+            "name": "routeTemplateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -5073,6 +5960,51 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Routes"
+        ],
+        "operationId": "CreateRouteV1Alias",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRouteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/routes/{routeId}": {
+      "get": {
+        "tags": [
+          "Routes"
+        ],
+        "operationId": "GetRouteV1Alias",
+        "parameters": [
+          {
+            "name": "routeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -5178,6 +6110,51 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Trips"
+        ],
+        "operationId": "CreateTripV1Alias",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTripRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/trips/{tripId}": {
+      "get": {
+        "tags": [
+          "Trips"
+        ],
+        "operationId": "GetTripV1Alias",
+        "parameters": [
+          {
+            "name": "tripId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -5862,6 +6839,31 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "CreateRouteTemplateRequest": {
+        "required": [
+          "title",
+          "description",
+          "stops"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "stops": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/CreateRouteStopRequest"
+            }
           }
         }
       },

@@ -20,6 +20,23 @@ public static class AssetDowntimeEndpoints
                 .WithTags("Downtime")
                 .RequireAuthorization();
 
+            group.MapGet("/", (
+                MaintainArrAuthorizationService authorization,
+                HttpContext context) =>
+            {
+                authorization.RequireDowntimeRead(context.User);
+                return Results.Ok(new
+                {
+                    items = new[]
+                    {
+                        new { key = "events", path = $"{route}/events" },
+                        new { key = "asset-availability", path = $"{route}/availability/assets/{{assetId}}" },
+                        new { key = "fleet-availability", path = $"{route}/availability/fleet" },
+                    }
+                });
+            })
+            .WithName($"GetMaintainArrDowntimeIndex{suffix}");
+
             group.MapGet("/events", async (
                 Guid? assetId,
                 bool? activeOnly,

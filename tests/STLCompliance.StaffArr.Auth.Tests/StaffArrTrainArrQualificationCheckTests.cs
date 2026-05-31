@@ -382,6 +382,29 @@ public class StaffArrTrainArrQualificationCheckTests : IAsyncLifetime
         Assert.Equal(qualificationCheck.ComplianceCore?.Outcome, authorizationCheck.ComplianceCore?.Outcome);
     }
 
+    [Fact]
+    public async Task Qualification_gate_alias_matches_primary_endpoint()
+    {
+        var personId = Guid.NewGuid();
+        var adminToken = CreateTrainArrAccessToken(["trainarr"], tenantRoleKey: "trainarr_admin");
+
+        var primary = await RunQualificationCheckAsync(
+            adminToken,
+            personId,
+            "hazmat_endorsement",
+            "driver_qualification");
+        var gateAlias = await RunQualificationCheckAsync(
+            adminToken,
+            personId,
+            "hazmat_endorsement",
+            "driver_qualification",
+            "/api/v1/qualifications/check");
+
+        Assert.Equal(primary.Outcome, gateAlias.Outcome);
+        Assert.Equal(primary.ReasonCode, gateAlias.ReasonCode);
+        Assert.Equal(primary.ComplianceCore?.Outcome, gateAlias.ComplianceCore?.Outcome);
+    }
+
     private async Task<QualificationCheckResponse> RunQualificationCheckAsync(
         string trainarrToken,
         Guid personId,
