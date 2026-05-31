@@ -41,11 +41,24 @@ describe('DataExportsPanel', () => {
 
   it('shows export failure callout', async () => {
     vi.mocked(client.getEntityExportManifest).mockResolvedValue({
+      packageVersion: 'test',
+      reportExports: [],
+      auditPackageFormats: [],
       entities: [
         {
           entityKey: 'training_assignments',
+          exportPath: '/api/trainarr/training-assignments/export',
           displayName: 'Training assignments',
+          csvHeader: 'training-assignments.csv',
           description: 'Assignments export',
+          formats: [
+            {
+              formatKey: 'csv',
+              contentType: 'text/csv',
+              fileNameTemplate: 'training-assignments.csv',
+              description: 'CSV export',
+            },
+          ],
         },
       ],
     })

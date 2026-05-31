@@ -34,6 +34,7 @@ describe('ComplianceReportsPanel', () => {
       citationAttachmentCount: 1,
       rulePackRequirementCount: 2,
       openRemediationCount: 3,
+      totalRemediationCount: 3,
       attentionItemCount: 4,
       recentRemediations: [],
     })

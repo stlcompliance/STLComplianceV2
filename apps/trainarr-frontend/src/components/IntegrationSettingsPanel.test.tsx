@@ -69,7 +69,7 @@ describe('IntegrationSettingsPanel', () => {
 
   it('shows retry callout when settings fail', async () => {
     vi.mocked(client.getIntegrationSettings).mockRejectedValue(new Error('settings down'))
-    vi.mocked(client.getIntegrationProbes).mockResolvedValue({ probedAt: null, items: [] })
+    vi.mocked(client.getIntegrationProbes).mockResolvedValue({ probedAt: '2026-05-28T12:00:00Z', items: [] })
 
     renderPanel()
 
