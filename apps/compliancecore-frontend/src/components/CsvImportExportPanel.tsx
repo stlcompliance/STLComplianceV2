@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { useRef, useState } from 'react'
 
 import { exportCsvBundleZip, getCsvBundleManifest, importCsvBundle } from '../api/client'
@@ -150,14 +151,10 @@ export function CsvImportExportPanel({ accessToken, canManage }: CsvImportExport
       ) : null}
 
       {importMutation.isError ? (
-        <p className="text-sm text-red-300">
-          {importMutation.error instanceof Error ? importMutation.error.message : 'Import failed'}
-        </p>
+        <ApiErrorCallout title="Import failed" message={getErrorMessage(importMutation.error, 'Import failed.')} />
       ) : null}
       {exportMutation.isError ? (
-        <p className="text-sm text-red-300">
-          {exportMutation.error instanceof Error ? exportMutation.error.message : 'Export failed'}
-        </p>
+        <ApiErrorCallout title="Export failed" message={getErrorMessage(exportMutation.error, 'Export failed.')} />
       ) : null}
     </section>
   )

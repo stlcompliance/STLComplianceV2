@@ -111,4 +111,32 @@ describe('PersonTimelinePanel', () => {
     fireEvent.click(screen.getByTestId('person-timeline-next-page'))
     expect(onPageChange).toHaveBeenCalledWith(3)
   })
+
+  it('renders retryable error callout when timeline loading fails', () => {
+    const onRetryRead = vi.fn()
+    render(
+      <PersonTimelinePanel
+        personDisplayName="Alex Rivera"
+        totalCount={0}
+        page={1}
+        pageSize={25}
+        hasNextPage={false}
+        categoryFilter=""
+        isLoading={false}
+        isError
+        readErrorMessage="timeline backend unavailable"
+        onRetryRead={onRetryRead}
+        onCategoryFilterChange={vi.fn()}
+        onPageChange={vi.fn()}
+        onPageSizeChange={vi.fn()}
+        entries={[]}
+      />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Timeline unavailable')).toBeTruthy()
+    expect(screen.getByText('timeline backend unavailable')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry timeline' }))
+    expect(onRetryRead).toHaveBeenCalledTimes(1)
+  })
 })

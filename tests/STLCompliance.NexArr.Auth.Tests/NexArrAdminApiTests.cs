@@ -363,6 +363,36 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
     }
 
     [Fact]
+    public async Task V1_platform_admin_can_get_service_client_detail()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var registerRequest = Authorized(HttpMethod.Post, "/api/v1/service-clients", token);
+        registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
+            "detail-worker",
+            "Detail Worker",
+            "staffarr",
+            ["staffarr"]));
+        var registerResponse = await _client.SendAsync(registerRequest);
+        registerResponse.EnsureSuccessStatusCode();
+        var registered = (await registerResponse.Content.ReadFromJsonAsync<ServiceClientResponse>())!;
+
+        var detailResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/service-clients/{registered.ServiceClientId}", token));
+        detailResponse.EnsureSuccessStatusCode();
+        var detail = (await detailResponse.Content.ReadFromJsonAsync<ServiceClientResponse>())!;
+
+        Assert.Equal(registered.ServiceClientId, detail.ServiceClientId);
+        Assert.Equal("detail-worker", detail.ClientKey);
+        Assert.Equal("Detail Worker", detail.DisplayName);
+        Assert.Equal("staffarr", detail.SourceProductKey);
+        Assert.Contains("staffarr", detail.AllowedProductKeys);
+        Assert.True(detail.IsActive);
+        Assert.Equal(0, detail.FailedAuthenticationAttempts);
+    }
+
+    [Fact]
     public async Task Revoked_service_token_fails_validation()
     {
         await SeedDatabaseAsync();
@@ -405,6 +435,145 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
     }
 
     [Fact]
+    public async Task Platform_admin_can_view_service_token_audit_log()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var registerRequest = Authorized(HttpMethod.Post, "/api/service-tokens/clients", token);
+        registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
+            "audit-worker",
+            "Audit Worker",
+            "staffarr",
+            ["staffarr"]));
+        var registerResponse = await _client.SendAsync(registerRequest);
+        registerResponse.EnsureSuccessStatusCode();
+        var client = (await registerResponse.Content.ReadFromJsonAsync<ServiceClientResponse>())!;
+
+        var issueRequest = Authorized(HttpMethod.Post, "/api/service-tokens", token);
+        issueRequest.Content = JsonContent.Create(new IssueServiceTokenRequest(
+            client.ServiceClientId,
+            PlatformSeeder.DemoTenantId,
+            null,
+            null,
+            30));
+        var issueResponse = await _client.SendAsync(issueRequest);
+        issueResponse.EnsureSuccessStatusCode();
+        var issued = (await issueResponse.Content.ReadFromJsonAsync<ServiceTokenIssueResponse>())!;
+
+        var validateRequest = Authorized(HttpMethod.Post, "/api/service-tokens/validate", token);
+        validateRequest.Content = JsonContent.Create(new ValidateServiceTokenRequest(issued.AccessToken));
+        var validateResponse = await _client.SendAsync(validateRequest);
+        validateResponse.EnsureSuccessStatusCode();
+        var valid = (await validateResponse.Content.ReadFromJsonAsync<ServiceTokenValidationResponse>())!;
+        Assert.True(valid.IsValid);
+
+        var revokeResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/service-tokens/{issued.TokenId}/revoke", token));
+        Assert.Equal(HttpStatusCode.NoContent, revokeResponse.StatusCode);
+
+        var deniedValidateRequest = Authorized(HttpMethod.Post, "/api/service-tokens/validate", token);
+        deniedValidateRequest.Content = JsonContent.Create(new ValidateServiceTokenRequest(issued.AccessToken));
+        var deniedValidateResponse = await _client.SendAsync(deniedValidateRequest);
+        deniedValidateResponse.EnsureSuccessStatusCode();
+        var denied = (await deniedValidateResponse.Content.ReadFromJsonAsync<ServiceTokenValidationResponse>())!;
+        Assert.False(denied.IsValid);
+        Assert.Equal("token_revoked", denied.ReasonCode);
+
+        var auditResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/service-tokens/audit?serviceClientId={client.ServiceClientId}&page=1&pageSize=100",
+                token));
+        auditResponse.EnsureSuccessStatusCode();
+
+        var auditPage = await auditResponse.Content.ReadFromJsonAsync<PagedResult<PlatformAuditEventExportItem>>();
+        Assert.NotNull(auditPage);
+        Assert.Contains(auditPage!.Items, x => x.Action == "service_client.register" && x.Result == "Success");
+        Assert.Contains(auditPage.Items, x => x.Action == "service_token.issue" && x.Result == "Success");
+        Assert.Contains(auditPage.Items, x => x.Action == "service_token.validate" && x.Result == "Success");
+        Assert.Contains(auditPage.Items, x => x.Action == "service_token.revoke" && x.Result == "Success");
+        Assert.Contains(auditPage.Items, x => x.Action == "service_token.validate" && x.Result == "Denied" && x.ReasonCode == "token_revoked");
+    }
+
+    [Fact]
+    public async Task Tenant_admin_cannot_view_service_token_audit_log()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/service-tokens/audit?page=1&pageSize=20", token));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Service_client_usage_and_failed_auth_telemetry_is_reported()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var registerRequest = Authorized(HttpMethod.Post, "/api/v1/service-clients", token);
+        registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
+            "telemetry-worker",
+            "Telemetry Worker",
+            "staffarr",
+            ["staffarr"]));
+        var registerResponse = await _client.SendAsync(registerRequest);
+        registerResponse.EnsureSuccessStatusCode();
+        var client = (await registerResponse.Content.ReadFromJsonAsync<ServiceClientResponse>())!;
+        Assert.Null(client.LastUsedAt);
+        Assert.Equal(0, client.FailedAuthenticationAttempts);
+
+        var issueRequest = Authorized(HttpMethod.Post, "/api/v1/service-token", token);
+        issueRequest.Content = JsonContent.Create(new IssueServiceTokenRequest(
+            client.ServiceClientId,
+            PlatformSeeder.DemoTenantId,
+            null,
+            "read",
+            30));
+        var issueResponse = await _client.SendAsync(issueRequest);
+        issueResponse.EnsureSuccessStatusCode();
+        var issued = (await issueResponse.Content.ReadFromJsonAsync<ServiceTokenIssueResponse>())!;
+
+        var revokeRequest = Authorized(HttpMethod.Post, $"/api/service-tokens/{issued.TokenId}/revoke", token);
+        (await _client.SendAsync(revokeRequest)).EnsureSuccessStatusCode();
+
+        var validateRequest = Authorized(HttpMethod.Post, "/api/service-tokens/validate", token);
+        validateRequest.Content = JsonContent.Create(new ValidateServiceTokenRequest(issued.AccessToken));
+        var validateResponse = await _client.SendAsync(validateRequest);
+        validateResponse.EnsureSuccessStatusCode();
+        var failedValidation = (await validateResponse.Content.ReadFromJsonAsync<ServiceTokenValidationResponse>())!;
+        Assert.False(failedValidation.IsValid);
+        Assert.Equal("token_revoked", failedValidation.ReasonCode);
+
+        var listResponseAfterFailure = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/service-clients?page=1&pageSize=50", token));
+        listResponseAfterFailure.EnsureSuccessStatusCode();
+        var listAfterFailure = (await listResponseAfterFailure.Content.ReadFromJsonAsync<PagedResult<ServiceClientResponse>>())!;
+        var listedAfterFailure = Assert.Single(listAfterFailure.Items.Where(x => x.ServiceClientId == client.ServiceClientId));
+        Assert.Null(listedAfterFailure.LastUsedAt);
+        Assert.Equal(1, listedAfterFailure.FailedAuthenticationAttempts);
+
+        var successValidateRequest = Authorized(HttpMethod.Post, "/api/service-tokens/validate", token);
+        successValidateRequest.Content = JsonContent.Create(new ValidateServiceTokenRequest(
+            (await IssueServiceTokenForClientAsync(token, client.ServiceClientId)).AccessToken));
+        var successValidateResponse = await _client.SendAsync(successValidateRequest);
+        successValidateResponse.EnsureSuccessStatusCode();
+        var successValidation = (await successValidateResponse.Content.ReadFromJsonAsync<ServiceTokenValidationResponse>())!;
+        Assert.True(successValidation.IsValid);
+
+        var listResponseAfterSuccess = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/service-clients?page=1&pageSize=50", token));
+        listResponseAfterSuccess.EnsureSuccessStatusCode();
+        var listAfterSuccess = (await listResponseAfterSuccess.Content.ReadFromJsonAsync<PagedResult<ServiceClientResponse>>())!;
+        var listedAfterSuccess = Assert.Single(listAfterSuccess.Items.Where(x => x.ServiceClientId == client.ServiceClientId));
+        Assert.NotNull(listedAfterSuccess.LastUsedAt);
+        Assert.Equal(0, listedAfterSuccess.FailedAuthenticationAttempts);
+    }
+
+    [Fact]
     public async Task Tenant_admin_cannot_register_service_client()
     {
         await SeedDatabaseAsync();
@@ -419,6 +588,139 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
         var response = await _client.SendAsync(registerRequest);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Platform_admin_can_update_service_client_audience()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var registerRequest = Authorized(HttpMethod.Post, "/api/v1/service-clients", token);
+        registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
+            "audience-worker",
+            "Audience Worker",
+            "staffarr",
+            ["staffarr"]));
+        var registerResponse = await _client.SendAsync(registerRequest);
+        registerResponse.EnsureSuccessStatusCode();
+        var client = (await registerResponse.Content.ReadFromJsonAsync<ServiceClientResponse>())!;
+        Assert.Equal(["staffarr"], client.AllowedProductKeys);
+
+        var updateRequest = Authorized(HttpMethod.Patch, $"/api/v1/service-clients/{client.ServiceClientId}/audience", token);
+        updateRequest.Content = JsonContent.Create(new UpdateServiceClientAudienceRequest(["staffarr", "trainarr"]));
+        var updateResponse = await _client.SendAsync(updateRequest);
+        updateResponse.EnsureSuccessStatusCode();
+        var updated = (await updateResponse.Content.ReadFromJsonAsync<ServiceClientResponse>())!;
+        Assert.Equal(2, updated.AllowedProductKeys.Count);
+        Assert.Contains("staffarr", updated.AllowedProductKeys);
+        Assert.Contains("trainarr", updated.AllowedProductKeys);
+    }
+
+    [Fact]
+    public async Task Tenant_admin_cannot_update_service_client_audience()
+    {
+        await SeedDatabaseAsync();
+        var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var tenantToken = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var registerRequest = Authorized(HttpMethod.Post, "/api/v1/service-clients", adminToken);
+        registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
+            "audience-blocked-worker",
+            "Audience Blocked Worker",
+            "staffarr",
+            ["staffarr"]));
+        var registerResponse = await _client.SendAsync(registerRequest);
+        registerResponse.EnsureSuccessStatusCode();
+        var client = (await registerResponse.Content.ReadFromJsonAsync<ServiceClientResponse>())!;
+
+        var updateRequest = Authorized(HttpMethod.Patch, $"/api/v1/service-clients/{client.ServiceClientId}/audience", tenantToken);
+        updateRequest.Content = JsonContent.Create(new UpdateServiceClientAudienceRequest(["staffarr", "trainarr"]));
+        var updateResponse = await _client.SendAsync(updateRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, updateResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Platform_admin_can_assign_service_client_tenant_scope_and_enforce_issue_scope()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var createTenantRequest = Authorized(HttpMethod.Post, "/api/v1/tenants", token);
+        createTenantRequest.Content = JsonContent.Create(new CreateTenantRequest(
+            $"scope-other-{Guid.NewGuid():N}",
+            "Scope Other Tenant"));
+        var createTenantResponse = await _client.SendAsync(createTenantRequest);
+        createTenantResponse.EnsureSuccessStatusCode();
+        var otherTenant = (await createTenantResponse.Content.ReadFromJsonAsync<TenantDetailResponse>())!;
+
+        var registerRequest = Authorized(HttpMethod.Post, "/api/v1/service-clients", token);
+        registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
+            "tenant-scope-worker",
+            "Tenant Scope Worker",
+            "staffarr",
+            ["staffarr"]));
+        var registerResponse = await _client.SendAsync(registerRequest);
+        registerResponse.EnsureSuccessStatusCode();
+        var client = (await registerResponse.Content.ReadFromJsonAsync<ServiceClientResponse>())!;
+
+        var scopeRequest = Authorized(HttpMethod.Patch, $"/api/v1/service-clients/{client.ServiceClientId}/tenant-scope", token);
+        scopeRequest.Content = JsonContent.Create(new UpdateServiceClientTenantScopeRequest([PlatformSeeder.DemoTenantId]));
+        var scopeResponse = await _client.SendAsync(scopeRequest);
+        scopeResponse.EnsureSuccessStatusCode();
+        var scopePayload = (await scopeResponse.Content.ReadFromJsonAsync<ServiceClientTenantScopeResponse>())!;
+        Assert.Equal(client.ServiceClientId, scopePayload.ServiceClientId);
+        Assert.Equal([PlatformSeeder.DemoTenantId], scopePayload.TenantIds);
+
+        var listClientsResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/service-clients?page=1&pageSize=50", token));
+        listClientsResponse.EnsureSuccessStatusCode();
+        var clientsPage = (await listClientsResponse.Content.ReadFromJsonAsync<PagedResult<ServiceClientResponse>>())!;
+        var listedClient = Assert.Single(clientsPage.Items.Where(x => x.ServiceClientId == client.ServiceClientId));
+        Assert.Equal([PlatformSeeder.DemoTenantId], listedClient.AllowedTenantIds);
+
+        var allowedIssueRequest = Authorized(HttpMethod.Post, "/api/service-tokens", token);
+        allowedIssueRequest.Content = JsonContent.Create(new IssueServiceTokenRequest(
+            client.ServiceClientId,
+            PlatformSeeder.DemoTenantId,
+            null,
+            null,
+            30));
+        var allowedIssueResponse = await _client.SendAsync(allowedIssueRequest);
+        allowedIssueResponse.EnsureSuccessStatusCode();
+
+        var deniedIssueRequest = Authorized(HttpMethod.Post, "/api/service-tokens", token);
+        deniedIssueRequest.Content = JsonContent.Create(new IssueServiceTokenRequest(
+            client.ServiceClientId,
+            otherTenant.TenantId,
+            null,
+            null,
+            30));
+        var deniedIssueResponse = await _client.SendAsync(deniedIssueRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, deniedIssueResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Tenant_admin_cannot_assign_service_client_tenant_scope()
+    {
+        await SeedDatabaseAsync();
+        var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var tenantToken = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var registerRequest = Authorized(HttpMethod.Post, "/api/v1/service-clients", adminToken);
+        registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
+            "tenant-scope-blocked-worker",
+            "Tenant Scope Blocked Worker",
+            "staffarr",
+            ["staffarr"]));
+        var registerResponse = await _client.SendAsync(registerRequest);
+        registerResponse.EnsureSuccessStatusCode();
+        var client = (await registerResponse.Content.ReadFromJsonAsync<ServiceClientResponse>())!;
+
+        var scopeRequest = Authorized(HttpMethod.Patch, $"/api/v1/service-clients/{client.ServiceClientId}/tenant-scope", tenantToken);
+        scopeRequest.Content = JsonContent.Create(new UpdateServiceClientTenantScopeRequest([PlatformSeeder.DemoTenantId]));
+        var scopeResponse = await _client.SendAsync(scopeRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, scopeResponse.StatusCode);
     }
 
     [Fact]
@@ -753,5 +1055,19 @@ public class NexArrAdminApiTests : IClassFixture<WebApplicationFactory<global::N
         await db.Database.EnsureCreatedAsync();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         await PlatformSeeder.SeedAsync(db, hasher);
+    }
+
+    private async Task<ServiceTokenIssueResponse> IssueServiceTokenForClientAsync(string adminToken, Guid serviceClientId)
+    {
+        var issueRequest = Authorized(HttpMethod.Post, "/api/v1/service-token", adminToken);
+        issueRequest.Content = JsonContent.Create(new IssueServiceTokenRequest(
+            serviceClientId,
+            PlatformSeeder.DemoTenantId,
+            null,
+            "read",
+            30));
+        var issueResponse = await _client.SendAsync(issueRequest);
+        issueResponse.EnsureSuccessStatusCode();
+        return (await issueResponse.Content.ReadFromJsonAsync<ServiceTokenIssueResponse>())!;
     }
 }

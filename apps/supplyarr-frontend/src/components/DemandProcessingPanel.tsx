@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   createDemandProcessingPrDraft,
@@ -206,7 +207,16 @@ export function DemandProcessingPanel({
       )}
 
       {dashboardQuery.isError && (
-        <p className="mt-3 text-sm text-rose-400">Failed to load demand processing dashboard.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Demand processing unavailable"
+            message={getErrorMessage(dashboardQuery.error, 'Failed to load demand processing dashboard.')}
+            retryLabel="Retry dashboard"
+            onRetry={() => {
+              void dashboardQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       {dashboardQuery.data && (

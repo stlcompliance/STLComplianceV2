@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/re
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { FieldTaskWorkOrderPanel } from './FieldTaskWorkOrderPanel'
 import type { FieldInboxTaskItem } from '../api/types'
+import * as client from '../api/client'
 
 const workOrderTask: FieldInboxTaskItem = {
   taskKey: 'maintainarr:work-order:dddddddd-dddd-dddd-dddd-dddddddddddd',
@@ -131,5 +132,38 @@ describe('FieldTaskWorkOrderPanel', () => {
     })
 
     expect(await screen.findByTestId('companion-work-order-success')).toBeInTheDocument()
+  })
+
+  it('renders retryable error callout when work order detail fails', async () => {
+    vi.mocked(client.getCompanionFieldWorkOrderDetail).mockRejectedValueOnce(
+      new Error('work order detail unavailable'),
+    )
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FieldTaskWorkOrderPanel accessToken="test-token" task={workOrderTask} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('work order detail unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry work order detail' })).toBeInTheDocument()
+  })
+
+  it('renders mutation failure in shared callout', async () => {
+    vi.mocked(client.logCompanionFieldWorkOrderLabor).mockRejectedValueOnce(new Error('labor failed'))
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FieldTaskWorkOrderPanel accessToken="test-token" task={workOrderTask} />
+      </QueryClientProvider>,
+    )
+
+    await screen.findByTestId('companion-work-order-labor-hours')
+    fireEvent.click(screen.getByTestId('companion-work-order-log-labor'))
+
+    expect(await screen.findByText('labor failed')).toBeInTheDocument()
+    expect(screen.getByTestId('companion-work-order-error')).toBeInTheDocument()
   })
 })

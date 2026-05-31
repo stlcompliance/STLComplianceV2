@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { Building2, KeyRound, ShieldCheck, User } from 'lucide-react'
 import * as nexarr from '../../api/nexarrClient'
 import type { TenantSummary } from '../../api/types'
@@ -135,11 +136,13 @@ export function IdentityProfilePanel() {
           <p className="text-sm text-slate-400">Loading entitlements…</p>
         ) : null}
 
-        {entitlementsQuery.isError ? (
-          <p className="text-sm text-red-300" role="alert">
-            Failed to load entitlements: {(entitlementsQuery.error as Error).message}
-          </p>
-        ) : null}
+        {entitlementsQuery.isError ? (
+          <ApiErrorCallout
+            message={getErrorMessage(entitlementsQuery.error, 'Failed to load entitlements.')}
+            onRetry={() => void entitlementsQuery.refetch()}
+            retryLabel="Retry entitlements"
+          />
+        ) : null}
 
         {entitlementsQuery.isSuccess && entitlements.length === 0 ? (
           <p className="text-sm text-slate-400">No product entitlements for this workspace.</p>
@@ -174,11 +177,13 @@ export function IdentityProfilePanel() {
           <p className="text-sm text-slate-400">Loading tenant memberships…</p>
         ) : null}
 
-        {tenantsQuery.isError ? (
-          <p className="text-sm text-red-300" role="alert">
-            Failed to load tenant memberships: {(tenantsQuery.error as Error).message}
-          </p>
-        ) : null}
+        {tenantsQuery.isError ? (
+          <ApiErrorCallout
+            message={getErrorMessage(tenantsQuery.error, 'Failed to load tenant memberships.')}
+            onRetry={() => void tenantsQuery.refetch()}
+            retryLabel="Retry tenant memberships"
+          />
+        ) : null}
 
         {tenantsQuery.isSuccess && tenants.length === 0 ? (
           <p className="text-sm text-slate-400">No tenant memberships found.</p>
@@ -205,4 +210,4 @@ export function IdentityProfilePanel() {
     </section>
   )
 }
-
+

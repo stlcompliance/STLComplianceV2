@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   completeDriverPortalTrip,
@@ -554,9 +555,11 @@ export function DriverPortalPanel({ accessToken }: Props) {
 
   if (scheduleQuery.isError) {
     return (
-      <p className="text-sm text-red-400" role="alert">
-        {(scheduleQuery.error as Error).message}
-      </p>
+      <ApiErrorCallout
+        message={getErrorMessage(scheduleQuery.error, 'Failed to load your driver schedule.')}
+        onRetry={() => void scheduleQuery.refetch()}
+        retryLabel="Retry schedule"
+      />
     )
   }
 

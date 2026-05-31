@@ -7,8 +7,22 @@ using STLCompliance.Shared.Contracts;
 
 namespace NexArr.Api.Services;
 
-public sealed class PlatformAuthorizationService(NexArrDbContext db)
+public sealed class PlatformAuthorizationService(NexArrDbContext db, IConfiguration configuration)
 {
+    private const int DefaultPlatformAdminSessionTimeoutMinutes = 60;
+
+    private static readonly HashSet<string> PlatformReadRoleKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "platform_support",
+        "read_only_auditor",
+        "platform_owner",
+    };
+
+    private static readonly HashSet<string> PlatformOwnerRoleKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "platform_owner",
+    };
+
     public async Task RequirePlatformAdminAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
     {
         if (!principal.IsPlatformAdmin())
@@ -22,6 +36,176 @@ public sealed class PlatformAuthorizationService(NexArrDbContext db)
         {
             throw new StlApiException("auth.unauthorized", "Unauthorized.", 401);
         }
+
+        await RequireRecentPlatformAdminSessionAsync(principal, userId, cancellationToken);
+    }
+
+    public async Task RequirePlatformReadAccessAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var userId = principal.GetUserId();
+        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId && u.IsActive, cancellationToken);
+        if (user is null)
+        {
+            throw new StlApiException("auth.unauthorized", "Unauthorized.", 401);
+        }
+
+        await RequireRecentPlatformAdminSessionAsync(principal, userId, cancellationToken);
+
+        if (principal.IsPlatformAdmin() || user.IsPlatformAdmin)
+        {
+            return;
+        }
+
+        var hasReadRole = await db.PlatformRoleAssignments.AsNoTracking().AnyAsync(
+            x => x.UserId == userId
+                && x.TenantId == null
+                && PlatformReadRoleKeys.Contains(x.RoleKey),
+            cancellationToken);
+
+        if (!hasReadRole)
+        {
+            throw new StlApiException("auth.forbidden", "Platform read access is required.", 403);
+        }
+    }
+
+    public async Task<Guid?> ResolvePlatformReadTenantScopeAsync(
+        ClaimsPrincipal principal,
+        Guid? requestedTenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = principal.GetUserId();
+        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId && u.IsActive, cancellationToken);
+        if (user is null)
+        {
+            throw new StlApiException("auth.unauthorized", "Unauthorized.", 401);
+        }
+
+        await RequireRecentPlatformAdminSessionAsync(principal, userId, cancellationToken);
+
+        if (principal.IsPlatformAdmin() || user.IsPlatformAdmin)
+        {
+            return requestedTenantId;
+        }
+
+        var hasGlobalReadRole = await db.PlatformRoleAssignments.AsNoTracking().AnyAsync(
+            x => x.UserId == userId
+                 && x.TenantId == null
+                 && PlatformReadRoleKeys.Contains(x.RoleKey),
+            cancellationToken);
+        if (hasGlobalReadRole)
+        {
+            return requestedTenantId;
+        }
+
+        if (requestedTenantId is not Guid scopedTenantId)
+        {
+            throw new StlApiException(
+                "auth.tenant_scope_required",
+                "Tenant scope is required for this platform read role.",
+                403);
+        }
+
+        var hasTenantScopedReadRole = await db.PlatformRoleAssignments.AsNoTracking().AnyAsync(
+            x => x.UserId == userId
+                 && x.TenantId == scopedTenantId
+                 && PlatformReadRoleKeys.Contains(x.RoleKey),
+            cancellationToken);
+        if (!hasTenantScopedReadRole)
+        {
+            throw new StlApiException("auth.tenant_forbidden", "Access to the requested tenant is forbidden.", 403);
+        }
+
+        return scopedTenantId;
+    }
+
+    public async Task RequirePlatformOwnerAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)
+    {
+        var userId = principal.GetUserId();
+        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId && u.IsActive, cancellationToken);
+        if (user is null)
+        {
+            throw new StlApiException("auth.unauthorized", "Unauthorized.", 401);
+        }
+
+        await RequireRecentPlatformAdminSessionAsync(principal, userId, cancellationToken);
+
+        var hasOwnerRole = await db.PlatformRoleAssignments.AsNoTracking().AnyAsync(
+            x => x.UserId == userId
+                && x.TenantId == null
+                && PlatformOwnerRoleKeys.Contains(x.RoleKey),
+            cancellationToken);
+
+        if (!hasOwnerRole)
+        {
+            throw new StlApiException("auth.forbidden", "Platform owner access is required.", 403);
+        }
+    }
+
+    private async Task RequireRecentPlatformAdminSessionAsync(
+        ClaimsPrincipal principal,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetPlatformAdminSessionTimeoutMinutes(configuration, out var timeoutMinutes))
+        {
+            return;
+        }
+
+        Guid sessionId;
+        try
+        {
+            sessionId = principal.GetSessionId();
+        }
+        catch (InvalidOperationException)
+        {
+            throw new StlApiException("auth.unauthorized", "Unauthorized.", 401);
+        }
+
+        var session = await db.UserSessions.AsNoTracking()
+            .FirstOrDefaultAsync(
+                s => s.Id == sessionId && s.UserId == userId && s.RevokedAt == null,
+                cancellationToken);
+        if (session is null)
+        {
+            throw new StlApiException("auth.unauthorized", "Unauthorized.", 401);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        if (session.ExpiresAt <= now)
+        {
+            throw new StlApiException("auth.session_expired", "Session expired. Sign in again.", 401);
+        }
+
+        if (session.CreatedAt.AddMinutes(timeoutMinutes) <= now)
+        {
+            throw new StlApiException("auth.admin_session_timeout", "Admin session timed out. Sign in again.", 401);
+        }
+    }
+
+    private static bool TryGetPlatformAdminSessionTimeoutMinutes(IConfiguration configuration, out int timeoutMinutes)
+    {
+        var configuredValue =
+            configuration["AUTH_PLATFORM_ADMIN_SESSION_TIMEOUT_MINUTES"]
+            ?? configuration["Auth:PlatformAdminSessionTimeoutMinutes"];
+
+        if (string.IsNullOrWhiteSpace(configuredValue))
+        {
+            timeoutMinutes = DefaultPlatformAdminSessionTimeoutMinutes;
+            return true;
+        }
+
+        if (!int.TryParse(configuredValue, out timeoutMinutes))
+        {
+            timeoutMinutes = DefaultPlatformAdminSessionTimeoutMinutes;
+            return true;
+        }
+
+        if (timeoutMinutes <= 0)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public async Task RequireNexArrAccessAsync(ClaimsPrincipal principal, CancellationToken cancellationToken = default)

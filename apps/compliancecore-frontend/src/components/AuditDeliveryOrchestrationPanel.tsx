@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getAuditDeliveryOrchestrationStatus,
@@ -81,7 +82,14 @@ export function AuditDeliveryOrchestrationPanel({
         <p className="text-sm text-slate-500">Loading orchestration status…</p>
       ) : null}
       {statusQuery.isError ? (
-        <p className="text-sm text-rose-400">Failed to load orchestration status.</p>
+        <ApiErrorCallout
+          title="Orchestration status unavailable"
+          message={getErrorMessage(statusQuery.error, 'Failed to load orchestration status.')}
+          retryLabel="Retry status"
+          onRetry={() => {
+            void statusQuery.refetch()
+          }}
+        />
       ) : null}
 
       {status ? (

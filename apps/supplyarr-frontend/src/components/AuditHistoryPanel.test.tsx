@@ -47,4 +47,18 @@ describe('AuditHistoryPanel', () => {
 
     expect(container).toBeEmptyDOMElement()
   })
+
+  it('shows retry callout when audit history fails', async () => {
+    const { listAuditHistory } = await import('../api/client')
+    vi.mocked(listAuditHistory).mockRejectedValueOnce(new Error('audit down'))
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <AuditHistoryPanel accessToken="token" canRead={true} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Audit history unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry history' })).toBeInTheDocument()
+  })
 })

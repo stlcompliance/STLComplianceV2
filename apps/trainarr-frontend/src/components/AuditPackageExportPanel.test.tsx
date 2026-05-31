@@ -1,12 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 
 
 import { AuditPackageExportPanel } from './AuditPackageExportPanel'
+import * as client from '../api/client'
 
 
 
@@ -106,6 +107,20 @@ describe('AuditPackageExportPanel', () => {
 
     expect(screen.queryByRole('button', { name: /Download ZIP package/i })).not.toBeInTheDocument()
 
+  })
+
+  it('shows callout when export fails', async () => {
+    vi.mocked(client.exportAuditPackageZip).mockRejectedValueOnce(new Error('zip export down'))
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={qc}>
+        <AuditPackageExportPanel accessToken="token" canExport={true} />
+      </QueryClientProvider>,
+    )
+
+    await screen.findByText(/Training audit package export/)
+    fireEvent.click(screen.getByRole('button', { name: /Download ZIP package/i }))
+    expect(await screen.findByText('Export failed')).toBeInTheDocument()
   })
 
 })

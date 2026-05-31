@@ -123,6 +123,57 @@ export class TrainArrApiError extends Error {
   }
 }
 
+type ProblemDetailsLike = {
+  title?: string
+  detail?: string
+  errors?: Record<string, string[] | string>
+}
+
+function extractProblemDetailsMessage(body: string): string | null {
+  if (!body.trim()) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(body) as ProblemDetailsLike
+    const parts: string[] = []
+
+    if (typeof parsed.title === 'string' && parsed.title.trim()) {
+      parts.push(parsed.title.trim())
+    }
+
+    if (typeof parsed.detail === 'string' && parsed.detail.trim()) {
+      parts.push(parsed.detail.trim())
+    }
+
+    const errorEntries = parsed.errors ? Object.entries(parsed.errors) : []
+    if (errorEntries.length > 0) {
+      const flattened = errorEntries
+        .flatMap(([field, value]) => {
+          const values = Array.isArray(value) ? value : [value]
+          return values
+            .map((message) => String(message).trim())
+            .filter(Boolean)
+            .map((message) => `${field}: ${message}`)
+        })
+      if (flattened.length > 0) {
+        parts.push(flattened.join('; '))
+      }
+    }
+
+    return parts.length > 0 ? parts.join(' - ') : null
+  } catch {
+    return null
+  }
+}
+
+async function toApiError(response: Response, fallbackMessage: string): Promise<TrainArrApiError> {
+  const body = await response.text()
+  const parsedMessage = extractProblemDetailsMessage(body)
+  const message = parsedMessage || body || `${fallbackMessage} (${response.status})`
+  return new TrainArrApiError(message, response.status, body)
+}
+
 function authHeaders(accessToken: string): HeadersInit {
   return {
     Authorization: `Bearer ${accessToken}`,
@@ -132,8 +183,7 @@ function authHeaders(accessToken: string): HeadersInit {
 
 async function parseJsonResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
   if (!response.ok) {
-    const body = await response.text()
-    throw new TrainArrApiError(body || `${fallbackMessage} (${response.status})`, response.status, body)
+    throw await toApiError(response, fallbackMessage)
   }
 
   return (await response.json()) as T
@@ -531,7 +581,7 @@ export async function deleteTrainingMatrixEntry(
     headers: authHeaders(accessToken),
   })
   if (!response.ok) {
-    throw new Error('Failed to delete training matrix entry')
+    throw await toApiError(response, 'Failed to delete training matrix entry')
   }
 }
 
@@ -565,7 +615,7 @@ export async function deleteTrainingApplicabilityProfile(
     headers: authHeaders(accessToken),
   })
   if (!response.ok) {
-    throw new Error('Failed to delete applicability profile')
+    throw await toApiError(response, 'Failed to delete applicability profile')
   }
 }
 
@@ -590,7 +640,7 @@ export async function deleteTrainingRequirement(
     headers: authHeaders(accessToken),
   })
   if (!response.ok) {
-    throw new Error('Failed to delete training requirement')
+    throw await toApiError(response, 'Failed to delete training requirement')
   }
 }
 
@@ -920,8 +970,7 @@ export async function removeTrainingDefinitionCitation(
     },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new TrainArrApiError(body || `Failed to remove citation (${response.status})`, response.status, body)
+    throw await toApiError(response, 'Failed to remove citation')
   }
 }
 
@@ -971,8 +1020,7 @@ export async function removeTrainingProgramCitation(
     },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new TrainArrApiError(body || `Failed to remove program citation (${response.status})`, response.status, body)
+    throw await toApiError(response, 'Failed to remove program citation')
   }
 }
 
@@ -1026,12 +1074,7 @@ export async function removeTrainingDefinitionRulePackRequirement(
     },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new TrainArrApiError(
-      body || `Failed to remove definition rule pack requirement (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Failed to remove definition rule pack requirement')
   }
 }
 
@@ -1085,12 +1128,7 @@ export async function removeTrainingProgramRulePackRequirement(
     },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new TrainArrApiError(
-      body || `Failed to remove program rule pack requirement (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Failed to remove program rule pack requirement')
   }
 }
 
@@ -1685,12 +1723,7 @@ export async function exportAuditPackageZip(
     },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new TrainArrApiError(
-      body || `Audit package export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Audit package export failed')
   }
   return response.blob()
 }
@@ -1761,12 +1794,7 @@ export async function downloadAuditPackageGenerationJob(
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new TrainArrApiError(
-      body || `Audit package download failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Audit package download failed')
   }
   return response.blob()
 }
@@ -1812,12 +1840,7 @@ export async function exportAssignmentReportSummaryCsv(
     { headers: { Authorization: `Bearer ${accessToken}` } },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new TrainArrApiError(
-      body || `Assignment report export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Assignment report export failed')
   }
   return response.blob()
 }
@@ -1849,12 +1872,7 @@ export async function exportQualificationReportSummaryCsv(
     { headers: { Authorization: `Bearer ${accessToken}` } },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new TrainArrApiError(
-      body || `Qualification report export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Qualification report export failed')
   }
   return response.blob()
 }
@@ -1886,12 +1904,7 @@ export async function exportComplianceReportSummaryCsv(
     { headers: { Authorization: `Bearer ${accessToken}` } },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new TrainArrApiError(
-      body || `Compliance report export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Compliance report export failed')
   }
   return response.blob()
 }
@@ -1919,12 +1932,7 @@ export async function exportTrainingAssignmentsCsv(
     { headers: { Authorization: `Bearer ${accessToken}` } },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new TrainArrApiError(
-      body || `Training assignments export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Training assignments export failed')
   }
   return response.blob()
 }
@@ -1940,12 +1948,7 @@ export async function exportQualificationIssuesCsv(
     { headers: { Authorization: `Bearer ${accessToken}` } },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new TrainArrApiError(
-      body || `Qualification issues export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Qualification issues export failed')
   }
   return response.blob()
 }
@@ -1955,12 +1958,7 @@ export async function exportTrainingDefinitionsCsv(accessToken: string): Promise
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new TrainArrApiError(
-      body || `Training definitions export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Training definitions export failed')
   }
   return response.blob()
 }

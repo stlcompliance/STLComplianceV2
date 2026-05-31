@@ -67,6 +67,35 @@ public static class ComplianceReportEndpoints
         })
         .WithName($"GetMaintainArrComplianceReportTemplateDetail{nameSuffix}");
 
+        group.MapGet("/alerts", async (
+            string? siteRef,
+            int? limit,
+            ComplianceReportService reportService,
+            MaintainArrAuthorizationService authorization,
+            IMaintainArrAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireComplianceReportRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var alerts = await reportService.ListAlertsAsync(
+                tenantId,
+                siteRef,
+                limit,
+                cancellationToken);
+            await audit.WriteAsync(
+                "maintainarr.reports.compliance.alerts",
+                tenantId,
+                actorUserId,
+                "compliance_report",
+                null,
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.Ok(alerts);
+        })
+        .WithName($"ListMaintainArrComplianceReportAlerts{nameSuffix}");
+
         group.MapGet("/summary/export", async (
             bool? attentionOnly,
             string? siteRef,

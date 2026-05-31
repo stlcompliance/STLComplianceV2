@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import { useState } from 'react'
 import { commitAssetImport, validateAssetImport } from '../api/client'
 import type { AssetBulkImportResponse, AssetImportRowRequest } from '../api/types'
@@ -155,7 +156,11 @@ export function AssetBulkImportPanel({ accessToken, canImport, onComplete }: Ass
             </button>
           </div>
 
-          {parseError ? <p className="mt-3 text-sm text-rose-400">{parseError}</p> : null}
+          {parseError ? (
+            <div className="mt-3">
+              <ApiErrorCallout title="Bulk import failed" message={parseError} />
+            </div>
+          ) : null}
 
           {lastResult ? (
             <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/60 p-3 text-sm text-slate-300">

@@ -67,6 +67,20 @@ public sealed record TrainingGapReportResponse(
     int TotalGaps,
     IReadOnlyList<TrainingGapReportItem> Items);
 
+public sealed record ProgramCitationGapReportItem(
+    Guid TrainingProgramId,
+    string ProgramKey,
+    string ProgramName,
+    string ProgramStatus,
+    int CitationAttachmentCount,
+    DateTimeOffset UpdatedAt);
+
+public sealed record ProgramCitationGapReportResponse(
+    DateTimeOffset GeneratedAt,
+    int TotalPrograms,
+    int ProgramsMissingCitationCount,
+    IReadOnlyList<ProgramCitationGapReportItem> Items);
+
 public sealed record ComplianceReportSummaryResponse(
     int CitationAttachmentCount,
     int RulePackRequirementCount,
@@ -82,6 +96,17 @@ public sealed record ComplianceReportRemediationItem(
     string Status,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
+
+public sealed record TrainArrReadinessAlertResponse(
+    string AlertType,
+    string Severity,
+    Guid StaffarrPersonId,
+    string Message,
+    DateTimeOffset DetectedAt,
+    Guid? AssignmentId,
+    Guid? QualificationIssueId,
+    Guid? EvaluationId,
+    Guid? RemediationId);
 
 public sealed record TrainArrCommandCenterResponse(
     DateTimeOffset GeneratedAt,

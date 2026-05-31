@@ -64,4 +64,19 @@ describe('DispatchOverrideReportsPanel', () => {
 
     expect(container).toBeEmptyDOMElement()
   })
+
+  it('shows retry callout when summary load fails', async () => {
+    const { getDispatchOverrideReportSummary } = await import('../api/client')
+    vi.mocked(getDispatchOverrideReportSummary).mockRejectedValueOnce(new Error('summary down'))
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <DispatchOverrideReportsPanel accessToken="token" canRead canExport />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Override report unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry summary' })).toBeInTheDocument()
+  })
 })

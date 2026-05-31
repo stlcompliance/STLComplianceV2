@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   assignTripDriver,
@@ -201,7 +202,15 @@ export function DispatchCommandCenterPanel({
 
   if (centerQuery.isError) {
     return (
-      <p className="text-sm text-red-300">{(centerQuery.error as Error).message}</p>
+      <ApiErrorCallout
+        title="Dispatch command center unavailable"
+        message={getErrorMessage(centerQuery.error, 'Unable to load dispatch command center.')}
+        retryLabel="Retry load"
+        onRetry={() => {
+          void centerQuery.refetch()
+        }}
+        testId="command-center-retry"
+      />
     )
   }
 
@@ -235,7 +244,8 @@ export function DispatchCommandCenterPanel({
           <h2 className="text-lg font-semibold text-slate-50">Dispatch command center</h2>
           <p className="mt-1 text-sm text-slate-400">
             Trips by status · {center.board.workQueue.unassignedDriverTripCount} unassigned ·{' '}
-            {center.board.trips.lateCount} late
+            {center.board.trips.lateCount} late ·{' '}
+            {center.board.workQueue.missingProofTripCount} missing proof
           </p>
         </div>
         <div className="flex gap-2">

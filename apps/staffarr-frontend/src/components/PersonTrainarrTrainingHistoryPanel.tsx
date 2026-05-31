@@ -1,3 +1,4 @@
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type { TrainarrPersonTrainingHistoryResponse } from '../api/types'
 
 type Props = {
@@ -5,6 +6,8 @@ type Props = {
   history: TrainarrPersonTrainingHistoryResponse | null
   isLoading: boolean
   isError: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
 }
 
 function formatTimestamp(iso: string) {
@@ -20,6 +23,8 @@ export function PersonTrainarrTrainingHistoryPanel({
   history,
   isLoading,
   isError,
+  readErrorMessage,
+  onRetryRead,
 }: Props) {
   return (
     <section
@@ -37,9 +42,12 @@ export function PersonTrainarrTrainingHistoryPanel({
       ) : null}
 
       {isError ? (
-        <p className="mt-4 text-sm text-rose-400" role="alert">
-          Failed to load TrainArr training history.
-        </p>
+        <ApiErrorCallout
+          className="mt-4"
+          message={readErrorMessage ?? 'Failed to load TrainArr training history.'}
+          onRetry={onRetryRead}
+          retryLabel="Retry history"
+        />
       ) : null}
 
       {history ? (

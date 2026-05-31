@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useState } from 'react'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type { OrgUnitResponse, StaffPersonDetailResponse } from '../api/types'
 
 interface PersonProfileEditorPanelProps {
@@ -225,7 +226,7 @@ export function PersonProfileEditorPanel({
         </div>
       ) : null}
 
-      {errorMessage ? <p className="text-sm text-red-300">{errorMessage}</p> : null}
+      {errorMessage ? <ApiErrorCallout title="Profile update failed" message={errorMessage} /> : null}
     </section>
   )
 }

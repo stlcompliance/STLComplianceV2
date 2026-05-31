@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
 
@@ -99,7 +100,12 @@ export function PlatformOutboxPublisherPanel() {
       )}
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-red-400">Failed to load platform outbox settings.</p>
+        <ApiErrorCallout
+          className="mt-3"
+          message={getErrorMessage(settingsQuery.error, 'Failed to load platform outbox settings.')}
+          onRetry={() => void settingsQuery.refetch()}
+          retryLabel="Retry settings"
+        />
       )}
 
       <div className="mt-4 space-y-3">

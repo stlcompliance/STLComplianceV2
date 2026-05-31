@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import { getApprovalRemindersDashboard } from '../api/client'
 
@@ -33,7 +34,16 @@ export function ApprovalRemindersPanel({ accessToken, canRead }: ApprovalReminde
       )}
 
       {dashboardQuery.isError && (
-        <p className="mt-3 text-sm text-rose-400">Failed to load approval reminders.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Approval reminders unavailable"
+            message={getErrorMessage(dashboardQuery.error, 'Failed to load approval reminders.')}
+            retryLabel="Retry reminders"
+            onRetry={() => {
+              void dashboardQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       {dashboardQuery.data && (

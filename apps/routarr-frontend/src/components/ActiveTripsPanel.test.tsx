@@ -211,6 +211,15 @@ describe('ActiveTripsPanel', () => {
 
   })
 
+  it('shows retryable error callout when active trips query fails', async () => {
+    vi.mocked(client.getActiveTrips).mockRejectedValueOnce(new Error('active trips unavailable'))
+
+    renderPanel()
+
+    expect(await screen.findByText('active trips unavailable')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Retry active trips' })).toBeTruthy()
+  })
+
 })
 
 

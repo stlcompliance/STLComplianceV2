@@ -18,6 +18,14 @@ public sealed class ReceivingReceipt : IHasTenant
 
     public string Notes { get; set; } = string.Empty;
 
+    public string PackingSlipReference { get; set; } = string.Empty;
+
+    public string PackingSlipFileName { get; set; } = string.Empty;
+
+    public string InvoiceReference { get; set; } = string.Empty;
+
+    public string InvoiceFileName { get; set; } = string.Empty;
+
     public Guid CreatedByUserId { get; set; }
 
     public DateTimeOffset? PostedAt { get; set; }

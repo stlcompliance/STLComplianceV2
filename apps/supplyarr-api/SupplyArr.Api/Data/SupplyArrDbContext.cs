@@ -385,6 +385,7 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.Property(x => x.ManufacturerName).HasMaxLength(256).IsRequired();
             entity.Property(x => x.ManufacturerPartNumber).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.RequiresSerialLotTracking).HasDefaultValue(false);
             entity.Property(x => x.ReorderPoint).HasPrecision(18, 4);
             entity.Property(x => x.ReorderQuantity).HasPrecision(18, 4);
             entity.HasIndex(x => x.TenantId);
@@ -610,6 +611,10 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.Property(x => x.ReceiptKey).HasMaxLength(128).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.PackingSlipReference).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.PackingSlipFileName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.InvoiceReference).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.InvoiceFileName).HasMaxLength(256).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.ReceiptKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.PurchaseOrderId });
@@ -630,6 +635,8 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.HasKey(x => x.Id);
             entity.Property(x => x.QuantityExpected).HasPrecision(18, 4);
             entity.Property(x => x.QuantityReceived).HasPrecision(18, 4);
+            entity.Property(x => x.Condition).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.SerialLotNumbersJson).HasMaxLength(4096).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.ReceivingReceiptId });
             entity.HasIndex(x => new { x.TenantId, x.ReceivingReceiptId, x.LineNumber }).IsUnique();

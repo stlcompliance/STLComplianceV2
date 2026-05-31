@@ -160,7 +160,9 @@ public sealed class PurchaseHistoryCsvImportService(
                 new CreateReceivingReceiptFromPurchaseOrderRequest(
                     first.ReceiptKey,
                     binsByKey[first.InventoryBinKey],
-                    first.ReceiptNotes),
+                    first.ReceiptNotes,
+                    $"ps-{first.ReceiptKey}",
+                    $"{first.ReceiptKey}-packing-slip.pdf"),
                 cancellationToken);
 
             foreach (var row in orderRows)

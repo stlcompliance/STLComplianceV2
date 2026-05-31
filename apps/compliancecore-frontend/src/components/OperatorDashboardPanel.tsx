@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import { getOperatorDashboard } from '../api/client'
 import type { OperatorDashboardResponse } from '../api/types'
@@ -37,9 +38,14 @@ export function OperatorDashboardPanel({ accessToken }: OperatorDashboardPanelPr
 
   if (dashboardQuery.isError) {
     return (
-      <p className="text-sm text-red-300">
-        Failed to load dashboard: {(dashboardQuery.error as Error).message}
-      </p>
+      <ApiErrorCallout
+        title="Operator dashboard unavailable"
+        message={getErrorMessage(dashboardQuery.error, 'Failed to load dashboard.')}
+        retryLabel="Retry dashboard"
+        onRetry={() => {
+          void dashboardQuery.refetch()
+        }}
+      />
     )
   }
 

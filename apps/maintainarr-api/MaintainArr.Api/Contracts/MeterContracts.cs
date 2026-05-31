@@ -64,3 +64,14 @@ public sealed record MeterPmForecastResponse(
     string Unit,
     decimal CurrentReading,
     IReadOnlyList<MeterPmForecastItem> LinkedSchedules);
+
+public sealed record MeterMissingReadingAlertResponse(
+    Guid AssetMeterId,
+    Guid AssetId,
+    string AssetTag,
+    string AssetName,
+    string MeterKey,
+    string MeterName,
+    DateTimeOffset? LastReadingAt,
+    int? DaysSinceLastReading,
+    string Message);

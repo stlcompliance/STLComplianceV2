@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { AdvancedReferenceField, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   createEquipmentAvailability,
@@ -299,9 +300,14 @@ export function EquipmentAvailabilityPanel({
 
   if (panelQuery.isError) {
     return (
-      <p className="text-sm text-red-300">
-        Failed to load equipment availability. Check your RoutArr entitlement and try again.
-      </p>
+      <ApiErrorCallout
+        message={getErrorMessage(
+          panelQuery.error,
+          'Failed to load equipment availability. Check your RoutArr entitlement and try again.',
+        )}
+        onRetry={() => void panelQuery.refetch()}
+        retryLabel="Retry equipment availability"
+      />
     )
   }
 

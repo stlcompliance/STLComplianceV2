@@ -110,4 +110,17 @@ describe('AuditDeliveryOrchestrationPanel', () => {
     )
     expect(container.firstChild).toBeNull()
   })
+
+  it('shows retry callout when orchestration load fails', async () => {
+    vi.mocked(client.getAuditDeliveryOrchestrationStatus).mockRejectedValue(new Error('status down'))
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AuditDeliveryOrchestrationPanel accessToken="token" canRead canTrigger />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Orchestration status unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry status' })).toBeInTheDocument()
+  })
 })

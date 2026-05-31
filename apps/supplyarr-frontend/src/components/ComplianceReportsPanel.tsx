@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { ShieldCheck } from 'lucide-react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   exportComplianceReportSummaryCsv,
@@ -104,7 +105,25 @@ export function ComplianceReportsPanel({
       )}
 
       {summaryQuery.isError && (
-        <p className="mt-3 text-sm text-rose-400">Failed to load compliance report.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Compliance report unavailable"
+            message={getErrorMessage(summaryQuery.error, 'Failed to load compliance report.')}
+            retryLabel="Retry summary"
+            onRetry={() => {
+              void summaryQuery.refetch()
+            }}
+          />
+        </div>
+      )}
+
+      {exportMutation.isError && (
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="CSV export failed"
+            message={getErrorMessage(exportMutation.error, 'Unable to export compliance report CSV.')}
+          />
+        </div>
       )}
 
       {summaryQuery.data && (

@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
+using MaintainArr.Api.Entities;
 using MaintainArr.Api.Services;
 using MaintainArrRedeemRequest = MaintainArr.Api.Contracts.RedeemHandoffRequest;
 using MaintainArrHandoffSessionResponse = MaintainArr.Api.Contracts.HandoffSessionResponse;
@@ -248,6 +249,30 @@ public sealed class MaintainArrWorkOrderLaborEvidenceTests : IAsyncLifetime
         listResponse.EnsureSuccessStatusCode();
         var docs = (await listResponse.Content.ReadFromJsonAsync<List<MaintainArrDocumentResponse>>())!;
         Assert.Contains(docs, x => x.DocumentId == created.DocumentId);
+    }
+
+    [Fact]
+    public async Task Documents_alerts_v1_include_open_defects_missing_evidence()
+    {
+        var managerToken = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetOnlyAsync(managerToken);
+
+        var defectRequest = Authorized(HttpMethod.Post, "/api/v1/defects", managerToken);
+        defectRequest.Content = JsonContent.Create(new CreateDefectRequest(
+            assetId,
+            "Hydraulic leak",
+            "Visible leak near actuator.",
+            DefectSeverities.High));
+        var defectResponse = await _maintainarrClient.SendAsync(defectRequest);
+        defectResponse.EnsureSuccessStatusCode();
+        var defect = (await defectResponse.Content.ReadFromJsonAsync<DefectSummaryResponse>())!;
+
+        var alertRequest = Authorized(HttpMethod.Get, "/api/v1/documents/alerts?targetType=defect", managerToken);
+        var alertResponse = await _maintainarrClient.SendAsync(alertRequest);
+        alertResponse.EnsureSuccessStatusCode();
+        var alerts = (await alertResponse.Content.ReadFromJsonAsync<List<MaintainArrDocumentAlertResponse>>())!;
+
+        Assert.Contains(alerts, alert => alert.TargetType == "defect" && alert.TargetId == defect.DefectId);
     }
 
     [Fact]

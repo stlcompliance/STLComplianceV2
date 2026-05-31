@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
 
@@ -63,7 +64,15 @@ export function EntitlementReconciliationSettingsPanel() {
       </p>
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-red-400">Failed to load entitlement reconciliation settings.</p>
+        <ApiErrorCallout
+          className="mt-3"
+          message={getErrorMessage(
+            settingsQuery.error,
+            'Failed to load entitlement reconciliation settings.',
+          )}
+          onRetry={() => void settingsQuery.refetch()}
+          retryLabel="Retry settings"
+        />
       )}
 
       <div className="mt-4 space-y-3">
@@ -109,6 +118,14 @@ export function EntitlementReconciliationSettingsPanel() {
         >
           {saveMutation.isPending ? 'Saving…' : 'Save settings'}
         </button>
+        {saveMutation.isError && (
+          <ApiErrorCallout
+            message={getErrorMessage(
+              saveMutation.error,
+              'Failed to save entitlement reconciliation settings.',
+            )}
+          />
+        )}
       </div>
 
       {isEnabled && (
@@ -116,7 +133,12 @@ export function EntitlementReconciliationSettingsPanel() {
           <h3 className="text-sm font-semibold text-white">Pending drift (preview)</h3>
           {pendingQuery.isLoading && <p className="mt-2 text-sm text-slate-400">Loading pending drift…</p>}
           {pendingQuery.isError && (
-            <p className="mt-2 text-sm text-red-400">Failed to load pending entitlement drift.</p>
+            <ApiErrorCallout
+              className="mt-2"
+              message={getErrorMessage(pendingQuery.error, 'Failed to load pending entitlement drift.')}
+              onRetry={() => void pendingQuery.refetch()}
+              retryLabel="Retry pending drift"
+            />
           )}
           {pendingQuery.data?.items.length === 0 && (
             <p className="mt-2 text-sm text-slate-400" data-testid="entitlement-reconciliation-pending-empty">
@@ -146,7 +168,12 @@ export function EntitlementReconciliationSettingsPanel() {
         <h3 className="text-sm font-semibold text-white">Recent reconciliation runs</h3>
         {runsQuery.isLoading && <p className="mt-2 text-sm text-slate-400">Loading runs…</p>}
         {runsQuery.isError && (
-          <p className="mt-2 text-sm text-red-400">Failed to load reconciliation run history.</p>
+          <ApiErrorCallout
+            className="mt-2"
+            message={getErrorMessage(runsQuery.error, 'Failed to load reconciliation run history.')}
+            onRetry={() => void runsQuery.refetch()}
+            retryLabel="Retry runs"
+          />
         )}
         {runsQuery.data?.items.length === 0 && (
           <p className="mt-2 text-sm text-slate-400" data-testid="entitlement-reconciliation-runs-empty">

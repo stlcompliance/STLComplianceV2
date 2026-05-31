@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getCompanionFieldReceivingDetail,
@@ -171,12 +172,14 @@ export function FieldTaskReceivingPanel({
   if (detailQuery.isError) {
     return (
       <div
-        className="mt-4 rounded-lg border border-rose-900/50 bg-rose-950/20 p-4 text-sm text-rose-300"
+        className="mt-4"
         data-testid="companion-field-receiving-panel"
       >
-        {detailQuery.error instanceof Error
-          ? detailQuery.error.message
-          : 'Failed to load receiving detail.'}
+        <ApiErrorCallout
+          message={getErrorMessage(detailQuery.error, 'Failed to load receiving detail.')}
+          onRetry={() => void detailQuery.refetch()}
+          retryLabel="Retry receiving detail"
+        />
       </div>
     )
   }
@@ -286,11 +289,12 @@ export function FieldTaskReceivingPanel({
       </div>
 
       {(lineMutation.isError || postMutation.isError) && (
-        <p className="mt-2 text-sm text-rose-400" data-testid="companion-receiving-error">
-          {(lineMutation.error ?? postMutation.error) instanceof Error
-            ? (lineMutation.error ?? postMutation.error)?.message
-            : 'Receiving update failed.'}
-        </p>
+        <ApiErrorCallout
+          className="mt-2"
+          testId="companion-receiving-error"
+          title="Receiving update failed"
+          message={getErrorMessage(lineMutation.error ?? postMutation.error, 'Receiving update failed.')}
+        />
       )}
 
       {successMessage && (

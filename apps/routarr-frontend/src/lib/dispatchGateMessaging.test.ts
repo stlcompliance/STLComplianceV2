@@ -75,6 +75,30 @@ describe('buildDispatchAssignmentGateLines', () => {
 
     expect(lines.map((line) => line.category)).toEqual(['eligibility', 'dispatchability'])
   })
+
+  it('includes missing/stale external data warnings from conflict summary', () => {
+    const lines = buildDispatchAssignmentGateLines(
+      emptyPreview({
+        hasBlockingConflicts: false,
+        conflictSummary: {
+          driverAvailabilityBlocks: 0,
+          equipmentAvailabilityBlocks: 0,
+          overlappingTrips: 0,
+          eligibilityBlocking: false,
+          eligibilityWarning: false,
+          dispatchabilityBlocking: false,
+          dispatchabilityWarning: false,
+          workflowGateBlocking: false,
+          workflowGateWarning: true,
+          hasMissingExternalData: true,
+          hasStaleExternalData: true,
+        },
+      }),
+    )
+
+    expect(lines.some((line) => line.reasonCode === 'external_data_unavailable')).toBe(true)
+    expect(lines.some((line) => line.reasonCode === 'external_data_stale')).toBe(true)
+  })
 })
 
 describe('formatDispatchAssignmentGateConfirmMessage', () => {

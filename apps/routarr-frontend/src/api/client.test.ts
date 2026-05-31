@@ -53,6 +53,50 @@ describe('routarr api client', () => {
     await expect(getTrips('token')).rejects.toMatchObject({ status: 403 })
   })
 
+  it('surfaces problem details title/detail in API errors', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        text: async () =>
+          JSON.stringify({
+            title: 'Dispatch assignment blocked',
+            detail: 'Driver qualification is expired.',
+          }),
+      }),
+    )
+
+    await expect(getTrips('token')).rejects.toMatchObject({
+      status: 400,
+      message: 'Dispatch assignment blocked - Driver qualification is expired.',
+    })
+  })
+
+  it('surfaces validation errors in API error messages', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 422,
+        text: async () =>
+          JSON.stringify({
+            title: 'Validation failed',
+            errors: {
+              tripId: ['TripId is required.'],
+              driverPersonId: ['DriverPersonId must be a valid GUID.'],
+            },
+          }),
+      }),
+    )
+
+    await expect(getTrips('token')).rejects.toMatchObject({
+      status: 422,
+      message:
+        'Validation failed - tripId: TripId is required.; driverPersonId: DriverPersonId must be a valid GUID.',
+    })
+  })
+
   it('parses route list success response', async () => {
     vi.stubGlobal(
       'fetch',
@@ -121,6 +165,7 @@ describe('routarr api client', () => {
             unassignedDriverTripCount: 1,
             unlinkedRouteCount: 0,
             pendingStopCount: 0,
+            missingProofTripCount: 0,
           },
           assignedTrips: [],
           activeTrips: [],

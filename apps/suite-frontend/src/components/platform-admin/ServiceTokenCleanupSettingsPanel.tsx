@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
 
@@ -56,7 +57,12 @@ export function ServiceTokenCleanupSettingsPanel() {
       </p>
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-red-400">Failed to load service token cleanup settings.</p>
+        <ApiErrorCallout
+          className="mt-3"
+          message={getErrorMessage(settingsQuery.error, 'Failed to load service token cleanup settings.')}
+          onRetry={() => void settingsQuery.refetch()}
+          retryLabel="Retry settings"
+        />
       )}
 
       <div className="mt-4 space-y-3">
@@ -108,13 +114,23 @@ export function ServiceTokenCleanupSettingsPanel() {
         >
           {saveMutation.isPending ? 'Saving…' : 'Save settings'}
         </button>
+        {saveMutation.isError && (
+          <ApiErrorCallout
+            message={getErrorMessage(saveMutation.error, 'Failed to save service token cleanup settings.')}
+          />
+        )}
       </div>
 
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-white">Recent cleanup runs</h3>
         {runsQuery.isLoading && <p className="mt-2 text-sm text-slate-400">Loading runs…</p>}
         {runsQuery.isError && (
-          <p className="mt-2 text-sm text-red-400">Failed to load cleanup run history.</p>
+          <ApiErrorCallout
+            className="mt-2"
+            message={getErrorMessage(runsQuery.error, 'Failed to load cleanup run history.')}
+            onRetry={() => void runsQuery.refetch()}
+            retryLabel="Retry runs"
+          />
         )}
         {runsQuery.data?.items.length === 0 && (
           <p className="mt-2 text-sm text-slate-400" data-testid="service-token-cleanup-runs-empty">

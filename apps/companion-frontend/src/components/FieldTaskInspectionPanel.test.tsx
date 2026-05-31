@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/re
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { FieldTaskInspectionPanel } from './FieldTaskInspectionPanel'
 import type { FieldInboxTaskItem } from '../api/types'
+import * as client from '../api/client'
 
 const inspectionTask: FieldInboxTaskItem = {
   taskKey: 'maintainarr:inspection:22222222-2222-2222-2222-222222222222',
@@ -136,5 +137,40 @@ describe('FieldTaskInspectionPanel', () => {
     })
 
     expect(await screen.findByTestId('companion-inspection-success')).toBeInTheDocument()
+  })
+
+  it('renders retryable error callout when inspection detail fails', async () => {
+    vi.mocked(client.getCompanionFieldInspectionDetail).mockRejectedValueOnce(
+      new Error('inspection detail unavailable'),
+    )
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FieldTaskInspectionPanel accessToken="test-token" task={inspectionTask} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('inspection detail unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry inspection' })).toBeInTheDocument()
+  })
+
+  it('renders mutation failure in shared callout', async () => {
+    vi.mocked(client.submitCompanionFieldInspectionAnswers).mockRejectedValueOnce(
+      new Error('inspection save failed'),
+    )
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FieldTaskInspectionPanel accessToken="test-token" task={inspectionTask} />
+      </QueryClientProvider>,
+    )
+
+    await screen.findByTestId('companion-inspection-save')
+    fireEvent.click(screen.getByTestId('companion-inspection-save'))
+
+    expect(await screen.findByText('inspection save failed')).toBeInTheDocument()
+    expect(screen.getByTestId('companion-inspection-error')).toBeInTheDocument()
   })
 })

@@ -34,4 +34,18 @@ describe('TripCompletionRollupSettingsPanel', () => {
     expect(screen.getByRole('heading', { name: 'Recent worker runs' })).toBeInTheDocument()
     expect(await screen.findByTestId('trip-completion-rollup-runs-empty')).toBeInTheDocument()
   })
+
+  it('shows retry callout when settings fail to load', async () => {
+    const { getTripCompletionRollupSettings } = await import('../api/client')
+    vi.mocked(getTripCompletionRollupSettings).mockRejectedValueOnce(new Error('settings down'))
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <TripCompletionRollupSettingsPanel accessToken="token" canManage />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Rollup settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
 })

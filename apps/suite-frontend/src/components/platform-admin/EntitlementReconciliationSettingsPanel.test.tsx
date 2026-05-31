@@ -49,4 +49,15 @@ describe('EntitlementReconciliationSettingsPanel', () => {
     expect(screen.getByTestId('entitlement-reconciliation-runs-empty')).toBeInTheDocument()
     expect(screen.getByTestId('entitlement-reconciliation-pending-empty')).toBeInTheDocument()
   })
+
+  it('renders callout when settings fail to load', async () => {
+    vi.mocked(nexarr.getEntitlementReconciliationSettings).mockRejectedValueOnce(
+      new Error('reconciliation unavailable'),
+    )
+
+    renderPanel()
+
+    expect(await screen.findByText('reconciliation unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
 })

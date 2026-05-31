@@ -20,6 +20,10 @@ public sealed class ReceivingReceiptLine : IHasTenant
 
     public decimal QuantityReceived { get; set; }
 
+    public string Condition { get; set; } = "good";
+
+    public string SerialLotNumbersJson { get; set; } = "[]";
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

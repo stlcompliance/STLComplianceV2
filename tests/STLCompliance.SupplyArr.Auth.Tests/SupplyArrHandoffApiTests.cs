@@ -105,6 +105,11 @@ using ReceivingExceptionResponse = SupplyArr.Api.Contracts.ReceivingExceptionRes
 using CreateReceivingReceiptFromPurchaseOrderRequest = SupplyArr.Api.Contracts.CreateReceivingReceiptFromPurchaseOrderRequest;
 using CreateReceivingExceptionRequest = SupplyArr.Api.Contracts.CreateReceivingExceptionRequest;
 using UpdateReceivingReceiptLineRequest = SupplyArr.Api.Contracts.UpdateReceivingReceiptLineRequest;
+using UpdateReceivingPackingSlipRequest = SupplyArr.Api.Contracts.UpdateReceivingPackingSlipRequest;
+using UpdateReceivingInvoiceRequest = SupplyArr.Api.Contracts.UpdateReceivingInvoiceRequest;
+using UpdateReceivingReceiptLineTrackingRequest = SupplyArr.Api.Contracts.UpdateReceivingReceiptLineTrackingRequest;
+using UpdateReceivingInventoryBinRequest = SupplyArr.Api.Contracts.UpdateReceivingInventoryBinRequest;
+using UpdateReceivingReceiptLineConditionRequest = SupplyArr.Api.Contracts.UpdateReceivingReceiptLineConditionRequest;
 using EmergencyPurchaseResponse = SupplyArr.Api.Contracts.EmergencyPurchaseResponse;
 using CreateEmergencyPurchaseRequest = SupplyArr.Api.Contracts.CreateEmergencyPurchaseRequest;
 using ExpeditedSubmitEmergencyPurchaseRequest = SupplyArr.Api.Contracts.ExpeditedSubmitEmergencyPurchaseRequest;
@@ -4070,7 +4075,12 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             $"/api/receiving/from-purchase-order/{purchaseOrder.PurchaseOrderId}",
             token);
         createReceiptRequest.Content = JsonContent.Create(
-            new CreateReceivingReceiptFromPurchaseOrderRequest("rcpt-2026-001", bin.BinId, "Dock delivery"));
+            new CreateReceivingReceiptFromPurchaseOrderRequest(
+                "rcpt-2026-001",
+                bin.BinId,
+                "Dock delivery",
+                "ps-rcpt-2026-001",
+                "packing-slip-2026-001.pdf"));
         var createReceiptResponse = await _supplyarrClient.SendAsync(createReceiptRequest);
         createReceiptResponse.EnsureSuccessStatusCode();
         var receipt = (await createReceiptResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
@@ -4125,7 +4135,12 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             $"/api/v1/receiving/from-purchase-order/{purchaseOrder.PurchaseOrderId}",
             token);
         createReceiptRequest.Content = JsonContent.Create(
-            new CreateReceivingReceiptFromPurchaseOrderRequest("rcpt-v1-001", bin.BinId, "Dock delivery"));
+            new CreateReceivingReceiptFromPurchaseOrderRequest(
+                "rcpt-v1-001",
+                bin.BinId,
+                "Dock delivery",
+                "ps-rcpt-v1-001",
+                "packing-slip-v1-001.pdf"));
         var createReceiptResponse = await _supplyarrClient.SendAsync(createReceiptRequest);
         createReceiptResponse.EnsureSuccessStatusCode();
         var receipt = (await createReceiptResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
@@ -4155,6 +4170,565 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var stockLevels = (await listStockResponse.Content.ReadFromJsonAsync<List<PartStockLevelResponse>>())!;
         Assert.Single(stockLevels);
         Assert.Equal(4m, stockLevels[0].QuantityOnHand);
+    }
+
+    [Fact]
+    public async Task Receiving_can_get_receipt_by_reference_key()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-key-001",
+            "po-rcv-key-001",
+            "rcv-key",
+            3m);
+
+        var receipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrder.PurchaseOrderId,
+            bin.BinId,
+            "rcpt-key-001");
+
+        var getByKeyRequest = Authorized(
+            HttpMethod.Get,
+            "/api/receiving/by-key/rcpt-key-001",
+            token);
+        var getByKeyResponse = await _supplyarrClient.SendAsync(getByKeyRequest);
+        getByKeyResponse.EnsureSuccessStatusCode();
+        var byKey = (await getByKeyResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
+
+        Assert.Equal(receipt.ReceivingReceiptId, byKey.ReceivingReceiptId);
+        Assert.Equal("rcpt-key-001", byKey.ReceiptKey);
+        Assert.Equal("draft", byKey.Status);
+    }
+
+    [Fact]
+    public async Task Receiving_can_lookup_receipts_by_packing_slip_reference_route()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-ps-key-001",
+            "po-rcv-ps-key-001",
+            "rcv-ps-key",
+            3m);
+
+        var receipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrder.PurchaseOrderId,
+            bin.BinId,
+            "rcpt-ps-key-001");
+
+        var updatePackingSlipRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/packing-slip",
+            token);
+        updatePackingSlipRequest.Content = JsonContent.Create(
+            new UpdateReceivingPackingSlipRequest("PS-SCAN-001", "ps-scan-001.pdf"));
+        (await _supplyarrClient.SendAsync(updatePackingSlipRequest)).EnsureSuccessStatusCode();
+
+        var byPackingSlipRequest = Authorized(
+            HttpMethod.Get,
+            "/api/receiving/by-packing-slip/PS-SCAN-001",
+            token);
+        var byPackingSlipResponse = await _supplyarrClient.SendAsync(byPackingSlipRequest);
+        byPackingSlipResponse.EnsureSuccessStatusCode();
+        var matches = (await byPackingSlipResponse.Content.ReadFromJsonAsync<List<ReceivingReceiptResponse>>())!;
+
+        var matched = Assert.Single(matches, x => x.ReceivingReceiptId == receipt.ReceivingReceiptId);
+        Assert.Equal("PS-SCAN-001", matched.PackingSlipReference);
+    }
+
+    [Fact]
+    public async Task Receiving_can_create_receipt_from_purchase_order_key()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-po-create-key-001",
+            "po-rcv-po-create-key-001",
+            "rcv-po-create-key",
+            4m);
+
+        var createRequest = Authorized(
+            HttpMethod.Post,
+            "/api/receiving/from-purchase-order-key/po-rcv-po-create-key-001",
+            token);
+        createRequest.Content = JsonContent.Create(new CreateReceivingReceiptFromPurchaseOrderRequest(
+            "rcpt-po-create-key-001",
+            bin.BinId,
+            "Created from order key",
+            null,
+            null));
+        var createResponse = await _supplyarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
+
+        Assert.Equal("draft", created.Status);
+        Assert.Equal(purchaseOrder.PurchaseOrderId, created.PurchaseOrderId);
+        Assert.Equal("po-rcv-po-create-key-001", created.PurchaseOrderKey);
+        Assert.Equal("rcpt-po-create-key-001", created.ReceiptKey);
+    }
+
+    [Fact]
+    public async Task Receiving_create_from_purchase_order_can_select_lines_and_reject_invalid_selection()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, binOne, purchaseOrderOne) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-line-select-001",
+            "po-rcv-line-select-001",
+            "rcv-line-select-1",
+            3m);
+        var (_, _, purchaseOrderTwo) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-line-select-002",
+            "po-rcv-line-select-002",
+            "rcv-line-select-2",
+            2m);
+
+        var invalidRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/from-purchase-order/{purchaseOrderOne.PurchaseOrderId}",
+            token);
+        invalidRequest.Content = JsonContent.Create(new CreateReceivingReceiptFromPurchaseOrderRequest(
+            "rcpt-line-select-002",
+            binOne.BinId,
+            null,
+            null,
+            null,
+            [purchaseOrderTwo.Lines[0].LineId]));
+        var invalidResponse = await _supplyarrClient.SendAsync(invalidRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, invalidResponse.StatusCode);
+
+        var selectedLineId = purchaseOrderOne.Lines[0].LineId;
+        var createRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/from-purchase-order/{purchaseOrderOne.PurchaseOrderId}",
+            token);
+        createRequest.Content = JsonContent.Create(new CreateReceivingReceiptFromPurchaseOrderRequest(
+            "rcpt-line-select-001",
+            binOne.BinId,
+            null,
+            null,
+            null,
+            [selectedLineId]));
+        var createResponse = await _supplyarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
+        Assert.Single(created.Lines);
+        Assert.Equal(selectedLineId, created.Lines[0].PurchaseOrderLineId);
+    }
+
+    [Fact]
+    public async Task Receiving_can_list_receipts_by_purchase_order_key()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, binOne, purchaseOrderOne) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-po-key-001",
+            "po-rcv-po-key-001",
+            "rcv-po-key-1",
+            2m);
+        var (_, binTwo, purchaseOrderTwo) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-po-key-002",
+            "po-rcv-po-key-002",
+            "rcv-po-key-2",
+            1m);
+
+        var receiptOne = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrderOne.PurchaseOrderId,
+            binOne.BinId,
+            "rcpt-po-key-001");
+        _ = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrderTwo.PurchaseOrderId,
+            binTwo.BinId,
+            "rcpt-po-key-002");
+
+        var listRequest = Authorized(
+            HttpMethod.Get,
+            "/api/receiving?purchaseOrderKey=po-rcv-po-key-001",
+            token);
+        var listResponse = await _supplyarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var receipts = (await listResponse.Content.ReadFromJsonAsync<List<ReceivingReceiptResponse>>())!;
+
+        Assert.Single(receipts);
+        Assert.Equal(receiptOne.ReceivingReceiptId, receipts[0].ReceivingReceiptId);
+        Assert.Equal(purchaseOrderOne.PurchaseOrderId, receipts[0].PurchaseOrderId);
+    }
+
+    [Fact]
+    public async Task Receiving_can_list_receipts_by_packing_slip_reference()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, binOne, purchaseOrderOne) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-slip-001",
+            "po-rcv-slip-001",
+            "rcv-slip-1",
+            2m);
+        var (_, binTwo, purchaseOrderTwo) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-slip-002",
+            "po-rcv-slip-002",
+            "rcv-slip-2",
+            1m);
+
+        var receiptOne = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrderOne.PurchaseOrderId,
+            binOne.BinId,
+            "rcpt-slip-001");
+        _ = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrderTwo.PurchaseOrderId,
+            binTwo.BinId,
+            "rcpt-slip-002");
+
+        var listRequest = Authorized(
+            HttpMethod.Get,
+            "/api/receiving?packingSlipReference=ps-rcpt-slip-001",
+            token);
+        var listResponse = await _supplyarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var receipts = (await listResponse.Content.ReadFromJsonAsync<List<ReceivingReceiptResponse>>())!;
+
+        Assert.Single(receipts);
+        Assert.Equal(receiptOne.ReceivingReceiptId, receipts[0].ReceivingReceiptId);
+    }
+
+    [Fact]
+    public async Task Receiving_can_search_receipts_with_single_query()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, binOne, purchaseOrderOne) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-query-001",
+            "po-rcv-query-001",
+            "rcv-query-1",
+            2m);
+        var (_, binTwo, purchaseOrderTwo) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-query-002",
+            "po-rcv-query-002",
+            "rcv-query-2",
+            1m);
+
+        var receiptOne = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrderOne.PurchaseOrderId,
+            binOne.BinId,
+            "rcpt-query-001");
+        _ = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrderTwo.PurchaseOrderId,
+            binTwo.BinId,
+            "rcpt-query-002");
+
+        var listRequest = Authorized(
+            HttpMethod.Get,
+            "/api/receiving?query=rcpt-query-001",
+            token);
+        var listResponse = await _supplyarrClient.SendAsync(listRequest);
+        listResponse.EnsureSuccessStatusCode();
+        var receipts = (await listResponse.Content.ReadFromJsonAsync<List<ReceivingReceiptResponse>>())!;
+
+        Assert.Single(receipts);
+        Assert.Equal(receiptOne.ReceivingReceiptId, receipts[0].ReceivingReceiptId);
+    }
+
+    [Fact]
+    public async Task Receiving_can_filter_and_search_receipts_by_invoice_reference()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, binOne, purchaseOrderOne) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-inv-filter-001",
+            "po-rcv-inv-filter-001",
+            "rcv-inv-filter-1",
+            2m);
+        var (_, binTwo, purchaseOrderTwo) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-inv-filter-002",
+            "po-rcv-inv-filter-002",
+            "rcv-inv-filter-2",
+            1m);
+
+        var receiptOne = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrderOne.PurchaseOrderId,
+            binOne.BinId,
+            "rcpt-inv-filter-001");
+        _ = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrderTwo.PurchaseOrderId,
+            binTwo.BinId,
+            "rcpt-inv-filter-002");
+
+        var updateInvoiceRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/receiving/{receiptOne.ReceivingReceiptId}/invoice",
+            token);
+        updateInvoiceRequest.Content = JsonContent.Create(
+            new UpdateReceivingInvoiceRequest("INV-FILTER-001", "inv-filter-001.pdf"));
+        (await _supplyarrClient.SendAsync(updateInvoiceRequest)).EnsureSuccessStatusCode();
+
+        var filterRequest = Authorized(
+            HttpMethod.Get,
+            "/api/receiving?invoiceReference=INV-FILTER-001",
+            token);
+        var filterResponse = await _supplyarrClient.SendAsync(filterRequest);
+        filterResponse.EnsureSuccessStatusCode();
+        var filtered = (await filterResponse.Content.ReadFromJsonAsync<List<ReceivingReceiptResponse>>())!;
+        Assert.Single(filtered);
+        Assert.Equal(receiptOne.ReceivingReceiptId, filtered[0].ReceivingReceiptId);
+
+        var queryRequest = Authorized(
+            HttpMethod.Get,
+            "/api/receiving?query=inv-filter-001",
+            token);
+        var queryResponse = await _supplyarrClient.SendAsync(queryRequest);
+        queryResponse.EnsureSuccessStatusCode();
+        var queryResults = (await queryResponse.Content.ReadFromJsonAsync<List<ReceivingReceiptResponse>>())!;
+        Assert.Single(queryResults);
+        Assert.Equal(receiptOne.ReceivingReceiptId, queryResults[0].ReceivingReceiptId);
+    }
+
+    [Fact]
+    public async Task Receiving_can_update_inventory_bin_while_draft_only()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, originalBin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-bin-001",
+            "po-rcv-bin-001",
+            "rcv-bin",
+            2m);
+        var receipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrder.PurchaseOrderId,
+            originalBin.BinId,
+            "rcpt-bin-001");
+
+        var createBinRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/inventory/locations/{originalBin.LocationId}/bins",
+            token);
+        createBinRequest.Content = JsonContent.Create(new CreateInventoryBinRequest("rcv-02", "Receiving Bin 02"));
+        var createBinResponse = await _supplyarrClient.SendAsync(createBinRequest);
+        createBinResponse.EnsureSuccessStatusCode();
+        var replacementBin = (await createBinResponse.Content.ReadFromJsonAsync<InventoryBinResponse>())!;
+
+        var updateDraftRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/inventory-bin",
+            token);
+        updateDraftRequest.Content = JsonContent.Create(new UpdateReceivingInventoryBinRequest(replacementBin.BinId));
+        var updateDraftResponse = await _supplyarrClient.SendAsync(updateDraftRequest);
+        updateDraftResponse.EnsureSuccessStatusCode();
+        var updatedDraft = (await updateDraftResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
+
+        Assert.Equal(replacementBin.BinId, updatedDraft.InventoryBinId);
+        Assert.Equal(replacementBin.LocationId, updatedDraft.InventoryLocationId);
+        Assert.Equal("draft", updatedDraft.Status);
+
+        var postRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/post",
+            token);
+        var postResponse = await _supplyarrClient.SendAsync(postRequest);
+        postResponse.EnsureSuccessStatusCode();
+
+        var updatePostedRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/inventory-bin",
+            token);
+        updatePostedRequest.Content = JsonContent.Create(new UpdateReceivingInventoryBinRequest(originalBin.BinId));
+        var updatePostedResponse = await _supplyarrClient.SendAsync(updatePostedRequest);
+        Assert.Equal(HttpStatusCode.Conflict, updatePostedResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Receiving_can_update_line_condition_and_reject_invalid_value()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-cond-001",
+            "po-rcv-cond-001",
+            "rcv-cond",
+            2m);
+        var receipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrder.PurchaseOrderId,
+            bin.BinId,
+            "rcpt-cond-001");
+        var line = receipt.Lines[0];
+
+        var updateRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/lines/{line.LineId}/condition",
+            token);
+        updateRequest.Content = JsonContent.Create(new UpdateReceivingReceiptLineConditionRequest("damaged"));
+        var updateResponse = await _supplyarrClient.SendAsync(updateRequest);
+        updateResponse.EnsureSuccessStatusCode();
+        var updated = (await updateResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
+
+        Assert.Equal("damaged", Assert.Single(updated.Lines).Condition);
+
+        var invalidRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/lines/{line.LineId}/condition",
+            token);
+        invalidRequest.Content = JsonContent.Create(new UpdateReceivingReceiptLineConditionRequest("unknown_condition"));
+        var invalidResponse = await _supplyarrClient.SendAsync(invalidRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, invalidResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Receiving_post_uses_line_condition_for_receipt_status()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-cond-status-001",
+            "po-rcv-cond-status-001",
+            "rcv-cond-status",
+            2m);
+        var receipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrder.PurchaseOrderId,
+            bin.BinId,
+            "rcpt-cond-status-001");
+        var line = receipt.Lines[0];
+
+        var updateConditionRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/lines/{line.LineId}/condition",
+            token);
+        updateConditionRequest.Content = JsonContent.Create(new UpdateReceivingReceiptLineConditionRequest("damaged"));
+        var updateConditionResponse = await _supplyarrClient.SendAsync(updateConditionRequest);
+        updateConditionResponse.EnsureSuccessStatusCode();
+
+        var postRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/post",
+            token);
+        var postResponse = await _supplyarrClient.SendAsync(postRequest);
+        postResponse.EnsureSuccessStatusCode();
+        var posted = (await postResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
+
+        Assert.Equal("damaged", posted.Status);
+    }
+
+    [Fact]
+    public async Task Receiving_post_releases_linked_purchase_order_line_reservations()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (part, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-resv-001",
+            "po-rcv-resv-001",
+            "rcv-resv",
+            2m);
+
+        var seedStockRequest = Authorized(HttpMethod.Post, "/api/inventory/stock", token);
+        seedStockRequest.Content = JsonContent.Create(new UpsertPartStockLevelRequest(part.PartId, bin.BinId, 10m));
+        var seedStockResponse = await _supplyarrClient.SendAsync(seedStockRequest);
+        seedStockResponse.EnsureSuccessStatusCode();
+
+        var poLineId = purchaseOrder.Lines[0].LineId;
+        var createReservationRequest = Authorized(HttpMethod.Post, "/api/v1/inventory/reservations", token);
+        createReservationRequest.Content = JsonContent.Create(new CreateStockReservationRequest(
+            "rcv-resv-001",
+            part.PartId,
+            bin.BinId,
+            2m,
+            "purchase_order_line",
+            poLineId,
+            "linked reservation"));
+        var createReservationResponse = await _supplyarrClient.SendAsync(createReservationRequest);
+        createReservationResponse.EnsureSuccessStatusCode();
+        var reservation = (await createReservationResponse.Content.ReadFromJsonAsync<StockReservationResponse>())!;
+        Assert.Equal("active", reservation.Status);
+
+        var receipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrder.PurchaseOrderId,
+            bin.BinId,
+            "rcpt-resv-001");
+        var postRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/post",
+            token);
+        var postResponse = await _supplyarrClient.SendAsync(postRequest);
+        postResponse.EnsureSuccessStatusCode();
+
+        var listReservationsRequest = Authorized(HttpMethod.Get, "/api/v1/inventory/reservations", token);
+        var listReservationsResponse = await _supplyarrClient.SendAsync(listReservationsRequest);
+        listReservationsResponse.EnsureSuccessStatusCode();
+        var reservations = (await listReservationsResponse.Content.ReadFromJsonAsync<List<StockReservationResponse>>())!;
+        var released = Assert.Single(reservations, x => x.ReservationId == reservation.ReservationId);
+        Assert.Equal("released", released.Status);
+        Assert.Equal("released after linked receipt posting", released.ReleaseReason);
+    }
+
+    [Fact]
+    public async Task Receiving_post_partially_releases_linked_purchase_order_line_reservations()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (part, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-resv-partial-001",
+            "po-rcv-resv-partial-001",
+            "rcv-resv-partial",
+            2m);
+
+        var seedStockRequest = Authorized(HttpMethod.Post, "/api/inventory/stock", token);
+        seedStockRequest.Content = JsonContent.Create(new UpsertPartStockLevelRequest(part.PartId, bin.BinId, 10m));
+        var seedStockResponse = await _supplyarrClient.SendAsync(seedStockRequest);
+        seedStockResponse.EnsureSuccessStatusCode();
+
+        var poLineId = purchaseOrder.Lines[0].LineId;
+        var createReservationRequest = Authorized(HttpMethod.Post, "/api/v1/inventory/reservations", token);
+        createReservationRequest.Content = JsonContent.Create(new CreateStockReservationRequest(
+            "rcv-resv-partial-001",
+            part.PartId,
+            bin.BinId,
+            5m,
+            "purchase_order_line",
+            poLineId,
+            "linked reservation partial"));
+        var createReservationResponse = await _supplyarrClient.SendAsync(createReservationRequest);
+        createReservationResponse.EnsureSuccessStatusCode();
+        var reservation = (await createReservationResponse.Content.ReadFromJsonAsync<StockReservationResponse>())!;
+        Assert.Equal("active", reservation.Status);
+        Assert.Equal(5m, reservation.QuantityReserved);
+
+        var receipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrder.PurchaseOrderId,
+            bin.BinId,
+            "rcpt-resv-partial-001");
+        var postRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/post",
+            token);
+        var postResponse = await _supplyarrClient.SendAsync(postRequest);
+        postResponse.EnsureSuccessStatusCode();
+
+        var listReservationsRequest = Authorized(HttpMethod.Get, "/api/v1/inventory/reservations", token);
+        var listReservationsResponse = await _supplyarrClient.SendAsync(listReservationsRequest);
+        listReservationsResponse.EnsureSuccessStatusCode();
+        var reservations = (await listReservationsResponse.Content.ReadFromJsonAsync<List<StockReservationResponse>>())!;
+        var partial = Assert.Single(reservations, x => x.ReservationId == reservation.ReservationId);
+        Assert.Equal("active", partial.Status);
+        Assert.Equal(3m, partial.QuantityReserved);
+        Assert.True(string.IsNullOrWhiteSpace(partial.ReleaseReason));
     }
 
     [Fact]
@@ -4330,6 +4904,347 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Receiving_can_record_missing_packing_slip_exception_type()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-packingslip-001",
+            "po-rcv-packingslip-001",
+            "rcv-packingslip",
+            2m);
+
+        var receipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrder.PurchaseOrderId,
+            bin.BinId,
+            "rcpt-packingslip-001");
+        var line = receipt.Lines.Single();
+
+        var createExceptionRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/lines/{line.LineId}/exceptions",
+            token);
+        createExceptionRequest.Content = JsonContent.Create(
+            new CreateReceivingExceptionRequest("missing_packing_slip", 1m, "Packing slip was not included with shipment."));
+
+        var createExceptionResponse = await _supplyarrClient.SendAsync(createExceptionRequest);
+        createExceptionResponse.EnsureSuccessStatusCode();
+
+        var exceptionsRequest = Authorized(
+            HttpMethod.Get,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/exceptions",
+            token);
+        var exceptionsResponse = await _supplyarrClient.SendAsync(exceptionsRequest);
+        exceptionsResponse.EnsureSuccessStatusCode();
+        var exceptions = (await exceptionsResponse.Content.ReadFromJsonAsync<List<ReceivingExceptionResponse>>())!;
+
+        Assert.Contains(
+            exceptions,
+            x => x.ExceptionType == "missing_packing_slip"
+                && x.Quantity == 1m
+                && x.Status == ReceivingExceptionStatuses.Open);
+    }
+
+    [Fact]
+    public async Task Receiving_post_requires_packing_slip_or_missing_packing_slip_exception()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-ps-guard-001",
+            "po-rcv-ps-guard-001",
+            "rcv-ps-guard",
+            2m);
+
+        var receipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrder.PurchaseOrderId,
+            bin.BinId,
+            "rcpt-ps-guard-001");
+
+        var clearPackingSlipRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/packing-slip",
+            token);
+        clearPackingSlipRequest.Content = JsonContent.Create(
+            new UpdateReceivingPackingSlipRequest(string.Empty, string.Empty));
+        (await _supplyarrClient.SendAsync(clearPackingSlipRequest)).EnsureSuccessStatusCode();
+
+        var postRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/post",
+            token);
+        var postResponse = await _supplyarrClient.SendAsync(postRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, postResponse.StatusCode);
+        var postBody = await postResponse.Content.ReadAsStringAsync();
+        using var postProblemJson = JsonDocument.Parse(postBody);
+        Assert.Equal(
+            "receiving.packing_slip.required",
+            postProblemJson.RootElement.GetProperty("code").GetString());
+
+        var line = receipt.Lines.Single();
+        var createExceptionRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/lines/{line.LineId}/exceptions",
+            token);
+        createExceptionRequest.Content = JsonContent.Create(
+            new CreateReceivingExceptionRequest("missing_packing_slip", 1m, "Packing slip not available at receiving."));
+        (await _supplyarrClient.SendAsync(createExceptionRequest)).EnsureSuccessStatusCode();
+
+        var allowedPostRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/post",
+            token);
+        var allowedPostResponse = await _supplyarrClient.SendAsync(allowedPostRequest);
+        allowedPostResponse.EnsureSuccessStatusCode();
+        var posted = (await allowedPostResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
+        Assert.Equal("posted", posted.Status);
+    }
+
+    [Fact]
+    public async Task Receiving_invoice_can_be_attached_after_posting()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-inv-001",
+            "po-rcv-inv-001",
+            "rcv-invoice",
+            2m);
+
+        var receipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrder.PurchaseOrderId,
+            bin.BinId,
+            "rcpt-inv-001");
+
+        var postRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/post",
+            token);
+        (await _supplyarrClient.SendAsync(postRequest)).EnsureSuccessStatusCode();
+
+        var updateInvoiceRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/invoice",
+            token);
+        updateInvoiceRequest.Content = JsonContent.Create(
+            new UpdateReceivingInvoiceRequest("INV-2026-0001", "invoice-2026-0001.pdf"));
+        var updateInvoiceResponse = await _supplyarrClient.SendAsync(updateInvoiceRequest);
+        updateInvoiceResponse.EnsureSuccessStatusCode();
+        var updated = (await updateInvoiceResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
+
+        Assert.Equal("INV-2026-0001", updated.InvoiceReference);
+        Assert.Equal("invoice-2026-0001.pdf", updated.InvoiceFileName);
+        Assert.Equal("posted", updated.Status);
+    }
+
+    [Fact]
+    public async Task Receiving_export_accounting_csv_returns_posted_receipt_rows()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-expacct-001",
+            "po-rcv-expacct-001",
+            "rcv-expacct",
+            2m);
+
+        var receipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrder.PurchaseOrderId,
+            bin.BinId,
+            "rcpt-expacct-001");
+
+        var postRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/post",
+            token);
+        (await _supplyarrClient.SendAsync(postRequest)).EnsureSuccessStatusCode();
+
+        var exportRequest = Authorized(
+            HttpMethod.Get,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/export-accounting.csv",
+            token);
+        var exportResponse = await _supplyarrClient.SendAsync(exportRequest);
+        exportResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", exportResponse.Content.Headers.ContentType?.MediaType);
+
+        var csv = await exportResponse.Content.ReadAsStringAsync();
+        Assert.Contains("receiptKey,receiptStatus,postedAt", csv);
+        Assert.Contains(receipt.ReceiptKey, csv);
+        Assert.Contains("rcv-expacct", csv);
+    }
+
+    [Fact]
+    public async Task Receiving_post_requires_serial_lot_tracking_when_part_is_configured()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-seriallot-001",
+            "po-rcv-seriallot-001",
+            "rcv-seriallot",
+            2m,
+            requiresSerialLotTracking: true);
+
+        var receipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            purchaseOrder.PurchaseOrderId,
+            bin.BinId,
+            "rcpt-seriallot-001");
+
+        var postRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/post",
+            token);
+        var blockedPostResponse = await _supplyarrClient.SendAsync(postRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, blockedPostResponse.StatusCode);
+        var blockedBody = await blockedPostResponse.Content.ReadAsStringAsync();
+        using var blockedJson = JsonDocument.Parse(blockedBody);
+        Assert.Equal(
+            "receiving.line.serial_lot.required",
+            blockedJson.RootElement.GetProperty("code").GetString());
+
+        var line = receipt.Lines.Single();
+        var updateTrackingRequest = Authorized(
+            HttpMethod.Put,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/lines/{line.LineId}/tracking",
+            token);
+        updateTrackingRequest.Content = JsonContent.Create(
+            new UpdateReceivingReceiptLineTrackingRequest(["SN-001", "SN-002"]));
+        (await _supplyarrClient.SendAsync(updateTrackingRequest)).EnsureSuccessStatusCode();
+
+        var allowedPostRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{receipt.ReceivingReceiptId}/post",
+            token);
+        var allowedPostResponse = await _supplyarrClient.SendAsync(allowedPostRequest);
+        allowedPostResponse.EnsureSuccessStatusCode();
+        var posted = (await allowedPostResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
+        Assert.Equal("posted", posted.Status);
+    }
+
+    [Fact]
+    public async Task Receiving_close_requires_non_draft_receipt_and_closes_posted_receipt()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, draftBin, draftPo) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-close-001",
+            "po-rcv-close-001",
+            "rcv-close",
+            2m);
+
+        var draftReceipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            draftPo.PurchaseOrderId,
+            draftBin.BinId,
+            "rcpt-close-draft-001");
+
+        var closeDraftRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{draftReceipt.ReceivingReceiptId}/close",
+            token);
+        var closeDraftResponse = await _supplyarrClient.SendAsync(closeDraftRequest);
+        Assert.Equal(HttpStatusCode.Conflict, closeDraftResponse.StatusCode);
+        var closeDraftBody = await closeDraftResponse.Content.ReadAsStringAsync();
+        using var closeDraftJson = JsonDocument.Parse(closeDraftBody);
+        Assert.Equal("receiving.not_posted", closeDraftJson.RootElement.GetProperty("code").GetString());
+
+        var (_, postedBin, postedPo) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-close-002",
+            "po-rcv-close-002",
+            "rcv-close-posted",
+            2m);
+
+        var postedReceipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            postedPo.PurchaseOrderId,
+            postedBin.BinId,
+            "rcpt-close-posted-001");
+
+        var postRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{postedReceipt.ReceivingReceiptId}/post",
+            token);
+        var postResponse = await _supplyarrClient.SendAsync(postRequest);
+        postResponse.EnsureSuccessStatusCode();
+
+        var closePostedRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{postedReceipt.ReceivingReceiptId}/close",
+            token);
+        var closePostedResponse = await _supplyarrClient.SendAsync(closePostedRequest);
+        closePostedResponse.EnsureSuccessStatusCode();
+        var closed = (await closePostedResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
+        Assert.Equal("closed", closed.Status);
+    }
+
+    [Fact]
+    public async Task Receiving_reopen_requires_closed_receipt_and_reopens_closed_receipt()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+        var (_, draftBin, draftPo) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-reopen-001",
+            "po-rcv-reopen-001",
+            "rcv-reopen",
+            2m);
+
+        var draftReceipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            draftPo.PurchaseOrderId,
+            draftBin.BinId,
+            "rcpt-reopen-draft-001");
+
+        var reopenDraftRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{draftReceipt.ReceivingReceiptId}/reopen",
+            token);
+        var reopenDraftResponse = await _supplyarrClient.SendAsync(reopenDraftRequest);
+        Assert.Equal(HttpStatusCode.Conflict, reopenDraftResponse.StatusCode);
+        var reopenDraftBody = await reopenDraftResponse.Content.ReadAsStringAsync();
+        using var reopenDraftJson = JsonDocument.Parse(reopenDraftBody);
+        Assert.Equal("receiving.not_closed", reopenDraftJson.RootElement.GetProperty("code").GetString());
+
+        var (_, postedBin, postedPo) = await CreateIssuedPurchaseOrderAsync(
+            token,
+            "pr-rcv-reopen-002",
+            "po-rcv-reopen-002",
+            "rcv-reopen-posted",
+            2m);
+        var postedReceipt = await CreateDraftReceivingReceiptAsync(
+            token,
+            postedPo.PurchaseOrderId,
+            postedBin.BinId,
+            "rcpt-reopen-posted-001");
+
+        var postRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{postedReceipt.ReceivingReceiptId}/post",
+            token);
+        (await _supplyarrClient.SendAsync(postRequest)).EnsureSuccessStatusCode();
+
+        var closeRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{postedReceipt.ReceivingReceiptId}/close",
+            token);
+        (await _supplyarrClient.SendAsync(closeRequest)).EnsureSuccessStatusCode();
+
+        var reopenClosedRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/receiving/{postedReceipt.ReceivingReceiptId}/reopen",
+            token);
+        var reopenClosedResponse = await _supplyarrClient.SendAsync(reopenClosedRequest);
+        reopenClosedResponse.EnsureSuccessStatusCode();
+        var reopened = (await reopenClosedResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
+        Assert.Equal("posted", reopened.Status);
+    }
+
+    [Fact]
     public async Task Receiving_over_receive_auto_creates_exception_on_post()
     {
         var token = await RedeemSupplyArrTokenAsync();
@@ -4361,7 +5276,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var postResponse = await _supplyarrClient.SendAsync(postWithoutException);
         postResponse.EnsureSuccessStatusCode();
         var posted = (await postResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;
-        Assert.Equal("posted", posted.Status);
+        Assert.Equal("overreceived", posted.Status);
         Assert.Contains(posted.Exceptions, ex => ex.ExceptionType == "over" && ex.Quantity == 1m);
 
         var stockLevels = await ListStockAsync(token, part.PartId, bin.BinId);
@@ -5141,7 +6056,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             string purchaseRequestKey,
             string purchaseOrderKey,
             string locationKeyPrefix,
-            decimal orderQuantity)
+            decimal orderQuantity,
+            bool requiresSerialLotTracking = false)
     {
         var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
         createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
@@ -5163,7 +6079,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "general",
             "each",
             string.Empty,
-            string.Empty));
+            string.Empty,
+            requiresSerialLotTracking));
         var createPartResponse = await _supplyarrClient.SendAsync(createPartRequest);
         createPartResponse.EnsureSuccessStatusCode();
         var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
@@ -5247,7 +6164,12 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             $"/api/receiving/from-purchase-order/{purchaseOrderId}",
             token);
         createReceiptRequest.Content = JsonContent.Create(
-            new CreateReceivingReceiptFromPurchaseOrderRequest(receiptKey, binId, null));
+            new CreateReceivingReceiptFromPurchaseOrderRequest(
+                receiptKey,
+                binId,
+                null,
+                $"ps-{receiptKey}",
+                $"{receiptKey}-packing-slip.pdf"));
         var createReceiptResponse = await _supplyarrClient.SendAsync(createReceiptRequest);
         createReceiptResponse.EnsureSuccessStatusCode();
         return (await createReceiptResponse.Content.ReadFromJsonAsync<ReceivingReceiptResponse>())!;

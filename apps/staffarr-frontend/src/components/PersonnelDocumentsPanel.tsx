@@ -1,4 +1,5 @@
 import { type ChangeEvent, type FormEvent, useState } from 'react'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type {
   CreatePersonnelDocumentRequest,
   PersonnelDocumentDetailResponse,
@@ -11,12 +12,19 @@ interface PersonnelDocumentsPanelProps {
   personDisplayName: string
   accessToken: string
   documents: PersonnelDocumentSummaryResponse[]
+  selectedDocumentId?: string | null
   selectedDocument: PersonnelDocumentDetailResponse | null
   isLoading: boolean
+  isError?: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
   isLoadingDetail: boolean
+  isDetailError?: boolean
+  detailErrorMessage?: string | null
+  onRetryDetail?: () => void
   canManage: boolean
   isSubmitting: boolean
-  errorMessage: string | null
+  actionErrorMessage: string | null
   onSelectDocument: (documentId: string) => void
   onUploadDocument: (request: CreatePersonnelDocumentRequest) => Promise<void>
   contentUrlFor: (documentId: string) => string
@@ -72,12 +80,19 @@ export function PersonnelDocumentsPanel({
   personDisplayName,
   accessToken,
   documents,
+  selectedDocumentId = null,
   selectedDocument,
   isLoading,
+  isError = false,
+  readErrorMessage = null,
+  onRetryRead,
   isLoadingDetail,
+  isDetailError = false,
+  detailErrorMessage = null,
+  onRetryDetail,
   canManage,
   isSubmitting,
-  errorMessage,
+  actionErrorMessage,
   onSelectDocument,
   onUploadDocument,
   contentUrlFor,
@@ -134,14 +149,23 @@ export function PersonnelDocumentsPanel({
         ) : null}
       </div>
 
-      {errorMessage ? (
-        <p className="mt-4 rounded-lg border border-rose-500/40 bg-rose-950/40 px-3 py-2 text-sm text-rose-200">
-          {errorMessage}
-        </p>
+      {actionErrorMessage ? (
+        <div className="mt-4">
+          <ApiErrorCallout title="Personnel document action failed" message={actionErrorMessage} />
+        </div>
       ) : null}
 
       {isLoading ? (
         <p className="mt-4 text-sm text-slate-400">Loading documents…</p>
+      ) : isError ? (
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="Personnel documents unavailable"
+            message={readErrorMessage ?? 'Failed to load personnel documents.'}
+            onRetry={onRetryRead}
+            retryLabel="Retry documents"
+          />
+        </div>
       ) : documents.length === 0 ? (
         <p className="mt-4 text-sm text-slate-400">No personnel documents uploaded for this person yet.</p>
       ) : (
@@ -171,61 +195,76 @@ export function PersonnelDocumentsPanel({
         </ul>
       )}
 
-      {selectedDocument ? (
+      {selectedDocumentId ? (
         <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/50 p-4">
           <h3 className="text-sm font-medium text-slate-200">Document detail</h3>
           {isLoadingDetail ? (
             <p className="mt-2 text-sm text-slate-400">Loading detail…</p>
+          ) : isDetailError ? (
+            <div className="mt-2">
+              <ApiErrorCallout
+                title="Document detail unavailable"
+                message={detailErrorMessage ?? 'Failed to load document detail.'}
+                onRetry={onRetryDetail}
+                retryLabel="Retry document detail"
+              />
+            </div>
           ) : (
             <>
-              {selectedDocument.description ? (
-                <p className="mt-2 text-sm text-slate-300">{selectedDocument.description}</p>
-              ) : null}
-              <dl className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-2">
-                <div>
-                  <dt className="uppercase tracking-wide">Type</dt>
-                  <dd className="text-slate-200">{formatDocumentTypeLabel(selectedDocument.documentTypeKey)}</dd>
-                </div>
-                <div>
-                  <dt className="uppercase tracking-wide">File</dt>
-                  <dd className="text-slate-200">{selectedDocument.fileName}</dd>
-                </div>
-                {selectedDocument.expiresAt ? (
-                  <div>
-                    <dt className="uppercase tracking-wide">Expires</dt>
-                    <dd className="text-slate-200">{new Date(selectedDocument.expiresAt).toLocaleString()}</dd>
-                  </div>
-                ) : null}
-              </dl>
-              <a
-                href={contentUrlFor(selectedDocument.documentId)}
-                download={selectedDocument.fileName}
-                className="mt-4 inline-flex rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600"
-                onClick={(event) => {
-                  event.preventDefault()
-                  void fetch(contentUrlFor(selectedDocument.documentId), {
-                    headers: { Authorization: `Bearer ${accessToken}` },
-                  })
-                    .then(async (response) => {
-                      if (!response.ok) {
-                        throw new Error('Download failed')
-                      }
+              {selectedDocument ? (
+                <>
+                  {selectedDocument.description ? (
+                    <p className="mt-2 text-sm text-slate-300">{selectedDocument.description}</p>
+                  ) : null}
+                  <dl className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-2">
+                    <div>
+                      <dt className="uppercase tracking-wide">Type</dt>
+                      <dd className="text-slate-200">{formatDocumentTypeLabel(selectedDocument.documentTypeKey)}</dd>
+                    </div>
+                    <div>
+                      <dt className="uppercase tracking-wide">File</dt>
+                      <dd className="text-slate-200">{selectedDocument.fileName}</dd>
+                    </div>
+                    {selectedDocument.expiresAt ? (
+                      <div>
+                        <dt className="uppercase tracking-wide">Expires</dt>
+                        <dd className="text-slate-200">{new Date(selectedDocument.expiresAt).toLocaleString()}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                  <a
+                    href={contentUrlFor(selectedDocument.documentId)}
+                    download={selectedDocument.fileName}
+                    className="mt-4 inline-flex rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-600"
+                    onClick={(event) => {
+                      event.preventDefault()
+                      void fetch(contentUrlFor(selectedDocument.documentId), {
+                        headers: { Authorization: `Bearer ${accessToken}` },
+                      })
+                        .then(async (response) => {
+                          if (!response.ok) {
+                            throw new Error('Download failed')
+                          }
 
-                      const blob = await response.blob()
-                      const url = URL.createObjectURL(blob)
-                      const anchor = window.document.createElement('a')
-                      anchor.href = url
-                      anchor.download = selectedDocument.fileName
-                      anchor.click()
-                      URL.revokeObjectURL(url)
-                    })
-                    .catch(() => {
-                      window.alert('Could not download document.')
-                    })
-                }}
-              >
-                Download file
-              </a>
+                          const blob = await response.blob()
+                          const url = URL.createObjectURL(blob)
+                          const anchor = window.document.createElement('a')
+                          anchor.href = url
+                          anchor.download = selectedDocument.fileName
+                          anchor.click()
+                          URL.revokeObjectURL(url)
+                        })
+                        .catch(() => {
+                          window.alert('Could not download document.')
+                        })
+                    }}
+                  >
+                    Download file
+                  </a>
+                </>
+              ) : (
+                <p className="mt-2 text-sm text-slate-400">Document detail is unavailable.</p>
+              )}
             </>
           )}
         </div>

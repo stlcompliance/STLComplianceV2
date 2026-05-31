@@ -3002,6 +3002,32 @@
         }
       }
     },
+    "/api/reports/compliance/programs-without-citation": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetTrainArrComplianceProgramsWithoutCitationReport",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/programs-without-citation/export": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ExportTrainArrComplianceProgramsWithoutCitationReport",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reports/compliance/summary": {
       "get": {
         "tags": [
@@ -3110,6 +3136,19 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/readiness/alerts": {
+      "get": {
+        "tags": [
+          "ReadinessReports"
+        ],
+        "operationId": "GetTrainArrReadinessAlerts",
         "responses": {
           "200": {
             "description": "OK"
@@ -7517,6 +7556,32 @@
         }
       }
     },
+    "/api/v1/reports/compliance/programs-without-citation": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "GetTrainArrComplianceProgramsWithoutCitationReportV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/compliance/programs-without-citation/export": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ExportTrainArrComplianceProgramsWithoutCitationReportV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/reports/compliance/summary": {
       "get": {
         "tags": [
@@ -7625,6 +7690,19 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/readiness/alerts": {
+      "get": {
+        "tags": [
+          "ReadinessReports"
+        ],
+        "operationId": "GetTrainArrReadinessAlertsV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -10627,6 +10705,9 @@
     },
     {
       "name": "ComplianceReports"
+    },
+    {
+      "name": "ReadinessReports"
     },
     {
       "name": "EntityExports"

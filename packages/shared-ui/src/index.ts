@@ -1,4 +1,5 @@
 export { PageHeader } from './PageHeader'
+export { ApiErrorCallout, getErrorMessage } from './ApiErrorCallout'
 export { PermissionHint } from './PermissionHint'
 export { ProductAppShell } from './ProductAppShell'
 export type { ProductAppShellProps, ProductNavItem } from './ProductAppShell'

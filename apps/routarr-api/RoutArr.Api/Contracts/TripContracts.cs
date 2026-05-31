@@ -53,7 +53,18 @@ public sealed record TripDetailResponse(
     DateTimeOffset? StartedAt,
     DateTimeOffset? CompletedAt,
     DateTimeOffset? ClosedAt,
-    DateTimeOffset? CancelledAt);
+    DateTimeOffset? CancelledAt,
+    TripDispatchReleaseSnapshotResponse? DispatchReleaseSnapshot = null);
+
+public sealed record TripDispatchReleaseSnapshotResponse(
+    Guid SnapshotId,
+    DateTimeOffset ReleasedAt,
+    Guid ReleasedByUserId,
+    bool DriverCanAssign,
+    bool VehicleCanAssign,
+    bool HasMissingExternalData,
+    bool HasStaleExternalData,
+    string Summary);
 
 public sealed record CreateTripLoadRequest(
     string LoadKey,

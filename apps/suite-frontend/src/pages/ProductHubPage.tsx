@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import * as nexarr from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
 import { PermissionGate } from '../components/PermissionGate'
@@ -31,9 +32,7 @@ export function ProductHubPage() {
       <PermissionGate
         allowed={canAccess}
         fallback={
-          <p className="text-sm text-red-700" role="alert">
-            You are not entitled to this product.
-          </p>
+          <ApiErrorCallout message="You are not entitled to this product." />
         }
       >
         {isInSuiteProduct(normalized) ? (
@@ -56,6 +55,16 @@ export function ProductHubPage() {
                     : ''}
                 </p>
               </>
+            )}
+            {contextQuery.isError && (
+              <ApiErrorCallout
+                message={getErrorMessage(
+                  contextQuery.error,
+                  'Failed to load product launch context.',
+                )}
+                onRetry={() => void contextQuery.refetch()}
+                retryLabel="Retry launch context"
+              />
             )}
 
             <PermissionGate allowed={launchAllowedQuery.data === true}>

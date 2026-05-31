@@ -99,13 +99,15 @@ public class NexArrPlatformOutboxTests : IClassFixture<WebApplicationFactory<glo
 
         await EnablePublisherAsync(adminToken);
 
+        var insertedEventId = Guid.Empty;
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
             var now = DateTimeOffset.UtcNow;
+            insertedEventId = Guid.NewGuid();
             db.PlatformOutboxEvents.Add(new PlatformOutboxEvent
             {
-                Id = Guid.NewGuid(),
+                Id = insertedEventId,
                 EventType = PlatformOutboxEventKinds.TenantUpdated,
                 IdempotencyKey = $"tenant.updated:tenant:{PlatformSeeder.DemoTenantId}:{now.ToUnixTimeMilliseconds()}",
                 SchemaVersion = 1,
@@ -128,13 +130,13 @@ public class NexArrPlatformOutboxTests : IClassFixture<WebApplicationFactory<glo
         processResponse.EnsureSuccessStatusCode();
         var batch = (await processResponse.Content.ReadFromJsonAsync<ProcessPlatformOutboxPublisherResponse>())!;
 
-        Assert.Equal(1, batch.PublishedCount);
-        Assert.NotEmpty(batch.PublishedEventIds);
+        Assert.True(batch.PublishedCount >= 1);
+        Assert.Contains(insertedEventId, batch.PublishedEventIds);
 
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
-            var published = await db.PlatformOutboxEvents.FirstAsync(x => x.Id == batch.PublishedEventIds[0]);
+            var published = await db.PlatformOutboxEvents.FirstAsync(x => x.Id == insertedEventId);
             Assert.Equal(PlatformOutboxEventStatuses.Published, published.ProcessingStatus);
             Assert.NotNull(published.PublishedAt);
             Assert.True(await db.PlatformOutboxPublisherRuns.AnyAsync());

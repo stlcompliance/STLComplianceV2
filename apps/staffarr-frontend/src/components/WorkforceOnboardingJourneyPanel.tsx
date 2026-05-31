@@ -1,4 +1,5 @@
 import { buildProductLaunchUrlMap } from '@stl/shared-ui'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type { WorkforceOnboardingJourneyResponse } from '../api/types'
 
 type Props = {
@@ -6,6 +7,8 @@ type Props = {
   journey: WorkforceOnboardingJourneyResponse | null
   isLoading: boolean
   isError: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
 }
 
 function statusLabel(status: string) {
@@ -41,6 +44,8 @@ export function WorkforceOnboardingJourneyPanel({
   journey,
   isLoading,
   isError,
+  readErrorMessage,
+  onRetryRead,
 }: Props) {
   const launchUrls = buildProductLaunchUrlMap(import.meta.env)
   const trainarrLaunchUrl = launchUrls.trainarr
@@ -63,9 +68,12 @@ export function WorkforceOnboardingJourneyPanel({
       ) : null}
 
       {isError ? (
-        <p className="mt-4 text-sm text-rose-400" role="alert">
-          Failed to load workforce onboarding journey.
-        </p>
+        <ApiErrorCallout
+          className="mt-4"
+          message={readErrorMessage ?? 'Failed to load workforce onboarding journey.'}
+          onRetry={onRetryRead}
+          retryLabel="Retry journey"
+        />
       ) : null}
 
       {journey ? (

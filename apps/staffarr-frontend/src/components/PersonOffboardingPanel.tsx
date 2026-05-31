@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useState } from 'react'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type { PersonOffboardingResponse } from '../api/types'
 
 interface PersonOffboardingPanelProps {
@@ -7,9 +8,12 @@ interface PersonOffboardingPanelProps {
   peopleOptions: Array<{ personId: string; displayName: string }>
   offboarding: PersonOffboardingResponse | null
   isLoading: boolean
+  isError?: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
   canManage: boolean
   isSubmitting: boolean
-  errorMessage: string | null
+  actionErrorMessage?: string | null
   onStart: (request: {
     separationDate: string
     separationReason: string | null
@@ -39,9 +43,12 @@ export function PersonOffboardingPanel({
   peopleOptions,
   offboarding,
   isLoading,
+  isError = false,
+  readErrorMessage = null,
+  onRetryRead,
   canManage,
   isSubmitting,
-  errorMessage,
+  actionErrorMessage = null,
   onStart,
   onExecute,
 }: PersonOffboardingPanelProps) {
@@ -99,15 +106,26 @@ export function PersonOffboardingPanel({
         </p>
       </header>
 
-      {isLoading ? <p className="mt-4 text-sm text-slate-400">Loading offboarding state…</p> : null}
-
-      {errorMessage ? (
-        <p className="mt-4 text-sm text-rose-400" role="alert">
-          {errorMessage}
-        </p>
+      {isLoading ? (
+        <p className="mt-4 text-sm text-slate-400">Loading offboarding state…</p>
+      ) : isError ? (
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="Offboarding workflow unavailable"
+            message={readErrorMessage ?? 'Failed to load offboarding workflow state.'}
+            onRetry={onRetryRead}
+            retryLabel="Retry offboarding"
+          />
+        </div>
       ) : null}
 
-      {offboarding ? (
+      {actionErrorMessage ? (
+        <div className="mt-4">
+          <ApiErrorCallout title="Offboarding action failed" message={actionErrorMessage} />
+        </div>
+      ) : null}
+
+      {!isError && offboarding ? (
         <div className="mt-4 space-y-4">
           <dl className="grid gap-3 text-sm md:grid-cols-2">
             <div className="flex justify-between gap-4">
@@ -192,7 +210,7 @@ export function PersonOffboardingPanel({
             </form>
           ) : null}
         </div>
-      ) : canManage ? (
+      ) : !isError && canManage ? (
         <form className="mt-4 grid gap-4 md:grid-cols-2" onSubmit={handleStart}>
           <label htmlFor="offboarding-separation-date" className="block text-sm text-slate-300">
             Separation date
@@ -261,9 +279,9 @@ export function PersonOffboardingPanel({
             </button>
           </div>
         </form>
-      ) : (
+      ) : !isError ? (
         <p className="mt-4 text-sm text-slate-400">No offboarding record exists for this person.</p>
-      )}
+      ) : null}
     </section>
   )
 }

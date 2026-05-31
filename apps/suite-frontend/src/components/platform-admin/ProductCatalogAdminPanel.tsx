@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { ApiErrorCallout, buildSemanticKey, GeneratedKeyField, getErrorMessage } from '@stl/shared-ui'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 
 import * as nexarr from '../../api/nexarrClient'
@@ -87,10 +87,16 @@ export function ProductCatalogAdminPanel() {
         </p>
       </header>
 
+      {productsQuery.isError ? (
+        <ApiErrorCallout
+          message={getErrorMessage(productsQuery.error, 'Failed to load products.')}
+          onRetry={() => void productsQuery.refetch()}
+          retryLabel="Retry products"
+        />
+      ) : null}
+
       {errorMessage ? (
-        <p className="text-sm text-red-700" role="alert">
-          {errorMessage}
-        </p>
+        <ApiErrorCallout message={errorMessage} />
       ) : null}
 
       <form className="grid gap-3 md:grid-cols-4" onSubmit={handleCreate}>

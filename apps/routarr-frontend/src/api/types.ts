@@ -212,6 +212,8 @@ export interface DispatchAssignmentConflictSummary {
   dispatchabilityWarning: boolean
   workflowGateBlocking: boolean
   workflowGateWarning: boolean
+  hasMissingExternalData: boolean
+  hasStaleExternalData: boolean
 }
 
 export interface DispatchAssignmentPreviewResponse {
@@ -664,6 +666,7 @@ export interface DispatchBoardWorkQueueSummary {
   unassignedDriverTripCount: number
   unlinkedRouteCount: number
   pendingStopCount: number
+  missingProofTripCount: number
 }
 
 export interface DispatchBoardTripRow {
@@ -679,6 +682,7 @@ export interface DispatchBoardTripRow {
   isAtRisk: boolean
   routeCount: number
   pendingStopCount: number
+  missingRequiredProofCount: number
 }
 
 export interface DispatchBoardResponse {

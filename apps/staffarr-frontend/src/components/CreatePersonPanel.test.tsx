@@ -46,4 +46,20 @@ describe('CreatePersonPanel', () => {
       jobTitle: null,
     })
   })
+
+  it('renders create error in callout', () => {
+    render(
+      <CreatePersonPanel
+        orgUnits={[]}
+        peopleOptions={[]}
+        canManage
+        isSubmitting={false}
+        errorMessage="create failed"
+        onCreate={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('create failed')).toBeTruthy()
+    expect(screen.getByRole('alert')).toBeTruthy()
+  })
 })

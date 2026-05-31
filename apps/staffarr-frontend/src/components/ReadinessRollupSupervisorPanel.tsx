@@ -1,3 +1,4 @@
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type {
   ReadinessRollupMemberResponse,
   ReadinessRollupMembersResponse,
@@ -16,10 +17,12 @@ interface ReadinessRollupSupervisorPanelProps {
   onSelectRollup: (rollup: ReadinessRollupSelection | null) => void
   rollupMembers: ReadinessRollupMembersResponse | null
   rollupMembersLoading: boolean
-  rollupMembersErrorMessage: string | null
+  rollupMembersReadErrorMessage: string | null
+  onRetryRollupMembersRead?: () => void
   onSelectPerson?: (personId: string) => void
   isLoading: boolean
-  errorMessage: string | null
+  readErrorMessage: string | null
+  onRetryRead?: () => void
 }
 
 function readinessBarClass(readyPercent: number): string {
@@ -139,7 +142,8 @@ function RollupMembersDrillDown({
   selectedRollup,
   rollupMembers,
   isLoading,
-  errorMessage,
+  readErrorMessage,
+  onRetryRead,
   memberReadinessFilter,
   onMemberReadinessFilterChange,
   onSelectPerson,
@@ -147,10 +151,11 @@ function RollupMembersDrillDown({
   selectedRollup: ReadinessRollupSelection
   rollupMembers: ReadinessRollupMembersResponse | null
   isLoading: boolean
-  errorMessage: string | null
+  readErrorMessage: string | null
   memberReadinessFilter: 'all' | 'not_ready'
   onMemberReadinessFilterChange: (filter: 'all' | 'not_ready') => void
   onSelectPerson?: (personId: string) => void
+  onRetryRead?: () => void
 }) {
   const members = rollupMembers?.members ?? []
 
@@ -185,14 +190,23 @@ function RollupMembersDrillDown({
         </label>
       </div>
 
-      {errorMessage ? <p className="mt-4 text-sm text-red-300">{errorMessage}</p> : null}
+      {readErrorMessage ? (
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="Member drill-down failed"
+            message={readErrorMessage}
+            onRetry={onRetryRead}
+            retryLabel={onRetryRead ? 'Retry members' : undefined}
+          />
+        </div>
+      ) : null}
       {isLoading ? <p className="mt-4 text-sm text-slate-400">Loading members…</p> : null}
 
-      {!isLoading && !errorMessage && members.length === 0 ? (
+      {!isLoading && !readErrorMessage && members.length === 0 ? (
         <p className="mt-4 text-sm text-slate-400">No members match this filter.</p>
       ) : null}
 
-      {!isLoading && !errorMessage && members.length > 0 ? (
+      {!isLoading && !readErrorMessage && members.length > 0 ? (
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-left text-sm" data-testid="readiness-rollup-members-table">
             <thead className="text-xs uppercase tracking-wide text-slate-500">
@@ -263,10 +277,12 @@ export function ReadinessRollupSupervisorPanel({
   onSelectRollup,
   rollupMembers,
   rollupMembersLoading,
-  rollupMembersErrorMessage,
+  rollupMembersReadErrorMessage,
+  onRetryRollupMembersRead,
   onSelectPerson,
   isLoading,
-  errorMessage,
+  readErrorMessage,
+  onRetryRead,
 }: ReadinessRollupSupervisorPanelProps) {
   return (
     <section className="mt-8 rounded-xl border border-slate-700 bg-slate-900/60 p-6" data-testid="readiness-rollup-supervisor-panel">
@@ -296,10 +312,19 @@ export function ReadinessRollupSupervisorPanel({
         </label>
       </div>
 
-      {errorMessage ? <p className="mt-4 text-sm text-red-300">{errorMessage}</p> : null}
+      {readErrorMessage ? (
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="Readiness rollup load failed"
+            message={readErrorMessage}
+            onRetry={onRetryRead}
+            retryLabel={onRetryRead ? 'Retry rollups' : undefined}
+          />
+        </div>
+      ) : null}
       {isLoading ? <p className="mt-4 text-sm text-slate-400">Loading readiness rollups…</p> : null}
 
-      {!isLoading && !errorMessage ? (
+      {!isLoading && !readErrorMessage ? (
         <div className="mt-6 grid gap-8 lg:grid-cols-2">
           <RollupTable
             title="Teams"
@@ -321,10 +346,11 @@ export function ReadinessRollupSupervisorPanel({
           selectedRollup={selectedRollup}
           rollupMembers={rollupMembers}
           isLoading={rollupMembersLoading}
-          errorMessage={rollupMembersErrorMessage}
+          readErrorMessage={rollupMembersReadErrorMessage}
           memberReadinessFilter={memberReadinessFilter}
           onMemberReadinessFilterChange={onMemberReadinessFilterChange}
           onSelectPerson={onSelectPerson}
+          onRetryRead={onRetryRollupMembersRead}
         />
       ) : null}
     </section>

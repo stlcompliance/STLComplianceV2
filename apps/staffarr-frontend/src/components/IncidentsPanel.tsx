@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from 'react'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type {
   CreatePersonnelIncidentRequest,
   PersonnelIncidentDetailResponse,
@@ -11,12 +12,19 @@ interface IncidentsPanelProps {
   personId: string
   personDisplayName: string
   incidents: PersonnelIncidentSummaryResponse[]
+  selectedIncidentId?: string | null
   selectedIncident: PersonnelIncidentDetailResponse | null
   isLoading: boolean
+  isError?: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
   isLoadingDetail: boolean
+  isDetailError?: boolean
+  detailErrorMessage?: string | null
+  onRetryDetail?: () => void
   canManage: boolean
   isSubmitting: boolean
-  errorMessage: string | null
+  actionErrorMessage: string | null
   onSelectIncident: (incidentId: string) => void
   onCreateIncident: (request: CreatePersonnelIncidentRequest) => Promise<void>
   onRouteToTrainarr?: (incidentId: string) => Promise<void>
@@ -74,12 +82,19 @@ export function IncidentsPanel({
   personId,
   personDisplayName,
   incidents,
+  selectedIncidentId = null,
   selectedIncident,
   isLoading,
+  isError = false,
+  readErrorMessage = null,
+  onRetryRead,
   isLoadingDetail,
+  isDetailError = false,
+  detailErrorMessage = null,
+  onRetryDetail,
   canManage,
   isSubmitting,
-  errorMessage,
+  actionErrorMessage,
   onSelectIncident,
   onCreateIncident,
   onRouteToTrainarr,
@@ -121,14 +136,23 @@ export function IncidentsPanel({
         ) : null}
       </div>
 
-      {errorMessage ? (
-        <p className="mt-4 rounded-lg border border-rose-500/40 bg-rose-950/40 px-3 py-2 text-sm text-rose-200">
-          {errorMessage}
-        </p>
+      {actionErrorMessage ? (
+        <div className="mt-4">
+          <ApiErrorCallout title="Personnel incident action failed" message={actionErrorMessage} />
+        </div>
       ) : null}
 
       {isLoading ? (
         <p className="mt-4 text-sm text-slate-400">Loading incidents…</p>
+      ) : isError ? (
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="Personnel incidents unavailable"
+            message={readErrorMessage ?? 'Failed to load personnel incidents.'}
+            onRetry={onRetryRead}
+            retryLabel="Retry incidents"
+          />
+        </div>
       ) : incidents.length === 0 ? (
         <p className="mt-4 text-sm text-slate-400">No incidents recorded for this person yet.</p>
       ) : (
@@ -165,47 +189,62 @@ export function IncidentsPanel({
         </ul>
       )}
 
-      {selectedIncident ? (
+      {selectedIncidentId ? (
         <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/50 p-4">
           <h3 className="text-sm font-medium text-slate-200">Incident detail</h3>
           {isLoadingDetail ? (
             <p className="mt-2 text-sm text-slate-400">Loading detail…</p>
+          ) : isDetailError ? (
+            <div className="mt-2">
+              <ApiErrorCallout
+                title="Incident detail unavailable"
+                message={detailErrorMessage ?? 'Failed to load incident detail.'}
+                onRetry={onRetryDetail}
+                retryLabel="Retry incident detail"
+              />
+            </div>
           ) : (
             <>
-              <p className="mt-2 text-sm text-slate-300">{selectedIncident.description}</p>
-              <dl className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-2">
-                <div>
-                  <dt className="uppercase tracking-wide">Occurred</dt>
-                  <dd className="text-slate-200">{new Date(selectedIncident.occurredAt).toLocaleString()}</dd>
-                </div>
-                <div>
-                  <dt className="uppercase tracking-wide">Reported</dt>
-                  <dd className="text-slate-200">{new Date(selectedIncident.reportedAt).toLocaleString()}</dd>
-                </div>
-                {selectedIncident.trainarrRouting ? (
-                  <div className="sm:col-span-2">
-                    <dt className="uppercase tracking-wide">TrainArr routing</dt>
-                    <dd className="text-violet-200">
-                      {selectedIncident.trainarrRouting.routingStatus} · remediation{' '}
-                      {selectedIncident.trainarrRouting.trainarrRemediationId.slice(0, 8)}… ·{' '}
-                      {new Date(selectedIncident.trainarrRouting.routedAt).toLocaleString()}
-                    </dd>
-                  </div>
-                ) : null}
-              </dl>
-              {canManage &&
-              onRouteToTrainarr &&
-              isIncidentRoutableToTrainarr(selectedIncident.reasonCategoryKey) &&
-              !selectedIncident.trainarrRouting ? (
-                <button
-                  type="button"
-                  disabled={isRouting}
-                  onClick={() => onRouteToTrainarr(selectedIncident.incidentId)}
-                  className="mt-4 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
-                >
-                  {isRouting ? 'Routing to TrainArr…' : 'Route to TrainArr for remediation'}
-                </button>
-              ) : null}
+              {selectedIncident ? (
+                <>
+                  <p className="mt-2 text-sm text-slate-300">{selectedIncident.description}</p>
+                  <dl className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-2">
+                    <div>
+                      <dt className="uppercase tracking-wide">Occurred</dt>
+                      <dd className="text-slate-200">{new Date(selectedIncident.occurredAt).toLocaleString()}</dd>
+                    </div>
+                    <div>
+                      <dt className="uppercase tracking-wide">Reported</dt>
+                      <dd className="text-slate-200">{new Date(selectedIncident.reportedAt).toLocaleString()}</dd>
+                    </div>
+                    {selectedIncident.trainarrRouting ? (
+                      <div className="sm:col-span-2">
+                        <dt className="uppercase tracking-wide">TrainArr routing</dt>
+                        <dd className="text-violet-200">
+                          {selectedIncident.trainarrRouting.routingStatus} · remediation{' '}
+                          {selectedIncident.trainarrRouting.trainarrRemediationId.slice(0, 8)}… ·{' '}
+                          {new Date(selectedIncident.trainarrRouting.routedAt).toLocaleString()}
+                        </dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                  {canManage &&
+                  onRouteToTrainarr &&
+                  isIncidentRoutableToTrainarr(selectedIncident.reasonCategoryKey) &&
+                  !selectedIncident.trainarrRouting ? (
+                    <button
+                      type="button"
+                      disabled={isRouting}
+                      onClick={() => onRouteToTrainarr(selectedIncident.incidentId)}
+                      className="mt-4 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
+                    >
+                      {isRouting ? 'Routing to TrainArr…' : 'Route to TrainArr for remediation'}
+                    </button>
+                  ) : null}
+                </>
+              ) : (
+                <p className="mt-2 text-sm text-slate-400">Incident detail is unavailable.</p>
+              )}
             </>
           )}
         </div>

@@ -52,6 +52,20 @@ describe('NotificationSettingsPanel', () => {
     expect(screen.getByRole('button', { name: /Save notification settings/i })).toBeTruthy()
   })
 
+  it('shows retry callout when settings fail to load', async () => {
+    const { getDispatchNotificationSettings } = await import('../api/client')
+    vi.mocked(getDispatchNotificationSettings).mockRejectedValueOnce(new Error('settings down'))
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <NotificationSettingsPanel accessToken="token" canManage={true} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Notification settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
+
   it('renders recent dispatch rows when dispatches exist', async () => {
     const tripId = '11111111-1111-1111-1111-111111111101'
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })

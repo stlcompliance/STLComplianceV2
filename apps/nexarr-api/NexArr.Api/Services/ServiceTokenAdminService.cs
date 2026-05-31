@@ -44,6 +44,21 @@ public sealed class ServiceTokenAdminService(
         return new PagedResult<ServiceClientResponse>(items, page, pageSize, total, page * pageSize < total);
     }
 
+    public async Task<ServiceClientResponse> GetClientAsync(
+        ClaimsPrincipal principal,
+        Guid serviceClientId,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+
+        var client = await db.ServiceClients
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == serviceClientId, cancellationToken)
+            ?? throw new StlApiException("service_client.not_found", "Service client was not found.", 404);
+
+        return ToClientResponse(client);
+    }
+
     public async Task<ServiceClientResponse> RegisterClientAsync(
         ClaimsPrincipal principal,
         RegisterServiceClientRequest request,
@@ -75,6 +90,7 @@ public sealed class ServiceTokenAdminService(
             DisplayName = request.DisplayName.Trim(),
             SourceProductKey = sourceProductKey,
             AllowedProductKeys = string.Join(',', allowedKeys),
+            AllowedTenantIds = string.Empty,
             IsActive = true,
             CreatedAt = now,
             ModifiedAt = now
@@ -113,6 +129,79 @@ public sealed class ServiceTokenAdminService(
             cancellationToken: cancellationToken);
 
         return ToClientResponse(client);
+    }
+
+    public async Task<ServiceClientResponse> UpdateClientAudienceAsync(
+        ClaimsPrincipal principal,
+        Guid serviceClientId,
+        UpdateServiceClientAudienceRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+
+        var client = await db.ServiceClients.FirstOrDefaultAsync(c => c.Id == serviceClientId, cancellationToken)
+            ?? throw new StlApiException("service_client.not_found", "Service client was not found.", 404);
+
+        var allowedKeys = NormalizeProductKeys(request.AllowedProductKeys);
+        if (allowedKeys.Count == 0)
+        {
+            throw new StlApiException("service_client.invalid_audience", "At least one allowed product key is required.", 400);
+        }
+
+        await ValidateProductKeysExistAsync(allowedKeys, cancellationToken);
+
+        client.AllowedProductKeys = string.Join(',', allowedKeys);
+        client.ModifiedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "service_client.audience_updated",
+            "service_client",
+            client.Id.ToString(),
+            "Success",
+            actorUserId: principal.GetUserId(),
+            cancellationToken: cancellationToken);
+
+        return ToClientResponse(client);
+    }
+
+    public async Task<ServiceClientTenantScopeResponse> UpdateClientTenantScopeAsync(
+        ClaimsPrincipal principal,
+        Guid serviceClientId,
+        UpdateServiceClientTenantScopeRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+
+        var client = await db.ServiceClients.FirstOrDefaultAsync(c => c.Id == serviceClientId, cancellationToken)
+            ?? throw new StlApiException("service_client.not_found", "Service client was not found.", 404);
+
+        var tenantIds = request.TenantIds.Distinct().ToList();
+        if (tenantIds.Count > 0)
+        {
+            var existingTenantIds = await db.Tenants.AsNoTracking()
+                .Where(t => tenantIds.Contains(t.Id))
+                .Select(t => t.Id)
+                .ToListAsync(cancellationToken);
+            if (existingTenantIds.Count != tenantIds.Count)
+            {
+                throw new StlApiException("tenant.not_found", "One or more tenants were not found.", 404);
+            }
+        }
+
+        client.AllowedTenantIds = string.Join(',', tenantIds);
+        client.ModifiedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "service_client.tenant_scope_updated",
+            "service_client",
+            client.Id.ToString(),
+            "Success",
+            actorUserId: principal.GetUserId(),
+            cancellationToken: cancellationToken);
+
+        return new ServiceClientTenantScopeResponse(client.Id, tenantIds);
     }
 
     public async Task<PagedResult<ServiceTokenSummaryResponse>> ListTokensAsync(
@@ -172,6 +261,15 @@ public sealed class ServiceTokenAdminService(
             {
                 throw new StlApiException("tenant.not_found", "Active tenant was not found.", 404);
             }
+        }
+
+        var allowedTenantIds = ParseTenantIds(client.AllowedTenantIds);
+        if (request.TenantId is Guid requestedTenantId && allowedTenantIds.Count > 0 && !allowedTenantIds.Contains(requestedTenantId))
+        {
+            throw new StlApiException(
+                "service_client.tenant_scope_forbidden",
+                "Service client is not allowed to issue tokens for the requested tenant.",
+                403);
         }
 
         var allowedKeys = request.AllowedProductKeys is { Count: > 0 }
@@ -257,20 +355,29 @@ public sealed class ServiceTokenAdminService(
         CancellationToken cancellationToken = default)
     {
         await authorization.RequireNexArrAccessAsync(principal, cancellationToken);
-        return await ValidateServiceTokenCoreAsync(request.Token, cancellationToken);
+        return await ValidateServiceTokenCoreAsync(request.Token, principal.GetUserId(), cancellationToken);
     }
 
     public Task<ServiceTokenValidationResponse> ValidateForHandoffRedeemAsync(
         string? token,
         CancellationToken cancellationToken = default) =>
-        ValidateServiceTokenCoreAsync(token, cancellationToken);
+        ValidateServiceTokenCoreAsync(token, null, cancellationToken);
 
     private async Task<ServiceTokenValidationResponse> ValidateServiceTokenCoreAsync(
         string? token,
+        Guid? actorUserId,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(token))
         {
+            await audit.WriteAsync(
+                "service_token.validate",
+                "service_token",
+                null,
+                "Denied",
+                actorUserId: actorUserId,
+                reasonCode: "token_missing",
+                cancellationToken: cancellationToken);
             return Invalid("token_missing");
         }
 
@@ -284,12 +391,28 @@ public sealed class ServiceTokenAdminService(
         }
         catch (Exception) when (token is not null)
         {
+            await audit.WriteAsync(
+                "service_token.validate",
+                "service_token",
+                null,
+                "Denied",
+                actorUserId: actorUserId,
+                reasonCode: "token_invalid",
+                cancellationToken: cancellationToken);
             return Invalid("token_invalid");
         }
 
         var tokenType = jwt.Claims.FirstOrDefault(c => c.Type == StlServiceTokenClaimTypes.TokenType)?.Value;
         if (!string.Equals(tokenType, StlServiceTokenClaimTypes.ServiceTokenTypeValue, StringComparison.Ordinal))
         {
+            await audit.WriteAsync(
+                "service_token.validate",
+                "service_token",
+                null,
+                "Denied",
+                actorUserId: actorUserId,
+                reasonCode: "token_type_invalid",
+                cancellationToken: cancellationToken);
             return Invalid("token_type_invalid");
         }
 
@@ -297,6 +420,14 @@ public sealed class ServiceTokenAdminService(
             ?? jwt.Claims.FirstOrDefault(c => c.Type == StlServiceTokenClaimTypes.TokenId)?.Value;
         if (jti is null || !Guid.TryParse(jti, out var tokenId))
         {
+            await audit.WriteAsync(
+                "service_token.validate",
+                "service_token",
+                null,
+                "Denied",
+                actorUserId: actorUserId,
+                reasonCode: "token_id_missing",
+                cancellationToken: cancellationToken);
             return Invalid("token_id_missing");
         }
 
@@ -306,36 +437,110 @@ public sealed class ServiceTokenAdminService(
 
         if (record is null)
         {
+            await audit.WriteAsync(
+                "service_token.validate",
+                "service_token",
+                tokenId.ToString(),
+                "Denied",
+                actorUserId: actorUserId,
+                reasonCode: "token_not_registered",
+                cancellationToken: cancellationToken);
             return Invalid("token_not_registered");
         }
 
         if (record.RevokedAt is not null)
         {
+            await IncrementFailedAuthenticationAttemptAsync(record.ServiceClient, cancellationToken);
+            await audit.WriteAsync(
+                "service_token.validate",
+                "service_token",
+                record.Id.ToString(),
+                "Denied",
+                tenantId: record.TenantId,
+                actorUserId: actorUserId,
+                reasonCode: "token_revoked",
+                cancellationToken: cancellationToken);
             return Invalid("token_revoked");
         }
 
         if (record.ExpiresAt <= DateTimeOffset.UtcNow)
         {
+            await IncrementFailedAuthenticationAttemptAsync(record.ServiceClient, cancellationToken);
+            await audit.WriteAsync(
+                "service_token.validate",
+                "service_token",
+                record.Id.ToString(),
+                "Denied",
+                tenantId: record.TenantId,
+                actorUserId: actorUserId,
+                reasonCode: "token_expired",
+                cancellationToken: cancellationToken);
             return Invalid("token_expired");
         }
 
         if (!record.ServiceClient.IsActive)
         {
+            await IncrementFailedAuthenticationAttemptAsync(record.ServiceClient, cancellationToken);
+            await audit.WriteAsync(
+                "service_token.validate",
+                "service_client",
+                record.ServiceClientId.ToString(),
+                "Denied",
+                tenantId: record.TenantId,
+                actorUserId: actorUserId,
+                reasonCode: "client_inactive",
+                cancellationToken: cancellationToken);
             return Invalid("client_inactive");
         }
 
         if (HashToken(token) != record.TokenHash)
         {
+            await IncrementFailedAuthenticationAttemptAsync(record.ServiceClient, cancellationToken);
+            await audit.WriteAsync(
+                "service_token.validate",
+                "service_token",
+                record.Id.ToString(),
+                "Denied",
+                tenantId: record.TenantId,
+                actorUserId: actorUserId,
+                reasonCode: "token_hash_mismatch",
+                cancellationToken: cancellationToken);
             return Invalid("token_hash_mismatch");
         }
 
         if (record.TenantId is Guid tenantId)
         {
+            var allowedTenantIdsForClient = ParseTenantIds(record.ServiceClient.AllowedTenantIds);
+            if (allowedTenantIdsForClient.Count > 0 && !allowedTenantIdsForClient.Contains(tenantId))
+            {
+                await IncrementFailedAuthenticationAttemptAsync(record.ServiceClient, cancellationToken);
+                await audit.WriteAsync(
+                    "service_token.validate",
+                    "service_client",
+                    record.ServiceClientId.ToString(),
+                    "Denied",
+                    tenantId: record.TenantId,
+                    actorUserId: actorUserId,
+                    reasonCode: "auth.tenant_forbidden",
+                    cancellationToken: cancellationToken);
+                return Invalid("auth.tenant_forbidden");
+            }
+
             var tenantActive = await db.Tenants.AnyAsync(
                 t => t.Id == tenantId && t.Status == TenantStatuses.Active,
                 cancellationToken);
             if (!tenantActive)
             {
+                await IncrementFailedAuthenticationAttemptAsync(record.ServiceClient, cancellationToken);
+                await audit.WriteAsync(
+                    "service_token.validate",
+                    "tenant",
+                    tenantId.ToString(),
+                    "Denied",
+                    tenantId: record.TenantId,
+                    actorUserId: actorUserId,
+                    reasonCode: "tenant_inactive",
+                    cancellationToken: cancellationToken);
                 return Invalid("tenant_inactive");
             }
         }
@@ -352,10 +557,30 @@ public sealed class ServiceTokenAdminService(
                     cancellationToken);
                 if (!entitled)
                 {
+                    await IncrementFailedAuthenticationAttemptAsync(record.ServiceClient, cancellationToken);
+                    await audit.WriteAsync(
+                        "service_token.validate",
+                        "service_token",
+                        record.Id.ToString(),
+                        "Denied",
+                        tenantId: record.TenantId,
+                        actorUserId: actorUserId,
+                        reasonCode: "entitlement_revoked",
+                        cancellationToken: cancellationToken);
                     return Invalid("entitlement_revoked");
                 }
             }
         }
+
+        await MarkClientAuthenticationSuccessAsync(record.ServiceClient, cancellationToken);
+        await audit.WriteAsync(
+            "service_token.validate",
+            "service_token",
+            record.Id.ToString(),
+            "Success",
+            tenantId: record.TenantId,
+            actorUserId: actorUserId,
+            cancellationToken: cancellationToken);
 
         return new ServiceTokenValidationResponse(
             true,
@@ -367,6 +592,80 @@ public sealed class ServiceTokenAdminService(
             record.ActionScope,
             record.ExpiresAt,
             null);
+    }
+
+    public async Task<PagedResult<PlatformAuditEventExportItem>> ListAuditHistoryAsync(
+        ClaimsPrincipal principal,
+        Guid? serviceClientId,
+        Guid? serviceTokenId,
+        Guid? tenantId,
+        DateTimeOffset? fromUtc,
+        DateTimeOffset? toUtc,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = db.AuditEvents.AsNoTracking()
+            .Where(e => e.Action.StartsWith("service_token.") || e.Action.StartsWith("service_client."));
+
+        if (tenantId is Guid scopedTenantId)
+        {
+            query = query.Where(e => e.TenantId == scopedTenantId);
+        }
+
+        if (fromUtc is DateTimeOffset from)
+        {
+            query = query.Where(e => e.OccurredAt >= from);
+        }
+
+        if (toUtc is DateTimeOffset to)
+        {
+            query = query.Where(e => e.OccurredAt <= to);
+        }
+
+        if (serviceTokenId is Guid scopedServiceTokenId)
+        {
+            var tokenIdText = scopedServiceTokenId.ToString();
+            query = query.Where(e => e.TargetId == tokenIdText);
+        }
+
+        if (serviceClientId is Guid scopedServiceClientId)
+        {
+            var clientIdText = scopedServiceClientId.ToString();
+            var clientTokenIds = await db.ServiceTokens.AsNoTracking()
+                .Where(t => t.ServiceClientId == scopedServiceClientId)
+                .Select(t => t.Id.ToString())
+                .ToListAsync(cancellationToken);
+
+            query = query.Where(e =>
+                e.TargetId == clientIdText
+                || (e.TargetId != null && clientTokenIds.Contains(e.TargetId)));
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(e => e.OccurredAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(e => new PlatformAuditEventExportItem(
+                e.Id,
+                e.TenantId,
+                e.ActorUserId,
+                e.Action,
+                e.TargetType,
+                e.TargetId,
+                e.Result,
+                e.ReasonCode,
+                e.CorrelationId,
+                e.OccurredAt))
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<PlatformAuditEventExportItem>(items, page, pageSize, total, page * pageSize < total);
     }
 
     public async Task RevokeAsync(
@@ -580,8 +879,34 @@ public sealed class ServiceTokenAdminService(
             client.DisplayName,
             client.SourceProductKey,
             ParseProductKeys(client.AllowedProductKeys),
+            ParseTenantIds(client.AllowedTenantIds).OrderBy(x => x).ToList(),
             client.IsActive,
-            client.CreatedAt);
+            client.CreatedAt,
+            client.LastUsedAt,
+            client.FailedAuthenticationAttempts);
+
+    private async Task IncrementFailedAuthenticationAttemptAsync(
+        ServiceClient client,
+        CancellationToken cancellationToken)
+    {
+        client.FailedAuthenticationAttempts += 1;
+        client.ModifiedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task MarkClientAuthenticationSuccessAsync(
+        ServiceClient client,
+        CancellationToken cancellationToken)
+    {
+        client.LastUsedAt = DateTimeOffset.UtcNow;
+        if (client.FailedAuthenticationAttempts != 0)
+        {
+            client.FailedAuthenticationAttempts = 0;
+        }
+
+        client.ModifiedAt = client.LastUsedAt.Value;
+        await db.SaveChangesAsync(cancellationToken);
+    }
 
     private static IReadOnlyList<string> NormalizeProductKeys(IReadOnlyList<string> keys) =>
         keys.Select(k => k.Trim().ToLowerInvariant()).Distinct(StringComparer.Ordinal).OrderBy(k => k).ToList();
@@ -590,6 +915,20 @@ public sealed class ServiceTokenAdminService(
         string.IsNullOrWhiteSpace(raw)
             ? []
             : raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+    private static IReadOnlySet<Guid> ParseTenantIds(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return new HashSet<Guid>();
+        }
+
+        return raw
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(x => Guid.TryParse(x, out var parsed) ? parsed : Guid.Empty)
+            .Where(x => x != Guid.Empty)
+            .ToHashSet();
+    }
 
     private static string HashToken(string token)
     {

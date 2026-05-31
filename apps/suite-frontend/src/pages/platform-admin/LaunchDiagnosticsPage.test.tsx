@@ -123,8 +123,24 @@ describe('LaunchDiagnosticsPage', () => {
     fireEvent.change(screen.getByLabelText('Product'), { target: { value: 'staffarr' } })
     fireEvent.click(screen.getByRole('button', { name: 'Validate launch' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Failed to validate launch: validation failed',
+    expect(await screen.findByRole('alert')).toHaveTextContent('validation failed')
+  })
+
+  it('shows retryable callout when diagnostics query fails', async () => {
+    vi.mocked(nexarr.getPlatformAdminLaunchDiagnostics).mockRejectedValueOnce(
+      new Error('diagnostics unavailable'),
     )
+    vi.mocked(nexarr.getPlatformAdminLaunchAttempts).mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 25,
+      totalCount: 0,
+      hasNextPage: false,
+    })
+
+    renderPage()
+
+    expect(await screen.findByText('diagnostics unavailable')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Retry diagnostics' })).toBeTruthy()
   })
 })

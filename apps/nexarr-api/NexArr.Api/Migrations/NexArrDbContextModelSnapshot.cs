@@ -269,6 +269,52 @@ namespace NexArr.Api.Migrations
                     b.ToTable("nexarr_entitlement_reconciliation_runs", (string)null);
                 });
 
+            modelBuilder.Entity("NexArr.Api.Entities.ExternalIdentityProviderMapping", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ExternalEmail")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("ExternalSubject")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTimeOffset>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ModifiedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProviderKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProviderKey", "ExternalSubject")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "ProviderKey")
+                        .IsUnique();
+
+                    b.ToTable("external_identity_provider_mappings", (string)null);
+                });
+
             modelBuilder.Entity("NexArr.Api.Entities.HandoffCodeRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -642,6 +688,37 @@ namespace NexArr.Api.Migrations
                     b.ToTable("nexarr_platform_outbox_publisher_settings", (string)null);
                 });
 
+            modelBuilder.Entity("NexArr.Api.Entities.PlatformRoleAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RoleKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "RoleKey", "TenantId")
+                        .IsUnique();
+
+                    b.ToTable("platform_role_assignments", (string)null);
+                });
+
             modelBuilder.Entity("NexArr.Api.Entities.PlatformServiceTokenCleanupSettings", b =>
                 {
                     b.Property<Guid>("Id")
@@ -909,6 +986,11 @@ namespace NexArr.Api.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)");
 
+                    b.Property<string>("AllowedTenantIds")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
                     b.Property<string>("ClientKey")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -922,8 +1004,16 @@ namespace NexArr.Api.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
+                    b.Property<int>("FailedAuthenticationAttempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastUsedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTimeOffset>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1337,6 +1427,16 @@ namespace NexArr.Api.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
+                    b.Property<bool>("IsEmailVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsMfaEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<DateTimeOffset?>("LockedUntil")
                         .HasColumnType("timestamp with time zone");
 
@@ -1437,6 +1537,17 @@ namespace NexArr.Api.Migrations
                     b.ToTable("platform_metadata", (string)null);
                 });
 
+            modelBuilder.Entity("NexArr.Api.Entities.ExternalIdentityProviderMapping", b =>
+                {
+                    b.HasOne("NexArr.Api.Entities.PlatformUser", "User")
+                        .WithMany("ExternalIdentityProviderMappings")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("NexArr.Api.Entities.HandoffCodeRecord", b =>
                 {
                     b.HasOne("NexArr.Api.Entities.Tenant", "Tenant")
@@ -1460,6 +1571,17 @@ namespace NexArr.Api.Migrations
                 {
                     b.HasOne("NexArr.Api.Entities.PlatformUser", "User")
                         .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NexArr.Api.Entities.PlatformRoleAssignment", b =>
+                {
+                    b.HasOne("NexArr.Api.Entities.PlatformUser", "User")
+                        .WithMany("RoleAssignments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1619,7 +1741,11 @@ namespace NexArr.Api.Migrations
                 {
                     b.Navigation("Credential");
 
+                    b.Navigation("ExternalIdentityProviderMappings");
+
                     b.Navigation("Memberships");
+
+                    b.Navigation("RoleAssignments");
 
                     b.Navigation("Sessions");
                 });

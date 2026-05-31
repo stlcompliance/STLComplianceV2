@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { AdvancedReferenceField, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import { getTripExecutionSummary, getTrips, downloadTripCaptureAttachment } from '../api/client'
 
@@ -94,9 +95,12 @@ export function TripProofDvirReadPanel({ accessToken }: Props) {
       ) : null}
 
       {summaryQuery.isError ? (
-        <p className="mt-4 text-sm text-red-400" role="alert">
-          {(summaryQuery.error as Error).message}
-        </p>
+        <ApiErrorCallout
+          className="mt-4"
+          message={getErrorMessage(summaryQuery.error, 'Failed to load execution summary.')}
+          onRetry={() => void summaryQuery.refetch()}
+          retryLabel="Retry execution summary"
+        />
       ) : null}
 
       {summaryQuery.data ? (

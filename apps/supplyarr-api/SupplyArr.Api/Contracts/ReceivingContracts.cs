@@ -9,9 +9,11 @@ public sealed record ReceivingReceiptLineResponse(
     string PartDisplayName,
     decimal QuantityExpected,
     decimal QuantityReceived,
+    string Condition,
     decimal QuantityOrdered,
     decimal QuantityPreviouslyReceived,
     decimal QuantityRemainingOnOrder,
+    IReadOnlyList<string> SerialLotNumbers,
     IReadOnlyList<ReceivingExceptionResponse> Exceptions,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
@@ -29,6 +31,10 @@ public sealed record ReceivingReceiptResponse(
     string LocationKey,
     string LocationName,
     string Notes,
+    string PackingSlipReference,
+    string PackingSlipFileName,
+    string InvoiceReference,
+    string InvoiceFileName,
     Guid CreatedByUserId,
     DateTimeOffset? PostedAt,
     Guid? PostedByUserId,
@@ -40,6 +46,24 @@ public sealed record ReceivingReceiptResponse(
 public sealed record CreateReceivingReceiptFromPurchaseOrderRequest(
     string ReceiptKey,
     Guid InventoryBinId,
-    string? Notes);
+    string? Notes,
+    string? PackingSlipReference = null,
+    string? PackingSlipFileName = null,
+    IReadOnlyList<Guid>? PurchaseOrderLineIds = null);
+
+public sealed record UpdateReceivingPackingSlipRequest(
+    string? PackingSlipReference,
+    string? PackingSlipFileName);
+
+public sealed record UpdateReceivingInvoiceRequest(
+    string? InvoiceReference,
+    string? InvoiceFileName);
+
+public sealed record UpdateReceivingInventoryBinRequest(Guid InventoryBinId);
 
 public sealed record UpdateReceivingReceiptLineRequest(decimal QuantityReceived);
+
+public sealed record UpdateReceivingReceiptLineConditionRequest(string Condition);
+
+public sealed record UpdateReceivingReceiptLineTrackingRequest(
+    IReadOnlyList<string> SerialLotNumbers);

@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, afterEach } from 'vitest'
+import { cleanup, fireEvent } from '@testing-library/react'
 
 import { ProofDvirReportsPanel } from './ProofDvirReportsPanel'
 
@@ -65,6 +66,11 @@ vi.mock('../api/client', () => ({
 }))
 
 describe('ProofDvirReportsPanel', () => {
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
   it('renders proof/DVIR report summary rows', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
@@ -87,5 +93,20 @@ describe('ProofDvirReportsPanel', () => {
     )
 
     expect(container.firstChild).toBeNull()
+  })
+
+  it('shows export failure callout', async () => {
+    const { exportProofDvirReportSummaryCsv } = await import('../api/client')
+    vi.mocked(exportProofDvirReportSummaryCsv).mockRejectedValueOnce(new Error('export down'))
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <ProofDvirReportsPanel accessToken="token" canRead={true} canExport={true} />
+      </QueryClientProvider>,
+    )
+
+    await screen.findByTestId('proof-dvir-reports-panel')
+    fireEvent.click(screen.getByRole('button', { name: /Export CSV/i }))
+    expect(await screen.findByText('CSV export failed')).toBeInTheDocument()
   })
 })

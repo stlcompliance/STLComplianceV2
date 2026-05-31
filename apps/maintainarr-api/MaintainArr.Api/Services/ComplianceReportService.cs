@@ -203,6 +203,29 @@ public sealed class ComplianceReportService(MaintainArrDbContext db)
             Encoding.UTF8.GetBytes(builder.ToString()));
     }
 
+    public async Task<IReadOnlyList<ComplianceAlertResponse>> ListAlertsAsync(
+        Guid tenantId,
+        string? siteRef,
+        int? limit,
+        CancellationToken cancellationToken = default)
+    {
+        var safeLimit = Math.Clamp(limit ?? 100, 1, 500);
+        var assetIds = await ResolveAssetFilterAsync(tenantId, siteRef, cancellationToken);
+        var attentionItems = await BuildAttentionItemsAsync(tenantId, assetIds, cancellationToken);
+
+        return attentionItems
+            .Select(item => new ComplianceAlertResponse(
+                item.AssetId,
+                item.AssetTag,
+                item.AssetName,
+                item.SiteRef,
+                item.IssueType,
+                AlertSeverity(item.IssueType),
+                item.Message))
+            .Take(safeLimit)
+            .ToList();
+    }
+
     private async Task<List<Guid>?> ResolveAssetFilterAsync(
         Guid tenantId,
         string? siteRef,
@@ -528,4 +551,12 @@ public sealed class ComplianceReportService(MaintainArrDbContext db)
 
         return value;
     }
+
+    private static string AlertSeverity(string issueType) => issueType switch
+    {
+        "critical_defect" => "critical",
+        "failed_inspection" => "high",
+        "overdue_pm" => "high",
+        _ => "medium"
+    };
 }

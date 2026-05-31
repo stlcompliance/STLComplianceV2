@@ -54,6 +54,7 @@ public sealed record PartResponse(
     string ManufacturerName,
     string ManufacturerPartNumber,
     string Status,
+    bool RequiresSerialLotTracking,
     decimal? ReorderPoint,
     decimal? ReorderQuantity,
     IReadOnlyList<PartManufacturerAliasResponse> ManufacturerAliases,
@@ -69,7 +70,8 @@ public sealed record CreatePartRequest(
     string CategoryKey,
     string UnitOfMeasure,
     string ManufacturerName,
-    string ManufacturerPartNumber);
+    string ManufacturerPartNumber,
+    bool RequiresSerialLotTracking = false);
 
 public sealed record UpdatePartRequest(
     Guid? CatalogId,
@@ -78,7 +80,8 @@ public sealed record UpdatePartRequest(
     string CategoryKey,
     string UnitOfMeasure,
     string ManufacturerName,
-    string ManufacturerPartNumber);
+    string ManufacturerPartNumber,
+    bool RequiresSerialLotTracking = false);
 
 public sealed record UpdatePartStatusRequest(string Status);
 

@@ -127,6 +127,26 @@ export function buildDispatchAssignmentGateLines(
     lines.push(...workflowGateLines(preview.workflowGates))
   }
 
+  if (preview.conflictSummary?.hasMissingExternalData) {
+    lines.push({
+      severity: 'warn',
+      category: 'other',
+      label: 'External data',
+      detail: 'Missing or unavailable data detected in pre-dispatch checks.',
+      reasonCode: 'external_data_unavailable',
+    })
+  }
+
+  if (preview.conflictSummary?.hasStaleExternalData) {
+    lines.push({
+      severity: 'warn',
+      category: 'other',
+      label: 'External data',
+      detail: 'Potentially stale data detected in pre-dispatch checks.',
+      reasonCode: 'external_data_stale',
+    })
+  }
+
   if (lines.length === 0 && preview.validationMessages?.length) {
     for (const message of preview.validationMessages) {
       lines.push({

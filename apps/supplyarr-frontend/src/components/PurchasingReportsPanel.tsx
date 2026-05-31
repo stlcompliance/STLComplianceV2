@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { ShoppingCart } from 'lucide-react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   exportPurchasingReportSummaryCsv,
@@ -112,7 +113,25 @@ export function PurchasingReportsPanel({
       )}
 
       {summaryQuery.isError && (
-        <p className="mt-3 text-sm text-rose-400">Failed to load purchasing report.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Purchasing report unavailable"
+            message={getErrorMessage(summaryQuery.error, 'Failed to load purchasing report.')}
+            retryLabel="Retry summary"
+            onRetry={() => {
+              void summaryQuery.refetch()
+            }}
+          />
+        </div>
+      )}
+
+      {exportMutation.isError && (
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="CSV export failed"
+            message={getErrorMessage(exportMutation.error, 'Unable to export purchasing report CSV.')}
+          />
+        </div>
       )}
 
       {summaryQuery.data && (

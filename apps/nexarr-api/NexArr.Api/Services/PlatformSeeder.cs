@@ -55,6 +55,7 @@ public static class PlatformSeeder
 
         if (await db.Users.AnyAsync(u => u.Email == DemoAdminEmail, cancellationToken))
         {
+            await EnsureDemoOwnerRoleAsync(db, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
             return;
         }
@@ -97,6 +98,16 @@ public static class PlatformSeeder
             RoleKey = "platform_admin",
             IsActive = true,
             CreatedAt = now
+        });
+
+        db.PlatformRoleAssignments.Add(new PlatformRoleAssignment
+        {
+            Id = Guid.Parse("44444444-4444-4444-4444-444444444401"),
+            UserId = DemoAdminUserId,
+            TenantId = null,
+            RoleKey = "platform_owner",
+            CreatedAt = now,
+            CreatedByUserId = DemoAdminUserId,
         });
 
         db.Users.Add(new PlatformUser
@@ -171,6 +182,31 @@ public static class PlatformSeeder
         SeedCallbackAllowlist(db, now);
 
         await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static async Task EnsureDemoOwnerRoleAsync(
+        NexArrDbContext db,
+        CancellationToken cancellationToken)
+    {
+        var hasOwner = await db.PlatformRoleAssignments.AnyAsync(
+            x => x.UserId == DemoAdminUserId
+                 && x.TenantId == null
+                 && x.RoleKey == "platform_owner",
+            cancellationToken);
+        if (hasOwner)
+        {
+            return;
+        }
+
+        db.PlatformRoleAssignments.Add(new PlatformRoleAssignment
+        {
+            Id = Guid.NewGuid(),
+            UserId = DemoAdminUserId,
+            TenantId = null,
+            RoleKey = "platform_owner",
+            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedByUserId = DemoAdminUserId,
+        });
     }
 
     private static async Task EnsureProductCatalogManifestColumnsAsync(

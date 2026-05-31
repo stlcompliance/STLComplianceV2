@@ -16,7 +16,10 @@ public sealed record DispatchReportTripSummaryItem(
     bool IsUnassigned,
     int RouteCount,
     int MissingRequiredProofCount,
-    int OpenExceptionCount);
+    int OpenExceptionCount,
+    bool HasDispatchReleaseSnapshot,
+    bool ReleaseHasMissingExternalData,
+    bool ReleaseHasStaleExternalData);
 
 public sealed record DispatchReportExceptionRow(
     Guid ExceptionId,
@@ -40,6 +43,9 @@ public sealed record DispatchReportSummaryResponse(
     int MissingProofTripCount,
     int OpenExceptionCount,
     int DelayExceptionCount,
+    int TripsWithDispatchReleaseSnapshotCount,
+    int ReleaseSnapshotsMissingExternalDataCount,
+    int ReleaseSnapshotsStaleExternalDataCount,
     IReadOnlyList<DispatchReportCountItem> TripStatusCounts,
     IReadOnlyList<DispatchReportCountItem> ExceptionStatusCounts,
     IReadOnlyList<DispatchReportCountItem> ExceptionCategoryCounts,
@@ -68,7 +74,8 @@ public sealed record DispatchReportTripDetailResponse(
     int LinkedExceptionCount,
     int DelayExceptionCount,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    TripDispatchReleaseSnapshotResponse? DispatchReleaseSnapshot);
 
 public sealed record DispatchReportExceptionDetailResponse(
     Guid ExceptionId,
@@ -88,6 +95,15 @@ public sealed record DispatchReportExceptionDetailResponse(
     DateTimeOffset? AssignedAt,
     Guid? ResolvedByUserId,
     DateTimeOffset? ResolvedAt);
+
+public sealed record DispatchReportAlertResponse(
+    string AlertType,
+    string Severity,
+    Guid? TripId,
+    string? TripNumber,
+    Guid? ExceptionId,
+    string Message,
+    DateTimeOffset DetectedAt);
 
 public sealed record DispatchTimeSummaryTripRow(
     Guid TripId,

@@ -30,6 +30,7 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<InspectionVoiceGuidanceService>();
         builder.Services.AddScoped<DefectService>();
         builder.Services.AddScoped<DefectEvidenceService>();
+        builder.Services.AddScoped<DocumentAlertService>();
         builder.Services.AddScoped<AssetMeterService>();
         builder.Services.AddScoped<MeterReadingService>();
         builder.Services.AddScoped<MeterPmForecastService>();

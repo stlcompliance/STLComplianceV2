@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import { getProcurementCoordinationDashboard } from '../api/client'
 
@@ -37,7 +38,19 @@ export function ProcurementCoordinationPanel({ accessToken, canRead }: Procureme
       )}
 
       {dashboardQuery.isError && (
-        <p className="mt-3 text-sm text-rose-400">Failed to load procurement coordination dashboard.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Procurement coordination unavailable"
+            message={getErrorMessage(
+              dashboardQuery.error,
+              'Failed to load procurement coordination dashboard.',
+            )}
+            retryLabel="Retry dashboard"
+            onRetry={() => {
+              void dashboardQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       {dashboardQuery.data && (

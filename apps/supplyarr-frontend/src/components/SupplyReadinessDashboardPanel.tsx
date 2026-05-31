@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import { getSupplyReadinessDashboard } from '../api/client'
 
@@ -57,7 +58,16 @@ export function SupplyReadinessDashboardPanel({
       )}
 
       {dashboardQuery.isError && (
-        <p className="mt-3 text-sm text-rose-400">Failed to load supply readiness dashboard.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Supply readiness unavailable"
+            message={getErrorMessage(dashboardQuery.error, 'Failed to load supply readiness dashboard.')}
+            retryLabel="Retry dashboard"
+            onRetry={() => {
+              void dashboardQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       {totals && (

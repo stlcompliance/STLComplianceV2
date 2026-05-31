@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import { CompanionApiError, redeemHandoff } from '../api/client'
 import { companionPlainReason } from '../lib/companionPlainReason'
 import { saveSession, toStoredSession } from '../auth/sessionStorage'
@@ -51,8 +52,7 @@ export function LaunchPage() {
       <div className="max-w-md rounded-xl border border-slate-700 bg-slate-900/80 p-8 text-center shadow-lg">
         {error ? (
           <>
-            <h1 className="text-lg font-semibold text-red-300">Launch failed</h1>
-            <p className="mt-3 text-sm text-slate-300">{error}</p>
+            <ApiErrorCallout title="Launch failed" message={error} />
           </>
         ) : (
           <p className="text-slate-300">Redeeming Companion handoff…</p>

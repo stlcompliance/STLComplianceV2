@@ -124,6 +124,60 @@ export class MaintainArrApiError extends Error {
   }
 }
 
+type ProblemDetailsLike = {
+  title?: string
+  detail?: string
+  errors?: Record<string, string[] | string>
+}
+
+function extractProblemDetailsMessage(body: string): string | null {
+  if (!body.trim()) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(body) as ProblemDetailsLike
+    const parts: string[] = []
+
+    if (typeof parsed.title === 'string' && parsed.title.trim()) {
+      parts.push(parsed.title.trim())
+    }
+
+    if (typeof parsed.detail === 'string' && parsed.detail.trim()) {
+      parts.push(parsed.detail.trim())
+    }
+
+    const errorEntries = parsed.errors ? Object.entries(parsed.errors) : []
+    if (errorEntries.length > 0) {
+      const flattened = errorEntries
+        .flatMap(([field, value]) => {
+          const values = Array.isArray(value) ? value : [value]
+          return values
+            .map((message) => String(message).trim())
+            .filter(Boolean)
+            .map((message) => `${field}: ${message}`)
+        })
+      if (flattened.length > 0) {
+        parts.push(flattened.join('; '))
+      }
+    }
+
+    return parts.length > 0 ? parts.join(' - ') : null
+  } catch {
+    return null
+  }
+}
+
+async function toApiError(
+  response: Response,
+  fallbackMessage: string,
+): Promise<MaintainArrApiError> {
+  const body = await response.text()
+  const parsedMessage = extractProblemDetailsMessage(body)
+  const message = parsedMessage || body || `${fallbackMessage} (${response.status})`
+  return new MaintainArrApiError(message, response.status, body)
+}
+
 function authHeaders(accessToken: string): HeadersInit {
   return {
     Authorization: `Bearer ${accessToken}`,
@@ -133,8 +187,7 @@ function authHeaders(accessToken: string): HeadersInit {
 
 async function parseJsonResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
   if (!response.ok) {
-    const body = await response.text()
-    throw new MaintainArrApiError(body || `${fallbackMessage} (${response.status})`, response.status, body)
+    throw await toApiError(response, fallbackMessage)
   }
 
   return (await response.json()) as T
@@ -332,8 +385,7 @@ export async function createInspectionTemplateCategory(
     body: JSON.stringify(payload),
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new MaintainArrApiError(body || `Failed to create category (${response.status})`, response.status, body)
+    throw await toApiError(response, 'Failed to create category')
   }
   await response.json()
   return getInspectionTemplate(accessToken, inspectionTemplateId)
@@ -350,8 +402,7 @@ export async function createInspectionChecklistItem(
     body: JSON.stringify(payload),
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new MaintainArrApiError(body || `Failed to create checklist item (${response.status})`, response.status, body)
+    throw await toApiError(response, 'Failed to create checklist item')
   }
   await response.json()
   return getInspectionTemplate(accessToken, inspectionTemplateId)
@@ -1276,12 +1327,7 @@ export async function exportAuditPackageZip(
     },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new MaintainArrApiError(
-      body || `Audit package export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Audit package export failed')
   }
   return response.blob()
 }
@@ -1295,12 +1341,7 @@ export async function exportAuditPackageCsv(
     { headers: { Authorization: `Bearer ${accessToken}` } },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new MaintainArrApiError(
-      body || `Audit CSV export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Audit CSV export failed')
   }
   return response.blob()
 }
@@ -1357,12 +1398,7 @@ export async function downloadAuditPackageGenerationJob(
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new MaintainArrApiError(
-      body || `Audit package download failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Audit package download failed')
   }
   return response.blob()
 }
@@ -1424,12 +1460,7 @@ export async function exportMaintenanceReportSummaryCsv(
     headers: authHeaders(accessToken),
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new MaintainArrApiError(
-      body || `Maintenance report export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Maintenance report export failed')
   }
   return response.blob()
 }
@@ -1451,12 +1482,7 @@ export async function exportExecutiveReportSummaryCsv(accessToken: string): Prom
     headers: authHeaders(accessToken),
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new MaintainArrApiError(
-      body || `Executive report export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Executive report export failed')
   }
   return response.blob()
 }
@@ -1498,12 +1524,7 @@ export async function exportComplianceReportSummaryCsv(
     headers: authHeaders(accessToken),
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new MaintainArrApiError(
-      body || `Compliance report export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Compliance report export failed')
   }
   return response.blob()
 }
@@ -1553,8 +1574,7 @@ async function downloadExportBlob(
     headers: authHeaders(accessToken),
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new MaintainArrApiError(body || `${errorLabel} (${response.status})`, response.status, body)
+    throw await toApiError(response, errorLabel)
   }
   return response.blob()
 }

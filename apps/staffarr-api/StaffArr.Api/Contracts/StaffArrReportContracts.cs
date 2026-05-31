@@ -37,6 +37,32 @@ public sealed record ReadinessReportSummaryItem(
     decimal ReadyPercent,
     DateTimeOffset ComputedAt);
 
+public sealed record ReadinessReportAlertResponse(
+    string AlertType,
+    string Severity,
+    Guid PersonId,
+    string PersonDisplayName,
+    string Message,
+    DateTimeOffset DetectedAt);
+
+public sealed record CertificationReportSummaryResponse(
+    int TotalPeople,
+    int ActiveCertificationCount,
+    int ExpiringSoonCount,
+    int ExpiredCertificationCount,
+    int MissingCertificationCount,
+    IReadOnlyList<CertificationReportSummaryItem> RecentCertifications);
+
+public sealed record CertificationReportSummaryItem(
+    Guid PersonCertificationId,
+    Guid PersonId,
+    string PersonDisplayName,
+    string CertificationKey,
+    string CertificationName,
+    string Status,
+    DateTimeOffset GrantedAt,
+    DateTimeOffset? ExpiresAt);
+
 public sealed record IncidentReportSummaryResponse(
     int TotalIncidents,
     int OpenCount,

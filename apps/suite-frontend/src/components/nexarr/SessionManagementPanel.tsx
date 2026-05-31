@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { useAuth } from '../../auth/AuthProvider'
 import * as nexarr from '../../api/nexarrClient'
 import type { UserSessionSummary } from '../../api/types'
@@ -68,9 +69,11 @@ export function SessionManagementPanel() {
 
   if (sessionsQuery.isError) {
     return (
-      <p className="text-sm text-red-300" role="alert">
-        Failed to load sessions: {(sessionsQuery.error as Error).message}
-      </p>
+      <ApiErrorCallout
+        message={getErrorMessage(sessionsQuery.error, 'Failed to load sessions.')}
+        onRetry={() => void sessionsQuery.refetch()}
+        retryLabel="Retry sessions"
+      />
     )
   }
 

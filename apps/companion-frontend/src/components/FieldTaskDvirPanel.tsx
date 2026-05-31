@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { useState } from 'react'
 
 import { submitCompanionFieldDvir, validateCompanionFieldTask } from '../api/client'
@@ -164,11 +165,12 @@ export function FieldTaskDvirPanel({ accessToken, task, onSubmitComplete }: Fiel
       </button>
 
       {submitMutation.isError && (
-        <p className="mt-2 text-sm text-rose-400" data-testid="companion-dvir-error">
-          {submitMutation.error instanceof Error
-            ? submitMutation.error.message
-            : 'DVIR submission failed.'}
-        </p>
+        <ApiErrorCallout
+          className="mt-2"
+          testId="companion-dvir-error"
+          title="DVIR submission failed"
+          message={getErrorMessage(submitMutation.error, 'DVIR submission failed.')}
+        />
       )}
 
       {successMessage && (

@@ -1,4 +1,5 @@
 import { type FormEvent, useMemo, useState } from 'react'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type {
   ManagerChainEntryResponse,
   StaffPersonSummaryResponse,
@@ -11,10 +12,19 @@ interface ManagerHierarchyPanelProps {
   people: StaffPersonSummaryResponse[]
   managerChain: ManagerChainEntryResponse[]
   subordinates: SubordinateSummaryResponse[]
+  selectedSubordinateId?: string | null
   selectedSubordinate: SubordinateSummaryResponse | null
+  isLoading?: boolean
+  isError?: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
+  isLoadingSubordinateDetail?: boolean
+  isSubordinateDetailError?: boolean
+  subordinateDetailErrorMessage?: string | null
+  onRetrySubordinateDetail?: () => void
   canManage: boolean
   isSubmitting: boolean
-  errorMessage: string | null
+  actionErrorMessage: string | null
   onSelectSubordinate: (subordinatePersonId: string) => void
   onUpdateManager: (managerPersonId: string | null) => Promise<void>
 }
@@ -58,15 +68,24 @@ export function ManagerHierarchyPanel({
   people,
   managerChain,
   subordinates,
+  selectedSubordinateId = null,
   selectedSubordinate,
+  isLoading = false,
+  isError = false,
+  readErrorMessage = null,
+  onRetryRead,
+  isLoadingSubordinateDetail = false,
+  isSubordinateDetailError = false,
+  subordinateDetailErrorMessage = null,
+  onRetrySubordinateDetail,
   canManage,
   isSubmitting,
-  errorMessage,
+  actionErrorMessage,
   onSelectSubordinate,
   onUpdateManager,
 }: ManagerHierarchyPanelProps) {
   const [managerPersonId, setManagerPersonId] = useState<string>('')
-  const normalizedError = formatManagerMutationError(errorMessage)
+  const normalizedError = formatManagerMutationError(actionErrorMessage)
 
   const managerCandidates = useMemo(
     () =>
@@ -90,14 +109,30 @@ export function ManagerHierarchyPanel({
         </span>
       </div>
       <p className="mt-2 text-xs text-slate-500">Hierarchy workspace for {selectedPersonDisplayName}</p>
-      {normalizedError ? <p className="mt-3 text-sm text-red-300">{normalizedError}</p> : null}
+      {normalizedError ? (
+        <div className="mt-3">
+          <ApiErrorCallout title="Manager update failed" message={normalizedError} />
+        </div>
+      ) : null}
+      {isError ? (
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Manager hierarchy unavailable"
+            message={readErrorMessage ?? 'Failed to load manager chain and subordinate hierarchy.'}
+            onRetry={onRetryRead}
+            retryLabel="Retry hierarchy"
+          />
+        </div>
+      ) : null}
 
       <div className="mt-5 grid gap-6 lg:grid-cols-2">
         <div>
           <h3 className="text-sm font-medium text-slate-300">Manager chain</h3>
-          {managerChain.length === 0 ? (
+          {isLoading ? (
+            <p className="mt-3 text-sm text-slate-400">Loading manager chain…</p>
+          ) : !isError && managerChain.length === 0 ? (
             <p className="mt-3 text-sm text-slate-400">No manager assigned above this person.</p>
-          ) : (
+          ) : !isError ? (
             <ol className="mt-3 space-y-2 text-sm text-slate-200">
               {managerChain.map((entry) => (
                 <li key={entry.personId}>
@@ -106,14 +141,16 @@ export function ManagerHierarchyPanel({
                 </li>
               ))}
             </ol>
-          )}
+          ) : null}
         </div>
 
         <div>
           <h3 className="text-sm font-medium text-slate-300">Subordinates (tree view)</h3>
-          {subordinates.length === 0 ? (
+          {isLoading ? (
+            <p className="mt-3 text-sm text-slate-400">Loading subordinates…</p>
+          ) : !isError && subordinates.length === 0 ? (
             <p className="mt-3 text-sm text-slate-400">No subordinates found for this person.</p>
-          ) : (
+          ) : !isError ? (
             <ul className="mt-3 divide-y divide-slate-700 text-sm">
               {subordinates.map((subordinate) => (
                 <li key={subordinate.personId} className={`py-2 ${indentClass(subordinate.depth)}`}>
@@ -130,15 +167,28 @@ export function ManagerHierarchyPanel({
                 </li>
               ))}
             </ul>
-          )}
+          ) : null}
         </div>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <div>
           <h3 className="text-sm font-medium text-slate-300">Subordinate detail</h3>
-          {!selectedSubordinate ? (
+          {!selectedSubordinateId ? (
             <p className="mt-3 text-sm text-slate-400">Select a subordinate to view detail.</p>
+          ) : isLoadingSubordinateDetail ? (
+            <p className="mt-3 text-sm text-slate-400">Loading subordinate detail…</p>
+          ) : isSubordinateDetailError ? (
+            <div className="mt-3">
+              <ApiErrorCallout
+                title="Subordinate detail unavailable"
+                message={subordinateDetailErrorMessage ?? 'Failed to load subordinate detail.'}
+                onRetry={onRetrySubordinateDetail}
+                retryLabel="Retry subordinate detail"
+              />
+            </div>
+          ) : !selectedSubordinate ? (
+            <p className="mt-3 text-sm text-slate-400">Subordinate detail is unavailable.</p>
           ) : (
             <dl className="mt-3 grid gap-2 text-sm">
               <div className="flex justify-between gap-3">

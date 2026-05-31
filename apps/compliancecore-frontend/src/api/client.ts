@@ -130,6 +130,60 @@ export class ComplianceCoreApiError extends Error {
   }
 }
 
+type ProblemDetailsLike = {
+  title?: string
+  detail?: string
+  errors?: Record<string, string[] | string>
+}
+
+function extractProblemDetailsMessage(body: string): string | null {
+  if (!body.trim()) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(body) as ProblemDetailsLike
+    const parts: string[] = []
+
+    if (typeof parsed.title === 'string' && parsed.title.trim()) {
+      parts.push(parsed.title.trim())
+    }
+
+    if (typeof parsed.detail === 'string' && parsed.detail.trim()) {
+      parts.push(parsed.detail.trim())
+    }
+
+    const errorEntries = parsed.errors ? Object.entries(parsed.errors) : []
+    if (errorEntries.length > 0) {
+      const flattened = errorEntries
+        .flatMap(([field, value]) => {
+          const values = Array.isArray(value) ? value : [value]
+          return values
+            .map((message) => String(message).trim())
+            .filter(Boolean)
+            .map((message) => `${field}: ${message}`)
+        })
+      if (flattened.length > 0) {
+        parts.push(flattened.join('; '))
+      }
+    }
+
+    return parts.length > 0 ? parts.join(' - ') : null
+  } catch {
+    return null
+  }
+}
+
+async function toApiError(
+  response: Response,
+  fallbackMessage: string,
+): Promise<ComplianceCoreApiError> {
+  const body = await response.text()
+  const parsedMessage = extractProblemDetailsMessage(body)
+  const message = parsedMessage || body || `${fallbackMessage} (${response.status})`
+  return new ComplianceCoreApiError(message, response.status, body)
+}
+
 function authHeaders(accessToken: string): HeadersInit {
   return {
     Authorization: `Bearer ${accessToken}`,
@@ -139,8 +193,7 @@ function authHeaders(accessToken: string): HeadersInit {
 
 async function parseJsonResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
   if (!response.ok) {
-    const body = await response.text()
-    throw new ComplianceCoreApiError(body || `${fallbackMessage} (${response.status})`, response.status, body)
+    throw await toApiError(response, fallbackMessage)
   }
 
   return (await response.json()) as T
@@ -621,8 +674,7 @@ export async function exportCsvBundleZip(accessToken: string): Promise<Blob> {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new ComplianceCoreApiError(body || `Export failed (${response.status})`, response.status, body)
+    throw await toApiError(response, 'Export failed')
   }
   return response.blob()
 }
@@ -1008,12 +1060,7 @@ export async function exportAuditPackageZip(
     },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new ComplianceCoreApiError(
-      body || `Audit package export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Audit package export failed')
   }
   return response.blob()
 }
@@ -1084,12 +1131,7 @@ export async function downloadAuditPackageGenerationJob(
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new ComplianceCoreApiError(
-      body || `Audit package download failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Audit package download failed')
   }
   return response.blob()
 }
@@ -1577,8 +1619,7 @@ export async function exportFindingsReportSummaryCsv(
     { headers: { Authorization: `Bearer ${accessToken}` } },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new ComplianceCoreApiError(body || 'Failed to export findings report', response.status, body)
+    throw await toApiError(response, 'Failed to export findings report')
   }
   return response.blob()
 }
@@ -1612,8 +1653,7 @@ export async function exportOperatorReportSummaryCsv(
     { headers: { Authorization: `Bearer ${accessToken}` } },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new ComplianceCoreApiError(body || 'Failed to export operator report', response.status, body)
+    throw await toApiError(response, 'Failed to export operator report')
   }
   return response.blob()
 }
@@ -1642,8 +1682,7 @@ export async function exportBulkFindingsCsv(
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new ComplianceCoreApiError(body || 'Failed to export findings CSV', response.status, body)
+    throw await toApiError(response, 'Failed to export findings CSV')
   }
   return response.blob()
 }
@@ -1653,8 +1692,7 @@ export async function exportBulkEvaluationsCsv(accessToken: string): Promise<Blo
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new ComplianceCoreApiError(body || 'Failed to export evaluations CSV', response.status, body)
+    throw await toApiError(response, 'Failed to export evaluations CSV')
   }
   return response.blob()
 }
@@ -1664,12 +1702,7 @@ export async function exportBulkWorkflowGateChecksCsv(accessToken: string): Prom
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new ComplianceCoreApiError(
-      body || 'Failed to export workflow gate checks CSV',
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Failed to export workflow gate checks CSV')
   }
   return response.blob()
 }
@@ -1685,8 +1718,7 @@ export async function exportBulkRulePacksCsv(
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new ComplianceCoreApiError(body || 'Failed to export rule packs CSV', response.status, body)
+    throw await toApiError(response, 'Failed to export rule packs CSV')
   }
   return response.blob()
 }

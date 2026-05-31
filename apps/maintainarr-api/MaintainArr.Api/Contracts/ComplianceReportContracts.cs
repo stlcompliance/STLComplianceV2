@@ -50,6 +50,15 @@ public sealed record ComplianceReportAttentionItem(
     string IssueType,
     string Message);
 
+public sealed record ComplianceAlertResponse(
+    Guid AssetId,
+    string AssetTag,
+    string AssetName,
+    string? SiteRef,
+    string AlertType,
+    string Severity,
+    string Message);
+
 public sealed record ComplianceReportSummaryResponse(
     DateTimeOffset GeneratedAt,
     ComplianceReportInspectionTotals InspectionTotals,

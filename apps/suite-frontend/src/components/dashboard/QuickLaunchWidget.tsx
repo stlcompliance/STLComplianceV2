@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { useProductLaunch } from '../../hooks/useProductLaunch'
 import { buildQuickLaunchProducts } from '../../lib/dashboard'
 import { getProductIcon } from '../../lib/productIcons'
@@ -55,9 +56,11 @@ export function QuickLaunchWidget({
         })}
       </ul>
       {launch.isError && (
-        <p className="mt-2 text-xs text-red-300" role="alert">
-          {(launch.error as Error).message}
-        </p>
+        <ApiErrorCallout
+          className="mt-2 text-xs"
+          title="Unable to launch product"
+          message={getErrorMessage(launch.error, 'Failed to launch product.')}
+        />
       )}
     </DashboardCard>
   )

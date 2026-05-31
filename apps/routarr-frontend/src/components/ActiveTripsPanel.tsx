@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import { getActiveTrips } from '../api/client'
 import type { ActiveTripRow } from '../api/types'
@@ -188,7 +189,13 @@ export function ActiveTripsPanel({ accessToken, scope }: Props) {
   }
 
   if (query.isError) {
-    return <p className="text-sm text-red-300">{(query.error as Error).message}</p>
+    return (
+      <ApiErrorCallout
+        message={getErrorMessage(query.error, 'Failed to load active trips.')}
+        onRetry={() => void query.refetch()}
+        retryLabel="Retry active trips"
+      />
+    )
   }
 
   const data = query.data!

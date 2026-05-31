@@ -43,5 +43,6 @@ describe('AssetBulkImportPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Validate$/i }))
 
     expect(screen.getByText(/header must include assettypekey/i)).toBeTruthy()
+    expect(screen.getByRole('alert')).toBeTruthy()
   })
 })

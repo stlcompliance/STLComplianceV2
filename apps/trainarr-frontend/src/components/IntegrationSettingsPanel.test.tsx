@@ -66,4 +66,14 @@ describe('IntegrationSettingsPanel', () => {
       expect(screen.getByText(/StaffArr · reachable/)).toBeTruthy()
     })
   })
+
+  it('shows retry callout when settings fail', async () => {
+    vi.mocked(client.getIntegrationSettings).mockRejectedValue(new Error('settings down'))
+    vi.mocked(client.getIntegrationProbes).mockResolvedValue({ probedAt: null, items: [] })
+
+    renderPanel()
+
+    expect(await screen.findByText('Integration settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
 })

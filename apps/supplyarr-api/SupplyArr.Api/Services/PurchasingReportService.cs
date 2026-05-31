@@ -149,7 +149,7 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             receivingReceipts.Count(x =>
                 string.Equals(x.Status, ReceivingReceiptStatuses.Draft, StringComparison.OrdinalIgnoreCase)),
             receivingReceipts.Count(x =>
-                string.Equals(x.Status, ReceivingReceiptStatuses.Posted, StringComparison.OrdinalIgnoreCase)),
+                ReceivingReceiptStatuses.IsPostedLike(x.Status)),
             backorders.Count(x =>
                 string.Equals(x.Status, BackorderStatuses.Open, StringComparison.OrdinalIgnoreCase)),
             purchaseOrders

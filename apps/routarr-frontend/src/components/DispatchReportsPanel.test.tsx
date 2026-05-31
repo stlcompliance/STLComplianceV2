@@ -1,8 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, afterEach } from 'vitest'
+import { cleanup, fireEvent } from '@testing-library/react'
 
 import { DispatchReportsPanel } from './DispatchReportsPanel'
+import * as client from '../api/client'
 
 vi.mock('../api/client', () => ({
   getDispatchReportSummary: vi.fn().mockResolvedValue({
@@ -55,6 +57,11 @@ vi.mock('../api/client', () => ({
 }))
 
 describe('DispatchReportsPanel', () => {
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
   it('renders dispatch report summary rows', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
@@ -77,5 +84,19 @@ describe('DispatchReportsPanel', () => {
     )
 
     expect(container.firstChild).toBeNull()
+  })
+
+  it('shows export failure callout', async () => {
+    vi.mocked(client.exportDispatchReportSummaryCsv).mockRejectedValue(new Error('export down'))
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={qc}>
+        <DispatchReportsPanel accessToken="token" canRead={true} canExport={true} />
+      </QueryClientProvider>,
+    )
+
+    await screen.findByTestId('dispatch-reports-panel')
+    fireEvent.click(screen.getByRole('button', { name: /Export CSV/i }))
+    expect(await screen.findByText('CSV export failed')).toBeInTheDocument()
   })
 })

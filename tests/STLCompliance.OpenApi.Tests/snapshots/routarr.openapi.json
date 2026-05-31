@@ -2964,6 +2964,40 @@
         }
       }
     },
+    "/api/reports/dispatch/alerts": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportAlerts",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reports/dispatch/exceptions/{exceptionId}": {
       "get": {
         "tags": [
@@ -5528,6 +5562,40 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/dispatch/alerts": {
+      "get": {
+        "tags": [
+          "DispatchReports"
+        ],
+        "operationId": "GetRoutArrDispatchReportAlertsV1",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
             }
           }
         ],

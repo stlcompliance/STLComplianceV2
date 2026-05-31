@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import * as client from '../api/client'
 import { deleteDriverAvailability, updateDriverAvailability } from '../api/client'
 import { DriverAvailabilityPanel } from './DriverAvailabilityPanel'
 
@@ -143,5 +144,27 @@ describe('DriverAvailabilityPanel', () => {
         '44444444-4444-4444-4444-444444444444',
       )
     })
+  })
+
+  it('renders retryable error callout when panel query fails', async () => {
+    vi.mocked(client.getDriverAvailabilityPanel).mockRejectedValueOnce(
+      new Error('driver availability unavailable'),
+    )
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <DriverAvailabilityPanel
+          accessToken="token"
+          scope="daily"
+          onScopeChange={vi.fn()}
+          canManage={false}
+          sessionPersonId="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('driver availability unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry driver availability' })).toBeInTheDocument()
   })
 })

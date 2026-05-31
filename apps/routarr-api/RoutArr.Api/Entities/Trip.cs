@@ -50,6 +50,8 @@ public sealed class Trip : IHasTenant
     public ICollection<TripPartsDemandLine> PartsDemandLines { get; set; } = [];
 
     public ICollection<DispatchMessage> DispatchMessages { get; set; } = [];
+
+    public TripDispatchReleaseSnapshot? DispatchReleaseSnapshot { get; set; }
 }
 
 public static class TripDispatchStatuses

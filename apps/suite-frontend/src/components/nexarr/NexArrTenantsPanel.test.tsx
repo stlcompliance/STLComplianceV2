@@ -123,7 +123,8 @@ describe('NexArrTenantsPanel', () => {
     renderPanel()
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Platform admin access required')
+      expect(screen.getByText('Platform admin access required')).toBeInTheDocument()
     })
+    expect(screen.getByRole('button', { name: 'Retry tenants' })).toBeInTheDocument()
   })
 })

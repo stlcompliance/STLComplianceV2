@@ -43,4 +43,18 @@ describe('ProcurementCoordinationSettingsPanel', () => {
 
     expect(container).toBeEmptyDOMElement()
   })
+
+  it('shows retry callout when settings fail to load', async () => {
+    const { getProcurementCoordinationSettings } = await import('../api/client')
+    vi.mocked(getProcurementCoordinationSettings).mockRejectedValueOnce(new Error('settings down'))
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <ProcurementCoordinationSettingsPanel accessToken="token" canManage={true} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Coordination settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
 })

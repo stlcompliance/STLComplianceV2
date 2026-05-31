@@ -26,9 +26,13 @@ describe('RoleTemplateAssignmentPanel', () => {
         permissionTemplates={[]}
         roleTemplates={[]}
         roleAssignments={[]}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
         canManage={false}
         isSubmitting={false}
-        errorMessage={null}
+        actionErrorMessage={null}
         onUpsertPermissionTemplate={vi.fn(async () => {})}
         onCreateRoleTemplate={vi.fn(async () => {})}
         onUpdateRoleTemplateStatus={vi.fn(async () => {})}
@@ -52,9 +56,13 @@ describe('RoleTemplateAssignmentPanel', () => {
         permissionTemplates={[]}
         roleTemplates={[]}
         roleAssignments={[]}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
         canManage
         isSubmitting={false}
-        errorMessage={null}
+        actionErrorMessage={null}
         onUpsertPermissionTemplate={onUpsert}
         onCreateRoleTemplate={vi.fn(async () => {})}
         onUpdateRoleTemplateStatus={vi.fn(async () => {})}
@@ -79,5 +87,63 @@ describe('RoleTemplateAssignmentPanel', () => {
     expect(formatRoleTemplateMutationError('{"status":403}')).toContain('Forbidden:')
     expect(formatRoleTemplateMutationError('{"status":409}')).toContain('Conflict:')
     expect(formatRoleTemplateMutationError('{"status":400}')).toContain('Validation:')
+  })
+
+  it('renders role template error in callout', () => {
+    render(
+      <RoleTemplateAssignmentPanel
+        personId="person-1"
+        personDisplayName="Alex"
+        orgUnits={orgUnits}
+        permissionTemplates={[]}
+        roleTemplates={[]}
+        roleAssignments={[]}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage="template failed"
+        onUpsertPermissionTemplate={vi.fn(async () => {})}
+        onCreateRoleTemplate={vi.fn(async () => {})}
+        onUpdateRoleTemplateStatus={vi.fn(async () => {})}
+        onCreateRoleAssignment={vi.fn(async () => {})}
+        onUpdateRoleAssignmentStatus={vi.fn(async () => {})}
+      />,
+    )
+
+    expect(screen.getByText('template failed')).toBeTruthy()
+    expect(screen.getByRole('alert')).toBeTruthy()
+  })
+
+  it('renders retryable read error callout', () => {
+    const onRetryRead = vi.fn()
+    render(
+      <RoleTemplateAssignmentPanel
+        personId="person-1"
+        personDisplayName="Alex"
+        orgUnits={orgUnits}
+        permissionTemplates={[]}
+        roleTemplates={[]}
+        roleAssignments={[]}
+        isLoading={false}
+        isError
+        readErrorMessage="permissions data read failed"
+        onRetryRead={onRetryRead}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage={null}
+        onUpsertPermissionTemplate={vi.fn(async () => {})}
+        onCreateRoleTemplate={vi.fn(async () => {})}
+        onUpdateRoleTemplateStatus={vi.fn(async () => {})}
+        onCreateRoleAssignment={vi.fn(async () => {})}
+        onUpdateRoleAssignmentStatus={vi.fn(async () => {})}
+      />,
+    )
+
+    expect(screen.getByText('Role and permission data unavailable')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry permissions data' }))
+    expect(onRetryRead).toHaveBeenCalledTimes(1)
   })
 })

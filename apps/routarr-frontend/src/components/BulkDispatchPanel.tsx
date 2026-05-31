@@ -1,6 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { AdvancedReferenceField, ControlledSelect, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import {
+  AdvancedReferenceField,
+  ApiErrorCallout,
+  ControlledSelect,
+  StaticSearchPicker,
+  getErrorMessage,
+  type PickerOption,
+} from '@stl/shared-ui'
 
 import { applyBulkDispatch, listDrivers, listVehicleRefs, getTrips, previewBulkDispatch } from '../api/client'
 import type { BulkDispatchItemPreview, TripSummaryResponse } from '../api/types'
@@ -38,6 +45,7 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
   const [dispatchStatus, setDispatchStatus] = useState('')
   const [previewItems, setPreviewItems] = useState<BulkDispatchItemPreview[] | null>(null)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const tripsQuery = useQuery({
     queryKey: ['routarr-trips-bulk', accessToken],
@@ -93,13 +101,14 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
       return previewBulkDispatch(accessToken, { items })
     },
     onSuccess: (response) => {
+      setActionError(null)
       setPreviewItems(response.items)
       setStatusMessage(
         `Preview: ${response.summary.canApplyCount}/${response.summary.total} trips ready to apply.`,
       )
     },
     onError: (error: Error) => {
-      setStatusMessage(error.message)
+      setActionError(getErrorMessage(error, 'Preview failed.'))
       setPreviewItems(null)
     },
   })
@@ -120,6 +129,7 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
       return applyBulkDispatch(accessToken, { items, ...ignoreFlags })
     },
     onSuccess: async (response) => {
+      setActionError(null)
       await queryClient.invalidateQueries({ queryKey: ['routarr-trips'] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-trips-bulk'] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-trips-assignment'] })
@@ -130,7 +140,7 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
       setPreviewItems(null)
     },
     onError: (error: Error) => {
-      setStatusMessage(error.message)
+      setActionError(getErrorMessage(error, 'Bulk apply failed.'))
     },
   })
 
@@ -158,15 +168,21 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
 
   async function handlePreview() {
     if (!canAssign || selectedTripIds.size === 0) return
+    setActionError(null)
     if (!hasBulkAction(driverPersonId, vehicleRefKey, dispatchStatus)) {
       setStatusMessage('Enter a driver, vehicle, or status to apply to selected trips.')
       return
     }
-    await previewMutation.mutateAsync()
+    try {
+      await previewMutation.mutateAsync()
+    } catch {
+      // Error callout is handled by mutation onError.
+    }
   }
 
   async function handleApply() {
     if (!canAssign || selectedTripIds.size === 0) return
+    setActionError(null)
     if (!hasBulkAction(driverPersonId, vehicleRefKey, dispatchStatus)) {
       setStatusMessage('Enter a driver, vehicle, or status to apply to selected trips.')
       return
@@ -176,8 +192,13 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
       ? buildBulkDispatchPreviewResponse(previewItems)
       : null
 
-    if (!previewResponse) {
-      previewResponse = await previewMutation.mutateAsync()
+    try {
+      if (!previewResponse) {
+        previewResponse = await previewMutation.mutateAsync()
+      }
+    } catch {
+      // Error callout is handled by mutation onError.
+      return
     }
 
     const ignoreFlags = confirmBulkDispatchPreview(previewResponse, (message) =>
@@ -212,6 +233,11 @@ export function BulkDispatchPanel({ accessToken, canAssign }: BulkDispatchPanelP
           <p className="mt-3 text-sm text-amber-200" data-testid="bulk-dispatch-status">
             {statusMessage}
           </p>
+        ) : null}
+        {actionError ? (
+          <div className="mt-3" data-testid="bulk-dispatch-error">
+            <ApiErrorCallout title="Bulk dispatch failed" message={actionError} />
+          </div>
         ) : null}
       </div>
 

@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import * as client from '../api/client'
 import { NotificationSettingsPanel } from './NotificationSettingsPanel'
 
 vi.mock('../api/client', () => ({
@@ -43,5 +44,21 @@ describe('NotificationSettingsPanel', () => {
     )
 
     expect(container).toBeEmptyDOMElement()
+  })
+
+  it('shows retryable settings error callout when settings load fails', async () => {
+    vi.mocked(client.getCompanionNotificationSettings).mockRejectedValueOnce(
+      new Error('settings unavailable'),
+    )
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <NotificationSettingsPanel accessToken="token" canManage={true} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
   })
 })

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getCompanionFieldWorkOrderDetail,
@@ -168,12 +169,14 @@ export function FieldTaskWorkOrderPanel({
   if (detailQuery.isError) {
     return (
       <div
-        className="mt-4 rounded-lg border border-rose-900/50 bg-rose-950/20 p-4 text-sm text-rose-300"
+        className="mt-4"
         data-testid="companion-field-work-order-panel"
       >
-        {detailQuery.error instanceof Error
-          ? detailQuery.error.message
-          : 'Failed to load work order detail.'}
+        <ApiErrorCallout
+          message={getErrorMessage(detailQuery.error, 'Failed to load work order detail.')}
+          onRetry={() => void detailQuery.refetch()}
+          retryLabel="Retry work order detail"
+        />
       </div>
     )
   }
@@ -314,11 +317,12 @@ export function FieldTaskWorkOrderPanel({
       </div>
 
       {(statusMutation.isError || laborMutation.isError) && (
-        <p className="mt-2 text-sm text-rose-400" data-testid="companion-work-order-error">
-          {(statusMutation.error ?? laborMutation.error) instanceof Error
-            ? (statusMutation.error ?? laborMutation.error)?.message
-            : 'Work order update failed.'}
-        </p>
+        <ApiErrorCallout
+          className="mt-2"
+          testId="companion-work-order-error"
+          title="Work order update failed"
+          message={getErrorMessage(statusMutation.error ?? laborMutation.error, 'Work order update failed.')}
+        />
       )}
 
       {successMessage && (

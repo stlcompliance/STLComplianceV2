@@ -61,6 +61,45 @@ public static class DocumentEndpoints
         })
         .WithName("ListMaintainArrDocumentsV1");
 
+        docs.MapGet("/alerts", async (
+            string? targetType,
+            Guid? assetId,
+            int? limit,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            DocumentAlertService alertService,
+            CancellationToken cancellationToken) =>
+        {
+            var resolvedTargetType = string.IsNullOrWhiteSpace(targetType)
+                ? "all"
+                : targetType.Trim().ToLowerInvariant();
+
+            if (resolvedTargetType is "all" or "defect")
+            {
+                authorization.RequireDefectsRead(context.User);
+            }
+
+            if (resolvedTargetType is "all" or "inspection_run")
+            {
+                authorization.RequireInspectionsRead(context.User);
+            }
+
+            if (resolvedTargetType is "all" or "work_order")
+            {
+                authorization.RequireWorkOrdersRead(context.User);
+            }
+
+            var tenantId = context.User.GetTenantId();
+            var alerts = await alertService.ListMissingAlertsAsync(
+                tenantId,
+                resolvedTargetType,
+                assetId,
+                limit ?? 100,
+                cancellationToken);
+            return Results.Ok(alerts);
+        })
+        .WithName("ListMaintainArrDocumentAlertsV1");
+
         docs.MapPost("/", async (
             CreateMaintainArrDocumentRequest request,
             HttpContext context,

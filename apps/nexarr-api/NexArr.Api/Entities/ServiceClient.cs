@@ -12,7 +12,13 @@ public sealed class ServiceClient
 
     public string AllowedProductKeys { get; set; } = string.Empty;
 
+    public string AllowedTenantIds { get; set; } = string.Empty;
+
     public bool IsActive { get; set; } = true;
+
+    public DateTimeOffset? LastUsedAt { get; set; }
+
+    public int FailedAuthenticationAttempts { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
 

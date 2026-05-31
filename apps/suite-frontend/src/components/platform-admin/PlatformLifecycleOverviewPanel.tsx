@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 
 export function PlatformLifecycleOverviewPanel() {
@@ -14,9 +15,11 @@ export function PlatformLifecycleOverviewPanel() {
 
   if (overviewQuery.isError) {
     return (
-      <p className="text-sm text-red-700" role="alert">
-        Failed to load overview: {(overviewQuery.error as Error).message}
-      </p>
+      <ApiErrorCallout
+        message={getErrorMessage(overviewQuery.error, 'Failed to load platform lifecycle overview.')}
+        onRetry={() => void overviewQuery.refetch()}
+        retryLabel="Retry overview"
+      />
     )
   }
 

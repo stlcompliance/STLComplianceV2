@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { SupplierOnboardingPanel } from './SupplierOnboardingPanel'
+import * as clientApi from '../api/client'
 
 vi.mock('../api/client', () => ({
   getSupplierOnboardingDocumentRequirements: vi.fn().mockResolvedValue({
@@ -21,6 +22,11 @@ vi.mock('../api/client', () => ({
 }))
 
 describe('SupplierOnboardingPanel', () => {
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
   it('renders when user can manage onboarding', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
@@ -64,5 +70,42 @@ describe('SupplierOnboardingPanel', () => {
       </QueryClientProvider>,
     )
     expect(container).toBeEmptyDOMElement()
+  })
+
+  it('shows action error callout when start onboarding fails', async () => {
+    vi.mocked(clientApi.startSupplierOnboarding).mockRejectedValueOnce(new Error('start failed'))
+
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <SupplierOnboardingPanel
+          accessToken="token"
+          canManage={true}
+          canReview={true}
+          onboardableParties={[
+            {
+              partyId: 'p1',
+              partyKey: 'V-1',
+              partyType: 'vendor',
+              displayName: 'Vendor One',
+              legalName: '',
+              taxIdentifier: null,
+              approvalStatus: 'pending',
+              status: 'active',
+              notes: '',
+              contacts: [],
+              createdAt: '',
+              updatedAt: '',
+            },
+          ]}
+        />
+      </QueryClientProvider>,
+    )
+
+    fireEvent.change(await screen.findByLabelText('Onboarding party'), { target: { value: 'p1' } })
+    fireEvent.click(screen.getByRole('button', { name: /Start onboarding|Restart \/ start draft/ }))
+
+    expect(await screen.findByText('start failed')).toBeInTheDocument()
+    expect(screen.getByTestId('supplier-onboarding-action-error')).toBeInTheDocument()
   })
 })

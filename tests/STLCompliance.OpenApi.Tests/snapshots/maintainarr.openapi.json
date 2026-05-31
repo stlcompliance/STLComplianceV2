@@ -3530,6 +3530,45 @@
         }
       }
     },
+    "/api/meters/alerts": {
+      "get": {
+        "tags": [
+          "Meters"
+        ],
+        "operationId": "ListMeterMissingReadingAlerts",
+        "parameters": [
+          {
+            "name": "staleAfterDays",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/meters/{assetMeterId}": {
       "get": {
         "tags": [
@@ -4199,6 +4238,40 @@
           "Reports"
         ],
         "operationId": "ListMaintainArrReportsIndex",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/alerts": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ListMaintainArrComplianceReportAlerts",
+        "parameters": [
+          {
+            "name": "siteRef",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -5917,6 +5990,48 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/documents/alerts": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "operationId": "ListMaintainArrDocumentAlertsV1",
+        "parameters": [
+          {
+            "name": "targetType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assetId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -7654,6 +7769,45 @@
         }
       }
     },
+    "/api/v1/meters/alerts": {
+      "get": {
+        "tags": [
+          "Meters"
+        ],
+        "operationId": "ListMeterMissingReadingAlertsV1",
+        "parameters": [
+          {
+            "name": "staleAfterDays",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/meters/{assetMeterId}": {
       "get": {
         "tags": [
@@ -8578,6 +8732,40 @@
           "Reports"
         ],
         "operationId": "ListMaintainArrReportsIndexV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/compliance/alerts": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ListMaintainArrComplianceReportAlertsV1",
+        "parameters": [
+          {
+            "name": "siteRef",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"

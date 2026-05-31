@@ -102,6 +102,57 @@ export class StaffArrApiError extends Error {
   }
 }
 
+type ProblemDetailsLike = {
+  title?: string
+  detail?: string
+  errors?: Record<string, string[] | string>
+}
+
+function extractProblemDetailsMessage(body: string): string | null {
+  if (!body.trim()) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(body) as ProblemDetailsLike
+    const parts: string[] = []
+
+    if (typeof parsed.title === 'string' && parsed.title.trim()) {
+      parts.push(parsed.title.trim())
+    }
+
+    if (typeof parsed.detail === 'string' && parsed.detail.trim()) {
+      parts.push(parsed.detail.trim())
+    }
+
+    const errorEntries = parsed.errors ? Object.entries(parsed.errors) : []
+    if (errorEntries.length > 0) {
+      const flattened = errorEntries
+        .flatMap(([field, value]) => {
+          const values = Array.isArray(value) ? value : [value]
+          return values
+            .map((message) => String(message).trim())
+            .filter(Boolean)
+            .map((message) => `${field}: ${message}`)
+        })
+      if (flattened.length > 0) {
+        parts.push(flattened.join('; '))
+      }
+    }
+
+    return parts.length > 0 ? parts.join(' - ') : null
+  } catch {
+    return null
+  }
+}
+
+async function toApiError(response: Response, fallbackMessage: string): Promise<StaffArrApiError> {
+  const body = await response.text()
+  const parsedMessage = extractProblemDetailsMessage(body)
+  const message = parsedMessage || body || `${fallbackMessage} (${response.status})`
+  return new StaffArrApiError(message, response.status, body)
+}
+
 function authHeaders(accessToken: string): HeadersInit {
   return {
     Authorization: `Bearer ${accessToken}`,
@@ -111,8 +162,7 @@ function authHeaders(accessToken: string): HeadersInit {
 
 async function parseJsonResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
   if (!response.ok) {
-    const body = await response.text()
-    throw new StaffArrApiError(body || `${fallbackMessage} (${response.status})`, response.status, body)
+    throw await toApiError(response, fallbackMessage)
   }
 
   return (await response.json()) as T
@@ -354,8 +404,7 @@ export async function exportPeopleCsv(accessToken: string, filters?: PersonExpor
     { headers: authHeaders(accessToken) },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new StaffArrApiError('Failed to export people CSV', response.status, body)
+    throw await toApiError(response, 'Failed to export people CSV')
   }
   return response.text()
 }
@@ -365,8 +414,7 @@ export async function exportPeopleZip(accessToken: string, filters?: PersonExpor
     headers: authHeaders(accessToken),
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new StaffArrApiError('Failed to export people ZIP', response.status, body)
+    throw await toApiError(response, 'Failed to export people ZIP')
   }
   return response.blob()
 }
@@ -1267,12 +1315,7 @@ export async function exportAuditPackageCsv(
     { headers: { Authorization: `Bearer ${accessToken}` } },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new StaffArrApiError(
-      body || `Audit events CSV export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Audit events CSV export failed')
   }
   return response.blob()
 }
@@ -1288,12 +1331,7 @@ export async function exportAuditPackageZip(
     },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new StaffArrApiError(
-      body || `Audit package export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Audit package export failed')
   }
   return response.blob()
 }
@@ -1350,12 +1388,7 @@ export async function downloadAuditPackageGenerationJob(
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new StaffArrApiError(
-      body || `Audit package download failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Audit package download failed')
   }
   return response.blob()
 }
@@ -1399,12 +1432,7 @@ export async function exportPersonnelReportSummaryCsv(
     { headers: authHeaders(accessToken) },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new StaffArrApiError(
-      body || `Personnel report export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Personnel report export failed')
   }
   return response.blob()
 }
@@ -1438,12 +1466,7 @@ export async function exportReadinessReportSummaryCsv(
     { headers: authHeaders(accessToken) },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new StaffArrApiError(
-      body || `Readiness report export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Readiness report export failed')
   }
   return response.blob()
 }
@@ -1479,12 +1502,7 @@ export async function exportIncidentReportSummaryCsv(
     { headers: authHeaders(accessToken) },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new StaffArrApiError(
-      body || `Incident report export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Incident report export failed')
   }
   return response.blob()
 }
@@ -1512,12 +1530,7 @@ export async function exportBulkPeopleCsv(
     { headers: authHeaders(accessToken) },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new StaffArrApiError(
-      body || `People bulk export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'People bulk export failed')
   }
   return response.blob()
 }
@@ -1533,12 +1546,7 @@ export async function exportBulkPersonnelIncidentsCsv(
     { headers: authHeaders(accessToken) },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new StaffArrApiError(
-      body || `Personnel incidents bulk export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Personnel incidents bulk export failed')
   }
   return response.blob()
 }
@@ -1554,12 +1562,7 @@ export async function exportBulkPersonCertificationsCsv(
     { headers: authHeaders(accessToken) },
   )
   if (!response.ok) {
-    const body = await response.text()
-    throw new StaffArrApiError(
-      body || `Person certifications export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Person certifications export failed')
   }
   return response.blob()
 }

@@ -1,3 +1,4 @@
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type { PersonLookupResponse } from '../api/types'
 
 interface PersonLookupPanelProps {
@@ -5,6 +6,9 @@ interface PersonLookupPanelProps {
   personDisplayName: string
   lookup: PersonLookupResponse | null
   isLoading: boolean
+  isError?: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
 }
 
 export function PersonLookupPanel({
@@ -12,6 +16,9 @@ export function PersonLookupPanel({
   personDisplayName,
   lookup,
   isLoading,
+  isError = false,
+  readErrorMessage = null,
+  onRetryRead,
 }: PersonLookupPanelProps) {
   return (
     <section
@@ -32,8 +39,22 @@ export function PersonLookupPanel({
 
       {isLoading ? (
         <p className="mt-4 text-sm text-slate-400">Loading person lookup…</p>
+      ) : isError ? (
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="Person lookup unavailable"
+            message={readErrorMessage ?? 'Failed to load person identity and placement details.'}
+            onRetry={onRetryRead}
+            retryLabel="Retry person lookup"
+          />
+        </div>
       ) : !lookup ? (
-        <p className="mt-4 text-sm text-slate-400">Person lookup is unavailable.</p>
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="Person lookup unavailable"
+            message="Person lookup is not available for this profile yet."
+          />
+        </div>
       ) : (
         <div className="mt-4 space-y-5">
           <dl className="grid gap-3 text-sm md:grid-cols-2">

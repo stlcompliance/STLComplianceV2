@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ControlledSelect } from '@stl/shared-ui'
+import { ApiErrorCallout, ControlledSelect, getErrorMessage } from '@stl/shared-ui'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import {
@@ -310,7 +310,12 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
         {timelineQuery.isLoading ? (
           <p className="mt-3 text-sm text-slate-500">Loading audit timeline…</p>
         ) : timelineQuery.isError ? (
-          <p className="mt-3 text-sm text-rose-400">Failed to load audit timeline.</p>
+          <ApiErrorCallout
+            className="mt-3"
+            message={getErrorMessage(timelineQuery.error, 'Failed to load audit timeline.')}
+            onRetry={() => void timelineQuery.refetch()}
+            retryLabel="Retry timeline"
+          />
         ) : timelineQuery.data && timelineQuery.data.items.length === 0 ? (
           <p className="mt-3 text-sm text-slate-500">No audit events match these filters.</p>
         ) : timelineQuery.data ? (
@@ -402,9 +407,29 @@ export function AuditPackageExportPanel({ accessToken, canRead, canExport }: Aud
             <span className="font-medium text-slate-100">{jobStatus.status}</span>
           </p>
           {jobStatus.errorMessage ? (
-            <p className="mt-2 text-rose-400">{jobStatus.errorMessage}</p>
+            <div className="mt-2">
+              <ApiErrorCallout title="Background export failed" message={jobStatus.errorMessage} />
+            </div>
           ) : null}
         </div>
+      ) : null}
+
+      {(zipExportMutation.isError
+        || csvExportMutation.isError
+        || jsonFileMutation.isError
+        || backgroundZipMutation.isError
+        || jsonExportMutation.isError) ? (
+        <ApiErrorCallout
+          title="Audit export failed"
+          message={getErrorMessage(
+            zipExportMutation.error
+              ?? csvExportMutation.error
+              ?? jsonFileMutation.error
+              ?? backgroundZipMutation.error
+              ?? jsonExportMutation.error,
+            'Export failed. Review filters and try again.',
+          )}
+        />
       ) : null}
 
       {lastJsonExport ? (

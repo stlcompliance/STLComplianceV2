@@ -67,4 +67,18 @@ describe('DemandProcessingPanel', () => {
     )
     expect(container.firstChild).toBeNull()
   })
+
+  it('shows retry callout when dashboard fails', async () => {
+    const { getDemandProcessingDashboard } = await import('../api/client')
+    vi.mocked(getDemandProcessingDashboard).mockRejectedValueOnce(new Error('dashboard down'))
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={qc}>
+        <DemandProcessingPanel accessToken="token" canRead={true} canOperate={true} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Demand processing unavailable')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Retry dashboard' })).toBeTruthy()
+  })
 })

@@ -228,7 +228,7 @@ public sealed class ComplianceCoreFactPublisherService(
         }
 
         var scopeKey = ScopeForReceivingReceipt(entity.Id);
-        var posted = string.Equals(entity.Status, ReceivingReceiptStatuses.Posted, StringComparison.OrdinalIgnoreCase);
+        var posted = ReceivingReceiptStatuses.IsPostedLike(entity.Status);
         return
         [
             BooleanFact(

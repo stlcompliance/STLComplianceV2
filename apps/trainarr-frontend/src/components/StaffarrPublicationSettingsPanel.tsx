@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getStaffarrPublicationDeliveries,
@@ -68,7 +69,16 @@ export function StaffarrPublicationSettingsPanel({ accessToken, canManage }: Sta
       </p>
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-destructive">Failed to load StaffArr publication settings.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Publication settings unavailable"
+            message={getErrorMessage(settingsQuery.error, 'Failed to load StaffArr publication settings.')}
+            retryLabel="Retry settings"
+            onRetry={() => {
+              void settingsQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       <div className="mt-4 space-y-3">
@@ -120,13 +130,26 @@ export function StaffarrPublicationSettingsPanel({ accessToken, canManage }: Sta
         >
           {saveMutation.isPending ? 'Saving…' : 'Save settings'}
         </button>
+        {saveMutation.isError && (
+          <ApiErrorCallout
+            title="Save failed"
+            message={getErrorMessage(saveMutation.error, 'Failed to save StaffArr publication settings.')}
+          />
+        )}
       </div>
 
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-foreground">Recent deliveries</h3>
         {deliveriesQuery.isLoading && <p className="mt-2 text-sm text-muted-foreground">Loading deliveries…</p>}
         {deliveriesQuery.isError && (
-          <p className="mt-2 text-sm text-destructive">Failed to load recent StaffArr publication deliveries.</p>
+          <ApiErrorCallout
+            title="Publication deliveries unavailable"
+            message={getErrorMessage(deliveriesQuery.error, 'Failed to load recent StaffArr publication deliveries.')}
+            retryLabel="Retry deliveries"
+            onRetry={() => {
+              void deliveriesQuery.refetch()
+            }}
+          />
         )}
         {deliveriesQuery.data && deliveriesQuery.data.items.length === 0 && (
           <p className="mt-2 text-sm text-muted-foreground" data-testid="staffarr-publication-deliveries-empty">

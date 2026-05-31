@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 import { useState } from 'react'
 
 import { getPersonTrainingHistory } from '../api/client'
@@ -53,7 +53,16 @@ export function PersonTrainingHistoryPanel({
       )}
 
       {historyQuery.isError && (
-        <p className="mt-3 text-sm text-destructive">Failed to load person training history.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Training history unavailable"
+            message={getErrorMessage(historyQuery.error, 'Failed to load person training history.')}
+            retryLabel="Retry history"
+            onRetry={() => {
+              void historyQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       {historyQuery.data && historyQuery.data.items.length === 0 && (

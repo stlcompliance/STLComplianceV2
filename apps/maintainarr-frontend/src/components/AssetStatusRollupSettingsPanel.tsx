@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getAssetStatusRollupRuns,
@@ -89,7 +90,16 @@ export function AssetStatusRollupSettingsPanel({
       </p>
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-destructive">Failed to load asset status rollup settings.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Rollup settings unavailable"
+            message={getErrorMessage(settingsQuery.error, 'Failed to load asset status rollup settings.')}
+            retryLabel="Retry settings"
+            onRetry={() => {
+              void settingsQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       <div className="mt-4 space-y-3">
@@ -125,7 +135,10 @@ export function AssetStatusRollupSettingsPanel({
         </button>
 
         {saveMutation.isError && (
-          <p className="text-sm text-destructive">Failed to save asset status rollup settings.</p>
+          <ApiErrorCallout
+            title="Save failed"
+            message={getErrorMessage(saveMutation.error, 'Failed to save asset status rollup settings.')}
+          />
         )}
       </div>
 

@@ -40,5 +40,6 @@ describe('PersonBulkImportPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: /Validate import/i }))
 
     expect(screen.getByText(/header must include primaryemail/i)).toBeTruthy()
+    expect(screen.getByRole('alert')).toBeTruthy()
   })
 })

@@ -292,4 +292,17 @@ describe('TripProofDvirReadPanel', () => {
       ),
     )
   })
+
+  it('shows retryable error callout when execution summary query fails', async () => {
+    vi.mocked(client.getTripExecutionSummary).mockRejectedValueOnce(
+      new Error('execution summary unavailable'),
+    )
+
+    renderPanel()
+    await selectTripFromPicker()
+    fireEvent.click(screen.getByRole('button', { name: 'Load execution' }))
+
+    expect(await screen.findByText('execution summary unavailable')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Retry execution summary' })).toBeTruthy()
+  })
 })

@@ -224,7 +224,7 @@ public sealed class RoutArrTripTests : IAsyncLifetime
         var dispatchResponse = await _routarrClient.SendAsync(dispatchRequest);
         Assert.Equal(HttpStatusCode.Conflict, dispatchResponse.StatusCode);
 
-        Assert.Equal(4, _trainarrQualificationHandler.Requests.Count);
+        Assert.Equal(3, _trainarrQualificationHandler.Requests.Count);
         var dispatchCheck = _trainarrQualificationHandler.Requests[^1];
         Assert.Equal("/api/integrations/routarr-qualification-check", dispatchCheck.Path);
         Assert.Equal("Bearer", dispatchCheck.AuthorizationScheme);
@@ -240,6 +240,57 @@ public sealed class RoutArrTripTests : IAsyncLifetime
         var trip = (await getResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
         Assert.Equal("assigned", trip.DispatchStatus);
         Assert.Null(trip.DispatchedAt);
+    }
+
+    [Fact]
+    public async Task Trip_dispatch_creates_immutable_release_snapshot_visible_in_trip_detail()
+    {
+        var dispatcherToken = await RedeemRoutArrTokenAsync();
+        var driverPersonId = Guid.NewGuid().ToString();
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/trips", dispatcherToken);
+        createRequest.Content = JsonContent.Create(new CreateTripRequest(
+            "Snapshot trip",
+            "Verify immutable dispatch-release snapshot",
+            "VEH-SNAP-1",
+            DateTimeOffset.UtcNow.AddHours(2),
+            DateTimeOffset.UtcNow.AddHours(5),
+            null));
+        var createResponse = await _routarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+
+        var assignRequest = Authorized(HttpMethod.Patch, $"/api/trips/{created.TripId}/assign-driver", dispatcherToken);
+        assignRequest.Content = JsonContent.Create(new AssignTripDriverRequest(driverPersonId));
+        (await _routarrClient.SendAsync(assignRequest)).EnsureSuccessStatusCode();
+
+        var dispatchRequest = Authorized(HttpMethod.Patch, $"/api/trips/{created.TripId}/status", dispatcherToken);
+        dispatchRequest.Content = JsonContent.Create(new UpdateTripDispatchStatusRequest("dispatched"));
+        var dispatchResponse = await _routarrClient.SendAsync(dispatchRequest);
+        dispatchResponse.EnsureSuccessStatusCode();
+        var dispatched = (await dispatchResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+        Assert.NotNull(dispatched.DispatchReleaseSnapshot);
+
+        var snapshotId = dispatched.DispatchReleaseSnapshot!.SnapshotId;
+        var releasedAt = dispatched.DispatchReleaseSnapshot.ReleasedAt;
+        Assert.True(dispatched.DispatchReleaseSnapshot.DriverCanAssign);
+        Assert.True(dispatched.DispatchReleaseSnapshot.VehicleCanAssign);
+
+        var startRequest = Authorized(HttpMethod.Patch, $"/api/trips/{created.TripId}/status", dispatcherToken);
+        startRequest.Content = JsonContent.Create(new UpdateTripDispatchStatusRequest("in_progress"));
+        (await _routarrClient.SendAsync(startRequest)).EnsureSuccessStatusCode();
+
+        var completeRequest = Authorized(HttpMethod.Patch, $"/api/trips/{created.TripId}/status", dispatcherToken);
+        completeRequest.Content = JsonContent.Create(new UpdateTripDispatchStatusRequest("completed"));
+        (await _routarrClient.SendAsync(completeRequest)).EnsureSuccessStatusCode();
+
+        var getRequest = Authorized(HttpMethod.Get, $"/api/trips/{created.TripId}", dispatcherToken);
+        var getResponse = await _routarrClient.SendAsync(getRequest);
+        getResponse.EnsureSuccessStatusCode();
+        var fetched = (await getResponse.Content.ReadFromJsonAsync<TripDetailResponse>())!;
+        Assert.NotNull(fetched.DispatchReleaseSnapshot);
+        Assert.Equal(snapshotId, fetched.DispatchReleaseSnapshot!.SnapshotId);
+        Assert.Equal(releasedAt, fetched.DispatchReleaseSnapshot.ReleasedAt);
     }
 
     [Fact]

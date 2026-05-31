@@ -342,6 +342,7 @@ public static class V1FeatureAliasEndpoints
             {
                 new { key = "personnel", path = "/api/v1/reports/personnel", description = "Personnel summaries and exports." },
                 new { key = "readiness", path = "/api/v1/reports/readiness", description = "Readiness summaries and exports." },
+                new { key = "certifications", path = "/api/v1/reports/certifications", description = "Certification readiness, missing, and expiring report exports." },
                 new { key = "incidents", path = "/api/v1/reports/incidents", description = "Incident summaries and exports." }
             };
             return Results.Ok(new { items });

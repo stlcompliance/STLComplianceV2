@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { WorkforceOnboardingJourneyPanel } from './WorkforceOnboardingJourneyPanel'
 
 describe('WorkforceOnboardingJourneyPanel', () => {
@@ -51,5 +51,23 @@ describe('WorkforceOnboardingJourneyPanel', () => {
     )
 
     expect(screen.getByText(/Loading onboarding journey/i)).toBeTruthy()
+  })
+
+  it('shows retryable error callout when journey fails to load', () => {
+    const onRetryRead = vi.fn()
+    render(
+      <WorkforceOnboardingJourneyPanel
+        personDisplayName="Ada Lovelace"
+        journey={null}
+        isLoading={false}
+        isError
+        readErrorMessage="journey unavailable"
+        onRetryRead={onRetryRead}
+      />,
+    )
+
+    expect(screen.getByText('journey unavailable')).toBeTruthy()
+    screen.getByRole('button', { name: 'Retry journey' }).click()
+    expect(onRetryRead).toHaveBeenCalledTimes(1)
   })
 })

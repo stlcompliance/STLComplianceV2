@@ -2,6 +2,7 @@ using RoutArr.Api.Contracts;
 using RoutArr.Api.Data;
 using RoutArr.Api.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using STLCompliance.Shared.Contracts;
 
 namespace RoutArr.Api.Services;
@@ -25,6 +26,7 @@ public sealed class TripService(
         var query = db.Trips
             .AsNoTracking()
             .Include(x => x.Loads)
+            .Include(x => x.DispatchReleaseSnapshot)
             .Where(x => x.TenantId == tenantId);
 
         if (!viewAll && actorUserId.HasValue)
@@ -119,6 +121,7 @@ public sealed class TripService(
 
         var trip = await db.Trips
             .Include(x => x.Loads)
+            .Include(x => x.DispatchReleaseSnapshot)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
 
         if (trip is null)
@@ -212,6 +215,7 @@ public sealed class TripService(
     {
         var trip = await db.Trips
             .Include(x => x.Loads)
+            .Include(x => x.DispatchReleaseSnapshot)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
 
         if (trip is null)
@@ -294,6 +298,7 @@ public sealed class TripService(
 
         var trip = await db.Trips
             .Include(x => x.Loads)
+            .Include(x => x.DispatchReleaseSnapshot)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
 
         if (trip is null)
@@ -337,16 +342,22 @@ public sealed class TripService(
                 400);
         }
 
+        DispatchReleasePreviewSnapshot? releasePreview = null;
         if (string.Equals(normalized, TripDispatchStatuses.Dispatched, StringComparison.OrdinalIgnoreCase))
         {
-            await dispatchAssignment.EnsureDriverAssignmentAllowedAsync(
+            releasePreview = await BuildDispatchReleasePreviewAsync(
                 tenantId,
                 trip,
-                trip.AssignedDriverPersonId!,
-                ignoreAvailabilityConflicts: false,
-                ignoreEligibilityBlocks: false,
-                ignoreWorkflowGateBlocks: false,
                 cancellationToken);
+
+            if (!releasePreview.CanRelease)
+            {
+                throw new StlApiException(
+                    "dispatch.release_blocked",
+                    "Trip cannot be released for dispatch because one or more pre-dispatch checks failed.",
+                    409,
+                    releasePreview);
+            }
         }
 
         if (!canManageAny)
@@ -373,9 +384,20 @@ public sealed class TripService(
             trip.AssignedAt ??= now;
         }
 
+        TripDispatchReleaseSnapshot? releaseSnapshot = trip.DispatchReleaseSnapshot;
         if (string.Equals(normalized, TripDispatchStatuses.Dispatched, StringComparison.OrdinalIgnoreCase))
         {
             trip.DispatchedAt ??= now;
+            if (trip.DispatchReleaseSnapshot is null && releasePreview is not null)
+            {
+                releaseSnapshot = CreateReleaseSnapshotEntity(
+                    tenantId,
+                    actorUserId,
+                    trip.Id,
+                    now,
+                    releasePreview);
+                db.TripDispatchReleaseSnapshots.Add(releaseSnapshot);
+            }
         }
 
         if (string.Equals(normalized, TripDispatchStatuses.InProgress, StringComparison.OrdinalIgnoreCase))
@@ -443,6 +465,7 @@ public sealed class TripService(
     {
         var trip = await db.Trips
             .Include(x => x.Loads)
+            .Include(x => x.DispatchReleaseSnapshot)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
 
         if (trip is null)
@@ -530,6 +553,7 @@ public sealed class TripService(
         var trip = await db.Trips
             .AsNoTracking()
             .Include(x => x.Loads)
+            .Include(x => x.DispatchReleaseSnapshot)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
 
         if (trip is null)
@@ -673,6 +697,7 @@ public sealed class TripService(
     {
         var trip = await db.Trips
             .Include(x => x.Loads)
+            .Include(x => x.DispatchReleaseSnapshot)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken);
 
         if (trip is null)
@@ -752,7 +777,131 @@ public sealed class TripService(
             trip.StartedAt,
             trip.CompletedAt,
             trip.ClosedAt,
-            trip.CancelledAt);
+            trip.CancelledAt,
+            trip.DispatchReleaseSnapshot is null
+                ? null
+                : new TripDispatchReleaseSnapshotResponse(
+                    trip.DispatchReleaseSnapshot.Id,
+                    trip.DispatchReleaseSnapshot.ReleasedAt,
+                    trip.DispatchReleaseSnapshot.ReleasedByUserId,
+                    trip.DispatchReleaseSnapshot.DriverCanAssign,
+                    trip.DispatchReleaseSnapshot.VehicleCanAssign,
+                    trip.DispatchReleaseSnapshot.HasMissingExternalData,
+                    trip.DispatchReleaseSnapshot.HasStaleExternalData,
+                    trip.DispatchReleaseSnapshot.Summary));
+
+    private async Task<DispatchReleasePreviewSnapshot> BuildDispatchReleasePreviewAsync(
+        Guid tenantId,
+        Trip trip,
+        CancellationToken cancellationToken)
+    {
+        var driverPreview = await dispatchAssignment.PreviewAsync(
+            tenantId,
+            new DispatchAssignmentPreviewRequest(
+                trip.Id,
+                DispatchAssignmentService.AssignmentKinds.Driver,
+                trip.AssignedDriverPersonId,
+                null),
+            cancellationToken);
+
+        DispatchAssignmentPreviewResponse? vehiclePreview = null;
+        if (!string.IsNullOrWhiteSpace(trip.VehicleRefKey))
+        {
+            vehiclePreview = await dispatchAssignment.PreviewAsync(
+                tenantId,
+                new DispatchAssignmentPreviewRequest(
+                    trip.Id,
+                    DispatchAssignmentService.AssignmentKinds.Vehicle,
+                    null,
+                    trip.VehicleRefKey),
+                cancellationToken);
+        }
+
+        var canRelease = driverPreview.CanAssign && (vehiclePreview?.CanAssign ?? true);
+        var hasMissingExternalData =
+            driverPreview.ConflictSummary?.HasMissingExternalData == true
+            || vehiclePreview?.ConflictSummary?.HasMissingExternalData == true;
+        var hasStaleExternalData =
+            driverPreview.ConflictSummary?.HasStaleExternalData == true
+            || vehiclePreview?.ConflictSummary?.HasStaleExternalData == true;
+        var summary = BuildDispatchReleaseSummary(
+            canRelease,
+            hasMissingExternalData,
+            hasStaleExternalData,
+            driverPreview,
+            vehiclePreview);
+
+        return new DispatchReleasePreviewSnapshot(
+            canRelease,
+            hasMissingExternalData,
+            hasStaleExternalData,
+            summary,
+            driverPreview,
+            vehiclePreview);
+    }
+
+    private static string BuildDispatchReleaseSummary(
+        bool canRelease,
+        bool hasMissingExternalData,
+        bool hasStaleExternalData,
+        DispatchAssignmentPreviewResponse driverPreview,
+        DispatchAssignmentPreviewResponse? vehiclePreview)
+    {
+        var mode = canRelease ? "releasable" : "blocked";
+        var warnings = new List<string>();
+        if (hasMissingExternalData)
+        {
+            warnings.Add("missing external data");
+        }
+
+        if (hasStaleExternalData)
+        {
+            warnings.Add("stale external data");
+        }
+
+        var driverState = driverPreview.CanAssign ? "driver ok" : "driver blocked";
+        var vehicleState = vehiclePreview is null
+            ? "vehicle check skipped"
+            : vehiclePreview.CanAssign
+                ? "vehicle ok"
+                : "vehicle blocked";
+        var suffix = warnings.Count == 0 ? string.Empty : $"; warnings: {string.Join(", ", warnings)}";
+
+        return $"{mode}; {driverState}; {vehicleState}{suffix}";
+    }
+
+    private static TripDispatchReleaseSnapshot CreateReleaseSnapshotEntity(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid tripId,
+        DateTimeOffset releasedAt,
+        DispatchReleasePreviewSnapshot preview)
+    {
+        var snapshotPayload = JsonSerializer.Serialize(new
+        {
+            evaluatedAt = releasedAt,
+            preview.CanRelease,
+            preview.HasMissingExternalData,
+            preview.HasStaleExternalData,
+            preview.DriverPreview,
+            preview.VehiclePreview,
+        });
+
+        return new TripDispatchReleaseSnapshot
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            TripId = tripId,
+            ReleasedByUserId = actorUserId,
+            ReleasedAt = releasedAt,
+            DriverCanAssign = preview.DriverPreview.CanAssign,
+            VehicleCanAssign = preview.VehiclePreview?.CanAssign ?? true,
+            HasMissingExternalData = preview.HasMissingExternalData,
+            HasStaleExternalData = preview.HasStaleExternalData,
+            Summary = preview.Summary,
+            SnapshotJson = snapshotPayload,
+        };
+    }
 
     private static string BuildAssignDriverAuditResult(string driverPersonId, AssignTripDriverRequest request)
     {
@@ -814,4 +963,12 @@ public sealed class TripService(
 
         return overrides;
     }
+
+    private sealed record DispatchReleasePreviewSnapshot(
+        bool CanRelease,
+        bool HasMissingExternalData,
+        bool HasStaleExternalData,
+        string Summary,
+        DispatchAssignmentPreviewResponse DriverPreview,
+        DispatchAssignmentPreviewResponse? VehiclePreview);
 }

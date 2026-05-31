@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import * as client from '../api/client'
@@ -162,5 +162,183 @@ describe('AuditPackageExportPanel', () => {
     )
 
     expect(container.firstChild).toBeNull()
+  })
+
+  it('shows timeline error callout with retry affordance', async () => {
+    vi.mocked(client.getAuditPackageManifest).mockResolvedValue({ packageVersion: '2', sections: [] })
+    vi.mocked(client.getAuditPackageFilterOptions).mockResolvedValue({
+      actions: [],
+      results: [],
+      targetTypes: [],
+      actorUserIds: [],
+    })
+    vi.mocked(client.getAuditPackageExportSummary).mockResolvedValue({
+      filters: {
+        from: null,
+        to: null,
+        action: null,
+        result: null,
+        targetType: null,
+        actorUserId: null,
+      },
+      counts: {
+        auditEvents: 0,
+        people: 0,
+        permissionHistory: 0,
+        personCertifications: 0,
+        personnelIncidents: 0,
+        readinessOverrides: 0,
+        trainingBlockers: 0,
+      },
+      byResult: [],
+      byAction: [],
+      generatedAt: '2026-05-28T14:00:00Z',
+    })
+    vi.mocked(client.getAuditPackageTimeline).mockRejectedValueOnce(new Error('timeline unavailable'))
+
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AuditPackageExportPanel accessToken="token" canRead={true} canExport={true} />
+      </QueryClientProvider>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('timeline unavailable')).toBeTruthy()
+    })
+    expect(screen.getByRole('button', { name: 'Retry timeline' })).toBeTruthy()
+  })
+
+  it('renders export mutation failures in shared callout', async () => {
+    vi.mocked(client.getAuditPackageManifest).mockResolvedValue({ packageVersion: '2', sections: [] })
+    vi.mocked(client.getAuditPackageFilterOptions).mockResolvedValue({
+      actions: [],
+      results: [],
+      targetTypes: [],
+      actorUserIds: [],
+    })
+    vi.mocked(client.getAuditPackageExportSummary).mockResolvedValue({
+      filters: {
+        from: null,
+        to: null,
+        action: null,
+        result: null,
+        targetType: null,
+        actorUserId: null,
+      },
+      counts: {
+        auditEvents: 0,
+        people: 0,
+        permissionHistory: 0,
+        personCertifications: 0,
+        personnelIncidents: 0,
+        readinessOverrides: 0,
+        trainingBlockers: 0,
+      },
+      byResult: [],
+      byAction: [],
+      generatedAt: '2026-05-28T14:00:00Z',
+    })
+    vi.mocked(client.getAuditPackageTimeline).mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 15,
+      totalCount: 0,
+      hasNextPage: false,
+    })
+    vi.mocked(client.exportAuditPackageZip).mockRejectedValueOnce(new Error('zip failed'))
+
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AuditPackageExportPanel accessToken="token" canRead={true} canExport={true} />
+      </QueryClientProvider>,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: /Download ZIP package/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Audit export failed')).toBeTruthy()
+    })
+    expect(screen.getByText('zip failed')).toBeTruthy()
+  })
+
+  it('renders background job status failures in shared callout', async () => {
+    vi.mocked(client.getAuditPackageManifest).mockResolvedValue({ packageVersion: '2', sections: [] })
+    vi.mocked(client.getAuditPackageFilterOptions).mockResolvedValue({
+      actions: [],
+      results: [],
+      targetTypes: [],
+      actorUserIds: [],
+    })
+    vi.mocked(client.getAuditPackageExportSummary).mockResolvedValue({
+      filters: {
+        from: null,
+        to: null,
+        action: null,
+        result: null,
+        targetType: null,
+        actorUserId: null,
+      },
+      counts: {
+        auditEvents: 0,
+        people: 0,
+        permissionHistory: 0,
+        personCertifications: 0,
+        personnelIncidents: 0,
+        readinessOverrides: 0,
+        trainingBlockers: 0,
+      },
+      byResult: [],
+      byAction: [],
+      generatedAt: '2026-05-28T14:00:00Z',
+    })
+    vi.mocked(client.getAuditPackageTimeline).mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 15,
+      totalCount: 0,
+      hasNextPage: false,
+    })
+    vi.mocked(client.createAuditPackageGenerationJob).mockResolvedValueOnce({
+      jobId: 'job-1',
+      status: 'pending',
+      format: 'zip',
+      from: null,
+      to: null,
+      packageId: null,
+      createdAt: '2026-05-28T14:00:00Z',
+      startedAt: null,
+      completedAt: null,
+      errorMessage: null,
+      downloadReady: false,
+    })
+    vi.mocked(client.getAuditPackageGenerationJob).mockResolvedValueOnce({
+      jobId: 'job-1',
+      status: 'failed',
+      format: 'zip',
+      from: null,
+      to: null,
+      packageId: null,
+      createdAt: '2026-05-28T14:00:00Z',
+      startedAt: '2026-05-28T14:00:01Z',
+      completedAt: '2026-05-28T14:00:02Z',
+      errorMessage: 'worker timeout',
+      downloadReady: false,
+    })
+
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AuditPackageExportPanel accessToken="token" canRead={true} canExport={true} />
+      </QueryClientProvider>,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: /Background ZIP export/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Background export failed')).toBeTruthy()
+    })
+    expect(screen.getByText('worker timeout')).toBeTruthy()
   })
 })

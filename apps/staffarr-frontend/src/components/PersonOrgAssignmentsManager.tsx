@@ -1,4 +1,5 @@
 import { type FormEvent, useMemo, useState } from 'react'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type { OrgUnitAssignmentResponse, OrgUnitResponse } from '../api/types'
 
 interface PersonOrgAssignmentsManagerProps {
@@ -6,9 +7,13 @@ interface PersonOrgAssignmentsManagerProps {
   personDisplayName: string
   orgUnits: OrgUnitResponse[]
   assignments: OrgUnitAssignmentResponse[]
+  isLoading?: boolean
+  isError?: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
   canManage: boolean
   isSubmitting: boolean
-  errorMessage: string | null
+  actionErrorMessage: string | null
   onCreate: (request: {
     siteOrgUnitId: string
     departmentOrgUnitId: string
@@ -63,9 +68,13 @@ export function PersonOrgAssignmentsManager({
   personDisplayName,
   orgUnits,
   assignments,
+  isLoading = false,
+  isError = false,
+  readErrorMessage = null,
+  onRetryRead,
   canManage,
   isSubmitting,
-  errorMessage,
+  actionErrorMessage,
   onCreate,
   onUpdate,
   onStatusChange,
@@ -74,7 +83,7 @@ export function PersonOrgAssignmentsManager({
   const departmentUnits = useMemo(() => byType(orgUnits, 'department'), [orgUnits])
   const teamUnits = useMemo(() => byType(orgUnits, 'team'), [orgUnits])
   const positionUnits = useMemo(() => byType(orgUnits, 'position'), [orgUnits])
-  const normalizedError = formatAssignmentMutationError(errorMessage)
+  const normalizedError = formatAssignmentMutationError(actionErrorMessage)
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null)
 
   const [createSiteId, setCreateSiteId] = useState('')
@@ -137,11 +146,27 @@ export function PersonOrgAssignmentsManager({
       <p className="mt-2 text-xs text-slate-500">
         Managing assignments for {personDisplayName} ({personId})
       </p>
-      {normalizedError ? <p className="mt-3 text-sm text-red-300">{normalizedError}</p> : null}
+      {normalizedError ? (
+        <div className="mt-3">
+          <ApiErrorCallout title="Org assignment update failed" message={normalizedError} />
+        </div>
+      ) : null}
+      {isError ? (
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Org assignments unavailable"
+            message={readErrorMessage ?? 'Failed to load org assignments and org unit options.'}
+            onRetry={onRetryRead}
+            retryLabel="Retry assignments"
+          />
+        </div>
+      ) : null}
 
-      {assignments.length === 0 ? (
+      {isLoading ? (
+        <p className="mt-4 text-sm text-slate-400">Loading linked org assignments…</p>
+      ) : !isError && assignments.length === 0 ? (
         <p className="mt-4 text-sm text-slate-400">No linked site/department/team/position assignments.</p>
-      ) : (
+      ) : !isError ? (
         <ul className="mt-4 divide-y divide-slate-700">
           {assignments.map((assignment) => (
             <li key={assignment.assignmentId} className="flex items-center justify-between py-3 text-sm">
@@ -160,9 +185,9 @@ export function PersonOrgAssignmentsManager({
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
 
-      {canManage ? (
+      {canManage && !isLoading && !isError ? (
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <form className="space-y-3" onSubmit={handleCreate}>
             <h3 className="text-sm font-medium text-slate-300">Create assignment</h3>
@@ -348,9 +373,9 @@ export function PersonOrgAssignmentsManager({
             </div>
           </form>
         </div>
-      ) : (
+      ) : !isLoading && !isError ? (
         <p className="mt-4 text-xs text-slate-500">Your role does not include org assignment write permission.</p>
-      )}
+      ) : null}
     </section>
   )
 }

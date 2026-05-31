@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getRouteCompletions,
@@ -172,7 +173,16 @@ export function TripCompletionReportsPanel({ accessToken, canRead, canExport }: 
       ) : null}
 
       {tripsQuery.isError ? (
-        <p className="mt-3 text-sm text-rose-400">Failed to load trip completion summaries.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Trip completion report unavailable"
+            message={getErrorMessage(tripsQuery.error, 'Failed to load trip completion summaries.')}
+            retryLabel="Retry summary"
+            onRetry={() => {
+              void tripsQuery.refetch()
+            }}
+          />
+        </div>
       ) : null}
 
       {tripsQuery.data ? (

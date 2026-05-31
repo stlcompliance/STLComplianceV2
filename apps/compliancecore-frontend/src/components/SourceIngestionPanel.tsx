@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import { useState } from 'react'
 
 import {
@@ -114,7 +115,9 @@ export function SourceIngestionPanel({ accessToken, canManage }: SourceIngestion
             rows={12}
             className="w-full rounded-md border border-slate-700 bg-slate-950 font-mono text-xs text-slate-200"
           />
-          {parseError && <p className="text-sm text-rose-400">{parseError}</p>}
+          {parseError ? (
+            <ApiErrorCallout title="Invalid source JSON" message={parseError} />
+          ) : null}
           <div className="flex flex-wrap gap-3">
             <button
               type="button"

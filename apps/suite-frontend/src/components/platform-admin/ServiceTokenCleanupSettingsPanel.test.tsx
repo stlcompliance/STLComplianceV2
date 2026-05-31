@@ -48,4 +48,14 @@ describe('ServiceTokenCleanupSettingsPanel', () => {
     expect(screen.getByTestId('service-token-cleanup-revoke-days')).toHaveValue(30)
     expect(screen.getByTestId('service-token-cleanup-runs-empty')).toBeInTheDocument()
   })
+
+  it('renders callout when settings request fails', async () => {
+    vi.mocked(nexarr.getServiceTokenCleanupSettings).mockRejectedValueOnce(new Error('cleanup unavailable'))
+    vi.mocked(nexarr.getServiceTokenCleanupRuns).mockResolvedValue({ items: [] })
+
+    renderPanel()
+
+    expect(await screen.findByText('cleanup unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
 })

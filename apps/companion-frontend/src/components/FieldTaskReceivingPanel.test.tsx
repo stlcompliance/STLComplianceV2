@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/re
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { FieldTaskReceivingPanel } from './FieldTaskReceivingPanel'
 import type { FieldInboxTaskItem } from '../api/types'
+import * as client from '../api/client'
 
 const receivingTask: FieldInboxTaskItem = {
   taskKey: 'supplyarr:receiving:eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
@@ -131,5 +132,40 @@ describe('FieldTaskReceivingPanel', () => {
     })
 
     expect(await screen.findByTestId('companion-receiving-success')).toBeInTheDocument()
+  })
+
+  it('renders retryable error callout when receiving detail fails', async () => {
+    vi.mocked(client.getCompanionFieldReceivingDetail).mockRejectedValueOnce(
+      new Error('receiving detail unavailable'),
+    )
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FieldTaskReceivingPanel accessToken="test-token" task={receivingTask} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('receiving detail unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry receiving detail' })).toBeInTheDocument()
+  })
+
+  it('renders mutation failure in shared callout', async () => {
+    vi.mocked(client.updateCompanionFieldReceivingLine).mockRejectedValueOnce(
+      new Error('receiving line failed'),
+    )
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <FieldTaskReceivingPanel accessToken="test-token" task={receivingTask} />
+      </QueryClientProvider>,
+    )
+
+    await screen.findByTestId('companion-receiving-line-qty-1')
+    fireEvent.click(screen.getByTestId('companion-receiving-save-line-1'))
+
+    expect(await screen.findByText('receiving line failed')).toBeInTheDocument()
+    expect(screen.getByTestId('companion-receiving-error')).toBeInTheDocument()
   })
 })

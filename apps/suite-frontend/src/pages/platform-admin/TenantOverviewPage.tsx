@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 import { TenantCatalogAdminPanel } from '../../components/platform-admin/TenantCatalogAdminPanel'
 
@@ -14,9 +15,11 @@ export function TenantOverviewPage() {
 
   if (overviewQuery.isError) {
     return (
-      <p className="text-sm text-red-700" role="alert">
-        Failed to load tenants: {(overviewQuery.error as Error).message}
-      </p>
+      <ApiErrorCallout
+        message={getErrorMessage(overviewQuery.error, 'Failed to load tenants.')}
+        onRetry={() => void overviewQuery.refetch()}
+        retryLabel="Retry tenants"
+      />
     )
   }
 

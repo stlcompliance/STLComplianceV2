@@ -58,4 +58,14 @@ describe('RecertificationSettingsPanel', () => {
     expect(screen.getByTestId('recertification-runs-list')).toBeInTheDocument()
     expect(screen.getByText('assigned')).toBeInTheDocument()
   })
+
+  it('shows retry callout when settings fail', async () => {
+    vi.mocked(client.getRecertificationSettings).mockRejectedValue(new Error('settings down'))
+    vi.mocked(client.getRecertificationAssignmentRuns).mockResolvedValue({ items: [] })
+
+    renderPanel()
+
+    expect(await screen.findByText('Recertification settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
 })

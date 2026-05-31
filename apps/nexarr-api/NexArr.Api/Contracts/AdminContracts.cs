@@ -74,8 +74,21 @@ public sealed record ServiceClientResponse(
     string DisplayName,
     string SourceProductKey,
     IReadOnlyList<string> AllowedProductKeys,
+    IReadOnlyList<Guid> AllowedTenantIds,
     bool IsActive,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? LastUsedAt,
+    int FailedAuthenticationAttempts);
+
+public sealed record UpdateServiceClientAudienceRequest(
+    IReadOnlyList<string> AllowedProductKeys);
+
+public sealed record UpdateServiceClientTenantScopeRequest(
+    IReadOnlyList<Guid> TenantIds);
+
+public sealed record ServiceClientTenantScopeResponse(
+    Guid ServiceClientId,
+    IReadOnlyList<Guid> TenantIds);
 
 public sealed record IssueServiceTokenRequest(
     Guid ServiceClientId,

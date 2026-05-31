@@ -164,6 +164,21 @@ public sealed class MaintainArrMeterTrackingTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Missing_reading_alerts_include_active_meter_without_readings_v1()
+    {
+        var token = await RedeemMaintainArrTokenAsync();
+        var assetId = await SeedAssetAsync(token);
+        var meter = await CreateMeterAsync(token, assetId, 750m);
+
+        var alertsRequest = Authorized(HttpMethod.Get, "/api/v1/meters/alerts?staleAfterDays=0", token);
+        var alertsResponse = await _maintainarrClient.SendAsync(alertsRequest);
+        alertsResponse.EnsureSuccessStatusCode();
+        var alerts = (await alertsResponse.Content.ReadFromJsonAsync<List<MeterMissingReadingAlertResponse>>())!;
+
+        Assert.Contains(alerts, x => x.AssetMeterId == meter.AssetMeterId);
+    }
+
+    [Fact]
     public async Task Correction_workflow_records_audited_v1_meter_correction()
     {
         var token = await RedeemMaintainArrTokenAsync();

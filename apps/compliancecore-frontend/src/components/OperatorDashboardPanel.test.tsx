@@ -3,6 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { OperatorDashboardPanel } from './OperatorDashboardPanel'
+import * as client from '../api/client'
 
 vi.mock('../api/client', () => ({
   getOperatorDashboard: vi.fn().mockResolvedValue({
@@ -75,5 +76,18 @@ describe('OperatorDashboardPanel', () => {
     expect(screen.getByText('Gate check failures')).toBeInTheDocument()
     expect(screen.getByText('Driver Qualification')).toBeInTheDocument()
     expect(screen.getByText('fail')).toBeInTheDocument()
+  })
+
+  it('shows retry callout when dashboard fails', async () => {
+    vi.mocked(client.getOperatorDashboard).mockRejectedValue(new Error('dashboard down'))
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <OperatorDashboardPanel accessToken="token" />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Operator dashboard unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry dashboard' })).toBeInTheDocument()
   })
 })

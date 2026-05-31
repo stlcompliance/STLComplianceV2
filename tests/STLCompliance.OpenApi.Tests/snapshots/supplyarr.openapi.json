@@ -6420,6 +6420,80 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "purchaseOrderKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "packingSlipReference",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "invoiceReference",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/by-key/{receiptKey}": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "GetReceivingReceiptByKey",
+        "parameters": [
+          {
+            "name": "receiptKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/by-packing-slip/{packingSlipReference}": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ListReceivingReceiptsByPackingSlipReference",
+        "parameters": [
+          {
+            "name": "packingSlipReference",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -6446,6 +6520,39 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/from-purchase-order-key/{purchaseOrderKey}": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CreateReceivingReceiptFromPurchaseOrderKey",
+        "parameters": [
+          {
+            "name": "purchaseOrderKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReceivingReceiptFromPurchaseOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -6511,6 +6618,30 @@
         }
       }
     },
+    "/api/receiving/{receivingReceiptId}/close": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CloseReceivingReceipt",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/receiving/{receivingReceiptId}/exceptions": {
       "get": {
         "tags": [
@@ -6528,6 +6659,98 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/{receivingReceiptId}/export-accounting.csv": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ExportReceivingReceiptAccountingCsv",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/{receivingReceiptId}/inventory-bin": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptInventoryBin",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingInventoryBinRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/{receivingReceiptId}/invoice": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptInvoice",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingInvoiceRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -6566,6 +6789,49 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateReceivingReceiptLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/{receivingReceiptId}/lines/{lineId}/condition": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptLineCondition",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingReceiptLineConditionRequest"
               }
             }
           },
@@ -6621,12 +6887,113 @@
         }
       }
     },
+    "/api/receiving/{receivingReceiptId}/lines/{lineId}/tracking": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptLineTracking",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingReceiptLineTrackingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/{receivingReceiptId}/packing-slip": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptPackingSlip",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingPackingSlipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/receiving/{receivingReceiptId}/post": {
       "post": {
         "tags": [
           "Receiving"
         ],
         "operationId": "PostReceivingReceipt",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/receiving/{receivingReceiptId}/reopen": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ReopenReceivingReceipt",
         "parameters": [
           {
             "name": "receivingReceiptId",
@@ -6810,6 +7177,19 @@
           "Reports"
         ],
         "operationId": "ListSupplyArrReportGroups",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/compliance/alerts": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ListSupplyArrComplianceAlerts",
         "responses": {
           "200": {
             "description": "OK"
@@ -15951,6 +16331,80 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "purchaseOrderKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "packingSlipReference",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "invoiceReference",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receipts/by-key/{receiptKey}": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "GetReceivingReceiptByKeyV1Receipts",
+        "parameters": [
+          {
+            "name": "receiptKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receipts/by-packing-slip/{packingSlipReference}": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ListReceivingReceiptsByPackingSlipReferenceV1Receipts",
+        "parameters": [
+          {
+            "name": "packingSlipReference",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -15977,6 +16431,39 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receipts/from-purchase-order-key/{purchaseOrderKey}": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CreateReceivingReceiptFromPurchaseOrderKeyV1Receipts",
+        "parameters": [
+          {
+            "name": "purchaseOrderKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReceivingReceiptFromPurchaseOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -16042,6 +16529,30 @@
         }
       }
     },
+    "/api/v1/receipts/{receivingReceiptId}/close": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CloseReceivingReceiptV1Receipts",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/receipts/{receivingReceiptId}/exceptions": {
       "get": {
         "tags": [
@@ -16059,6 +16570,98 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receipts/{receivingReceiptId}/export-accounting.csv": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ExportReceivingReceiptAccountingCsvV1Receipts",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receipts/{receivingReceiptId}/inventory-bin": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptInventoryBinV1Receipts",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingInventoryBinRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receipts/{receivingReceiptId}/invoice": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptInvoiceV1Receipts",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingInvoiceRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -16097,6 +16700,49 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateReceivingReceiptLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receipts/{receivingReceiptId}/lines/{lineId}/condition": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptLineConditionV1Receipts",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingReceiptLineConditionRequest"
               }
             }
           },
@@ -16152,12 +16798,113 @@
         }
       }
     },
+    "/api/v1/receipts/{receivingReceiptId}/lines/{lineId}/tracking": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptLineTrackingV1Receipts",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingReceiptLineTrackingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receipts/{receivingReceiptId}/packing-slip": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptPackingSlipV1Receipts",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingPackingSlipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/receipts/{receivingReceiptId}/post": {
       "post": {
         "tags": [
           "Receiving"
         ],
         "operationId": "PostReceivingReceiptV1Receipts",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receipts/{receivingReceiptId}/reopen": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ReopenReceivingReceiptV1Receipts",
         "parameters": [
           {
             "name": "receivingReceiptId",
@@ -16197,6 +16944,80 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "purchaseOrderKey",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "packingSlipReference",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "invoiceReference",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/by-key/{receiptKey}": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "GetReceivingReceiptByKeyV1",
+        "parameters": [
+          {
+            "name": "receiptKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/by-packing-slip/{packingSlipReference}": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ListReceivingReceiptsByPackingSlipReferenceV1",
+        "parameters": [
+          {
+            "name": "packingSlipReference",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -16223,6 +17044,39 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/from-purchase-order-key/{purchaseOrderKey}": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CreateReceivingReceiptFromPurchaseOrderKeyV1",
+        "parameters": [
+          {
+            "name": "purchaseOrderKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReceivingReceiptFromPurchaseOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -16288,6 +17142,30 @@
         }
       }
     },
+    "/api/v1/receiving/{receivingReceiptId}/close": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CloseReceivingReceiptV1",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/receiving/{receivingReceiptId}/exceptions": {
       "get": {
         "tags": [
@@ -16305,6 +17183,98 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/{receivingReceiptId}/export-accounting.csv": {
+      "get": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ExportReceivingReceiptAccountingCsvV1",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/{receivingReceiptId}/inventory-bin": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptInventoryBinV1",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingInventoryBinRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/{receivingReceiptId}/invoice": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptInvoiceV1",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingInvoiceRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -16343,6 +17313,49 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateReceivingReceiptLineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/{receivingReceiptId}/lines/{lineId}/condition": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptLineConditionV1",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingReceiptLineConditionRequest"
               }
             }
           },
@@ -16398,12 +17411,113 @@
         }
       }
     },
+    "/api/v1/receiving/{receivingReceiptId}/lines/{lineId}/tracking": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptLineTrackingV1",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "lineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingReceiptLineTrackingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/{receivingReceiptId}/packing-slip": {
+      "put": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "UpdateReceivingReceiptPackingSlipV1",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReceivingPackingSlipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/receiving/{receivingReceiptId}/post": {
       "post": {
         "tags": [
           "Receiving"
         ],
         "operationId": "PostReceivingReceiptV1",
+        "parameters": [
+          {
+            "name": "receivingReceiptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/receiving/{receivingReceiptId}/reopen": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "ReopenReceivingReceiptV1",
         "parameters": [
           {
             "name": "receivingReceiptId",
@@ -16587,6 +17701,19 @@
           "Reports"
         ],
         "operationId": "ListSupplyArrReportGroupsV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/compliance/alerts": {
+      "get": {
+        "tags": [
+          "ComplianceReports"
+        ],
+        "operationId": "ListSupplyArrComplianceAlertsV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -21019,6 +22146,10 @@
           },
           "manufacturerPartNumber": {
             "type": "string"
+          },
+          "requiresSerialLotTracking": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -21474,6 +22605,28 @@
               "null",
               "string"
             ]
+          },
+          "packingSlipReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "packingSlipFileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "purchaseOrderLineIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
@@ -23824,6 +24977,10 @@
           },
           "manufacturerPartNumber": {
             "type": "string"
+          },
+          "requiresSerialLotTracking": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -23950,6 +25107,71 @@
           }
         }
       },
+      "UpdateReceivingInventoryBinRequest": {
+        "required": [
+          "inventoryBinId"
+        ],
+        "type": "object",
+        "properties": {
+          "inventoryBinId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "UpdateReceivingInvoiceRequest": {
+        "required": [
+          "invoiceReference",
+          "invoiceFileName"
+        ],
+        "type": "object",
+        "properties": {
+          "invoiceReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "invoiceFileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateReceivingPackingSlipRequest": {
+        "required": [
+          "packingSlipReference",
+          "packingSlipFileName"
+        ],
+        "type": "object",
+        "properties": {
+          "packingSlipReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "packingSlipFileName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateReceivingReceiptLineConditionRequest": {
+        "required": [
+          "condition"
+        ],
+        "type": "object",
+        "properties": {
+          "condition": {
+            "type": "string"
+          }
+        }
+      },
       "UpdateReceivingReceiptLineRequest": {
         "required": [
           "quantityReceived"
@@ -23963,6 +25185,20 @@
               "string"
             ],
             "format": "double"
+          }
+        }
+      },
+      "UpdateReceivingReceiptLineTrackingRequest": {
+        "required": [
+          "serialLotNumbers"
+        ],
+        "type": "object",
+        "properties": {
+          "serialLotNumbers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

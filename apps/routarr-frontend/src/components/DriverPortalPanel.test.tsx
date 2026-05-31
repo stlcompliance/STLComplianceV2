@@ -171,4 +171,15 @@ describe('DriverPortalPanel', () => {
     )
     expect(await screen.findByText(/Exception DEX-TEST reported/)).toBeTruthy()
   })
+
+  it('shows retryable error callout when schedule query fails', async () => {
+    vi.mocked(client.getDriverPortalSchedule).mockRejectedValueOnce(
+      new Error('schedule unavailable'),
+    )
+
+    renderPanel()
+
+    expect(await screen.findByText('schedule unavailable')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Retry schedule' })).toBeTruthy()
+  })
 })

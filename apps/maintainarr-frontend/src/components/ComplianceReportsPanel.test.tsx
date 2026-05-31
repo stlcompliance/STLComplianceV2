@@ -1,8 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, afterEach } from 'vitest'
+import { cleanup, fireEvent, waitFor } from '@testing-library/react'
 
 import { ComplianceReportsPanel } from './ComplianceReportsPanel'
+import * as client from '../api/client'
 
 vi.mock('../api/client', () => ({
   getComplianceReportSummary: vi.fn().mockResolvedValue({
@@ -57,6 +59,11 @@ vi.mock('../api/client', () => ({
 }))
 
 describe('ComplianceReportsPanel', () => {
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
   it('renders compliance report metrics', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
@@ -80,5 +87,55 @@ describe('ComplianceReportsPanel', () => {
     )
 
     expect(container).toBeEmptyDOMElement()
+  })
+
+  it('shows export failure callout', async () => {
+    vi.mocked(client.getComplianceReportSummary).mockResolvedValue({
+      generatedAt: new Date().toISOString(),
+      inspectionTotals: {
+        totalRuns: 1,
+        completedRuns: 1,
+        passedRuns: 1,
+        failedRuns: 0,
+        inProgressRuns: 0,
+        failedChecklistAnswers: 0,
+        passRatePercent: 100,
+      },
+      defectTotals: {
+        openDefectCount: 0,
+        openCriticalCount: 0,
+        openHighCount: 0,
+        inspectionSourcedOpenCount: 0,
+        manualSourcedOpenCount: 0,
+      },
+      pmAdherenceTotals: {
+        activeScheduleCount: 1,
+        overdueCount: 0,
+        dueCount: 0,
+        scheduledCount: 1,
+        adherencePercent: 100,
+      },
+      regulatoryKeyMirrorCount: 0,
+      regulatoryKeyGroups: [],
+      templateSummaries: [],
+      attentionItems: [],
+      defectSeverityCounts: [],
+    })
+    vi.mocked(client.exportComplianceReportSummaryCsv).mockRejectedValue(new Error('export down'))
+
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ComplianceReportsPanel accessToken="token" canRead={true} canExport={true} />
+      </QueryClientProvider>,
+    )
+
+    await screen.findByTestId('compliance-reports-panel')
+    fireEvent.click(screen.getByRole('button', { name: /Export CSV/i }))
+
+    expect(await screen.findByText('CSV export failed')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(client.exportComplianceReportSummaryCsv).toHaveBeenCalledTimes(1)
+    })
   })
 })

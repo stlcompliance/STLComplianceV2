@@ -11,6 +11,8 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
     public DbSet<UserSession> UserSessions => Set<UserSession>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<TenantMembership> TenantMemberships => Set<TenantMembership>();
+    public DbSet<PlatformRoleAssignment> PlatformRoleAssignments => Set<PlatformRoleAssignment>();
+    public DbSet<ExternalIdentityProviderMapping> ExternalIdentityProviderMappings => Set<ExternalIdentityProviderMapping>();
     public DbSet<ProductCatalogItem> ProductCatalog => Set<ProductCatalogItem>();
     public DbSet<TenantProductEntitlement> Entitlements => Set<TenantProductEntitlement>();
     public DbSet<PlatformAuditEvent> AuditEvents => Set<PlatformAuditEvent>();
@@ -81,6 +83,8 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.ToTable("user_credentials");
             entity.HasKey(x => x.UserId);
             entity.Property(x => x.PasswordHash).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.IsEmailVerified).HasDefaultValue(true);
+            entity.Property(x => x.IsMfaEnabled).HasDefaultValue(false);
             entity.Property(x => x.FailedLoginCount).HasDefaultValue(0);
             entity.HasOne(x => x.User).WithOne(x => x.Credential).HasForeignKey<UserCredential>(x => x.UserId);
         });
@@ -90,6 +94,7 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.ToTable("user_sessions");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.RefreshTokenHash).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.IsRemembered).HasDefaultValue(false);
             entity.HasIndex(x => x.RefreshTokenHash);
             entity.HasIndex(x => x.UserId);
             entity.HasOne(x => x.User).WithMany(x => x.Sessions).HasForeignKey(x => x.UserId);
@@ -113,6 +118,27 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.HasIndex(x => new { x.TenantId, x.UserId }).IsUnique();
             entity.HasOne(x => x.Tenant).WithMany(x => x.Memberships).HasForeignKey(x => x.TenantId);
             entity.HasOne(x => x.User).WithMany(x => x.Memberships).HasForeignKey(x => x.UserId);
+        });
+
+        modelBuilder.Entity<PlatformRoleAssignment>(entity =>
+        {
+            entity.ToTable("platform_role_assignments");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.RoleKey).HasMaxLength(64).IsRequired();
+            entity.HasIndex(x => new { x.UserId, x.RoleKey, x.TenantId }).IsUnique();
+            entity.HasOne(x => x.User).WithMany(x => x.RoleAssignments).HasForeignKey(x => x.UserId);
+        });
+
+        modelBuilder.Entity<ExternalIdentityProviderMapping>(entity =>
+        {
+            entity.ToTable("external_identity_provider_mappings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ProviderKey).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ExternalSubject).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ExternalEmail).HasMaxLength(320);
+            entity.HasIndex(x => new { x.ProviderKey, x.ExternalSubject }).IsUnique();
+            entity.HasIndex(x => new { x.UserId, x.ProviderKey }).IsUnique();
+            entity.HasOne(x => x.User).WithMany(x => x.ExternalIdentityProviderMappings).HasForeignKey(x => x.UserId);
         });
 
         modelBuilder.Entity<ProductCatalogItem>(entity =>
@@ -168,6 +194,8 @@ public sealed class NexArrDbContext(DbContextOptions<NexArrDbContext> options) :
             entity.Property(x => x.DisplayName).HasMaxLength(128).IsRequired();
             entity.Property(x => x.SourceProductKey).HasMaxLength(64).IsRequired();
             entity.Property(x => x.AllowedProductKeys).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.AllowedTenantIds).HasMaxLength(2048).IsRequired();
+            entity.Property(x => x.FailedAuthenticationAttempts).HasDefaultValue(0);
             entity.HasIndex(x => x.ClientKey).IsUnique();
             entity.HasOne(x => x.SourceProduct).WithMany().HasForeignKey(x => x.SourceProductKey);
         });

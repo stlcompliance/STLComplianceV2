@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { PersonTrainarrTrainingHistoryPanel } from './PersonTrainarrTrainingHistoryPanel'
 
 describe('PersonTrainarrTrainingHistoryPanel', () => {
@@ -49,5 +49,23 @@ describe('PersonTrainarrTrainingHistoryPanel', () => {
     )
 
     expect(screen.getByTestId('person-trainarr-training-history-empty')).toBeTruthy()
+  })
+
+  it('shows retryable error callout when history fails', () => {
+    const onRetryRead = vi.fn()
+    render(
+      <PersonTrainarrTrainingHistoryPanel
+        personDisplayName="Alex Driver"
+        isLoading={false}
+        isError
+        readErrorMessage="history unavailable"
+        onRetryRead={onRetryRead}
+        history={null}
+      />,
+    )
+
+    expect(screen.getByText('history unavailable')).toBeTruthy()
+    screen.getByRole('button', { name: 'Retry history' }).click()
+    expect(onRetryRead).toHaveBeenCalledTimes(1)
   })
 })

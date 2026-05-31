@@ -1,4 +1,4 @@
-import { StaffArrApiError } from '../../api/client'
+import { getErrorMessage } from '@stl/shared-ui'
 import { ManagerHierarchyPanel } from '../../components/ManagerHierarchyPanel'
 import { OrgHierarchyManager } from '../../components/OrgHierarchyManager'
 import { PersonOrgAssignmentsManager } from '../../components/PersonOrgAssignmentsManager'
@@ -16,15 +16,34 @@ export function OrgSection({ state }: Props) {
           personDisplayName={s.selectedPerson.displayName}
           orgUnits={s.orgUnits}
           assignments={s.assignments}
+          isLoading={s.assignmentQuery.isLoading || s.orgUnitsQuery.isLoading}
+          isError={s.assignmentQuery.isError || s.orgUnitsQuery.isError}
+          readErrorMessage={
+            s.assignmentQuery.isError
+              ? getErrorMessage(
+                  s.assignmentQuery.error,
+                  'Failed to load person org assignments.',
+                )
+              : s.orgUnitsQuery.isError
+                ? getErrorMessage(
+                    s.orgUnitsQuery.error,
+                    'Failed to load org unit options.',
+                  )
+                : null
+          }
+          onRetryRead={() => {
+            void s.assignmentQuery.refetch()
+            void s.orgUnitsQuery.refetch()
+          }}
           canManage={s.canManageOrgUnits}
           isSubmitting={
             s.createAssignmentMutation.isPending ||
             s.updateAssignmentMutation.isPending ||
             s.updateAssignmentStatusMutation.isPending
           }
-          errorMessage={
-            s.assignmentMutationError instanceof StaffArrApiError
-              ? s.assignmentMutationError.body || s.assignmentMutationError.message
+          actionErrorMessage={
+            s.assignmentMutationError
+              ? getErrorMessage(s.assignmentMutationError, 'Failed to save org assignments.')
               : null
           }
           onCreate={async (payload) => {
@@ -56,12 +75,43 @@ export function OrgSection({ state }: Props) {
           people={s.people}
           managerChain={s.managerChain}
           subordinates={s.subordinates}
+          selectedSubordinateId={s.selectedSubordinateId}
           selectedSubordinate={s.selectedSubordinateDetail}
+          isLoading={s.managerChainQuery.isLoading || s.subordinatesQuery.isLoading}
+          isError={s.managerChainQuery.isError || s.subordinatesQuery.isError}
+          readErrorMessage={
+            s.managerChainQuery.isError
+              ? getErrorMessage(
+                  s.managerChainQuery.error,
+                  'Failed to load manager chain.',
+                )
+              : s.subordinatesQuery.isError
+                ? getErrorMessage(
+                    s.subordinatesQuery.error,
+                    'Failed to load subordinate hierarchy.',
+                  )
+                : null
+          }
+          onRetryRead={() => {
+            void s.managerChainQuery.refetch()
+            void s.subordinatesQuery.refetch()
+          }}
+          isLoadingSubordinateDetail={s.subordinateDetailQuery.isLoading}
+          isSubordinateDetailError={s.subordinateDetailQuery.isError}
+          subordinateDetailErrorMessage={
+            s.subordinateDetailQuery.isError
+              ? getErrorMessage(
+                  s.subordinateDetailQuery.error,
+                  'Failed to load subordinate detail.',
+                )
+              : null
+          }
+          onRetrySubordinateDetail={() => void s.subordinateDetailQuery.refetch()}
           canManage={s.canManageHierarchy}
           isSubmitting={s.updateManagerMutation.isPending}
-          errorMessage={
-            s.managerMutationError instanceof StaffArrApiError
-              ? s.managerMutationError.body || s.managerMutationError.message
+          actionErrorMessage={
+            s.managerMutationError
+              ? getErrorMessage(s.managerMutationError, 'Failed to update manager hierarchy.')
               : null
           }
           onSelectSubordinate={(subordinatePersonId) => s.setSelectedSubordinateId(subordinatePersonId)}
@@ -76,14 +126,25 @@ export function OrgSection({ state }: Props) {
 
       <OrgHierarchyManager
         orgUnits={s.orgUnits}
+        isLoading={s.orgUnitsQuery.isLoading}
+        isError={s.orgUnitsQuery.isError}
+        readErrorMessage={
+          s.orgUnitsQuery.isError
+            ? getErrorMessage(
+                s.orgUnitsQuery.error,
+                'Failed to load org hierarchy data.',
+              )
+            : null
+        }
+        onRetryRead={() => void s.orgUnitsQuery.refetch()}
         canManage={s.canManageOrgUnits}
         isSubmitting={
           s.createOrgUnitMutation.isPending ||
           s.updateOrgUnitMutation.isPending ||
           s.updateOrgUnitStatusMutation.isPending
         }
-        errorMessage={
-          s.orgMutationError instanceof StaffArrApiError ? s.orgMutationError.body || s.orgMutationError.message : null
+        actionErrorMessage={
+          s.orgMutationError ? getErrorMessage(s.orgMutationError, 'Failed to update org hierarchy.') : null
         }
         onCreate={async (payload) => {
           await s.createOrgUnitMutation.mutateAsync(payload)

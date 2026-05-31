@@ -1,6 +1,6 @@
 namespace NexArr.Api.Contracts;
 
-public sealed record LoginRequest(string Email, string Password, Guid? TenantId);
+public sealed record LoginRequest(string Email, string Password, Guid? TenantId, bool RememberDevice = false);
 
 public sealed record RenewSessionRequest(string RefreshToken);
 
@@ -70,7 +70,8 @@ public sealed record UserSessionSummary(
     string? IpAddress,
     Guid? ActiveTenantId,
     bool IsCurrent,
-    bool IsActive);
+    bool IsActive,
+    bool IsRemembered);
 
 public sealed record UserSessionsResponse(IReadOnlyList<UserSessionSummary> Sessions);
 

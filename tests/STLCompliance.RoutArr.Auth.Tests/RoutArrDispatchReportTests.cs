@@ -98,6 +98,8 @@ public sealed class RoutArrDispatchReportTests : IAsyncLifetime
         Assert.True(summary.TotalTripCount >= 1);
         Assert.True(summary.MissingProofTripCount >= 1);
         Assert.Contains(summary.Trips, x => x.TripId == _tripId && x.MissingRequiredProofCount == 1);
+        Assert.True(summary.TripsWithDispatchReleaseSnapshotCount >= 1);
+        Assert.True(summary.ReleaseSnapshotsMissingExternalDataCount >= 1);
         Assert.True(summary.DelayExceptionCount >= 1);
         Assert.Contains(summary.ExceptionCategoryCounts, x =>
             string.Equals(x.Key, DispatchExceptionCategories.Delay, StringComparison.OrdinalIgnoreCase));
@@ -113,6 +115,9 @@ public sealed class RoutArrDispatchReportTests : IAsyncLifetime
         Assert.Equal(_tripId, trip.TripId);
         Assert.True(trip.DelayExceptionCount >= 1);
         Assert.Equal(1, trip.MissingRequiredProofCount);
+        Assert.NotNull(trip.DispatchReleaseSnapshot);
+        Assert.True(trip.DispatchReleaseSnapshot!.HasMissingExternalData);
+        Assert.False(trip.DispatchReleaseSnapshot.HasStaleExternalData);
 
         var exceptionResponse = await _routarrClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/reports/dispatch/exceptions/{_exceptionId:D}", _dispatcherToken));
@@ -137,6 +142,18 @@ public sealed class RoutArrDispatchReportTests : IAsyncLifetime
         Assert.Contains("missingRequiredProofCount", csv, StringComparison.Ordinal);
         Assert.Contains("Report trip", csv, StringComparison.Ordinal);
         Assert.Contains(",1,1", csv, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Dispatch_report_alerts_include_missing_proof_and_exception_alerts()
+    {
+        var response = await _routarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/dispatch/alerts?scope=daily", _dispatcherToken));
+        response.EnsureSuccessStatusCode();
+
+        var alerts = (await response.Content.ReadFromJsonAsync<List<DispatchReportAlertResponse>>())!;
+        Assert.Contains(alerts, x => x.AlertType == "proof_missing" && x.TripId == _tripId);
+        Assert.Contains(alerts, x => x.ExceptionId == _exceptionId);
     }
 
     [Fact]
@@ -317,6 +334,20 @@ public sealed class RoutArrDispatchReportTests : IAsyncLifetime
 
         using var scope = _routarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<RoutArrDbContext>();
+        db.TripDispatchReleaseSnapshots.Add(new TripDispatchReleaseSnapshot
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            TripId = trip.TripId,
+            ReleasedByUserId = PlatformSeeder.DemoAdminUserId,
+            ReleasedAt = now.AddMinutes(-15),
+            DriverCanAssign = true,
+            VehicleCanAssign = true,
+            HasMissingExternalData = true,
+            HasStaleExternalData = false,
+            Summary = "releasable; driver ok; vehicle ok; warnings: missing external data",
+            SnapshotJson = """{"seeded":true}"""
+        });
         var completedTrip = new Trip
         {
             Id = Guid.NewGuid(),

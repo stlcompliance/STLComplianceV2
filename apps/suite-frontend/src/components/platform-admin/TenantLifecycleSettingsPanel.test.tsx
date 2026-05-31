@@ -51,4 +51,13 @@ describe('TenantLifecycleSettingsPanel', () => {
     expect(screen.getByTestId('tenant-lifecycle-runs-empty')).toBeInTheDocument()
     expect(screen.getByTestId('tenant-lifecycle-pending-empty')).toBeInTheDocument()
   })
+
+  it('renders an API error callout when settings fail to load', async () => {
+    vi.mocked(nexarr.getTenantLifecycleSettings).mockRejectedValueOnce(new Error('settings unavailable'))
+
+    renderPanel()
+
+    expect(await screen.findByText('settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
 })

@@ -33,6 +33,9 @@ public static class DispatchAssignmentValidationRules
         var workflowWarning =
             preview.WorkflowGates?.Outcome is "warn"
             && !workflowBlocking;
+        var externalReasonCodes = CollectExternalReasonCodes(preview);
+        var hasMissingExternalData = externalReasonCodes.Any(IsMissingExternalDataReasonCode);
+        var hasStaleExternalData = externalReasonCodes.Any(IsStaleExternalDataReasonCode);
 
         return new DispatchAssignmentConflictSummary(
             preview.BlockingDriverAvailability.Count,
@@ -43,7 +46,9 @@ public static class DispatchAssignmentValidationRules
             dispatchabilityBlocking,
             dispatchabilityWarning,
             workflowBlocking,
-            workflowWarning);
+            workflowWarning,
+            hasMissingExternalData,
+            hasStaleExternalData);
     }
 
     public static IReadOnlyList<string> BuildValidationMessages(
@@ -96,6 +101,17 @@ public static class DispatchAssignmentValidationRules
         else if (preview.WorkflowGates?.Outcome is "warn")
         {
             messages.Add($"Workflow gate warning: {preview.WorkflowGates.Message}");
+        }
+
+        var externalReasonCodes = CollectExternalReasonCodes(preview);
+        if (externalReasonCodes.Any(IsMissingExternalDataReasonCode))
+        {
+            messages.Add("External data is missing or unavailable; dispatch checks may be incomplete.");
+        }
+
+        if (externalReasonCodes.Any(IsStaleExternalDataReasonCode))
+        {
+            messages.Add("External data may be stale; validate readiness before dispatch release.");
         }
 
         return messages;
@@ -159,6 +175,47 @@ public static class DispatchAssignmentValidationRules
             PrimaryBlockCode = primaryBlockCode,
         };
     }
+
+    private static IReadOnlyList<string> CollectExternalReasonCodes(DispatchAssignmentPreviewResponse preview)
+    {
+        var codes = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(preview.DriverEligibility?.ReasonCode))
+        {
+            codes.Add(preview.DriverEligibility!.ReasonCode);
+        }
+
+        if (!string.IsNullOrWhiteSpace(preview.AssetDispatchability?.ReasonCode))
+        {
+            codes.Add(preview.AssetDispatchability!.ReasonCode);
+        }
+
+        if (!string.IsNullOrWhiteSpace(preview.WorkflowGates?.ReasonCode))
+        {
+            codes.Add(preview.WorkflowGates!.ReasonCode);
+        }
+
+        if (preview.WorkflowGates?.Gates is not null)
+        {
+            codes.AddRange(preview.WorkflowGates.Gates
+                .Where(g => !string.IsNullOrWhiteSpace(g.ReasonCode))
+                .Select(g => g.ReasonCode));
+        }
+
+        return codes;
+    }
+
+    private static bool IsMissingExternalDataReasonCode(string reasonCode)
+    {
+        var code = reasonCode.ToLowerInvariant();
+        return code.Contains("unavailable", StringComparison.Ordinal)
+            || code.Contains("not_found", StringComparison.Ordinal)
+            || code.Contains("missing", StringComparison.Ordinal)
+            || code.Contains("required", StringComparison.Ordinal);
+    }
+
+    private static bool IsStaleExternalDataReasonCode(string reasonCode) =>
+        reasonCode.Contains("stale", StringComparison.OrdinalIgnoreCase);
 }
 
 public sealed record TripAssignmentValidation(bool IsValid, string? BlockCode, string? Message);

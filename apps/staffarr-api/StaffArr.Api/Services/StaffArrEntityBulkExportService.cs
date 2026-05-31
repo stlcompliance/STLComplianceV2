@@ -66,6 +66,11 @@ public sealed class StaffArrEntityBulkExportService(
                     "Readiness report CSV",
                     "Org-unit readiness rollups with attention filters."),
                 new(
+                    "certifications",
+                    $"{reportBasePath}/certifications/summary/export",
+                    "Certification report CSV",
+                    "Certification readiness, missing, and expiring coverage."),
+                new(
                     "incidents",
                     $"{reportBasePath}/incidents/summary/export",
                     "Incident report CSV",

@@ -502,6 +502,50 @@ describe('supplyarr api client', () => {
     await expect(getVendors('token')).rejects.toBeInstanceOf(SupplyArrApiError)
   })
 
+  it('surfaces problem details title/detail in API errors', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        text: async () =>
+          JSON.stringify({
+            title: 'Vendor export blocked',
+            detail: 'Missing procurement report permission.',
+          }),
+      }),
+    )
+
+    await expect(getVendors('token')).rejects.toMatchObject({
+      status: 400,
+      message: 'Vendor export blocked - Missing procurement report permission.',
+    })
+  })
+
+  it('surfaces validation errors in API error messages', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 422,
+        text: async () =>
+          JSON.stringify({
+            title: 'Validation failed',
+            errors: {
+              externalPartyId: ['External party is required.'],
+              partyType: ['Party type is invalid.'],
+            },
+          }),
+      }),
+    )
+
+    await expect(getVendors('token')).rejects.toMatchObject({
+      status: 422,
+      message:
+        'Validation failed - externalPartyId: External party is required.; partyType: Party type is invalid.',
+    })
+  })
+
   it('loads supply readiness dashboard from v1 endpoint', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

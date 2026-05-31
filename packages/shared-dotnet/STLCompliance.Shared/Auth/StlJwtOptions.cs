@@ -14,4 +14,8 @@ public sealed class StlJwtOptions
     public int AccessTokenMinutes { get; set; } = 15;
 
     public int RefreshTokenDays { get; set; } = 7;
+
+    public bool? RequirePlatformAdminMfa { get; set; }
+
+    public int? RememberedRefreshTokenDays { get; set; }
 }

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getPushPermissionState,
@@ -83,7 +84,12 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
       </p>
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-rose-400">Failed to load notification settings.</p>
+        <ApiErrorCallout
+          className="mt-3"
+          message={getErrorMessage(settingsQuery.error, 'Failed to load notification settings.')}
+          onRetry={() => void settingsQuery.refetch()}
+          retryLabel="Retry settings"
+        />
       )}
 
       <div className="mt-4 space-y-3">
@@ -182,7 +188,9 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
         </button>
 
         {saveMutation.isError && (
-          <p className="text-sm text-rose-400">Failed to save notification settings.</p>
+          <ApiErrorCallout
+            message={getErrorMessage(saveMutation.error, 'Failed to save notification settings.')}
+          />
         )}
       </div>
 
@@ -190,6 +198,14 @@ export function NotificationSettingsPanel({ accessToken, canManage }: Notificati
         <h3 className="text-sm font-semibold text-slate-200">Recent dispatches</h3>
         {dispatchesQuery.isLoading && (
           <p className="mt-2 text-sm text-slate-500">Loading dispatch history…</p>
+        )}
+        {dispatchesQuery.isError && (
+          <ApiErrorCallout
+            className="mt-2"
+            message={getErrorMessage(dispatchesQuery.error, 'Failed to load dispatch history.')}
+            onRetry={() => void dispatchesQuery.refetch()}
+            retryLabel="Retry dispatch history"
+          />
         )}
         {dispatchesQuery.data && dispatchesQuery.data.items.length === 0 && (
           <p className="mt-2 text-sm text-slate-500">No notification dispatches yet.</p>

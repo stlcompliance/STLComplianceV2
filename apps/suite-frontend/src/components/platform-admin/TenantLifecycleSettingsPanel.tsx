@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
 
@@ -70,7 +71,12 @@ export function TenantLifecycleSettingsPanel() {
       </p>
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-red-400">Failed to load tenant lifecycle settings.</p>
+        <ApiErrorCallout
+          className="mt-3"
+          message={getErrorMessage(settingsQuery.error, 'Failed to load tenant lifecycle settings.')}
+          onRetry={() => void settingsQuery.refetch()}
+          retryLabel="Retry settings"
+        />
       )}
 
       <div className="mt-4 space-y-3">
@@ -144,7 +150,9 @@ export function TenantLifecycleSettingsPanel() {
           {saveMutation.isPending ? 'Saving…' : 'Save settings'}
         </button>
         {saveMutation.isError && (
-          <span className="text-sm text-red-400">Save failed.</span>
+          <ApiErrorCallout
+            message={getErrorMessage(saveMutation.error, 'Failed to save tenant lifecycle settings.')}
+          />
         )}
         {saveMutation.isSuccess && (
           <span className="text-sm text-emerald-400">Saved.</span>

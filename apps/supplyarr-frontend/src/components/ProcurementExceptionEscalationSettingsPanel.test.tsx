@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
+import * as client from '../api/client'
 import { ProcurementExceptionEscalationSettingsPanel } from './ProcurementExceptionEscalationSettingsPanel'
 
 vi.mock('../api/client', () => ({
@@ -68,5 +69,19 @@ describe('ProcurementExceptionEscalationSettingsPanel', () => {
     )
 
     expect(container).toBeEmptyDOMElement()
+  })
+
+  it('shows retryable settings error callout when settings query fails', async () => {
+    vi.mocked(client.getProcurementExceptionEscalationSettings).mockRejectedValueOnce(
+      new Error('settings unavailable'),
+    )
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <ProcurementExceptionEscalationSettingsPanel accessToken="token" canManage={true} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
   })
 })

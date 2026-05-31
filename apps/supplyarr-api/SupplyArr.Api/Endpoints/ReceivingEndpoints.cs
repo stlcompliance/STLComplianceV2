@@ -13,6 +13,10 @@ public static class ReceivingEndpoints
         group.MapGet("/", async (
             string? status,
             Guid? purchaseOrderId,
+            string? purchaseOrderKey,
+            string? packingSlipReference,
+            string? invoiceReference,
+            string? query,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             ReceivingService service,
@@ -20,7 +24,15 @@ public static class ReceivingEndpoints
         {
             authorization.RequireReceivingRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListAsync(tenantId, status, purchaseOrderId, cancellationToken));
+            return Results.Ok(await service.ListAsync(
+                tenantId,
+                status,
+                purchaseOrderId,
+                purchaseOrderKey,
+                packingSlipReference,
+                invoiceReference,
+                query,
+                cancellationToken));
         })
         .WithName($"ListReceivingReceipts{nameSuffix}");
 
@@ -36,6 +48,55 @@ public static class ReceivingEndpoints
             return Results.Ok(await service.GetAsync(tenantId, receivingReceiptId, cancellationToken));
         })
         .WithName($"GetReceivingReceipt{nameSuffix}");
+
+        group.MapGet("/{receivingReceiptId:guid}/export-accounting.csv", async (
+            Guid receivingReceiptId,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ReceivingService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var bytes = await service.BuildAccountingExportCsvAsync(
+                tenantId,
+                receivingReceiptId,
+                cancellationToken);
+            return Results.File(
+                bytes,
+                "text/csv",
+                $"supplyarr-receipt-accounting-{receivingReceiptId:D}.csv");
+        })
+        .WithName($"ExportReceivingReceiptAccountingCsv{nameSuffix}");
+
+        group.MapGet("/by-key/{receiptKey}", async (
+            string receiptKey,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ReceivingService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.GetByReceiptKeyAsync(tenantId, receiptKey, cancellationToken));
+        })
+        .WithName($"GetReceivingReceiptByKey{nameSuffix}");
+
+        group.MapGet("/by-packing-slip/{packingSlipReference}", async (
+            string packingSlipReference,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ReceivingService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            return Results.Ok(await service.ListByPackingSlipReferenceAsync(
+                tenantId,
+                packingSlipReference,
+                cancellationToken));
+        })
+        .WithName($"ListReceivingReceiptsByPackingSlipReference{nameSuffix}");
 
         group.MapPost("/from-purchase-order/{purchaseOrderId:guid}", async (
             Guid purchaseOrderId,
@@ -57,6 +118,27 @@ public static class ReceivingEndpoints
             return Results.Created($"/api/receiving/{created.ReceivingReceiptId}", created);
         })
         .WithName($"CreateReceivingReceiptFromPurchaseOrder{nameSuffix}");
+
+        group.MapPost("/from-purchase-order-key/{purchaseOrderKey}", async (
+            string purchaseOrderKey,
+            CreateReceivingReceiptFromPurchaseOrderRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ReceivingService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingPerform(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var created = await service.CreateFromPurchaseOrderKeyAsync(
+                tenantId,
+                actorUserId,
+                purchaseOrderKey,
+                request,
+                cancellationToken);
+            return Results.Created($"/api/receiving/{created.ReceivingReceiptId}", created);
+        })
+        .WithName($"CreateReceivingReceiptFromPurchaseOrderKey{nameSuffix}");
 
         group.MapPut("/{receivingReceiptId:guid}/lines/{lineId:guid}", async (
             Guid receivingReceiptId,
@@ -80,6 +162,110 @@ public static class ReceivingEndpoints
         })
         .WithName($"UpdateReceivingReceiptLine{nameSuffix}");
 
+        group.MapPut("/{receivingReceiptId:guid}/lines/{lineId:guid}/tracking", async (
+            Guid receivingReceiptId,
+            Guid lineId,
+            UpdateReceivingReceiptLineTrackingRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ReceivingService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingPerform(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpdateLineTrackingAsync(
+                tenantId,
+                actorUserId,
+                receivingReceiptId,
+                lineId,
+                request,
+                cancellationToken));
+        })
+        .WithName($"UpdateReceivingReceiptLineTracking{nameSuffix}");
+
+        group.MapPut("/{receivingReceiptId:guid}/lines/{lineId:guid}/condition", async (
+            Guid receivingReceiptId,
+            Guid lineId,
+            UpdateReceivingReceiptLineConditionRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ReceivingService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingPerform(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpdateLineConditionAsync(
+                tenantId,
+                actorUserId,
+                receivingReceiptId,
+                lineId,
+                request,
+                cancellationToken));
+        })
+        .WithName($"UpdateReceivingReceiptLineCondition{nameSuffix}");
+
+        group.MapPut("/{receivingReceiptId:guid}/packing-slip", async (
+            Guid receivingReceiptId,
+            UpdateReceivingPackingSlipRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ReceivingService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingPerform(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpdatePackingSlipAsync(
+                tenantId,
+                actorUserId,
+                receivingReceiptId,
+                request,
+                cancellationToken));
+        })
+        .WithName($"UpdateReceivingReceiptPackingSlip{nameSuffix}");
+
+        group.MapPut("/{receivingReceiptId:guid}/invoice", async (
+            Guid receivingReceiptId,
+            UpdateReceivingInvoiceRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ReceivingService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingPerform(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpdateInvoiceAsync(
+                tenantId,
+                actorUserId,
+                receivingReceiptId,
+                request,
+                cancellationToken));
+        })
+        .WithName($"UpdateReceivingReceiptInvoice{nameSuffix}");
+
+        group.MapPut("/{receivingReceiptId:guid}/inventory-bin", async (
+            Guid receivingReceiptId,
+            UpdateReceivingInventoryBinRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ReceivingService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingPerform(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.UpdateInventoryBinAsync(
+                tenantId,
+                actorUserId,
+                receivingReceiptId,
+                request,
+                cancellationToken));
+        })
+        .WithName($"UpdateReceivingReceiptInventoryBin{nameSuffix}");
+
         group.MapPost("/{receivingReceiptId:guid}/post", async (
             Guid receivingReceiptId,
             HttpContext context,
@@ -99,6 +285,42 @@ public static class ReceivingEndpoints
                 cancellationToken));
         })
         .WithName($"PostReceivingReceipt{nameSuffix}");
+
+        group.MapPost("/{receivingReceiptId:guid}/close", async (
+            Guid receivingReceiptId,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ReceivingService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingPerform(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.CloseAsync(
+                tenantId,
+                actorUserId,
+                receivingReceiptId,
+                cancellationToken));
+        })
+        .WithName($"CloseReceivingReceipt{nameSuffix}");
+
+        group.MapPost("/{receivingReceiptId:guid}/reopen", async (
+            Guid receivingReceiptId,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            ReceivingService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireReceivingPerform(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.ReopenAsync(
+                tenantId,
+                actorUserId,
+                receivingReceiptId,
+                cancellationToken));
+        })
+        .WithName($"ReopenReceivingReceipt{nameSuffix}");
 
         group.MapGet("/{receivingReceiptId:guid}/exceptions", async (
             Guid receivingReceiptId,

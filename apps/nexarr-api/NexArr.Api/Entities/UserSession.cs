@@ -10,6 +10,8 @@ public sealed class UserSession
 
     public Guid? ActiveTenantId { get; set; }
 
+    public bool IsRemembered { get; set; }
+
     public DateTimeOffset ExpiresAt { get; set; }
 
     public DateTimeOffset? RevokedAt { get; set; }

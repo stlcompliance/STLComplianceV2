@@ -37,7 +37,9 @@ public sealed class PlatformIdentityIntegrationService(
             reasonCode: sourceProductKey,
             cancellationToken: cancellationToken);
 
-        return Map(user);
+        var lastProductLaunchAt = await GetLastProductLaunchAtAsync(user.Id, cancellationToken);
+        var launchEligible = await IsLaunchEligibleAsync(user, tenantId, cancellationToken);
+        return Map(user, lastProductLaunchAt, launchEligible);
     }
 
     public async Task<CreatePlatformIdentityResponse> CreateMinimalAsync(
@@ -141,7 +143,71 @@ public sealed class PlatformIdentityIntegrationService(
         }
 
         user = (await LoadUserAsync(user.Id, cancellationToken))!;
-        return new CreatePlatformIdentityResponse(wasCreated, membershipWasCreated, Map(user));
+        var lastProductLaunchAt = await GetLastProductLaunchAtAsync(user.Id, cancellationToken);
+        var launchEligible = await IsLaunchEligibleAsync(user, request.TenantId, cancellationToken);
+        return new CreatePlatformIdentityResponse(
+            wasCreated,
+            membershipWasCreated,
+            Map(user, lastProductLaunchAt, launchEligible));
+    }
+
+    public async Task<PlatformIdentityResponse> SyncAsync(
+        Guid personId,
+        SyncPlatformIdentityRequest request,
+        string sourceProductKey,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await db.Users
+            .Include(u => u.Credential)
+            .Include(u => u.Memberships)
+            .FirstOrDefaultAsync(u => u.Id == personId, cancellationToken)
+            ?? throw new StlApiException("identity.not_found", "Platform identity was not found.", 404);
+
+        var tenantExists = await db.Tenants.AnyAsync(t => t.Id == request.TenantId, cancellationToken);
+        if (!tenantExists)
+        {
+            throw new StlApiException("tenant.not_found", "Tenant was not found.", 404);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        user.DisplayName = NormalizeDisplayName(request.DisplayName);
+        user.ModifiedAt = now;
+
+        var roleKey = NormalizeRoleKey(request.RoleKey);
+        var membership = user.Memberships.FirstOrDefault(x => x.TenantId == request.TenantId);
+        if (membership is null)
+        {
+            user.Memberships.Add(new TenantMembership
+            {
+                Id = Guid.NewGuid(),
+                TenantId = request.TenantId,
+                UserId = user.Id,
+                RoleKey = roleKey,
+                IsActive = true,
+                CreatedAt = now,
+            });
+        }
+        else
+        {
+            membership.IsActive = true;
+            membership.RoleKey = roleKey;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "identity.sync",
+            "user",
+            user.Id.ToString(),
+            "Success",
+            tenantId: request.TenantId,
+            reasonCode: sourceProductKey,
+            cancellationToken: cancellationToken);
+
+        var reloaded = (await LoadUserAsync(user.Id, cancellationToken))!;
+        var lastProductLaunchAt = await GetLastProductLaunchAtAsync(user.Id, cancellationToken);
+        var launchEligible = await IsLaunchEligibleAsync(reloaded, request.TenantId, cancellationToken);
+        return Map(reloaded, lastProductLaunchAt, launchEligible);
     }
 
     private async Task<PlatformUser?> LoadUserAsync(Guid personId, CancellationToken cancellationToken) =>
@@ -152,22 +218,78 @@ public sealed class PlatformIdentityIntegrationService(
             .Include(u => u.Memberships)
             .FirstOrDefaultAsync(u => u.Id == personId, cancellationToken);
 
-    private static PlatformIdentityResponse Map(PlatformUser user)
+    private async Task<DateTimeOffset?> GetLastProductLaunchAtAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        return await db.AuditEvents
+            .AsNoTracking()
+            .Where(x =>
+                x.ActorUserId == userId
+                && x.Action == "launch.handoff.create"
+                && x.Result == "Success")
+            .OrderByDescending(x => x.OccurredAt)
+            .Select(x => (DateTimeOffset?)x.OccurredAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private async Task<bool> IsLaunchEligibleAsync(
+        PlatformUser user,
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        if (!user.IsActive)
+        {
+            return false;
+        }
+
+        var hasActiveMembership = user.Memberships.Any(x => x.TenantId == tenantId && x.IsActive);
+        if (!hasActiveMembership)
+        {
+            return false;
+        }
+
+        if (user.IsPlatformAdmin)
+        {
+            return true;
+        }
+
+        var hasEntitlements = await db.Entitlements.AsNoTracking().AnyAsync(
+            x => x.TenantId == tenantId && x.Status == EntitlementStatuses.Active,
+            cancellationToken);
+        return hasEntitlements;
+    }
+
+    private static PlatformIdentityResponse Map(
+        PlatformUser user,
+        DateTimeOffset? lastProductLaunchAt,
+        bool launchEligible)
     {
         var lastLoginAt = user.Sessions
             .Where(s => s.RevokedAt is null)
             .OrderByDescending(s => s.CreatedAt)
             .Select(s => (DateTimeOffset?)s.CreatedAt)
             .FirstOrDefault();
+        var canLogin = user.Credential is not null;
+        var status = PlatformUserStatusResolver.Resolve(
+            user.IsActive,
+            canLogin,
+            user.Credential?.IsEmailVerified,
+            user.Credential?.LockedUntil,
+            DateTimeOffset.UtcNow);
 
         return new PlatformIdentityResponse(
             user.Id,
             user.Email,
+            null,
+            null,
+            null,
             user.DisplayName,
             user.IsActive,
-            user.Credential is not null,
+            canLogin,
+            launchEligible,
+            status,
             user.IsPlatformAdmin,
             lastLoginAt,
+            lastProductLaunchAt,
             user.CreatedAt,
             user.ModifiedAt,
             user.Memberships

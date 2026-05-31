@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import { AdvancedReferenceField, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
+import { AdvancedReferenceField, ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 
 import {
   assignDispatchException,
@@ -323,7 +323,16 @@ export function DispatchExceptionQueuePanel({ accessToken, userId, canTriage }: 
   }
 
   if (listQuery.isError) {
-    return <p className="text-sm text-red-300">{(listQuery.error as Error).message}</p>
+    return (
+      <ApiErrorCallout
+        title="Exception queue unavailable"
+        message={getErrorMessage(listQuery.error, 'Failed to load exception queue.')}
+        retryLabel="Retry queue"
+        onRetry={() => {
+          void listQuery.refetch()
+        }}
+      />
+    )
   }
 
   const list = listQuery.data!

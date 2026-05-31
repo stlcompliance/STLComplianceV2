@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getPendingProcurementExceptionEscalations,
@@ -101,9 +102,19 @@ export function ProcurementExceptionEscalationSettingsPanel({
       </p>
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-rose-400">
-          Failed to load procurement exception escalation settings.
-        </p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Escalation settings unavailable"
+            message={getErrorMessage(
+              settingsQuery.error,
+              'Failed to load procurement exception escalation settings.',
+            )}
+            retryLabel="Retry settings"
+            onRetry={() => {
+              void settingsQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       <div className="mt-4 space-y-3">
@@ -168,7 +179,10 @@ export function ProcurementExceptionEscalationSettingsPanel({
         </button>
 
         {saveMutation.isError && (
-          <p className="text-sm text-rose-400">Failed to save escalation settings.</p>
+          <ApiErrorCallout
+            title="Save failed"
+            message={getErrorMessage(saveMutation.error, 'Failed to save escalation settings.')}
+          />
         )}
       </div>
 
@@ -176,6 +190,20 @@ export function ProcurementExceptionEscalationSettingsPanel({
         <h3 className="text-sm font-semibold text-slate-200">Due for escalation</h3>
         {pendingQuery.isLoading && (
           <p className="mt-2 text-sm text-slate-500">Loading pending preview…</p>
+        )}
+        {pendingQuery.isError && (
+          <ApiErrorCallout
+            className="mt-2"
+            title="Pending preview unavailable"
+            message={getErrorMessage(
+              pendingQuery.error,
+              'Failed to load pending escalation preview.',
+            )}
+            retryLabel="Retry pending preview"
+            onRetry={() => {
+              void pendingQuery.refetch()
+            }}
+          />
         )}
         {pendingQuery.data && pendingQuery.data.items.length === 0 && (
           <p
@@ -210,6 +238,20 @@ export function ProcurementExceptionEscalationSettingsPanel({
 
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-slate-200">Recent runs</h3>
+        {runsQuery.isError && (
+          <ApiErrorCallout
+            className="mt-2"
+            title="Run history unavailable"
+            message={getErrorMessage(
+              runsQuery.error,
+              'Failed to load escalation worker run history.',
+            )}
+            retryLabel="Retry run history"
+            onRetry={() => {
+              void runsQuery.refetch()
+            }}
+          />
+        )}
         {runsQuery.data && runsQuery.data.items.length === 0 && (
           <p className="mt-2 text-sm text-slate-500" data-testid="procurement-exception-escalation-runs-empty">
             No worker runs yet.
@@ -238,6 +280,20 @@ export function ProcurementExceptionEscalationSettingsPanel({
 
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-slate-200">Recent escalation events</h3>
+        {eventsQuery.isError && (
+          <ApiErrorCallout
+            className="mt-2"
+            title="Escalation events unavailable"
+            message={getErrorMessage(
+              eventsQuery.error,
+              'Failed to load recent escalation events.',
+            )}
+            retryLabel="Retry escalation events"
+            onRetry={() => {
+              void eventsQuery.refetch()
+            }}
+          />
+        )}
         {eventsQuery.data && eventsQuery.data.items.length === 0 && (
           <p className="mt-2 text-sm text-slate-500" data-testid="procurement-exception-escalation-events-empty">
             No escalation events yet.

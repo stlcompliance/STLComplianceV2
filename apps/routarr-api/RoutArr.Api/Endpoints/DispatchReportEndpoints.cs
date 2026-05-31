@@ -65,6 +65,31 @@ public static class DispatchReportEndpoints
         })
         .WithName($"ExportRoutArrDispatchReportSummary{routeNameSuffix}");
 
+        group.MapGet("/alerts", async (
+            string? scope,
+            int? limit,
+            RoutArrAuthorizationService authorization,
+            DispatchReportService reportService,
+            IRoutArrAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireDispatchReportRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var alerts = await reportService.GetAlertsAsync(tenantId, scope, limit, cancellationToken);
+            await audit.WriteAsync(
+                "routarr.reports.dispatch.alerts",
+                tenantId,
+                actorUserId,
+                "dispatch_report",
+                scope,
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.Ok(alerts);
+        })
+        .WithName($"GetRoutArrDispatchReportAlerts{routeNameSuffix}");
+
         group.MapGet("/time-summary", async (
             string? scope,
             RoutArrAuthorizationService authorization,

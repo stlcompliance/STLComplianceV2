@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PersonLookupPanel } from './PersonLookupPanel'
 import type { PersonLookupResponse } from '../api/types'
 
@@ -38,6 +38,10 @@ const sampleLookup: PersonLookupResponse = {
 }
 
 describe('PersonLookupPanel', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it('renders identity, placement, and active assignment path', () => {
     render(
       <PersonLookupPanel
@@ -68,5 +72,41 @@ describe('PersonLookupPanel', () => {
     )
 
     expect(screen.getByText('No active site/department/team assignments.')).toBeTruthy()
+  })
+
+  it('renders retryable error callout when lookup query fails', () => {
+    const onRetryRead = vi.fn()
+    render(
+      <PersonLookupPanel
+        personId={sampleLookup.personId}
+        personDisplayName={sampleLookup.displayName}
+        lookup={null}
+        isLoading={false}
+        isError
+        readErrorMessage="lookup service unavailable"
+        onRetryRead={onRetryRead}
+      />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Person lookup unavailable')).toBeTruthy()
+    expect(screen.getByText('lookup service unavailable')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry person lookup' }))
+    expect(onRetryRead).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders unavailable lookup placeholder when payload is missing', () => {
+    render(
+      <PersonLookupPanel
+        personId={sampleLookup.personId}
+        personDisplayName={sampleLookup.displayName}
+        lookup={null}
+        isLoading={false}
+      />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Person lookup unavailable')).toBeTruthy()
+    expect(screen.getByText('Person lookup is not available for this profile yet.')).toBeTruthy()
   })
 })

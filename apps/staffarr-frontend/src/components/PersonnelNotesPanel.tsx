@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from 'react'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type {
   CreatePersonnelNoteRequest,
   PersonnelNoteCategoryKey,
@@ -11,12 +12,19 @@ interface PersonnelNotesPanelProps {
   personId: string
   personDisplayName: string
   notes: PersonnelNoteSummaryResponse[]
+  selectedNoteId?: string | null
   selectedNote: PersonnelNoteDetailResponse | null
   isLoading: boolean
+  isError?: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
   isLoadingDetail: boolean
+  isDetailError?: boolean
+  detailErrorMessage?: string | null
+  onRetryDetail?: () => void
   canManage: boolean
   isSubmitting: boolean
-  errorMessage: string | null
+  actionErrorMessage: string | null
   onSelectNote: (noteId: string) => void
   onCreateNote: (request: CreatePersonnelNoteRequest) => Promise<void>
 }
@@ -58,12 +66,19 @@ export function PersonnelNotesPanel({
   personId: _personId,
   personDisplayName,
   notes,
+  selectedNoteId = null,
   selectedNote,
   isLoading,
+  isError = false,
+  readErrorMessage = null,
+  onRetryRead,
   isLoadingDetail,
+  isDetailError = false,
+  detailErrorMessage = null,
+  onRetryDetail,
   canManage,
   isSubmitting,
-  errorMessage,
+  actionErrorMessage,
   onSelectNote,
   onCreateNote,
 }: PersonnelNotesPanelProps) {
@@ -100,14 +115,23 @@ export function PersonnelNotesPanel({
         ) : null}
       </div>
 
-      {errorMessage ? (
-        <p className="mt-4 rounded-lg border border-rose-500/40 bg-rose-950/40 px-3 py-2 text-sm text-rose-200">
-          {errorMessage}
-        </p>
+      {actionErrorMessage ? (
+        <div className="mt-4">
+          <ApiErrorCallout title="Personnel notes action failed" message={actionErrorMessage} />
+        </div>
       ) : null}
 
       {isLoading ? (
         <p className="mt-4 text-sm text-slate-400">Loading notes…</p>
+      ) : isError ? (
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="Personnel notes unavailable"
+            message={readErrorMessage ?? 'Failed to load personnel notes.'}
+            onRetry={onRetryRead}
+            retryLabel="Retry notes"
+          />
+        </div>
       ) : notes.length === 0 ? (
         <p className="mt-4 text-sm text-slate-400">No personnel notes recorded for this person yet.</p>
       ) : (
@@ -138,24 +162,39 @@ export function PersonnelNotesPanel({
         </ul>
       )}
 
-      {selectedNote ? (
+      {selectedNoteId ? (
         <div className="mt-4 rounded-lg border border-slate-700 bg-slate-950/50 p-4">
           <h3 className="text-sm font-medium text-slate-200">Note detail</h3>
           {isLoadingDetail ? (
             <p className="mt-2 text-sm text-slate-400">Loading detail…</p>
+          ) : isDetailError ? (
+            <div className="mt-2">
+              <ApiErrorCallout
+                title="Note detail unavailable"
+                message={detailErrorMessage ?? 'Failed to load note detail.'}
+                onRetry={onRetryDetail}
+                retryLabel="Retry note detail"
+              />
+            </div>
           ) : (
             <>
-              <p className="mt-2 whitespace-pre-wrap text-sm text-slate-300">{selectedNote.body}</p>
-              <dl className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-2">
-                <div>
-                  <dt className="uppercase tracking-wide">Category</dt>
-                  <dd className="text-slate-200">{formatCategoryLabel(selectedNote.categoryKey)}</dd>
-                </div>
-                <div>
-                  <dt className="uppercase tracking-wide">Visibility</dt>
-                  <dd className="text-slate-200">{formatVisibilityLabel(selectedNote.visibilityKey)}</dd>
-                </div>
-              </dl>
+              {selectedNote ? (
+                <>
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-slate-300">{selectedNote.body}</p>
+                  <dl className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-2">
+                    <div>
+                      <dt className="uppercase tracking-wide">Category</dt>
+                      <dd className="text-slate-200">{formatCategoryLabel(selectedNote.categoryKey)}</dd>
+                    </div>
+                    <div>
+                      <dt className="uppercase tracking-wide">Visibility</dt>
+                      <dd className="text-slate-200">{formatVisibilityLabel(selectedNote.visibilityKey)}</dd>
+                    </div>
+                  </dl>
+                </>
+              ) : (
+                <p className="mt-2 text-sm text-slate-400">Note detail is unavailable.</p>
+              )}
             </>
           )}
         </div>

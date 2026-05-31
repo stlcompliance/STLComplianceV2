@@ -38,6 +38,41 @@ public sealed record OperatorReportSummaryItem(
     string OverallResult,
     DateTimeOffset CreatedAt);
 
+public sealed record OperatorReportAlertResponse(
+    string AlertType,
+    string Severity,
+    Guid? RulePackId,
+    string? PackKey,
+    Guid? WaiverId,
+    string Message,
+    DateTimeOffset DetectedAt);
+
+public sealed record MissingEvidenceReportSummaryResponse(
+    int TotalWarnings,
+    int CriticalCount,
+    int HighCount,
+    int MediumCount,
+    int LowCount,
+    int MissingMirrorCount,
+    int UnresolvedFactCount,
+    int NoFactDefinitionCount,
+    IReadOnlyList<MissingEvidenceReportSummaryItem> RecentWarnings);
+
+public sealed record MissingEvidenceReportSummaryItem(
+    Guid WarningId,
+    Guid RunId,
+    Guid RulePackId,
+    string PackKey,
+    string FactKey,
+    string WarningType,
+    string Severity,
+    string ReasonCode,
+    bool HasMirrorAtScope,
+    bool IsRequiredInRule,
+    bool IsRequiredInCatalog,
+    string Summary,
+    DateTimeOffset EvaluatedAt);
+
 public sealed record EntityExportFormatDescriptor(
     string FormatKey,
     string ContentType,

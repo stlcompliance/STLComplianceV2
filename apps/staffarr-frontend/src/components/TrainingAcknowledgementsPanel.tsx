@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { acknowledgeTrainingAssignment, listTrainingAcknowledgements } from '../api/client'
 import type { TrainingAcknowledgementResponse } from '../api/types'
 
@@ -40,9 +41,14 @@ export function TrainingAcknowledgementsPanel({
 
   if (acknowledgementsQuery.isError) {
     return (
-      <p className="rounded-lg border border-rose-800/60 bg-rose-950/40 px-4 py-3 text-sm text-rose-200">
-        Unable to load training acknowledgements for {displayName}.
-      </p>
+      <ApiErrorCallout
+        message={getErrorMessage(
+          acknowledgementsQuery.error,
+          `Unable to load training acknowledgements for ${displayName}.`,
+        )}
+        onRetry={() => void acknowledgementsQuery.refetch()}
+        retryLabel="Retry acknowledgements"
+      />
     )
   }
 

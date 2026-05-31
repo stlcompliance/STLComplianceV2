@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 
+import * as client from '../api/client'
 import { ProcurementCoordinationPanel } from './ProcurementCoordinationPanel'
 
 vi.mock('../api/client', () => ({
@@ -59,5 +60,21 @@ describe('ProcurementCoordinationPanel', () => {
     )
 
     expect(container).toBeEmptyDOMElement()
+  })
+
+  it('shows retryable error callout when dashboard query fails', async () => {
+    vi.mocked(client.getProcurementCoordinationDashboard).mockRejectedValueOnce(
+      new Error('coordination unavailable'),
+    )
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ProcurementCoordinationPanel accessToken="token" canRead={true} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('coordination unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry dashboard' })).toBeInTheDocument()
   })
 })

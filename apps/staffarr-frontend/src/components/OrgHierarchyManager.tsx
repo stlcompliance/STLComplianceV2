@@ -1,11 +1,16 @@
 import { type FormEvent, useMemo, useState } from 'react'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type { OrgUnitResponse } from '../api/types'
 
 interface OrgHierarchyManagerProps {
   orgUnits: OrgUnitResponse[]
+  isLoading?: boolean
+  isError?: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
   canManage: boolean
   isSubmitting: boolean
-  errorMessage: string | null
+  actionErrorMessage: string | null
   onCreate: (request: { unitType: string; name: string; parentOrgUnitId: string | null }) => Promise<void>
   onUpdate: (orgUnitId: string, request: { unitType: string; name: string; parentOrgUnitId: string | null }) => Promise<void>
   onStatusChange: (orgUnitId: string, status: 'active' | 'inactive') => Promise<void>
@@ -57,9 +62,13 @@ export function canManageOrgHierarchy(roleKey: string, isPlatformAdmin: boolean)
 
 export function OrgHierarchyManager({
   orgUnits,
+  isLoading = false,
+  isError = false,
+  readErrorMessage = null,
+  onRetryRead,
   canManage,
   isSubmitting,
-  errorMessage,
+  actionErrorMessage,
   onCreate,
   onUpdate,
   onStatusChange,
@@ -120,11 +129,27 @@ export function OrgHierarchyManager({
           {canManage ? 'Write enabled' : 'Read only'}
         </span>
       </div>
-      {errorMessage ? <p className="mt-3 text-sm text-red-300">{errorMessage}</p> : null}
+      {actionErrorMessage ? (
+        <div className="mt-3">
+          <ApiErrorCallout title="Org hierarchy update failed" message={actionErrorMessage} />
+        </div>
+      ) : null}
+      {isError ? (
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Org hierarchy unavailable"
+            message={readErrorMessage ?? 'Failed to load org hierarchy data.'}
+            onRetry={onRetryRead}
+            retryLabel="Retry org hierarchy"
+          />
+        </div>
+      ) : null}
 
-      {rows.length === 0 ? (
+      {isLoading ? (
+        <p className="mt-4 text-sm text-slate-400">Loading org hierarchy…</p>
+      ) : !isError && rows.length === 0 ? (
         <p className="mt-4 text-sm text-slate-400">No org units configured yet.</p>
-      ) : (
+      ) : !isError ? (
         <ul className="mt-4 divide-y divide-slate-700">
           {rows.map(({ node, depth }) => (
             <li key={node.orgUnitId} className="flex items-center justify-between py-2 text-sm">
@@ -143,9 +168,9 @@ export function OrgHierarchyManager({
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
 
-      {canManage ? (
+      {canManage && !isLoading && !isError ? (
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <form className="space-y-3" onSubmit={handleCreate}>
             <h3 className="text-sm font-medium text-slate-300">Create org unit</h3>
@@ -257,9 +282,9 @@ export function OrgHierarchyManager({
             </div>
           </form>
         </div>
-      ) : (
+      ) : !isLoading && !isError ? (
         <p className="mt-4 text-xs text-slate-500">Your role does not include org hierarchy write permission.</p>
-      )}
+      ) : null}
     </section>
   )
 }

@@ -26,6 +26,8 @@ public sealed class Part : IHasTenant
 
     public string Status { get; set; } = "active";
 
+    public bool RequiresSerialLotTracking { get; set; }
+
     public decimal? ReorderPoint { get; set; }
 
     public decimal? ReorderQuantity { get; set; }

@@ -457,9 +457,10 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
     private async Task<Guid> SeedAssetWithTypeAsync(string token, Guid assetTypeId)
     {
         var createAssetRequest = Authorized(HttpMethod.Post, "/api/assets", token);
+        var assetTag = $"RDY-{Guid.NewGuid().ToString("N")[..8]}";
         createAssetRequest.Content = JsonContent.Create(new CreateAssetRequest(
             assetTypeId,
-            $"RDY-ASSET-{Guid.NewGuid():N}".Substring(0, 12),
+            assetTag,
             "Readiness Test Asset",
             string.Empty,
             null));
@@ -471,19 +472,21 @@ public sealed class MaintainArrAssetReadinessTests : IAsyncLifetime
 
     private async Task<Guid> SeedAssetTypeAsync(string token)
     {
+        var classKey = $"rdyv-{Guid.NewGuid().ToString("N")[..8]}";
         var createClassRequest = Authorized(HttpMethod.Post, "/api/asset-classes", token);
         createClassRequest.Content = JsonContent.Create(new CreateAssetClassRequest(
-            $"rdy-vehicles-{Guid.NewGuid():N}".Substring(0, 12),
+            classKey,
             "Readiness Vehicles",
             string.Empty));
         var createClassResponse = await _maintainarrClient.SendAsync(createClassRequest);
         createClassResponse.EnsureSuccessStatusCode();
         var assetClass = (await createClassResponse.Content.ReadFromJsonAsync<AssetClassResponse>())!;
 
+        var typeKey = $"rdyf-{Guid.NewGuid().ToString("N")[..8]}";
         var createTypeRequest = Authorized(HttpMethod.Post, "/api/asset-types", token);
         createTypeRequest.Content = JsonContent.Create(new CreateAssetTypeRequest(
             assetClass.AssetClassId,
-            $"rdy-forklift-{Guid.NewGuid():N}".Substring(0, 12),
+            typeKey,
             "Readiness Forklift",
             string.Empty));
         var createTypeResponse = await _maintainarrClient.SendAsync(createTypeRequest);

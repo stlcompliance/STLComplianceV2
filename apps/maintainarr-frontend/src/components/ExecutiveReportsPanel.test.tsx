@@ -1,8 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, afterEach } from 'vitest'
+import { cleanup, fireEvent, waitFor } from '@testing-library/react'
 
 import { ExecutiveReportsPanel } from './ExecutiveReportsPanel'
+import * as client from '../api/client'
 
 vi.mock('../api/client', () => ({
   getExecutiveReportSummary: vi.fn().mockResolvedValue({
@@ -80,6 +82,11 @@ vi.mock('../api/client', () => ({
 }))
 
 describe('ExecutiveReportsPanel', () => {
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
   it('renders executive summary metrics', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
@@ -107,5 +114,23 @@ describe('ExecutiveReportsPanel', () => {
     )
 
     expect(container).toBeEmptyDOMElement()
+  })
+
+  it('shows retry callout when summary fails', async () => {
+    vi.mocked(client.getExecutiveReportSummary).mockRejectedValue(new Error('summary down'))
+
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ExecutiveReportsPanel accessToken="token" canRead={true} canExport={true} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Executive summary unavailable')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry summary' }))
+
+    await waitFor(() => {
+      expect(client.getExecutiveReportSummary).toHaveBeenCalledTimes(2)
+    })
   })
 })

@@ -103,6 +103,29 @@ public static class ComplianceReportEndpoints
                 return Results.Ok(detail);
             })
             .WithName($"GetSupplyArrCompliancePartyDetail{nameSuffix}");
+
+            group.MapGet("/alerts", async (
+                SupplyArrAuthorizationService authorization,
+                ComplianceReportService reportService,
+                ISupplyArrAuditService audit,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireComplianceReportRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var alerts = await reportService.ListAlertsAsync(tenantId, cancellationToken);
+                await audit.WriteAsync(
+                    "supplyarr.reports.compliance.alerts",
+                    tenantId,
+                    actorUserId,
+                    "compliance_report",
+                    null,
+                    "success",
+                    cancellationToken: cancellationToken);
+                return Results.Ok(alerts);
+            })
+            .WithName($"ListSupplyArrComplianceAlerts{nameSuffix}");
         }
 
         MapRoutes(app.MapGroup("/api/reports/compliance"), string.Empty);

@@ -67,6 +67,7 @@ import { canManagePersonnelNotes } from '../components/PersonnelNotesPanel'
 import { canManagePersonnelDocuments } from '../components/PersonnelDocumentsPanel'
 import { canOverrideReadiness } from '../components/ReadinessPanel'
 import { canViewReadinessRollups } from '../components/ReadinessRollupSupervisorPanel'
+import { filterPeopleDirectory } from '../lib/peopleDirectoryFilter'
 import { canManageOrgHierarchy } from '../components/OrgHierarchyManager'
 import type { PersonTimelineCategoryFilter } from '../components/PersonTimelinePanel'
 import type { ReadinessRollupSelection } from '../api/types'
@@ -100,6 +101,7 @@ export function useStaffArrWorkspaceState() {
     enabled: Boolean(session?.accessToken),
   })
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
+  const [peopleDirectoryQuery, setPeopleDirectoryQuery] = useState('')
   const [personTimelinePage, setPersonTimelinePage] = useState(1)
   const [personTimelinePageSize, setPersonTimelinePageSize] = useState(25)
   const [personTimelineCategoryFilter, setPersonTimelineCategoryFilter] =
@@ -568,6 +570,13 @@ export function useStaffArrWorkspaceState() {
         queryClient.invalidateQueries({ queryKey: ['staffarr-person', session?.accessToken, payload.personId] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-manager-chain', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-subordinates', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-lookup', session?.accessToken, payload.personId] }),
+        queryClient.invalidateQueries({
+          queryKey: ['staffarr-person-history-summary', session?.accessToken, payload.personId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['staffarr-workforce-onboarding-journey', session?.accessToken, payload.personId],
+        }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
       ])
     },
@@ -582,6 +591,13 @@ export function useStaffArrWorkspaceState() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['staffarr-people', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-person', session?.accessToken, payload.personId] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-lookup', session?.accessToken, payload.personId] }),
+        queryClient.invalidateQueries({
+          queryKey: ['staffarr-person-history-summary', session?.accessToken, payload.personId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['staffarr-workforce-onboarding-journey', session?.accessToken, payload.personId],
+        }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
       ])
     },
@@ -606,6 +622,13 @@ export function useStaffArrWorkspaceState() {
     onSuccess: async (_, payload) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['staffarr-person-offboarding', session?.accessToken, payload.personId] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-lookup', session?.accessToken, payload.personId] }),
+        queryClient.invalidateQueries({
+          queryKey: ['staffarr-person-history-summary', session?.accessToken, payload.personId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['staffarr-workforce-onboarding-journey', session?.accessToken, payload.personId],
+        }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
       ])
     },
@@ -628,6 +651,13 @@ export function useStaffArrWorkspaceState() {
         queryClient.invalidateQueries({ queryKey: ['staffarr-role-assignments', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-person-readiness', session?.accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-lookup', session?.accessToken, payload.personId] }),
+        queryClient.invalidateQueries({
+          queryKey: ['staffarr-person-history-summary', session?.accessToken, payload.personId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['staffarr-workforce-onboarding-journey', session?.accessToken, payload.personId],
+        }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', session?.accessToken] }),
         queryClient.invalidateQueries({ queryKey: ['staffarr-subordinates', session?.accessToken] }),
       ])
@@ -702,9 +732,14 @@ export function useStaffArrWorkspaceState() {
 
   const me = meQuery.data
   const people = peopleQuery.data ?? []
+  const filteredPeople = filterPeopleDirectory(people, peopleDirectoryQuery)
   const orgUnits = orgUnitsQuery.data ?? []
   const profile = personProfileQuery.data
   const selectedPerson = people.find((person) => person.personId === effectivePersonId) ?? null
+  const selectedPersonHiddenByFilter =
+    Boolean(peopleDirectoryQuery.trim()) &&
+    Boolean(selectedPerson) &&
+    !filteredPeople.some((person) => person.personId === selectedPerson?.personId)
   const assignments = assignmentQuery.data ?? []
   const managerChain = managerChainQuery.data ?? []
   const subordinates = subordinatesQuery.data ?? []
@@ -750,7 +785,6 @@ export function useStaffArrWorkspaceState() {
   const noteMutationError = createNoteMutation.error ?? null
   const documentMutationError = uploadDocumentMutation.error ?? null
   const personProfileMutationError =
-    createPersonMutation.error ??
     updatePersonMutation.error ??
     updateEmploymentStatusMutation.error ??
     null
@@ -768,6 +802,8 @@ export function useStaffArrWorkspaceState() {
     searchParams,
     selectedPersonId,
     setSelectedPersonId,
+    peopleDirectoryQuery,
+    setPeopleDirectoryQuery,
     selectedSubordinateId,
     setSelectedSubordinateId,
     selectedIncidentId,
@@ -843,9 +879,11 @@ export function useStaffArrWorkspaceState() {
     personDocumentsQuery,
     documentDetailQuery,
     people,
+    filteredPeople,
     orgUnits,
     profile,
     selectedPerson,
+    selectedPersonHiddenByFilter,
     assignments,
     managerChain,
     subordinates,

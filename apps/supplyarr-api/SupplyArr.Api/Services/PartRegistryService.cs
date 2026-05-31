@@ -84,6 +84,7 @@ public sealed class PartRegistryService(
             UnitOfMeasure = NormalizeUnitOfMeasure(request.UnitOfMeasure),
             ManufacturerName = NormalizeManufacturerName(request.ManufacturerName),
             ManufacturerPartNumber = NormalizeManufacturerPartNumber(request.ManufacturerPartNumber),
+            RequiresSerialLotTracking = request.RequiresSerialLotTracking,
             Status = "active",
             CreatedAt = now,
             UpdatedAt = now
@@ -143,6 +144,7 @@ public sealed class PartRegistryService(
         entity.UnitOfMeasure = NormalizeUnitOfMeasure(request.UnitOfMeasure);
         entity.ManufacturerName = NormalizeManufacturerName(request.ManufacturerName);
         entity.ManufacturerPartNumber = NormalizeManufacturerPartNumber(request.ManufacturerPartNumber);
+        entity.RequiresSerialLotTracking = request.RequiresSerialLotTracking;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -501,6 +503,7 @@ public sealed class PartRegistryService(
             entity.ManufacturerName,
             entity.ManufacturerPartNumber,
             entity.Status,
+            entity.RequiresSerialLotTracking,
             entity.ReorderPoint,
             entity.ReorderQuantity,
             entity.ManufacturerAliases

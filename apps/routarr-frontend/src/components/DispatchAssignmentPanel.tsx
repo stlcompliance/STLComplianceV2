@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { useMemo, useState } from 'react'
 
 import {
@@ -87,6 +88,7 @@ function TripDropTarget({
 export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: DispatchAssignmentPanelProps) {
   const queryClient = useQueryClient()
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
   const [assigningTripId, setAssigningTripId] = useState<string | null>(null)
 
   const tripsQuery = useQuery({
@@ -140,6 +142,7 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
       })
     },
     onSuccess: async () => {
+      setActionError(null)
       await queryClient.invalidateQueries({ queryKey: ['routarr-trips'] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-trips-assignment'] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-dispatch-board'] })
@@ -149,7 +152,7 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
       setAssigningTripId(null)
     },
     onError: (error: Error) => {
-      setStatusMessage(error.message)
+      setActionError(getErrorMessage(error, 'Assignment failed.'))
       setAssigningTripId(null)
     },
   })
@@ -187,6 +190,7 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
 
     setAssigningTripId(tripId)
     setStatusMessage(null)
+    setActionError(null)
 
     try {
       const preview = await previewDispatchAssignment(accessToken, {
@@ -214,7 +218,7 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
         ignoreWorkflowGateBlocks: ignoreFlags.ignoreWorkflowGateBlocks,
       })
     } catch (error) {
-      setStatusMessage((error as Error).message)
+      setActionError(getErrorMessage(error, 'Assignment failed.'))
       setAssigningTripId(null)
     }
   }
@@ -245,6 +249,11 @@ export function DispatchAssignmentPanel({ accessToken, scope, canAssign }: Dispa
           overlapping assignments, driver eligibility, and Compliance Core workflow gates before saving.
         </p>
         {statusMessage ? <p className="mt-3 text-sm text-amber-200">{statusMessage}</p> : null}
+        {actionError ? (
+          <div className="mt-3" data-testid="dispatch-assignment-error">
+            <ApiErrorCallout title="Assignment failed" message={actionError} />
+          </div>
+        ) : null}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

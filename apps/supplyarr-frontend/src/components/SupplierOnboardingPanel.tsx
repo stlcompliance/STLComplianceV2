@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { useMemo, useState } from 'react'
 
 import {
@@ -35,6 +36,15 @@ function statusBadgeClass(status: string): string {
     default:
       return 'bg-sky-500/20 text-sky-200 ring-sky-500/40'
   }
+}
+
+function isMissingOnboardingRecordError(error: unknown): boolean {
+  return (
+    typeof error === 'object'
+    && error !== null
+    && 'status' in error
+    && (error as { status?: number }).status === 404
+  )
 }
 
 export function SupplierOnboardingPanel({
@@ -132,6 +142,13 @@ export function SupplierOnboardingPanel({
   })
 
   const onboarding = onboardingQuery.data
+  const actionError =
+    (startMutation.isError && startMutation.error)
+    || (submitMutation.isError && submitMutation.error)
+    || (approveMutation.isError && approveMutation.error)
+    || (rejectMutation.isError && rejectMutation.error)
+    || (registerDocMutation.isError && registerDocMutation.error)
+    || null
   const canSubmit =
     onboarding &&
     (onboarding.onboardingStatus === 'draft' || onboarding.onboardingStatus === 'rejected')
@@ -146,6 +163,34 @@ export function SupplierOnboardingPanel({
       <p className="mt-1 text-sm text-slate-400">
         Register compliance documents, submit for review, and approve vendor or supplier parties.
       </p>
+      {requirementsQuery.isError ? (
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Unable to load onboarding requirements"
+            message={getErrorMessage(requirementsQuery.error, 'Failed to load required documents.')}
+            onRetry={() => void requirementsQuery.refetch()}
+            retryLabel="Retry requirements"
+          />
+        </div>
+      ) : null}
+      {pendingQuery.isError ? (
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Unable to load pending reviews"
+            message={getErrorMessage(pendingQuery.error, 'Failed to load pending supplier onboarding reviews.')}
+            onRetry={() => void pendingQuery.refetch()}
+            retryLabel="Retry pending reviews"
+          />
+        </div>
+      ) : null}
+      {actionError ? (
+        <div className="mt-3" data-testid="supplier-onboarding-action-error">
+          <ApiErrorCallout
+            title="Onboarding action failed"
+            message={getErrorMessage(actionError, 'Unable to complete onboarding action.')}
+          />
+        </div>
+      ) : null}
 
       {canReview && (pendingQuery.data?.length ?? 0) > 0 ? (
         <div className="mt-4 rounded-lg border border-amber-800/50 bg-amber-950/30 p-3">
@@ -306,9 +351,21 @@ export function SupplierOnboardingPanel({
             <p className="mt-2 text-sm text-rose-300">Rejected: {onboarding.rejectionReason}</p>
           ) : null}
         </div>
-      ) : selectedPartyId && onboardingQuery.isError ? (
+      ) : selectedPartyId && onboardingQuery.isError && isMissingOnboardingRecordError(onboardingQuery.error) ? (
         <p className="mt-3 text-sm text-slate-400">No onboarding record yet — start onboarding above.</p>
       ) : null}
+      {selectedPartyId
+      && onboardingQuery.isError
+      && !isMissingOnboardingRecordError(onboardingQuery.error) ? (
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Unable to load supplier onboarding"
+            message={getErrorMessage(onboardingQuery.error, 'Failed to load onboarding details.')}
+            onRetry={() => void onboardingQuery.refetch()}
+            retryLabel="Retry onboarding"
+          />
+        </div>
+        ) : null}
 
       {canApproveReview ? (
         <div className="mt-4 flex flex-wrap items-end gap-2">

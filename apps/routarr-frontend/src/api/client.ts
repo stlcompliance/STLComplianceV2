@@ -123,6 +123,57 @@ export class RoutArrApiError extends Error {
   }
 }
 
+type ProblemDetailsLike = {
+  title?: string
+  detail?: string
+  errors?: Record<string, string[] | string>
+}
+
+function extractProblemDetailsMessage(body: string): string | null {
+  if (!body.trim()) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(body) as ProblemDetailsLike
+    const parts: string[] = []
+
+    if (typeof parsed.title === 'string' && parsed.title.trim()) {
+      parts.push(parsed.title.trim())
+    }
+
+    if (typeof parsed.detail === 'string' && parsed.detail.trim()) {
+      parts.push(parsed.detail.trim())
+    }
+
+    const errorEntries = parsed.errors ? Object.entries(parsed.errors) : []
+    if (errorEntries.length > 0) {
+      const flattened = errorEntries
+        .flatMap(([field, value]) => {
+          const values = Array.isArray(value) ? value : [value]
+          return values
+            .map((message) => String(message).trim())
+            .filter(Boolean)
+            .map((message) => `${field}: ${message}`)
+        })
+      if (flattened.length > 0) {
+        parts.push(flattened.join('; '))
+      }
+    }
+
+    return parts.length > 0 ? parts.join(' - ') : null
+  } catch {
+    return null
+  }
+}
+
+async function toApiError(response: Response, fallbackMessage: string): Promise<RoutArrApiError> {
+  const body = await response.text()
+  const parsedMessage = extractProblemDetailsMessage(body)
+  const message = parsedMessage || body || `${fallbackMessage} (${response.status})`
+  return new RoutArrApiError(message, response.status, body)
+}
+
 function authHeaders(accessToken: string): HeadersInit {
   return {
     Authorization: `Bearer ${accessToken}`,
@@ -132,8 +183,7 @@ function authHeaders(accessToken: string): HeadersInit {
 
 async function parseJsonResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
   if (!response.ok) {
-    const body = await response.text()
-    throw new RoutArrApiError(body || `${fallbackMessage} (${response.status})`, response.status, body)
+    throw await toApiError(response, fallbackMessage)
   }
 
   return (await response.json()) as T
@@ -1416,12 +1466,7 @@ export async function exportDispatchReportSummaryCsv(
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new RoutArrApiError(
-      body || `Dispatch report export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Dispatch report export failed')
   }
   return response.blob()
 }
@@ -1457,12 +1502,7 @@ export async function exportDispatchOverrideReportSummaryCsv(
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new RoutArrApiError(
-      body || `Dispatch override report export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Dispatch override report export failed')
   }
   return response.blob()
 }
@@ -1524,12 +1564,7 @@ export async function exportRouteReportSummaryCsv(
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new RoutArrApiError(
-      body || `Route report export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Route report export failed')
   }
   return response.blob()
 }
@@ -1604,12 +1639,7 @@ export async function exportProofDvirReportSummaryCsv(
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new RoutArrApiError(
-      body || `Proof/DVIR report export failed (${response.status})`,
-      response.status,
-      body,
-    )
+    throw await toApiError(response, 'Proof/DVIR report export failed')
   }
   return response.blob()
 }
@@ -1635,8 +1665,7 @@ async function downloadExportBlob(
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new RoutArrApiError(body || `${errorMessage} (${response.status})`, response.status, body)
+    throw await toApiError(response, errorMessage)
   }
   return response.blob()
 }

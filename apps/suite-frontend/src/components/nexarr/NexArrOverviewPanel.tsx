@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Building2, KeyRound, LayoutDashboard, ShieldCheck, User } from 'lucide-react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
 import { useAuth } from '../../auth/AuthProvider'
@@ -63,10 +64,18 @@ export function NexArrOverviewPanel() {
   }
 
   if (error) {
+    const retry = () => {
+      void entitlementsQuery.refetch()
+      void tenantsQuery.refetch()
+      void navigationQuery.refetch()
+      void sessionsQuery.refetch()
+    }
     return (
-      <p className="text-sm text-red-300" role="alert">
-        Failed to load platform overview: {(error as Error).message}
-      </p>
+      <ApiErrorCallout
+        message={getErrorMessage(error, 'Failed to load platform overview.')}
+        onRetry={retry}
+        retryLabel="Retry overview"
+      />
     )
   }
 

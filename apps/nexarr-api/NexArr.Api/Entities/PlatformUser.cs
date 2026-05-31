@@ -20,5 +20,9 @@ public sealed class PlatformUser
 
     public ICollection<TenantMembership> Memberships { get; set; } = [];
 
+    public ICollection<PlatformRoleAssignment> RoleAssignments { get; set; } = [];
+
+    public ICollection<ExternalIdentityProviderMapping> ExternalIdentityProviderMappings { get; set; } = [];
+
     public ICollection<UserSession> Sessions { get; set; } = [];
 }

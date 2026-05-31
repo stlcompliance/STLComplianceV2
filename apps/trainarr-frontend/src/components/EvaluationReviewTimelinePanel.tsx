@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { getTrainingEvaluationReviewTimeline } from '../api/client'
 import type { TrainingEvaluationReviewItem } from '../api/types'
 
@@ -120,7 +121,12 @@ export function EvaluationReviewTimelinePanel({
       {timelineQuery.isLoading ? (
         <p className="mt-3 text-sm text-slate-400">Loading evaluation timeline…</p>
       ) : timelineQuery.isError ? (
-        <p className="mt-3 text-sm text-rose-300">Unable to load evaluation review timeline.</p>
+        <ApiErrorCallout
+          className="mt-3"
+          message={getErrorMessage(timelineQuery.error, 'Unable to load evaluation review timeline.')}
+          onRetry={() => void timelineQuery.refetch()}
+          retryLabel="Retry evaluation timeline"
+        />
       ) : items.length === 0 ? (
         <p className="mt-3 text-sm text-slate-400">No evaluations recorded yet.</p>
       ) : (

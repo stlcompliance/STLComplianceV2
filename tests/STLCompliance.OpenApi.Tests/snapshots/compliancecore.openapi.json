@@ -2799,6 +2799,64 @@
         }
       }
     },
+    "/api/reports/evidence/missing/summary": {
+      "get": {
+        "tags": [
+          "MissingEvidenceReports"
+        ],
+        "operationId": "GetComplianceCoreMissingEvidenceReportSummary",
+        "parameters": [
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reasonCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/evidence/missing/summary/export": {
+      "get": {
+        "tags": [
+          "MissingEvidenceReports"
+        ],
+        "operationId": "ExportComplianceCoreMissingEvidenceReportSummary",
+        "parameters": [
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reasonCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reports/findings/summary": {
       "get": {
         "tags": [
@@ -2864,6 +2922,19 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/operator/alerts": {
+      "get": {
+        "tags": [
+          "OperatorReports"
+        ],
+        "operationId": "GetComplianceCoreOperatorReportAlerts",
         "responses": {
           "200": {
             "description": "OK"
@@ -6987,6 +7058,64 @@
         }
       }
     },
+    "/api/v1/reports/evidence/missing/summary": {
+      "get": {
+        "tags": [
+          "MissingEvidenceReports"
+        ],
+        "operationId": "GetComplianceCoreMissingEvidenceReportSummaryV1",
+        "parameters": [
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reasonCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/evidence/missing/summary/export": {
+      "get": {
+        "tags": [
+          "MissingEvidenceReports"
+        ],
+        "operationId": "ExportComplianceCoreMissingEvidenceReportSummaryV1",
+        "parameters": [
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reasonCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/reports/findings/summary": {
       "get": {
         "tags": [
@@ -7052,6 +7181,19 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/operator/alerts": {
+      "get": {
+        "tags": [
+          "OperatorReports"
+        ],
+        "operationId": "GetComplianceCoreOperatorReportAlertsV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -13450,6 +13592,9 @@
     },
     {
       "name": "OperatorReports"
+    },
+    {
+      "name": "MissingEvidenceReports"
     },
     {
       "name": "EntityExports"

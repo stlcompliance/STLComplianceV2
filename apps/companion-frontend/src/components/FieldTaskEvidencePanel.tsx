@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { useRef, useState } from 'react'
 
 import { submitCompanionFieldEvidence, validateCompanionFieldTask } from '../api/client'
@@ -163,11 +164,12 @@ export function FieldTaskEvidencePanel({
       </button>
 
       {submitMutation.isError && (
-        <p className="mt-2 text-sm text-rose-400" data-testid="companion-evidence-error">
-          {submitMutation.error instanceof Error
-            ? submitMutation.error.message
-            : 'Evidence upload failed.'}
-        </p>
+        <ApiErrorCallout
+          className="mt-2"
+          testId="companion-evidence-error"
+          title="Evidence upload failed"
+          message={getErrorMessage(submitMutation.error, 'Evidence upload failed.')}
+        />
       )}
 
       {successMessage && (

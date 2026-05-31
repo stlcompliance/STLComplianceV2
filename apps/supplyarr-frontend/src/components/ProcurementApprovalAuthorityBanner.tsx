@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import { getProcurementApprovalAuthority } from '../api/client'
 import type { ProcurementApprovalAuthorityMirrorResponse } from '../api/types'
@@ -71,10 +72,18 @@ export function ProcurementApprovalAuthorityBanner({ accessToken, canRead }: Pro
         </ul>
       )}
       {authorityQuery.isError && (
-        <p className="mt-2 text-sm text-amber-300">
-          Could not load StaffArr authority mirror. Denied actions will return a procurement approval
-          authority error from the API.
-        </p>
+        <div className="mt-2">
+          <ApiErrorCallout
+            tone="warning"
+            title="Authority mirror unavailable"
+            message={getErrorMessage(
+              authorityQuery.error,
+              'Could not load StaffArr authority mirror. Denied actions will return a procurement approval authority error from the API.',
+            )}
+            onRetry={() => void authorityQuery.refetch()}
+            retryLabel="Retry authority mirror"
+          />
+        </div>
       )}
     </section>
   )

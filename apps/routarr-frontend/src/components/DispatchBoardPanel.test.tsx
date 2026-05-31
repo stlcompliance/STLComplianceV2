@@ -39,6 +39,7 @@ vi.mock('../api/client', () => ({
       unassignedDriverTripCount: 1,
       unlinkedRouteCount: 0,
       pendingStopCount: 2,
+      missingProofTripCount: 1,
     },
     assignedTrips: [
       {
@@ -47,12 +48,14 @@ vi.mock('../api/client', () => ({
         title: 'North yard delivery',
         dispatchStatus: 'dispatched',
         assignedDriverPersonId: 'driver-1',
+        vehicleRefKey: 'VEH-1',
         scheduledStartAt: '2026-05-27T10:00:00Z',
         scheduledEndAt: '2026-05-27T13:00:00Z',
         isLate: false,
         isAtRisk: true,
         routeCount: 1,
         pendingStopCount: 2,
+        missingRequiredProofCount: 1,
       },
     ],
     activeTrips: [
@@ -62,12 +65,14 @@ vi.mock('../api/client', () => ({
         title: 'North yard delivery',
         dispatchStatus: 'dispatched',
         assignedDriverPersonId: 'driver-1',
+        vehicleRefKey: 'VEH-1',
         scheduledStartAt: '2026-05-27T10:00:00Z',
         scheduledEndAt: '2026-05-27T13:00:00Z',
         isLate: false,
         isAtRisk: true,
         routeCount: 1,
         pendingStopCount: 2,
+        missingRequiredProofCount: 1,
       },
     ],
     generatedAt: '2026-05-27T12:05:00Z',
@@ -108,5 +113,21 @@ describe('DispatchBoardPanel', () => {
     await screen.findByText(/Dispatch board/)
     fireEvent.click(screen.getByRole('button', { name: 'Weekly' }))
     expect(onScopeChange).toHaveBeenCalledWith('weekly')
+  })
+
+  it('shows retry callout when board fails', async () => {
+    const { getDispatchBoard } = await import('../api/client')
+    vi.mocked(getDispatchBoard).mockRejectedValueOnce(new Error('board down'))
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const onScopeChange = vi.fn()
+
+    render(
+      <QueryClientProvider client={client}>
+        <DispatchBoardPanel accessToken="token" scope="daily" onScopeChange={onScopeChange} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Dispatch board unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry board' })).toBeInTheDocument()
   })
 })

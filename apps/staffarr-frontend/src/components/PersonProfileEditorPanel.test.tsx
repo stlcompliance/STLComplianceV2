@@ -60,4 +60,22 @@ describe('PersonProfileEditorPanel', () => {
     expect(screen.getByRole('button', { name: /Save profile changes/i })).toBeTruthy()
     expect(screen.getByRole('button', { name: /Mark inactive/i })).toBeTruthy()
   })
+
+  it('renders profile error in callout', () => {
+    render(
+      <PersonProfileEditorPanel
+        profile={profile}
+        orgUnits={[]}
+        peopleOptions={[]}
+        canManage={true}
+        isSubmitting={false}
+        errorMessage="profile save failed"
+        onUpdate={async () => {}}
+        onEmploymentStatusChange={async () => {}}
+      />,
+    )
+
+    expect(screen.getByText('profile save failed')).toBeTruthy()
+    expect(screen.getByRole('alert')).toBeTruthy()
+  })
 })

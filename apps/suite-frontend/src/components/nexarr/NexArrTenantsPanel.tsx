@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Building2, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
 import type { TenantOverviewRow } from '../../api/types'
@@ -41,9 +42,11 @@ export function NexArrTenantsPanel() {
 
   if (overviewQuery.isError) {
     return (
-      <p className="text-sm text-red-300" role="alert">
-        Failed to load tenants: {(overviewQuery.error as Error).message}
-      </p>
+      <ApiErrorCallout
+        message={getErrorMessage(overviewQuery.error, 'Failed to load tenants.')}
+        onRetry={() => void overviewQuery.refetch()}
+        retryLabel="Retry tenants"
+      />
     )
   }
 

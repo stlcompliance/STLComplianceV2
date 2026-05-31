@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import { getDispatchBoard } from '../api/client'
 import type { DispatchBoardResponse, DispatchBoardTripRow } from '../api/types'
@@ -59,6 +60,9 @@ function TripRow({ trip }: { trip: DispatchBoardTripRow }) {
       </p>
       <p className="mt-1 text-xs text-slate-500">
         {trip.routeCount} route(s) · {trip.pendingStopCount} pending stop(s)
+        {trip.missingRequiredProofCount > 0
+          ? ` · ${trip.missingRequiredProofCount} missing proof`
+          : ''}
         {trip.assignedDriverPersonId ? ` · driver ${trip.assignedDriverPersonId.slice(0, 8)}…` : ' · unassigned'}
       </p>
     </li>
@@ -77,9 +81,14 @@ export function DispatchBoardPanel({ accessToken, scope, onScopeChange }: Dispat
 
   if (boardQuery.isError) {
     return (
-      <p className="text-sm text-red-300">
-        Failed to load dispatch board: {(boardQuery.error as Error).message}
-      </p>
+      <ApiErrorCallout
+        title="Dispatch board unavailable"
+        message={getErrorMessage(boardQuery.error, 'Failed to load dispatch board.')}
+        retryLabel="Retry board"
+        onRetry={() => {
+          void boardQuery.refetch()
+        }}
+      />
     )
   }
 
@@ -123,7 +132,7 @@ export function DispatchBoardPanel({ accessToken, scope, onScopeChange }: Dispat
 
       <div>
         <h3 className="mb-3 text-sm font-medium text-slate-300">Work queue</h3>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryCard
             label="Unassigned trips"
             value={board.workQueue.unassignedDriverTripCount}
@@ -138,6 +147,11 @@ export function DispatchBoardPanel({ accessToken, scope, onScopeChange }: Dispat
             label="Pending stops"
             value={board.workQueue.pendingStopCount}
             hint="Stops awaiting arrival"
+          />
+          <SummaryCard
+            label="Missing proof"
+            value={board.workQueue.missingProofTripCount}
+            hint="Trips missing required proof"
           />
         </div>
       </div>

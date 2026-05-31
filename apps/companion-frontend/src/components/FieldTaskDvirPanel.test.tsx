@@ -90,4 +90,21 @@ describe('FieldTaskDvirPanel', () => {
 
     expect(await screen.findByTestId('companion-dvir-success')).toBeInTheDocument()
   })
+
+  it('shows submission failure in shared callout', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const { submitCompanionFieldDvir } = await import('../api/client')
+    vi.mocked(submitCompanionFieldDvir).mockRejectedValueOnce(new Error('dvir submit failed'))
+
+    render(
+      <QueryClientProvider client={client}>
+        <FieldTaskDvirPanel accessToken="test-token" task={tripTask} />
+      </QueryClientProvider>,
+    )
+
+    fireEvent.click(screen.getByTestId('companion-dvir-submit'))
+
+    expect(await screen.findByText('dvir submit failed')).toBeInTheDocument()
+    expect(screen.getByTestId('companion-dvir-error')).toBeInTheDocument()
+  })
 })

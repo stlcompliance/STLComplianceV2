@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import * as nexarr from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
 import { PermissionGate } from '../components/PermissionGate'
@@ -45,9 +46,9 @@ export function ProductSurfacePage() {
 
   if (!surface.isEnabled) {
     return (
-      <p className="text-sm text-red-700" role="alert">
-        {surface.permissionHint ?? 'You do not have access to this surface.'}
-      </p>
+      <ApiErrorCallout
+        message={surface.permissionHint ?? 'You do not have access to this surface.'}
+      />
     )
   }
 
@@ -95,9 +96,7 @@ export function ProductSurfacePage() {
         )}
 
         {launch.isError && (
-          <p className="rounded-lg border border-red-800/60 bg-red-950/30 p-4 text-sm text-red-200" role="alert">
-            {(launch.error as Error).message}
-          </p>
+          <ApiErrorCallout message={getErrorMessage(launch.error, 'Failed to launch product.')} />
         )}
 
         <PermissionGate allowed={launchAllowedQuery.data === true && !launchDenied}>

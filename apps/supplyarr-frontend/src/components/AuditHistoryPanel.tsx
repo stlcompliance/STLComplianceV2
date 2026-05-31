@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { ScrollText } from 'lucide-react'
-import { ControlledSelect } from '@stl/shared-ui'
+import { ApiErrorCallout, ControlledSelect, getErrorMessage } from '@stl/shared-ui'
 
 import { listAuditHistory } from '../api/client'
 
@@ -199,7 +199,16 @@ export function AuditHistoryPanel({ accessToken, canRead }: AuditHistoryPanelPro
       )}
 
       {query.isError && (
-        <p className="mt-3 text-sm text-rose-400">Failed to load audit history.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Audit history unavailable"
+            message={getErrorMessage(query.error, 'Failed to load audit history.')}
+            retryLabel="Retry history"
+            onRetry={() => {
+              void query.refetch()
+            }}
+          />
+        </div>
       )}
 
       {accumulatedItems.length > 0 && (

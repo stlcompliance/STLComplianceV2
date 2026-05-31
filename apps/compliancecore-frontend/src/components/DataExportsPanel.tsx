@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import {
   exportBulkEvaluationsCsv,
   exportBulkFindingsCsv,
@@ -65,6 +66,12 @@ export function DataExportsPanel({ accessToken, canExport }: DataExportsPanelPro
     },
   })
 
+  const exportError =
+    findingsExportMutation.error ??
+    evaluationsExportMutation.error ??
+    rulePacksExportMutation.error ??
+    workflowGateChecksExportMutation.error
+
   if (!canExport) {
     return (
       <section
@@ -98,7 +105,25 @@ export function DataExportsPanel({ accessToken, canExport }: DataExportsPanelPro
       )}
 
       {manifestQuery.isError && (
-        <p className="mt-3 text-sm text-red-300">Failed to load export manifest.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Export manifest unavailable"
+            message={getErrorMessage(manifestQuery.error, 'Failed to load export manifest.')}
+            retryLabel="Retry manifest"
+            onRetry={() => {
+              void manifestQuery.refetch()
+            }}
+          />
+        </div>
+      )}
+
+      {exportError && (
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="CSV export failed"
+            message={getErrorMessage(exportError, 'Unable to export CSV.')}
+          />
+        </div>
       )}
 
       {manifestQuery.data && (

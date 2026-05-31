@@ -1,6 +1,7 @@
 import { ChevronDown } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { useLocation, useNavigate } from 'react-router-dom'
 import * as nexarr from '../api/nexarrClient'
 import { useAuth } from '../auth/AuthProvider'
@@ -181,9 +182,11 @@ export function ProductSwitcher() {
       ) : null}
 
       {launch.isError ? (
-        <p className="absolute right-0 mt-1 w-72 text-xs text-red-300" role="alert">
-          {(launch.error as Error).message}
-        </p>
+        <ApiErrorCallout
+          className="absolute right-0 mt-1 w-72 text-xs"
+          title="Unable to launch product"
+          message={getErrorMessage(launch.error, 'Failed to launch product.')}
+        />
       ) : null}
     </div>
   )

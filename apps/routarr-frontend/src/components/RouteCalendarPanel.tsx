@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import { getRouteCalendar } from '../api/client'
 import type { RouteCalendarEvent, RouteCalendarResponse } from '../api/types'
@@ -94,9 +95,14 @@ export function RouteCalendarPanel({ accessToken, scope, onScopeChange }: RouteC
 
   if (calendarQuery.isError) {
     return (
-      <p className="text-sm text-red-300">
-        Failed to load route calendar: {(calendarQuery.error as Error).message}
-      </p>
+      <ApiErrorCallout
+        title="Route calendar unavailable"
+        message={getErrorMessage(calendarQuery.error, 'Failed to load route calendar.')}
+        retryLabel="Retry calendar"
+        onRetry={() => {
+          void calendarQuery.refetch()
+        }}
+      />
     )
   }
 

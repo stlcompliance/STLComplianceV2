@@ -50,4 +50,14 @@ describe('QualificationRecalculationSettingsPanel', () => {
     expect(screen.getByTestId('qualification-recalculation-states-empty')).toBeInTheDocument()
     expect(screen.getByTestId('qualification-recalculation-runs-empty')).toBeInTheDocument()
   })
+
+  it('shows retry callout when settings fail', async () => {
+    vi.mocked(client.getQualificationRecalculationSettings).mockRejectedValue(new Error('settings down'))
+    vi.mocked(client.getQualificationRecalculationStates).mockResolvedValue({ items: [] })
+    vi.mocked(client.getQualificationRecalculationRuns).mockResolvedValue({ items: [] })
+    renderPanel()
+
+    expect(await screen.findByText('Recalculation settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
 })

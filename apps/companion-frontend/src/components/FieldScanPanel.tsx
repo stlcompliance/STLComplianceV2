@@ -1,4 +1,5 @@
 import { BrowserMultiFormatReader } from '@zxing/browser'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import { ScanLine } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CompanionScanResolveResponse } from '../api/types'
@@ -28,7 +29,7 @@ export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps)
     scanControlsRef.current = null
     readerRef.current = null
     const stream = videoRef.current?.srcObject
-    if (stream instanceof MediaStream) {
+    if (typeof MediaStream !== 'undefined' && stream instanceof MediaStream) {
       for (const track of stream.getTracks()) {
         track.stop()
       }
@@ -192,9 +193,11 @@ export function FieldScanPanel({ accessToken, onResolved }: FieldScanPanelProps)
         </form>
 
         {errorMessage && (
-          <p className="text-sm text-red-200" data-testid="companion-scan-error">
-            {errorMessage}
-          </p>
+          <ApiErrorCallout
+            testId="companion-scan-error"
+            title="Scan failed"
+            message={errorMessage}
+          />
         )}
 
         {lastDenied && (

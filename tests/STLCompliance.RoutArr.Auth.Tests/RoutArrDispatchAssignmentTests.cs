@@ -118,6 +118,11 @@ public sealed class RoutArrDispatchAssignmentTests : IAsyncLifetime
         Assert.True(preview.HasBlockingConflicts);
         Assert.Single(preview.BlockingDriverAvailability);
         Assert.Empty(preview.OverlappingTrips);
+        Assert.NotNull(preview.ConflictSummary);
+        Assert.True(preview.ConflictSummary!.HasMissingExternalData);
+        Assert.False(preview.ConflictSummary.HasStaleExternalData);
+        Assert.Contains(preview.ValidationMessages!, message =>
+            message.Contains("External data is missing or unavailable", StringComparison.OrdinalIgnoreCase));
 
         var assignRequest = Authorized(HttpMethod.Patch, $"/api/trips/{trip.TripId}/assign-driver", dispatcherToken);
         assignRequest.Content = JsonContent.Create(new AssignTripDriverRequest(driverPersonId));

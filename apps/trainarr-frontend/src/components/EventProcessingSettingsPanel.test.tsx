@@ -50,4 +50,12 @@ describe('EventProcessingSettingsPanel', () => {
       expect(screen.getByTestId('event-processing-events-empty')).toBeInTheDocument()
     })
   })
+
+  it('shows retry callout when settings fail to load', async () => {
+    vi.mocked(client.getEventProcessingSettings).mockRejectedValue(new Error('settings down'))
+    renderPanel()
+
+    expect(await screen.findByText('Event processing settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
 })

@@ -60,6 +60,26 @@ public static class InternalPlatformIdentityEndpoints
         })
         .WithName("InternalCreatePlatformIdentity")
         .WithTags("Internal");
+
+        app.MapPut("/api/internal/platform-identities/{personId:guid}", async (
+            Guid personId,
+            SyncPlatformIdentityRequest request,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            PlatformIdentityIntegrationService service,
+            CancellationToken cancellationToken) =>
+        {
+            var token = ValidateServiceToken(
+                tokenValidator,
+                context,
+                request.TenantId,
+                PlatformIdentityIntegrationService.CreateIdentityActionScope,
+                requireStaffArrSource: true);
+
+            return Results.Ok(await service.SyncAsync(personId, request, token.SourceProductKey, cancellationToken));
+        })
+        .WithName("InternalSyncPlatformIdentity")
+        .WithTags("Internal");
     }
 
     private static ValidatedServiceToken ValidateServiceToken(

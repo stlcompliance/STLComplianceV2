@@ -1,4 +1,5 @@
 import type { AggregatedFieldInboxResponse, FieldInboxTaskItem } from '../api/types'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import { formatBlockedTaskReason } from '../lib/companionDeniedReasonCatalog'
 import { formatWhen, inboxSourceLoadFailures, productLabel, taskTypeLabel } from '../lib/fieldInbox'
 import { isMaintainarrInspectionTask, isMaintainarrWorkOrderTask, isRoutarrTripTask, isSupplyarrReceivingTask, isTrainarrFieldTask } from '../lib/evidenceCapture'
@@ -67,20 +68,14 @@ export function FieldInboxPanel({
       </div>
 
       {sourceFailures.length > 0 && (
-        <div
-          className="rounded-lg border border-amber-500/40 bg-amber-950/30 px-4 py-3 text-sm text-amber-100"
-          data-testid="companion-inbox-source-errors"
-        >
-          <p className="font-medium">Some product inboxes could not be loaded</p>
-          <ul className="mt-2 space-y-1 text-amber-100/90">
-            {sourceFailures.map((failure) => (
-              <li key={failure.productKey}>
-                <span className="font-medium">{productLabel(failure.productKey)}:</span>{' '}
-                {failure.message}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ApiErrorCallout
+          testId="companion-inbox-source-errors"
+          tone="warning"
+          title="Some product inboxes could not be loaded"
+          message={sourceFailures
+            .map((failure) => `${productLabel(failure.productKey)}: ${failure.message}`)
+            .join(' | ')}
+        />
       )}
 
       {filteredItems.length === 0 ? (

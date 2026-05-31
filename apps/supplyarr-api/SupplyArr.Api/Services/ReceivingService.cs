@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using System.Text;
+using System.Text.Json;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
@@ -17,10 +20,25 @@ public sealed class ReceivingService(
     TrainArrQualificationCheckClient trainArrQualificationCheckClient,
     ISupplyArrAuditService audit)
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly HashSet<string> AllowedLineConditions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "good",
+        "damaged",
+        "wrong_item",
+        "pending_inspection",
+        "quarantined",
+        "returned"
+    };
+
     public async Task<IReadOnlyList<ReceivingReceiptResponse>> ListAsync(
         Guid tenantId,
         string? status = null,
         Guid? purchaseOrderId = null,
+        string? purchaseOrderKey = null,
+        string? packingSlipReference = null,
+        string? invoiceReference = null,
+        string? queryText = null,
         CancellationToken cancellationToken = default)
     {
         var query = db.ReceivingReceipts
@@ -39,12 +57,42 @@ public sealed class ReceivingService(
         if (!string.IsNullOrWhiteSpace(status))
         {
             var normalizedStatus = status.Trim().ToLowerInvariant();
-            query = query.Where(x => x.Status == normalizedStatus);
+            query = string.Equals(normalizedStatus, ReceivingReceiptStatuses.Posted, StringComparison.OrdinalIgnoreCase)
+                ? query.Where(x => ReceivingReceiptStatuses.PostedLike.Contains(x.Status))
+                : query.Where(x => x.Status == normalizedStatus);
         }
 
         if (purchaseOrderId is not null)
         {
             query = query.Where(x => x.PurchaseOrderId == purchaseOrderId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(purchaseOrderKey))
+        {
+            var normalizedOrderKey = NormalizePurchaseOrderKey(purchaseOrderKey);
+            query = query.Where(x => x.PurchaseOrder.OrderKey == normalizedOrderKey);
+        }
+
+        if (!string.IsNullOrWhiteSpace(packingSlipReference))
+        {
+            var normalizedPackingSlipReference = NormalizePackingSlipReference(packingSlipReference);
+            query = query.Where(x => x.PackingSlipReference == normalizedPackingSlipReference);
+        }
+
+        if (!string.IsNullOrWhiteSpace(invoiceReference))
+        {
+            var normalizedInvoiceReference = NormalizeInvoiceReference(invoiceReference);
+            query = query.Where(x => x.InvoiceReference == normalizedInvoiceReference);
+        }
+
+        if (!string.IsNullOrWhiteSpace(queryText))
+        {
+            var normalizedQuery = queryText.Trim().ToLowerInvariant();
+            query = query.Where(x =>
+                x.ReceiptKey.Contains(normalizedQuery)
+                || x.PurchaseOrder.OrderKey.Contains(normalizedQuery)
+                || x.PackingSlipReference.ToLower().Contains(normalizedQuery)
+                || x.InvoiceReference.ToLower().Contains(normalizedQuery));
         }
 
         var receipts = await query
@@ -63,6 +111,68 @@ public sealed class ReceivingService(
         return Map(entity);
     }
 
+    public async Task<ReceivingReceiptResponse> GetByReceiptKeyAsync(
+        Guid tenantId,
+        string receiptKey,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedReceiptKey = NormalizeReceiptKey(receiptKey);
+        var entity = await db.ReceivingReceipts
+            .AsNoTracking()
+            .Include(x => x.PurchaseOrder)
+            .Include(x => x.InventoryBin)
+                .ThenInclude(x => x!.InventoryLocation)
+            .Include(x => x.Lines)
+                .ThenInclude(x => x.Part)
+            .Include(x => x.Lines)
+                .ThenInclude(x => x.PurchaseOrderLine)
+            .Include(x => x.Lines)
+                .ThenInclude(x => x.Exceptions)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.ReceiptKey == normalizedReceiptKey,
+                cancellationToken)
+            ?? throw new StlApiException(
+                "receiving.not_found",
+                "Receiving receipt was not found.",
+                404);
+
+        return Map(entity);
+    }
+
+    public async Task<IReadOnlyList<ReceivingReceiptResponse>> ListByPackingSlipReferenceAsync(
+        Guid tenantId,
+        string packingSlipReference,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedReference = NormalizePackingSlipReference(packingSlipReference);
+        if (string.IsNullOrWhiteSpace(normalizedReference))
+        {
+            throw new StlApiException(
+                "receiving.packing_slip_reference.required",
+                "Packing slip reference is required.",
+                400);
+        }
+
+        var entities = await db.ReceivingReceipts
+            .AsNoTracking()
+            .Include(x => x.PurchaseOrder)
+            .Include(x => x.InventoryBin)
+                .ThenInclude(x => x.InventoryLocation)
+            .Include(x => x.Lines)
+                .ThenInclude(x => x.Part)
+            .Include(x => x.Lines)
+                .ThenInclude(x => x.PurchaseOrderLine)
+            .Include(x => x.Lines)
+                .ThenInclude(x => x.Exceptions)
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.PackingSlipReference == normalizedReference)
+            .OrderByDescending(x => x.UpdatedAt)
+            .ToListAsync(cancellationToken);
+
+        return entities.Select(Map).ToList();
+    }
+
     public async Task<ReceivingReceiptResponse> CreateFromPurchaseOrderAsync(
         Guid tenantId,
         Guid actorUserId,
@@ -70,16 +180,45 @@ public sealed class ReceivingService(
         CreateReceivingReceiptFromPurchaseOrderRequest request,
         CancellationToken cancellationToken = default)
     {
-        var purchaseOrder = await db.PurchaseOrders
-            .Include(x => x.Lines)
-                .ThenInclude(x => x.Part)
-            .FirstOrDefaultAsync(
-                x => x.TenantId == tenantId && x.Id == purchaseOrderId,
-                cancellationToken)
-            ?? throw new StlApiException(
-                "receiving.purchase_order.not_found",
-                "Purchase order was not found.",
-                404);
+        var purchaseOrder = await LoadIssuedPurchaseOrderForReceivingByIdAsync(
+            tenantId,
+            purchaseOrderId,
+            cancellationToken);
+        return await CreateFromPurchaseOrderAsync(
+            tenantId,
+            actorUserId,
+            purchaseOrder,
+            request,
+            cancellationToken);
+    }
+
+    public async Task<ReceivingReceiptResponse> CreateFromPurchaseOrderKeyAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        string purchaseOrderKey,
+        CreateReceivingReceiptFromPurchaseOrderRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedOrderKey = NormalizePurchaseOrderKey(purchaseOrderKey);
+        var purchaseOrder = await LoadIssuedPurchaseOrderForReceivingByKeyAsync(
+            tenantId,
+            normalizedOrderKey,
+            cancellationToken);
+        return await CreateFromPurchaseOrderAsync(
+            tenantId,
+            actorUserId,
+            purchaseOrder,
+            request,
+            cancellationToken);
+    }
+
+    private async Task<ReceivingReceiptResponse> CreateFromPurchaseOrderAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        PurchaseOrder purchaseOrder,
+        CreateReceivingReceiptFromPurchaseOrderRequest request,
+        CancellationToken cancellationToken)
+    {
 
         if (!string.Equals(
                 purchaseOrder.Status,
@@ -130,7 +269,7 @@ public sealed class ReceivingService(
 
         var openDraft = await db.ReceivingReceipts.AnyAsync(
             x => x.TenantId == tenantId
-                && x.PurchaseOrderId == purchaseOrderId
+                && x.PurchaseOrderId == purchaseOrder.Id
                 && x.Status == ReceivingReceiptStatuses.Draft,
             cancellationToken);
         if (openDraft)
@@ -158,6 +297,30 @@ public sealed class ReceivingService(
                 409);
         }
 
+        var selectedLineIds = (request.PurchaseOrderLineIds ?? [])
+            .Distinct()
+            .ToList();
+        if (selectedLineIds.Count > 0)
+        {
+            var openLineIds = linesWithRemaining
+                .Select(x => x.Line.Id)
+                .ToHashSet();
+            var invalidSelection = selectedLineIds
+                .Where(id => !openLineIds.Contains(id))
+                .ToList();
+            if (invalidSelection.Count > 0)
+            {
+                throw new StlApiException(
+                    "receiving.purchase_order.line_selection.invalid",
+                    "Selected purchase order lines must belong to the purchase order and have remaining quantity.",
+                    400);
+            }
+
+            linesWithRemaining = linesWithRemaining
+                .Where(x => selectedLineIds.Contains(x.Line.Id))
+                .ToList();
+        }
+
         var now = DateTimeOffset.UtcNow;
         var entity = new ReceivingReceipt
         {
@@ -168,6 +331,8 @@ public sealed class ReceivingService(
             InventoryBinId = bin.Id,
             Status = ReceivingReceiptStatuses.Draft,
             Notes = NormalizeNotes(request.Notes ?? string.Empty),
+            PackingSlipReference = NormalizePackingSlipReference(request.PackingSlipReference ?? string.Empty),
+            PackingSlipFileName = NormalizePackingSlipFileName(request.PackingSlipFileName ?? string.Empty),
             CreatedByUserId = actorUserId,
             CreatedAt = now,
             UpdatedAt = now,
@@ -188,6 +353,8 @@ public sealed class ReceivingService(
                 LineNumber = lineNumber++,
                 QuantityExpected = decimal.Round(item.Remaining, 4, MidpointRounding.AwayFromZero),
                 QuantityReceived = decimal.Round(item.Remaining, 4, MidpointRounding.AwayFromZero),
+                Condition = "good",
+                SerialLotNumbersJson = "[]",
                 CreatedAt = now,
                 UpdatedAt = now,
                 Part = item.Line.Part,
@@ -262,6 +429,21 @@ public sealed class ReceivingService(
             EnsureAutoMismatchExceptions(entity, line, tenantId, actorUserId, now);
         }
 
+        var hasPackingSlipReference = !string.IsNullOrWhiteSpace(entity.PackingSlipReference);
+        var hasMissingPackingSlipException = entity.Lines
+            .SelectMany(x => x.Exceptions)
+            .Any(x => string.Equals(
+                x.ExceptionType,
+                ReceivingExceptionTypes.MissingPackingSlip,
+                StringComparison.OrdinalIgnoreCase));
+        if (!hasPackingSlipReference && !hasMissingPackingSlipException)
+        {
+            throw new StlApiException(
+                "receiving.packing_slip.required",
+                "Packing slip reference is required before posting unless a missing_packing_slip exception is recorded.",
+                400);
+        }
+
         foreach (var line in entity.Lines)
         {
             if (line.QuantityReceived < 0)
@@ -277,6 +459,7 @@ public sealed class ReceivingService(
             if (line.QuantityReceived > 0 || lineExceptions.Count > 0)
             {
                 ReceivingExceptionService.ValidateLineCoverageForPost(line, lineExceptions);
+                ValidateSerialLotTracking(line);
             }
             else if (line.QuantityExpected > 0)
             {
@@ -321,12 +504,20 @@ public sealed class ReceivingService(
             }
         }
 
-        entity.Status = ReceivingReceiptStatuses.Posted;
+        entity.Status = DeterminePostedStatus(entity);
         entity.PostedAt = now;
         entity.PostedByUserId = actorUserId;
         entity.UpdatedAt = now;
 
         await db.SaveChangesAsync(cancellationToken);
+
+        await ReleaseLinkedReservationsAfterPostAsync(
+            tenantId,
+            actorUserId,
+            entity,
+            now,
+            cancellationToken);
+
         await backorders.SyncAfterReceivingPostAsync(
             tenantId,
             actorUserId,
@@ -371,6 +562,403 @@ public sealed class ReceivingService(
             cancellationToken: cancellationToken);
 
         return await GetAsync(tenantId, entity.Id, cancellationToken);
+    }
+
+    private async Task ReleaseLinkedReservationsAfterPostAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        ReceivingReceipt receipt,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        foreach (var line in receipt.Lines.Where(x => x.QuantityReceived > 0))
+        {
+            var remainingToRelease = line.QuantityReceived;
+            if (remainingToRelease <= 0)
+            {
+                continue;
+            }
+
+            var reservations = await db.PartStockReservations
+                .Where(x =>
+                    x.TenantId == tenantId
+                    && x.Status == StockReservationStatuses.Active
+                    && x.SourceReferenceId == line.PurchaseOrderLineId
+                    && x.SourceType == "purchase_order_line")
+                .OrderBy(x => x.CreatedAt)
+                .ToListAsync(cancellationToken);
+
+            foreach (var reservation in reservations)
+            {
+                if (remainingToRelease <= 0)
+                {
+                    break;
+                }
+
+                var stockLevel = await db.PartStockLevels.FirstOrDefaultAsync(
+                    x => x.TenantId == tenantId && x.Id == reservation.PartStockLevelId,
+                    cancellationToken);
+                if (stockLevel is null)
+                {
+                    continue;
+                }
+
+                var quantityToRelease = decimal.Min(reservation.QuantityReserved, remainingToRelease);
+                if (quantityToRelease <= 0)
+                {
+                    continue;
+                }
+
+                stockLevel.QuantityReserved -= quantityToRelease;
+                if (stockLevel.QuantityReserved < 0)
+                {
+                    stockLevel.QuantityReserved = 0;
+                }
+
+                stockLevel.UpdatedAt = now;
+                reservation.QuantityReserved -= quantityToRelease;
+                if (reservation.QuantityReserved <= 0)
+                {
+                    reservation.QuantityReserved = 0;
+                    reservation.Status = StockReservationStatuses.Released;
+                    reservation.ReleasedByUserId = actorUserId;
+                    reservation.ReleasedAt = now;
+                    reservation.ReleaseReason = "released after linked receipt posting";
+                }
+
+                reservation.UpdatedAt = now;
+
+                remainingToRelease -= quantityToRelease;
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task<PurchaseOrder> LoadIssuedPurchaseOrderForReceivingByIdAsync(
+        Guid tenantId,
+        Guid purchaseOrderId,
+        CancellationToken cancellationToken)
+    {
+        return await db.PurchaseOrders
+            .Include(x => x.Lines)
+                .ThenInclude(x => x.Part)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == purchaseOrderId,
+                cancellationToken)
+            ?? throw new StlApiException(
+                "receiving.purchase_order.not_found",
+                "Purchase order was not found.",
+                404);
+    }
+
+    private async Task<PurchaseOrder> LoadIssuedPurchaseOrderForReceivingByKeyAsync(
+        Guid tenantId,
+        string orderKey,
+        CancellationToken cancellationToken)
+    {
+        return await db.PurchaseOrders
+            .Include(x => x.Lines)
+                .ThenInclude(x => x.Part)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.OrderKey == orderKey,
+                cancellationToken)
+            ?? throw new StlApiException(
+                "receiving.purchase_order.not_found",
+                "Purchase order was not found.",
+                404);
+    }
+
+    public async Task<ReceivingReceiptResponse> CloseAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid receivingReceiptId,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadTrackedAsync(tenantId, receivingReceiptId, cancellationToken);
+        if (string.Equals(entity.Status, ReceivingReceiptStatuses.Draft, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "receiving.not_posted",
+                "Draft receiving receipts cannot be closed.",
+                409);
+        }
+
+        if (string.Equals(entity.Status, ReceivingReceiptStatuses.Closed, StringComparison.OrdinalIgnoreCase))
+        {
+            return await GetAsync(tenantId, entity.Id, cancellationToken);
+        }
+
+        entity.Status = ReceivingReceiptStatuses.Closed;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "receiving_receipt.close",
+            tenantId,
+            actorUserId,
+            "receiving_receipt",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return await GetAsync(tenantId, entity.Id, cancellationToken);
+    }
+
+    public async Task<ReceivingReceiptResponse> ReopenAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid receivingReceiptId,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadTrackedAsync(tenantId, receivingReceiptId, cancellationToken);
+        if (!string.Equals(entity.Status, ReceivingReceiptStatuses.Closed, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "receiving.not_closed",
+                "Only closed receiving receipts can be reopened.",
+                409);
+        }
+
+        entity.Status = ReceivingReceiptStatuses.Posted;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+
+        await audit.WriteAsync(
+            "receiving_receipt.reopen",
+            tenantId,
+            actorUserId,
+            "receiving_receipt",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return await GetAsync(tenantId, entity.Id, cancellationToken);
+    }
+
+    public async Task<ReceivingReceiptResponse> UpdateLineTrackingAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid receivingReceiptId,
+        Guid lineId,
+        UpdateReceivingReceiptLineTrackingRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadTrackedAsync(tenantId, receivingReceiptId, cancellationToken);
+        EnsureEditable(entity);
+
+        var line = entity.Lines.FirstOrDefault(x => x.Id == lineId)
+            ?? throw new StlApiException(
+                "receiving.line.not_found",
+                "Receiving receipt line was not found.",
+                404);
+
+        line.SerialLotNumbersJson = NormalizeSerialLotNumbersJson(request.SerialLotNumbers);
+        line.UpdatedAt = DateTimeOffset.UtcNow;
+        entity.UpdatedAt = line.UpdatedAt;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "receiving_receipt.line.tracking.update",
+            tenantId,
+            actorUserId,
+            "receiving_receipt_line",
+            line.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return await GetAsync(tenantId, entity.Id, cancellationToken);
+    }
+
+    public async Task<ReceivingReceiptResponse> UpdateLineConditionAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid receivingReceiptId,
+        Guid lineId,
+        UpdateReceivingReceiptLineConditionRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadTrackedAsync(tenantId, receivingReceiptId, cancellationToken);
+        EnsureEditable(entity);
+
+        var line = entity.Lines.FirstOrDefault(x => x.Id == lineId)
+            ?? throw new StlApiException(
+                "receiving.line.not_found",
+                "Receiving receipt line was not found.",
+                404);
+
+        line.Condition = NormalizeLineCondition(request.Condition);
+        line.UpdatedAt = DateTimeOffset.UtcNow;
+        entity.UpdatedAt = line.UpdatedAt;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "receiving_receipt.line.condition.update",
+            tenantId,
+            actorUserId,
+            "receiving_receipt_line",
+            line.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return await GetAsync(tenantId, entity.Id, cancellationToken);
+    }
+
+    public async Task<ReceivingReceiptResponse> UpdatePackingSlipAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid receivingReceiptId,
+        UpdateReceivingPackingSlipRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadTrackedAsync(tenantId, receivingReceiptId, cancellationToken);
+        EnsureEditable(entity);
+
+        entity.PackingSlipReference = NormalizePackingSlipReference(request.PackingSlipReference ?? string.Empty);
+        entity.PackingSlipFileName = NormalizePackingSlipFileName(request.PackingSlipFileName ?? string.Empty);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "receiving_receipt.packing_slip.update",
+            tenantId,
+            actorUserId,
+            "receiving_receipt",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return await GetAsync(tenantId, entity.Id, cancellationToken);
+    }
+
+    public async Task<ReceivingReceiptResponse> UpdateInvoiceAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid receivingReceiptId,
+        UpdateReceivingInvoiceRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadTrackedAsync(tenantId, receivingReceiptId, cancellationToken);
+
+        entity.InvoiceReference = NormalizeInvoiceReference(request.InvoiceReference ?? string.Empty);
+        entity.InvoiceFileName = NormalizeInvoiceFileName(request.InvoiceFileName ?? string.Empty);
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "receiving_receipt.invoice.update",
+            tenantId,
+            actorUserId,
+            "receiving_receipt",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return await GetAsync(tenantId, entity.Id, cancellationToken);
+    }
+
+    public async Task<ReceivingReceiptResponse> UpdateInventoryBinAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid receivingReceiptId,
+        UpdateReceivingInventoryBinRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await LoadTrackedAsync(tenantId, receivingReceiptId, cancellationToken);
+        EnsureEditable(entity);
+
+        var bin = await db.InventoryBins
+            .Include(x => x.InventoryLocation)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == request.InventoryBinId,
+                cancellationToken)
+            ?? throw new StlApiException(
+                "receiving.bin.not_found",
+                "Inventory bin was not found.",
+                404);
+
+        if (!string.Equals(bin.Status, "active", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "receiving.bin.inactive",
+                "Stock cannot be received into an inactive bin.",
+                400);
+        }
+
+        entity.InventoryBinId = bin.Id;
+        entity.InventoryBin = bin;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            "receiving_receipt.inventory_bin.update",
+            tenantId,
+            actorUserId,
+            "receiving_receipt",
+            entity.Id.ToString(),
+            "Succeeded",
+            cancellationToken: cancellationToken);
+
+        return await GetAsync(tenantId, entity.Id, cancellationToken);
+    }
+
+    public async Task<byte[]> BuildAccountingExportCsvAsync(
+        Guid tenantId,
+        Guid receivingReceiptId,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await db.ReceivingReceipts
+            .Include(x => x.PurchaseOrder)
+                .ThenInclude(x => x.PurchaseRequest)
+            .Include(x => x.PurchaseOrder)
+                .ThenInclude(x => x.VendorParty)
+            .Include(x => x.InventoryBin)
+                .ThenInclude(x => x.InventoryLocation)
+            .Include(x => x.Lines)
+                .ThenInclude(x => x.Part)
+            .Include(x => x.Lines)
+                .ThenInclude(x => x.PurchaseOrderLine)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == receivingReceiptId,
+                cancellationToken)
+            ?? throw new StlApiException(
+                "receiving.not_found",
+                "Receiving receipt was not found.",
+                404);
+
+        var builder = new StringBuilder();
+        builder.AppendLine("receiptKey,receiptStatus,postedAt,orderKey,orderStatus,requestKey,vendorPartyKey,vendorDisplayName,locationKey,binKey,lineNumber,partKey,partDisplayName,quantityReceived,unitOfMeasure,unitPrice,receivedAmount,receiptNotes,orderIssuedAt,invoiceReference,invoiceFileName");
+
+        foreach (var line in entity.Lines.OrderBy(x => x.LineNumber))
+        {
+            var row = new[]
+            {
+                entity.ReceiptKey,
+                entity.Status,
+                entity.PostedAt?.ToString("O", CultureInfo.InvariantCulture) ?? string.Empty,
+                entity.PurchaseOrder.OrderKey,
+                entity.PurchaseOrder.Status,
+                entity.PurchaseOrder.PurchaseRequest?.RequestKey ?? string.Empty,
+                entity.PurchaseOrder.VendorParty?.PartyKey ?? string.Empty,
+                entity.PurchaseOrder.VendorParty?.DisplayName ?? string.Empty,
+                entity.InventoryBin.InventoryLocation?.LocationKey ?? string.Empty,
+                entity.InventoryBin.BinKey,
+                line.LineNumber.ToString(CultureInfo.InvariantCulture),
+                line.Part.PartKey,
+                line.Part.DisplayName,
+                line.QuantityReceived.ToString(CultureInfo.InvariantCulture),
+                line.PurchaseOrderLine.UnitOfMeasure,
+                string.Empty,
+                string.Empty,
+                entity.Notes,
+                entity.PurchaseOrder.IssuedAt?.ToString("O", CultureInfo.InvariantCulture) ?? string.Empty,
+                entity.InvoiceReference,
+                entity.InvoiceFileName
+            };
+            builder.AppendLine(string.Join(",", row.Select(x => EscapeCsv(x ?? string.Empty))));
+        }
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
     private void EnsureAutoMismatchExceptions(
@@ -526,6 +1114,10 @@ public sealed class ReceivingService(
             entity.InventoryBin.InventoryLocation?.LocationKey ?? string.Empty,
             entity.InventoryBin.InventoryLocation?.Name ?? string.Empty,
             entity.Notes,
+            entity.PackingSlipReference,
+            entity.PackingSlipFileName,
+            entity.InvoiceReference,
+            entity.InvoiceFileName,
             entity.CreatedByUserId,
             entity.PostedAt,
             entity.PostedByUserId,
@@ -561,9 +1153,11 @@ public sealed class ReceivingService(
             line.Part.DisplayName,
             line.QuantityExpected,
             line.QuantityReceived,
+            line.Condition,
             ordered,
             previouslyReceived,
             remaining,
+            DeserializeSerialLotNumbers(line.SerialLotNumbersJson),
             line.Exceptions
                 .OrderBy(x => x.ExceptionType)
                 .Select(ex => ReceivingExceptionService.Map(ex, line))
@@ -594,6 +1188,28 @@ public sealed class ReceivingService(
         return key;
     }
 
+    private static string NormalizePurchaseOrderKey(string value)
+    {
+        var key = (value ?? string.Empty).Trim().ToLowerInvariant();
+        if (key.Length == 0)
+        {
+            throw new StlApiException(
+                "receiving.purchase_order.order_key.required",
+                "Purchase order key is required.",
+                400);
+        }
+
+        if (key.Length > 128)
+        {
+            throw new StlApiException(
+                "receiving.purchase_order.order_key.too_long",
+                "Purchase order key must be 128 characters or fewer.",
+                400);
+        }
+
+        return key;
+    }
+
     private static string NormalizeNotes(string value)
     {
         var notes = (value ?? string.Empty).Trim();
@@ -611,6 +1227,201 @@ public sealed class ReceivingService(
         }
 
         return decimal.Round(quantity, 4, MidpointRounding.AwayFromZero);
+    }
+
+    private static string NormalizeLineCondition(string value)
+    {
+        var condition = (value ?? string.Empty).Trim().ToLowerInvariant();
+        if (condition.Length == 0)
+        {
+            throw new StlApiException(
+                "receiving.line.condition.required",
+                "Line condition is required.",
+                400);
+        }
+
+        if (!AllowedLineConditions.Contains(condition))
+        {
+            throw new StlApiException(
+                "receiving.line.condition.invalid",
+                "Line condition is invalid.",
+                400);
+        }
+
+        return condition;
+    }
+
+    private static void ValidateSerialLotTracking(ReceivingReceiptLine line)
+    {
+        if (!line.Part.RequiresSerialLotTracking || line.QuantityReceived <= 0)
+        {
+            return;
+        }
+
+        var numbers = DeserializeSerialLotNumbers(line.SerialLotNumbersJson);
+        if (numbers.Count == 0)
+        {
+            throw new StlApiException(
+                "receiving.line.serial_lot.required",
+                "Serial/lot numbers are required for this part before posting.",
+                400);
+        }
+
+        var wholeUnits = decimal.Truncate(line.QuantityReceived);
+        if (line.QuantityReceived == wholeUnits && wholeUnits > 0 && numbers.Count != (int)wholeUnits)
+        {
+            throw new StlApiException(
+                "receiving.line.serial_lot.count_mismatch",
+                "Serial/lot number count must match received quantity for whole-unit receipts.",
+                400);
+        }
+    }
+
+    private static string NormalizeSerialLotNumbersJson(IReadOnlyList<string>? serialLotNumbers)
+    {
+        var normalized = (serialLotNumbers ?? [])
+            .Select(x => (x ?? string.Empty).Trim())
+            .Where(x => x.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(x => x.Length > 128 ? x[..128] : x)
+            .Take(200)
+            .ToList();
+        return JsonSerializer.Serialize(normalized, JsonOptions);
+    }
+
+    private static IReadOnlyList<string> DeserializeSerialLotNumbers(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<List<string>>(json, JsonOptions) ?? [];
+            return parsed
+                .Select(x => (x ?? string.Empty).Trim())
+                .Where(x => x.Length > 0)
+                .ToList();
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static string NormalizePackingSlipReference(string value)
+    {
+        var reference = (value ?? string.Empty).Trim();
+        return reference.Length > 256 ? reference[..256] : reference;
+    }
+
+    private static string NormalizePackingSlipFileName(string value)
+    {
+        var fileName = (value ?? string.Empty).Trim();
+        return fileName.Length > 256 ? fileName[..256] : fileName;
+    }
+
+    private static string NormalizeInvoiceReference(string value)
+    {
+        var reference = (value ?? string.Empty).Trim();
+        return reference.Length > 256 ? reference[..256] : reference;
+    }
+
+    private static string NormalizeInvoiceFileName(string value)
+    {
+        var fileName = (value ?? string.Empty).Trim();
+        return fileName.Length > 256 ? fileName[..256] : fileName;
+    }
+
+    private static string EscapeCsv(string value)
+    {
+        var safe = value ?? string.Empty;
+        if (safe.IndexOfAny([',', '"', '\r', '\n']) >= 0)
+        {
+            return $"\"{safe.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
+        }
+
+        return safe;
+    }
+
+    private static string DeterminePostedStatus(ReceivingReceipt receipt)
+    {
+        var exceptions = receipt.Lines.SelectMany(x => x.Exceptions).ToList();
+        var conditions = receipt.Lines
+            .Select(x => (x.Condition ?? string.Empty).Trim().ToLowerInvariant())
+            .Where(x => x.Length > 0)
+            .ToList();
+
+        if (exceptions.Any(x => string.Equals(x.ExceptionType, ReceivingExceptionTypes.WrongItem, StringComparison.OrdinalIgnoreCase)))
+        {
+            return ReceivingReceiptStatuses.WrongItem;
+        }
+
+        if (conditions.Any(x => string.Equals(x, "wrong_item", StringComparison.OrdinalIgnoreCase)))
+        {
+            return ReceivingReceiptStatuses.WrongItem;
+        }
+
+        if (exceptions.Any(x =>
+                string.Equals(x.ExceptionType, ReceivingExceptionTypes.QualityIssue, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(x.ExceptionType, ReceivingExceptionTypes.ExpiredItem, StringComparison.OrdinalIgnoreCase)))
+        {
+            return ReceivingReceiptStatuses.Quarantined;
+        }
+
+        if (conditions.Any(x => string.Equals(x, "quarantined", StringComparison.OrdinalIgnoreCase)))
+        {
+            return ReceivingReceiptStatuses.Quarantined;
+        }
+
+        if (exceptions.Any(x => string.Equals(x.ExceptionType, ReceivingExceptionTypes.RequiresInspection, StringComparison.OrdinalIgnoreCase)))
+        {
+            return ReceivingReceiptStatuses.PendingInspection;
+        }
+
+        if (conditions.Any(x => string.Equals(x, "pending_inspection", StringComparison.OrdinalIgnoreCase)))
+        {
+            return ReceivingReceiptStatuses.PendingInspection;
+        }
+
+        if (exceptions.Any(x =>
+                string.Equals(x.ExceptionType, ReceivingExceptionTypes.Damage, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(x.ExceptionType, ReceivingExceptionTypes.DamagedGoods, StringComparison.OrdinalIgnoreCase)))
+        {
+            return ReceivingReceiptStatuses.Damaged;
+        }
+
+        if (conditions.Any(x => string.Equals(x, "damaged", StringComparison.OrdinalIgnoreCase)))
+        {
+            return ReceivingReceiptStatuses.Damaged;
+        }
+
+        if (conditions.Count > 0
+            && conditions.All(x => string.Equals(x, "returned", StringComparison.OrdinalIgnoreCase)))
+        {
+            return ReceivingReceiptStatuses.Returned;
+        }
+
+        var totalExpected = receipt.Lines.Sum(x => x.QuantityExpected);
+        var totalReceived = receipt.Lines.Sum(x => x.QuantityReceived);
+
+        if (totalReceived > totalExpected + 0.0001m)
+        {
+            return ReceivingReceiptStatuses.Overreceived;
+        }
+
+        if (totalReceived + 0.0001m < totalExpected)
+        {
+            return ReceivingReceiptStatuses.Underreceived;
+        }
+
+        if (receipt.Lines.Any(x => x.QuantityReceived <= 0))
+        {
+            return ReceivingReceiptStatuses.PartiallyReceived;
+        }
+
+        return ReceivingReceiptStatuses.Posted;
     }
 
     private async Task EnsureReceivingPersonQualifiedAsync(

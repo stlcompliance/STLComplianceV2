@@ -52,6 +52,8 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
 
     public DbSet<DispatchMessage> DispatchMessages => Set<DispatchMessage>();
 
+    public DbSet<TripDispatchReleaseSnapshot> TripDispatchReleaseSnapshots => Set<TripDispatchReleaseSnapshot>();
+
     public DbSet<TripProofRecord> TripProofRecords => Set<TripProofRecord>();
 
     public DbSet<TripDvirInspection> TripDvirInspections => Set<TripDvirInspection>();
@@ -89,6 +91,21 @@ public sealed class RoutArrDbContext(DbContextOptions<RoutArrDbContext> options)
             entity.HasIndex(x => new { x.TenantId, x.DispatchStatus, x.UpdatedAt });
             entity.HasIndex(x => new { x.TenantId, x.AssignedDriverPersonId });
             entity.HasIndex(x => new { x.TenantId, x.AcceptedAt });
+            entity.HasOne(x => x.DispatchReleaseSnapshot)
+                .WithOne(x => x.Trip)
+                .HasForeignKey<TripDispatchReleaseSnapshot>(x => x.TripId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TripDispatchReleaseSnapshot>(entity =>
+        {
+            entity.ToTable("routarr_trip_dispatch_release_snapshots");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Summary).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.SnapshotJson).IsRequired();
+            entity.HasIndex(x => x.TenantId);
+            entity.HasIndex(x => new { x.TenantId, x.TripId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.ReleasedAt });
         });
 
         modelBuilder.Entity<TripLoad>(entity =>

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   applyBulkDispatch,
@@ -147,7 +148,11 @@ function TripRow({
                 data-testid={`unassigned-gate-preview-${trip.tripId}`}
               />
             ) : assignPreviewQuery.isError ? (
-              <p className="text-xs text-red-300">{(assignPreviewQuery.error as Error).message}</p>
+              <ApiErrorCallout
+                title="Assignment gate check failed"
+                message={getErrorMessage(assignPreviewQuery.error, 'Unable to check assignment gates.')}
+                className="text-xs"
+              />
             ) : null
           ) : null}
         </div>
@@ -276,7 +281,16 @@ export function UnassignedWorkQueuePanel({ accessToken, scope, canAssign }: Prop
   }
 
   if (queueQuery.isError) {
-    return <p className="text-sm text-red-300">{(queueQuery.error as Error).message}</p>
+    return (
+      <ApiErrorCallout
+        title="Unassigned work queue unavailable"
+        message={getErrorMessage(queueQuery.error, 'Unable to load unassigned work queue.')}
+        retryLabel="Retry queue"
+        onRetry={() => {
+          void queueQuery.refetch()
+        }}
+      />
+    )
   }
 
   const queue = queueQuery.data!

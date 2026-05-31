@@ -146,6 +146,29 @@ public static class StaffArrReportEndpoints
                 return Results.File(export.Content, export.ContentType, export.FileName);
             })
             .WithName($"ExportStaffArrReadinessReportSummary{suffix}");
+
+            group.MapGet("/alerts", async (
+                StaffArrAuthorizationService authorization,
+                ReadinessReportService reportService,
+                IStaffArrAuditService audit,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireReadinessReportRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var alerts = await reportService.ListAlertsAsync(tenantId, cancellationToken);
+                await audit.WriteAsync(
+                    "staffarr.reports.readiness.alerts",
+                    tenantId,
+                    actorUserId,
+                    "readiness_report",
+                    null,
+                    "success",
+                    cancellationToken: cancellationToken);
+                return Results.Ok(alerts);
+            })
+            .WithName($"GetStaffArrReadinessAlerts{suffix}");
         }
     }
 
@@ -224,6 +247,80 @@ public static class StaffArrReportEndpoints
                 return Results.File(export.Content, export.ContentType, export.FileName);
             })
             .WithName($"ExportStaffArrIncidentReportSummary{suffix}");
+        }
+    }
+
+    public static void MapStaffArrCertificationReportEndpoints(this WebApplication app)
+    {
+        var groups = new[]
+        {
+            (Route: "/api/reports/certifications", Suffix: string.Empty),
+            (Route: "/api/v1/reports/certifications", Suffix: "V1")
+        };
+
+        foreach (var (route, suffix) in groups)
+        {
+            var group = app.MapGroup(route)
+                .WithTags("CertificationReports")
+                .RequireAuthorization();
+
+            group.MapGet("/summary", async (
+                bool? missingOnly,
+                bool? expiringOnly,
+                StaffArrAuthorizationService authorization,
+                CertificationReportService reportService,
+                IStaffArrAuditService audit,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireReadinessReportRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var summary = await reportService.GetSummaryAsync(
+                    tenantId,
+                    missingOnly ?? false,
+                    expiringOnly ?? false,
+                    cancellationToken);
+                await audit.WriteAsync(
+                    "staffarr.reports.certifications.summary",
+                    tenantId,
+                    actorUserId,
+                    "certification_report",
+                    null,
+                    "success",
+                    cancellationToken: cancellationToken);
+                return Results.Ok(summary);
+            })
+            .WithName($"GetStaffArrCertificationReportSummary{suffix}");
+
+            group.MapGet("/summary/export", async (
+                bool? missingOnly,
+                bool? expiringOnly,
+                StaffArrAuthorizationService authorization,
+                CertificationReportService reportService,
+                IStaffArrAuditService audit,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireReadinessReportExport(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var export = await reportService.ExportSummaryCsvAsync(
+                    tenantId,
+                    missingOnly ?? false,
+                    expiringOnly ?? false,
+                    cancellationToken);
+                await audit.WriteAsync(
+                    "staffarr.reports.certifications.export",
+                    tenantId,
+                    actorUserId,
+                    "certification_report",
+                    "summary",
+                    "success",
+                    cancellationToken: cancellationToken);
+                return Results.File(export.Content, export.ContentType, export.FileName);
+            })
+            .WithName($"ExportStaffArrCertificationReportSummary{suffix}");
         }
     }
 

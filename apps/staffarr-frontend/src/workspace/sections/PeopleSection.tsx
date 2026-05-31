@@ -1,4 +1,4 @@
-import { StaffArrApiError } from '../../api/client'
+import { getErrorMessage } from '@stl/shared-ui'
 import { CreatePersonPanel } from '../../components/CreatePersonPanel'
 import { PersonProfileEditorPanel } from '../../components/PersonProfileEditorPanel'
 import { PersonLookupPanel } from '../../components/PersonLookupPanel'
@@ -46,15 +46,80 @@ export function PeopleSection({ state }: Props) {
 
         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-6 lg:col-span-2">
           <h2 className="text-sm font-medium text-slate-300">People directory</h2>
+          <div className="mt-3 space-y-2">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-400" htmlFor="workspace-directory-filter">
+              Quick filter
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                id="workspace-directory-filter"
+                type="search"
+                aria-label="People quick filter"
+                data-testid="workspace-people-directory-filter"
+                value={s.peopleDirectoryQuery}
+                onChange={(event) => s.setPeopleDirectoryQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape' && s.peopleDirectoryQuery) {
+                    event.preventDefault()
+                    s.setPeopleDirectoryQuery('')
+                    return
+                  }
+                  if (event.key === 'Enter' && s.peopleDirectoryQuery.trim() && s.filteredPeople.length > 0) {
+                    event.preventDefault()
+                    s.setSelectedPersonId(s.filteredPeople[0]!.personId)
+                  }
+                }}
+                placeholder="Search by name, email, title, org unit, or status"
+                className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-sky-500 focus:outline-none"
+              />
+              {s.peopleDirectoryQuery ? (
+                <button
+                  type="button"
+                  onClick={() => s.setPeopleDirectoryQuery('')}
+                  className="rounded-md border border-slate-700 px-3 py-2 text-xs text-slate-300 hover:border-slate-500 hover:text-white"
+                >
+                  Clear
+                </button>
+              ) : null}
+            </div>
+            {!s.peopleQuery.isLoading && s.people.length > 0 ? (
+              <p className="text-xs text-slate-500" aria-live="polite">
+                Showing {s.filteredPeople.length} of {s.people.length} people
+              </p>
+            ) : null}
+            {!s.peopleQuery.isLoading && s.peopleDirectoryQuery.trim() && s.filteredPeople.length > 0 ? (
+              <p className="text-xs text-slate-500">Press Enter to select the first filtered person.</p>
+            ) : null}
+            {s.selectedPersonHiddenByFilter ? (
+              <div className="rounded-md border border-amber-700/60 bg-amber-950/20 p-2 text-xs text-amber-200">
+                The selected person is hidden by the current filter.
+                <button
+                  type="button"
+                  onClick={() => s.setPeopleDirectoryQuery('')}
+                  className="ml-2 underline decoration-amber-400/70 underline-offset-2 hover:text-amber-100"
+                >
+                  Clear filter to show selection
+                </button>
+              </div>
+            ) : null}
+          </div>
           {s.peopleQuery.isLoading ? (
             <p className="mt-4 text-sm text-slate-400">Loading people…</p>
           ) : s.people.length === 0 ? (
             <p className="mt-4 text-sm text-slate-400">No people have been added yet for this tenant.</p>
+          ) : s.filteredPeople.length === 0 ? (
+            <p className="mt-4 text-sm text-slate-400" aria-live="polite">
+              No people match the current filter. Try a different name, email, or status.
+            </p>
           ) : (
             <ul className="mt-4 divide-y divide-slate-700">
-              {s.people.map((person) => (
+              {s.filteredPeople.map((person) => (
                 <li key={person.personId} className="flex items-center justify-between py-3">
-                  <button type="button" onClick={() => s.setSelectedPersonId(person.personId)} className="text-left">
+                  <button
+                    type="button"
+                    onClick={() => s.setSelectedPersonId(person.personId)}
+                    className={`w-full text-left ${s.effectivePersonId === person.personId ? 'text-sky-200' : ''}`}
+                  >
                     <p className="text-sm text-white">{person.displayName}</p>
                     <p className="text-xs text-slate-400">
                       {person.jobTitle ?? 'No title'} · {person.primaryEmail}
@@ -77,8 +142,8 @@ export function PeopleSection({ state }: Props) {
         canManage={s.canManagePeopleProfiles}
         isSubmitting={s.createPersonMutation.isPending}
         errorMessage={
-          s.createPersonMutation.error instanceof StaffArrApiError
-            ? s.createPersonMutation.error.body || s.createPersonMutation.error.message
+          s.createPersonMutation.error
+            ? getErrorMessage(s.createPersonMutation.error, 'Failed to create person profile.')
             : null
         }
         onCreate={async (request) => {
@@ -133,8 +198,8 @@ export function PeopleSection({ state }: Props) {
           canManage={s.canManagePeopleProfiles}
           isSubmitting={s.updatePersonMutation.isPending || s.updateEmploymentStatusMutation.isPending}
           errorMessage={
-            s.personProfileMutationError instanceof StaffArrApiError
-              ? s.personProfileMutationError.body || s.personProfileMutationError.message
+            s.personProfileMutationError
+              ? getErrorMessage(s.personProfileMutationError, 'Failed to update person profile.')
               : null
           }
           onUpdate={async (request) => {
@@ -157,14 +222,35 @@ export function PeopleSection({ state }: Props) {
           personId={s.selectedPerson.personId}
           personDisplayName={s.selectedPerson.displayName}
           notes={s.personNotes}
+          selectedNoteId={s.selectedNoteId}
           selectedNote={s.noteDetailQuery.data ?? null}
           isLoading={s.personNotesQuery.isLoading}
+          isError={s.personNotesQuery.isError}
+          readErrorMessage={
+            s.personNotesQuery.isError
+              ? getErrorMessage(
+                  s.personNotesQuery.error,
+                  'Failed to load personnel notes.',
+                )
+              : null
+          }
+          onRetryRead={() => void s.personNotesQuery.refetch()}
           isLoadingDetail={s.noteDetailQuery.isLoading}
+          isDetailError={s.noteDetailQuery.isError}
+          detailErrorMessage={
+            s.noteDetailQuery.isError
+              ? getErrorMessage(
+                  s.noteDetailQuery.error,
+                  'Failed to load note detail.',
+                )
+              : null
+          }
+          onRetryDetail={() => void s.noteDetailQuery.refetch()}
           canManage={s.canManagePersonNotes}
           isSubmitting={s.createNoteMutation.isPending}
-          errorMessage={
-            s.noteMutationError instanceof StaffArrApiError
-              ? s.noteMutationError.body || s.noteMutationError.message
+          actionErrorMessage={
+            s.noteMutationError
+              ? getErrorMessage(s.noteMutationError, 'Failed to save personnel note.')
               : null
           }
           onSelectNote={s.setSelectedNoteId}
@@ -180,14 +266,35 @@ export function PeopleSection({ state }: Props) {
           personDisplayName={s.selectedPerson.displayName}
           accessToken={s.accessToken}
           documents={s.personDocuments}
+          selectedDocumentId={s.selectedDocumentId}
           selectedDocument={s.documentDetailQuery.data ?? null}
           isLoading={s.personDocumentsQuery.isLoading}
+          isError={s.personDocumentsQuery.isError}
+          readErrorMessage={
+            s.personDocumentsQuery.isError
+              ? getErrorMessage(
+                  s.personDocumentsQuery.error,
+                  'Failed to load personnel documents.',
+                )
+              : null
+          }
+          onRetryRead={() => void s.personDocumentsQuery.refetch()}
           isLoadingDetail={s.documentDetailQuery.isLoading}
+          isDetailError={s.documentDetailQuery.isError}
+          detailErrorMessage={
+            s.documentDetailQuery.isError
+              ? getErrorMessage(
+                  s.documentDetailQuery.error,
+                  'Failed to load document detail.',
+                )
+              : null
+          }
+          onRetryDetail={() => void s.documentDetailQuery.refetch()}
           canManage={s.canManagePersonDocuments}
           isSubmitting={s.uploadDocumentMutation.isPending}
-          errorMessage={
-            s.documentMutationError instanceof StaffArrApiError
-              ? s.documentMutationError.body || s.documentMutationError.message
+          actionErrorMessage={
+            s.documentMutationError
+              ? getErrorMessage(s.documentMutationError, 'Failed to upload personnel document.')
               : null
           }
           onSelectDocument={s.setSelectedDocumentId}
@@ -208,6 +315,15 @@ export function PeopleSection({ state }: Props) {
           journey={s.workforceOnboardingJourneyQuery.data ?? null}
           isLoading={s.workforceOnboardingJourneyQuery.isLoading}
           isError={s.workforceOnboardingJourneyQuery.isError}
+          readErrorMessage={
+            s.workforceOnboardingJourneyQuery.isError
+              ? getErrorMessage(
+                  s.workforceOnboardingJourneyQuery.error,
+                  'Failed to load workforce onboarding journey.',
+                )
+              : null
+          }
+          onRetryRead={() => void s.workforceOnboardingJourneyQuery.refetch()}
         />
       ) : null}
 
@@ -221,11 +337,21 @@ export function PeopleSection({ state }: Props) {
           }))}
           offboarding={s.personOffboardingQuery.data ?? null}
           isLoading={s.personOffboardingQuery.isLoading}
+          isError={s.personOffboardingQuery.isError}
+          readErrorMessage={
+            s.personOffboardingQuery.isError
+              ? getErrorMessage(
+                  s.personOffboardingQuery.error,
+                  'Failed to load offboarding workflow state.',
+                )
+              : null
+          }
+          onRetryRead={() => void s.personOffboardingQuery.refetch()}
           canManage={s.canManagePeopleProfiles}
           isSubmitting={s.startOffboardingMutation.isPending || s.executeOffboardingMutation.isPending}
-          errorMessage={
-            s.offboardingMutationError instanceof StaffArrApiError
-              ? s.offboardingMutationError.body || s.offboardingMutationError.message
+          actionErrorMessage={
+            s.offboardingMutationError
+              ? getErrorMessage(s.offboardingMutationError, 'Failed to update offboarding workflow.')
               : null
           }
           onStart={async (request) => {
@@ -255,6 +381,16 @@ export function PeopleSection({ state }: Props) {
           personDisplayName={s.selectedPerson.displayName}
           lookup={s.personLookupQuery.data ?? null}
           isLoading={s.personLookupQuery.isLoading}
+          isError={s.personLookupQuery.isError}
+          readErrorMessage={
+            s.personLookupQuery.isError
+              ? getErrorMessage(
+                  s.personLookupQuery.error,
+                  'Failed to load person identity and placement details.',
+                )
+              : null
+          }
+          onRetryRead={() => void s.personLookupQuery.refetch()}
         />
       ) : null}
 
@@ -263,6 +399,16 @@ export function PeopleSection({ state }: Props) {
           personDisplayName={s.selectedPerson.displayName}
           summary={s.personHistorySummaryQuery.data ?? null}
           isLoading={s.personHistorySummaryQuery.isLoading}
+          isError={s.personHistorySummaryQuery.isError}
+          readErrorMessage={
+            s.personHistorySummaryQuery.isError
+              ? getErrorMessage(
+                  s.personHistorySummaryQuery.error,
+                  'Failed to load personnel history summary.',
+                )
+              : null
+          }
+          onRetryRead={() => void s.personHistorySummaryQuery.refetch()}
         />
       ) : null}
 
@@ -276,6 +422,16 @@ export function PeopleSection({ state }: Props) {
           hasNextPage={s.personTimelineHasNextPage}
           categoryFilter={s.personTimelineCategoryFilter}
           isLoading={s.personTimelineQuery.isLoading}
+          isError={s.personTimelineQuery.isError}
+          readErrorMessage={
+            s.personTimelineQuery.isError
+              ? getErrorMessage(
+                  s.personTimelineQuery.error,
+                  'Failed to load person timeline events.',
+                )
+              : null
+          }
+          onRetryRead={() => void s.personTimelineQuery.refetch()}
           onCategoryFilterChange={s.setPersonTimelineCategoryFilter}
           onPageChange={s.setPersonTimelinePage}
           onPageSizeChange={s.setPersonTimelinePageSize}
@@ -288,6 +444,15 @@ export function PeopleSection({ state }: Props) {
           history={s.trainarrTrainingHistoryQuery.data ?? null}
           isLoading={s.trainarrTrainingHistoryQuery.isLoading}
           isError={s.trainarrTrainingHistoryQuery.isError}
+          readErrorMessage={
+            s.trainarrTrainingHistoryQuery.isError
+              ? getErrorMessage(
+                  s.trainarrTrainingHistoryQuery.error,
+                  'Failed to load TrainArr training history.',
+                )
+              : null
+          }
+          onRetryRead={() => void s.trainarrTrainingHistoryQuery.refetch()}
         />
       ) : null}
     </>

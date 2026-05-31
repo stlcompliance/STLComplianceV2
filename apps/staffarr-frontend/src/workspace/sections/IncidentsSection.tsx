@@ -1,4 +1,4 @@
-import { StaffArrApiError } from '../../api/client'
+import { getErrorMessage } from '@stl/shared-ui'
 import { IncidentsPanel } from '../../components/IncidentsPanel'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
 
@@ -15,15 +15,36 @@ export function IncidentsSection({ state }: Props) {
       personId={s.selectedPerson.personId}
       personDisplayName={s.selectedPerson.displayName}
       incidents={s.personIncidents}
+      selectedIncidentId={s.selectedIncidentId}
       selectedIncident={s.incidentDetailQuery.data ?? null}
       isLoading={s.personIncidentsQuery.isLoading}
+      isError={s.personIncidentsQuery.isError}
+      readErrorMessage={
+        s.personIncidentsQuery.isError
+          ? getErrorMessage(
+              s.personIncidentsQuery.error,
+              'Failed to load personnel incidents.',
+            )
+          : null
+      }
+      onRetryRead={() => void s.personIncidentsQuery.refetch()}
       isLoadingDetail={s.incidentDetailQuery.isLoading}
+      isDetailError={s.incidentDetailQuery.isError}
+      detailErrorMessage={
+        s.incidentDetailQuery.isError
+          ? getErrorMessage(
+              s.incidentDetailQuery.error,
+              'Failed to load incident detail.',
+            )
+          : null
+      }
+      onRetryDetail={() => void s.incidentDetailQuery.refetch()}
       canManage={s.canManagePersonIncidents}
       isSubmitting={s.createIncidentMutation.isPending}
       isRouting={s.routeIncidentToTrainarrMutation.isPending}
-      errorMessage={
-        s.incidentMutationError instanceof StaffArrApiError
-          ? s.incidentMutationError.body || s.incidentMutationError.message
+      actionErrorMessage={
+        s.incidentMutationError
+          ? getErrorMessage(s.incidentMutationError, 'Failed to save personnel incident changes.')
           : null
       }
       onSelectIncident={s.setSelectedIncidentId}

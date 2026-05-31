@@ -61,4 +61,24 @@ describe('PlatformOutboxPublisherPanel', () => {
     expect(await screen.findByText('tenant.created')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
   })
+
+  it('renders callout when settings fail to load', async () => {
+    vi.mocked(nexarr.getPlatformOutboxPublisherSettings).mockRejectedValueOnce(
+      new Error('outbox settings unavailable'),
+    )
+    vi.mocked(nexarr.getPlatformOutboxPublisherStatus).mockResolvedValue({
+      asOfUtc: new Date().toISOString(),
+      isEnabled: true,
+      pendingCount: 0,
+      deadLetterCount: 0,
+      latestRun: null,
+    })
+    vi.mocked(nexarr.getPlatformOutboxPublisherRuns).mockResolvedValue({ items: [] })
+    vi.mocked(nexarr.getPlatformOutboxEvents).mockResolvedValue({ items: [] })
+
+    renderPanel()
+
+    expect(await screen.findByText('outbox settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
 })

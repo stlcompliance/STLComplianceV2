@@ -67,3 +67,14 @@ public sealed record ComplianceDocumentDetailItemResponse(
 public sealed record CompliancePartyDetailResponse(
     CompliancePartySummaryItemResponse Summary,
     IReadOnlyList<ComplianceDocumentDetailItemResponse> Documents);
+
+public sealed record ComplianceReportAlertResponse(
+    string AlertType,
+    string Severity,
+    Guid? ExternalPartyId,
+    string? PartyKey,
+    Guid? PurchaseRequestId,
+    string? PurchaseRequestKey,
+    Guid? ProcurementExceptionId,
+    string Message,
+    DateTimeOffset DetectedAt);

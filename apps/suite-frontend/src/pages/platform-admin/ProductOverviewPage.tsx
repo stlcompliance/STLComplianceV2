@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 import { ProductCatalogAdminPanel } from '../../components/platform-admin/ProductCatalogAdminPanel'
 
@@ -14,9 +15,11 @@ export function ProductOverviewPage() {
 
   if (overviewQuery.isError) {
     return (
-      <p className="text-sm text-red-700" role="alert">
-        Failed to load products: {(overviewQuery.error as Error).message}
-      </p>
+      <ApiErrorCallout
+        message={getErrorMessage(overviewQuery.error, 'Failed to load products.')}
+        onRetry={() => void overviewQuery.refetch()}
+        retryLabel="Retry products"
+      />
     )
   }
 

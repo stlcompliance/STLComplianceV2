@@ -290,4 +290,13 @@ describe('TripExecutionWorkspacePanel', () => {
       })
     })
   })
+
+  it('shows retryable callout when trip query fails', async () => {
+    vi.mocked(client.getTrip).mockRejectedValueOnce(new Error('trip workspace unavailable'))
+
+    renderPanel()
+
+    expect(await screen.findByText('trip workspace unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry trip workspace' })).toBeInTheDocument()
+  })
 })

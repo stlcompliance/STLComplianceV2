@@ -49,4 +49,13 @@ describe('PlatformLifecycleOverviewPanel', () => {
     expect(screen.getByText(/Pending \(sample\)/i)).toBeTruthy()
     expect(screen.getByRole('link', { name: /Open settings/i })).toBeTruthy()
   })
+
+  it('renders callout when overview fails to load', async () => {
+    vi.mocked(nexarr.getPlatformLifecycleOverview).mockRejectedValueOnce(new Error('overview offline'))
+
+    renderPanel()
+
+    expect(await screen.findByText('overview offline')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Retry overview' })).toBeTruthy()
+  })
 })

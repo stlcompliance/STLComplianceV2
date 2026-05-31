@@ -69,6 +69,7 @@ describe('DispatchCommandCenterPanel', () => {
           unassignedDriverTripCount: 1,
           unlinkedRouteCount: 0,
           pendingStopCount: 0,
+          missingProofTripCount: 0,
         },
         assignedTrips: [],
         activeTrips: [],
@@ -150,7 +151,12 @@ describe('DispatchCommandCenterPanel', () => {
           skippedCount: 0,
           totalCount: 0,
         },
-        workQueue: { unassignedDriverTripCount: 1, unlinkedRouteCount: 0, pendingStopCount: 0 },
+        workQueue: {
+          unassignedDriverTripCount: 1,
+          unlinkedRouteCount: 0,
+          pendingStopCount: 0,
+          missingProofTripCount: 0,
+        },
         assignedTrips: [],
         activeTrips: [],
         generatedAt: new Date().toISOString(),
@@ -215,5 +221,66 @@ describe('DispatchCommandCenterPanel', () => {
       expect(client.assignTripDriver).toHaveBeenCalled()
     })
     vi.unstubAllGlobals()
+  })
+
+  it('shows retry action when command center load fails', async () => {
+    vi.mocked(client.getDispatchCommandCenter)
+      .mockRejectedValueOnce(new Error('Backend unavailable'))
+      .mockResolvedValueOnce({
+        generatedAt: new Date().toISOString(),
+        scope: 'daily',
+        boardState: { defaultScope: 'daily', updatedAt: new Date().toISOString(), updatedByUserId: null },
+        board: {
+          scope: 'daily',
+          windowStart: new Date().toISOString(),
+          windowEnd: new Date().toISOString(),
+          trips: {
+            plannedCount: 0,
+            assignedCount: 0,
+            dispatchedCount: 0,
+            inProgressCount: 0,
+            completedCount: 0,
+            cancelledCount: 0,
+            totalCount: 0,
+            lateCount: 0,
+            atRiskCount: 0,
+          },
+          routes: {
+            draftCount: 0,
+            plannedCount: 0,
+            activeCount: 0,
+            completedCount: 0,
+            cancelledCount: 0,
+            totalCount: 0,
+          },
+          stops: {
+            pendingCount: 0,
+            arrivedCount: 0,
+            completedCount: 0,
+            skippedCount: 0,
+            totalCount: 0,
+          },
+          workQueue: {
+            unassignedDriverTripCount: 0,
+            unlinkedRouteCount: 0,
+            pendingStopCount: 0,
+            missingProofTripCount: 0,
+          },
+          assignedTrips: [],
+          activeTrips: [],
+          generatedAt: new Date().toISOString(),
+        },
+        tripColumns: [],
+        driverRefs: { items: [] },
+        actions: [],
+      })
+
+    renderPanel(true)
+    expect(await screen.findByText('Backend unavailable')).toBeTruthy()
+    fireEvent.click(screen.getByText('Retry load'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Dispatch command center')).toBeTruthy()
+    })
   })
 })

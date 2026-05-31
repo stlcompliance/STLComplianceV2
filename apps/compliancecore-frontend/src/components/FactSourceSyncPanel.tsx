@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { useEffect, useMemo, useState } from 'react'
 
 import {
@@ -45,7 +46,9 @@ function SyncHealthRow({ item }: { item: FactSourceSyncHealthItem }) {
         </p>
       )}
       {item.lastErrorMessage && (
-        <p className="mt-1 text-xs text-rose-400">{item.lastErrorMessage}</p>
+        <div className="mt-2">
+          <ApiErrorCallout title="Last sync failed" message={item.lastErrorMessage} />
+        </div>
       )}
     </li>
   )
@@ -124,6 +127,16 @@ export function FactSourceSyncPanel({ accessToken, canManage }: FactSourceSyncPa
         </p>
         {healthQuery.isLoading ? (
           <p className="mt-3 text-sm text-slate-500">Loading sync health…</p>
+        ) : healthQuery.isError ? (
+          <ApiErrorCallout
+            className="mt-3"
+            title="Sync health unavailable"
+            message={getErrorMessage(healthQuery.error, 'Failed to load fact source sync health.')}
+            retryLabel="Retry health"
+            onRetry={() => {
+              void healthQuery.refetch()
+            }}
+          />
         ) : health ? (
           <div className="mt-3 grid gap-3 sm:grid-cols-4">
             <div className="rounded-lg border border-slate-700 bg-slate-950/60 p-3">
@@ -148,7 +161,12 @@ export function FactSourceSyncPanel({ accessToken, canManage }: FactSourceSyncPa
             </div>
           </div>
         ) : (
-          <p className="mt-3 text-sm text-slate-500">Sync health unavailable.</p>
+          <ApiErrorCallout
+            className="mt-3"
+            tone="info"
+            title="Sync health unavailable"
+            message="No sync health data is available yet."
+          />
         )}
         {health && health.sources.length > 0 && (
           <ul className="mt-4 space-y-2">

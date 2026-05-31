@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ReadinessPanel } from './ReadinessPanel'
 import type { PersonReadinessResponse } from '../api/types'
 
@@ -63,6 +63,10 @@ const overrideReadiness: PersonReadinessResponse = {
 }
 
 describe('ReadinessPanel', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it('renders readiness status, blockers, and requirements', () => {
     render(
       <ReadinessPanel
@@ -150,5 +154,70 @@ describe('ReadinessPanel', () => {
       reason: 'Emergency coverage approved by operations manager for 48 hours.',
       expiresAt: null,
     })
+  })
+
+  it('renders override errors in shared callout', () => {
+    render(
+      <ReadinessPanel
+        personId={sampleReadiness.personId}
+        personDisplayName="Alex Worker"
+        readiness={sampleReadiness}
+        isLoading={false}
+        canOverride
+        isSubmittingOverride={false}
+        overrideErrorMessage="Override request denied"
+        onGrantOverride={async () => {}}
+        onClearOverride={async () => {}}
+      />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Readiness override failed')).toBeTruthy()
+    expect(screen.getByText('Override request denied')).toBeTruthy()
+  })
+
+  it('renders unavailable readiness state in shared callout', () => {
+    render(
+      <ReadinessPanel
+        personId={sampleReadiness.personId}
+        personDisplayName="Alex Worker"
+        readiness={null}
+        isLoading={false}
+        canOverride={false}
+        isSubmittingOverride={false}
+        overrideErrorMessage={null}
+        onGrantOverride={async () => {}}
+        onClearOverride={async () => {}}
+      />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Readiness summary unavailable')).toBeTruthy()
+    expect(screen.getByText('Could not load readiness status for this person.')).toBeTruthy()
+  })
+
+  it('renders retryable read error callout when readiness query fails', () => {
+    const onRetryRead = vi.fn()
+    render(
+      <ReadinessPanel
+        personId={sampleReadiness.personId}
+        personDisplayName="Alex Worker"
+        readiness={null}
+        isLoading={false}
+        isError
+        readErrorMessage="readiness backend unavailable"
+        onRetryRead={onRetryRead}
+        canOverride={false}
+        isSubmittingOverride={false}
+        overrideErrorMessage={null}
+        onGrantOverride={async () => {}}
+        onClearOverride={async () => {}}
+      />,
+    )
+
+    expect(screen.getByText('Readiness summary unavailable')).toBeTruthy()
+    expect(screen.getByText('readiness backend unavailable')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry readiness' }))
+    expect(onRetryRead).toHaveBeenCalledTimes(1)
   })
 })

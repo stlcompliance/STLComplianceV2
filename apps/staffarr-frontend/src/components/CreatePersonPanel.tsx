@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react'
-import { ControlledSelect } from '@stl/shared-ui'
+import { ApiErrorCallout, ControlledSelect } from '@stl/shared-ui'
 import type { OrgUnitResponse } from '../api/types'
 
 const EMPLOYMENT_STATUS_OPTIONS = [
@@ -158,7 +158,11 @@ export function CreatePersonPanel({
           </select>
         </label>
         <div className="md:col-span-2">
-          {errorMessage ? <p className="mb-3 text-sm text-rose-300">{errorMessage}</p> : null}
+          {errorMessage ? (
+            <div className="mb-3">
+              <ApiErrorCallout title="Create person failed" message={errorMessage} />
+            </div>
+          ) : null}
           <button
             type="submit"
             disabled={isSubmitting}

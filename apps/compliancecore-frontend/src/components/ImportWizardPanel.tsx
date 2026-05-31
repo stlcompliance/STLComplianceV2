@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -235,11 +236,11 @@ export function ImportWizardPanel({ accessToken, canManage }: ImportWizardPanelP
           />
         </div>
         {uploadMutation.isError || candidateMutation.isError ? (
-          <p className="mt-2 text-sm text-red-300">
-            {(uploadMutation.error || candidateMutation.error) instanceof Error
-              ? (uploadMutation.error || candidateMutation.error)?.message
-              : 'Import wizard action failed'}
-          </p>
+          <ApiErrorCallout
+            className="mt-2"
+            title="Import wizard action failed"
+            message={getErrorMessage(uploadMutation.error || candidateMutation.error, 'Import wizard action failed.')}
+          />
         ) : null}
       </div>
 
@@ -712,9 +713,10 @@ export function ImportWizardPanel({ accessToken, canManage }: ImportWizardPanelP
       ) : null}
 
       {decisionMutation.isError ? (
-        <p className="text-sm text-red-300">
-          {decisionMutation.error instanceof Error ? decisionMutation.error.message : 'Mapping decision failed'}
-        </p>
+        <ApiErrorCallout
+          title="Mapping decision failed"
+          message={getErrorMessage(decisionMutation.error, 'Mapping decision failed.')}
+        />
       ) : null}
 
       {session ? (

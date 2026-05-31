@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from 'react'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type { PersonReadinessResponse } from '../api/types'
 
 interface ReadinessPanelProps {
@@ -6,6 +7,9 @@ interface ReadinessPanelProps {
   personDisplayName: string
   readiness: PersonReadinessResponse | null
   isLoading: boolean
+  isError?: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
   canOverride: boolean
   isSubmittingOverride: boolean
   overrideErrorMessage: string | null
@@ -51,6 +55,9 @@ export function ReadinessPanel({
   personDisplayName,
   readiness,
   isLoading,
+  isError = false,
+  readErrorMessage = null,
+  onRetryRead,
   canOverride,
   isSubmittingOverride,
   overrideErrorMessage,
@@ -73,7 +80,18 @@ export function ReadinessPanel({
     return (
       <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
         <h2 className="text-sm font-medium text-slate-300">Workforce readiness</h2>
-        <p className="mt-4 text-sm text-slate-400">Readiness summary is unavailable.</p>
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="Readiness summary unavailable"
+            message={
+              isError
+                ? readErrorMessage ?? 'Failed to load readiness status for this person.'
+                : 'Could not load readiness status for this person.'
+            }
+            onRetry={isError ? onRetryRead : undefined}
+            retryLabel={isError ? 'Retry readiness' : undefined}
+          />
+        </div>
       </section>
     )
   }
@@ -230,9 +248,12 @@ export function ReadinessPanel({
             </form>
           )}
           {overrideErrorMessage ? (
-            <p className="mt-3 text-sm text-rose-300" role="alert">
-              {overrideErrorMessage}
-            </p>
+            <div className="mt-3">
+              <ApiErrorCallout
+                title="Readiness override failed"
+                message={overrideErrorMessage}
+              />
+            </div>
           ) : null}
         </div>
       ) : null}

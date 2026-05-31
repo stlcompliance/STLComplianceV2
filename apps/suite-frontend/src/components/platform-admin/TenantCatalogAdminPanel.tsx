@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { type FormEvent, useState } from 'react'
 
 import * as nexarr from '../../api/nexarrClient'
@@ -69,10 +70,16 @@ export function TenantCatalogAdminPanel() {
         </p>
       </header>
 
+      {tenantsQuery.isError ? (
+        <ApiErrorCallout
+          message={getErrorMessage(tenantsQuery.error, 'Failed to load tenants.')}
+          onRetry={() => void tenantsQuery.refetch()}
+          retryLabel="Retry tenants"
+        />
+      ) : null}
+
       {errorMessage ? (
-        <p className="text-sm text-red-700" role="alert">
-          {errorMessage}
-        </p>
+        <ApiErrorCallout message={errorMessage} />
       ) : null}
 
       <form className="grid gap-3 md:grid-cols-3" onSubmit={handleCreate}>

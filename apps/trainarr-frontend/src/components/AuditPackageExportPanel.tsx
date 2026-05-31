@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 
 import { useEffect, useRef, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 
 
@@ -243,6 +244,18 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
 
         <h3 className="text-sm font-medium text-slate-200">Package sections</h3>
+        {manifestQuery.isError ? (
+          <div className="mt-2">
+            <ApiErrorCallout
+              title="Export manifest unavailable"
+              message={getErrorMessage(manifestQuery.error, 'Failed to load audit package manifest.')}
+              retryLabel="Retry manifest"
+              onRetry={() => {
+                void manifestQuery.refetch()
+              }}
+            />
+          </div>
+        ) : null}
 
         <ul className="mt-2 list-inside list-disc text-sm text-slate-400">
 
@@ -454,8 +467,13 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
         || jsonExportMutation.isError
 
         || backgroundZipMutation.isError) && (
-
-        <p className="text-sm text-red-300">Export failed. Check date range and try again.</p>
+        <ApiErrorCallout
+          title="Export failed"
+          message={getErrorMessage(
+            zipExportMutation.error ?? jsonExportMutation.error ?? backgroundZipMutation.error,
+            'Export failed. Check date range and try again.',
+          )}
+        />
 
       )}
 

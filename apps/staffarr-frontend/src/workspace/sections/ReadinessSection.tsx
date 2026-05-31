@@ -1,4 +1,4 @@
-import { StaffArrApiError } from '../../api/client'
+import { getErrorMessage } from '@stl/shared-ui'
 import { ReadinessPanel } from '../../components/ReadinessPanel'
 import { ReadinessRollupSupervisorPanel } from '../../components/ReadinessRollupSupervisorPanel'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
@@ -21,20 +21,34 @@ export function ReadinessSection({ state }: Props) {
           onSelectRollup={s.setSelectedReadinessRollup}
           rollupMembers={s.readinessRollupMembersQuery.data ?? null}
           rollupMembersLoading={s.readinessRollupMembersQuery.isLoading}
-          rollupMembersErrorMessage={
-            s.readinessRollupMembersQuery.error instanceof StaffArrApiError
-              ? s.readinessRollupMembersQuery.error.body || s.readinessRollupMembersQuery.error.message
+          rollupMembersReadErrorMessage={
+            s.readinessRollupMembersQuery.isError
+              ? getErrorMessage(
+                  s.readinessRollupMembersQuery.error,
+                  'Failed to load readiness rollup members.',
+                )
               : null
           }
           onSelectPerson={s.setSelectedPersonId}
           isLoading={s.teamReadinessRollupsQuery.isLoading || s.siteReadinessRollupsQuery.isLoading}
-          errorMessage={
-            s.teamReadinessRollupsQuery.error instanceof StaffArrApiError
-              ? s.teamReadinessRollupsQuery.error.body || s.teamReadinessRollupsQuery.error.message
-              : s.siteReadinessRollupsQuery.error instanceof StaffArrApiError
-                ? s.siteReadinessRollupsQuery.error.body || s.siteReadinessRollupsQuery.error.message
+          readErrorMessage={
+            s.teamReadinessRollupsQuery.isError
+              ? getErrorMessage(
+                  s.teamReadinessRollupsQuery.error,
+                  'Failed to load team readiness rollups.',
+                )
+              : s.siteReadinessRollupsQuery.isError
+                ? getErrorMessage(
+                    s.siteReadinessRollupsQuery.error,
+                    'Failed to load site readiness rollups.',
+                  )
                 : null
           }
+          onRetryRead={() => {
+            void s.teamReadinessRollupsQuery.refetch()
+            void s.siteReadinessRollupsQuery.refetch()
+          }}
+          onRetryRollupMembersRead={() => void s.readinessRollupMembersQuery.refetch()}
         />
       ) : null}
 
@@ -44,13 +58,23 @@ export function ReadinessSection({ state }: Props) {
           personDisplayName={s.selectedPerson.displayName}
           readiness={s.personReadinessQuery.data ?? null}
           isLoading={s.personReadinessQuery.isLoading}
+          isError={s.personReadinessQuery.isError}
+          readErrorMessage={
+            s.personReadinessQuery.isError
+              ? getErrorMessage(
+                  s.personReadinessQuery.error,
+                  'Failed to load readiness status for this person.',
+                )
+              : null
+          }
+          onRetryRead={() => void s.personReadinessQuery.refetch()}
           canOverride={s.canOverridePersonReadiness}
           isSubmittingOverride={
             s.grantReadinessOverrideMutation.isPending || s.clearReadinessOverrideMutation.isPending
           }
           overrideErrorMessage={
-            s.readinessOverrideMutationError instanceof StaffArrApiError
-              ? s.readinessOverrideMutationError.body || s.readinessOverrideMutationError.message
+            s.readinessOverrideMutationError
+              ? getErrorMessage(s.readinessOverrideMutationError, 'Failed to update readiness override.')
               : null
           }
           onGrantOverride={async (payload) => {

@@ -40,10 +40,19 @@ describe('ManagerHierarchyPanel', () => {
         people={people}
         managerChain={[]}
         subordinates={[]}
+        selectedSubordinateId={null}
         selectedSubordinate={null}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
+        isLoadingSubordinateDetail={false}
+        isSubordinateDetailError={false}
+        subordinateDetailErrorMessage={null}
+        onRetrySubordinateDetail={vi.fn()}
         canManage={false}
         isSubmitting={false}
-        errorMessage={null}
+        actionErrorMessage={null}
         onSelectSubordinate={vi.fn()}
         onUpdateManager={vi.fn(async () => {})}
       />,
@@ -63,10 +72,19 @@ describe('ManagerHierarchyPanel', () => {
         people={people}
         managerChain={[]}
         subordinates={[]}
+        selectedSubordinateId={null}
         selectedSubordinate={null}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
+        isLoadingSubordinateDetail={false}
+        isSubordinateDetailError={false}
+        subordinateDetailErrorMessage={null}
+        onRetrySubordinateDetail={vi.fn()}
         canManage
         isSubmitting={false}
-        errorMessage={null}
+        actionErrorMessage={null}
         onSelectSubordinate={vi.fn()}
         onUpdateManager={onUpdateManager}
       />,
@@ -82,5 +100,99 @@ describe('ManagerHierarchyPanel', () => {
     expect(formatManagerMutationError('{"status":403}')).toContain('Forbidden:')
     expect(formatManagerMutationError('{"status":409,"code":"people.manager_cycle"}')).toContain('Conflict:')
     expect(formatManagerMutationError('{"status":400}')).toContain('Validation:')
+  })
+
+  it('renders manager error in callout', () => {
+    render(
+      <ManagerHierarchyPanel
+        selectedPersonId="person-2"
+        selectedPersonDisplayName="Bob Lead"
+        people={people}
+        managerChain={[]}
+        subordinates={[]}
+        selectedSubordinateId={null}
+        selectedSubordinate={null}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
+        isLoadingSubordinateDetail={false}
+        isSubordinateDetailError={false}
+        subordinateDetailErrorMessage={null}
+        onRetrySubordinateDetail={vi.fn()}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage="update failed"
+        onSelectSubordinate={vi.fn()}
+        onUpdateManager={vi.fn(async () => {})}
+      />,
+    )
+
+    expect(screen.getByText('update failed')).toBeTruthy()
+    expect(screen.getByRole('alert')).toBeTruthy()
+  })
+
+  it('renders retryable hierarchy read error callout', () => {
+    const onRetryRead = vi.fn()
+    render(
+      <ManagerHierarchyPanel
+        selectedPersonId="person-2"
+        selectedPersonDisplayName="Bob Lead"
+        people={people}
+        managerChain={[]}
+        subordinates={[]}
+        selectedSubordinateId={null}
+        selectedSubordinate={null}
+        isLoading={false}
+        isError
+        readErrorMessage="hierarchy read failed"
+        onRetryRead={onRetryRead}
+        isLoadingSubordinateDetail={false}
+        isSubordinateDetailError={false}
+        subordinateDetailErrorMessage={null}
+        onRetrySubordinateDetail={vi.fn()}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage={null}
+        onSelectSubordinate={vi.fn()}
+        onUpdateManager={vi.fn(async () => {})}
+      />,
+    )
+
+    expect(screen.getByText('Manager hierarchy unavailable')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry hierarchy' }))
+    expect(onRetryRead).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders retryable subordinate detail error callout', () => {
+    const onRetrySubordinateDetail = vi.fn()
+    render(
+      <ManagerHierarchyPanel
+        selectedPersonId="person-2"
+        selectedPersonDisplayName="Bob Lead"
+        people={people}
+        managerChain={[]}
+        subordinates={[]}
+        selectedSubordinateId="person-3"
+        selectedSubordinate={null}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
+        isLoadingSubordinateDetail={false}
+        isSubordinateDetailError
+        subordinateDetailErrorMessage="subordinate detail read failed"
+        onRetrySubordinateDetail={onRetrySubordinateDetail}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage={null}
+        onSelectSubordinate={vi.fn()}
+        onUpdateManager={vi.fn(async () => {})}
+      />,
+    )
+
+    expect(screen.getByText('Subordinate detail unavailable')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry subordinate detail' }))
+    expect(onRetrySubordinateDetail).toHaveBeenCalledTimes(1)
   })
 })

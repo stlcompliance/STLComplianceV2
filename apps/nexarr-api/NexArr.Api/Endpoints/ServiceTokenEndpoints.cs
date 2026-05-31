@@ -27,6 +27,30 @@ public static class ServiceTokenEndpoints
         v1Clients.MapGet("/", ListClientsEndpoint)
         .WithName("ListServiceClientsV1");
 
+        static async Task<IResult> GetClientEndpoint(
+            Guid serviceClientId,
+            HttpContext context,
+            ServiceTokenAdminService service,
+            CancellationToken cancellationToken)
+        {
+            var client = await service.GetClientAsync(context.User, serviceClientId, cancellationToken);
+            return Results.Ok(client);
+        }
+
+        group.MapGet("/clients/{serviceClientId:guid}", GetClientEndpoint)
+        .WithName("GetServiceClient");
+
+        v1Clients.MapGet("/{id:guid}", async (
+            Guid id,
+            HttpContext context,
+            ServiceTokenAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            var client = await service.GetClientAsync(context.User, id, cancellationToken);
+            return Results.Ok(client);
+        })
+        .WithName("GetServiceClientV1");
+
         static async Task<IResult> RegisterClientEndpoint(
             RegisterServiceClientRequest request,
             HttpContext context,
@@ -78,6 +102,74 @@ public static class ServiceTokenEndpoints
         })
             .WithName("RotateServiceClientV1");
 
+        static async Task<IResult> UpdateServiceClientAudienceEndpoint(
+            Guid serviceClientId,
+            UpdateServiceClientAudienceRequest request,
+            HttpContext context,
+            ServiceTokenAdminService service,
+            CancellationToken cancellationToken)
+        {
+            var updated = await service.UpdateClientAudienceAsync(
+                context.User,
+                serviceClientId,
+                request,
+                cancellationToken);
+            return Results.Ok(updated);
+        }
+
+        group.MapPatch("/clients/{serviceClientId:guid}/audience", UpdateServiceClientAudienceEndpoint)
+            .WithName("UpdateServiceClientAudience");
+
+        v1Clients.MapPatch("/{id:guid}/audience", async (
+            Guid id,
+            UpdateServiceClientAudienceRequest request,
+            HttpContext context,
+            ServiceTokenAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            var updated = await service.UpdateClientAudienceAsync(
+                context.User,
+                id,
+                request,
+                cancellationToken);
+            return Results.Ok(updated);
+        })
+            .WithName("UpdateServiceClientAudienceV1");
+
+        static async Task<IResult> UpdateServiceClientTenantScopeEndpoint(
+            Guid serviceClientId,
+            UpdateServiceClientTenantScopeRequest request,
+            HttpContext context,
+            ServiceTokenAdminService service,
+            CancellationToken cancellationToken)
+        {
+            var updated = await service.UpdateClientTenantScopeAsync(
+                context.User,
+                serviceClientId,
+                request,
+                cancellationToken);
+            return Results.Ok(updated);
+        }
+
+        group.MapPatch("/clients/{serviceClientId:guid}/tenant-scope", UpdateServiceClientTenantScopeEndpoint)
+            .WithName("UpdateServiceClientTenantScope");
+
+        v1Clients.MapPatch("/{id:guid}/tenant-scope", async (
+            Guid id,
+            UpdateServiceClientTenantScopeRequest request,
+            HttpContext context,
+            ServiceTokenAdminService service,
+            CancellationToken cancellationToken) =>
+        {
+            var updated = await service.UpdateClientTenantScopeAsync(
+                context.User,
+                id,
+                request,
+                cancellationToken);
+            return Results.Ok(updated);
+        })
+            .WithName("UpdateServiceClientTenantScopeV1");
+
         static async Task<IResult> RevokeClientEndpoint(
             Guid serviceClientId,
             HttpContext context,
@@ -101,6 +193,37 @@ public static class ServiceTokenEndpoints
             return Results.NoContent();
         })
             .WithName("RevokeServiceClientV1");
+
+        static async Task<IResult> ListServiceTokenAuditEndpoint(
+            HttpContext context,
+            ServiceTokenAdminService service,
+            Guid? serviceClientId,
+            Guid? serviceTokenId,
+            Guid? tenantId,
+            DateTimeOffset? fromUtc,
+            DateTimeOffset? toUtc,
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken)
+        {
+            var result = await service.ListAuditHistoryAsync(
+                context.User,
+                serviceClientId,
+                serviceTokenId,
+                tenantId,
+                fromUtc,
+                toUtc,
+                page == 0 ? 1 : page,
+                pageSize == 0 ? 50 : pageSize,
+                cancellationToken);
+            return Results.Ok(result);
+        }
+
+        group.MapGet("/audit", ListServiceTokenAuditEndpoint)
+            .WithName("ListServiceTokenAudit");
+
+        v1Clients.MapGet("/audit", ListServiceTokenAuditEndpoint)
+            .WithName("ListServiceTokenAuditV1");
 
         group.MapGet("/", async (
             HttpContext context,

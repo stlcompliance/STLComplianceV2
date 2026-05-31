@@ -92,4 +92,20 @@ describe('RouteCalendarPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Weekly' }))
     expect(onScopeChange).toHaveBeenCalledWith('weekly')
   })
+
+  it('shows retry callout when calendar fails', async () => {
+    const { getRouteCalendar } = await import('../api/client')
+    vi.mocked(getRouteCalendar).mockRejectedValueOnce(new Error('calendar down'))
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const onScopeChange = vi.fn()
+
+    render(
+      <QueryClientProvider client={client}>
+        <RouteCalendarPanel accessToken="token" scope="daily" onScopeChange={onScopeChange} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Route calendar unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry calendar' })).toBeInTheDocument()
+  })
 })

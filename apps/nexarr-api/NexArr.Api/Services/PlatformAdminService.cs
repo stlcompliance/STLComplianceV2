@@ -17,7 +17,7 @@ public sealed class PlatformAdminService(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
-        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        await authorization.RequirePlatformReadAccessAsync(principal, cancellationToken);
         var actorUserId = principal.GetUserId();
         var now = DateTimeOffset.UtcNow;
         var dayAgo = now.AddHours(-24);
@@ -77,7 +77,7 @@ public sealed class PlatformAdminService(
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        tenantId = await authorization.ResolvePlatformReadTenantScopeAsync(principal, tenantId, cancellationToken);
         var actorUserId = principal.GetUserId();
         var now = DateTimeOffset.UtcNow;
 
@@ -188,7 +188,7 @@ public sealed class PlatformAdminService(
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        tenantId = await authorization.ResolvePlatformReadTenantScopeAsync(principal, tenantId, cancellationToken);
         var actorUserId = principal.GetUserId();
 
         page = Math.Max(1, page);
@@ -348,7 +348,7 @@ public sealed class PlatformAdminService(
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        await authorization.RequirePlatformReadAccessAsync(principal, cancellationToken);
         var actorUserId = principal.GetUserId();
 
         page = Math.Max(1, page);
@@ -410,7 +410,7 @@ public sealed class PlatformAdminService(
         ClaimsPrincipal principal,
         CancellationToken cancellationToken = default)
     {
-        await authorization.RequirePlatformAdminAsync(principal, cancellationToken);
+        await authorization.RequirePlatformReadAccessAsync(principal, cancellationToken);
         var actorUserId = principal.GetUserId();
 
         var products = await db.ProductCatalog.AsNoTracking()
@@ -448,6 +448,403 @@ public sealed class PlatformAdminService(
             cancellationToken: cancellationToken);
 
         return items;
+    }
+
+    public async Task<PagedResult<PlatformUserAccessHistoryItemResponse>> GetUserAccessHistoryAsync(
+        ClaimsPrincipal principal,
+        Guid userId,
+        DateTimeOffset? fromUtc,
+        DateTimeOffset? toUtc,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformReadAccessAsync(principal, cancellationToken);
+        var actorUserId = principal.GetUserId();
+
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = db.AuditEvents.AsNoTracking()
+            .Where(e => e.ActorUserId == userId
+                && (e.Action.StartsWith("auth.") || e.Action.StartsWith("launch.")));
+
+        if (fromUtc is DateTimeOffset from)
+        {
+            query = query.Where(e => e.OccurredAt >= from);
+        }
+
+        if (toUtc is DateTimeOffset to)
+        {
+            query = query.Where(e => e.OccurredAt <= to);
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var events = await query
+            .OrderByDescending(e => e.OccurredAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var handoffIds = events
+            .Where(e => string.Equals(e.TargetType, "handoff_code", StringComparison.OrdinalIgnoreCase)
+                && Guid.TryParse(e.TargetId, out _))
+            .Select(e => Guid.Parse(e.TargetId!))
+            .Distinct()
+            .ToList();
+        var handoffs = handoffIds.Count == 0
+            ? new List<HandoffCodeRecord>()
+            : await db.HandoffCodes.AsNoTracking()
+                .Where(h => handoffIds.Contains(h.Id))
+                .ToListAsync(cancellationToken);
+
+        var tenantIds = events.Select(e => e.TenantId)
+            .Concat(handoffs.Select(h => (Guid?)h.TenantId))
+            .OfType<Guid>()
+            .Distinct()
+            .ToList();
+        var tenants = tenantIds.Count == 0
+            ? new List<Tenant>()
+            : await db.Tenants.AsNoTracking()
+                .Where(t => tenantIds.Contains(t.Id))
+                .ToListAsync(cancellationToken);
+
+        var user = await db.Users.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
+        var productKeys = events
+            .Select(e => ResolveProductKeyFromAuditEvent(e))
+            .Concat(handoffs.Select(h => h.TargetProductKey))
+            .Where(k => !string.IsNullOrWhiteSpace(k))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var products = productKeys.Count == 0
+            ? new List<ProductCatalogItem>()
+            : await db.ProductCatalog.AsNoTracking()
+                .Where(p => productKeys.Contains(p.ProductKey))
+                .ToListAsync(cancellationToken);
+
+        var items = events.Select(e =>
+        {
+            var handoff = handoffs.FirstOrDefault(h => string.Equals(h.Id.ToString(), e.TargetId, StringComparison.OrdinalIgnoreCase));
+            var resolvedTenantId = e.TenantId ?? handoff?.TenantId;
+            var tenant = resolvedTenantId is Guid tid ? tenants.FirstOrDefault(t => t.Id == tid) : null;
+            var productKey = handoff?.TargetProductKey ?? ResolveProductKeyFromAuditEvent(e);
+            var product = string.IsNullOrWhiteSpace(productKey)
+                ? null
+                : products.FirstOrDefault(p => string.Equals(p.ProductKey, productKey, StringComparison.OrdinalIgnoreCase));
+
+            return new PlatformUserAccessHistoryItemResponse(
+                e.Id,
+                userId,
+                user?.Email,
+                user?.DisplayName,
+                resolvedTenantId,
+                tenant?.Slug,
+                e.Action,
+                e.Result,
+                e.ReasonCode,
+                e.TargetType,
+                e.TargetId,
+                e.CorrelationId,
+                e.OccurredAt,
+                productKey,
+                product?.DisplayName);
+        }).ToList();
+
+        await audit.WriteAsync(
+            "platform_admin.user_access_history.read",
+            "user",
+            userId.ToString(),
+            "Success",
+            actorUserId: actorUserId,
+            cancellationToken: cancellationToken);
+
+        return new PagedResult<PlatformUserAccessHistoryItemResponse>(items, page, pageSize, total, page * pageSize < total);
+    }
+
+    public Task<PagedResult<PlatformUserAccessHistoryItemResponse>> GetUserLoginHistoryAsync(
+        ClaimsPrincipal principal,
+        Guid userId,
+        DateTimeOffset? fromUtc,
+        DateTimeOffset? toUtc,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default) =>
+        GetUserAccessHistoryByActionPrefixAsync(
+            principal,
+            userId,
+            "auth.",
+            "platform_admin.user_login_history.read",
+            fromUtc,
+            toUtc,
+            page,
+            pageSize,
+            cancellationToken);
+
+    public Task<PagedResult<PlatformUserAccessHistoryItemResponse>> GetUserLaunchHistoryAsync(
+        ClaimsPrincipal principal,
+        Guid userId,
+        DateTimeOffset? fromUtc,
+        DateTimeOffset? toUtc,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default) =>
+        GetUserAccessHistoryByActionPrefixAsync(
+            principal,
+            userId,
+            "launch.",
+            "platform_admin.user_launch_history.read",
+            fromUtc,
+            toUtc,
+            page,
+            pageSize,
+            cancellationToken);
+
+    private async Task<PagedResult<PlatformUserAccessHistoryItemResponse>> GetUserAccessHistoryByActionPrefixAsync(
+        ClaimsPrincipal principal,
+        Guid userId,
+        string actionPrefix,
+        string auditAction,
+        DateTimeOffset? fromUtc,
+        DateTimeOffset? toUtc,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        await authorization.RequirePlatformReadAccessAsync(principal, cancellationToken);
+        var actorUserId = principal.GetUserId();
+
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = db.AuditEvents.AsNoTracking()
+            .Where(e => e.ActorUserId == userId
+                && e.Action.StartsWith(actionPrefix));
+
+        if (fromUtc is DateTimeOffset from)
+        {
+            query = query.Where(e => e.OccurredAt >= from);
+        }
+
+        if (toUtc is DateTimeOffset to)
+        {
+            query = query.Where(e => e.OccurredAt <= to);
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var events = await query
+            .OrderByDescending(e => e.OccurredAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var handoffIds = events
+            .Where(e => string.Equals(e.TargetType, "handoff_code", StringComparison.OrdinalIgnoreCase)
+                && Guid.TryParse(e.TargetId, out _))
+            .Select(e => Guid.Parse(e.TargetId!))
+            .Distinct()
+            .ToList();
+        var handoffs = handoffIds.Count == 0
+            ? new List<HandoffCodeRecord>()
+            : await db.HandoffCodes.AsNoTracking()
+                .Where(h => handoffIds.Contains(h.Id))
+                .ToListAsync(cancellationToken);
+
+        var tenantIds = events.Select(e => e.TenantId)
+            .Concat(handoffs.Select(h => (Guid?)h.TenantId))
+            .OfType<Guid>()
+            .Distinct()
+            .ToList();
+        var tenants = tenantIds.Count == 0
+            ? new List<Tenant>()
+            : await db.Tenants.AsNoTracking()
+                .Where(t => tenantIds.Contains(t.Id))
+                .ToListAsync(cancellationToken);
+
+        var user = await db.Users.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
+        var productKeys = events
+            .Select(ResolveProductKeyFromAuditEvent)
+            .Concat(handoffs.Select(h => h.TargetProductKey))
+            .Where(k => !string.IsNullOrWhiteSpace(k))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var products = productKeys.Count == 0
+            ? new List<ProductCatalogItem>()
+            : await db.ProductCatalog.AsNoTracking()
+                .Where(p => productKeys.Contains(p.ProductKey))
+                .ToListAsync(cancellationToken);
+
+        var items = events.Select(e =>
+        {
+            var handoff = handoffs.FirstOrDefault(h => string.Equals(h.Id.ToString(), e.TargetId, StringComparison.OrdinalIgnoreCase));
+            var resolvedTenantId = e.TenantId ?? handoff?.TenantId;
+            var tenant = resolvedTenantId is Guid tid ? tenants.FirstOrDefault(t => t.Id == tid) : null;
+            var productKey = handoff?.TargetProductKey ?? ResolveProductKeyFromAuditEvent(e);
+            var product = string.IsNullOrWhiteSpace(productKey)
+                ? null
+                : products.FirstOrDefault(p => string.Equals(p.ProductKey, productKey, StringComparison.OrdinalIgnoreCase));
+
+            return new PlatformUserAccessHistoryItemResponse(
+                e.Id,
+                userId,
+                user?.Email,
+                user?.DisplayName,
+                resolvedTenantId,
+                tenant?.Slug,
+                e.Action,
+                e.Result,
+                e.ReasonCode,
+                e.TargetType,
+                e.TargetId,
+                e.CorrelationId,
+                e.OccurredAt,
+                productKey,
+                product?.DisplayName);
+        }).ToList();
+
+        await audit.WriteAsync(
+            auditAction,
+            "user",
+            userId.ToString(),
+            "Success",
+            actorUserId: actorUserId,
+            cancellationToken: cancellationToken);
+
+        return new PagedResult<PlatformUserAccessHistoryItemResponse>(items, page, pageSize, total, page * pageSize < total);
+    }
+
+    public async Task<PagedResult<PlatformUserIdentityAuditHistoryItemResponse>> GetUserIdentityAuditHistoryAsync(
+        ClaimsPrincipal principal,
+        Guid userId,
+        DateTimeOffset? fromUtc,
+        DateTimeOffset? toUtc,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        await authorization.RequirePlatformReadAccessAsync(principal, cancellationToken);
+        var actorUserId = principal.GetUserId();
+
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var userIdText = userId.ToString();
+        var tenantMembershipTargetIdsForUser = db.TenantMemberships
+            .AsNoTracking()
+            .Where(m => m.UserId == userId)
+            .Select(m => m.Id.ToString());
+        var query = db.AuditEvents.AsNoTracking()
+            .Where(e =>
+                (e.TargetType == "user" && e.TargetId == userIdText && e.Action.StartsWith("user."))
+                || (e.TargetType == "platform_role_assignment" && e.TargetId == userIdText && e.Action.StartsWith("platform.role."))
+                || (e.TargetType == "tenant_membership" && e.Action.StartsWith("tenant.membership_") && e.TargetId != null && tenantMembershipTargetIdsForUser.Contains(e.TargetId)));
+
+        if (fromUtc is DateTimeOffset from)
+        {
+            query = query.Where(e => e.OccurredAt >= from);
+        }
+
+        if (toUtc is DateTimeOffset to)
+        {
+            query = query.Where(e => e.OccurredAt <= to);
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var events = await query
+            .OrderByDescending(e => e.OccurredAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var membershipTargetIds = events
+            .Where(e => e.TargetType == "tenant_membership" && Guid.TryParse(e.TargetId, out _))
+            .Select(e => Guid.Parse(e.TargetId!))
+            .Distinct()
+            .ToList();
+        var membershipRecords = membershipTargetIds.Count == 0
+            ? new List<TenantMembership>()
+            : await db.TenantMemberships.AsNoTracking()
+                .Where(m => membershipTargetIds.Contains(m.Id))
+                .ToListAsync(cancellationToken);
+
+        var tenantIds = events
+            .Select(e => e.TenantId)
+            .Concat(membershipRecords.Select(m => (Guid?)m.TenantId))
+            .OfType<Guid>()
+            .Distinct()
+            .ToList();
+        var tenants = tenantIds.Count == 0
+            ? new List<Tenant>()
+            : await db.Tenants.AsNoTracking()
+                .Where(t => tenantIds.Contains(t.Id))
+                .ToListAsync(cancellationToken);
+
+        var actorIds = events
+            .Select(e => e.ActorUserId)
+            .OfType<Guid>()
+            .Distinct()
+            .ToList();
+        var actors = actorIds.Count == 0
+            ? new List<PlatformUser>()
+            : await db.Users.AsNoTracking()
+                .Where(u => actorIds.Contains(u.Id))
+                .ToListAsync(cancellationToken);
+
+        var subjectUser = await db.Users.AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
+        var items = events.Select(e =>
+        {
+            Guid? resolvedTenantId = e.TenantId;
+            if (resolvedTenantId is null && e.TargetType == "tenant_membership")
+            {
+                var membership = membershipRecords.FirstOrDefault(m => string.Equals(m.Id.ToString(), e.TargetId, StringComparison.OrdinalIgnoreCase));
+                resolvedTenantId = membership?.TenantId;
+            }
+
+            var tenant = resolvedTenantId is Guid tid
+                ? tenants.FirstOrDefault(t => t.Id == tid)
+                : null;
+            var actor = e.ActorUserId is Guid aid
+                ? actors.FirstOrDefault(u => u.Id == aid)
+                : null;
+
+            return new PlatformUserIdentityAuditHistoryItemResponse(
+                e.Id,
+                userId,
+                subjectUser?.Email,
+                subjectUser?.DisplayName,
+                resolvedTenantId,
+                tenant?.Slug,
+                e.ActorUserId,
+                actor?.Email,
+                actor?.DisplayName,
+                e.Action,
+                e.Result,
+                e.ReasonCode,
+                e.TargetType,
+                e.TargetId,
+                e.CorrelationId,
+                e.OccurredAt);
+        }).ToList();
+
+        await audit.WriteAsync(
+            "platform_admin.user_identity_audit_history.read",
+            "user",
+            userIdText,
+            "Success",
+            actorUserId: actorUserId,
+            cancellationToken: cancellationToken);
+
+        return new PagedResult<PlatformUserIdentityAuditHistoryItemResponse>(
+            items,
+            page,
+            pageSize,
+            total,
+            page * pageSize < total);
     }
 
     private static string? ResolveProductKeyFromAuditEvent(PlatformAuditEvent auditEvent)

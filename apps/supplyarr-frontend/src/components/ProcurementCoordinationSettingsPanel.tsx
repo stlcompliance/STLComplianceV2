@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getPendingProcurementCoordination,
@@ -79,7 +80,16 @@ export function ProcurementCoordinationSettingsPanel({
       </p>
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-rose-400">Failed to load procurement coordination settings.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Coordination settings unavailable"
+            message={getErrorMessage(settingsQuery.error, 'Failed to load procurement coordination settings.')}
+            retryLabel="Retry settings"
+            onRetry={() => {
+              void settingsQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       <div className="mt-4 space-y-3">
@@ -116,7 +126,10 @@ export function ProcurementCoordinationSettingsPanel({
         </button>
 
         {saveMutation.isError && (
-          <p className="text-sm text-rose-400">Failed to save procurement coordination settings.</p>
+          <ApiErrorCallout
+            title="Save failed"
+            message={getErrorMessage(saveMutation.error, 'Failed to save procurement coordination settings.')}
+          />
         )}
       </div>
 

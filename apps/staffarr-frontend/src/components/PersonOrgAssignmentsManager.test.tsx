@@ -35,9 +35,13 @@ describe('PersonOrgAssignmentsManager', () => {
         personDisplayName="Jane Doe"
         orgUnits={orgUnits}
         assignments={assignments}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
         canManage={false}
         isSubmitting={false}
-        errorMessage={null}
+        actionErrorMessage={null}
         onCreate={vi.fn(async () => {})}
         onUpdate={vi.fn(async () => {})}
         onStatusChange={vi.fn(async () => {})}
@@ -57,9 +61,13 @@ describe('PersonOrgAssignmentsManager', () => {
         personDisplayName="Jane Doe"
         orgUnits={orgUnits}
         assignments={assignments}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
         canManage
         isSubmitting={false}
-        errorMessage={null}
+        actionErrorMessage={null}
         onCreate={vi.fn(async () => {})}
         onUpdate={vi.fn(async () => {})}
         onStatusChange={onStatusChange}
@@ -76,5 +84,55 @@ describe('PersonOrgAssignmentsManager', () => {
     expect(formatAssignmentMutationError('{"status":409,"code":"org_assignment.link_invalid"}')).toContain('Conflict:')
     expect(formatAssignmentMutationError('{"status":403}')).toContain('Forbidden:')
     expect(formatAssignmentMutationError('{"status":400}')).toContain('Validation:')
+  })
+
+  it('renders assignment error in callout', () => {
+    render(
+      <PersonOrgAssignmentsManager
+        personId="person-1"
+        personDisplayName="Jane Doe"
+        orgUnits={orgUnits}
+        assignments={assignments}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage="assignment failed"
+        onCreate={vi.fn(async () => {})}
+        onUpdate={vi.fn(async () => {})}
+        onStatusChange={vi.fn(async () => {})}
+      />,
+    )
+
+    expect(screen.getByText('assignment failed')).toBeTruthy()
+    expect(screen.getByRole('alert')).toBeTruthy()
+  })
+
+  it('renders retryable read error callout', () => {
+    const onRetryRead = vi.fn()
+    render(
+      <PersonOrgAssignmentsManager
+        personId="person-1"
+        personDisplayName="Jane Doe"
+        orgUnits={orgUnits}
+        assignments={[]}
+        isLoading={false}
+        isError
+        readErrorMessage="assignment read failed"
+        onRetryRead={onRetryRead}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage={null}
+        onCreate={vi.fn(async () => {})}
+        onUpdate={vi.fn(async () => {})}
+        onStatusChange={vi.fn(async () => {})}
+      />,
+    )
+
+    expect(screen.getByText('Org assignments unavailable')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry assignments' }))
+    expect(onRetryRead).toHaveBeenCalledTimes(1)
   })
 })

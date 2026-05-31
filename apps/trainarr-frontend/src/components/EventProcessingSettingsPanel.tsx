@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getEventProcessingSettings,
@@ -71,7 +72,16 @@ export function EventProcessingSettingsPanel({ accessToken, canManage }: EventPr
       </p>
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-destructive">Failed to load event processing settings.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Event processing settings unavailable"
+            message={getErrorMessage(settingsQuery.error, 'Failed to load event processing settings.')}
+            retryLabel="Retry settings"
+            onRetry={() => {
+              void settingsQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       <div className="mt-4 space-y-3">
@@ -114,6 +124,12 @@ export function EventProcessingSettingsPanel({ accessToken, canManage }: EventPr
         >
           {saveMutation.isPending ? 'Saving…' : 'Save settings'}
         </button>
+        {saveMutation.isError && (
+          <ApiErrorCallout
+            title="Save failed"
+            message={getErrorMessage(saveMutation.error, 'Failed to save event processing settings.')}
+          />
+        )}
       </div>
 
       <div className="mt-6">

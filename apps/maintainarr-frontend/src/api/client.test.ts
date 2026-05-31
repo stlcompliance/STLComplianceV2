@@ -63,6 +63,44 @@ describe('maintainarr api client', () => {
     await expect(getAssets('token-123')).rejects.toBeInstanceOf(MaintainArrApiError)
   })
 
+  it('surfaces problem details title/detail in API errors', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          title: 'Asset validation failed',
+          detail: 'Asset tag is already in use.',
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    await expect(getAssets('token-123')).rejects.toMatchObject({
+      status: 400,
+      message: 'Asset validation failed - Asset tag is already in use.',
+    })
+  })
+
+  it('surfaces validation errors in API error messages', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          title: 'Validation failed',
+          errors: {
+            assetTag: ['Asset tag is required.'],
+            siteRef: ['Site reference is invalid.'],
+          },
+        }),
+        { status: 422, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    await expect(getAssets('token-123')).rejects.toMatchObject({
+      status: 422,
+      message:
+        'Validation failed - assetTag: Asset tag is required.; siteRef: Site reference is invalid.',
+    })
+  })
+
   it('loads due PM schedules successfully', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(

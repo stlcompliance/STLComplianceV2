@@ -46,4 +46,13 @@ describe('EvidenceRetentionSettingsPanel', () => {
     expect(screen.getByTestId('evidence-retention-days')).toHaveValue(365)
     expect(screen.getByTestId('evidence-retention-runs-empty')).toBeInTheDocument()
   })
+
+  it('shows retry callout when settings fail', async () => {
+    vi.mocked(client.getEvidenceRetentionSettings).mockRejectedValue(new Error('settings down'))
+    vi.mocked(client.getEvidenceRetentionRuns).mockResolvedValue({ items: [] })
+    renderPanel()
+
+    expect(await screen.findByText('Retention settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
 })

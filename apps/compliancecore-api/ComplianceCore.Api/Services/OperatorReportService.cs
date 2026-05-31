@@ -9,6 +9,7 @@ namespace ComplianceCore.Api.Services;
 public sealed class OperatorReportService(ComplianceCoreDbContext db)
 {
     private const int RecentLimit = 25;
+    private static readonly TimeSpan WaiverExpiringSoonWindow = TimeSpan.FromDays(14);
 
     public async Task<OperatorReportSummaryResponse> GetSummaryAsync(
         Guid tenantId,
@@ -113,6 +114,61 @@ public sealed class OperatorReportService(ComplianceCoreDbContext db)
             "text/csv",
             $"compliancecore-operator-report-{DateTime.UtcNow:yyyy-MM-dd}.csv",
             Encoding.UTF8.GetBytes(builder.ToString()));
+    }
+
+    public async Task<IReadOnlyList<OperatorReportAlertResponse>> ListAlertsAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var alerts = new List<OperatorReportAlertResponse>();
+
+        var missingEvidenceWarnings = await db.MissingEvidenceWarnings
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .OrderByDescending(x => x.EvaluatedAt)
+            .Take(100)
+            .ToListAsync(cancellationToken);
+
+        foreach (var warning in missingEvidenceWarnings)
+        {
+            alerts.Add(new OperatorReportAlertResponse(
+                "evidence_missing",
+                warning.Severity,
+                warning.RulePackId,
+                warning.PackKey,
+                null,
+                warning.Summary,
+                warning.EvaluatedAt));
+        }
+
+        var expiringWaivers = await db.ComplianceWaivers
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.Status == WaiverStatuses.Approved
+                && x.ExpiresAt != null
+                && x.ExpiresAt >= now
+                && x.ExpiresAt <= now.Add(WaiverExpiringSoonWindow))
+            .OrderBy(x => x.ExpiresAt)
+            .Take(100)
+            .ToListAsync(cancellationToken);
+
+        foreach (var waiver in expiringWaivers)
+        {
+            alerts.Add(new OperatorReportAlertResponse(
+                "waiver_expiring",
+                "high",
+                waiver.RulePackId,
+                waiver.PackKey,
+                waiver.Id,
+                $"Compliance waiver '{waiver.WaiverKey}' expires on {waiver.ExpiresAt:O}.",
+                waiver.UpdatedAt));
+        }
+
+        return alerts
+            .OrderByDescending(x => x.DetectedAt)
+            .Take(200)
+            .ToList();
     }
 
     private static string CsvEscape(string value)

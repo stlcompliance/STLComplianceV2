@@ -60,6 +60,87 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
     }
 
     [Fact]
+    public async Task Remember_device_login_uses_remembered_refresh_lifetime_and_marks_session()
+    {
+        var rememberFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("Auth:RememberedRefreshTokenDays", "30");
+            builder.ConfigureServices(services =>
+            {
+                var descriptors = services
+                    .Where(d => d.ServiceType == typeof(DbContextOptions<NexArrDbContext>)
+                        || d.ServiceType == typeof(NexArrDbContext))
+                    .ToList();
+                foreach (var descriptor in descriptors)
+                {
+                    services.Remove(descriptor);
+                }
+
+                services.AddDbContext<NexArrDbContext>(options =>
+                    options.UseInMemoryDatabase("NexArrAuthTests-RememberDevice"));
+            });
+        });
+
+        await SeedDatabaseAsync(rememberFactory);
+        var client = rememberFactory.CreateClient();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                PlatformSeeder.DemoAdminEmail,
+                PlatformSeeder.DemoAdminPassword,
+                PlatformSeeder.DemoTenantId,
+                RememberDevice: true));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var tokens = (await response.Content.ReadFromJsonAsync<AuthTokenResponse>())!;
+        Assert.True(tokens.RefreshTokenExpiresAt > DateTimeOffset.UtcNow.AddDays(20));
+
+        var sessionsRequest = new HttpRequestMessage(HttpMethod.Get, "/api/me/sessions");
+        sessionsRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+        var sessionsResponse = await client.SendAsync(sessionsRequest);
+        sessionsResponse.EnsureSuccessStatusCode();
+        var sessions = (await sessionsResponse.Content.ReadFromJsonAsync<UserSessionsResponse>())!;
+        var current = Assert.Single(sessions.Sessions, s => s.IsCurrent);
+        Assert.True(current.IsRemembered);
+    }
+
+    [Fact]
+    public async Task Login_from_new_user_agent_emits_suspicious_login_audit_event()
+    {
+        await SeedDatabaseAsync();
+
+        var firstRequest = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login");
+        firstRequest.Headers.UserAgent.ParseAdd("stl-agent/1.0");
+        firstRequest.Content = JsonContent.Create(new LoginRequest(
+            PlatformSeeder.DemoAdminEmail,
+            PlatformSeeder.DemoAdminPassword,
+            PlatformSeeder.DemoTenantId));
+        var firstResponse = await _client.SendAsync(firstRequest);
+        Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+
+        var secondRequest = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login");
+        secondRequest.Headers.UserAgent.ParseAdd("stl-agent/2.0");
+        secondRequest.Content = JsonContent.Create(new LoginRequest(
+            PlatformSeeder.DemoAdminEmail,
+            PlatformSeeder.DemoAdminPassword,
+            PlatformSeeder.DemoTenantId));
+        var secondResponse = await _client.SendAsync(secondRequest);
+        Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        var suspiciousEvents = await db.AuditEvents
+            .AsNoTracking()
+            .Where(x => x.Action == "auth.suspicious_login" && x.ActorUserId == PlatformSeeder.DemoAdminUserId)
+            .ToListAsync();
+
+        var suspicious = Assert.Single(suspiciousEvents);
+        Assert.Equal("Warning", suspicious.Result);
+        Assert.Equal("new_device_or_ip", suspicious.ReasonCode);
+    }
+
+    [Fact]
     public async Task Login_with_wrong_password_returns_unauthorized()
     {
         await SeedDatabaseAsync();
@@ -68,6 +149,42 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
             new LoginRequest(PlatformSeeder.DemoAdminEmail, "wrong-password", PlatformSeeder.DemoTenantId));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Platform_admin_login_requires_mfa_when_enforced()
+    {
+        var mfaFactory = CreateMfaRequiredFactory("NexArrAuthTests-MfaRequired-Denied");
+        var client = mfaFactory.CreateClient();
+        await SeedDatabaseAsync(mfaFactory);
+
+        var response = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(PlatformSeeder.DemoAdminEmail, PlatformSeeder.DemoAdminPassword, PlatformSeeder.DemoTenantId));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Platform_admin_login_succeeds_when_mfa_is_enabled_and_enforced()
+    {
+        var mfaFactory = CreateMfaRequiredFactory("NexArrAuthTests-MfaRequired-Allowed");
+        var client = mfaFactory.CreateClient();
+        await SeedDatabaseAsync(mfaFactory);
+
+        using (var scope = mfaFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var credential = await db.UserCredentials.SingleAsync(x => x.UserId == PlatformSeeder.DemoAdminUserId);
+            credential.IsMfaEnabled = true;
+            await db.SaveChangesAsync();
+        }
+
+        var response = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(PlatformSeeder.DemoAdminEmail, PlatformSeeder.DemoAdminPassword, PlatformSeeder.DemoTenantId));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
@@ -298,6 +415,38 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
     private async Task SeedDatabaseAsync()
     {
         using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.EnsureCreatedAsync();
+        var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+        await PlatformSeeder.SeedAsync(db, hasher);
+    }
+
+    private WebApplicationFactory<global::NexArr.Api.Program> CreateMfaRequiredFactory(string databaseName)
+    {
+        return _factory.WithWebHostBuilder(builder =>
+            {
+                builder.UseSetting("Auth:RequirePlatformAdminMfa", "true");
+                builder.ConfigureServices(services =>
+                {
+                    var descriptors = services
+                        .Where(d => d.ServiceType == typeof(DbContextOptions<NexArrDbContext>)
+                            || d.ServiceType == typeof(NexArrDbContext))
+                        .ToList();
+                    foreach (var descriptor in descriptors)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<NexArrDbContext>(options =>
+                        options.UseInMemoryDatabase(databaseName));
+                });
+            });
+    }
+
+    private async Task SeedDatabaseAsync(WebApplicationFactory<global::NexArr.Api.Program> factory)
+    {
+        using var scope = factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
         await db.Database.EnsureDeletedAsync();
         await db.Database.EnsureCreatedAsync();

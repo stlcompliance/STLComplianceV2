@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 
 function readinessClass(readiness: string): string {
@@ -66,9 +67,11 @@ export function LaunchDiagnosticsPage() {
 
   if (diagnosticsQuery.isError) {
     return (
-      <p className="text-sm text-red-700" role="alert">
-        Failed to load diagnostics: {(diagnosticsQuery.error as Error).message}
-      </p>
+      <ApiErrorCallout
+        message={getErrorMessage(diagnosticsQuery.error, 'Failed to load diagnostics.')}
+        onRetry={() => void diagnosticsQuery.refetch()}
+        retryLabel="Retry diagnostics"
+      />
     )
   }
 
@@ -129,9 +132,10 @@ export function LaunchDiagnosticsPage() {
           </div>
         </div>
         {validateLaunchMutation.isError ? (
-          <p className="mt-3 text-sm text-red-700" role="alert">
-            Failed to validate launch: {(validateLaunchMutation.error as Error).message}
-          </p>
+          <ApiErrorCallout
+            className="mt-3"
+            message={getErrorMessage(validateLaunchMutation.error, 'Failed to validate launch.')}
+          />
         ) : null}
         {validateLaunchMutation.data ? (
           <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
@@ -217,9 +221,11 @@ export function LaunchDiagnosticsPage() {
           </p>
         </div>
         {attemptsQuery.isError ? (
-          <p className="text-sm text-red-700" role="alert">
-            Failed to load launch attempts: {(attemptsQuery.error as Error).message}
-          </p>
+          <ApiErrorCallout
+            message={getErrorMessage(attemptsQuery.error, 'Failed to load launch attempts.')}
+            onRetry={() => void attemptsQuery.refetch()}
+            retryLabel="Retry launch attempts"
+          />
         ) : attempts.length === 0 ? (
           <p className="text-sm text-slate-500">No launch attempts recorded.</p>
         ) : (

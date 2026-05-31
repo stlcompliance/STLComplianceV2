@@ -78,4 +78,12 @@ describe('DispatchExceptionQueuePanel', () => {
     expect(screen.getByTestId('exception-bulk-actions')).toBeTruthy()
     expect(screen.getByTestId('exception-resolution-template')).toBeTruthy()
   })
+
+  it('shows retry callout when queue fails', async () => {
+    vi.mocked(client.listDispatchExceptions).mockRejectedValueOnce(new Error('queue down'))
+    renderPanel(true)
+
+    expect(await screen.findByText('Exception queue unavailable')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Retry queue' })).toBeTruthy()
+  })
 })

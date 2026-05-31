@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getQualificationRecalculationRuns,
@@ -76,7 +77,16 @@ export function QualificationRecalculationSettingsPanel({ accessToken, canManage
       </p>
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-destructive">Failed to load qualification recalculation settings.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Recalculation settings unavailable"
+            message={getErrorMessage(settingsQuery.error, 'Failed to load qualification recalculation settings.')}
+            retryLabel="Retry settings"
+            onRetry={() => {
+              void settingsQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       <div className="mt-4 space-y-3">
@@ -127,7 +137,10 @@ export function QualificationRecalculationSettingsPanel({ accessToken, canManage
         </button>
 
         {saveMutation.isError && (
-          <p className="text-sm text-destructive">Failed to save qualification recalculation settings.</p>
+          <ApiErrorCallout
+            title="Save failed"
+            message={getErrorMessage(saveMutation.error, 'Failed to save qualification recalculation settings.')}
+          />
         )}
       </div>
 

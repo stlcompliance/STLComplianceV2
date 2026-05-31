@@ -1,5 +1,5 @@
-import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PermissionProjectionTimelinePanel } from './PermissionProjectionTimelinePanel'
 
 const orgUnits = [
@@ -72,5 +72,26 @@ describe('PermissionProjectionTimelinePanel', () => {
     expect(screen.getByText('People read')).toBeTruthy()
     expect(screen.getByText('Assignment created')).toBeTruthy()
     expect(screen.getByText(/staffarr.people.read via staffarr.viewer/i)).toBeTruthy()
+  })
+
+  it('renders retryable read error callout', () => {
+    const onRetryRead = vi.fn()
+    render(
+      <PermissionProjectionTimelinePanel
+        personDisplayName="Alex"
+        orgUnits={orgUnits}
+        projection={null}
+        timeline={[]}
+        isLoading={false}
+        isError
+        readErrorMessage="permission read failed"
+        onRetryRead={onRetryRead}
+      />,
+    )
+
+    expect(screen.getByText('Permission projection unavailable')).toBeTruthy()
+    expect(screen.getByText('permission read failed')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry permissions' }))
+    expect(onRetryRead).toHaveBeenCalledTimes(1)
   })
 })

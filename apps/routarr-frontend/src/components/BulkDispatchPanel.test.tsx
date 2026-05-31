@@ -223,4 +223,25 @@ describe('BulkDispatchPanel', () => {
       })
     })
   })
+
+  it('shows callout when preview request fails', async () => {
+    previewBulkDispatch.mockRejectedValueOnce(new Error('preview unavailable'))
+
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <BulkDispatchPanel accessToken="token" canAssign />
+      </QueryClientProvider>,
+    )
+
+    fireEvent.click(await screen.findByTestId('bulk-trip-11111111-1111-1111-1111-111111111111'))
+    const driverInput = screen.getByLabelText('Driver person')
+    fireEvent.focus(driverInput)
+    fireEvent.change(driverInput, { target: { value: 'Bulk' } })
+    fireEvent.click(await screen.findByRole('button', { name: 'Bulk Driver' }))
+    fireEvent.click(screen.getByText('Preview conflicts'))
+
+    expect(await screen.findByText('preview unavailable')).toBeTruthy()
+    expect(screen.getByTestId('bulk-dispatch-error')).toBeTruthy()
+  })
 })

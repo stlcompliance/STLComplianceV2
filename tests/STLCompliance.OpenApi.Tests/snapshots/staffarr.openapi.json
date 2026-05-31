@@ -4250,6 +4250,64 @@
         }
       }
     },
+    "/api/reports/certifications/summary": {
+      "get": {
+        "tags": [
+          "CertificationReports"
+        ],
+        "operationId": "GetStaffArrCertificationReportSummary",
+        "parameters": [
+          {
+            "name": "missingOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "expiringOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/certifications/summary/export": {
+      "get": {
+        "tags": [
+          "CertificationReports"
+        ],
+        "operationId": "ExportStaffArrCertificationReportSummary",
+        "parameters": [
+          {
+            "name": "missingOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "expiringOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/reports/incidents/summary": {
       "get": {
         "tags": [
@@ -4359,6 +4417,19 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/reports/readiness/alerts": {
+      "get": {
+        "tags": [
+          "ReadinessReports"
+        ],
+        "operationId": "GetStaffArrReadinessAlerts",
         "responses": {
           "200": {
             "description": "OK"
@@ -7941,6 +8012,64 @@
         }
       }
     },
+    "/api/v1/reports/certifications/summary": {
+      "get": {
+        "tags": [
+          "CertificationReports"
+        ],
+        "operationId": "GetStaffArrCertificationReportSummaryV1",
+        "parameters": [
+          {
+            "name": "missingOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "expiringOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/certifications/summary/export": {
+      "get": {
+        "tags": [
+          "CertificationReports"
+        ],
+        "operationId": "ExportStaffArrCertificationReportSummaryV1",
+        "parameters": [
+          {
+            "name": "missingOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "expiringOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/reports/incidents/summary": {
       "get": {
         "tags": [
@@ -8050,6 +8179,19 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/readiness/alerts": {
+      "get": {
+        "tags": [
+          "ReadinessReports"
+        ],
+        "operationId": "GetStaffArrReadinessAlertsV1",
         "responses": {
           "200": {
             "description": "OK"
@@ -10063,6 +10205,9 @@
     },
     {
       "name": "ReadinessReports"
+    },
+    {
+      "name": "CertificationReports"
     },
     {
       "name": "IncidentReports"

@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using ComplianceCore.Api.Contracts;
 using ComplianceCore.Api.Data;
+using ComplianceCore.Api.Entities;
 using ComplianceCore.Api.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -79,6 +80,32 @@ public sealed class ComplianceCoreReportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Operator_report_alerts_include_missing_evidence_and_expiring_waivers()
+    {
+        var response = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/reports/operator/alerts", _adminToken));
+        response.EnsureSuccessStatusCode();
+
+        var alerts = await response.Content.ReadFromJsonAsync<IReadOnlyList<OperatorReportAlertResponse>>();
+        Assert.NotNull(alerts);
+        Assert.Contains(alerts!, x => x.AlertType == "evidence_missing");
+        Assert.Contains(alerts, x => x.AlertType == "waiver_expiring");
+    }
+
+    [Fact]
+    public async Task Missing_evidence_report_summary_returns_aggregates()
+    {
+        var response = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/reports/evidence/missing/summary", _adminToken));
+        response.EnsureSuccessStatusCode();
+
+        var summary = (await response.Content.ReadFromJsonAsync<MissingEvidenceReportSummaryResponse>())!;
+        Assert.True(summary.TotalWarnings >= 1);
+        Assert.True(summary.HighCount >= 1);
+        Assert.True(summary.MissingMirrorCount >= 1);
+    }
+
+    [Fact]
     public async Task V1_reports_index_summaries_and_export_are_available()
     {
         var indexResponse = await _complianceCoreClient.SendAsync(
@@ -87,6 +114,7 @@ public sealed class ComplianceCoreReportTests : IAsyncLifetime
         var indexJson = await indexResponse.Content.ReadAsStringAsync();
         Assert.Contains("/api/v1/reports/findings", indexJson, StringComparison.Ordinal);
         Assert.Contains("/api/v1/reports/operator", indexJson, StringComparison.Ordinal);
+        Assert.Contains("/api/v1/reports/evidence/missing", indexJson, StringComparison.Ordinal);
 
         var findingsResponse = await _complianceCoreClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/reports/findings/summary?openOnly=true", _adminToken));
@@ -104,6 +132,17 @@ public sealed class ComplianceCoreReportTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/reports/findings/summary/export?openOnly=true", _adminToken));
         exportResponse.EnsureSuccessStatusCode();
         Assert.Equal("text/csv", exportResponse.Content.Headers.ContentType?.MediaType);
+
+        var missingEvidenceResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/evidence/missing/summary?severity=high", _adminToken));
+        missingEvidenceResponse.EnsureSuccessStatusCode();
+        var missingEvidence = (await missingEvidenceResponse.Content.ReadFromJsonAsync<MissingEvidenceReportSummaryResponse>())!;
+        Assert.True(missingEvidence.TotalWarnings >= 1);
+
+        var missingEvidenceExportResponse = await _complianceCoreClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/evidence/missing/summary/export?severity=high", _adminToken));
+        missingEvidenceExportResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", missingEvidenceExportResponse.Content.Headers.ContentType?.MediaType);
     }
 
     [Fact]
@@ -117,6 +156,9 @@ public sealed class ComplianceCoreReportTests : IAsyncLifetime
         Assert.Equal(4, manifest.Entities.Count);
         Assert.Contains(manifest.Entities, entity => entity.EntityKey == "findings");
         Assert.Contains(manifest.Entities, entity => entity.EntityKey == "rule_packs");
+        Assert.Contains(manifest.ReportExports, report =>
+            report.ReportKey == "missing_evidence"
+            && report.ExportPath == "/api/reports/evidence/missing/summary/export");
     }
 
     [Fact]
@@ -163,6 +205,63 @@ public sealed class ComplianceCoreReportTests : IAsyncLifetime
             new Dictionary<string, bool> { ["driver_license_valid"] = false },
             EmitFindings: true));
         (await _complianceCoreClient.SendAsync(evaluateRequest)).EnsureSuccessStatusCode();
+
+        using var scope = _complianceCoreFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var now = DateTimeOffset.UtcNow;
+
+        var warningRunId = Guid.NewGuid();
+        db.MissingEvidenceWarningRuns.Add(new MissingEvidenceWarningRun
+        {
+            Id = warningRunId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            ScopeKey = "tenant",
+            PacksAnalyzedCount = 1,
+            WarningsEmittedCount = 1,
+            HighestSeverity = MissingEvidenceWarningSeverities.High,
+            EvaluatedAt = now
+        });
+
+        db.MissingEvidenceWarnings.Add(new MissingEvidenceWarning
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            RunId = warningRunId,
+            ScopeKey = "tenant",
+            RulePackId = pack.RulePackId,
+            PackKey = pack.PackKey,
+            FactKey = "driver_license_valid",
+            WarningType = MissingEvidenceWarningTypes.RulePackFact,
+            Severity = MissingEvidenceWarningSeverities.High,
+            ReasonCode = MissingEvidenceReasonCodes.MissingMirror,
+            HasMirrorAtScope = false,
+            IsRequiredInRule = true,
+            IsRequiredInCatalog = true,
+            Summary = "Missing evidence for driver license validation fact.",
+            EvaluatedAt = now
+        });
+
+        db.ComplianceWaivers.Add(new ComplianceWaiver
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            WaiverKey = "expiring-waiver-seed",
+            RulePackId = pack.RulePackId,
+            PackKey = pack.PackKey,
+            SubjectScopeKey = "tenant",
+            ReasonCode = "operations_override",
+            Explanation = "Temporary override while vendor evidence is in transit.",
+            Status = WaiverStatuses.Approved,
+            EffectiveAt = now.AddDays(-1),
+            ExpiresAt = now.AddDays(3),
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+            ApprovedByUserId = PlatformSeeder.DemoAdminUserId,
+            ApprovedAt = now.AddDays(-1),
+            CreatedAt = now.AddDays(-1),
+            UpdatedAt = now
+        });
+
+        await db.SaveChangesAsync();
     }
 
     private async Task<Guid> CreateRegulatoryProgramAsync(string adminToken)

@@ -62,6 +62,7 @@ await StlApiHost.RunAsync<ComplianceCoreDbContext>(
         app.MapComplianceCoreReportIndexEndpoints();
         app.MapComplianceCoreFindingsReportEndpoints();
         app.MapComplianceCoreOperatorReportEndpoints();
+        app.MapComplianceCoreMissingEvidenceReportEndpoints();
         app.MapComplianceCoreEntityExportEndpoints();
         app.MapComplianceCoreLoadTestJourneySeedEndpoints();
 

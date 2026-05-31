@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import { getTripExecutionSettings, upsertTripExecutionSettings } from '../api/client'
 
@@ -91,6 +92,15 @@ export function TripExecutionSettingsPanel({
         Tenant rules for driver portal pickup/delivery proof and pre/post-trip DVIR before start or
         complete.
       </p>
+
+      {settingsQuery.isError ? (
+        <ApiErrorCallout
+          className="mt-3"
+          message={getErrorMessage(settingsQuery.error, 'Failed to load trip execution settings.')}
+          onRetry={() => void settingsQuery.refetch()}
+          retryLabel="Retry settings"
+        />
+      ) : null}
 
       <div className="mt-4 space-y-2 text-sm text-slate-200">
         <label className="flex items-center gap-2" htmlFor="trip-execution-require-pre-trip-dvir">
@@ -204,9 +214,10 @@ export function TripExecutionSettingsPanel({
         Save capture policy
       </button>
       {saveMutation.isError ? (
-        <p className="mt-2 text-sm text-red-400" role="alert">
-          {(saveMutation.error as Error).message}
-        </p>
+        <ApiErrorCallout
+          className="mt-2"
+          message={getErrorMessage(saveMutation.error, 'Failed to save trip execution settings.')}
+        />
       ) : null}
     </section>
   )

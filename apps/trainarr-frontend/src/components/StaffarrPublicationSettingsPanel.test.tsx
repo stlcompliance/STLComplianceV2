@@ -49,4 +49,14 @@ describe('StaffarrPublicationSettingsPanel', () => {
       expect(screen.getByTestId('staffarr-publication-deliveries-empty')).toBeInTheDocument()
     })
   })
+
+  it('shows retry callout when settings fail', async () => {
+    vi.mocked(client.getStaffarrPublicationSettings).mockRejectedValue(new Error('settings down'))
+    vi.mocked(client.getStaffarrPublicationDeliveries).mockResolvedValue({ items: [] })
+
+    renderPanel()
+
+    expect(await screen.findByText('Publication settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
 })

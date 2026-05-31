@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type {
   MePortalSummaryResponse,
   PersonnelIncidentSummaryResponse,
@@ -137,7 +138,10 @@ export function MeSelfServicePortalPanel({
   if (!summary) {
     return (
       <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-        <p className="text-sm text-slate-400">Self-service profile is unavailable.</p>
+        <ApiErrorCallout
+          title="Self-service profile unavailable"
+          message="Could not load your workforce profile details."
+        />
       </section>
     )
   }
@@ -399,7 +403,11 @@ export function MeSelfServicePortalPanel({
           </div>
         </form>
 
-        {errorMessage ? <p className="mt-3 text-sm text-rose-300">{errorMessage}</p> : null}
+        {errorMessage ? (
+          <div className="mt-3">
+            <ApiErrorCallout title="Request submission failed" message={errorMessage} />
+          </div>
+        ) : null}
 
         {updateRequests.length > 0 ? (
           <div className="mt-6">

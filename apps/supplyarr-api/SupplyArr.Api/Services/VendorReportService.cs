@@ -90,7 +90,7 @@ public sealed class VendorReportService(SupplyArrDbContext db)
             join purchaseOrder in db.PurchaseOrders.AsNoTracking()
                 on receipt.PurchaseOrderId equals purchaseOrder.Id
             where receipt.TenantId == tenantId
-                && receipt.Status == ReceivingReceiptStatuses.Posted
+                && ReceivingReceiptStatuses.PostedLike.Contains(receipt.Status)
                 && vendorIds.Contains(purchaseOrder.VendorPartyId)
             select new
             {

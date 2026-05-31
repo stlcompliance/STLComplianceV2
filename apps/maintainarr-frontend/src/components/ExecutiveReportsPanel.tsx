@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { exportExecutiveReportSummaryCsv, getExecutiveReportSummary } from '../api/client'
 
 interface ExecutiveReportsPanelProps {
@@ -69,7 +70,25 @@ export function ExecutiveReportsPanel({
       )}
 
       {summaryQuery.isError && (
-        <p className="mt-3 text-sm text-rose-400">Failed to load executive summary.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Executive summary unavailable"
+            message={getErrorMessage(summaryQuery.error, 'Failed to load executive summary.')}
+            retryLabel="Retry summary"
+            onRetry={() => {
+              void summaryQuery.refetch()
+            }}
+          />
+        </div>
+      )}
+
+      {exportMutation.isError && (
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="CSV export failed"
+            message={getErrorMessage(exportMutation.error, 'Unable to export executive summary CSV.')}
+          />
+        </div>
       )}
 
       {summaryQuery.data && fleet && ops && downtime && supply && (

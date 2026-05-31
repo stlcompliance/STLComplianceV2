@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getPendingPriceSnapshotCaptures,
@@ -77,7 +78,16 @@ export function PriceSnapshotSettingsPanel({ accessToken, canManage }: PriceSnap
       </p>
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-rose-400">Failed to load price snapshot settings.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Price snapshot settings unavailable"
+            message={getErrorMessage(settingsQuery.error, 'Failed to load price snapshot settings.')}
+            retryLabel="Retry settings"
+            onRetry={() => {
+              void settingsQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       <div className="mt-4 space-y-3">
@@ -114,7 +124,10 @@ export function PriceSnapshotSettingsPanel({ accessToken, canManage }: PriceSnap
         </button>
 
         {saveMutation.isError && (
-          <p className="text-sm text-rose-400">Failed to save price snapshot settings.</p>
+          <ApiErrorCallout
+            title="Save failed"
+            message={getErrorMessage(saveMutation.error, 'Failed to save price snapshot settings.')}
+          />
         )}
       </div>
 

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
 
@@ -84,9 +85,11 @@ export function PlatformWorkerHealthOrchestrationPanel() {
         <p className="text-sm text-slate-500">Loading orchestration status…</p>
       )}
       {statusQuery.isError && (
-        <p className="text-sm text-red-400" role="alert">
-          Failed to load orchestration status: {(statusQuery.error as Error).message}
-        </p>
+        <ApiErrorCallout
+          message={getErrorMessage(statusQuery.error, 'Failed to load orchestration status.')}
+          onRetry={() => void statusQuery.refetch()}
+          retryLabel="Retry orchestration"
+        />
       )}
 
       {status && (

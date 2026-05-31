@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MyTeamPanel } from './MyTeamPanel'
 import type { MyTeamDashboardResponse } from '../api/types'
 
@@ -77,6 +77,10 @@ const dashboard: MyTeamDashboardResponse = {
 }
 
 describe('MyTeamPanel', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   it('renders team metrics and member readiness', () => {
     render(<MyTeamPanel dashboard={dashboard} isLoading={false} errorMessage={null} />)
 
@@ -131,5 +135,50 @@ describe('MyTeamPanel', () => {
         applyToProfile: true,
       })
     })
+  })
+
+  it('renders dashboard fetch errors in a shared alert callout', () => {
+    render(
+      <MyTeamPanel
+        dashboard={null}
+        isLoading={false}
+        errorMessage="Dashboard request failed"
+      />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Team dashboard failed to load')).toBeTruthy()
+    expect(screen.getByText('Dashboard request failed')).toBeTruthy()
+  })
+
+  it('renders review errors in a shared alert callout', () => {
+    render(
+      <MyTeamPanel
+        dashboard={dashboard}
+        isLoading={false}
+        errorMessage={null}
+        onReviewRequest={vi.fn()}
+        reviewingRequestId="req-1"
+        reviewErrorMessage="Could not submit decision"
+      />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Request review failed')).toBeTruthy()
+    expect(screen.getByText('Could not submit decision')).toBeTruthy()
+  })
+
+  it('renders unavailable dashboard state in shared callout', () => {
+    render(
+      <MyTeamPanel
+        dashboard={null}
+        isLoading={false}
+        errorMessage={null}
+      />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Team dashboard unavailable')).toBeTruthy()
+    expect(screen.getByText('Could not load team dashboard data.')).toBeTruthy()
   })
 })

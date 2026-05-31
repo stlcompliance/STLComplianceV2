@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState } from 'react'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type {
   MyTeamDashboardResponse,
   MyTeamMemberResponse,
@@ -194,9 +195,9 @@ function PendingRequestRow({
               Deny
             </button>
           </div>
-          {reviewErrorMessage ? (
-            <p className="text-sm text-rose-300">{reviewErrorMessage}</p>
-          ) : null}
+          {reviewErrorMessage ? (
+            <ApiErrorCallout title="Request review failed" message={reviewErrorMessage} />
+          ) : null}
         </div>
       ) : null}
     </li>
@@ -219,18 +220,21 @@ export function MyTeamPanel({
     )
   }
 
-  if (errorMessage) {
-    return (
-      <section className="rounded-xl border border-rose-500/40 bg-rose-950/20 p-6">
-        <p className="text-sm text-rose-200">{errorMessage}</p>
-      </section>
-    )
-  }
+  if (errorMessage) {
+    return (
+      <section className="rounded-xl border border-rose-500/40 bg-rose-950/20 p-6">
+        <ApiErrorCallout title="Team dashboard failed to load" message={errorMessage} />
+      </section>
+    )
+  }
 
   if (!dashboard) {
     return (
       <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-        <p className="text-sm text-slate-400">Team dashboard is unavailable.</p>
+        <ApiErrorCallout
+          title="Team dashboard unavailable"
+          message="Could not load team dashboard data."
+        />
       </section>
     )
   }
@@ -343,4 +347,6 @@ export function MyTeamPanel({
     </div>
   )
 }
-
+
+
+

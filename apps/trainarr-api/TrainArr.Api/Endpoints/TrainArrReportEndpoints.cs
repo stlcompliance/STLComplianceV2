@@ -66,6 +66,7 @@ public static class TrainArrReportEndpoints
                     new { key = "assignments", path = $"{route}/assignments", description = "Training assignment summaries and exports." },
                     new { key = "qualifications", path = $"{route}/qualifications", description = "Qualification issue and status summaries." },
                     new { key = "compliance", path = $"{route}/compliance", description = "Compliance coverage and remediation summaries." },
+                    new { key = "compliance_gap_programs_without_citation", path = $"{route}/compliance/programs-without-citation", description = "Training programs missing citation attachments." },
                 };
                 return Results.Ok(new { items });
             })
@@ -345,6 +346,91 @@ public static class TrainArrReportEndpoints
             return Results.Ok(report);
         })
         .WithName($"GetTrainArrComplianceGapReport{suffix}");
+
+            group.MapGet("/programs-without-citation", async (
+            TrainArrAuthorizationService authorization,
+            ComplianceReportService reportService,
+            ITrainArrAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireComplianceReportRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var report = await reportService.GetProgramsWithoutCitationReportAsync(tenantId, cancellationToken);
+            await audit.WriteAsync(
+                "trainarr.reports.compliance.programs_without_citation",
+                tenantId,
+                actorUserId,
+                "compliance_report",
+                "programs_without_citation",
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.Ok(report);
+        })
+        .WithName($"GetTrainArrComplianceProgramsWithoutCitationReport{suffix}");
+
+            group.MapGet("/programs-without-citation/export", async (
+            TrainArrAuthorizationService authorization,
+            ComplianceReportService reportService,
+            ITrainArrAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireComplianceReportExport(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var export = await reportService.ExportProgramsWithoutCitationReportCsvAsync(tenantId, cancellationToken);
+            await audit.WriteAsync(
+                "trainarr.reports.compliance.programs_without_citation.export",
+                tenantId,
+                actorUserId,
+                "compliance_report",
+                "programs_without_citation_export",
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.File(export.Content, export.ContentType, export.FileName);
+        })
+        .WithName($"ExportTrainArrComplianceProgramsWithoutCitationReport{suffix}");
+        }
+    }
+
+    public static void MapTrainArrReadinessAlertReportEndpoints(this WebApplication app)
+    {
+        var routes = new[]
+        {
+            (Route: "/api/reports/readiness", Suffix: string.Empty),
+            (Route: "/api/v1/reports/readiness", Suffix: "V1"),
+        };
+
+        foreach (var (route, suffix) in routes)
+        {
+            var group = app.MapGroup(route)
+                .WithTags("ReadinessReports")
+                .RequireAuthorization();
+
+            group.MapGet("/alerts", async (
+                TrainArrAuthorizationService authorization,
+                ReadinessAlertReportService reportService,
+                ITrainArrAuditService audit,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireQualificationReportRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var alerts = await reportService.GetAlertsAsync(tenantId, cancellationToken);
+                await audit.WriteAsync(
+                    "trainarr.reports.readiness.alerts",
+                    tenantId,
+                    actorUserId,
+                    "readiness_report",
+                    "alerts",
+                    "success",
+                    cancellationToken: cancellationToken);
+                return Results.Ok(alerts);
+            })
+            .WithName($"GetTrainArrReadinessAlerts{suffix}");
         }
     }
 

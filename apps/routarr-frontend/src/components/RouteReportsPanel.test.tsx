@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, afterEach } from 'vitest'
+import { cleanup, fireEvent } from '@testing-library/react'
 
 import { RouteReportsPanel } from './RouteReportsPanel'
 
@@ -59,6 +60,11 @@ vi.mock('../api/client', () => ({
 }))
 
 describe('RouteReportsPanel', () => {
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
   it('renders route report summary rows', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
@@ -81,5 +87,20 @@ describe('RouteReportsPanel', () => {
     )
 
     expect(container.firstChild).toBeNull()
+  })
+
+  it('shows export failure callout', async () => {
+    const { exportRouteReportSummaryCsv } = await import('../api/client')
+    vi.mocked(exportRouteReportSummaryCsv).mockRejectedValueOnce(new Error('export down'))
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <RouteReportsPanel accessToken="token" canRead={true} canExport={true} />
+      </QueryClientProvider>,
+    )
+
+    await screen.findByTestId('route-reports-panel')
+    fireEvent.click(screen.getByRole('button', { name: /Export CSV/i }))
+    expect(await screen.findByText('CSV export failed')).toBeInTheDocument()
   })
 })

@@ -1,8 +1,43 @@
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PersonHistorySummaryPanel } from './PersonHistorySummaryPanel'
 
 describe('PersonHistorySummaryPanel', () => {
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('shows retryable error callout when summary query fails', () => {
+    const onRetryRead = vi.fn()
+
+    render(
+      <PersonHistorySummaryPanel
+        personDisplayName="Alex Example"
+        summary={null}
+        isLoading={false}
+        isError
+        readErrorMessage="history rollup request failed"
+        onRetryRead={onRetryRead}
+      />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('History summary unavailable')).toBeTruthy()
+    expect(screen.getByText('history rollup request failed')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry history summary' }))
+    expect(onRetryRead).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows unavailable callout when summary payload is missing', () => {
+    render(
+      <PersonHistorySummaryPanel personDisplayName="Alex Example" summary={null} isLoading={false} />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('History summary unavailable')).toBeTruthy()
+    expect(screen.getByText('History summary has not been generated yet.')).toBeTruthy()
+  })
+
   it('shows pending message when rollup is not materialized', () => {
     render(
       <PersonHistorySummaryPanel

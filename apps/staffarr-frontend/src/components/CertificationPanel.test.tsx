@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CertificationPanel } from './CertificationPanel'
 
@@ -57,8 +57,12 @@ describe('CertificationPanel', () => {
           },
         ]}
         canManage={false}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
         isSubmitting={false}
-        errorMessage={null}
+        actionErrorMessage={null}
         onGrantCertification={vi.fn().mockResolvedValue(undefined)}
         onUpdateCertification={vi.fn().mockResolvedValue(undefined)}
       />,
@@ -85,8 +89,12 @@ describe('CertificationPanel', () => {
           },
         ]}
         canManage={false}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
         isSubmitting={false}
-        errorMessage={null}
+        actionErrorMessage={null}
         onGrantCertification={vi.fn().mockResolvedValue(undefined)}
         onUpdateCertification={vi.fn().mockResolvedValue(undefined)}
       />,
@@ -104,8 +112,12 @@ describe('CertificationPanel', () => {
         definitions={definitions}
         certifications={certifications}
         canManage
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
         isSubmitting={false}
-        errorMessage={null}
+        actionErrorMessage={null}
         onGrantCertification={vi.fn().mockResolvedValue(undefined)}
         onUpdateCertification={vi.fn().mockResolvedValue(undefined)}
       />,
@@ -116,5 +128,55 @@ describe('CertificationPanel', () => {
     expect(screen.getByText(/Manual grant for onboarding/i)).toBeTruthy()
     expect(screen.getByText('Readiness catalog')).toBeTruthy()
     expect(screen.getAllByText(/readiness.safety_orientation/i).length).toBeGreaterThan(0)
+  })
+
+  it('renders action errors in shared callout', () => {
+    render(
+      <CertificationPanel
+        personId="person-1"
+        personDisplayName="Alex"
+        definitions={definitions}
+        certifications={certifications}
+        canManage
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
+        isSubmitting={false}
+        actionErrorMessage="Forbidden by policy"
+        onGrantCertification={vi.fn().mockResolvedValue(undefined)}
+        onUpdateCertification={vi.fn().mockResolvedValue(undefined)}
+      />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Certification update failed')).toBeTruthy()
+    expect(screen.getByText('Forbidden: Forbidden by policy')).toBeTruthy()
+  })
+
+  it('renders retryable read error callout', () => {
+    const onRetryRead = vi.fn()
+    render(
+      <CertificationPanel
+        personId="person-1"
+        personDisplayName="Alex"
+        definitions={[]}
+        certifications={[]}
+        canManage
+        isLoading={false}
+        isError
+        readErrorMessage="certification reads failed"
+        onRetryRead={onRetryRead}
+        isSubmitting={false}
+        actionErrorMessage={null}
+        onGrantCertification={vi.fn().mockResolvedValue(undefined)}
+        onUpdateCertification={vi.fn().mockResolvedValue(undefined)}
+      />,
+    )
+
+    expect(screen.getByText('Certifications unavailable')).toBeTruthy()
+    expect(screen.getByText('certification reads failed')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry certifications' }))
+    expect(onRetryRead).toHaveBeenCalledTimes(1)
   })
 })

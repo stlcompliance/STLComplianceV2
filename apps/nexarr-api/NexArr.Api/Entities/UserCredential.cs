@@ -8,6 +8,10 @@ public sealed class UserCredential
 
     public DateTimeOffset PasswordChangedAt { get; set; }
 
+    public bool IsEmailVerified { get; set; } = true;
+
+    public bool IsMfaEnabled { get; set; }
+
     public int FailedLoginCount { get; set; }
 
     public DateTimeOffset? LockedUntil { get; set; }

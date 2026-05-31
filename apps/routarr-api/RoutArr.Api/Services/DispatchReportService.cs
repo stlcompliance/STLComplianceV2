@@ -10,6 +10,8 @@ namespace RoutArr.Api.Services;
 public sealed class DispatchReportService(RoutArrDbContext db)
 {
     private const int RecentExceptionLimit = 25;
+    private const int DefaultAlertLimit = 100;
+    private const int MaxAlertLimit = 500;
 
     public async Task<DispatchReportSummaryResponse> GetSummaryAsync(
         Guid tenantId,
@@ -27,6 +29,11 @@ public sealed class DispatchReportService(RoutArrDbContext db)
 
         var scopedTrips = trips.Where(x => IsTripInScope(x, windowStart, windowEnd)).ToList();
         var tripIds = scopedTrips.Select(x => x.Id).ToHashSet();
+        var releaseSnapshots = await db.TripDispatchReleaseSnapshots
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && tripIds.Contains(x.TripId))
+            .ToListAsync(cancellationToken);
+        var releaseSnapshotByTrip = releaseSnapshots.ToDictionary(x => x.TripId);
 
         var settingsEntity = await db.TenantTripExecutionSettings
             .AsNoTracking()
@@ -90,7 +97,10 @@ public sealed class DispatchReportService(RoutArrDbContext db)
                     isUnassigned,
                     routeCountByTrip.GetValueOrDefault(trip.Id),
                     missingRequiredProofByTrip.GetValueOrDefault(trip.Id),
-                    openExceptionCountByTrip.GetValueOrDefault(trip.Id));
+                    openExceptionCountByTrip.GetValueOrDefault(trip.Id),
+                    releaseSnapshotByTrip.ContainsKey(trip.Id),
+                    releaseSnapshotByTrip.GetValueOrDefault(trip.Id)?.HasMissingExternalData == true,
+                    releaseSnapshotByTrip.GetValueOrDefault(trip.Id)?.HasStaleExternalData == true);
             })
             .OrderBy(x => x.ScheduledStartAt ?? DateTimeOffset.MaxValue)
             .ThenBy(x => x.TripNumber)
@@ -115,6 +125,9 @@ public sealed class DispatchReportService(RoutArrDbContext db)
             scopedExceptions.Count(x => DispatchExceptionStatuses.OpenQueue.Contains(x.Status)),
             scopedExceptions.Count(x =>
                 string.Equals(x.Category, DispatchExceptionCategories.Delay, StringComparison.OrdinalIgnoreCase)),
+            tripItems.Count(x => x.HasDispatchReleaseSnapshot),
+            tripItems.Count(x => x.ReleaseHasMissingExternalData),
+            tripItems.Count(x => x.ReleaseHasStaleExternalData),
             CountBy(scopedTrips.Select(x => x.DispatchStatus)),
             CountBy(scopedExceptions.Select(x => x.Status)),
             CountBy(scopedExceptions.Select(x => x.Category)),
@@ -131,6 +144,9 @@ public sealed class DispatchReportService(RoutArrDbContext db)
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == tripId, cancellationToken)
             ?? throw new StlApiException("reports.trip_not_found", "Trip was not found.", 404);
+        var releaseSnapshot = await db.TripDispatchReleaseSnapshots
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.TripId == tripId, cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         var isLate = DispatchBoardRules.IsLateTrip(trip, now);
@@ -193,7 +209,18 @@ public sealed class DispatchReportService(RoutArrDbContext db)
             tripExceptions.Count(x =>
                 string.Equals(x.Category, DispatchExceptionCategories.Delay, StringComparison.OrdinalIgnoreCase)),
             trip.CreatedAt,
-            trip.UpdatedAt);
+            trip.UpdatedAt,
+            releaseSnapshot is null
+                ? null
+                : new TripDispatchReleaseSnapshotResponse(
+                    releaseSnapshot.Id,
+                    releaseSnapshot.ReleasedAt,
+                    releaseSnapshot.ReleasedByUserId,
+                    releaseSnapshot.DriverCanAssign,
+                    releaseSnapshot.VehicleCanAssign,
+                    releaseSnapshot.HasMissingExternalData,
+                    releaseSnapshot.HasStaleExternalData,
+                    releaseSnapshot.Summary));
     }
 
     public async Task<DispatchReportExceptionDetailResponse> GetExceptionDetailAsync(
@@ -365,6 +392,52 @@ public sealed class DispatchReportService(RoutArrDbContext db)
 
         var fileName = $"routarr-time-summary-report-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv";
         return ("text/csv", fileName, Encoding.UTF8.GetBytes(builder.ToString()));
+    }
+
+    public async Task<IReadOnlyList<DispatchReportAlertResponse>> GetAlertsAsync(
+        Guid tenantId,
+        string? scope,
+        int? limit,
+        CancellationToken cancellationToken = default)
+    {
+        var summary = await GetSummaryAsync(tenantId, scope, cancellationToken);
+        var safeLimit = Math.Clamp(limit ?? DefaultAlertLimit, 1, MaxAlertLimit);
+        var alerts = new List<DispatchReportAlertResponse>();
+
+        foreach (var trip in summary.Trips.Where(x => x.MissingRequiredProofCount > 0))
+        {
+            alerts.Add(new DispatchReportAlertResponse(
+                "proof_missing",
+                "high",
+                trip.TripId,
+                trip.TripNumber,
+                null,
+                $"Trip {trip.TripNumber} is missing {trip.MissingRequiredProofCount} required proof item(s).",
+                summary.GeneratedAt));
+        }
+
+        foreach (var exception in summary.RecentExceptions)
+        {
+            var severity = string.Equals(exception.Status, DispatchExceptionStatuses.Assigned, StringComparison.OrdinalIgnoreCase)
+                ? "critical"
+                : "medium";
+            var alertType = string.Equals(exception.Status, DispatchExceptionStatuses.Assigned, StringComparison.OrdinalIgnoreCase)
+                ? "exception_escalated"
+                : "exception_created";
+            alerts.Add(new DispatchReportAlertResponse(
+                alertType,
+                severity,
+                exception.TripId,
+                summary.Trips.FirstOrDefault(x => x.TripId == exception.TripId)?.TripNumber,
+                exception.ExceptionId,
+                $"Dispatch exception {exception.ExceptionKey} is {exception.Status}.",
+                exception.UpdatedAt));
+        }
+
+        return alerts
+            .OrderByDescending(x => x.DetectedAt)
+            .Take(safeLimit)
+            .ToList();
     }
 
     private static DispatchReportExceptionRow MapExceptionRow(DispatchException entity) =>

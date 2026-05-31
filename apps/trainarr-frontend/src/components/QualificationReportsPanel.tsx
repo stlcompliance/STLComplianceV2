@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import {
   exportQualificationReportSummaryCsv,
   getQualificationReportSummary,
@@ -102,7 +103,25 @@ export function QualificationReportsPanel({
       )}
 
       {summaryQuery.isError && (
-        <p className="mt-3 text-sm text-destructive">Failed to load qualification report summary.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Qualification report unavailable"
+            message={getErrorMessage(summaryQuery.error, 'Failed to load qualification report summary.')}
+            retryLabel="Retry summary"
+            onRetry={() => {
+              void summaryQuery.refetch()
+            }}
+          />
+        </div>
+      )}
+
+      {exportMutation.isError && (
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="CSV export failed"
+            message={getErrorMessage(exportMutation.error, 'Unable to export qualification report CSV.')}
+          />
+        </div>
       )}
 
       {summaryQuery.data && (

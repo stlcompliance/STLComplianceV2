@@ -68,6 +68,7 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
         Assert.True(created.WasCreated);
         Assert.True(created.MembershipWasCreated);
         Assert.False(created.Identity.CanLogin);
+        Assert.Equal("invited", created.Identity.Status);
         Assert.Contains(created.Identity.TenantMemberships, m =>
             m.TenantId == PlatformSeeder.DemoTenantId && m.RoleKey == "driver" && m.IsActive);
 
@@ -99,6 +100,8 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
         Assert.Equal(created.Identity.PersonId, resolved.PersonId);
         Assert.Equal("new.worker@example.com", resolved.Email);
         Assert.False(resolved.CanLogin);
+        Assert.True(resolved.LaunchEligible);
+        Assert.Equal("invited", resolved.Status);
     }
 
     [Fact]
@@ -140,6 +143,109 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
         var response = await _client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Platform_identity_resolve_returns_active_status_for_login_enabled_user()
+    {
+        await SeedDatabaseAsync();
+        var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var tenantAdminToken = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+        var readToken = await IssueServiceTokenAsync(
+            adminToken,
+            "maintainarr",
+            PlatformIdentityIntegrationService.ReadIdentityActionScope,
+            PlatformSeeder.DemoTenantId);
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", tenantAdminToken);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest(
+            "staffarr",
+            "http://localhost:5173/app/staffarr"));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+        handoffResponse.EnsureSuccessStatusCode();
+
+        var request = Authorized(
+            HttpMethod.Get,
+            $"/api/internal/platform-identities/{PlatformSeeder.DemoTenantAdminUserId}?tenantId={PlatformSeeder.DemoTenantId}",
+            readToken);
+        var response = await _client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var identity = (await response.Content.ReadFromJsonAsync<PlatformIdentityResponse>())!;
+
+        Assert.True(identity.CanLogin);
+        Assert.True(identity.LaunchEligible);
+        Assert.Equal("active", identity.Status);
+        Assert.Null(identity.SecondaryEmail);
+        Assert.Null(identity.PhoneNumber);
+        Assert.Null(identity.AvatarUrl);
+        Assert.NotNull(identity.LastProductLaunchAt);
+    }
+
+    [Fact]
+    public async Task StaffArr_can_sync_existing_platform_identity_by_person_id()
+    {
+        await SeedDatabaseAsync();
+        var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var staffarrSyncToken = await IssueServiceTokenAsync(
+            adminToken,
+            "staffarr",
+            PlatformIdentityIntegrationService.CreateIdentityActionScope,
+            PlatformSeeder.DemoTenantId);
+
+        var request = Authorized(
+            HttpMethod.Put,
+            $"/api/internal/platform-identities/{PlatformSeeder.DemoTenantAdminUserId}",
+            staffarrSyncToken);
+        request.Content = JsonContent.Create(new SyncPlatformIdentityRequest(
+            PlatformSeeder.DemoTenantId,
+            "Updated Tenant Admin",
+            "driver"));
+        var response = await _client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var identity = (await response.Content.ReadFromJsonAsync<PlatformIdentityResponse>())!;
+
+        Assert.Equal(PlatformSeeder.DemoTenantAdminUserId, identity.PersonId);
+        Assert.Equal("Updated Tenant Admin", identity.DisplayName);
+        Assert.True(identity.LaunchEligible);
+        Assert.Contains(identity.TenantMemberships, x =>
+            x.TenantId == PlatformSeeder.DemoTenantId
+            && x.RoleKey == "driver"
+            && x.IsActive);
+    }
+
+    [Fact]
+    public async Task Platform_identity_resolve_returns_not_launch_eligible_when_tenant_has_no_entitlements()
+    {
+        await SeedDatabaseAsync();
+        var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var readToken = await IssueServiceTokenAsync(
+            adminToken,
+            "maintainarr",
+            PlatformIdentityIntegrationService.ReadIdentityActionScope,
+            PlatformSeeder.DemoTenantId);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var entitlements = await db.Entitlements
+                .Where(x => x.TenantId == PlatformSeeder.DemoTenantId)
+                .ToListAsync();
+            foreach (var entitlement in entitlements)
+            {
+                entitlement.Status = EntitlementStatuses.Revoked;
+            }
+            await db.SaveChangesAsync();
+        }
+
+        var request = Authorized(
+            HttpMethod.Get,
+            $"/api/internal/platform-identities/{PlatformSeeder.DemoTenantAdminUserId}?tenantId={PlatformSeeder.DemoTenantId}",
+            readToken);
+        var response = await _client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var identity = (await response.Content.ReadFromJsonAsync<PlatformIdentityResponse>())!;
+
+        Assert.False(identity.LaunchEligible);
     }
 
     private async Task<string> IssueServiceTokenAsync(

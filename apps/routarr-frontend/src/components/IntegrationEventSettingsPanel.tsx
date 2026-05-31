@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getIntegrationEventSettings,
@@ -127,7 +128,16 @@ export function IntegrationEventSettingsPanel({
       </p>
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-rose-400">Failed to load integration event settings.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Integration settings unavailable"
+            message={getErrorMessage(settingsQuery.error, 'Failed to load integration event settings.')}
+            retryLabel="Retry settings"
+            onRetry={() => {
+              void settingsQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       <div className="mt-4 space-y-3">
@@ -201,9 +211,7 @@ export function IntegrationEventSettingsPanel({
         </button>
 
         {saveError ? (
-          <p className="text-sm text-rose-400" data-testid="integration-event-settings-save-error">
-            {saveError}
-          </p>
+          <ApiErrorCallout title="Save failed" message={saveError} />
         ) : null}
       </div>
 

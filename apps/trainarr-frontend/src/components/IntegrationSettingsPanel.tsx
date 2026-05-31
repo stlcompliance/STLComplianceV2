@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getIntegrationProbes,
@@ -80,7 +81,16 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
       </p>
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-destructive">Failed to load integration settings.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Integration settings unavailable"
+            message={getErrorMessage(settingsQuery.error, 'Failed to load integration settings.')}
+            retryLabel="Retry settings"
+            onRetry={() => {
+              void settingsQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       <div className="mt-4 space-y-4">
@@ -179,13 +189,26 @@ export function IntegrationSettingsPanel({ accessToken, canManage }: Integration
         >
           {saveMutation.isPending ? 'Saving…' : 'Save integration settings'}
         </button>
+        {saveMutation.isError && (
+          <ApiErrorCallout
+            title="Save failed"
+            message={getErrorMessage(saveMutation.error, 'Failed to save integration settings.')}
+          />
+        )}
       </div>
 
       <div className="mt-6">
         <h3 className="text-sm font-semibold text-foreground">Connectivity probes</h3>
         {probesQuery.isLoading && <p className="mt-2 text-sm text-muted-foreground">Probing integrations…</p>}
         {probesQuery.isError && (
-          <p className="mt-2 text-sm text-destructive">Failed to load integration connectivity probes.</p>
+          <ApiErrorCallout
+            title="Connectivity probes unavailable"
+            message={getErrorMessage(probesQuery.error, 'Failed to load integration connectivity probes.')}
+            retryLabel="Retry probes"
+            onRetry={() => {
+              void probesQuery.refetch()
+            }}
+          />
         )}
         {probesQuery.data && (
           <ul className="mt-2 space-y-2 text-sm" data-testid="integration-probes-list">

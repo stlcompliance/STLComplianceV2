@@ -257,7 +257,7 @@ public sealed class ReceivingExceptionService(
         {
             throw new StlApiException(
                 "receiving_exception.type.invalid",
-                "Exception type must be short, over, or damage.",
+                "Exception type is not recognized.",
                 400);
         }
 

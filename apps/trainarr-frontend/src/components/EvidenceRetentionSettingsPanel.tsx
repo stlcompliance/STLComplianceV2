@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   getEvidenceRetentionRuns,
@@ -75,7 +76,16 @@ export function EvidenceRetentionSettingsPanel({ accessToken, canManage }: Evide
       </p>
 
       {settingsQuery.isError && (
-        <p className="mt-3 text-sm text-destructive">Failed to load evidence retention settings.</p>
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Retention settings unavailable"
+            message={getErrorMessage(settingsQuery.error, 'Failed to load evidence retention settings.')}
+            retryLabel="Retry settings"
+            onRetry={() => {
+              void settingsQuery.refetch()
+            }}
+          />
+        </div>
       )}
 
       <div className="mt-4 space-y-3">
@@ -115,7 +125,10 @@ export function EvidenceRetentionSettingsPanel({ accessToken, canManage }: Evide
         </button>
 
         {saveMutation.isError && (
-          <p className="text-sm text-destructive">Failed to save evidence retention settings.</p>
+          <ApiErrorCallout
+            title="Save failed"
+            message={getErrorMessage(saveMutation.error, 'Failed to save evidence retention settings.')}
+          />
         )}
       </div>
 

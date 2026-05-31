@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, ExternalLink, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   downloadTripCaptureAttachment,
@@ -373,9 +374,14 @@ export function TripExecutionWorkspacePanel({
 
   if (tripQuery.isError || !tripQuery.data) {
     return (
-      <p className="text-sm text-red-400" role="alert">
-        {(tripQuery.error as Error | undefined)?.message ?? 'Trip not found or access denied.'}
-      </p>
+      <ApiErrorCallout
+        message={getErrorMessage(
+          tripQuery.error,
+          'Trip not found or access denied.',
+        )}
+        onRetry={() => void tripQuery.refetch()}
+        retryLabel="Retry trip workspace"
+      />
     )
   }
 
@@ -481,6 +487,13 @@ export function TripExecutionWorkspacePanel({
         <h3 className="text-sm font-semibold text-slate-200">Routes & stops</h3>
         {routesQuery.isLoading ? (
           <p className="mt-2 text-sm text-slate-500">Loading routes…</p>
+        ) : routesQuery.isError ? (
+          <ApiErrorCallout
+            className="mt-2"
+            message={getErrorMessage(routesQuery.error, 'Failed to load routes for this trip.')}
+            onRetry={() => void routesQuery.refetch()}
+            retryLabel="Retry routes"
+          />
         ) : (
           <div className="mt-3">
             <RouteStopsSection routes={routesQuery.data ?? []} />
@@ -492,6 +505,13 @@ export function TripExecutionWorkspacePanel({
         <h3 className="text-sm font-semibold text-slate-200">Proof & DVIR</h3>
         {executionQuery.isLoading ? (
           <p className="mt-2 text-sm text-slate-500">Loading execution capture…</p>
+        ) : executionQuery.isError ? (
+          <ApiErrorCallout
+            className="mt-2"
+            message={getErrorMessage(executionQuery.error, 'Failed to load proof and DVIR data.')}
+            onRetry={() => void executionQuery.refetch()}
+            retryLabel="Retry proof and DVIR"
+          />
         ) : executionQuery.data ? (
           <div className="mt-3">
             <ExecutionProofDvirSection
@@ -554,6 +574,13 @@ export function TripExecutionWorkspacePanel({
         </p>
         {auditQuery.isLoading ? (
           <p className="mt-2 text-sm text-slate-500">Loading audit trail…</p>
+        ) : auditQuery.isError ? (
+          <ApiErrorCallout
+            className="mt-2"
+            message={getErrorMessage(auditQuery.error, 'Failed to load transportation audit trail.')}
+            onRetry={() => void auditQuery.refetch()}
+            retryLabel="Retry audit trail"
+          />
         ) : auditQuery.data && auditQuery.data.entries.length > 0 ? (
           <ul className="mt-3 max-h-56 divide-y divide-slate-800 overflow-y-auto text-xs text-slate-300">
             {auditQuery.data.entries.map((entry) => (

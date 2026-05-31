@@ -178,6 +178,66 @@ public sealed class SupplyArrVendorRestrictionTests : IAsyncLifetime
         Assert.Equal("restricted", party.ApprovalStatus);
     }
 
+    [Fact]
+    public async Task Issue_purchase_order_is_blocked_when_required_vendor_document_is_expired()
+    {
+        var vendor = await CreateVendorAsync();
+        var part = await CreatePartAsync();
+
+        var registerDocument = Authorized(HttpMethod.Post, "/api/vendor-documents", _userToken);
+        registerDocument.Content = JsonContent.Create(new RegisterVendorDocumentRequest(
+            vendor.PartyId,
+            $"doc-{Guid.NewGuid():N}"[..20],
+            "insurance_certificate",
+            "Expired insurance certificate",
+            DateTimeOffset.UtcNow.AddDays(-1),
+            null,
+            "insurance.pdf",
+            "application/pdf",
+            1024,
+            "s3://tests/insurance.pdf"));
+        var registerDocumentResponse = await _supplyarrClient.SendAsync(registerDocument);
+        registerDocumentResponse.EnsureSuccessStatusCode();
+        var document = (await registerDocumentResponse.Content.ReadFromJsonAsync<PartyComplianceDocumentResponse>())!;
+
+        var approveDocument = Authorized(
+            HttpMethod.Post,
+            $"/api/vendor-documents/{document.DocumentId}/approve",
+            _userToken);
+        (await _supplyarrClient.SendAsync(approveDocument)).EnsureSuccessStatusCode();
+
+        var createPr = Authorized(HttpMethod.Post, "/api/purchase-requests", _userToken);
+        createPr.Content = JsonContent.Create(new CreatePurchaseRequestRequest(
+            $"po-doc-{Guid.NewGuid():N}"[..20],
+            "PO blocked by expired document",
+            string.Empty,
+            vendor.PartyId,
+            [new CreatePurchaseRequestLineRequest(part.PartId, 1m, string.Empty)]));
+        var createPrResponse = await _supplyarrClient.SendAsync(createPr);
+        createPrResponse.EnsureSuccessStatusCode();
+        var purchaseRequest = (await createPrResponse.Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
+
+        (await _supplyarrClient.SendAsync(Authorized(
+            HttpMethod.Post,
+            $"/api/purchase-requests/{purchaseRequest.PurchaseRequestId}/submit",
+            _userToken))).EnsureSuccessStatusCode();
+        (await _supplyarrClient.SendAsync(Authorized(
+            HttpMethod.Post,
+            $"/api/purchase-requests/{purchaseRequest.PurchaseRequestId}/approve",
+            _userToken))).EnsureSuccessStatusCode();
+
+        var createPo = Authorized(
+            HttpMethod.Post,
+            $"/api/purchase-orders/from-purchase-request/{purchaseRequest.PurchaseRequestId}",
+            _userToken);
+        createPo.Content = JsonContent.Create(new CreatePurchaseOrderFromPurchaseRequestRequest(
+            $"po-{Guid.NewGuid():N}"[..16],
+            "Blocked PO",
+            string.Empty));
+        var createPoResponse = await _supplyarrClient.SendAsync(createPo);
+        Assert.Equal(HttpStatusCode.Conflict, createPoResponse.StatusCode);
+    }
+
     private async Task<ExternalPartyResponse> CreateVendorAsync()
     {
         var createVendor = Authorized(HttpMethod.Post, "/api/vendors", _userToken);

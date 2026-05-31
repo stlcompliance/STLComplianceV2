@@ -186,4 +186,44 @@ describe('MeSelfServicePortalPanel', () => {
     expect(screen.getByText('Near miss in warehouse')).toBeTruthy()
     expect(screen.getByText(/submitted/)).toBeTruthy()
   })
+
+  it('renders submission errors in a shared alert callout', () => {
+    render(
+      <MeSelfServicePortalPanel
+        summary={summary}
+        updateRequests={[]}
+        incidentReports={[]}
+        isLoading={false}
+        isSubmittingUpdate={false}
+        isSubmittingIncident={false}
+        errorMessage="Unable to submit profile request"
+        onSubmitUpdateRequest={vi.fn()}
+        onSubmitIncidentReport={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Request submission failed')).toBeTruthy()
+    expect(screen.getByText('Unable to submit profile request')).toBeTruthy()
+  })
+
+  it('renders unavailable summary state in a shared alert callout', () => {
+    render(
+      <MeSelfServicePortalPanel
+        summary={null}
+        updateRequests={[]}
+        incidentReports={[]}
+        isLoading={false}
+        isSubmittingUpdate={false}
+        isSubmittingIncident={false}
+        errorMessage={null}
+        onSubmitUpdateRequest={vi.fn()}
+        onSubmitIncidentReport={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Self-service profile unavailable')).toBeTruthy()
+    expect(screen.getByText('Could not load your workforce profile details.')).toBeTruthy()
+  })
 })

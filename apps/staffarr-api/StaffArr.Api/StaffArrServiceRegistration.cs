@@ -108,6 +108,7 @@ public static class StaffArrServiceRegistration
         builder.Services.AddScoped<AuditPackageGenerationService>();
         builder.Services.AddScoped<PersonnelReportService>();
         builder.Services.AddScoped<ReadinessReportService>();
+        builder.Services.AddScoped<CertificationReportService>();
         builder.Services.AddScoped<IncidentReportService>();
         builder.Services.AddScoped<StaffArrEntityBulkExportService>();
         builder.Services.AddScoped<StaffArrWorkerAdminService>();

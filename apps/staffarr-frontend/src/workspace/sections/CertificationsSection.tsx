@@ -1,4 +1,4 @@
-import { StaffArrApiError } from '../../api/client'
+import { getErrorMessage } from '@stl/shared-ui'
 import { CertificationPanel } from '../../components/CertificationPanel'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
 
@@ -16,11 +16,30 @@ export function CertificationsSection({ state }: Props) {
       personDisplayName={s.selectedPerson.displayName}
       definitions={s.certificationDefinitions}
       certifications={s.personCertifications}
+      isLoading={s.certificationDefinitionsQuery.isLoading || s.personCertificationsQuery.isLoading}
+      isError={s.certificationDefinitionsQuery.isError || s.personCertificationsQuery.isError}
+      readErrorMessage={
+        s.certificationDefinitionsQuery.isError
+          ? getErrorMessage(
+              s.certificationDefinitionsQuery.error,
+              'Failed to load certification definitions.',
+            )
+          : s.personCertificationsQuery.isError
+            ? getErrorMessage(
+                s.personCertificationsQuery.error,
+                'Failed to load person certifications.',
+              )
+            : null
+      }
+      onRetryRead={() => {
+        void s.certificationDefinitionsQuery.refetch()
+        void s.personCertificationsQuery.refetch()
+      }}
       canManage={s.canManagePeopleProfiles}
       isSubmitting={s.grantCertificationMutation.isPending || s.updateCertificationMutation.isPending}
-      errorMessage={
-        s.certificationMutationError instanceof StaffArrApiError
-          ? s.certificationMutationError.body || s.certificationMutationError.message
+      actionErrorMessage={
+        s.certificationMutationError
+          ? getErrorMessage(s.certificationMutationError, 'Failed to update certification records.')
           : null
       }
       onGrantCertification={async (payload) => {

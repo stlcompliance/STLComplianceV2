@@ -130,6 +130,17 @@ public sealed class MaintainArrComplianceReportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Compliance_report_alerts_returns_compliance_alert_items()
+    {
+        var response = await _maintainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/compliance/alerts", _managerToken));
+        response.EnsureSuccessStatusCode();
+
+        var alerts = (await response.Content.ReadFromJsonAsync<List<ComplianceAlertResponse>>())!;
+        Assert.Contains(alerts, x => x.AlertType == "critical_defect");
+    }
+
+    [Fact]
     public async Task Compliance_report_v1_aliases_work()
     {
         var summaryResponse = await _maintainarrClient.SendAsync(
@@ -198,7 +209,31 @@ public sealed class MaintainArrComplianceReportTests : IAsyncLifetime
             "Compliance Test Asset",
             string.Empty,
             "yard-a"));
-        (await _maintainarrClient.SendAsync(createAssetRequest)).EnsureSuccessStatusCode();
+        var createAssetResponse = await _maintainarrClient.SendAsync(createAssetRequest);
+        createAssetResponse.EnsureSuccessStatusCode();
+        var asset = (await createAssetResponse.Content.ReadFromJsonAsync<AssetResponse>())!;
+
+        using (var scope = _maintainarrFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+            var tenantId = PlatformSeeder.DemoTenantId;
+            var now = DateTimeOffset.UtcNow;
+            db.Defects.Add(new Defect
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                AssetId = asset.AssetId,
+                Title = "Brake pressure fault",
+                Description = "Critical compliance defect.",
+                Severity = DefectSeverities.Critical,
+                Status = DefectStatuses.Open,
+                Source = DefectSources.Manual,
+                ReportedByUserId = PlatformSeeder.DemoAdminUserId,
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+            await db.SaveChangesAsync();
+        }
 
         return template.InspectionTemplateId;
     }

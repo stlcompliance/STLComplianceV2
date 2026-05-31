@@ -30,12 +30,19 @@ describe('IncidentsPanel', () => {
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
         incidents={sampleIncidents}
+        selectedIncidentId={null}
         selectedIncident={null}
         isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
         isLoadingDetail={false}
+        isDetailError={false}
+        detailErrorMessage={null}
+        onRetryDetail={vi.fn()}
         canManage
         isSubmitting={false}
-        errorMessage={null}
+        actionErrorMessage={null}
         onSelectIncident={vi.fn()}
         onCreateIncident={vi.fn().mockResolvedValue(undefined)}
       />,
@@ -54,12 +61,19 @@ describe('IncidentsPanel', () => {
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
         incidents={[]}
+        selectedIncidentId={null}
         selectedIncident={null}
         isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
         isLoadingDetail={false}
+        isDetailError={false}
+        detailErrorMessage={null}
+        onRetryDetail={vi.fn()}
         canManage
         isSubmitting={false}
-        errorMessage={null}
+        actionErrorMessage={null}
         onSelectIncident={vi.fn()}
         onCreateIncident={onCreateIncident}
       />,
@@ -104,12 +118,19 @@ describe('IncidentsPanel', () => {
         personId={sampleIncidents[0].personId}
         personDisplayName="Alex Worker"
         incidents={[]}
+        selectedIncidentId={trainingIncident.incidentId}
         selectedIncident={trainingIncident}
         isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
         isLoadingDetail={false}
+        isDetailError={false}
+        detailErrorMessage={null}
+        onRetryDetail={vi.fn()}
         canManage
         isSubmitting={false}
-        errorMessage={null}
+        actionErrorMessage={null}
         onSelectIncident={vi.fn()}
         onCreateIncident={vi.fn()}
         onRouteToTrainarr={vi.fn()}
@@ -121,5 +142,96 @@ describe('IncidentsPanel', () => {
     ).toBeTruthy()
     expect(isIncidentRoutableToTrainarr('training_compliance')).toBe(true)
     expect(isIncidentRoutableToTrainarr('safety')).toBe(false)
+  })
+
+  it('renders incident action errors in shared callout', () => {
+    render(
+      <IncidentsPanel
+        personId={sampleIncidents[0].personId}
+        personDisplayName="Alex Worker"
+        incidents={sampleIncidents}
+        selectedIncidentId={null}
+        selectedIncident={null}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
+        isLoadingDetail={false}
+        isDetailError={false}
+        detailErrorMessage={null}
+        onRetryDetail={vi.fn()}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage="Incident intake failed"
+        onSelectIncident={vi.fn()}
+        onCreateIncident={vi.fn().mockResolvedValue(undefined)}
+      />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Personnel incident action failed')).toBeTruthy()
+    expect(screen.getByText('Incident intake failed')).toBeTruthy()
+  })
+
+  it('renders retryable read error callout when incidents query fails', () => {
+    const onRetryRead = vi.fn()
+    render(
+      <IncidentsPanel
+        personId={sampleIncidents[0].personId}
+        personDisplayName="Alex Worker"
+        incidents={[]}
+        selectedIncidentId={null}
+        selectedIncident={null}
+        isLoading={false}
+        isError
+        readErrorMessage="incidents read failed"
+        onRetryRead={onRetryRead}
+        isLoadingDetail={false}
+        isDetailError={false}
+        detailErrorMessage={null}
+        onRetryDetail={vi.fn()}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage={null}
+        onSelectIncident={vi.fn()}
+        onCreateIncident={vi.fn().mockResolvedValue(undefined)}
+      />,
+    )
+
+    expect(screen.getByText('Personnel incidents unavailable')).toBeTruthy()
+    expect(screen.getByText('incidents read failed')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry incidents' }))
+    expect(onRetryRead).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders detail error when selected incident detail query fails with null payload', () => {
+    const onRetryDetail = vi.fn()
+    render(
+      <IncidentsPanel
+        personId={sampleIncidents[0].personId}
+        personDisplayName="Alex Worker"
+        incidents={sampleIncidents}
+        selectedIncidentId={sampleIncidents[0].incidentId}
+        selectedIncident={null}
+        isLoading={false}
+        isError={false}
+        readErrorMessage={null}
+        onRetryRead={vi.fn()}
+        isLoadingDetail={false}
+        isDetailError
+        detailErrorMessage="incident detail read failed"
+        onRetryDetail={onRetryDetail}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage={null}
+        onSelectIncident={vi.fn()}
+        onCreateIncident={vi.fn().mockResolvedValue(undefined)}
+      />,
+    )
+
+    expect(screen.getByText('Incident detail unavailable')).toBeTruthy()
+    expect(screen.getByText('incident detail read failed')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry incident detail' }))
+    expect(onRetryDetail).toHaveBeenCalledTimes(1)
   })
 })

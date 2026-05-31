@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   completeCompanionFieldInspection,
@@ -198,12 +199,14 @@ export function FieldTaskInspectionPanel({
   if (detailQuery.isError) {
     return (
       <div
-        className="mt-4 rounded-lg border border-rose-900/50 bg-rose-950/20 p-4 text-sm text-rose-300"
+        className="mt-4"
         data-testid="companion-field-inspection-panel"
       >
-        {detailQuery.error instanceof Error
-          ? detailQuery.error.message
-          : 'Failed to load inspection checklist.'}
+        <ApiErrorCallout
+          message={getErrorMessage(detailQuery.error, 'Failed to load inspection checklist.')}
+          onRetry={() => void detailQuery.refetch()}
+          retryLabel="Retry inspection"
+        />
       </div>
     )
   }
@@ -322,11 +325,12 @@ export function FieldTaskInspectionPanel({
       </div>
 
       {(saveMutation.isError || completeMutation.isError) && (
-        <p className="mt-2 text-sm text-rose-400" data-testid="companion-inspection-error">
-          {(saveMutation.error ?? completeMutation.error) instanceof Error
-            ? (saveMutation.error ?? completeMutation.error)?.message
-            : 'Inspection submission failed.'}
-        </p>
+        <ApiErrorCallout
+          className="mt-2"
+          testId="companion-inspection-error"
+          title="Inspection submission failed"
+          message={getErrorMessage(saveMutation.error ?? completeMutation.error, 'Inspection submission failed.')}
+        />
       )}
 
       {successMessage && (

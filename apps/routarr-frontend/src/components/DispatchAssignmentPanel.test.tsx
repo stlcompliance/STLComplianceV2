@@ -133,4 +133,25 @@ describe('DispatchAssignmentPanel', () => {
       expect(assignTripDriver).toHaveBeenCalled()
     })
   })
+
+  it('shows callout when assignment preview fails', async () => {
+    previewDispatchAssignment.mockRejectedValueOnce(new Error('assignment preview failed'))
+
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <DispatchAssignmentPanel accessToken="token" scope="daily" canAssign />
+      </QueryClientProvider>,
+    )
+
+    const dropTarget = await screen.findByTestId('trip-drop-11111111-1111-1111-1111-111111111111')
+    fireEvent.drop(dropTarget, {
+      dataTransfer: {
+        getData: () => JSON.stringify({ kind: 'driver', personId: 'driver-person-1' }),
+      },
+    })
+
+    expect(await screen.findByText('assignment preview failed')).toBeTruthy()
+    expect(screen.getByTestId('dispatch-assignment-error')).toBeTruthy()
+  })
 })

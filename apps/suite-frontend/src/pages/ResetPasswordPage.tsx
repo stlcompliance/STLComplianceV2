@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
@@ -114,9 +115,9 @@ export function ResetPasswordPage() {
         )}
 
         {error && (
-          <p className="mt-4 text-sm text-red-300" role="alert">
-            {error}
-          </p>
+          <div className="mt-4">
+            <ApiErrorCallout message={error} />
+          </div>
         )}
 
         <button

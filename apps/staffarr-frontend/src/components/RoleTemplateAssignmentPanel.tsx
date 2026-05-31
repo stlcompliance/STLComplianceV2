@@ -1,4 +1,4 @@
-import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { ApiErrorCallout, buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type {
   OrgUnitResponse,
@@ -15,9 +15,13 @@ interface RoleTemplateAssignmentPanelProps {
   permissionTemplates: PermissionTemplateSummaryResponse[]
   roleTemplates: RoleTemplateResponse[]
   roleAssignments: PersonRoleAssignmentResponse[]
+  isLoading?: boolean
+  isError?: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
   canManage: boolean
   isSubmitting: boolean
-  errorMessage: string | null
+  actionErrorMessage: string | null
   onUpsertPermissionTemplate: (request: {
     permissionKey: string
     name: string
@@ -86,16 +90,20 @@ export function RoleTemplateAssignmentPanel({
   permissionTemplates,
   roleTemplates,
   roleAssignments,
+  isLoading = false,
+  isError = false,
+  readErrorMessage = null,
+  onRetryRead,
   canManage,
   isSubmitting,
-  errorMessage,
+  actionErrorMessage,
   onUpsertPermissionTemplate,
   onCreateRoleTemplate,
   onUpdateRoleTemplateStatus,
   onCreateRoleAssignment,
   onUpdateRoleAssignmentStatus,
 }: RoleTemplateAssignmentPanelProps) {
-  const normalizedError = formatRoleTemplateMutationError(errorMessage)
+  const normalizedError = formatRoleTemplateMutationError(actionErrorMessage)
 
   const [permissionKey, setPermissionKey] = useState('staffarr.people.read')
   const [permissionName, setPermissionName] = useState('People read')
@@ -190,14 +198,30 @@ export function RoleTemplateAssignmentPanel({
       <p className="mt-2 text-xs text-slate-500">
         Template and assignment foundations for {personDisplayName} ({personId})
       </p>
-      {normalizedError ? <p className="mt-3 text-sm text-red-300">{normalizedError}</p> : null}
+      {normalizedError ? (
+        <div className="mt-3">
+          <ApiErrorCallout title="Role template update failed" message={normalizedError} />
+        </div>
+      ) : null}
+      {isError ? (
+        <div className="mt-3">
+          <ApiErrorCallout
+            title="Role and permission data unavailable"
+            message={readErrorMessage ?? 'Failed to load role templates, permission templates, and assignments.'}
+            onRetry={onRetryRead}
+            retryLabel="Retry permissions data"
+          />
+        </div>
+      ) : null}
 
       <div className="mt-5 grid gap-6 lg:grid-cols-2">
         <div>
           <h3 className="text-sm font-medium text-slate-300">Permission templates</h3>
-          {permissionTemplates.length === 0 ? (
+          {isLoading ? (
+            <p className="mt-3 text-sm text-slate-400">Loading permission templates…</p>
+          ) : !isError && permissionTemplates.length === 0 ? (
             <p className="mt-3 text-sm text-slate-400">No permission templates configured yet.</p>
-          ) : (
+          ) : !isError ? (
             <ul className="mt-3 divide-y divide-slate-700 text-sm">
               {permissionTemplates.map((permission) => (
                 <li key={permission.permissionTemplateId} className="py-2">
@@ -206,14 +230,16 @@ export function RoleTemplateAssignmentPanel({
                 </li>
               ))}
             </ul>
-          )}
+          ) : null}
         </div>
 
         <div>
           <h3 className="text-sm font-medium text-slate-300">Role templates</h3>
-          {roleTemplates.length === 0 ? (
+          {isLoading ? (
+            <p className="mt-3 text-sm text-slate-400">Loading role templates…</p>
+          ) : !isError && roleTemplates.length === 0 ? (
             <p className="mt-3 text-sm text-slate-400">No role templates created yet.</p>
-          ) : (
+          ) : !isError ? (
             <ul className="mt-3 divide-y divide-slate-700 text-sm">
               {roleTemplates.map((role) => (
                 <li key={role.roleTemplateId} className="py-2">
@@ -240,15 +266,17 @@ export function RoleTemplateAssignmentPanel({
                 </li>
               ))}
             </ul>
-          )}
+          ) : null}
         </div>
       </div>
 
       <div className="mt-6">
         <h3 className="text-sm font-medium text-slate-300">Person role assignments</h3>
-        {roleAssignments.length === 0 ? (
+        {isLoading ? (
+          <p className="mt-3 text-sm text-slate-400">Loading role assignments…</p>
+        ) : !isError && roleAssignments.length === 0 ? (
           <p className="mt-3 text-sm text-slate-400">No role assignments for this person.</p>
-        ) : (
+        ) : !isError ? (
           <ul className="mt-3 divide-y divide-slate-700 text-sm">
             {roleAssignments.map((assignment) => (
               <li key={assignment.assignmentId} className="flex items-center justify-between py-2">
@@ -278,10 +306,10 @@ export function RoleTemplateAssignmentPanel({
               </li>
             ))}
           </ul>
-        )}
+        ) : null}
       </div>
 
-      {canManage ? (
+      {canManage && !isLoading && !isError ? (
         <div className="mt-6 grid gap-6 xl:grid-cols-3">
           <form className="space-y-3" onSubmit={handlePermissionSubmit}>
             <h3 className="text-sm font-medium text-slate-300">Upsert permission template</h3>
@@ -513,11 +541,11 @@ export function RoleTemplateAssignmentPanel({
             </button>
           </form>
         </div>
-      ) : (
+      ) : !isLoading && !isError ? (
         <p className="mt-4 text-xs text-slate-500">
           Your role does not include role template or permission assignment write permission.
         </p>
-      )}
+      ) : null}
     </section>
   )
 }

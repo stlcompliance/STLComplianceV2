@@ -1,5 +1,8 @@
 using MaintainArr.Api.Contracts;
+using MaintainArr.Api.Data;
+using MaintainArr.Api.Entities;
 using MaintainArr.Api.Services;
+using Microsoft.EntityFrameworkCore;
 using STLCompliance.Shared.Auth;
 
 namespace MaintainArr.Api.Endpoints;
@@ -137,5 +140,49 @@ public static class MeterEndpoints
             return Results.Ok(await service.GetForecastAsync(tenantId, assetMeterId, cancellationToken));
         })
         .WithName($"GetMeterPmForecast{nameSuffix}");
+
+        group.MapGet("/meters/alerts", async (
+            int? staleAfterDays,
+            int? limit,
+            HttpContext context,
+            MaintainArrAuthorizationService authorization,
+            MaintainArrDbContext db,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireMetersRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var effectiveStaleDays = Math.Clamp(staleAfterDays ?? 14, 0, 3650);
+            var effectiveLimit = Math.Clamp(limit ?? 100, 1, 500);
+            var now = DateTimeOffset.UtcNow;
+            var threshold = now.AddDays(-effectiveStaleDays);
+
+            var alerts = await (
+                from meter in db.AssetMeters.AsNoTracking()
+                join asset in db.Assets.AsNoTracking() on meter.AssetId equals asset.Id
+                where meter.TenantId == tenantId
+                    && asset.TenantId == tenantId
+                    && meter.Status == MeterStatuses.Active
+                    && (meter.LastReadingAt == null || meter.LastReadingAt < threshold)
+                orderby meter.LastReadingAt ascending, meter.Name
+                select new MeterMissingReadingAlertResponse(
+                    meter.Id,
+                    asset.Id,
+                    asset.AssetTag,
+                    asset.Name,
+                    meter.MeterKey,
+                    meter.Name,
+                    meter.LastReadingAt,
+                    meter.LastReadingAt == null
+                        ? null
+                        : (int?)Math.Floor((now - meter.LastReadingAt.Value).TotalDays),
+                    meter.LastReadingAt == null
+                        ? $"Meter \"{meter.Name}\" has no readings yet."
+                        : $"Meter \"{meter.Name}\" has not received a reading in {Math.Floor((now - meter.LastReadingAt.Value).TotalDays)} days."))
+                .Take(effectiveLimit)
+                .ToListAsync(cancellationToken);
+
+            return Results.Ok(alerts);
+        })
+        .WithName($"ListMeterMissingReadingAlerts{nameSuffix}");
     }
 }

@@ -70,6 +70,28 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
     }
 
     [Fact]
+    public async Task Platform_admin_dashboard_requires_recent_admin_session()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var session = await db.UserSessions
+                .OrderByDescending(x => x.CreatedAt)
+                .FirstAsync(x => x.UserId == PlatformSeeder.DemoAdminUserId);
+            session.CreatedAt = DateTimeOffset.UtcNow.AddHours(-2);
+            await db.SaveChangesAsync();
+        }
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/platform-admin/dashboard", token));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Tenant_admin_cannot_read_platform_admin_dashboard()
     {
         await SeedDatabaseAsync();
@@ -256,6 +278,110 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
     }
 
     [Fact]
+    public async Task Platform_admin_can_read_user_login_and_launch_history_separately()
+    {
+        await SeedDatabaseAsync();
+        var platformAdminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var tenantAdminToken = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var loginResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/platform-admin/users/{PlatformSeeder.DemoTenantAdminUserId}/login-history?page=1&pageSize=20",
+                platformAdminToken));
+        loginResponse.EnsureSuccessStatusCode();
+        var loginHistory = await loginResponse.Content.ReadFromJsonAsync<PagedResult<PlatformUserAccessHistoryItemResponse>>();
+        Assert.NotNull(loginHistory);
+        Assert.NotEmpty(loginHistory!.Items);
+        Assert.All(loginHistory.Items, item => Assert.StartsWith("auth.", item.Action, StringComparison.Ordinal));
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", tenantAdminToken);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest(
+            "staffarr",
+            "http://localhost:5173/app/staffarr"));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+        handoffResponse.EnsureSuccessStatusCode();
+
+        var launchResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/platform-admin/users/{PlatformSeeder.DemoTenantAdminUserId}/launch-history?page=1&pageSize=20",
+                platformAdminToken));
+        launchResponse.EnsureSuccessStatusCode();
+        var launchHistory = await launchResponse.Content.ReadFromJsonAsync<PagedResult<PlatformUserAccessHistoryItemResponse>>();
+        Assert.NotNull(launchHistory);
+        Assert.NotEmpty(launchHistory!.Items);
+        Assert.All(launchHistory.Items, item => Assert.StartsWith("launch.", item.Action, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Platform_support_role_can_read_platform_admin_dashboard()
+    {
+        await SeedDatabaseAsync();
+        await GrantPlatformRoleAsync(PlatformSeeder.DemoTenantAdminUserId, "platform_support");
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/platform-admin/dashboard", token));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Read_only_auditor_role_can_read_launch_attempts()
+    {
+        await SeedDatabaseAsync();
+        await GrantPlatformRoleAsync(PlatformSeeder.DemoTenantAdminUserId, "read_only_auditor");
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/platform-admin/launch-attempts", token));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Tenant_scoped_platform_support_requires_tenant_scope_for_launch_diagnostics()
+    {
+        await SeedDatabaseAsync();
+        await GrantPlatformRoleAsync(
+            PlatformSeeder.DemoTenantAdminUserId,
+            "platform_support",
+            PlatformSeeder.DemoTenantId);
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var unscopedResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/platform-admin/launch-diagnostics", token));
+        Assert.Equal(HttpStatusCode.Forbidden, unscopedResponse.StatusCode);
+
+        var scopedResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/platform-admin/launch-diagnostics?tenantId={PlatformSeeder.DemoTenantId}",
+                token));
+        Assert.Equal(HttpStatusCode.OK, scopedResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Tenant_scoped_auditor_cannot_read_other_tenant_launch_attempts()
+    {
+        await SeedDatabaseAsync();
+        await GrantPlatformRoleAsync(
+            PlatformSeeder.DemoTenantAdminUserId,
+            "read_only_auditor",
+            PlatformSeeder.DemoTenantId);
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+        var otherTenantId = Guid.Parse("99999999-9999-9999-9999-999999999901");
+
+        var forbiddenResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/platform-admin/launch-attempts?tenantId={otherTenantId}",
+                token));
+        Assert.Equal(HttpStatusCode.Forbidden, forbiddenResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Platform_admin_can_create_and_update_user_with_outbox_events()
     {
         await SeedDatabaseAsync();
@@ -329,13 +455,84 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
     }
 
     [Fact]
+    public async Task Platform_admin_can_invite_user_without_login_credentials()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var inviteRequest = Authorized(HttpMethod.Post, "/api/v1/platform-admin/users/invite", token);
+        inviteRequest.Content = JsonContent.Create(new InvitePlatformUserRequest(
+            "invited-user@example.test",
+            "Invited User"));
+
+        var inviteResponse = await _client.SendAsync(inviteRequest);
+        Assert.Equal(HttpStatusCode.Created, inviteResponse.StatusCode);
+        var invited = (await inviteResponse.Content.ReadFromJsonAsync<PlatformUserDetailResponse>())!;
+        Assert.NotEqual(Guid.Empty, invited.UserId);
+        Assert.Equal("invited-user@example.test", invited.Email);
+
+        var loginResponse = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                "invited-user@example.test",
+                "AnyPassword123!",
+                PlatformSeeder.DemoTenantId));
+        Assert.Equal(HttpStatusCode.Unauthorized, loginResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Platform_admin_can_create_user_pending_verification_and_login_is_blocked_until_verified()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/platform-admin/users", token);
+        createRequest.Content = JsonContent.Create(new CreatePlatformUserRequest(
+            "pending-verify@example.test",
+            "Pending Verify User",
+            "StrongPass1234",
+            IsPlatformAdmin: false,
+            IsActive: true,
+            RequireEmailVerification: true));
+
+        var createResponse = await _client.SendAsync(createRequest);
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var created = (await createResponse.Content.ReadFromJsonAsync<PlatformUserDetailResponse>())!;
+        Assert.True(created.CanLogin);
+        Assert.Equal("pending_verification", created.Status);
+
+        var loginResponse = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                "pending-verify@example.test",
+                "StrongPass1234",
+                PlatformSeeder.DemoTenantId));
+        Assert.Equal(HttpStatusCode.Forbidden, loginResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Tenant_admin_cannot_invite_platform_user()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var inviteRequest = Authorized(HttpMethod.Post, "/api/v1/platform-admin/users/invite", token);
+        inviteRequest.Content = JsonContent.Create(new InvitePlatformUserRequest(
+            "blocked-invite@example.test",
+            "Blocked Invite"));
+
+        var inviteResponse = await _client.SendAsync(inviteRequest);
+        Assert.Equal(HttpStatusCode.Forbidden, inviteResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task Platform_admin_can_lock_and_unlock_user_with_outbox_events()
     {
         await SeedDatabaseAsync();
         var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
 
         var lockResponse = await _client.SendAsync(
-            Authorized(HttpMethod.Post, $"/api/v1/platform-admin/users/{PlatformSeeder.DemoTenantAdminUserId}/lock", token));
+            AuthorizedWithConfirmation(HttpMethod.Post, $"/api/v1/platform-admin/users/{PlatformSeeder.DemoTenantAdminUserId}/lock", token));
 
         Assert.Equal(HttpStatusCode.OK, lockResponse.StatusCode);
         var locked = (await lockResponse.Content.ReadFromJsonAsync<PlatformUserLockResponse>())!;
@@ -352,7 +549,7 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         Assert.Equal(HttpStatusCode.Locked, blockedLoginResponse.StatusCode);
 
         var unlockResponse = await _client.SendAsync(
-            Authorized(HttpMethod.Post, $"/api/v1/platform-admin/users/{PlatformSeeder.DemoTenantAdminUserId}/unlock", token));
+            AuthorizedWithConfirmation(HttpMethod.Post, $"/api/v1/platform-admin/users/{PlatformSeeder.DemoTenantAdminUserId}/unlock", token));
 
         Assert.Equal(HttpStatusCode.OK, unlockResponse.StatusCode);
         var unlocked = (await unlockResponse.Content.ReadFromJsonAsync<PlatformUserUnlockResponse>())!;
@@ -416,6 +613,142 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
     }
 
     [Fact]
+    public async Task Platform_admin_user_list_includes_last_login_timestamp()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var tenantAdminToken = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", tenantAdminToken);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest(
+            "staffarr",
+            "http://localhost:5173/app/staffarr"));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+        handoffResponse.EnsureSuccessStatusCode();
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, "/api/platform-admin/users?page=1&pageSize=20", token));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var users = await response.Content.ReadFromJsonAsync<PlatformUsersListResponse>();
+        Assert.NotNull(users);
+        var admin = Assert.Single(users.Items, x => x.UserId == PlatformSeeder.DemoAdminUserId);
+        Assert.NotNull(admin.LastLoginAt);
+        var tenantAdmin = Assert.Single(users.Items, x => x.UserId == PlatformSeeder.DemoTenantAdminUserId);
+        Assert.NotNull(tenantAdmin.LastProductLaunchAt);
+    }
+
+    [Fact]
+    public async Task Platform_admin_can_get_user_detail_with_last_activity_timestamps()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+        var tenantAdminToken = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var handoffRequest = Authorized(HttpMethod.Post, "/api/v1/launch/handoff", tenantAdminToken);
+        handoffRequest.Content = JsonContent.Create(new CreateHandoffRequest(
+            "staffarr",
+            "http://localhost:5173/app/staffarr"));
+        var handoffResponse = await _client.SendAsync(handoffRequest);
+        handoffResponse.EnsureSuccessStatusCode();
+
+        var response = await _client.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/platform-admin/users/{PlatformSeeder.DemoTenantAdminUserId}", token));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var user = await response.Content.ReadFromJsonAsync<PlatformUserDetailResponse>();
+        Assert.NotNull(user);
+        Assert.Equal(PlatformSeeder.DemoTenantAdminUserId, user.UserId);
+        Assert.NotNull(user.LastLoginAt);
+        Assert.NotNull(user.LastProductLaunchAt);
+    }
+
+    [Fact]
+    public async Task Platform_admin_can_list_and_revoke_user_sessions()
+    {
+        await SeedDatabaseAsync();
+        var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var tenantLoginResponse = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                PlatformSeeder.DemoTenantAdminEmail,
+                PlatformSeeder.DemoAdminPassword,
+                PlatformSeeder.DemoTenantId));
+        tenantLoginResponse.EnsureSuccessStatusCode();
+        var tenantTokens = (await tenantLoginResponse.Content.ReadFromJsonAsync<AuthTokenResponse>())!;
+
+        var sessionsResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/platform-admin/users/{PlatformSeeder.DemoTenantAdminUserId}/sessions",
+                adminToken));
+        sessionsResponse.EnsureSuccessStatusCode();
+        var sessions = (await sessionsResponse.Content.ReadFromJsonAsync<PlatformUserSessionsResponse>())!;
+
+        Assert.Equal(PlatformSeeder.DemoTenantAdminUserId, sessions.UserId);
+        Assert.Contains(sessions.Sessions, x => x.SessionId == tenantTokens.SessionId && x.IsActive);
+
+        var revokeResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Post,
+                $"/api/platform-admin/users/{PlatformSeeder.DemoTenantAdminUserId}/sessions/{tenantTokens.SessionId}/revoke",
+                adminToken));
+        revokeResponse.EnsureSuccessStatusCode();
+        var revoked = (await revokeResponse.Content.ReadFromJsonAsync<PlatformUserSessionRevokeResponse>())!;
+        Assert.False(revoked.WasAlreadyRevoked);
+
+        var renewResponse = await _client.PostAsJsonAsync(
+            "/api/auth/renew",
+            new RenewSessionRequest(tenantTokens.RefreshToken));
+        Assert.Equal(HttpStatusCode.Unauthorized, renewResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Platform_admin_can_toggle_user_mfa_with_confirmation()
+    {
+        await SeedDatabaseAsync();
+        var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/platform-admin/users", adminToken);
+        createRequest.Content = JsonContent.Create(new CreatePlatformUserRequest(
+            "mfa-toggle@example.test",
+            "Mfa Toggle",
+            "StrongPass1234"));
+        var createResponse = await _client.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<PlatformUserDetailResponse>())!;
+        Assert.False(created.IsMfaEnabled);
+
+        var enableRequest = AuthorizedWithConfirmation(
+            HttpMethod.Post,
+            $"/api/v1/platform-admin/users/{created.UserId}/mfa",
+            adminToken);
+        enableRequest.Content = JsonContent.Create(new SetPlatformUserMfaRequest(true));
+        var enableResponse = await _client.SendAsync(enableRequest);
+        enableResponse.EnsureSuccessStatusCode();
+        var enabled = (await enableResponse.Content.ReadFromJsonAsync<PlatformUserMfaResponse>())!;
+        Assert.True(enabled.IsMfaEnabled);
+        Assert.False(enabled.WasAlreadySet);
+
+        var disableRequest = AuthorizedWithConfirmation(
+            HttpMethod.Post,
+            $"/api/v1/platform-admin/users/{created.UserId}/mfa",
+            adminToken);
+        disableRequest.Content = JsonContent.Create(new SetPlatformUserMfaRequest(false));
+        var disableResponse = await _client.SendAsync(disableRequest);
+        disableResponse.EnsureSuccessStatusCode();
+        var disabled = (await disableResponse.Content.ReadFromJsonAsync<PlatformUserMfaResponse>())!;
+        Assert.False(disabled.IsMfaEnabled);
+
+        var detailResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/platform-admin/users/{created.UserId}", adminToken));
+        detailResponse.EnsureSuccessStatusCode();
+        var detail = (await detailResponse.Content.ReadFromJsonAsync<PlatformUserDetailResponse>())!;
+        Assert.False(detail.IsMfaEnabled);
+    }
+
+    [Fact]
     public async Task Tenant_admin_cannot_read_tenant_overview()
     {
         await SeedDatabaseAsync();
@@ -427,10 +760,171 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Platform_admin_can_read_user_identity_audit_history()
+    {
+        await SeedDatabaseAsync();
+        var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/platform-admin/users", adminToken);
+        createRequest.Content = JsonContent.Create(new CreatePlatformUserRequest(
+            "identity-audit@example.test",
+            "Identity Audit",
+            "StrongPass1234"));
+        var createResponse = await _client.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var createdUser = (await createResponse.Content.ReadFromJsonAsync<PlatformUserDetailResponse>())!;
+
+        var disableResponse = await _client.SendAsync(
+            AuthorizedWithConfirmation(HttpMethod.Post, $"/api/v1/platform-admin/users/{createdUser.UserId}/disable", adminToken));
+        disableResponse.EnsureSuccessStatusCode();
+
+        var roleRequest = Authorized(HttpMethod.Post, $"/api/v1/platform-admin/users/{createdUser.UserId}/roles", adminToken);
+        roleRequest.Content = JsonContent.Create(new AssignPlatformUserRoleRequest("read_only_auditor"));
+        var roleResponse = await _client.SendAsync(roleRequest);
+        roleResponse.EnsureSuccessStatusCode();
+
+        var historyResponse = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/platform-admin/users/{createdUser.UserId}/identity-audit-history",
+                adminToken));
+
+        Assert.Equal(HttpStatusCode.OK, historyResponse.StatusCode);
+        var history = await historyResponse.Content.ReadFromJsonAsync<PagedResult<PlatformUserIdentityAuditHistoryItemResponse>>();
+        Assert.NotNull(history);
+        Assert.True(history.TotalCount >= 3);
+        Assert.Contains(history.Items, x => x.Action == "user.created");
+        Assert.Contains(history.Items, x => x.Action == "user.disabled");
+        Assert.Contains(history.Items, x => x.Action == "platform.role.assigned");
+        Assert.All(history.Items, item =>
+        {
+            Assert.Equal(createdUser.UserId, item.UserId);
+            Assert.Equal("identity-audit@example.test", item.UserEmail);
+            Assert.Equal(PlatformSeeder.DemoAdminUserId, item.ActorUserId);
+            Assert.Equal(PlatformSeeder.DemoAdminEmail, item.ActorEmail);
+        });
+    }
+
+    [Fact]
+    public async Task Tenant_admin_cannot_read_user_identity_audit_history()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoTenantAdminEmail);
+
+        var response = await _client.SendAsync(
+            Authorized(
+                HttpMethod.Get,
+                $"/api/platform-admin/users/{PlatformSeeder.DemoTenantAdminUserId}/identity-audit-history",
+                token));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Platform_admin_sensitive_user_actions_require_confirmation_header()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/v1/platform-admin/users", token);
+        createRequest.Content = JsonContent.Create(new CreatePlatformUserRequest(
+            "confirm-required@example.test",
+            "Confirm Required",
+            "StrongPass1234"));
+        var createResponse = await _client.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var created = (await createResponse.Content.ReadFromJsonAsync<PlatformUserDetailResponse>())!;
+
+        var lockResponse = await _client.SendAsync(
+            Authorized(HttpMethod.Post, $"/api/v1/platform-admin/users/{created.UserId}/lock", token));
+
+        Assert.Equal(HttpStatusCode.Conflict, lockResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Owner_only_role_assignment_requires_recent_admin_session()
+    {
+        await SeedDatabaseAsync();
+        var token = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var session = await db.UserSessions
+                .OrderByDescending(x => x.CreatedAt)
+                .FirstAsync(x => x.UserId == PlatformSeeder.DemoAdminUserId);
+            session.CreatedAt = DateTimeOffset.UtcNow.AddHours(-2);
+            await db.SaveChangesAsync();
+        }
+
+        var roleRequest = AuthorizedWithConfirmation(
+            HttpMethod.Post,
+            $"/api/v1/platform-admin/users/{PlatformSeeder.DemoTenantAdminUserId}/roles",
+            token);
+        roleRequest.Content = JsonContent.Create(new AssignPlatformUserRoleRequest("platform_admin"));
+        var roleResponse = await _client.SendAsync(roleRequest);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, roleResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Admin_password_reset_revokes_existing_sessions_for_user()
+    {
+        await SeedDatabaseAsync();
+        var adminToken = await LoginAsync(PlatformSeeder.DemoAdminEmail);
+
+        var tenantLoginResponse = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                PlatformSeeder.DemoTenantAdminEmail,
+                PlatformSeeder.DemoAdminPassword,
+                PlatformSeeder.DemoTenantId));
+        tenantLoginResponse.EnsureSuccessStatusCode();
+        var tenantTokens = (await tenantLoginResponse.Content.ReadFromJsonAsync<AuthTokenResponse>())!;
+
+        var resetRequest = AuthorizedWithConfirmation(
+            HttpMethod.Post,
+            $"/api/v1/platform-admin/users/{PlatformSeeder.DemoTenantAdminUserId}/reset-password",
+            adminToken);
+        const string newPassword = "ResetPass4567!";
+        resetRequest.Content = JsonContent.Create(new AdminResetUserPasswordRequest(newPassword));
+        var resetResponse = await _client.SendAsync(resetRequest);
+        resetResponse.EnsureSuccessStatusCode();
+
+        var renewResponse = await _client.PostAsJsonAsync(
+            "/api/auth/renew",
+            new RenewSessionRequest(tenantTokens.RefreshToken));
+        Assert.Equal(HttpStatusCode.Unauthorized, renewResponse.StatusCode);
+
+        var oldPasswordLoginResponse = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                PlatformSeeder.DemoTenantAdminEmail,
+                PlatformSeeder.DemoAdminPassword,
+                PlatformSeeder.DemoTenantId));
+        Assert.Equal(HttpStatusCode.Unauthorized, oldPasswordLoginResponse.StatusCode);
+
+        var newPasswordLoginResponse = await _client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequest(
+                PlatformSeeder.DemoTenantAdminEmail,
+                newPassword,
+                PlatformSeeder.DemoTenantId));
+        Assert.Equal(HttpStatusCode.OK, newPasswordLoginResponse.StatusCode);
+    }
+
     private static HttpRequestMessage Authorized(HttpMethod method, string url, string accessToken)
     {
         var request = new HttpRequestMessage(method, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return request;
+    }
+
+    private static HttpRequestMessage AuthorizedWithConfirmation(HttpMethod method, string url, string accessToken)
+    {
+        var request = Authorized(method, url, accessToken);
+        request.Headers.Add("X-Admin-Confirm", "CONFIRM");
         return request;
     }
 
@@ -476,5 +970,21 @@ public class NexArrPlatformAdminApiTests : IClassFixture<WebApplicationFactory<g
         await db.Database.EnsureCreatedAsync();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         await PlatformSeeder.SeedAsync(db, hasher);
+    }
+
+    private async Task GrantPlatformRoleAsync(Guid userId, string roleKey, Guid? tenantId = null)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+        db.PlatformRoleAssignments.Add(new PlatformRoleAssignment
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            RoleKey = roleKey,
+            TenantId = tenantId,
+            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedByUserId = PlatformSeeder.DemoAdminUserId,
+        });
+        await db.SaveChangesAsync();
     }
 }

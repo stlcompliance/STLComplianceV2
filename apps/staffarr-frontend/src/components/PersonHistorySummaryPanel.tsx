@@ -1,15 +1,22 @@
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type { PersonnelHistorySummaryResponse } from '../api/types'
 
 interface PersonHistorySummaryPanelProps {
   personDisplayName: string
   summary: PersonnelHistorySummaryResponse | null
   isLoading: boolean
+  isError?: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
 }
 
 export function PersonHistorySummaryPanel({
   personDisplayName,
   summary,
   isLoading,
+  isError = false,
+  readErrorMessage = null,
+  onRetryRead,
 }: PersonHistorySummaryPanelProps) {
   return (
     <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6" data-testid="person-history-summary-panel">
@@ -21,7 +28,23 @@ export function PersonHistorySummaryPanel({
 
       {isLoading ? (
         <p className="mt-4 text-sm text-slate-400">Loading history summary…</p>
-      ) : !summary?.isMaterialized ? (
+      ) : isError ? (
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="History summary unavailable"
+            message={readErrorMessage ?? 'Failed to load personnel history summary.'}
+            onRetry={onRetryRead}
+            retryLabel="Retry history summary"
+          />
+        </div>
+      ) : !summary ? (
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="History summary unavailable"
+            message="History summary has not been generated yet."
+          />
+        </div>
+      ) : !summary.isMaterialized ? (
         <p className="mt-4 text-sm text-slate-400">
           History rollup has not been computed yet. The worker will materialize events on the next scheduled scan.
         </p>

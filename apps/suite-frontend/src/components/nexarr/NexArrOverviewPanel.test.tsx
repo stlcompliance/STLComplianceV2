@@ -160,4 +160,13 @@ describe('NexArrOverviewPanel', () => {
       ).toBeInTheDocument()
     })
   })
+
+  it('shows API callout when overview queries fail', async () => {
+    vi.mocked(nexarr.getMyEntitlements).mockRejectedValueOnce(new Error('overview unavailable'))
+
+    renderPanel()
+
+    expect(await screen.findByText('overview unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry overview' })).toBeInTheDocument()
+  })
 })

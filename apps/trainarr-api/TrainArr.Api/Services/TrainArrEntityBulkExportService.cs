@@ -70,6 +70,11 @@ public sealed class TrainArrEntityBulkExportService(
                     $"{reportBasePath}/compliance/summary/export",
                     "Compliance report CSV",
                     "Citation, rule-pack, and remediation attention rows."),
+                new(
+                    "programs_without_citation",
+                    $"{reportBasePath}/compliance/programs-without-citation/export",
+                    "Programs Without Citation CSV",
+                    "Training programs missing citation attachments."),
             ],
             AuditPackageFormats: ["json", "zip"]);
 

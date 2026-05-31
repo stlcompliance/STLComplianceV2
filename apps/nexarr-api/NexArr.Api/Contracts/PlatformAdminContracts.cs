@@ -79,3 +79,38 @@ public sealed record ProductOverviewRowResponse(
     bool HasLaunchProfile,
     bool LaunchProfileActive,
     string? BaseUrl);
+
+public sealed record PlatformUserAccessHistoryItemResponse(
+    Guid AuditEventId,
+    Guid UserId,
+    string? UserEmail,
+    string? UserDisplayName,
+    Guid? TenantId,
+    string? TenantSlug,
+    string Action,
+    string Result,
+    string? ReasonCode,
+    string TargetType,
+    string? TargetId,
+    Guid CorrelationId,
+    DateTimeOffset OccurredAt,
+    string? ProductKey,
+    string? ProductDisplayName);
+
+public sealed record PlatformUserIdentityAuditHistoryItemResponse(
+    Guid AuditEventId,
+    Guid UserId,
+    string? UserEmail,
+    string? UserDisplayName,
+    Guid? TenantId,
+    string? TenantSlug,
+    Guid? ActorUserId,
+    string? ActorEmail,
+    string? ActorDisplayName,
+    string Action,
+    string Result,
+    string? ReasonCode,
+    string TargetType,
+    string? TargetId,
+    Guid CorrelationId,
+    DateTimeOffset OccurredAt);

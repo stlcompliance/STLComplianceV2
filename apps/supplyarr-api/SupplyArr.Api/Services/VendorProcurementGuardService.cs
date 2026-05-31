@@ -47,6 +47,11 @@ public sealed class VendorProcurementGuardService(SupplyArrDbContext db)
                 409);
         }
 
+        if (string.Equals(scope, VendorRestrictionScopes.PurchaseOrders, StringComparison.OrdinalIgnoreCase))
+        {
+            await EnsureNoExpiredRequiredVendorDocumentsAsync(tenantId, vendorPartyId, cancellationToken);
+        }
+
         var asOfUtc = DateTimeOffset.UtcNow;
         var restrictions = await db.VendorRestrictions
             .AsNoTracking()
@@ -141,5 +146,61 @@ public sealed class VendorProcurementGuardService(SupplyArrDbContext db)
         {
             return [];
         }
+    }
+
+    private async Task EnsureNoExpiredRequiredVendorDocumentsAsync(
+        Guid tenantId,
+        Guid vendorPartyId,
+        CancellationToken cancellationToken)
+    {
+        var requiredDocumentTypeKeys = await LoadRequiredDocumentTypeKeysAsync(tenantId, cancellationToken);
+        if (requiredDocumentTypeKeys.Count == 0)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        foreach (var documentTypeKey in requiredDocumentTypeKeys)
+        {
+            var latest = await db.PartyComplianceDocuments
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId
+                    && x.ExternalPartyId == vendorPartyId
+                    && x.DocumentTypeKey == documentTypeKey
+                    && x.ReviewStatus == PartyComplianceDocumentReviewStatuses.Approved)
+                .OrderByDescending(x => x.Version)
+                .ThenByDescending(x => x.UpdatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (latest is null || latest.ExpiresAt is null || latest.ExpiresAt.Value > now)
+            {
+                continue;
+            }
+
+            throw new StlApiException(
+                "vendor_restrictions.required_document_expired",
+                $"Vendor required document '{documentTypeKey}' is expired and blocks purchase order issuance.",
+                409);
+        }
+    }
+
+    private async Task<IReadOnlyList<string>> LoadRequiredDocumentTypeKeysAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        var settings = await db.TenantSupplierOnboardingSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId, cancellationToken);
+
+        if (settings is null || string.IsNullOrWhiteSpace(settings.RequiredDocumentTypeKeysJson))
+        {
+            return SupplierOnboardingRules.DefaultRequirements.Select(x => x.DocumentTypeKey).ToList();
+        }
+
+        var parsed = JsonSerializer.Deserialize<List<string>>(settings.RequiredDocumentTypeKeysJson, JsonOptions) ?? [];
+        var normalized = SupplierOnboardingRules.NormalizeRequiredTypeKeys(parsed);
+        return normalized.Count == 0
+            ? SupplierOnboardingRules.DefaultRequirements.Select(x => x.DocumentTypeKey).ToList()
+            : normalized;
     }
 }

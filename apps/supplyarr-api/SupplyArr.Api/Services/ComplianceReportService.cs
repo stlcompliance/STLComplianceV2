@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
@@ -11,6 +12,7 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
 {
     private const int DetailListLimit = 50;
     private static readonly TimeSpan ExpiringSoonWindow = TimeSpan.FromDays(30);
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public async Task<ComplianceReportSummaryResponse> GetSummaryAsync(
         Guid tenantId,
@@ -156,6 +158,133 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
 
         var fileName = $"supplyarr-compliance-{DateTime.UtcNow:yyyy-MM-dd}.csv";
         return (Encoding.UTF8.GetBytes(builder.ToString()), "text/csv", fileName);
+    }
+
+    public async Task<IReadOnlyList<ComplianceReportAlertResponse>> ListAlertsAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var alerts = new List<ComplianceReportAlertResponse>();
+
+        var requiredDocumentTypeKeys = await LoadRequiredDocumentTypeKeysAsync(tenantId, cancellationToken);
+        var vendorParties = await db.ExternalParties
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && (x.PartyType == "vendor" || x.PartyType == "supplier")
+                && x.Status == "active")
+            .OrderBy(x => x.DisplayName)
+            .ToListAsync(cancellationToken);
+
+        foreach (var party in vendorParties)
+        {
+            var approvedTypeKeys = await db.PartyComplianceDocuments
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId
+                    && x.ExternalPartyId == party.Id
+                    && x.ReviewStatus == PartyComplianceDocumentReviewStatuses.Approved
+                    && (x.ExpiresAt == null || x.ExpiresAt > now))
+                .Select(x => x.DocumentTypeKey)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            var missing = requiredDocumentTypeKeys
+                .Where(required => approvedTypeKeys.All(existing =>
+                    !string.Equals(existing, required, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+            if (missing.Count > 0)
+            {
+                alerts.Add(new ComplianceReportAlertResponse(
+                    "missing_required_documents",
+                    "high",
+                    party.Id,
+                    party.PartyKey,
+                    null,
+                    null,
+                    null,
+                    $"Missing required documents: {string.Join(", ", missing)}.",
+                    party.UpdatedAt));
+            }
+        }
+
+        var expiringDocuments = await db.PartyComplianceDocuments
+            .AsNoTracking()
+            .Include(x => x.ExternalParty)
+            .Where(x => x.TenantId == tenantId
+                && x.ReviewStatus == PartyComplianceDocumentReviewStatuses.Approved
+                && x.ExpiresAt != null
+                && x.ExpiresAt >= now
+                && x.ExpiresAt <= now.Add(ExpiringSoonWindow))
+            .OrderBy(x => x.ExpiresAt)
+            .ToListAsync(cancellationToken);
+
+        foreach (var document in expiringDocuments)
+        {
+            alerts.Add(new ComplianceReportAlertResponse(
+                "expiring_compliance_document",
+                "medium",
+                document.ExternalPartyId,
+                document.ExternalParty.PartyKey,
+                null,
+                null,
+                null,
+                $"Document '{document.Title}' expires on {document.ExpiresAt:O}.",
+                document.UpdatedAt));
+        }
+
+        var approvalsMissingEvidence = await db.PurchaseRequests
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.Status == PurchaseRequestStatuses.Approved
+                && (x.ApprovedByUserId == null
+                    || (x.IsEmergency && x.ManagerOverrideApproved && string.IsNullOrWhiteSpace(x.ManagerOverrideJustification))))
+            .OrderByDescending(x => x.UpdatedAt)
+            .ToListAsync(cancellationToken);
+
+        foreach (var request in approvalsMissingEvidence)
+        {
+            alerts.Add(new ComplianceReportAlertResponse(
+                "purchase_approval_missing_evidence",
+                "high",
+                request.VendorPartyId,
+                null,
+                request.Id,
+                request.RequestKey,
+                null,
+                "Approved purchase request is missing approval evidence.",
+                request.UpdatedAt));
+        }
+
+        var emergencyExceptionRows = await (
+            from exception in db.ProcurementExceptions.AsNoTracking()
+            join request in db.PurchaseRequests.AsNoTracking()
+                on exception.LinkedPurchaseRequestId equals request.Id
+            where exception.TenantId == tenantId
+                && request.TenantId == tenantId
+                && request.IsEmergency
+                && ProcurementExceptionStatuses.Active.Contains(exception.Status)
+            orderby exception.UpdatedAt descending
+            select new { exception, request })
+            .ToListAsync(cancellationToken);
+
+        foreach (var row in emergencyExceptionRows)
+        {
+            alerts.Add(new ComplianceReportAlertResponse(
+                "emergency_purchase_exception",
+                "high",
+                row.request.VendorPartyId,
+                null,
+                row.request.Id,
+                row.request.RequestKey,
+                row.exception.Id,
+                $"Emergency purchase exception '{row.exception.ExceptionKey}' is {row.exception.Status}.",
+                row.exception.UpdatedAt));
+        }
+
+        return alerts
+            .OrderByDescending(x => x.DetectedAt)
+            .Take(200)
+            .ToList();
     }
 
     private async Task<List<PartyComplianceDocument>> LoadDocumentsAsync(
@@ -320,5 +449,25 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
         }
 
         return value;
+    }
+
+    private async Task<IReadOnlyList<string>> LoadRequiredDocumentTypeKeysAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken)
+    {
+        var settings = await db.TenantSupplierOnboardingSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId, cancellationToken);
+
+        if (settings is null || string.IsNullOrWhiteSpace(settings.RequiredDocumentTypeKeysJson))
+        {
+            return SupplierOnboardingRules.DefaultRequirements.Select(x => x.DocumentTypeKey).ToList();
+        }
+
+        var parsed = JsonSerializer.Deserialize<List<string>>(settings.RequiredDocumentTypeKeysJson, JsonOptions) ?? [];
+        var normalized = SupplierOnboardingRules.NormalizeRequiredTypeKeys(parsed);
+        return normalized.Count == 0
+            ? SupplierOnboardingRules.DefaultRequirements.Select(x => x.DocumentTypeKey).ToList()
+            : normalized;
     }
 }

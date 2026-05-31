@@ -1,3 +1,4 @@
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { QuickLaunchWidget } from '../components/dashboard/QuickLaunchWidget'
 import { SessionInfoWidget } from '../components/dashboard/SessionInfoWidget'
 import { TenantContextWidget } from '../components/dashboard/TenantContextWidget'
@@ -14,9 +15,7 @@ export function HomePage() {
 
   if (error) {
     return (
-      <p className="text-sm text-red-700" role="alert">
-        Failed to load dashboard: {(error as Error).message}
-      </p>
+      <ApiErrorCallout message={getErrorMessage(error, 'Failed to load dashboard.')} />
     )
   }
 

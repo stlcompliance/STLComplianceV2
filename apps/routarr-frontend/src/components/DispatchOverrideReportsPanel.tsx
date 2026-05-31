@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   exportDispatchOverrideReportSummaryCsv,
@@ -102,9 +103,25 @@ export function DispatchOverrideReportsPanel({ accessToken, canRead, canExport }
       ) : null}
 
       {summaryQuery.isError ? (
-        <p className="mt-4 text-sm text-rose-400" role="alert">
-          {(summaryQuery.error as Error).message}
-        </p>
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="Override report unavailable"
+            message={getErrorMessage(summaryQuery.error, 'Failed to load dispatch override report summary.')}
+            retryLabel="Retry summary"
+            onRetry={() => {
+              void summaryQuery.refetch()
+            }}
+          />
+        </div>
+      ) : null}
+
+      {exportMutation.isError ? (
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="CSV export failed"
+            message={getErrorMessage(exportMutation.error, 'Unable to export dispatch override report CSV.')}
+          />
+        </div>
       ) : null}
 
       {summary ? (

@@ -76,6 +76,19 @@ public sealed class StaffArrReportTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Certification_report_summary_returns_aggregates()
+    {
+        var response = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/reports/certifications/summary", _adminToken));
+        response.EnsureSuccessStatusCode();
+
+        var summary = (await response.Content.ReadFromJsonAsync<CertificationReportSummaryResponse>())!;
+        Assert.True(summary.TotalPeople >= 1);
+        Assert.True(summary.ActiveCertificationCount >= 1);
+        Assert.True(summary.ExpiringSoonCount >= 1);
+    }
+
+    [Fact]
     public async Task Incident_report_summary_returns_aggregates()
     {
         var response = await _staffarrClient.SendAsync(
@@ -85,6 +98,20 @@ public sealed class StaffArrReportTests : IAsyncLifetime
         var summary = (await response.Content.ReadFromJsonAsync<IncidentReportSummaryResponse>())!;
         Assert.Equal(1, summary.TotalIncidents);
         Assert.Equal(1, summary.OpenCount);
+    }
+
+    [Fact]
+    public async Task Readiness_alerts_include_expiring_certifications_overrides_and_open_incidents()
+    {
+        var response = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/reports/readiness/alerts", _adminToken));
+        response.EnsureSuccessStatusCode();
+
+        var alerts = await response.Content.ReadFromJsonAsync<IReadOnlyList<ReadinessReportAlertResponse>>();
+        Assert.NotNull(alerts);
+        Assert.Contains(alerts!, alert => alert.AlertType == "certification_expiring");
+        Assert.Contains(alerts, alert => alert.AlertType == "override_expiring");
+        Assert.Contains(alerts, alert => alert.AlertType == "open_incident");
     }
 
     [Fact]
@@ -114,6 +141,9 @@ public sealed class StaffArrReportTests : IAsyncLifetime
         Assert.Contains(manifest.ReportExports, report =>
             report.ReportKey == "personnel"
             && report.ExportPath == "/api/v1/reports/personnel/summary/export");
+        Assert.Contains(manifest.ReportExports, report =>
+            report.ReportKey == "certifications"
+            && report.ExportPath == "/api/v1/reports/certifications/summary/export");
 
         var peopleResponse = await _staffarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/exports/people?employmentStatus=active", _adminToken));
@@ -159,6 +189,8 @@ public sealed class StaffArrReportTests : IAsyncLifetime
         var reportsIndexResponse = await _staffarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/reports", _adminToken));
         reportsIndexResponse.EnsureSuccessStatusCode();
+        var reportsIndexJson = await reportsIndexResponse.Content.ReadAsStringAsync();
+        Assert.Contains("/api/v1/reports/certifications", reportsIndexJson, StringComparison.Ordinal);
 
         var certificationsResponse = await _staffarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/certifications", _adminToken));
@@ -215,10 +247,21 @@ public sealed class StaffArrReportTests : IAsyncLifetime
         Assert.Equal(1, incidents.TotalIncidents);
         Assert.Equal(1, incidents.OpenCount);
 
+        var certificationsResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/certifications/summary?expiringOnly=true", _adminToken));
+        certificationsResponse.EnsureSuccessStatusCode();
+        var certifications = (await certificationsResponse.Content.ReadFromJsonAsync<CertificationReportSummaryResponse>())!;
+        Assert.True(certifications.ExpiringSoonCount >= 1);
+
         var exportResponse = await _staffarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/reports/personnel/summary/export", _adminToken));
         exportResponse.EnsureSuccessStatusCode();
         Assert.Equal("text/csv", exportResponse.Content.Headers.ContentType?.MediaType);
+
+        var certificationExportResponse = await _staffarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/certifications/summary/export?expiringOnly=true", _adminToken));
+        certificationExportResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", certificationExportResponse.Content.Headers.ContentType?.MediaType);
     }
 
     private async Task SeedWorkforceDataAsync()
@@ -254,6 +297,18 @@ public sealed class StaffArrReportTests : IAsyncLifetime
             UpdatedAt = now,
         });
 
+        var certificationDefinitionId = Guid.NewGuid();
+        db.CertificationDefinitions.Add(new CertificationDefinition
+        {
+            Id = certificationDefinitionId,
+            TenantId = PlatformSeeder.DemoTenantId,
+            CertificationKey = "hazmat-cert",
+            Name = "Hazmat Certification",
+            Status = "active",
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
         db.ReadinessRollups.Add(new ReadinessRollup
         {
             Id = Guid.NewGuid(),
@@ -267,6 +322,35 @@ public sealed class StaffArrReportTests : IAsyncLifetime
             OverrideCount = 0,
             ReadyPercent = 0m,
             ComputedAt = now,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.PersonCertifications.Add(new PersonCertification
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            PersonId = _personId,
+            CertificationDefinitionId = certificationDefinitionId,
+            SourceType = "manual",
+            Status = "active",
+            GrantedAt = now.AddMonths(-3),
+            ExpiresAt = now.AddDays(10),
+            GrantedByUserId = PlatformSeeder.DemoAdminUserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        });
+
+        db.PersonReadinessOverrides.Add(new PersonReadinessOverride
+        {
+            Id = Guid.NewGuid(),
+            TenantId = PlatformSeeder.DemoTenantId,
+            PersonId = _personId,
+            Status = "active",
+            Reason = "Temporary assignment allowance",
+            GrantedAt = now.AddDays(-2),
+            ExpiresAt = now.AddDays(7),
+            GrantedByUserId = PlatformSeeder.DemoAdminUserId,
             CreatedAt = now,
             UpdatedAt = now,
         });

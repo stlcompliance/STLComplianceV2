@@ -50,4 +50,15 @@ describe('RulePackImpactSettingsPanel', () => {
     expect(screen.getByTestId('rule-pack-impact-states-empty')).toBeInTheDocument()
     expect(screen.getByTestId('rule-pack-impact-runs-empty')).toBeInTheDocument()
   })
+
+  it('shows retry callout when settings fail to load', async () => {
+    vi.mocked(client.getRulePackImpactSettings).mockRejectedValue(new Error('settings down'))
+    vi.mocked(client.getRulePackImpactStates).mockResolvedValue({ items: [] })
+    vi.mocked(client.getRulePackImpactRuns).mockResolvedValue({ items: [] })
+
+    renderPanel()
+
+    expect(await screen.findByText('Impact settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
 })

@@ -1,4 +1,4 @@
-import { StaffArrApiError } from '../../api/client'
+import { getErrorMessage } from '@stl/shared-ui'
 import { PermissionProjectionTimelinePanel } from '../../components/PermissionProjectionTimelinePanel'
 import { RoleTemplateAssignmentPanel } from '../../components/RoleTemplateAssignmentPanel'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
@@ -20,6 +20,39 @@ export function PermissionsSection({ state }: Props) {
         permissionTemplates={s.permissionTemplates}
         roleTemplates={s.roleTemplates}
         roleAssignments={s.roleAssignments}
+        isLoading={
+          s.permissionTemplatesQuery.isLoading
+          || s.roleTemplatesQuery.isLoading
+          || s.roleAssignmentsQuery.isLoading
+        }
+        isError={
+          s.permissionTemplatesQuery.isError
+          || s.roleTemplatesQuery.isError
+          || s.roleAssignmentsQuery.isError
+        }
+        readErrorMessage={
+          s.permissionTemplatesQuery.isError
+            ? getErrorMessage(
+                s.permissionTemplatesQuery.error,
+                'Failed to load permission templates.',
+              )
+            : s.roleTemplatesQuery.isError
+              ? getErrorMessage(
+                  s.roleTemplatesQuery.error,
+                  'Failed to load role templates.',
+                )
+              : s.roleAssignmentsQuery.isError
+                ? getErrorMessage(
+                    s.roleAssignmentsQuery.error,
+                    'Failed to load role assignments.',
+                  )
+                : null
+        }
+        onRetryRead={() => {
+          void s.permissionTemplatesQuery.refetch()
+          void s.roleTemplatesQuery.refetch()
+          void s.roleAssignmentsQuery.refetch()
+        }}
         canManage={s.canManageHierarchy}
         isSubmitting={
           s.upsertPermissionTemplateMutation.isPending ||
@@ -28,9 +61,9 @@ export function PermissionsSection({ state }: Props) {
           s.createRoleAssignmentMutation.isPending ||
           s.updateRoleAssignmentStatusMutation.isPending
         }
-        errorMessage={
-          s.roleTemplateMutationError instanceof StaffArrApiError
-            ? s.roleTemplateMutationError.body || s.roleTemplateMutationError.message
+        actionErrorMessage={
+          s.roleTemplateMutationError
+            ? getErrorMessage(s.roleTemplateMutationError, 'Failed to update role templates or assignments.')
             : null
         }
         onUpsertPermissionTemplate={async (payload) => {
@@ -74,6 +107,25 @@ export function PermissionsSection({ state }: Props) {
         orgUnits={s.orgUnits}
         projection={s.effectivePermissions}
         timeline={s.permissionHistory}
+        isLoading={s.effectivePermissionsQuery.isLoading || s.permissionHistoryQuery.isLoading}
+        isError={s.effectivePermissionsQuery.isError || s.permissionHistoryQuery.isError}
+        readErrorMessage={
+          s.effectivePermissionsQuery.isError
+            ? getErrorMessage(
+                s.effectivePermissionsQuery.error,
+                'Failed to load effective permission projection.',
+              )
+            : s.permissionHistoryQuery.isError
+              ? getErrorMessage(
+                  s.permissionHistoryQuery.error,
+                  'Failed to load permission history timeline.',
+                )
+              : null
+        }
+        onRetryRead={() => {
+          void s.effectivePermissionsQuery.refetch()
+          void s.permissionHistoryQuery.refetch()
+        }}
       />
     </>
   )

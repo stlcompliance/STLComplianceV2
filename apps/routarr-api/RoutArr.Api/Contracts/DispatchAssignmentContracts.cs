@@ -30,7 +30,9 @@ public sealed record DispatchAssignmentConflictSummary(
     bool DispatchabilityBlocking,
     bool DispatchabilityWarning,
     bool WorkflowGateBlocking,
-    bool WorkflowGateWarning);
+    bool WorkflowGateWarning,
+    bool HasMissingExternalData = false,
+    bool HasStaleExternalData = false);
 
 public sealed record DispatchAssignmentPreviewResponse(
     Guid TripId,

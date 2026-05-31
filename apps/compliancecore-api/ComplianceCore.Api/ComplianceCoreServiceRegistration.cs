@@ -78,6 +78,7 @@ public static class ComplianceCoreServiceRegistration
         builder.Services.AddScoped<OperatorDashboardService>();
         builder.Services.AddScoped<FindingsReportService>();
         builder.Services.AddScoped<OperatorReportService>();
+        builder.Services.AddScoped<MissingEvidenceReportService>();
         builder.Services.AddScoped<ComplianceCoreEntityBulkExportService>();
         builder.Services.AddScoped<IComplianceCoreAuditService, ComplianceCoreAuditService>();
 

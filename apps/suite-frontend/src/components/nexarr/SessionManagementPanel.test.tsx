@@ -143,4 +143,13 @@ describe('SessionManagementPanel', () => {
       expect(logout).toHaveBeenCalledTimes(1)
     })
   })
+
+  it('shows error callout when session list fails to load', async () => {
+    vi.mocked(nexarr.getMySessions).mockRejectedValueOnce(new Error('sessions unavailable'))
+
+    renderPanel()
+
+    expect(await screen.findByText('sessions unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry sessions' })).toBeInTheDocument()
+  })
 })

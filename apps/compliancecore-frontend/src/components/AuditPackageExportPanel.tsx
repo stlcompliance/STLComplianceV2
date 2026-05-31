@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   createAuditPackageGenerationJob,
@@ -207,7 +208,9 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
             </p>
           ) : null}
           {jobStatus.errorMessage ? (
-            <p className="mt-1 text-rose-400">{jobStatus.errorMessage}</p>
+            <div className="mt-2">
+              <ApiErrorCallout title="Background export failed" message={jobStatus.errorMessage} />
+            </div>
           ) : null}
         </div>
       ) : null}
@@ -226,7 +229,17 @@ export function AuditPackageExportPanel({ accessToken, canExport }: AuditPackage
       {(zipExportMutation.isError
         || jsonExportMutation.isError
         || backgroundZipMutation.isError) && (
-        <p className="text-sm text-red-300">Export failed. Check date range and try again.</p>
+        <ApiErrorCallout
+          title="Audit export failed"
+          message={
+            getErrorMessage(
+              zipExportMutation.error
+                ?? jsonExportMutation.error
+                ?? backgroundZipMutation.error,
+              'Export failed. Check date range and try again.',
+            )
+          }
+        />
       )}
     </section>
   )

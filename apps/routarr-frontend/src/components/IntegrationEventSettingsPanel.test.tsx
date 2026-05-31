@@ -48,6 +48,20 @@ describe('IntegrationEventSettingsPanel', () => {
     expect(screen.getByRole('button', { name: /Save integration event settings/i })).toBeTruthy()
   })
 
+  it('shows retry callout when settings fail to load', async () => {
+    const { getIntegrationEventSettings } = await import('../api/client')
+    vi.mocked(getIntegrationEventSettings).mockRejectedValueOnce(new Error('settings down'))
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <IntegrationEventSettingsPanel accessToken="token" canManage={true} />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Integration settings unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
+
   it('returns null when user cannot manage settings', () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     const { container } = render(

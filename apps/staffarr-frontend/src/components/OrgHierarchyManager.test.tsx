@@ -38,7 +38,7 @@ describe('OrgHierarchyManager', () => {
         orgUnits={sampleOrgUnits}
         canManage={false}
         isSubmitting={false}
-        errorMessage={null}
+        actionErrorMessage={null}
         onCreate={vi.fn(async () => {})}
         onUpdate={vi.fn(async () => {})}
         onStatusChange={vi.fn(async () => {})}
@@ -57,7 +57,7 @@ describe('OrgHierarchyManager', () => {
         orgUnits={sampleOrgUnits}
         canManage
         isSubmitting={false}
-        errorMessage={null}
+        actionErrorMessage={null}
         onCreate={vi.fn(async () => {})}
         onUpdate={vi.fn(async () => {})}
         onStatusChange={onStatusChange}
@@ -68,5 +68,46 @@ describe('OrgHierarchyManager', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Deactivate' }))
 
     expect(onStatusChange).toHaveBeenCalledWith('11111111-1111-1111-1111-111111111111', 'inactive')
+  })
+
+  it('renders backend errors in shared callout', () => {
+    render(
+      <OrgHierarchyManager
+        orgUnits={sampleOrgUnits}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage="Could not save org unit"
+        onCreate={vi.fn(async () => {})}
+        onUpdate={vi.fn(async () => {})}
+        onStatusChange={vi.fn(async () => {})}
+      />,
+    )
+
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Org hierarchy update failed')).toBeTruthy()
+    expect(screen.getByText('Could not save org unit')).toBeTruthy()
+  })
+
+  it('renders read error with retry action', () => {
+    const onRetryRead = vi.fn()
+    render(
+      <OrgHierarchyManager
+        orgUnits={sampleOrgUnits}
+        isError
+        readErrorMessage="Org hierarchy query failed"
+        onRetryRead={onRetryRead}
+        canManage
+        isSubmitting={false}
+        actionErrorMessage={null}
+        onCreate={vi.fn(async () => {})}
+        onUpdate={vi.fn(async () => {})}
+        onStatusChange={vi.fn(async () => {})}
+      />,
+    )
+
+    expect(screen.getByText('Org hierarchy unavailable')).toBeTruthy()
+    expect(screen.getByText('Org hierarchy query failed')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Retry org hierarchy' }))
+    expect(onRetryRead).toHaveBeenCalledTimes(1)
   })
 })

@@ -156,6 +156,9 @@ public sealed class TrainArrReportTests : IAsyncLifetime
         Assert.Contains(manifest.ReportExports, report =>
             report.ReportKey == "assignments"
             && report.ExportPath == "/api/v1/reports/assignments/summary/export");
+        Assert.Contains(manifest.ReportExports, report =>
+            report.ReportKey == "programs_without_citation"
+            && report.ExportPath == "/api/v1/reports/compliance/programs-without-citation/export");
 
         var assignmentsResponse = await _trainarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/exports/training-assignments?status=assigned", _adminToken));
@@ -257,6 +260,41 @@ public sealed class TrainArrReportTests : IAsyncLifetime
         Assert.Contains(gaps.Items, item =>
             item.QualificationKey == "forklift_operator"
             && item.GapReasonCode == "missing_issued_qualification");
+
+        var programsWithoutCitationResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/compliance/programs-without-citation", _adminToken));
+        programsWithoutCitationResponse.EnsureSuccessStatusCode();
+        var programsWithoutCitation = (await programsWithoutCitationResponse.Content.ReadFromJsonAsync<ProgramCitationGapReportResponse>())!;
+        Assert.True(programsWithoutCitation.TotalPrograms >= 2);
+        Assert.Equal(2, programsWithoutCitation.ProgramsMissingCitationCount);
+        Assert.Contains(programsWithoutCitation.Items, item => item.ProgramKey == "hazmat_program");
+        Assert.Contains(programsWithoutCitation.Items, item => item.ProgramKey == "draft_pit_review");
+
+        var programsWithoutCitationExportResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/compliance/programs-without-citation/export", _adminToken));
+        programsWithoutCitationExportResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", programsWithoutCitationExportResponse.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Readiness_alerts_include_required_training_risk_signals()
+    {
+        var legacyResponse = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/reports/readiness/alerts", _adminToken));
+        legacyResponse.EnsureSuccessStatusCode();
+        var legacyAlerts = await legacyResponse.Content.ReadFromJsonAsync<List<TrainArrReadinessAlertResponse>>();
+        Assert.NotNull(legacyAlerts);
+        Assert.Contains(legacyAlerts!, x => x.AlertType == "overdue_training_assignment");
+        Assert.Contains(legacyAlerts!, x => x.AlertType == "expiring_qualification");
+        Assert.Contains(legacyAlerts!, x => x.AlertType == "failed_training_evaluation");
+        Assert.Contains(legacyAlerts!, x => x.AlertType == "open_training_remediation");
+
+        var v1Response = await _trainarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/readiness/alerts", _adminToken));
+        v1Response.EnsureSuccessStatusCode();
+        var v1Alerts = await v1Response.Content.ReadFromJsonAsync<List<TrainArrReadinessAlertResponse>>();
+        Assert.NotNull(v1Alerts);
+        Assert.Equal(legacyAlerts!.Count, v1Alerts!.Count);
     }
 
     [Fact]
@@ -272,6 +310,7 @@ public sealed class TrainArrReportTests : IAsyncLifetime
         Assert.Contains(payload.Items, item => item.Key == "qualifications");
         Assert.Contains(payload.Items, item => item.Key == "compliance");
         Assert.Contains(payload.Items, item => item.Key == "dashboard" && item.Path == "/api/v1/dashboard");
+        Assert.Contains(payload.Items, item => item.Key == "compliance_gap_programs_without_citation");
     }
 
     [Fact]

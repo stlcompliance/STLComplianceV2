@@ -29,7 +29,8 @@ public static class ComplianceCoreReportEndpoints
                     Reports = new[]
                     {
                         new { Key = "findings", Path = "/api/v1/reports/findings" },
-                        new { Key = "operator", Path = "/api/v1/reports/operator" }
+                        new { Key = "operator", Path = "/api/v1/reports/operator" },
+                        new { Key = "missing_evidence", Path = "/api/v1/reports/evidence/missing" }
                     }
                 });
             })
@@ -118,6 +119,77 @@ public static class ComplianceCoreReportEndpoints
         MapOperatorGroup(app, "/api/v1/reports/operator", "V1");
     }
 
+    public static void MapComplianceCoreMissingEvidenceReportEndpoints(this WebApplication app)
+    {
+        MapMissingEvidenceGroup(app, "/api/reports/evidence/missing", string.Empty);
+        MapMissingEvidenceGroup(app, "/api/v1/reports/evidence/missing", "V1");
+    }
+
+    private static void MapMissingEvidenceGroup(WebApplication app, string routePrefix, string routeNameSuffix)
+    {
+        var group = app.MapGroup(routePrefix)
+            .WithTags("MissingEvidenceReports")
+            .RequireAuthorization();
+
+        group.MapGet("/summary", async (
+            string? severity,
+            string? reasonCode,
+            ComplianceCoreAuthorizationService authorization,
+            MissingEvidenceReportService reportService,
+            IComplianceCoreAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireMissingEvidenceWarningRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var summary = await reportService.GetSummaryAsync(
+                tenantId,
+                severity,
+                reasonCode,
+                cancellationToken);
+            await audit.WriteAsync(
+                "compliancecore.reports.missing_evidence.summary",
+                tenantId,
+                actorUserId,
+                "missing_evidence_report",
+                null,
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.Ok(summary);
+        })
+        .WithName($"GetComplianceCoreMissingEvidenceReportSummary{routeNameSuffix}");
+
+        group.MapGet("/summary/export", async (
+            string? severity,
+            string? reasonCode,
+            ComplianceCoreAuthorizationService authorization,
+            MissingEvidenceReportService reportService,
+            IComplianceCoreAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireFindingsReportExport(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var export = await reportService.ExportSummaryCsvAsync(
+                tenantId,
+                severity,
+                reasonCode,
+                cancellationToken);
+            await audit.WriteAsync(
+                "compliancecore.reports.missing_evidence.export",
+                tenantId,
+                actorUserId,
+                "missing_evidence_report",
+                "summary",
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.File(export.Content, export.ContentType, export.FileName);
+        })
+        .WithName($"ExportComplianceCoreMissingEvidenceReportSummary{routeNameSuffix}");
+    }
+
     private static void MapOperatorGroup(WebApplication app, string routePrefix, string routeNameSuffix)
     {
         var group = app.MapGroup(routePrefix)
@@ -177,6 +249,29 @@ public static class ComplianceCoreReportEndpoints
             return Results.File(export.Content, export.ContentType, export.FileName);
         })
         .WithName($"ExportComplianceCoreOperatorReportSummary{routeNameSuffix}");
+
+        group.MapGet("/alerts", async (
+            ComplianceCoreAuthorizationService authorization,
+            OperatorReportService reportService,
+            IComplianceCoreAuditService audit,
+            HttpContext context,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireOperatorReportRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var alerts = await reportService.ListAlertsAsync(tenantId, cancellationToken);
+            await audit.WriteAsync(
+                "compliancecore.reports.operator.alerts",
+                tenantId,
+                actorUserId,
+                "operator_report",
+                null,
+                "success",
+                cancellationToken: cancellationToken);
+            return Results.Ok(alerts);
+        })
+        .WithName($"GetComplianceCoreOperatorReportAlerts{routeNameSuffix}");
     }
 
     public static void MapComplianceCoreEntityExportEndpoints(this WebApplication app)

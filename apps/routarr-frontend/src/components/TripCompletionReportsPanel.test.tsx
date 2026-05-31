@@ -126,4 +126,19 @@ describe('TripCompletionReportsPanel', () => {
 
     expect(screen.queryByTestId('trip-completion-reports-panel')).not.toBeInTheDocument()
   })
+
+  it('shows retry callout when trip summaries fail', async () => {
+    const { getTripCompletions } = await import('../api/client')
+    vi.mocked(getTripCompletions).mockRejectedValueOnce(new Error('summary down'))
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TripCompletionReportsPanel accessToken="token" canRead canExport />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Trip completion report unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry summary' })).toBeInTheDocument()
+  })
 })

@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
+import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { useState } from 'react'
 
 import { importPeopleBulk } from '../api/client'
@@ -136,9 +137,14 @@ export function PersonBulkImportPanel({ accessToken, canImport, onComplete }: Pe
         </p>
       )}
 
-      {parseError ? <p className="text-sm text-red-300">{parseError}</p> : null}
+      {parseError ? (
+        <ApiErrorCallout title="Bulk import failed" message={parseError} />
+      ) : null}
       {importMutation.error instanceof Error ? (
-        <p className="text-sm text-red-300">{importMutation.error.message}</p>
+        <ApiErrorCallout
+          title="Bulk import failed"
+          message={getErrorMessage(importMutation.error, 'Bulk import failed.')}
+        />
       ) : null}
 
       {lastResult ? (

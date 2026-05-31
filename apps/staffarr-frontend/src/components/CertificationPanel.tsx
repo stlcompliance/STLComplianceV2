@@ -1,4 +1,5 @@
 import { type FormEvent, useMemo, useState } from 'react'
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type {
   CertificationDefinitionResponse,
   PersonCertificationResponse,
@@ -9,9 +10,13 @@ interface CertificationPanelProps {
   personDisplayName: string
   definitions: CertificationDefinitionResponse[]
   certifications: PersonCertificationResponse[]
+  isLoading?: boolean
+  isError?: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
   canManage: boolean
   isSubmitting: boolean
-  errorMessage: string | null
+  actionErrorMessage: string | null
   onGrantCertification: (request: {
     certificationDefinitionId: string
     grantedAt: string | null
@@ -80,9 +85,13 @@ export function CertificationPanel({
   personDisplayName,
   definitions,
   certifications,
+  isLoading = false,
+  isError = false,
+  readErrorMessage = null,
+  onRetryRead,
   canManage,
   isSubmitting,
-  errorMessage,
+  actionErrorMessage,
   onGrantCertification,
   onUpdateCertification,
 }: CertificationPanelProps) {
@@ -135,11 +144,27 @@ export function CertificationPanel({
         Readiness-linked certification visibility and manual grant records for person {personId}.
       </p>
 
-      {errorMessage ? (
-        <p className="mt-4 text-sm text-red-300">{formatCertificationMutationError(errorMessage)}</p>
+      {actionErrorMessage ? (
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="Certification update failed"
+            message={formatCertificationMutationError(actionErrorMessage) ?? actionErrorMessage}
+          />
+        </div>
       ) : null}
 
-      {certifications.length === 0 ? (
+      {isLoading ? (
+        <p className="mt-4 text-sm text-slate-400">Loading certifications…</p>
+      ) : isError ? (
+        <div className="mt-4">
+          <ApiErrorCallout
+            title="Certifications unavailable"
+            message={readErrorMessage ?? 'Failed to load certifications and readiness catalog.'}
+            onRetry={onRetryRead}
+            retryLabel="Retry certifications"
+          />
+        </div>
+      ) : certifications.length === 0 ? (
         <p className="mt-4 text-sm text-slate-400">No certification records yet for this person.</p>
       ) : (
         <ul className="mt-4 divide-y divide-slate-700">
@@ -212,7 +237,7 @@ export function CertificationPanel({
         </ul>
       )}
 
-      {canManage ? (
+      {canManage && !isLoading && !isError ? (
         <form className="mt-6 grid gap-3 border-t border-slate-700 pt-4 md:grid-cols-2" onSubmit={handleGrantSubmit}>
           <label htmlFor="certification-grant-definition" className="grid gap-1 text-xs text-slate-400 md:col-span-2">
             Certification definition
@@ -261,15 +286,19 @@ export function CertificationPanel({
             </button>
           </div>
         </form>
-      ) : (
+      ) : !isLoading && !isError ? (
         <p className="mt-4 text-xs text-slate-500">
           Certification grants require staffarr.certifications.manage scope.
         </p>
-      )}
+      ) : null}
 
       <div className="mt-6 border-t border-slate-700 pt-4">
         <h3 className="text-xs font-medium uppercase tracking-wide text-slate-500">Readiness catalog</h3>
-        {definitions.length === 0 ? (
+        {isLoading ? (
+          <p className="mt-2 text-sm text-slate-400">Loading readiness catalog…</p>
+        ) : isError ? (
+          <p className="mt-2 text-sm text-slate-400">Readiness catalog unavailable.</p>
+        ) : definitions.length === 0 ? (
           <p className="mt-2 text-sm text-slate-400">No certification definitions loaded.</p>
         ) : (
           <ul className="mt-2 grid gap-2 md:grid-cols-2">

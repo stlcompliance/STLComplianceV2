@@ -59,6 +59,32 @@ public sealed class AuthService(
             throw new StlApiException("auth.invalid_credentials", "Invalid email or password.", 401);
         }
 
+        if (!user.Credential.IsEmailVerified)
+        {
+            await audit.WriteAsync(
+                "auth.login",
+                "user",
+                user.Id.ToString(),
+                "Denied",
+                actorUserId: user.Id,
+                reasonCode: "email_not_verified",
+                cancellationToken: cancellationToken);
+            throw new StlApiException("auth.email_not_verified", "Email verification is required before sign in.", 403);
+        }
+
+        if (ShouldRequirePlatformAdminMfa(user) && !user.Credential.IsMfaEnabled)
+        {
+            await audit.WriteAsync(
+                "auth.login",
+                "user",
+                user.Id.ToString(),
+                "Denied",
+                actorUserId: user.Id,
+                reasonCode: "mfa_required",
+                cancellationToken: cancellationToken);
+            throw new StlApiException("auth.mfa_required", "Multi-factor authentication is required before sign in.", 403);
+        }
+
         var shouldEmitUnlock = user.Credential.LockedUntil is DateTimeOffset expiredLock && expiredLock <= now;
         if (user.Credential.FailedLoginCount != 0 || user.Credential.LockedUntil is not null)
         {
@@ -83,7 +109,20 @@ public sealed class AuthService(
             throw new StlApiException("auth.no_entitlements", "No active product entitlements for this tenant.", 403);
         }
 
-        var response = await IssueSessionAsync(user, tenantId, entitlements, userAgent, ipAddress, cancellationToken);
+        if (await IsSuspiciousLoginAsync(user.Id, userAgent, ipAddress, cancellationToken))
+        {
+            await audit.WriteAsync(
+                "auth.suspicious_login",
+                "user",
+                user.Id.ToString(),
+                "Warning",
+                tenantId: tenantId,
+                actorUserId: user.Id,
+                reasonCode: "new_device_or_ip",
+                cancellationToken: cancellationToken);
+        }
+
+        var response = await IssueSessionAsync(user, tenantId, entitlements, userAgent, ipAddress, request.RememberDevice, cancellationToken);
 
         if (shouldEmitUnlock)
         {
@@ -136,7 +175,23 @@ public sealed class AuthService(
             actorUserId: session.UserId,
             cancellationToken: cancellationToken);
 
-        return await IssueSessionAsync(session.User, tenantId, entitlements, session.UserAgent, session.IpAddress, cancellationToken);
+        return await IssueSessionAsync(session.User, tenantId, entitlements, session.UserAgent, session.IpAddress, session.IsRemembered, cancellationToken);
+    }
+
+    private bool ShouldRequirePlatformAdminMfa(PlatformUser user)
+    {
+        if (!user.IsPlatformAdmin)
+        {
+            return false;
+        }
+
+        var configuredValue =
+            Environment.GetEnvironmentVariable("AUTH_REQUIRE_PLATFORM_ADMIN_MFA")
+            ?? Environment.GetEnvironmentVariable("Auth__RequirePlatformAdminMfa")
+            ?? jwtOptions.Value.RequirePlatformAdminMfa?.ToString()
+            ?? string.Empty;
+
+        return bool.TryParse(configuredValue, out var requireMfa) && requireMfa;
     }
 
     public async Task LogoutAsync(LogoutRequest request, CancellationToken cancellationToken = default)
@@ -226,7 +281,8 @@ public sealed class AuthService(
                 s.IpAddress,
                 s.ActiveTenantId,
                 s.Id == currentSessionId,
-                s.RevokedAt == null && s.ExpiresAt > now))
+                s.RevokedAt == null && s.ExpiresAt > now,
+                s.IsRemembered))
             .ToListAsync(cancellationToken);
 
         return new UserSessionsResponse(sessions);
@@ -308,11 +364,13 @@ public sealed class AuthService(
         IReadOnlyList<string> entitlements,
         string? userAgent,
         string? ipAddress,
+        bool rememberDevice,
         CancellationToken cancellationToken)
     {
         var sessionId = Guid.NewGuid();
         var refreshToken = tokenService.GenerateRefreshToken();
-        var refreshExpires = DateTimeOffset.UtcNow.AddDays(jwtOptions.Value.RefreshTokenDays);
+        var refreshLifetimeDays = ResolveRefreshTokenLifetimeDays(rememberDevice);
+        var refreshExpires = DateTimeOffset.UtcNow.AddDays(refreshLifetimeDays);
 
         db.UserSessions.Add(new UserSession
         {
@@ -320,6 +378,7 @@ public sealed class AuthService(
             UserId = user.Id,
             RefreshTokenHash = tokenService.HashRefreshToken(refreshToken),
             ActiveTenantId = tenantId,
+            IsRemembered = rememberDevice,
             ExpiresAt = refreshExpires,
             UserAgent = userAgent,
             IpAddress = ipAddress,
@@ -346,6 +405,26 @@ public sealed class AuthService(
             sessionId,
             user.Id,
             tenantId);
+    }
+
+    private int ResolveRefreshTokenLifetimeDays(bool rememberDevice)
+    {
+        var configuredDefault = jwtOptions.Value.RefreshTokenDays > 0
+            ? jwtOptions.Value.RefreshTokenDays
+            : 7;
+
+        if (!rememberDevice)
+        {
+            return configuredDefault;
+        }
+
+        var configuredRemembered = jwtOptions.Value.RememberedRefreshTokenDays;
+        if (configuredRemembered is null || configuredRemembered <= 0)
+        {
+            return configuredDefault;
+        }
+
+        return configuredRemembered.Value;
     }
 
     private async Task RecordFailedLoginAsync(
@@ -397,6 +476,42 @@ public sealed class AuthService(
                 cancellationToken);
         }
     }
+
+    private async Task<bool> IsSuspiciousLoginAsync(
+        Guid userId,
+        string? userAgent,
+        string? ipAddress,
+        CancellationToken cancellationToken)
+    {
+        var latestPriorSession = await db.UserSessions
+            .AsNoTracking()
+            .Where(s => s.UserId == userId)
+            .OrderByDescending(s => s.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (latestPriorSession is null)
+        {
+            return false;
+        }
+
+        var normalizedUserAgent = NormalizeSuspicionValue(userAgent);
+        var normalizedIpAddress = NormalizeSuspicionValue(ipAddress);
+        var previousUserAgent = NormalizeSuspicionValue(latestPriorSession.UserAgent);
+        var previousIpAddress = NormalizeSuspicionValue(latestPriorSession.IpAddress);
+
+        var userAgentChanged =
+            !string.IsNullOrEmpty(normalizedUserAgent)
+            && !string.IsNullOrEmpty(previousUserAgent)
+            && !string.Equals(normalizedUserAgent, previousUserAgent, StringComparison.Ordinal);
+        var ipChanged =
+            !string.IsNullOrEmpty(normalizedIpAddress)
+            && !string.IsNullOrEmpty(previousIpAddress)
+            && !string.Equals(normalizedIpAddress, previousIpAddress, StringComparison.Ordinal);
+
+        return userAgentChanged || ipChanged;
+    }
+
+    private static string NormalizeSuspicionValue(string? value) =>
+        value?.Trim().ToLowerInvariant() ?? string.Empty;
 
     private async Task EnqueueUserLifecycleEventAsync(
         string eventType,

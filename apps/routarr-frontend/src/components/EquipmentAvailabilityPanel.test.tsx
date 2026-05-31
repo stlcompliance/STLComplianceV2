@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import * as client from '../api/client'
 import { deleteEquipmentAvailability, updateEquipmentAvailability } from '../api/client'
 import { EquipmentAvailabilityPanel } from './EquipmentAvailabilityPanel'
 
@@ -141,5 +142,28 @@ describe('EquipmentAvailabilityPanel', () => {
         '55555555-5555-5555-5555-555555555555',
       )
     })
+  })
+
+  it('renders retryable error callout when panel query fails', async () => {
+    vi.mocked(client.getEquipmentAvailabilityPanel).mockRejectedValueOnce(
+      new Error('equipment availability unavailable'),
+    )
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <EquipmentAvailabilityPanel
+          accessToken="token"
+          scope="daily"
+          onScopeChange={vi.fn()}
+          canManage={false}
+        />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('equipment availability unavailable')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Retry equipment availability' }),
+    ).toBeInTheDocument()
   })
 })

@@ -140,6 +140,74 @@ public sealed class ComplianceReportService(TrainArrDbContext db)
         return new TrainingGapReportResponse(DateTimeOffset.UtcNow, gaps.Count, gaps);
     }
 
+    public async Task<ProgramCitationGapReportResponse> GetProgramsWithoutCitationReportAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var programs = await db.TrainingPrograms
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .OrderBy(x => x.ProgramKey)
+            .ToListAsync(cancellationToken);
+
+        var programIds = programs.Select(x => x.Id).ToList();
+        var citationsByProgram = await db.TrainingCitationAttachments
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId
+                && x.EntityType == "training_program"
+                && programIds.Contains(x.EntityId))
+            .GroupBy(x => x.EntityId)
+            .Select(x => new { ProgramId = x.Key, Count = x.Count() })
+            .ToDictionaryAsync(x => x.ProgramId, x => x.Count, cancellationToken);
+
+        var missing = programs
+            .Where(x => citationsByProgram.GetValueOrDefault(x.Id) == 0)
+            .Select(x => new ProgramCitationGapReportItem(
+                x.Id,
+                x.ProgramKey,
+                x.Name,
+                x.Status,
+                0,
+                x.UpdatedAt))
+            .ToList();
+
+        return new ProgramCitationGapReportResponse(
+            DateTimeOffset.UtcNow,
+            programs.Count,
+            missing.Count,
+            missing);
+    }
+
+    public async Task<CsvExportResult> ExportProgramsWithoutCitationReportCsvAsync(
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var report = await GetProgramsWithoutCitationReportAsync(tenantId, cancellationToken);
+        var builder = new StringBuilder();
+        builder.AppendLine("trainingProgramId,programKey,programName,programStatus,citationAttachmentCount,updatedAt");
+
+        foreach (var item in report.Items)
+        {
+            builder.Append(CsvEscape(item.TrainingProgramId.ToString()));
+            builder.Append(',');
+            builder.Append(CsvEscape(item.ProgramKey));
+            builder.Append(',');
+            builder.Append(CsvEscape(item.ProgramName));
+            builder.Append(',');
+            builder.Append(CsvEscape(item.ProgramStatus));
+            builder.Append(',');
+            builder.Append(item.CitationAttachmentCount);
+            builder.Append(',');
+            builder.AppendLine(CsvEscape(item.UpdatedAt.ToString("O")));
+        }
+
+        var timestamp = DateTimeOffset.UtcNow.ToString("yyyy-MM-dd");
+        return new CsvExportResult(
+            "text/csv",
+            $"trainarr-programs-without-citation-report-{timestamp}.csv",
+            Encoding.UTF8.GetBytes(builder.ToString()));
+    }
+
     private static string CsvEscape(string value)
     {
         if (value.Contains('"') || value.Contains(',') || value.Contains('\n') || value.Contains('\r'))

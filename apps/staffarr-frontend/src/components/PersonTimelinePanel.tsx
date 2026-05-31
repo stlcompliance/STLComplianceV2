@@ -1,3 +1,4 @@
+import { ApiErrorCallout } from '@stl/shared-ui'
 import type { PersonTimelineEntryResponse } from '../api/types'
 
 export type PersonTimelineCategoryFilter =
@@ -30,6 +31,9 @@ interface PersonTimelinePanelProps {
   hasNextPage: boolean
   categoryFilter: PersonTimelineCategoryFilter
   isLoading: boolean
+  isError?: boolean
+  readErrorMessage?: string | null
+  onRetryRead?: () => void
   onCategoryFilterChange: (value: PersonTimelineCategoryFilter) => void
   onPageChange: (page: number) => void
   onPageSizeChange: (pageSize: number) => void
@@ -98,6 +102,9 @@ export function PersonTimelinePanel({
   hasNextPage,
   categoryFilter,
   isLoading,
+  isError = false,
+  readErrorMessage = null,
+  onRetryRead,
   onCategoryFilterChange,
   onPageChange,
   onPageSizeChange,
@@ -149,7 +156,15 @@ export function PersonTimelinePanel({
         </label>
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <ApiErrorCallout
+          className="mt-4"
+          title="Timeline unavailable"
+          message={readErrorMessage ?? 'Failed to load person timeline events.'}
+          retryLabel={onRetryRead ? 'Retry timeline' : undefined}
+          onRetry={onRetryRead}
+        />
+      ) : isLoading ? (
         <p className="mt-4 text-sm text-slate-400">Loading timeline…</p>
       ) : entries.length === 0 ? (
         <p className="mt-4 text-sm text-slate-400">

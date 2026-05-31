@@ -11,6 +11,7 @@ vi.mock('../../api/nexarrClient', () => ({
   triggerPlatformServiceTokenCleanup: vi.fn(),
   triggerPlatformEntitlementReconciliation: vi.fn(),
   triggerPlatformTenantLifecycle: vi.fn(),
+  triggerPlatformOutboxPublisher: vi.fn(),
 }))
 
 function renderPanel() {
@@ -105,5 +106,16 @@ describe('PlatformWorkerHealthOrchestrationPanel', () => {
       'platform-orchestration-trigger-tenant-lifecycle',
     ) as HTMLButtonElement
     expect(lifecycleTrigger.disabled).toBe(false)
+  })
+
+  it('renders callout when orchestration status fails', async () => {
+    vi.mocked(nexarr.getPlatformWorkerHealthOrchestration).mockRejectedValueOnce(
+      new Error('orchestration down'),
+    )
+
+    renderPanel()
+
+    expect(await screen.findByText('orchestration down')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Retry orchestration' })).toBeTruthy()
   })
 })

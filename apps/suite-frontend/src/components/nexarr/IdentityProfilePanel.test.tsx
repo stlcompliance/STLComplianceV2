@@ -229,6 +229,18 @@ describe('IdentityProfilePanel', () => {
 
   })
 
+  it('shows retryable API callouts for entitlements and tenant memberships', async () => {
+    vi.mocked(nexarr.getMyTenants).mockRejectedValueOnce(new Error('tenant memberships unavailable'))
+    vi.mocked(nexarr.getMyEntitlements).mockRejectedValueOnce(new Error('entitlements unavailable'))
+
+    renderPanel()
+
+    expect(await screen.findByText('tenant memberships unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry tenant memberships' })).toBeInTheDocument()
+    expect(screen.getByText('entitlements unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry entitlements' })).toBeInTheDocument()
+  })
+
 })
 
 

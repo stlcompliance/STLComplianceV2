@@ -74,6 +74,11 @@ public sealed class ComplianceCoreEntityBulkExportService(
                     "/api/reports/operator/summary/export",
                     "Operator report CSV",
                     "Evaluation and workflow gate rollups with attention filters."),
+                new(
+                    "missing_evidence",
+                    "/api/reports/evidence/missing/summary/export",
+                    "Missing evidence report CSV",
+                    "Missing evidence warnings by severity and reason."),
             ],
             AuditPackageFormats: ["json", "zip"]);
 
