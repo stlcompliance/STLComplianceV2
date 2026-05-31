@@ -54,29 +54,39 @@ describe('ProductSurfacePage', () => {
 
   it('shows launch mutation errors in callout', async () => {
     vi.mocked(nexarr.getNavigation).mockResolvedValue({
+      tenantId: 'tenant-1',
       products: [
         {
           productKey: 'staffarr',
           displayName: 'StaffArr',
+          routePath: '/products/staffarr',
+          sortOrder: 1,
           surfaces: [
             {
               surfaceKey: 'launch',
               label: 'Launch',
-              isEnabled: true,
-              launchPath: '/launch',
               relativePath: 'launch',
+              iconKey: 'rocket',
+              sortOrder: 1,
+              isEnabled: true,
+              permissionHint: null,
             },
           ],
         },
       ],
     })
     vi.mocked(nexarr.getLaunchContext).mockResolvedValue({
+      tenantId: 'tenant-1',
+      tenantSlug: 'tenant-1',
+      tenantDisplayName: 'Tenant 1',
+      userId: 'user-1',
+      userEmail: 'user1@example.test',
       productKey: 'staffarr',
       productDisplayName: 'StaffArr',
+      baseLaunchUrl: 'https://example.test',
       canLaunch: true,
       launchUrl: 'https://example.test/launch',
-      reasonCode: null,
-      reasonDetail: null,
+      denialReasonCode: null,
     })
 
     renderPage()

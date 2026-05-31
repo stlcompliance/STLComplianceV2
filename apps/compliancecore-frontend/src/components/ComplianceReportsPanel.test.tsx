@@ -42,7 +42,9 @@ describe('ComplianceReportsPanel', () => {
     vi.mocked(client.getFindingsReportSummary).mockResolvedValue({
       totalFindings: 1,
       openCount: 1,
+      acknowledgedCount: 0,
       openBlockSeverityCount: 1,
+      openWarnSeverityCount: 0,
       resolvedCount: 0,
       recentFindings: [],
     })

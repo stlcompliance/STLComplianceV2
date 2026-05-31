@@ -40,7 +40,11 @@ describe('DefectEscalationSettingsPanel', () => {
       notifyOnEscalation: true,
       updatedAt: null,
     })
-    vi.mocked(client.getPendingDefectEscalations).mockResolvedValue({ items: [] })
+    vi.mocked(client.getPendingDefectEscalations).mockResolvedValue({
+      asOfUtc: '2026-05-31T00:00:00Z',
+      batchSize: 100,
+      items: [],
+    })
     vi.mocked(client.getDefectEscalationRuns).mockResolvedValue({ items: [] })
     vi.mocked(client.getDefectEscalationEvents).mockResolvedValue({ items: [] })
     vi.mocked(client.upsertDefectEscalationSettings).mockResolvedValue({

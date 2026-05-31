@@ -42,11 +42,24 @@ describe('DataExportsPanel', () => {
 
   it('shows export failure callout', async () => {
     vi.mocked(client.getEntityExportManifest).mockResolvedValue({
+      packageVersion: 'test',
+      reportExports: [],
+      auditPackageFormats: [],
       entities: [
         {
           entityKey: 'findings',
+          exportPath: '/api/compliancecore/findings/export',
           displayName: 'Findings',
+          csvHeader: 'findings.csv',
           description: 'Findings export',
+          formats: [
+            {
+              formatKey: 'csv',
+              contentType: 'text/csv',
+              fileNameTemplate: 'findings.csv',
+              description: 'CSV export',
+            },
+          ],
         },
       ],
     })

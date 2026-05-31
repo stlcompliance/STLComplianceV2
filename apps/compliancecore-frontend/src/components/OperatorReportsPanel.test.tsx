@@ -41,9 +41,15 @@ describe('OperatorReportsPanel', () => {
   it('shows export failure callout', async () => {
     vi.mocked(client.getOperatorReportSummary).mockResolvedValue({
       evaluationTotalCount: 3,
+      evaluationPassCount: 2,
       evaluationFailCount: 1,
+      evaluationsLast24Hours: 3,
+      workflowGateDefinitionCount: 2,
       workflowGateBlockCount: 2,
+      workflowGateWarnCount: 1,
       rulePackPublishedCount: 4,
+      rulePackDraftCount: 1,
+      attentionItemCount: 2,
       recentEvaluations: [],
     })
     vi.mocked(client.exportOperatorReportSummaryCsv).mockRejectedValue(new Error('export down'))
