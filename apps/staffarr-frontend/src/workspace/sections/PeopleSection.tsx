@@ -64,9 +64,26 @@ export function PeopleSection({ state }: Props) {
                     s.setPeopleDirectoryQuery('')
                     return
                   }
+                  if (
+                    (event.key === 'ArrowDown' || event.key === 'ArrowUp') &&
+                    s.peopleDirectoryQuery.trim() &&
+                    s.filteredPeople.length > 0
+                  ) {
+                    event.preventDefault()
+                    const anchorId =
+                      s.activeDirectoryPersonId ?? s.selectedPerson?.personId ?? s.filteredPeople[0]!.personId
+                    const currentIndex = s.filteredPeople.findIndex((person) => person.personId === anchorId)
+                    const startIndex = currentIndex >= 0 ? currentIndex : 0
+                    const nextIndex =
+                      event.key === 'ArrowDown'
+                        ? (startIndex + 1) % s.filteredPeople.length
+                        : (startIndex - 1 + s.filteredPeople.length) % s.filteredPeople.length
+                    s.setActiveDirectoryPersonId(s.filteredPeople[nextIndex]!.personId)
+                    return
+                  }
                   if (event.key === 'Enter' && s.peopleDirectoryQuery.trim() && s.filteredPeople.length > 0) {
                     event.preventDefault()
-                    s.setSelectedPersonId(s.filteredPeople[0]!.personId)
+                    s.setSelectedPersonId(s.activeDirectoryPersonId ?? s.filteredPeople[0]!.personId)
                   }
                 }}
                 placeholder="Search by name, email, title, org unit, or status"
@@ -88,7 +105,7 @@ export function PeopleSection({ state }: Props) {
               </p>
             ) : null}
             {!s.peopleQuery.isLoading && s.peopleDirectoryQuery.trim() && s.filteredPeople.length > 0 ? (
-              <p className="text-xs text-slate-500">Press Enter to select the first filtered person.</p>
+              <p className="text-xs text-slate-500">Use ↑/↓ to move through results, then press Enter to select.</p>
             ) : null}
             {s.selectedPersonHiddenByFilter ? (
               <div className="rounded-md border border-amber-700/60 bg-amber-950/20 p-2 text-xs text-amber-200">
@@ -113,12 +130,26 @@ export function PeopleSection({ state }: Props) {
             </p>
           ) : (
             <ul className="mt-4 divide-y divide-slate-700">
-              {s.filteredPeople.map((person) => (
+              {s.filteredPeople.map((person) => {
+                const isSelected = s.effectivePersonId === person.personId
+                const isActive =
+                  Boolean(s.peopleDirectoryQuery.trim()) && s.activeDirectoryPersonId === person.personId
+                const buttonClass = isSelected
+                  ? 'w-full rounded-md px-1 py-1 text-left text-sky-200'
+                  : isActive
+                    ? 'w-full rounded-md px-1 py-1 text-left text-slate-100 ring-1 ring-sky-500/70'
+                    : 'w-full rounded-md px-1 py-1 text-left'
+
+                return (
                 <li key={person.personId} className="flex items-center justify-between py-3">
                   <button
                     type="button"
-                    onClick={() => s.setSelectedPersonId(person.personId)}
-                    className={`w-full text-left ${s.effectivePersonId === person.personId ? 'text-sky-200' : ''}`}
+                    onMouseEnter={() => s.setActiveDirectoryPersonId(person.personId)}
+                    onClick={() => {
+                      s.setActiveDirectoryPersonId(person.personId)
+                      s.setSelectedPersonId(person.personId)
+                    }}
+                    className={buttonClass}
                   >
                     <p className="text-sm text-white">{person.displayName}</p>
                     <p className="text-xs text-slate-400">
@@ -127,7 +158,8 @@ export function PeopleSection({ state }: Props) {
                   </button>
                   <span className="text-xs uppercase tracking-wide text-slate-500">{person.employmentStatus}</span>
                 </li>
-              ))}
+                )
+              })}
             </ul>
           )}
         </div>

@@ -118,6 +118,7 @@ export function HomePage() {
     enabled: Boolean(session?.accessToken),
   })
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
+  const [activeDirectoryPersonId, setActiveDirectoryPersonId] = useState<string | null>(null)
   const [peopleDirectoryQuery, setPeopleDirectoryQuery] = useState('')
   const [personTimelinePage, setPersonTimelinePage] = useState(1)
   const [personTimelinePageSize, setPersonTimelinePageSize] = useState(25)
@@ -952,9 +953,21 @@ export function HomePage() {
                     setPeopleDirectoryQuery('')
                     return
                   }
+                  if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && peopleDirectoryQuery.trim() && filteredPeople.length > 0) {
+                    event.preventDefault()
+                    const anchorId = activeDirectoryPersonId ?? selectedPerson?.personId ?? filteredPeople[0]!.personId
+                    const currentIndex = filteredPeople.findIndex((person) => person.personId === anchorId)
+                    const startIndex = currentIndex >= 0 ? currentIndex : 0
+                    const nextIndex =
+                      event.key === 'ArrowDown'
+                        ? (startIndex + 1) % filteredPeople.length
+                        : (startIndex - 1 + filteredPeople.length) % filteredPeople.length
+                    setActiveDirectoryPersonId(filteredPeople[nextIndex]!.personId)
+                    return
+                  }
                   if (event.key === 'Enter' && peopleDirectoryQuery.trim() && filteredPeople.length > 0) {
                     event.preventDefault()
-                    setSelectedPersonId(filteredPeople[0]!.personId)
+                    setSelectedPersonId(activeDirectoryPersonId ?? filteredPeople[0]!.personId)
                   }
                 }}
                 placeholder="Search by name, email, title, org unit, or status"
@@ -976,7 +989,7 @@ export function HomePage() {
               </p>
             ) : null}
             {!peopleQuery.isLoading && peopleDirectoryQuery.trim() && filteredPeople.length > 0 ? (
-              <p className="text-xs text-slate-500">Press Enter to select the first filtered person.</p>
+              <p className="text-xs text-slate-500">Use ↑/↓ to move through results, then press Enter to select.</p>
             ) : null}
             {selectedPersonHiddenByFilter ? (
               <div className="rounded-md border border-amber-700/60 bg-amber-950/20 p-2 text-xs text-amber-200">
@@ -1001,12 +1014,25 @@ export function HomePage() {
             </p>
           ) : (
             <ul className="mt-4 divide-y divide-slate-700">
-              {filteredPeople.map((person) => (
+              {filteredPeople.map((person) => {
+                const isSelected = effectivePersonId === person.personId
+                const isActive = Boolean(peopleDirectoryQuery.trim()) && activeDirectoryPersonId === person.personId
+                const buttonClass = isSelected
+                  ? 'w-full rounded-md px-1 py-1 text-left text-sky-200'
+                  : isActive
+                    ? 'w-full rounded-md px-1 py-1 text-left text-slate-100 ring-1 ring-sky-500/70'
+                    : 'w-full rounded-md px-1 py-1 text-left'
+
+                return (
                 <li key={person.personId} className="flex items-center justify-between py-3">
                   <button
                     type="button"
-                    onClick={() => setSelectedPersonId(person.personId)}
-                    className={`w-full text-left ${effectivePersonId === person.personId ? 'text-sky-200' : ''}`}
+                    onMouseEnter={() => setActiveDirectoryPersonId(person.personId)}
+                    onClick={() => {
+                      setActiveDirectoryPersonId(person.personId)
+                      setSelectedPersonId(person.personId)
+                    }}
+                    className={buttonClass}
                   >
                     <p className="text-sm text-white">{person.displayName}</p>
                     <p className="text-xs text-slate-400">
@@ -1015,7 +1041,8 @@ export function HomePage() {
                   </button>
                   <span className="text-xs uppercase tracking-wide text-slate-500">{person.employmentStatus}</span>
                 </li>
-              ))}
+                )
+              })}
             </ul>
           )}
         </div>

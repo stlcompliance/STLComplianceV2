@@ -101,6 +101,7 @@ export function useStaffArrWorkspaceState() {
     enabled: Boolean(session?.accessToken),
   })
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null)
+  const [activeDirectoryPersonId, setActiveDirectoryPersonId] = useState<string | null>(null)
   const [peopleDirectoryQuery, setPeopleDirectoryQuery] = useState('')
   const [personTimelinePage, setPersonTimelinePage] = useState(1)
   const [personTimelinePageSize, setPersonTimelinePageSize] = useState(25)
@@ -802,6 +803,8 @@ export function useStaffArrWorkspaceState() {
     searchParams,
     selectedPersonId,
     setSelectedPersonId,
+    activeDirectoryPersonId,
+    setActiveDirectoryPersonId,
     peopleDirectoryQuery,
     setPeopleDirectoryQuery,
     selectedSubordinateId,

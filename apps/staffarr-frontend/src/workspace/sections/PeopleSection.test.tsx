@@ -67,6 +67,8 @@ function buildState(overrides: Partial<StaffArrWorkspaceState> = {}): StaffArrWo
     selectedPersonHiddenByFilter: false,
     selectedPersonId: 'person-1',
     setSelectedPersonId,
+    activeDirectoryPersonId: null,
+    setActiveDirectoryPersonId: vi.fn(),
     effectivePersonId: 'person-1',
     orgUnits: [],
     canManagePeopleProfiles: true,
@@ -175,7 +177,7 @@ describe('PeopleSection quick filter', () => {
       />,
     )
 
-    expect(screen.getByText('Press Enter to select the first filtered person.')).toBeTruthy()
+    expect(screen.getByText('Use ↑/↓ to move through results, then press Enter to select.')).toBeTruthy()
   })
 
   it('updates filter input and clears filter', () => {
@@ -234,6 +236,86 @@ describe('PeopleSection quick filter', () => {
       />,
     )
     fireEvent.keyDown(screen.getByTestId('workspace-people-directory-filter'), { key: 'Enter' })
+    expect(setSelectedPersonId).toHaveBeenCalledWith('person-2')
+  })
+
+  it('selects active filtered person when ArrowDown then Enter is pressed in filter', () => {
+    const setSelectedPersonId = vi.fn()
+    const setActiveDirectoryPersonId = vi.fn()
+    render(
+      <PeopleSection
+        state={buildState({
+          peopleDirectoryQuery: 'a',
+          filteredPeople: [
+            {
+              personId: 'person-1',
+              externalUserId: null,
+              displayName: 'Alex Rivera',
+              primaryEmail: 'alex.rivera@example.com',
+              primaryOrgUnitId: null,
+              primaryOrgUnitName: 'Ops',
+              managerPersonId: null,
+              jobTitle: 'Operator',
+              employmentStatus: 'active',
+            },
+            {
+              personId: 'person-2',
+              externalUserId: null,
+              displayName: 'Sam Patel',
+              primaryEmail: 'sam.patel@example.com',
+              primaryOrgUnitId: null,
+              primaryOrgUnitName: 'Quality',
+              managerPersonId: null,
+              jobTitle: 'Auditor',
+              employmentStatus: 'inactive',
+            },
+          ],
+          activeDirectoryPersonId: 'person-1',
+          setActiveDirectoryPersonId,
+          setSelectedPersonId,
+        })}
+      />,
+    )
+
+    const filter = screen.getByTestId('workspace-people-directory-filter')
+    fireEvent.keyDown(filter, { key: 'ArrowDown' })
+    expect(setActiveDirectoryPersonId).toHaveBeenCalledWith('person-2')
+
+    render(
+      <PeopleSection
+        state={buildState({
+          peopleDirectoryQuery: 'a',
+          filteredPeople: [
+            {
+              personId: 'person-1',
+              externalUserId: null,
+              displayName: 'Alex Rivera',
+              primaryEmail: 'alex.rivera@example.com',
+              primaryOrgUnitId: null,
+              primaryOrgUnitName: 'Ops',
+              managerPersonId: null,
+              jobTitle: 'Operator',
+              employmentStatus: 'active',
+            },
+            {
+              personId: 'person-2',
+              externalUserId: null,
+              displayName: 'Sam Patel',
+              primaryEmail: 'sam.patel@example.com',
+              primaryOrgUnitId: null,
+              primaryOrgUnitName: 'Quality',
+              managerPersonId: null,
+              jobTitle: 'Auditor',
+              employmentStatus: 'inactive',
+            },
+          ],
+          activeDirectoryPersonId: 'person-2',
+          setSelectedPersonId,
+        })}
+      />,
+    )
+
+    fireEvent.keyDown(screen.getAllByTestId('workspace-people-directory-filter')[1]!, { key: 'Enter' })
     expect(setSelectedPersonId).toHaveBeenCalledWith('person-2')
   })
 

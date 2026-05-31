@@ -474,7 +474,7 @@ describe('HomePage', () => {
     })
   })
 
-  it('shows Enter-key guidance only when query has matching results', async () => {
+  it('shows keyboard guidance only when query has matching results', async () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
     })
@@ -488,13 +488,37 @@ describe('HomePage', () => {
     )
 
     const filter = (await screen.findAllByTestId('people-directory-filter'))[0] as HTMLInputElement
-    expect(screen.queryByText('Press Enter to select the first filtered person.')).toBeNull()
+    expect(screen.queryByText('Use ↑/↓ to move through results, then press Enter to select.')).toBeNull()
 
     fireEvent.change(filter, { target: { value: 'sam' } })
-    expect(screen.getByText('Press Enter to select the first filtered person.')).toBeTruthy()
+    expect(screen.getByText('Use ↑/↓ to move through results, then press Enter to select.')).toBeTruthy()
 
     fireEvent.change(filter, { target: { value: 'zzz' } })
-    expect(screen.queryByText('Press Enter to select the first filtered person.')).toBeNull()
+    expect(screen.queryByText('Use ↑/↓ to move through results, then press Enter to select.')).toBeNull()
+  })
+
+  it('selects active filtered person when ArrowDown then Enter is pressed in quick filter', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <HomePage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+
+    const filter = (await screen.findAllByTestId('people-directory-filter'))[0] as HTMLInputElement
+    fireEvent.change(filter, { target: { value: 'a' } })
+    fireEvent.keyDown(filter, { key: 'ArrowDown' })
+    fireEvent.keyDown(filter, { key: 'Enter' })
+
+    await waitFor(() => {
+      const person2Calls = mocked.getPerson.mock.calls.filter(([, personId]) => personId === 'person-2')
+      expect(person2Calls.length).toBeGreaterThan(0)
+    })
   })
 
   it('does not auto-select on Enter when quick filter is empty', async () => {
