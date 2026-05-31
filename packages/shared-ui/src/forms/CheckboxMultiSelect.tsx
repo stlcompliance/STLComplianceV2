@@ -3,7 +3,7 @@ import { formatPickerLabel, type PickerOption } from './pickerTypes'
 export type CheckboxMultiSelectProps = {
   values: string[]
   onChange: (values: string[]) => void
-  options: PickerOption[]
+  options: readonly PickerOption[]
   label?: string
   disabled?: boolean
   testId?: string

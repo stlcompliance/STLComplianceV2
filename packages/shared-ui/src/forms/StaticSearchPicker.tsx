@@ -6,7 +6,7 @@ import { formatPickerLabel, mergePickerOptions, type PickerOption } from './pick
 export type StaticSearchPickerProps = {
   value: string
   onChange: (value: string) => void
-  options: PickerOption[]
+  options: readonly PickerOption[]
   selectedOption?: PickerOption
   label?: string
   id?: string

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -40,7 +40,7 @@ namespace SupplyArr.Api.Migrations
                 {
                     table.PrimaryKey("PK_supplyarr_contracts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_supplyarr_contracts_supplyarr_external_parties_VendorParty~",
+                        name: "FK_supplyarr_contracts_supplyarr_external_parties_VendorPartyId",
                         column: x => x.VendorPartyId,
                         principalTable: "supplyarr_external_parties",
                         principalColumn: "Id",
@@ -77,7 +77,8 @@ namespace SupplyArr.Api.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(name: "supplyarr_contracts");
+            migrationBuilder.DropTable(
+                name: "supplyarr_contracts");
         }
     }
 }

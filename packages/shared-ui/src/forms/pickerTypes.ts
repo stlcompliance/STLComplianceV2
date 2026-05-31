@@ -12,17 +12,17 @@ export function formatPickerLabel(option: PickerOption): string {
 }
 
 export function mergePickerOptions(
-  options: PickerOption[],
+  options: readonly PickerOption[],
   selectedValue: string,
   selectedOption?: PickerOption,
 ): PickerOption[] {
   if (!selectedValue) {
-    return options
+    return [...options]
   }
 
   const exists = options.some((option) => option.value === selectedValue)
   if (exists) {
-    return options
+    return [...options]
   }
 
   const orphan: PickerOption = selectedOption ?? {
