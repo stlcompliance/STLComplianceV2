@@ -36,6 +36,7 @@ import type {
   AuditPackageGenerationJobResponse,
   AuditPackageManifestResponse,
   CsvBundleManifestResponse,
+  CsvImportResolutionOptions,
   CsvImportResultResponse,
   WorkflowGateBatchCheckRequest,
   WorkflowGateBatchCheckResponse,
@@ -683,15 +684,41 @@ export async function importCsvBundle(
   accessToken: string,
   files: FileList,
   dryRun: boolean,
+  options?: CsvImportResolutionOptions,
 ): Promise<CsvImportResultResponse> {
   const form = new FormData()
   Array.from(files).forEach((file) => form.append('file', file, file.name))
+  appendCsvImportResolutionOptions(form, options)
   const response = await fetch(`${apiBase}/api/csv-bundle/import?dryRun=${dryRun}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}` },
     body: form,
   })
   return parseJsonResponse<CsvImportResultResponse>(response, 'Failed to import CSV bundle')
+}
+
+function appendCsvImportResolutionOptions(form: FormData, options?: CsvImportResolutionOptions) {
+  if (!options) {
+    return
+  }
+
+  form.append('regulatorySpineMode', options.regulatorySpineMode)
+  appendFormValue(form, 'governingBodyKey', options.governingBodyKey)
+  appendFormValue(form, 'governingBodyLabel', options.governingBodyLabel)
+  appendFormValue(form, 'governingBodyDescription', options.governingBodyDescription)
+  appendFormValue(form, 'jurisdictionKey', options.jurisdictionKey)
+  appendFormValue(form, 'jurisdictionLabel', options.jurisdictionLabel)
+  appendFormValue(form, 'jurisdictionDescription', options.jurisdictionDescription)
+
+  if (options.programMappings && Object.keys(options.programMappings).length > 0) {
+    form.append('programMappingsJson', JSON.stringify(options.programMappings))
+  }
+}
+
+function appendFormValue(form: FormData, key: string, value?: string) {
+  if (value?.trim()) {
+    form.append(key, value.trim())
+  }
 }
 
 export async function createImportSession(

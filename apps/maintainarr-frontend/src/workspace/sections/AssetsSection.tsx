@@ -26,9 +26,9 @@ export function AssetsSection({ state }: Props) {
       {mode === 'create' ? (
         <div className="rounded-xl border border-amber-700/50 bg-amber-950/20 p-4 text-sm text-amber-100">
           <ol className="list-decimal space-y-1 pl-5">
-            <li>Step 1: Create an asset class so related asset types share the same business grouping.</li>
-            <li>Step 2: Create an asset type to standardize maintenance plans and readiness checks.</li>
-            <li>Step 3: Create an asset record to place a real unit under tracking and lifecycle control.</li>
+            <li>Step 1: Select controlled asset classification and configuration values from the provided catalogs.</li>
+            <li>Step 2: Add regulatory and organizational references from Compliance Core and StaffArr selectors.</li>
+            <li>Step 3: Create the asset record with validated controlled values.</li>
           </ol>
         </div>
       ) : null}
@@ -77,6 +77,11 @@ export function AssetsSection({ state }: Props) {
           isCreatingClass={s.createClassMutation.isPending}
           isCreatingType={s.createTypeMutation.isPending}
           isCreatingAsset={s.createAssetMutation.isPending}
+          assetFieldset={s.assetCreateFieldsetQuery.data ?? null}
+          assetFieldValues={s.assetFieldValues}
+          onAssetFieldChange={(fieldKey, value) =>
+            s.setAssetFieldValues((current) => ({ ...current, [fieldKey]: value }))
+          }
         />
       ) : null}
 
@@ -86,6 +91,7 @@ export function AssetsSection({ state }: Props) {
             asset={selectedAsset}
             readiness={s.assetReadinessDetailQuery.data ?? null}
             isReadinessLoading={s.assetReadinessDetailQuery.isLoading}
+            fieldContext={s.assetFieldContextQuery.data ?? null}
           />
         ) : (
           <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">

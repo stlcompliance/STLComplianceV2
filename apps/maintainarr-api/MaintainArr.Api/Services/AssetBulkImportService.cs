@@ -8,37 +8,61 @@ namespace MaintainArr.Api.Services;
 
 public sealed class AssetBulkImportService(
     MaintainArrDbContext db,
+    AssetService assetService,
+    FieldsetService fieldsetService,
+    ControlledValueValidationService controlledValueValidationService,
     IMaintainArrAuditService audit)
 {
     public const int MaxBatchSize = 100;
 
-    private static readonly HashSet<string> AllowedLifecycleStatuses = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, string> GlobalAliases = new(StringComparer.OrdinalIgnoreCase)
     {
-        "active",
-        "inactive",
-        "retired",
-        "out_of_service",
-    };
-    private static readonly Dictionary<string, string> AliasMap = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["freightliner cascadia"] = "cascadia",
+        ["freightliner"] = "freightliner",
         ["frtlnr"] = "freightliner",
+        ["freightliner cascadia"] = "cascadia",
+        ["disc"] = "disc",
         ["disc brake"] = "disc",
         ["air disc"] = "disc",
+        ["drum"] = "drum",
         ["s-cam"] = "drum",
         ["air drum"] = "drum",
         ["super singles"] = "super_single",
         ["wide base"] = "super_single",
         ["wide-base singles"] = "super_single",
+        ["duals"] = "duals",
         ["dual tires"] = "duals",
         ["dual wheels"] = "duals",
-        ["compressed natural gas"] = "CNG",
+        ["cng"] = "cng",
+        ["compressed natural gas"] = "cng",
+        ["reefer"] = "reefer",
         ["refrigerated trailer"] = "reefer",
+        ["fmcsa"] = "fmcsa",
+        ["federal motor carrier safety administration"] = "fmcsa",
+        ["osha"] = "osha",
+        ["occupational safety and health administration"] = "osha",
+        ["msha"] = "msha",
+        ["mine safety and health administration"] = "msha",
+        ["epa"] = "epa",
+        ["environmental protection agency"] = "epa",
+    };
+
+    private static readonly HashSet<string> MultiValueFields = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "governingBodyKey",
+        "rulepackApplicabilityKeys",
+        "regulatoryAssetType",
+        "complianceCategory",
+        "requiredEvidenceType",
+        "documentRequirementType",
+        "inspectionRequirementType",
+        "compatiblePartIds",
+        "secondaryMeterTypes",
     };
 
     public async Task<AssetBulkImportResponse> ImportAsync(
         Guid tenantId,
         Guid actorUserId,
+        string actorPersonId,
         IReadOnlyList<AssetImportRowRequest> assets,
         bool dryRun,
         string phase,
@@ -57,12 +81,12 @@ public sealed class AssetBulkImportService(
                 400);
         }
 
+        var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", cancellationToken);
         var batchId = Guid.NewGuid();
         var results = new List<AssetImportRowResult>();
         var batchTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var successCount = 0;
         var errorCount = 0;
-        var typeCache = await BuildAssetTypeCacheAsync(tenantId, cancellationToken);
 
         for (var index = 0; index < assets.Count; index++)
         {
@@ -85,60 +109,39 @@ public sealed class AssetBulkImportService(
             try
             {
                 ValidateRow(row);
-                var normalizedClassKey = NormalizeAlias(row.AssetClassKey);
-                var normalizedTypeKey = NormalizeAlias(row.AssetTypeKey);
-                var assetType = ResolveAssetType(typeCache, normalizedClassKey, normalizedTypeKey);
+                var values = BuildNormalizedValues(row);
                 await EnsureTagAvailableAsync(tenantId, normalizedTag, cancellationToken);
+
+                await controlledValueValidationService.ValidateFieldsetValuesAsync(
+                    tenantId,
+                    fieldset.Fields,
+                    values,
+                    actorPersonId,
+                    "asset_import",
+                    $"row_{index + 1}",
+                    createPendingValues: !dryRun,
+                    cancellationToken);
 
                 if (dryRun)
                 {
                     successCount++;
-                    results.Add(new AssetImportRowResult(
-                        index,
-                        normalizedTag,
-                        "validated",
-                        null,
-                        null,
-                        null));
+                    results.Add(new AssetImportRowResult(index, normalizedTag, "validated", null, null, null));
                     continue;
                 }
 
-                var now = DateTimeOffset.UtcNow;
-                var entity = new Asset
-                {
-                    Id = Guid.NewGuid(),
-                    TenantId = tenantId,
-                    AssetTypeId = assetType.Id,
-                    AssetTag = normalizedTag,
-                    Name = NormalizeName(row.Name),
-                    Description = NormalizeDescription(row.Description),
-                    LifecycleStatus = row.LifecycleStatus.Trim().ToLowerInvariant(),
-                    SiteRef = NormalizeSiteRef(row.SiteRef),
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                };
-
-                db.Assets.Add(entity);
-                await db.SaveChangesAsync(cancellationToken);
-
-                successCount++;
-                results.Add(new AssetImportRowResult(
-                    index,
-                    normalizedTag,
-                    "created",
-                    entity.Id,
-                    null,
-                    null));
-
-                await audit.WriteAsync(
-                    "asset.create",
+                var created = await assetService.CreateV1Async(
                     tenantId,
                     actorUserId,
-                    "asset",
-                    entity.Id.ToString(),
-                    "success",
-                    reasonCode: "bulk_import",
-                    cancellationToken: cancellationToken);
+                    actorPersonId,
+                    new AssetUpsertV1Request(
+                        normalizedTag,
+                        row.Name.Trim(),
+                        string.IsNullOrWhiteSpace(row.Description) ? null : row.Description.Trim(),
+                        values),
+                    cancellationToken);
+
+                successCount++;
+                results.Add(new AssetImportRowResult(index, normalizedTag, "created", created.AssetId, null, null));
             }
             catch (StlApiException ex)
             {
@@ -205,22 +208,11 @@ public sealed class AssetBulkImportService(
 
     private static void ValidateRow(AssetImportRowRequest row)
     {
-        if (string.IsNullOrWhiteSpace(row.AssetClassKey)
-            || string.IsNullOrWhiteSpace(row.AssetTypeKey)
-            || string.IsNullOrWhiteSpace(row.AssetTag)
-            || string.IsNullOrWhiteSpace(row.Name))
+        if (string.IsNullOrWhiteSpace(row.AssetTag) || string.IsNullOrWhiteSpace(row.Name))
         {
             throw new StlApiException(
                 "imports.validation",
-                "assetClassKey, assetTypeKey, assetTag, and name are required.",
-                400);
-        }
-
-        if (!AllowedLifecycleStatuses.Contains(row.LifecycleStatus.Trim()))
-        {
-            throw new StlApiException(
-                "imports.validation",
-                "lifecycleStatus must be active, inactive, retired, or out_of_service.",
+                "assetTag and name are required.",
                 400);
         }
     }
@@ -242,88 +234,117 @@ public sealed class AssetBulkImportService(
         }
     }
 
-    private static AssetType ResolveAssetType(
-        IReadOnlyDictionary<(string ClassKey, string TypeKey), AssetType> cache,
-        string classKey,
-        string typeKey)
+    private static IReadOnlyDictionary<string, object?> BuildNormalizedValues(AssetImportRowRequest row)
     {
-        var normalizedClass = classKey.Trim().ToLowerInvariant();
-        var normalizedType = typeKey.Trim().ToLowerInvariant();
-        if (!cache.TryGetValue((normalizedClass, normalizedType), out var assetType))
+        var values = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+        foreach (var pair in row.Values)
         {
-            throw new StlApiException(
-                "imports.asset_type_not_found",
-                $"Asset type '{typeKey}' in class '{classKey}' was not found or is inactive.",
-                400);
+            if (string.IsNullOrWhiteSpace(pair.Key) || string.IsNullOrWhiteSpace(pair.Value))
+            {
+                continue;
+            }
+
+            var fieldKey = pair.Key.Trim();
+            var normalized = NormalizeValue(fieldKey, pair.Value!.Trim());
+
+            if (MultiValueFields.Contains(fieldKey))
+            {
+                values[fieldKey] = SplitMultiValue(normalized)
+                    .Select(value => NormalizeValue(fieldKey, value))
+                    .ToList();
+                continue;
+            }
+
+            values[fieldKey] = normalized;
         }
 
-        return assetType;
+        if (!values.ContainsKey("assetClass") && !string.IsNullOrWhiteSpace(row.AssetClassKey))
+        {
+            values["assetClass"] = NormalizeValue("assetClass", row.AssetClassKey.Trim());
+        }
+        if (!values.ContainsKey("assetType") && !string.IsNullOrWhiteSpace(row.AssetTypeKey))
+        {
+            values["assetType"] = NormalizeValue("assetType", row.AssetTypeKey.Trim());
+        }
+        if (!values.ContainsKey("siteId") && !string.IsNullOrWhiteSpace(row.SiteRef))
+        {
+            values["siteId"] = row.SiteRef.Trim();
+        }
+        if (!values.ContainsKey("lifecycleStatus") && !string.IsNullOrWhiteSpace(row.LifecycleStatus))
+        {
+            values["lifecycleStatus"] = NormalizeValue("lifecycleStatus", row.LifecycleStatus.Trim());
+        }
+        if (!values.ContainsKey("lifecycleStatus"))
+        {
+            values["lifecycleStatus"] = "in_service";
+        }
+        if (!values.ContainsKey("assetStatus"))
+        {
+            values["assetStatus"] = "active";
+        }
+        if (!values.ContainsKey("criticality"))
+        {
+            values["criticality"] = "medium";
+        }
+
+        return values;
     }
 
-    private static string NormalizeAlias(string value)
+    private static IReadOnlyList<string> SplitMultiValue(string value)
     {
-        var trimmed = value.Trim();
-        if (AliasMap.TryGetValue(trimmed, out var mapped))
+        return value
+            .Split([',', ';', '|'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .ToList();
+    }
+
+    private static string NormalizeValue(string fieldKey, string value)
+    {
+        var lowered = value.Trim().ToLowerInvariant();
+        if (GlobalAliases.TryGetValue(lowered, out var mapped))
         {
             return mapped;
         }
 
-        return trimmed;
-    }
+        if (string.Equals(fieldKey, "fuelType", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.Equals(lowered, "cng", StringComparison.OrdinalIgnoreCase))
+            {
+                return "cng";
+            }
+        }
 
-    private async Task<Dictionary<(string ClassKey, string TypeKey), AssetType>> BuildAssetTypeCacheAsync(
-        Guid tenantId,
-        CancellationToken cancellationToken)
-    {
-        var types = await db.AssetTypes
-            .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && x.Status == "active")
-            .Join(
-                db.AssetClasses.AsNoTracking().Where(c => c.TenantId == tenantId && c.Status == "active"),
-                type => type.AssetClassId,
-                assetClass => assetClass.Id,
-                (type, assetClass) => new { type, assetClass })
-            .ToListAsync(cancellationToken);
+        if (string.Equals(fieldKey, "trailerType", StringComparison.OrdinalIgnoreCase) && lowered == "reefer_trailer")
+        {
+            return "reefer";
+        }
 
-        return types.ToDictionary(
-            x => (x.assetClass.ClassKey.Trim().ToLowerInvariant(), x.type.TypeKey.Trim().ToLowerInvariant()),
-            x => x.type);
+        if (string.Equals(fieldKey, "lifecycleStatus", StringComparison.OrdinalIgnoreCase))
+        {
+            if (lowered == "active")
+            {
+                return "in_service";
+            }
+            if (lowered == "inactive")
+            {
+                return "temporarily_inactive";
+            }
+        }
+
+        return lowered
+            .Replace('&', 'a')
+            .Replace('/', '_')
+            .Replace('-', '_')
+            .Replace(' ', '_');
     }
 
     private static string NormalizeAssetTag(string value)
     {
-        var tag = value.Trim();
+        var tag = value.Trim().ToUpperInvariant();
         if (tag.Length == 0 || tag.Length > 64)
         {
             throw new StlApiException("imports.validation", "assetTag must be between 1 and 64 characters.", 400);
         }
 
         return tag;
-    }
-
-    private static string NormalizeName(string value)
-    {
-        var name = value.Trim();
-        if (name.Length == 0 || name.Length > 256)
-        {
-            throw new StlApiException("imports.validation", "name must be between 1 and 256 characters.", 400);
-        }
-
-        return name;
-    }
-
-    private static string NormalizeDescription(string value) => value?.Trim() ?? string.Empty;
-
-    private static string? NormalizeSiteRef(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        var site = value.Trim();
-        return site.Length > 128
-            ? throw new StlApiException("imports.validation", "siteRef must be 128 characters or fewer.", 400)
-            : site;
     }
 }

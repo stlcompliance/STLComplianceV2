@@ -5,6 +5,7 @@ import type {
   CreateAssetClassRequest,
   CreateAssetRequest,
   AssetUpsertV1Request,
+  AssetFieldContextResponse,
   CatalogResponse,
   FieldsetResponse,
   CreateAssetTypeRequest,
@@ -279,7 +280,7 @@ export async function createAsset(accessToken: string, payload: CreateAssetReque
 }
 
 export async function createAssetControlledV1(accessToken: string, payload: AssetUpsertV1Request): Promise<AssetResponse> {
-  const response = await fetch(`${apiBase}/api/v1/assets/controlled`, {
+  const response = await fetch(`${apiBase}/api/v1/assets`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
@@ -294,6 +295,13 @@ export async function updateAssetControlledV1(accessToken: string, assetId: stri
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<AssetResponse>(response, 'Failed to update controlled asset')
+}
+
+export async function getAssetFieldContext(accessToken: string, assetId: string): Promise<AssetFieldContextResponse> {
+  const response = await fetch(`${apiBase}/api/v1/assets/${assetId}/field-context`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<AssetFieldContextResponse>(response, 'Failed to load asset field context')
 }
 
 export async function getAssetCreateFieldset(accessToken: string): Promise<FieldsetResponse> {

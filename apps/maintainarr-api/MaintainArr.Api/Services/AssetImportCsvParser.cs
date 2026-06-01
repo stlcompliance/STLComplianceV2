@@ -6,8 +6,6 @@ public static class AssetImportCsvParser
 {
     private static readonly string[] RequiredHeaders =
     [
-        "assetclasskey",
-        "assettypekey",
         "assettag",
         "name",
     ];
@@ -28,10 +26,11 @@ public static class AssetImportCsvParser
                 400);
         }
 
-        var headers = lines[0].Split(',').Select(h => h.Trim().ToLowerInvariant()).ToList();
+        var headers = SplitCsvLine(lines[0]).Select(h => h.Trim()).ToList();
+        var normalizedHeaders = headers.Select(h => h.ToLowerInvariant()).ToList();
         foreach (var required in RequiredHeaders)
         {
-            if (!headers.Contains(required))
+            if (!normalizedHeaders.Contains(required))
             {
                 throw new STLCompliance.Shared.Contracts.StlApiException(
                     "imports.csv.invalid",
@@ -50,19 +49,69 @@ public static class AssetImportCsvParser
                 map[headers[i]] = i < values.Count ? values[i].Trim() : string.Empty;
             }
 
-            rows.Add(new AssetImportRowRequest(
-                map["assetclasskey"],
-                map["assettypekey"],
-                map["assettag"],
-                map["name"],
-                map.GetValueOrDefault("description") ?? string.Empty,
-                string.IsNullOrWhiteSpace(map.GetValueOrDefault("siteref")) ? null : map["siteref"],
-                string.IsNullOrWhiteSpace(map.GetValueOrDefault("lifecyclestatus"))
-                    ? "active"
-                    : map["lifecyclestatus"]!));
+            var valueMap = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+            foreach (var pair in map)
+            {
+                var normalizedKey = NormalizeHeaderToFieldKey(pair.Key);
+                if (string.Equals(normalizedKey, "assetTag", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(normalizedKey, "name", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(normalizedKey, "description", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(normalizedKey, "lifecycleStatus", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                valueMap[normalizedKey] = string.IsNullOrWhiteSpace(pair.Value) ? null : pair.Value.Trim();
+            }
+
+            var legacyClass = map.GetValueOrDefault("assetClassKey") ?? map.GetValueOrDefault("assetClass") ?? string.Empty;
+            var legacyType = map.GetValueOrDefault("assetTypeKey") ?? map.GetValueOrDefault("assetType") ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(legacyClass))
+            {
+                valueMap["assetClass"] = legacyClass;
+            }
+            if (!string.IsNullOrWhiteSpace(legacyType))
+            {
+                valueMap["assetType"] = legacyType;
+            }
+            if (map.TryGetValue("siteRef", out var siteRefValue) && !string.IsNullOrWhiteSpace(siteRefValue))
+            {
+                valueMap["siteId"] = siteRefValue.Trim();
+            }
+
+            rows.Add(new AssetImportRowRequest
+            {
+                AssetTag = map.GetValueOrDefault("assetTag")?.Trim() ?? string.Empty,
+                Name = map.GetValueOrDefault("name")?.Trim() ?? string.Empty,
+                Description = map.GetValueOrDefault("description")?.Trim() ?? string.Empty,
+                LifecycleStatus = string.IsNullOrWhiteSpace(map.GetValueOrDefault("lifecycleStatus"))
+                    ? "in_service"
+                    : map["lifecycleStatus"].Trim(),
+                AssetClassKey = legacyClass,
+                AssetTypeKey = legacyType,
+                SiteRef = map.GetValueOrDefault("siteRef"),
+                Values = valueMap,
+            });
         }
 
         return rows;
+    }
+
+    private static string NormalizeHeaderToFieldKey(string header)
+    {
+        var normalized = header.Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return string.Empty;
+        }
+
+        if (normalized.Contains('_'))
+        {
+            var parts = normalized.Split('_', StringSplitOptions.RemoveEmptyEntries);
+            return parts[0].ToLowerInvariant() + string.Concat(parts.Skip(1).Select(x => char.ToUpperInvariant(x[0]) + x[1..]));
+        }
+
+        return normalized;
     }
 
     private static List<string> SplitCsvLine(string line)

@@ -165,6 +165,7 @@ public sealed class CsvImportExportService(
         Guid? actorUserId,
         IReadOnlyDictionary<string, string> fileContents,
         bool dryRun,
+        RulePackImportResolutionOptions? resolutionOptions = null,
         CancellationToken cancellationToken = default)
     {
         var issues = new List<CsvImportIssue>();
@@ -183,7 +184,15 @@ public sealed class CsvImportExportService(
 
         try
         {
-            return await ApplyImportAsync(tenantId, actorUserId, parsed, dryRun, summaries, issues, cancellationToken);
+            return await ApplyImportAsync(
+                tenantId,
+                actorUserId,
+                parsed,
+                dryRun,
+                resolutionOptions ?? new RulePackImportResolutionOptions(),
+                summaries,
+                issues,
+                cancellationToken);
         }
         catch (CsvParseException ex)
         {
@@ -197,6 +206,7 @@ public sealed class CsvImportExportService(
         Guid? actorUserId,
         ParsedCsvBundle parsed,
         bool dryRun,
+        RulePackImportResolutionOptions resolutionOptions,
         List<CsvImportFileSummary> summaries,
         List<CsvImportIssue> issues,
         CancellationToken cancellationToken)
@@ -211,6 +221,7 @@ public sealed class CsvImportExportService(
                     actorUserId,
                     parsed,
                     dryRun,
+                    resolutionOptions,
                     summaries,
                     issues,
                     cancellationToken);
@@ -235,6 +246,7 @@ public sealed class CsvImportExportService(
             actorUserId,
             parsed,
             dryRun,
+            resolutionOptions,
             summaries,
             issues,
             cancellationToken);
@@ -245,6 +257,7 @@ public sealed class CsvImportExportService(
         Guid? actorUserId,
         ParsedCsvBundle parsed,
         bool dryRun,
+        RulePackImportResolutionOptions resolutionOptions,
         List<CsvImportFileSummary> summaries,
         List<CsvImportIssue> issues,
         CancellationToken cancellationToken)
@@ -254,10 +267,10 @@ public sealed class CsvImportExportService(
         summaries.Add(await ApplyAliasesAsync(tenantId, parsed.VocabularyAliases, context, issues, cancellationToken));
         summaries.Add(await ApplyComplianceKeysAsync(tenantId, parsed.ComplianceKeys, context, issues, cancellationToken));
         summaries.Add(await ApplyMaterialKeysAsync(tenantId, parsed.MaterialKeys, context, issues, cancellationToken));
-        summaries.Add(await ApplyRulePacksAsync(tenantId, parsed.RulePacks, context, issues, cancellationToken));
-        summaries.Add(await ApplyRuleRequirementsAsync(tenantId, parsed.RuleRequirements, context, issues, cancellationToken));
+        summaries.Add(await ApplyRulePacksAsync(tenantId, parsed.RulePacks, context, resolutionOptions, issues, cancellationToken));
+        summaries.Add(await ApplyRuleRequirementsAsync(tenantId, parsed.RuleRequirements, context, resolutionOptions, issues, cancellationToken));
         summaries.Add(await ApplyRuleFactRequirementsAsync(tenantId, parsed.RuleFactRequirements, context, issues, cancellationToken));
-        summaries.Add(await ApplyRegulatoryMappingsAsync(tenantId, parsed.RegulatoryMappings, context, issues, cancellationToken));
+        summaries.Add(await ApplyRegulatoryMappingsAsync(tenantId, parsed.RegulatoryMappings, context, resolutionOptions, issues, cancellationToken));
         summaries.Add(await ApplySdsReferencesAsync(tenantId, parsed.SdsReferences, context, issues, cancellationToken));
         summaries.Add(await ApplyExceptionExemptionsAsync(tenantId, parsed.ExceptionExemptions, context, issues, cancellationToken));
 
@@ -582,6 +595,8 @@ public sealed class CsvImportExportService(
         await db.VocabularyTypes.AsNoTracking().AnyAsync(cancellationToken);
 
         return new ImportContext(
+            await db.GoverningBodies.Where(x => x.TenantId == tenantId).ToListAsync(cancellationToken),
+            await db.Jurisdictions.Where(x => x.TenantId == tenantId).ToListAsync(cancellationToken),
             await db.VocabularyTerms.Where(x => x.TenantId == tenantId).ToListAsync(cancellationToken),
             await db.VocabularyAliases.Where(x => x.TenantId == tenantId).ToListAsync(cancellationToken),
             await db.ComplianceKeys.Where(x => x.TenantId == tenantId).ToListAsync(cancellationToken),
@@ -889,10 +904,253 @@ public sealed class CsvImportExportService(
         return new CsvImportFileSummary(fileName, rows.Count, created, updated, deactivated);
     }
 
+    private RegulatoryProgram? ResolveProgram(
+        Guid tenantId,
+        string sourceProgramKey,
+        string fileName,
+        int lineNumber,
+        ImportContext context,
+        RulePackImportResolutionOptions resolutionOptions,
+        List<CsvImportIssue> issues)
+    {
+        var mappedProgramKey = MappedProgramKey(sourceProgramKey, resolutionOptions);
+        var hasExplicitProgramMapping = !string.Equals(sourceProgramKey, mappedProgramKey, StringComparison.OrdinalIgnoreCase);
+        var program = context.Programs.FirstOrDefault(x => x.ProgramKey == mappedProgramKey);
+        if (program is not null)
+        {
+            var expectedBodyKey = NormalizeImportKey(resolutionOptions.GoverningBodyKey);
+            if (!string.IsNullOrWhiteSpace(expectedBodyKey))
+            {
+                var actualBodyKey = ResolveGoverningBodyKey(program, context);
+                if (!string.Equals(actualBodyKey, expectedBodyKey, StringComparison.OrdinalIgnoreCase) &&
+                    !AllowsExistingRegulatorySpineMapping(resolutionOptions) &&
+                    !hasExplicitProgramMapping)
+                {
+                    issues.Add(new CsvImportIssue(
+                        fileName,
+                        lineNumber,
+                        "regulatory.governing_body_mismatch",
+                        $"Regulatory program '{mappedProgramKey}' belongs to governing body '{actualBodyKey}', not '{expectedBodyKey}'. Use regulatorySpineMode=map_existing or programMappingsJson to map the import to the existing program."));
+                    return null;
+                }
+            }
+
+            return program;
+        }
+
+        if (hasExplicitProgramMapping)
+        {
+            issues.Add(new CsvImportIssue(
+                fileName,
+                lineNumber,
+                "regulatory.program_mapping_not_found",
+                $"Imported regulatory program '{sourceProgramKey}' was mapped to '{mappedProgramKey}', but that existing program was not found."));
+            return null;
+        }
+
+        if (!AllowsMissingRegulatorySpineCreation(resolutionOptions))
+        {
+            issues.Add(new CsvImportIssue(
+                fileName,
+                lineNumber,
+                "regulatory.program_not_found",
+                $"Regulatory program '{sourceProgramKey}' was not found. Use regulatorySpineMode=create_missing with governing body and jurisdiction fields to create it during import, or programMappingsJson to map it to an existing program."));
+            return null;
+        }
+
+        return CreateImportedProgram(tenantId, sourceProgramKey, context, resolutionOptions);
+    }
+
+    private RegulatoryProgram CreateImportedProgram(
+        Guid tenantId,
+        string programKey,
+        ImportContext context,
+        RulePackImportResolutionOptions resolutionOptions)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var governingBody = EnsureImportedGoverningBody(tenantId, context, resolutionOptions, now);
+        var jurisdiction = EnsureImportedJurisdiction(tenantId, governingBody, context, resolutionOptions, now);
+        var program = new RegulatoryProgram
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            JurisdictionId = jurisdiction.Id,
+            ProgramKey = programKey,
+            Label = LabelFromKey(programKey),
+            Description = $"Imported regulatory program '{programKey}'.",
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        context.Programs.Add(program);
+        db.RegulatoryPrograms.Add(program);
+        return program;
+    }
+
+    private GoverningBody EnsureImportedGoverningBody(
+        Guid tenantId,
+        ImportContext context,
+        RulePackImportResolutionOptions resolutionOptions,
+        DateTimeOffset now)
+    {
+        var bodyKey = NormalizeImportKey(resolutionOptions.GoverningBodyKey);
+        if (string.IsNullOrWhiteSpace(bodyKey))
+        {
+            bodyKey = "imported";
+        }
+
+        var existing = context.GoverningBodies.FirstOrDefault(x => x.BodyKey == bodyKey);
+        if (existing is not null)
+        {
+            existing.IsActive = true;
+            existing.UpdatedAt = now;
+            return existing;
+        }
+
+        var body = new GoverningBody
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            BodyKey = bodyKey,
+            Label = FirstNonEmpty(resolutionOptions.GoverningBodyLabel, LabelFromKey(bodyKey)),
+            Description = FirstNonEmpty(resolutionOptions.GoverningBodyDescription, $"Imported governing body '{bodyKey}'."),
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        context.GoverningBodies.Add(body);
+        db.GoverningBodies.Add(body);
+        return body;
+    }
+
+    private Jurisdiction EnsureImportedJurisdiction(
+        Guid tenantId,
+        GoverningBody governingBody,
+        ImportContext context,
+        RulePackImportResolutionOptions resolutionOptions,
+        DateTimeOffset now)
+    {
+        var requestedKey = NormalizeImportKey(resolutionOptions.JurisdictionKey);
+        if (string.IsNullOrWhiteSpace(requestedKey))
+        {
+            requestedKey = TruncateKey($"{governingBody.BodyKey}_imported");
+        }
+
+        var existing = context.Jurisdictions.FirstOrDefault(
+            x => x.JurisdictionKey == requestedKey && x.GoverningBodyId == governingBody.Id);
+        if (existing is not null)
+        {
+            existing.IsActive = true;
+            existing.UpdatedAt = now;
+            return existing;
+        }
+
+        var jurisdictionKey = requestedKey;
+        if (context.Jurisdictions.Any(x => x.JurisdictionKey == jurisdictionKey))
+        {
+            jurisdictionKey = UniqueKey(
+                TruncateKey($"{governingBody.BodyKey}_{requestedKey}"),
+                context.Jurisdictions.Select(x => x.JurisdictionKey));
+        }
+
+        var jurisdiction = new Jurisdiction
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            GoverningBodyId = governingBody.Id,
+            JurisdictionKey = jurisdictionKey,
+            Label = FirstNonEmpty(resolutionOptions.JurisdictionLabel, LabelFromKey(jurisdictionKey)),
+            Description = FirstNonEmpty(resolutionOptions.JurisdictionDescription, $"Imported jurisdiction '{jurisdictionKey}'."),
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        context.Jurisdictions.Add(jurisdiction);
+        db.Jurisdictions.Add(jurisdiction);
+        return jurisdiction;
+    }
+
+    private static string ResolveGoverningBodyKey(RegulatoryProgram program, ImportContext context)
+    {
+        var jurisdiction = context.Jurisdictions.FirstOrDefault(x => x.Id == program.JurisdictionId);
+        if (jurisdiction is null)
+        {
+            return string.Empty;
+        }
+
+        return context.GoverningBodies.FirstOrDefault(x => x.Id == jurisdiction.GoverningBodyId)?.BodyKey ?? string.Empty;
+    }
+
+    private static string MappedProgramKey(string sourceProgramKey, RulePackImportResolutionOptions resolutionOptions)
+    {
+        if (resolutionOptions.ProgramMappings is null)
+        {
+            return sourceProgramKey;
+        }
+
+        foreach (var pair in resolutionOptions.ProgramMappings)
+        {
+            if (string.Equals(NormalizeImportKey(pair.Key), sourceProgramKey, StringComparison.OrdinalIgnoreCase))
+            {
+                var mapped = NormalizeImportKey(pair.Value);
+                return string.IsNullOrWhiteSpace(mapped) ? sourceProgramKey : mapped;
+            }
+        }
+
+        return sourceProgramKey;
+    }
+
+    private static bool AllowsMissingRegulatorySpineCreation(RulePackImportResolutionOptions resolutionOptions)
+    {
+        var mode = NormalizeImportKey(resolutionOptions.RegulatorySpineMode);
+        return mode is RulePackImportResolutionModes.CreateMissing or RulePackImportResolutionModes.CreateOrMap;
+    }
+
+    private static bool AllowsExistingRegulatorySpineMapping(RulePackImportResolutionOptions resolutionOptions)
+    {
+        var mode = NormalizeImportKey(resolutionOptions.RegulatorySpineMode);
+        return mode is RulePackImportResolutionModes.MapExisting or RulePackImportResolutionModes.CreateOrMap;
+    }
+
+    private static string NormalizeImportKey(string? key) =>
+        string.IsNullOrWhiteSpace(key) ? string.Empty : key.Trim().ToLowerInvariant();
+
+    private static string LabelFromKey(string key)
+    {
+        var words = key
+            .Replace('.', ' ')
+            .Replace('_', ' ')
+            .Replace('-', ' ');
+        return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(words);
+    }
+
+    private static string FirstNonEmpty(string? preferred, string fallback) =>
+        string.IsNullOrWhiteSpace(preferred) ? fallback : preferred.Trim();
+
+    private static string TruncateKey(string key) =>
+        key.Length <= 64 ? key : key[..64].TrimEnd('.', '_', '-');
+
+    private static string UniqueKey(string preferred, IEnumerable<string> existingKeys)
+    {
+        var existing = existingKeys.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var candidate = TruncateKey(preferred);
+        for (var index = 2; existing.Contains(candidate); index++)
+        {
+            var suffix = $"_{index}";
+            candidate = $"{TruncateKey(preferred)[..Math.Min(64 - suffix.Length, TruncateKey(preferred).Length)]}{suffix}";
+        }
+
+        return candidate;
+    }
+
     private async Task<CsvImportFileSummary> ApplyRulePacksAsync(
         Guid tenantId,
         IReadOnlyList<IReadOnlyDictionary<string, string>> rows,
         ImportContext context,
+        RulePackImportResolutionOptions resolutionOptions,
         List<CsvImportIssue> issues,
         CancellationToken cancellationToken)
     {
@@ -911,14 +1169,16 @@ public sealed class CsvImportExportService(
                 continue;
             }
 
-            var program = context.Programs.FirstOrDefault(x => x.ProgramKey == programKey);
+            var program = ResolveProgram(
+                tenantId,
+                programKey,
+                CsvBundleFiles.RulePacks,
+                lineNumber,
+                context,
+                resolutionOptions,
+                issues);
             if (program is null)
             {
-                issues.Add(new CsvImportIssue(
-                    CsvBundleFiles.RulePacks,
-                    lineNumber,
-                    "regulatory.program_not_found",
-                    $"Regulatory program '{programKey}' was not found."));
                 continue;
             }
 
@@ -994,6 +1254,7 @@ public sealed class CsvImportExportService(
         Guid tenantId,
         IReadOnlyList<IReadOnlyDictionary<string, string>> rows,
         ImportContext context,
+        RulePackImportResolutionOptions resolutionOptions,
         List<CsvImportIssue> issues,
         CancellationToken cancellationToken)
     {
@@ -1012,14 +1273,16 @@ public sealed class CsvImportExportService(
                 continue;
             }
 
-            var program = context.Programs.FirstOrDefault(x => x.ProgramKey == programKey);
+            var program = ResolveProgram(
+                tenantId,
+                programKey,
+                CsvBundleFiles.RuleRequirements,
+                lineNumber,
+                context,
+                resolutionOptions,
+                issues);
             if (program is null)
             {
-                issues.Add(new CsvImportIssue(
-                    CsvBundleFiles.RuleRequirements,
-                    lineNumber,
-                    "regulatory.program_not_found",
-                    $"Regulatory program '{programKey}' was not found."));
                 continue;
             }
 
@@ -1392,6 +1655,7 @@ public sealed class CsvImportExportService(
         Guid tenantId,
         IReadOnlyList<IReadOnlyDictionary<string, string>> rows,
         ImportContext context,
+        RulePackImportResolutionOptions resolutionOptions,
         List<CsvImportIssue> issues,
         CancellationToken cancellationToken)
     {
@@ -1422,14 +1686,16 @@ public sealed class CsvImportExportService(
                 continue;
             }
 
-            var program = context.Programs.FirstOrDefault(x => x.ProgramKey == programKey);
+            var program = ResolveProgram(
+                tenantId,
+                programKey,
+                CsvBundleFiles.RegulatoryMappings,
+                lineNumber,
+                context,
+                resolutionOptions,
+                issues);
             if (program is null)
             {
-                issues.Add(new CsvImportIssue(
-                    CsvBundleFiles.RegulatoryMappings,
-                    lineNumber,
-                    "regulatory.program_not_found",
-                    $"Regulatory program '{programKey}' was not found."));
                 continue;
             }
 
@@ -1821,6 +2087,8 @@ public sealed class CsvImportExportService(
         IReadOnlyList<IReadOnlyDictionary<string, string>> ExceptionExemptions);
 
     private sealed class ImportContext(
+        List<GoverningBody> governingBodies,
+        List<Jurisdiction> jurisdictions,
         List<VocabularyTerm> terms,
         List<VocabularyAlias> aliases,
         List<ComplianceKey> complianceKeys,
@@ -1835,6 +2103,10 @@ public sealed class CsvImportExportService(
         List<ComplianceExceptionExemption> exceptionExemptions,
         HashSet<string> vocabularyTypeKeys)
     {
+        public List<GoverningBody> GoverningBodies { get; } = governingBodies;
+
+        public List<Jurisdiction> Jurisdictions { get; } = jurisdictions;
+
         public List<VocabularyTerm> Terms { get; } = terms;
 
         public List<VocabularyAlias> Aliases { get; } = aliases;

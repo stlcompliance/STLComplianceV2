@@ -132,6 +132,11 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
     public DbSet<AssetComponent> AssetComponents => Set<AssetComponent>();
     public DbSet<AssetDocumentRef> AssetDocumentRefs => Set<AssetDocumentRef>();
     public DbSet<AssetComplianceState> AssetComplianceStates => Set<AssetComplianceState>();
+    public DbSet<AssetStatusHistory> AssetStatusHistory => Set<AssetStatusHistory>();
+    public DbSet<AssetLocationHistory> AssetLocationHistory => Set<AssetLocationHistory>();
+    public DbSet<AssetAssignmentHistory> AssetAssignmentHistory => Set<AssetAssignmentHistory>();
+    public DbSet<AssetReadinessState> AssetReadinessStates => Set<AssetReadinessState>();
+    public DbSet<AssetExternalMapping> AssetExternalMappings => Set<AssetExternalMapping>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -1017,6 +1022,66 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
             entity.ToTable("maintainarr_asset_compliance_state");
             entity.HasKey(x => x.Id);
             entity.HasIndex(x => new { x.TenantId, x.AssetId }).IsUnique();
+        });
+
+        modelBuilder.Entity<AssetStatusHistory>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_status_history");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.StatusFieldKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.StatusValueKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ChangedByPersonId).HasMaxLength(128);
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.ChangedAt });
+        });
+
+        modelBuilder.Entity<AssetLocationHistory>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_location_history");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SiteId).HasMaxLength(128);
+            entity.Property(x => x.HomeLocationId).HasMaxLength(128);
+            entity.Property(x => x.CurrentLocationId).HasMaxLength(128);
+            entity.Property(x => x.Yard).HasMaxLength(128);
+            entity.Property(x => x.Bay).HasMaxLength(128);
+            entity.Property(x => x.ParkingSpot).HasMaxLength(128);
+            entity.Property(x => x.ChangedByPersonId).HasMaxLength(128);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.EffectiveAt });
+        });
+
+        modelBuilder.Entity<AssetAssignmentHistory>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_assignment_history");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.AssignmentFieldKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.PersonId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ChangedByPersonId).HasMaxLength(128);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.AssignmentFieldKey, x.EffectiveAt });
+        });
+
+        modelBuilder.Entity<AssetReadinessState>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_readiness_state");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ReadinessStatusKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.OperationalStatusKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.AvailabilityStatusKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Basis).HasMaxLength(256);
+            entity.Property(x => x.Notes).HasMaxLength(1024);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId }).IsUnique();
+        });
+
+        modelBuilder.Entity<AssetExternalMapping>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_external_mappings");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SourceSystem).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ExternalEntityType).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ExternalId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ExternalKey).HasMaxLength(128);
+            entity.Property(x => x.MetadataJson).HasMaxLength(4096);
+            entity.HasIndex(x => new { x.TenantId, x.SourceSystem, x.ExternalEntityType, x.ExternalId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.AssetId });
         });
     }
 }

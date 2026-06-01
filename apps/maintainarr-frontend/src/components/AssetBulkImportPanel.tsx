@@ -10,9 +10,26 @@ interface AssetBulkImportPanelProps {
   onComplete?: () => void
 }
 
-const CSV_TEMPLATE = `assetClassKey,assetTypeKey,assetTag,name,description,siteRef,lifecycleStatus
-vehicles,forklift,FLT-101,Forklift 101,Main shop forklift,yard-a,active
-vehicles,forklift,FLT-102,Forklift 102,Backup unit,yard-b,active`
+const CSV_TEMPLATE = `assetTag,name,description,assetClass,assetType,make,model,fuelType,brakeType,tireConfiguration,siteId,governingBodyKey,lifecycleStatus
+FLT-101,Forklift 101,Main shop forklift,powered_industrial_truck,forklift,toyota_material_handling,custom,electric,disc,forklift_pneumatic,site_a,FMCSA;OSHA,in_service
+TR-240,Trailer 240,Reefer trailer,trailer,reefer_trailer,great_dane,custom,diesel,drum,trailer_tandem,site_b,FMCSA,in_service`
+
+function normalizeHeaderKey(key: string): string {
+  const map: Record<string, string> = {
+    assetclass: 'assetClass',
+    assetclasskey: 'assetClass',
+    assettype: 'assetType',
+    assettypekey: 'assetType',
+    fueltype: 'fuelType',
+    braketype: 'brakeType',
+    tireconfiguration: 'tireConfiguration',
+    siteid: 'siteId',
+    siteref: 'siteId',
+    governingbodykey: 'governingBodyKey',
+    lifecyclestatus: 'lifecycleStatus',
+  }
+  return map[key] ?? key
+}
 
 function parseCsvImportRows(csvText: string): AssetImportRowRequest[] {
   const lines = csvText
@@ -25,7 +42,7 @@ function parseCsvImportRows(csvText: string): AssetImportRowRequest[] {
   }
 
   const headers = lines[0].split(',').map((header) => header.trim().toLowerCase())
-  const required = ['assetclasskey', 'assettypekey', 'assettag', 'name']
+  const required = ['assettag', 'name']
   for (const key of required) {
     if (!headers.includes(key)) {
       throw new Error(`CSV header must include ${key}.`)
@@ -33,20 +50,30 @@ function parseCsvImportRows(csvText: string): AssetImportRowRequest[] {
   }
 
   return lines.slice(1).map((line) => {
-    const values = line.split(',').map((value) => value.trim())
+    const rowValues = line.split(',').map((value) => value.trim())
     const row: Record<string, string> = {}
     headers.forEach((header, index) => {
-      row[header] = values[index] ?? ''
+      row[header] = rowValues[index] ?? ''
+    })
+
+    const importValues: Record<string, string | null> = {}
+    Object.entries(row).forEach(([key, value]) => {
+      const normalized = normalizeHeaderKey(key)
+      if (normalized === 'assettag' || normalized === 'name' || normalized === 'description' || normalized === 'lifecycleStatus') {
+        return
+      }
+      importValues[normalized] = value || null
     })
 
     return {
-      assetClassKey: row.assetclasskey,
-      assetTypeKey: row.assettypekey,
       assetTag: row.assettag,
       name: row.name,
       description: row.description ?? '',
+      lifecycleStatus: row.lifecyclestatus || 'in_service',
+      values: importValues,
+      assetClassKey: row.assetclasskey || row.assetclass || undefined,
+      assetTypeKey: row.assettypekey || row.assettype || undefined,
       siteRef: row.siteref || null,
-      lifecycleStatus: row.lifecyclestatus || 'active',
     }
   })
 }
@@ -119,8 +146,7 @@ export function AssetBulkImportPanel({ accessToken, canImport, onComplete }: Ass
       <header>
         <h2 className="text-lg font-semibold text-slate-50">Bulk asset import</h2>
         <p className="mt-1 text-sm text-slate-400">
-          Import up to 100 assets per batch. Asset class and type keys must already exist and be active.
-          Validate first, then commit.
+          Import up to 100 assets per batch using controlled field keys. Validate first, then commit.
         </p>
       </header>
 

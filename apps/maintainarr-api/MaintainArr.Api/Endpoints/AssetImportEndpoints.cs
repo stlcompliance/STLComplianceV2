@@ -52,6 +52,7 @@ public static class AssetImportEndpoints
                 return Results.Ok(await importService.ImportAsync(
                     tenantId,
                     actorUserId,
+                    context.User.GetPersonId().ToString("D"),
                     rows,
                     dryRun: true,
                     MaintainArrImportPhases.Validate,
@@ -75,6 +76,7 @@ public static class AssetImportEndpoints
                 return Results.Ok(await importService.ImportAsync(
                     tenantId,
                     actorUserId,
+                    context.User.GetPersonId().ToString("D"),
                     rows,
                     dryRun: false,
                     MaintainArrImportPhases.Commit,

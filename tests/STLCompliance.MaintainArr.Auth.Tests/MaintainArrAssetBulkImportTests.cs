@@ -14,9 +14,6 @@ using MaintainArr.Api.Entities;
 using MaintainArr.Api.Services;
 using MaintainArrRedeemRequest = MaintainArr.Api.Contracts.RedeemHandoffRequest;
 using MaintainArrHandoffSessionResponse = MaintainArr.Api.Contracts.HandoffSessionResponse;
-using AssetClassResponse = MaintainArr.Api.Contracts.AssetClassResponse;
-using CreateAssetClassRequest = MaintainArr.Api.Contracts.CreateAssetClassRequest;
-using CreateAssetTypeRequest = MaintainArr.Api.Contracts.CreateAssetTypeRequest;
 using NexArr.Api.Data;
 using NexArr.Api.Services;
 using STLCompliance.Shared.Auth;
@@ -30,8 +27,8 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
     private HttpClient _nexarrClient = null!;
     private HttpClient _maintainarrClient = null!;
     private string _managerToken = null!;
-    private string _classKey = null!;
-    private string _typeKey = null!;
+    private const string _classKey = "powered_industrial_truck";
+    private const string _typeKey = "forklift";
 
     public async Task InitializeAsync()
     {
@@ -78,7 +75,6 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
 
         _maintainarrClient = _maintainarrFactory.CreateClient();
         _managerToken = await RedeemMaintainArrTokenAsync();
-        (_classKey, _typeKey) = await SeedAssetTypeKeysAsync(_managerToken);
     }
 
     public async Task DisposeAsync()
@@ -119,7 +115,7 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
         var request = Authorized(HttpMethod.Post, "/api/imports/assets/commit", _managerToken);
         request.Content = JsonContent.Create(new AssetBulkImportRequest(
         [
-            new AssetImportRowRequest(_classKey, _typeKey, tag, "Committed Import Asset", "desc", "yard-a", "active"),
+            new AssetImportRowRequest(_classKey, _typeKey, tag, "Committed Import Asset", "desc", "site_a", "active"),
         ]));
 
         var response = await _maintainarrClient.SendAsync(request);
@@ -131,7 +127,7 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
 
         using var scope = _maintainarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
-        Assert.True(await db.Assets.AnyAsync(x => x.AssetTag == tag));
+        Assert.True(await db.Assets.AnyAsync(x => x.AssetTag == tag.ToUpperInvariant()));
     }
 
     [Fact]
@@ -199,27 +195,54 @@ public sealed class MaintainArrAssetBulkImportTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    private async Task<(string ClassKey, string TypeKey)> SeedAssetTypeKeysAsync(string token)
+    [Fact]
+    public async Task Asset_import_normalizes_alias_values_on_commit()
     {
-        var classKey = $"veh-{Guid.NewGuid():N}".Substring(0, 8);
-        var typeKey = $"flt-{Guid.NewGuid():N}".Substring(0, 8);
+        var tag = $"ALIAS-{Guid.NewGuid():N}".Substring(0, 12);
+        var request = Authorized(HttpMethod.Post, "/api/imports/assets/commit", _managerToken);
+        request.Content = JsonContent.Create(new AssetBulkImportRequest(
+        [
+            new AssetImportRowRequest
+            {
+                AssetTag = tag,
+                Name = "Alias Normalized Asset",
+                Description = "alias normalization coverage",
+                Values = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["assetClass"] = "vehicle",
+                    ["assetType"] = "semi_tractor",
+                    ["make"] = "Frtlnr",
+                    ["model"] = "Freightliner Cascadia",
+                    ["brakeType"] = "air disc",
+                    ["tireConfiguration"] = "wide-base singles",
+                    ["fuelType"] = "compressed natural gas",
+                    ["trailerType"] = "refrigerated trailer",
+                    ["assetStatus"] = "active",
+                    ["criticality"] = "medium",
+                    ["lifecycleStatus"] = "in_service",
+                },
+            },
+        ]));
 
-        var createClassRequest = Authorized(HttpMethod.Post, "/api/asset-classes", token);
-        createClassRequest.Content = JsonContent.Create(new CreateAssetClassRequest(classKey, "Vehicles", string.Empty));
-        var createClassResponse = await _maintainarrClient.SendAsync(createClassRequest);
-        createClassResponse.EnsureSuccessStatusCode();
-        var assetClass = (await createClassResponse.Content.ReadFromJsonAsync<AssetClassResponse>())!;
+        var response = await _maintainarrClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<AssetBulkImportResponse>())!;
+        Assert.Equal(1, result.SuccessCount);
+        Assert.Equal("created", result.Results[0].Status);
 
-        var createTypeRequest = Authorized(HttpMethod.Post, "/api/asset-types", token);
-        createTypeRequest.Content = JsonContent.Create(new CreateAssetTypeRequest(
-            assetClass.AssetClassId,
-            typeKey,
-            "Forklift",
-            string.Empty));
-        var createTypeResponse = await _maintainarrClient.SendAsync(createTypeRequest);
-        createTypeResponse.EnsureSuccessStatusCode();
+        using var scope = _maintainarrFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+        var asset = await db.Assets.SingleAsync(x => x.AssetTag == tag.ToUpperInvariant());
+        var fields = await db.AssetCustomFieldValues
+            .Where(x => x.AssetId == asset.Id)
+            .ToDictionaryAsync(x => x.FieldKey, x => x.ValueJson);
 
-        return (classKey, typeKey);
+        Assert.Equal("\"freightliner\"", fields["make"]);
+        Assert.Equal("\"cascadia\"", fields["model"]);
+        Assert.Equal("\"disc\"", fields["brakeType"]);
+        Assert.Equal("\"super_single\"", fields["tireConfiguration"]);
+        Assert.Equal("\"cng\"", fields["fuelType"]);
+        Assert.Equal("\"reefer\"", fields["trailerType"]);
     }
 
     private async Task<string> RedeemMaintainArrTokenAsync()

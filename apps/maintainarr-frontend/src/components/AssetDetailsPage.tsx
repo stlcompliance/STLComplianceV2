@@ -1,11 +1,12 @@
 import { AlertTriangle, CheckCircle2, ClipboardCheck, FileText, Gauge, History, MapPin, ShieldCheck, Truck, Wrench, XCircle } from 'lucide-react'
 
-import type { AssetReadinessResponse, AssetResponse } from '../api/types'
+import type { AssetFieldContextResponse, AssetReadinessResponse, AssetResponse } from '../api/types'
 
 interface AssetDetailsPageProps {
   asset: AssetResponse
   readiness: AssetReadinessResponse | null
   isReadinessLoading: boolean
+  fieldContext: AssetFieldContextResponse | null
 }
 
 function toneClass(tone: 'good' | 'warn' | 'neutral'): string {
@@ -18,7 +19,7 @@ function badge(label: string, tone: 'good' | 'warn' | 'neutral') {
   return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${toneClass(tone)}`}>{label}</span>
 }
 
-export function AssetDetailsPage({ asset, readiness, isReadinessLoading }: AssetDetailsPageProps) {
+export function AssetDetailsPage({ asset, readiness, isReadinessLoading, fieldContext }: AssetDetailsPageProps) {
   const readinessTone = readiness?.readinessStatus === 'ready' ? 'good' : 'warn'
   const blockers = readiness?.blockers ?? []
 
@@ -99,6 +100,12 @@ export function AssetDetailsPage({ asset, readiness, isReadinessLoading }: Asset
               <p className="text-xs text-slate-500">Description</p>
               <p className="text-sm font-medium text-slate-100">{asset.description || 'No description provided'}</p>
             </div>
+            {fieldContext?.fields?.slice(0, 12).map((field) => (
+              <div key={field.key} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
+                <p className="text-xs text-slate-500">{field.key}</p>
+                <p className="text-sm font-medium text-slate-100">{field.displayValue || '—'}</p>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -160,4 +167,3 @@ export function AssetDetailsPage({ asset, readiness, isReadinessLoading }: Asset
     </div>
   )
 }
-

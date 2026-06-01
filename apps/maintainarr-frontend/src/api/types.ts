@@ -105,6 +105,7 @@ export interface CatalogOptionResponse {
   parentOptionKey: string | null
   isActive: boolean
   dependency: Record<string, string> | null
+  metadata: Record<string, unknown> | null
 }
 
 export interface CatalogResponse {
@@ -122,6 +123,7 @@ export interface CatalogResponse {
 export interface FieldMetadataResponse {
   key: string
   label: string
+  description: string
   type: string
   control: string
   required: boolean
@@ -129,6 +131,8 @@ export interface FieldMetadataResponse {
   referenceKey: string | null
   source: string
   sourceOfTruth: string
+  storedValue: string
+  displayValue: string
   allowCustom: boolean
   customRequiresApproval: boolean
   drivesLogic: boolean
@@ -140,6 +144,8 @@ export interface FieldMetadataResponse {
   dependsOn: Record<string, string> | null
   validation: Record<string, unknown> | null
   defaultValue: unknown
+  visibility: Record<string, unknown> | null
+  sectionKey: string
   options: CatalogOptionResponse[] | null
 }
 
@@ -156,6 +162,19 @@ export interface AssetUpsertV1Request {
   name: string
   description?: string | null
   values: Record<string, unknown>
+}
+
+export interface AssetFieldContextValueResponse {
+  key: string
+  storedValue: unknown
+  displayValue: string | null
+  source: string
+  sourceOfTruth: string
+}
+
+export interface AssetFieldContextResponse {
+  assetId: string
+  fields: AssetFieldContextValueResponse[]
 }
 
 export interface InspectionTemplateSummaryResponse {
@@ -1523,13 +1542,14 @@ export interface ComplianceReportSummaryResponse {
 }
 
 export interface AssetImportRowRequest {
-  assetClassKey: string
-  assetTypeKey: string
   assetTag: string
   name: string
   description?: string
-  siteRef?: string | null
   lifecycleStatus?: string
+  values?: Record<string, string | null>
+  assetClassKey?: string
+  assetTypeKey?: string
+  siteRef?: string | null
 }
 
 export interface AssetBulkImportRequest {

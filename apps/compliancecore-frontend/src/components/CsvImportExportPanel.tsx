@@ -2,7 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 import { useRef, useState } from 'react'
 
-import { exportCsvBundleZip, getCsvBundleManifest, importCsvBundle } from '../api/client'
+import { exportCsvBundleZip, getCsvBundleManifest, getRegulatoryPrograms, importCsvBundle } from '../api/client'
 import type { CsvImportResultResponse } from '../api/types'
 
 interface CsvImportExportPanelProps {
@@ -14,10 +14,26 @@ export function CsvImportExportPanel({ accessToken, canManage }: CsvImportExport
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [dryRun, setDryRun] = useState(true)
   const [lastResult, setLastResult] = useState<CsvImportResultResponse | null>(null)
+  const [regulatorySpineMode, setRegulatorySpineMode] = useState('strict')
+  const [governingBodyKey, setGoverningBodyKey] = useState('')
+  const [governingBodyLabel, setGoverningBodyLabel] = useState('')
+  const [governingBodyDescription, setGoverningBodyDescription] = useState('')
+  const [jurisdictionKey, setJurisdictionKey] = useState('')
+  const [jurisdictionLabel, setJurisdictionLabel] = useState('')
+  const [jurisdictionDescription, setJurisdictionDescription] = useState('')
+  const [mappingSourceKey, setMappingSourceKey] = useState('')
+  const [mappingTargetKey, setMappingTargetKey] = useState('')
+  const [programMappings, setProgramMappings] = useState<Array<{ sourceKey: string; targetKey: string }>>([])
 
   const manifestQuery = useQuery({
     queryKey: ['compliancecore-csv-manifest', accessToken],
     queryFn: () => getCsvBundleManifest(accessToken),
+  })
+
+  const programsQuery = useQuery({
+    queryKey: ['compliancecore-regulatory-programs-import', accessToken],
+    queryFn: () => getRegulatoryPrograms(accessToken),
+    enabled: canManage,
   })
 
   const exportMutation = useMutation({
@@ -33,11 +49,28 @@ export function CsvImportExportPanel({ accessToken, canManage }: CsvImportExport
   })
 
   const importMutation = useMutation({
-    mutationFn: (files: FileList) => importCsvBundle(accessToken, files, dryRun),
+    mutationFn: (files: FileList) =>
+      importCsvBundle(accessToken, files, dryRun, {
+        regulatorySpineMode,
+        governingBodyKey,
+        governingBodyLabel,
+        governingBodyDescription,
+        jurisdictionKey,
+        jurisdictionLabel,
+        jurisdictionDescription,
+        programMappings: Object.fromEntries(
+          programMappings
+            .map((mapping) => [mapping.sourceKey.trim(), mapping.targetKey.trim()])
+            .filter(([sourceKey, targetKey]) => sourceKey && targetKey),
+        ),
+      }),
     onSuccess: (result) => {
       setLastResult(result)
     },
   })
+
+  const showCreateFields = regulatorySpineMode === 'create_missing' || regulatorySpineMode === 'create_or_map'
+  const existingPrograms = programsQuery.data ?? []
 
   return (
     <section
@@ -92,6 +125,97 @@ export function CsvImportExportPanel({ accessToken, canManage }: CsvImportExport
             />
             Dry run (validate only)
           </label>
+          <label htmlFor="csv-import-resolution-mode" className="block text-sm text-slate-300">
+            Registry resolution
+            <select
+              id="csv-import-resolution-mode"
+              value={regulatorySpineMode}
+              onChange={(event) => setRegulatorySpineMode(event.target.value)}
+              className="mt-1 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+            >
+              <option value="strict">Strict match</option>
+              <option value="create_missing">Create missing</option>
+              <option value="map_existing">Map existing</option>
+              <option value="create_or_map">Create or map</option>
+            </select>
+          </label>
+          {showCreateFields ? (
+            <div className="grid gap-3 md:grid-cols-2">
+              <TextInput label="Governing body key" value={governingBodyKey} onChange={setGoverningBodyKey} />
+              <TextInput label="Governing body label" value={governingBodyLabel} onChange={setGoverningBodyLabel} />
+              <TextInput
+                label="Governing body description"
+                value={governingBodyDescription}
+                onChange={setGoverningBodyDescription}
+              />
+              <TextInput label="Jurisdiction key" value={jurisdictionKey} onChange={setJurisdictionKey} />
+              <TextInput label="Jurisdiction label" value={jurisdictionLabel} onChange={setJurisdictionLabel} />
+              <TextInput
+                label="Jurisdiction description"
+                value={jurisdictionDescription}
+                onChange={setJurisdictionDescription}
+              />
+            </div>
+          ) : null}
+          <div className="space-y-2 rounded-md border border-slate-800 p-3">
+            <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+              <TextInput label="Imported program key" value={mappingSourceKey} onChange={setMappingSourceKey} />
+              <label className="block text-sm text-slate-300">
+                Existing program
+                <select
+                  value={mappingTargetKey}
+                  onChange={(event) => setMappingTargetKey(event.target.value)}
+                  className="mt-1 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+                >
+                  <option value="">Select program</option>
+                  {existingPrograms.map((program) => (
+                    <option key={program.regulatoryProgramId} value={program.programKey}>
+                      {program.programKey}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!mappingSourceKey.trim() || !mappingTargetKey.trim()) {
+                    return
+                  }
+                  setProgramMappings((current) => [
+                    ...current.filter((mapping) => mapping.sourceKey !== mappingSourceKey.trim()),
+                    { sourceKey: mappingSourceKey.trim(), targetKey: mappingTargetKey.trim() },
+                  ])
+                  setMappingSourceKey('')
+                  setMappingTargetKey('')
+                }}
+                className="self-end rounded-md bg-slate-700 px-3 py-2 text-sm font-medium text-white hover:bg-slate-600"
+              >
+                Add mapping
+              </button>
+            </div>
+            {programMappings.length > 0 ? (
+              <ul className="space-y-1 text-xs text-slate-300">
+                {programMappings.map((mapping) => (
+                  <li key={mapping.sourceKey} className="flex items-center justify-between gap-2 rounded bg-slate-900 px-2 py-1">
+                    <span>
+                      <span className="font-mono text-slate-100">{mapping.sourceKey}</span>
+                      <span className="text-slate-500"> -&gt; </span>
+                      <span className="font-mono text-emerald-200">{mapping.targetKey}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setProgramMappings((current) => current.filter((item) => item.sourceKey !== mapping.sourceKey))
+                      }
+                      className="text-slate-400 hover:text-slate-100"
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
           <label htmlFor="csv-import-export-files" className="block text-sm text-slate-300">
             CSV or ZIP bundle files
             <input
@@ -157,5 +281,29 @@ export function CsvImportExportPanel({ accessToken, canManage }: CsvImportExport
         <ApiErrorCallout title="Export failed" message={getErrorMessage(exportMutation.error, 'Export failed.')} />
       ) : null}
     </section>
+  )
+}
+
+function TextInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  const id = `csv-import-${label.toLowerCase().replaceAll(' ', '-')}`
+  return (
+    <label htmlFor={id} className="block text-sm text-slate-300">
+      {label}
+      <input
+        id={id}
+        type="text"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-1 block w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100"
+      />
+    </label>
   )
 }

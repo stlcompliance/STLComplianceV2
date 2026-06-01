@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Collections.Concurrent;
+using System.Text.Json;
 using ComplianceCore.Api.Csv;
 using ComplianceCore.Api.Contracts;
 using ComplianceCore.Api.Services;
@@ -76,7 +77,8 @@ public static class CsvImportExportEndpoints
                 return Results.BadRequest(new { code = "csv_bundle.invalid_request", message = "Multipart form upload is required." });
             }
 
-            var fileContents = await ReadUploadedCsvFilesAsync(request, cancellationToken);
+            var form = await request.ReadFormAsync(cancellationToken);
+            var fileContents = await ReadUploadedCsvFilesAsync(form, cancellationToken);
             if (fileContents.Count == 0)
             {
                 return Results.BadRequest(new { code = "csv_bundle.no_files", message = "Upload at least one CSV file or a zip bundle." });
@@ -88,6 +90,7 @@ public static class CsvImportExportEndpoints
                 context.User.GetUserId(),
                 fileContents,
                 dryRun,
+                ReadRulePackImportResolutionOptions(form),
                 cancellationToken);
             return Results.Ok(result);
         })
@@ -223,7 +226,8 @@ public static class CsvImportExportEndpoints
             return Results.BadRequest(new { code = "csv_bundle.invalid_request", message = "Multipart form upload is required." });
         }
 
-        var fileContents = await ReadUploadedCsvFilesAsync(request, cancellationToken);
+        var form = await request.ReadFormAsync(cancellationToken);
+        var fileContents = await ReadUploadedCsvFilesAsync(form, cancellationToken);
         if (fileContents.Count == 0)
         {
             return Results.BadRequest(new { code = "csv_bundle.no_files", message = "Upload at least one CSV file or a zip bundle." });
@@ -235,6 +239,7 @@ public static class CsvImportExportEndpoints
             context.User.GetUserId(),
             fileContents,
             dryRun,
+            ReadRulePackImportResolutionOptions(form),
             cancellationToken);
 
         var importId = Guid.NewGuid();
@@ -249,11 +254,11 @@ public static class CsvImportExportEndpoints
     }
 
     private static async Task<Dictionary<string, string>> ReadUploadedCsvFilesAsync(
-        HttpRequest request,
+        IFormCollection form,
         CancellationToken cancellationToken)
     {
         var files = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var file in request.Form.Files)
+        foreach (var file in form.Files)
         {
             if (file.Length == 0)
             {
@@ -289,5 +294,48 @@ public static class CsvImportExportEndpoints
         }
 
         return files;
+    }
+
+    private static RulePackImportResolutionOptions ReadRulePackImportResolutionOptions(IFormCollection form) =>
+        new(
+            RegulatorySpineMode: ReadFormValue(form, "regulatorySpineMode", "governingBodyResolutionMode")
+                ?? RulePackImportResolutionModes.Strict,
+            GoverningBodyKey: ReadFormValue(form, "governingBodyKey", "bodyKey"),
+            GoverningBodyLabel: ReadFormValue(form, "governingBodyLabel", "bodyLabel"),
+            GoverningBodyDescription: ReadFormValue(form, "governingBodyDescription", "bodyDescription"),
+            JurisdictionKey: ReadFormValue(form, "jurisdictionKey"),
+            JurisdictionLabel: ReadFormValue(form, "jurisdictionLabel"),
+            JurisdictionDescription: ReadFormValue(form, "jurisdictionDescription"),
+            ProgramMappings: ReadProgramMappings(form));
+
+    private static string? ReadFormValue(IFormCollection form, params string[] keys)
+    {
+        foreach (var key in keys)
+        {
+            if (form.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value.ToString()))
+            {
+                return value.ToString();
+            }
+        }
+
+        return null;
+    }
+
+    private static IReadOnlyDictionary<string, string>? ReadProgramMappings(IFormCollection form)
+    {
+        var raw = ReadFormValue(form, "programMappingsJson", "programMappings");
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, string>>(raw);
+        }
+        catch (JsonException ex)
+        {
+            throw new BadHttpRequestException("programMappingsJson must be a JSON object of imported program keys to existing program keys.", ex);
+        }
     }
 }

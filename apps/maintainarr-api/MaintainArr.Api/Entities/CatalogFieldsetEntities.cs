@@ -180,3 +180,71 @@ public sealed class AssetComplianceState : IHasTenant
     public string ComplianceCategoryKeysJson { get; set; } = "[]";
     public DateTimeOffset UpdatedAt { get; set; }
 }
+
+public sealed class AssetStatusHistory : IHasTenant
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public Guid AssetId { get; set; }
+    public string StatusFieldKey { get; set; } = string.Empty;
+    public string StatusValueKey { get; set; } = string.Empty;
+    public string? ChangedByPersonId { get; set; }
+    public string? Notes { get; set; }
+    public DateTimeOffset ChangedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+public sealed class AssetLocationHistory : IHasTenant
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public Guid AssetId { get; set; }
+    public string? SiteId { get; set; }
+    public string? HomeLocationId { get; set; }
+    public string? CurrentLocationId { get; set; }
+    public string? Yard { get; set; }
+    public string? Bay { get; set; }
+    public string? ParkingSpot { get; set; }
+    public string? ChangedByPersonId { get; set; }
+    public DateTimeOffset EffectiveAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+public sealed class AssetAssignmentHistory : IHasTenant
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public Guid AssetId { get; set; }
+    public string AssignmentFieldKey { get; set; } = string.Empty;
+    public string PersonId { get; set; } = string.Empty;
+    public string? ChangedByPersonId { get; set; }
+    public DateTimeOffset EffectiveAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+public sealed class AssetReadinessState : IHasTenant
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public Guid AssetId { get; set; }
+    public string ReadinessStatusKey { get; set; } = "blocked";
+    public string OperationalStatusKey { get; set; } = "unknown";
+    public string AvailabilityStatusKey { get; set; } = "unavailable";
+    public string? Basis { get; set; }
+    public string? Notes { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+}
+
+public sealed class AssetExternalMapping : IHasTenant
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public Guid AssetId { get; set; }
+    public string SourceSystem { get; set; } = string.Empty;
+    public string ExternalEntityType { get; set; } = string.Empty;
+    public string ExternalId { get; set; } = string.Empty;
+    public string? ExternalKey { get; set; }
+    public string? MetadataJson { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+}

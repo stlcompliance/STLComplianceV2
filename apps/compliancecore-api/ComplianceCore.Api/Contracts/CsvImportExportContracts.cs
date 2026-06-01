@@ -51,3 +51,21 @@ public sealed record RulePackImportRollbackResponse(
     Guid ImportId,
     bool RolledBack,
     string Status);
+
+public sealed record RulePackImportResolutionOptions(
+    string RegulatorySpineMode = RulePackImportResolutionModes.Strict,
+    string? GoverningBodyKey = null,
+    string? GoverningBodyLabel = null,
+    string? GoverningBodyDescription = null,
+    string? JurisdictionKey = null,
+    string? JurisdictionLabel = null,
+    string? JurisdictionDescription = null,
+    IReadOnlyDictionary<string, string>? ProgramMappings = null);
+
+public static class RulePackImportResolutionModes
+{
+    public const string Strict = "strict";
+    public const string CreateMissing = "create_missing";
+    public const string MapExisting = "map_existing";
+    public const string CreateOrMap = "create_or_map";
+}

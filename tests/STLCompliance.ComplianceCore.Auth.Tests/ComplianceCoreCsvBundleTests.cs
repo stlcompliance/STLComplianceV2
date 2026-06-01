@@ -281,6 +281,104 @@ public class ComplianceCoreCsvBundleTests : IAsyncLifetime
         Assert.Equal(published.ImportId, rollback.ImportId);
     }
 
+    [Fact]
+    public async Task V1_rule_pack_import_can_create_missing_governing_body_spine()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin", isPlatformAdmin: true);
+        using var form = BuildRulePackOnlyForm(
+            "osha_loto",
+            "osha_safety",
+            "OSHA Lockout Tagout");
+        form.Add(new StringContent(RulePackImportResolutionModes.CreateMissing), "regulatorySpineMode");
+        form.Add(new StringContent("osha"), "governingBodyKey");
+        form.Add(new StringContent("Occupational Safety and Health Administration"), "governingBodyLabel");
+        form.Add(new StringContent("Workplace safety and health authority."), "governingBodyDescription");
+        form.Add(new StringContent("us_workplace"), "jurisdictionKey");
+        form.Add(new StringContent("United States Workplace Safety"), "jurisdictionLabel");
+        form.Add(new StringContent("Workplace safety jurisdiction."), "jurisdictionDescription");
+
+        var request = Authorized(HttpMethod.Post, "/api/v1/rule-pack-imports/publish-draft", adminToken);
+        request.Content = form;
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<RulePackImportRunResponse>())!;
+        Assert.True(result.Result.Applied);
+        Assert.Empty(result.Result.Issues);
+
+        using var scope = _complianceCoreFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var body = await db.GoverningBodies.SingleAsync(x => x.BodyKey == "osha");
+        var jurisdiction = await db.Jurisdictions.SingleAsync(x => x.JurisdictionKey == "us_workplace");
+        var program = await db.RegulatoryPrograms.SingleAsync(x => x.ProgramKey == "osha_safety");
+        var pack = await db.RulePacks.SingleAsync(x => x.PackKey == "osha_loto");
+        Assert.Equal(body.Id, jurisdiction.GoverningBodyId);
+        Assert.Equal(jurisdiction.Id, program.JurisdictionId);
+        Assert.Equal(program.Id, pack.RegulatoryProgramId);
+    }
+
+    [Fact]
+    public async Task V1_rule_pack_import_can_map_imported_program_to_existing_program()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin", isPlatformAdmin: true);
+        await SeedSampleTenantDataAsync(adminToken);
+        using var form = BuildRulePackOnlyForm(
+            "external_driver_qualification",
+            "external_fmcsa",
+            "External Driver Qualification");
+        form.Add(new StringContent("""{"external_fmcsa":"fmcsa_safety"}"""), "programMappingsJson");
+
+        var request = Authorized(HttpMethod.Post, "/api/v1/rule-pack-imports/publish-draft", adminToken);
+        request.Content = form;
+        var response = await _complianceCoreClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+        var result = (await response.Content.ReadFromJsonAsync<RulePackImportRunResponse>())!;
+        Assert.True(result.Result.Applied);
+        Assert.Empty(result.Result.Issues);
+
+        using var scope = _complianceCoreFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var existingProgram = await db.RegulatoryPrograms.SingleAsync(x => x.ProgramKey == "fmcsa_safety");
+        var pack = await db.RulePacks.SingleAsync(x => x.PackKey == "external_driver_qualification");
+        Assert.Equal(existingProgram.Id, pack.RegulatoryProgramId);
+        Assert.False(await db.RegulatoryPrograms.AnyAsync(x => x.ProgramKey == "external_fmcsa"));
+    }
+
+    [Fact]
+    public async Task V1_rule_pack_import_requires_explicit_mapping_when_governing_body_mismatches()
+    {
+        var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin", isPlatformAdmin: true);
+        await SeedSampleTenantDataAsync(adminToken);
+
+        using (var strictForm = BuildRulePackOnlyForm(
+                   "mismatched_body_driver_qualification",
+                   "fmcsa_safety",
+                   "Mismatched Body Driver Qualification"))
+        {
+            strictForm.Add(new StringContent("osha"), "governingBodyKey");
+            var strictRequest = Authorized(HttpMethod.Post, "/api/v1/rule-pack-imports/publish-draft", adminToken);
+            strictRequest.Content = strictForm;
+            var strictResponse = await _complianceCoreClient.SendAsync(strictRequest);
+            strictResponse.EnsureSuccessStatusCode();
+            var strict = (await strictResponse.Content.ReadFromJsonAsync<RulePackImportRunResponse>())!;
+            Assert.False(strict.Result.Applied);
+            Assert.Contains(strict.Result.Issues, issue => issue.Code == "regulatory.governing_body_mismatch");
+        }
+
+        using var mappedForm = BuildRulePackOnlyForm(
+            "mismatched_body_driver_qualification",
+            "fmcsa_safety",
+            "Mismatched Body Driver Qualification");
+        mappedForm.Add(new StringContent("osha"), "governingBodyKey");
+        mappedForm.Add(new StringContent(RulePackImportResolutionModes.MapExisting), "regulatorySpineMode");
+        var mappedRequest = Authorized(HttpMethod.Post, "/api/v1/rule-pack-imports/publish-draft", adminToken);
+        mappedRequest.Content = mappedForm;
+        var mappedResponse = await _complianceCoreClient.SendAsync(mappedRequest);
+        mappedResponse.EnsureSuccessStatusCode();
+        var mapped = (await mappedResponse.Content.ReadFromJsonAsync<RulePackImportRunResponse>())!;
+        Assert.True(mapped.Result.Applied);
+        Assert.Empty(mapped.Result.Issues);
+    }
+
     private async Task SeedSampleTenantDataAsync(string adminToken)
     {
         var bodyRequest = Authorized(HttpMethod.Post, "/api/governing-bodies", adminToken);
@@ -341,6 +439,20 @@ public class ComplianceCoreCsvBundleTests : IAsyncLifetime
         AddCsv(form, CsvBundleFiles.RegulatoryMappings, "mapping_key,target_kind,program_key,pack_key,pack_version,citation_key,compliance_key,material_key,fact_key,label,description,active\n");
         AddCsv(form, CsvBundleFiles.SdsReferences, "sds_key,material_key,product_name,manufacturer,document_url,revision_date,active\n");
         AddCsv(form, CsvBundleFiles.ExceptionExemptions, "key,label,type,governing_body,program_key,pack_key,citation_key,applicability_key,applies_to_subject_kind,applies_to_source_product,applies_to_source_entity,effect_type,condition_logic_json,required_evidence_option_group_key,issuing_authority,authorization_number,effective_at,expires_at,active,description\n");
+        return form;
+    }
+
+    private static MultipartFormDataContent BuildRulePackOnlyForm(
+        string packKey,
+        string programKey,
+        string label)
+    {
+        var form = new MultipartFormDataContent();
+        AddCsv(
+            form,
+            CsvBundleFiles.RulePacks,
+            "pack_key,program_key,version_number,label,description,status,active,rule_content_json\n"
+            + $"{packKey},{programKey},1,{label},Imported rule pack,draft,true,\n");
         return form;
     }
 

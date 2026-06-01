@@ -27,6 +27,29 @@ public static class ReferenceEndpoints
             return Results.Ok(data);
         });
 
+        group.MapGet("/compliance-core/rulepacks", async (HttpContext context, MaintainArrAuthorizationService authorization, ComplianceCoreReferenceAdapter adapter, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAssetsRead(context.User);
+            return Results.Ok(await adapter.GetOptionsAsync(context.User.GetTenantId(), "rulepackApplicabilityKeys", cancellationToken));
+        });
+
+        group.MapGet("/compliance-core/rulepacks/applicability", async (HttpContext context, MaintainArrAuthorizationService authorization, ComplianceCoreReferenceAdapter adapter, CancellationToken cancellationToken) =>
+        {
+            authorization.RequireAssetsRead(context.User);
+            var items = await adapter.GetOptionsAsync(context.User.GetTenantId(), "rulepackApplicabilityKeys", cancellationToken);
+            var applicability = items.Select(item => new
+            {
+                rulepackKey = item.Key,
+                rulepackId = item.Id,
+                displayName = item.Label,
+                source = item.Source,
+                sourceOfTruth = item.SourceOfTruth,
+                storedValue = item.StoredValue,
+                displayValue = item.DisplayValue,
+            });
+            return Results.Ok(applicability);
+        });
+
         group.MapGet("/sites", async (HttpContext context, MaintainArrAuthorizationService authorization, StaffArrReferenceAdapter adapter, CancellationToken cancellationToken) =>
         {
             authorization.RequireAssetsRead(context.User);

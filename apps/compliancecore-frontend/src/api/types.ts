@@ -571,6 +571,17 @@ export interface CsvImportResultResponse {
   issues: CsvImportIssue[]
 }
 
+export interface CsvImportResolutionOptions {
+  regulatorySpineMode: string
+  governingBodyKey?: string
+  governingBodyLabel?: string
+  governingBodyDescription?: string
+  jurisdictionKey?: string
+  jurisdictionLabel?: string
+  jurisdictionDescription?: string
+  programMappings?: Record<string, string>
+}
+
 export interface ImportSessionResponse {
   importSessionId: string
   tenantId: string

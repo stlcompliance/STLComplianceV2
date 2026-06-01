@@ -5022,7 +5022,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateAssetRequest"
+                "$ref": "#/components/schemas/AssetUpsertV1Request"
               }
             }
           },
@@ -5084,6 +5084,62 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "UpdateAssetControlledV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssetUpsertV1Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/assets/{assetId}/field-context": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "operationId": "GetAssetFieldContextV1",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -5584,6 +5640,121 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RedeemHandoffRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/catalogs": {
+      "get": {
+        "tags": [
+          "Catalogs"
+        ],
+        "parameters": [
+          {
+            "name": "keys",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/catalogs/{catalogKey}": {
+      "get": {
+        "tags": [
+          "Catalogs"
+        ],
+        "parameters": [
+          {
+            "name": "catalogKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/catalogs/{catalogKey}/options": {
+      "post": {
+        "tags": [
+          "Catalogs"
+        ],
+        "parameters": [
+          {
+            "name": "catalogKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertCatalogOptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/catalogs/{catalogKey}/options/{optionKey}": {
+      "patch": {
+        "tags": [
+          "Catalogs"
+        ],
+        "parameters": [
+          {
+            "name": "catalogKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "optionKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertCatalogOptionRequest"
               }
             }
           },
@@ -6454,6 +6625,53 @@
           "FieldInbox"
         ],
         "operationId": "GetMaintainArrFieldInboxV1",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/fieldsets/assets": {
+      "get": {
+        "tags": [
+          "Fieldsets"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/fieldsets/assets/create": {
+      "get": {
+        "tags": [
+          "Fieldsets"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/fieldsets/assets/{assetId}/edit": {
+      "get": {
+        "tags": [
+          "Fieldsets"
+        ],
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -8726,6 +8944,148 @@
         }
       }
     },
+    "/api/v1/references/compliance-core/catalogs": {
+      "get": {
+        "tags": [
+          "References"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/references/compliance-core/catalogs/{catalogKey}": {
+      "get": {
+        "tags": [
+          "References"
+        ],
+        "parameters": [
+          {
+            "name": "catalogKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/references/compliance-core/rulepacks": {
+      "get": {
+        "tags": [
+          "References"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/references/compliance-core/rulepacks/applicability": {
+      "get": {
+        "tags": [
+          "References"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/references/customers": {
+      "get": {
+        "tags": [
+          "References"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/references/departments": {
+      "get": {
+        "tags": [
+          "References"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/references/parts": {
+      "get": {
+        "tags": [
+          "References"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/references/people": {
+      "get": {
+        "tags": [
+          "References"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/references/sites": {
+      "get": {
+        "tags": [
+          "References"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/references/teams": {
+      "get": {
+        "tags": [
+          "References"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/references/vendors": {
+      "get": {
+        "tags": [
+          "References"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/reports": {
       "get": {
         "tags": [
@@ -10095,20 +10455,8 @@
         }
       },
       "AssetImportRowRequest": {
-        "required": [
-          "assetClassKey",
-          "assetTypeKey",
-          "assetTag",
-          "name"
-        ],
         "type": "object",
         "properties": {
-          "assetClassKey": {
-            "type": "string"
-          },
-          "assetTypeKey": {
-            "type": "string"
-          },
           "assetTag": {
             "type": "string"
           },
@@ -10116,18 +10464,54 @@
             "type": "string"
           },
           "description": {
-            "type": "string",
-            "default": ""
+            "type": "string"
+          },
+          "lifecycleStatus": {
+            "type": "string"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "assetClassKey": {
+            "type": "string"
+          },
+          "assetTypeKey": {
+            "type": "string"
           },
           "siteRef": {
             "type": [
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "AssetUpsertV1Request": {
+        "required": [
+          "assetTag",
+          "name",
+          "description",
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "assetTag": {
+            "type": "string"
           },
-          "lifecycleStatus": {
-            "type": "string",
-            "default": "active"
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "values": {
+            "type": "object"
           }
         }
       },
@@ -12255,6 +12639,62 @@
           }
         }
       },
+      "UpsertCatalogOptionRequest": {
+        "required": [
+          "key",
+          "label",
+          "description",
+          "sortOrder",
+          "parentOptionKey",
+          "isActive",
+          "dependency",
+          "metadata"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "parentOptionKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "dependency": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "metadata": {
+            "type": [
+              "null",
+              "object"
+            ]
+          }
+        }
+      },
       "UpsertDefectEscalationSettingsRequest": {
         "required": [
           "isEnabled",
@@ -12543,6 +12983,15 @@
     },
     {
       "name": "Assets"
+    },
+    {
+      "name": "Catalogs"
+    },
+    {
+      "name": "Fieldsets"
+    },
+    {
+      "name": "References"
     },
     {
       "name": "PreventiveMaintenance"

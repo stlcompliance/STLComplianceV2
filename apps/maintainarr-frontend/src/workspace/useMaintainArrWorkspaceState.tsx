@@ -31,6 +31,7 @@ import {
   createInspectionTemplateCategory,
   getAssetClasses,
   getAssetCreateFieldset,
+  getAssetFieldContext,
   getAssetMeters,
   getAssets,
   getAssetTypes,
@@ -119,6 +120,7 @@ export function useMaintainArrWorkspaceState() {
   const [assetName, setAssetName] = useState('')
   const [assetDescription, setAssetDescription] = useState('')
   const [siteRef, setSiteRef] = useState('')
+  const [assetFieldValues, setAssetFieldValues] = useState<Record<string, unknown>>({})
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null)
   const [templateKey, setTemplateKey] = useState('')
   const [templateName, setTemplateName] = useState('')
@@ -243,6 +245,23 @@ export function useMaintainArrWorkspaceState() {
     enabled: meQuery.isSuccess,
   })
 
+  useEffect(() => {
+    const fieldset = assetCreateFieldsetQuery.data
+    if (!fieldset) return
+    setAssetFieldValues((current) => {
+      const next = { ...current }
+      for (const field of fieldset.fields) {
+        if (next[field.key] !== undefined) continue
+        if (field.defaultValue !== null && field.defaultValue !== undefined) {
+          next[field.key] = field.defaultValue
+          continue
+        }
+        next[field.key] = field.control === 'multiSelect' ? [] : ''
+      }
+      return next
+    })
+  }, [assetCreateFieldsetQuery.data])
+
   const assetReadinessFleetQuery = useQuery({
     queryKey: ['maintainarr-asset-readiness-fleet'],
     queryFn: () => getAssetReadinessFleet(accessToken),
@@ -252,6 +271,12 @@ export function useMaintainArrWorkspaceState() {
   const assetReadinessDetailQuery = useQuery({
     queryKey: ['maintainarr-asset-readiness-detail', selectedAssetId],
     queryFn: () => getAssetReadiness(accessToken, selectedAssetId!),
+    enabled: meQuery.isSuccess && Boolean(selectedAssetId),
+  })
+
+  const assetFieldContextQuery = useQuery({
+    queryKey: ['maintainarr-asset-field-context', selectedAssetId],
+    queryFn: () => getAssetFieldContext(accessToken, selectedAssetId!),
     enabled: meQuery.isSuccess && Boolean(selectedAssetId),
   })
 
@@ -1036,27 +1061,30 @@ export function useMaintainArrWorkspaceState() {
   })
 
   const createAssetMutation = useMutation({
-    mutationFn: () =>
-      createAssetControlledV1(accessToken, {
+    mutationFn: () => {
+      const values: Record<string, unknown> = { ...assetFieldValues }
+      if (!values.assetClass && selectedClassId) {
+        values.assetClass = classesQuery.data?.find((c) => c.assetClassId === selectedClassId)?.classKey ?? ''
+      }
+      if (!values.assetType && selectedTypeId) {
+        values.assetType = typesQuery.data?.find((t) => t.assetTypeId === selectedTypeId)?.typeKey ?? ''
+      }
+      if (!values.siteId && siteRef) {
+        values.siteId = siteRef
+      }
+      return createAssetControlledV1(accessToken, {
         assetTag,
         name: assetName,
         description: assetDescription || null,
-        values: {
-          assetClass: classesQuery.data?.find((c) => c.assetClassId === selectedClassId)?.classKey ?? null,
-          assetType: typesQuery.data?.find((t) => t.assetTypeId === selectedTypeId)?.typeKey ?? null,
-          make: null,
-          model: null,
-          fuelType: null,
-          brakeType: null,
-          tireConfiguration: null,
-          siteId: siteRef || null,
-        },
-      }),
+        values,
+      })
+    },
     onSuccess: async () => {
       setAssetTag('')
       setAssetName('')
       setAssetDescription('')
       setSiteRef('')
+      setAssetFieldValues({})
       setApiError(null)
       await invalidateRegistry()
     },
@@ -1192,6 +1220,7 @@ export function useMaintainArrWorkspaceState() {
     assetName,
     assetDescription,
     siteRef,
+    assetFieldValues,
     templateKey,
     templateName,
     templateDescription,
@@ -1281,6 +1310,7 @@ export function useMaintainArrWorkspaceState() {
     setAssetName,
     setAssetDescription,
     setSiteRef,
+    setAssetFieldValues,
     setSelectedAssetId,
     setTemplateKey,
     setTemplateName,
@@ -1356,6 +1386,7 @@ export function useMaintainArrWorkspaceState() {
     assetsQuery,
     assetCreateFieldsetQuery,
     assetCatalogsQuery,
+    assetFieldContextQuery,
     selectedAssetId,
     assetReadinessFleetQuery,
     assetReadinessDetailQuery,

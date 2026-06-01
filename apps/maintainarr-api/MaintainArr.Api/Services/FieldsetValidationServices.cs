@@ -10,6 +10,7 @@ namespace MaintainArr.Api.Services;
 public sealed class FieldsetService(
     MaintainArrDbContext db,
     CatalogService catalogService,
+    CatalogSeedService catalogSeedService,
     IEnumerable<IExternalReferenceAdapter> adapters)
 {
     private readonly Dictionary<string, IExternalReferenceAdapter> _adapters = adapters.ToDictionary(x => x.SourceType, StringComparer.OrdinalIgnoreCase);
@@ -19,6 +20,8 @@ public sealed class FieldsetService(
 
     public async Task<FieldsetResponse> GetFieldsetAsync(Guid tenantId, string key, string purpose, CancellationToken cancellationToken)
     {
+        await catalogSeedService.EnsureSeededForTenantAsync(tenantId, cancellationToken);
+
         var definition = await db.FieldsetDefinitions.AsNoTracking()
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Key == key && x.Purpose == purpose && x.IsActive, cancellationToken)
             ?? throw new StlApiException("fieldset.not_found", $"Fieldset '{key}:{purpose}' was not found.", 404);
@@ -39,12 +42,30 @@ public sealed class FieldsetService(
             else if (!string.IsNullOrWhiteSpace(field.ReferenceKey) && _adapters.TryGetValue(field.SourceType, out var adapter))
             {
                 var refOptions = await adapter.GetOptionsAsync(tenantId, field.ReferenceKey!, cancellationToken);
-                options = refOptions.Select(x => new CatalogOptionResponse(x.Key, x.Label, string.Empty, 0, null, x.IsActive, null)).ToList();
+                options = refOptions
+                    .Select((x, index) => new CatalogOptionResponse(
+                        x.Key,
+                        x.Label,
+                        string.Empty,
+                        index,
+                        null,
+                        x.IsActive,
+                        null,
+                        new Dictionary<string, object?>
+                        {
+                            ["source"] = x.Source,
+                            ["sourceOfTruth"] = x.SourceOfTruth,
+                            ["storedValue"] = x.StoredValue,
+                            ["displayValue"] = x.DisplayValue,
+                            ["externalId"] = x.Id,
+                        }))
+                    .ToList();
             }
 
             resultFields.Add(new FieldMetadataResponse(
                 field.Key,
                 field.Label,
+                field.Description,
                 field.DataType,
                 field.ControlType,
                 field.Required,
@@ -52,6 +73,8 @@ public sealed class FieldsetService(
                 field.ReferenceKey,
                 field.SourceType,
                 field.SourceOfTruth,
+                InferStoredValue(field),
+                InferDisplayValue(field),
                 field.AllowCustom,
                 field.CustomRequiresApproval,
                 field.DrivesLogic,
@@ -63,27 +86,71 @@ public sealed class FieldsetService(
                 ParseStringDict(field.DependencyJson),
                 ParseObjectDict(field.ValidationJson),
                 ParseDefault(field.DefaultValueJson),
+                ParseObjectDict(field.VisibilityJson),
+                field.SectionKey,
                 options));
         }
 
         return new FieldsetResponse(definition.Key, definition.Label, definition.EntityType, definition.Purpose, resultFields);
     }
 
+    private static string InferStoredValue(FieldsetField field)
+    {
+        if (string.Equals(field.SourceType, "compliancecore_reference", StringComparison.OrdinalIgnoreCase))
+        {
+            return "stable_key";
+        }
+
+        if (field.ReferenceKey is not null)
+        {
+            return "id";
+        }
+
+        return "catalog_key";
+    }
+
+    private static string InferDisplayValue(FieldsetField field)
+    {
+        if (string.Equals(field.SourceType, "compliancecore_reference", StringComparison.OrdinalIgnoreCase))
+        {
+            return "mirrored_label";
+        }
+
+        if (field.ReferenceKey is not null)
+        {
+            return "mirroredDisplayName";
+        }
+
+        return "catalog_label";
+    }
+
     private static IReadOnlyDictionary<string, string>? ParseStringDict(string json)
     {
-        if (string.IsNullOrWhiteSpace(json) || json == "{}") return null;
+        if (string.IsNullOrWhiteSpace(json) || json == "{}")
+        {
+            return null;
+        }
+
         return JsonSerializer.Deserialize<Dictionary<string, string>>(json);
     }
 
     private static IReadOnlyDictionary<string, object?>? ParseObjectDict(string json)
     {
-        if (string.IsNullOrWhiteSpace(json) || json == "{}") return null;
+        if (string.IsNullOrWhiteSpace(json) || json == "{}")
+        {
+            return null;
+        }
+
         return JsonSerializer.Deserialize<Dictionary<string, object?>>(json);
     }
 
     private static object? ParseDefault(string json)
     {
-        if (string.IsNullOrWhiteSpace(json) || json == "null") return null;
+        if (string.IsNullOrWhiteSpace(json) || json == "null")
+        {
+            return null;
+        }
+
         return JsonSerializer.Deserialize<object>(json);
     }
 }
@@ -114,11 +181,29 @@ public sealed class PendingCatalogValueService(MaintainArrDbContext db)
 }
 
 public sealed class ControlledValueValidationService(
-    MaintainArrDbContext db,
     CatalogService catalogService,
     PendingCatalogValueService pendingCatalogValueService,
     IEnumerable<IExternalReferenceAdapter> adapters)
 {
+    private static readonly HashSet<string> ComplianceCoreOwnedReferenceKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "governingBody",
+        "governingBodyApplicability",
+        "regulatoryAssetType",
+        "regulatedUseType",
+        "complianceCategory",
+        "requiredEvidenceType",
+        "inspectionRequirementType",
+        "documentRequirementType",
+        "rulepackApplicabilityKeys",
+        "lawCitation",
+        "ruleApplicabilityContext",
+        "evidenceMappingType",
+        "complianceOutcomeType",
+        "exemptionType",
+        "exceptionType",
+    };
+
     private readonly Dictionary<string, IExternalReferenceAdapter> _adapters = adapters.ToDictionary(x => x.SourceType, StringComparer.OrdinalIgnoreCase);
 
     public async Task ValidateFieldsetValuesAsync(
@@ -128,50 +213,192 @@ public sealed class ControlledValueValidationService(
         string personId,
         string sourceEntityType,
         string sourceEntityId,
+        bool createPendingValues,
         CancellationToken cancellationToken)
     {
+        var selectedByFieldKey = fields.ToDictionary(
+            f => f.Key,
+            f => ExtractValues(values.TryGetValue(f.Key, out var raw) ? raw : null),
+            StringComparer.OrdinalIgnoreCase);
+
+        var selectedByCatalogKey = new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase);
         foreach (var field in fields)
         {
-            values.TryGetValue(field.Key, out var raw);
-            var value = raw?.ToString();
-            if (field.Required && string.IsNullOrWhiteSpace(value))
+            if (!string.IsNullOrWhiteSpace(field.CatalogKey))
+            {
+                selectedByCatalogKey[field.CatalogKey!] = selectedByFieldKey[field.Key];
+            }
+        }
+
+        foreach (var field in fields)
+        {
+            var selectedValues = selectedByFieldKey[field.Key];
+            if (field.Required && selectedValues.Count == 0)
             {
                 throw new StlApiException("assets.validation", $"{field.Key} is required.", 400);
             }
 
-            if (string.IsNullOrWhiteSpace(value))
+            if (selectedValues.Count == 0)
             {
                 continue;
             }
 
             if (!string.IsNullOrWhiteSpace(field.CatalogKey))
             {
-                var catalog = await catalogService.GetAsync(tenantId, field.CatalogKey!, cancellationToken);
-                var exists = catalog.Options.Any(x => string.Equals(x.Key, value, StringComparison.OrdinalIgnoreCase));
-                if (!exists)
-                {
-                    if (field.AllowCustom && field.CustomRequiresApproval)
-                    {
-                        _ = await pendingCatalogValueService.CreateAsync(tenantId, field.CatalogKey!, value, personId, sourceEntityType, sourceEntityId, cancellationToken);
-                        continue;
-                    }
-
-                    throw new StlApiException("assets.validation", $"Invalid value '{value}' for field '{field.Key}'. Allowed catalog: {field.CatalogKey}.", 400);
-                }
+                await ValidateCatalogFieldAsync(
+                    tenantId,
+                    field,
+                    selectedValues,
+                    selectedByCatalogKey,
+                    personId,
+                    sourceEntityType,
+                    sourceEntityId,
+                    createPendingValues,
+                    cancellationToken);
+                continue;
             }
-            else if (!string.IsNullOrWhiteSpace(field.ReferenceKey))
+
+            if (!string.IsNullOrWhiteSpace(field.ReferenceKey))
             {
-                if (!_adapters.TryGetValue(field.Source, out var adapter))
+                await ValidateReferenceFieldAsync(tenantId, field, selectedValues, cancellationToken);
+            }
+        }
+    }
+
+    private async Task ValidateCatalogFieldAsync(
+        Guid tenantId,
+        FieldMetadataResponse field,
+        IReadOnlyList<string> selectedValues,
+        IReadOnlyDictionary<string, IReadOnlyList<string>> selectedByCatalogKey,
+        string personId,
+        string sourceEntityType,
+        string sourceEntityId,
+        bool createPendingValues,
+        CancellationToken cancellationToken)
+    {
+        var catalog = await catalogService.GetAsync(tenantId, field.CatalogKey!, cancellationToken);
+        var optionMap = catalog.Options.ToDictionary(x => x.Key, x => x, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var selectedValue in selectedValues)
+        {
+            if (!optionMap.TryGetValue(selectedValue, out var option))
+            {
+                if (field.AllowCustom && field.CustomRequiresApproval)
                 {
-                    throw new StlApiException("references.adapter_missing", $"No adapter for source '{field.Source}'.", 500);
+                    if (createPendingValues)
+                    {
+                        _ = await pendingCatalogValueService.CreateAsync(
+                            tenantId,
+                            field.CatalogKey!,
+                            selectedValue,
+                            personId,
+                            sourceEntityType,
+                            sourceEntityId,
+                            cancellationToken);
+                    }
+                    continue;
                 }
 
-                var exists = await adapter.ExistsAsync(tenantId, field.ReferenceKey!, value, cancellationToken);
-                if (!exists)
+                if (field.AllowCustom)
                 {
-                    throw new StlApiException("assets.validation", $"Invalid external reference '{value}' for field '{field.Key}' from '{field.SourceOfTruth}'.", 400);
+                    continue;
+                }
+
+                throw new StlApiException(
+                    "assets.validation",
+                    $"Invalid value '{selectedValue}' for field '{field.Key}'. Allowed catalog: {field.CatalogKey}.",
+                    400);
+            }
+
+            var dependency = option.Dependency;
+            if (dependency is null || dependency.Count == 0)
+            {
+                continue;
+            }
+
+            foreach (var dependencyRule in dependency)
+            {
+                if (!selectedByCatalogKey.TryGetValue(dependencyRule.Key, out var selectedParentValues)
+                    || !selectedParentValues.Any(x => string.Equals(x, dependencyRule.Value, StringComparison.OrdinalIgnoreCase)))
+                {
+                    throw new StlApiException(
+                        "assets.validation",
+                        $"Invalid value '{selectedValue}' for field '{field.Key}'. Expected parent '{dependencyRule.Key}' = '{dependencyRule.Value}'.",
+                        400);
                 }
             }
         }
+    }
+
+    private async Task ValidateReferenceFieldAsync(
+        Guid tenantId,
+        FieldMetadataResponse field,
+        IReadOnlyList<string> selectedValues,
+        CancellationToken cancellationToken)
+    {
+        if (field.ReferenceKey is not null
+            && ComplianceCoreOwnedReferenceKeys.Contains(field.ReferenceKey)
+            && !string.Equals(field.Source, "compliancecore_reference", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "references.ownership_violation",
+                $"Field '{field.Key}' must resolve from Compliance Core.",
+                400);
+        }
+
+        if (!_adapters.TryGetValue(field.Source, out var adapter))
+        {
+            throw new StlApiException("references.adapter_missing", $"No adapter for source '{field.Source}'.", 500);
+        }
+
+        foreach (var selectedValue in selectedValues)
+        {
+            var exists = await adapter.ExistsAsync(tenantId, field.ReferenceKey!, selectedValue, cancellationToken);
+            if (!exists)
+            {
+                throw new StlApiException(
+                    "assets.validation",
+                    $"Invalid external reference '{selectedValue}' for field '{field.Key}' from '{field.SourceOfTruth}'.",
+                    400);
+            }
+        }
+    }
+
+    private static IReadOnlyList<string> ExtractValues(object? raw)
+    {
+        if (raw is null)
+        {
+            return [];
+        }
+
+        if (raw is string text)
+        {
+            return string.IsNullOrWhiteSpace(text) ? [] : [text.Trim()];
+        }
+
+        if (raw is JsonElement json)
+        {
+            return json.ValueKind switch
+            {
+                JsonValueKind.Array => json.EnumerateArray()
+                    .Select(x => x.ToString().Trim())
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .ToList(),
+                JsonValueKind.String => string.IsNullOrWhiteSpace(json.GetString()) ? [] : [json.GetString()!.Trim()],
+                JsonValueKind.Null => [],
+                _ => [json.ToString().Trim()],
+            };
+        }
+
+        if (raw is IEnumerable<object?> list)
+        {
+            return list
+                .Select(x => x?.ToString()?.Trim())
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x!)
+                .ToList();
+        }
+
+        return [raw.ToString()!.Trim()];
     }
 }

@@ -7,7 +7,8 @@ public sealed record CatalogOptionResponse(
     int SortOrder,
     string? ParentOptionKey,
     bool IsActive,
-    IReadOnlyDictionary<string, string>? Dependency);
+    IReadOnlyDictionary<string, string>? Dependency,
+    IReadOnlyDictionary<string, object?>? Metadata);
 
 public sealed record CatalogResponse(
     string Key,
@@ -27,11 +28,13 @@ public sealed record UpsertCatalogOptionRequest(
     int SortOrder,
     string? ParentOptionKey,
     bool IsActive,
-    IReadOnlyDictionary<string, string>? Dependency);
+    IReadOnlyDictionary<string, string>? Dependency,
+    IReadOnlyDictionary<string, object?>? Metadata);
 
 public sealed record FieldMetadataResponse(
     string Key,
     string Label,
+    string Description,
     string Type,
     string Control,
     bool Required,
@@ -39,6 +42,8 @@ public sealed record FieldMetadataResponse(
     string? ReferenceKey,
     string Source,
     string SourceOfTruth,
+    string StoredValue,
+    string DisplayValue,
     bool AllowCustom,
     bool CustomRequiresApproval,
     bool DrivesLogic,
@@ -50,6 +55,8 @@ public sealed record FieldMetadataResponse(
     IReadOnlyDictionary<string, string>? DependsOn,
     IReadOnlyDictionary<string, object?>? Validation,
     object? DefaultValue,
+    IReadOnlyDictionary<string, object?>? Visibility,
+    string SectionKey,
     IReadOnlyList<CatalogOptionResponse>? Options);
 
 public sealed record FieldsetResponse(
@@ -77,5 +84,11 @@ public sealed record AssetUpsertV1Request(
 
 public sealed record AssetFieldContextResponse(
     Guid AssetId,
-    IReadOnlyDictionary<string, object?> Values,
-    IReadOnlyDictionary<string, string> DisplayValues);
+    IReadOnlyList<AssetFieldContextValueResponse> Fields);
+
+public sealed record AssetFieldContextValueResponse(
+    string Key,
+    object? StoredValue,
+    string? DisplayValue,
+    string Source,
+    string SourceOfTruth);

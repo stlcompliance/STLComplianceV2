@@ -2,6 +2,7 @@ using MaintainArr.Api;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Endpoints;
 using MaintainArr.Api.Services;
+using Microsoft.EntityFrameworkCore;
 using STLCompliance.Shared.Endpoints;
 using STLCompliance.Shared.Hosting;
 
@@ -12,11 +13,7 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
     MaintainArrServiceRegistration.ConfigurePipeline,
     async app =>
     {
-        using (var scope = app.Services.CreateScope())
-        {
-            var seeder = scope.ServiceProvider.GetRequiredService<CatalogSeedService>();
-            await seeder.SeedDefaultsAsync();
-        }
+        await SeedCatalogsAsync(app);
 
         app.MapMaintainArrAuthEndpoints();
         app.MapStlProductLaunchEndpoints();
@@ -73,3 +70,42 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
         app.MapMaintainArrEntityExportEndpoints();
         await Task.CompletedTask;
     });
+
+static async Task SeedCatalogsAsync(WebApplication app)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<MaintainArrDbContext>();
+
+    string? providerName;
+    try
+    {
+        providerName = db.Database.ProviderName;
+    }
+    catch (InvalidOperationException)
+    {
+        app.Logger.LogWarning(
+            "Skipping MaintainArr catalog/fieldset seed: database provider is not configured.");
+        return;
+    }
+
+    if (string.IsNullOrWhiteSpace(providerName))
+    {
+        app.Logger.LogWarning(
+            "Skipping MaintainArr catalog/fieldset seed: database provider is unavailable.");
+        return;
+    }
+
+    if (db.Database.IsRelational())
+    {
+        var canConnect = await db.Database.CanConnectAsync();
+        if (!canConnect)
+        {
+            app.Logger.LogWarning(
+                "Skipping MaintainArr catalog/fieldset seed: relational provider is configured but not reachable.");
+            return;
+        }
+    }
+
+    var seeder = scope.ServiceProvider.GetRequiredService<CatalogSeedService>();
+    await seeder.SeedDefaultsAsync();
+}
