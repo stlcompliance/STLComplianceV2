@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { getSuiteProductIcon } from './productCatalog'
 import { ProductSwitcher } from './ProductSwitcher'
 import { WorkspaceUserChrome } from './WorkspaceUserChrome'
@@ -107,6 +107,7 @@ export function ProductAppShell({
   layoutVariant = 'standard',
   children,
 }: ProductAppShellProps) {
+  const location = useLocation()
   const showSidebar = layoutVariant === 'standard'
   const ProductIcon = getSuiteProductIcon(productKey)
   const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
@@ -116,6 +117,19 @@ export function ProductAppShell({
         ? 'border-l-2 border-teal-400 bg-slate-800/80 pl-[10px] text-white'
         : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
     ].join(' ')
+
+  const routeIsActive = (to: string) =>
+    location.pathname === to || location.pathname.startsWith(`${to}/`)
+
+  const routeSection = (to: string) => {
+    const parts = to.split('/').filter(Boolean)
+    return parts.length > 0 ? `/${parts[0]}` : to
+  }
+
+  const routeSectionIsActive = (to: string) => {
+    const section = routeSection(to)
+    return location.pathname === section || location.pathname.startsWith(`${section}/`)
+  }
 
   if (!showSidebar) {
     return (
@@ -157,13 +171,15 @@ export function ProductAppShell({
         <nav aria-label={`${productName} navigation`} className="flex flex-col gap-1">
           {navItems.map((item) => {
             const Icon = item.icon ?? ProductIcon
+            const childActive = item.children?.some((child) => routeIsActive(child.to)) ?? false
+            const expanded = routeIsActive(item.to) || routeSectionIsActive(item.to) || childActive
             return (
               <div key={item.to} className={item.sectionBreakBefore ? 'mt-2 border-t border-slate-700/70 pt-2' : ''}>
                 <NavLink to={item.to} end={item.to === '/'} className={navLinkClassName}>
                   <Icon className="h-4 w-4 shrink-0" aria-hidden />
                   <span>{item.label}</span>
                 </NavLink>
-                {item.children?.length ? (
+                {item.children?.length && expanded ? (
                   <div className="ml-5 mt-1 flex flex-col gap-1 border-l border-slate-700/60 pl-2">
                     {item.children.map((child) => {
                       const ChildIcon = child.icon ?? Icon
