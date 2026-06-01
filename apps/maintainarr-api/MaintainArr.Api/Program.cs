@@ -1,6 +1,7 @@
 using MaintainArr.Api;
 using MaintainArr.Api.Data;
 using MaintainArr.Api.Endpoints;
+using MaintainArr.Api.Services;
 using STLCompliance.Shared.Endpoints;
 using STLCompliance.Shared.Hosting;
 
@@ -11,12 +12,21 @@ await StlApiHost.RunAsync<MaintainArrDbContext>(
     MaintainArrServiceRegistration.ConfigurePipeline,
     async app =>
     {
+        using (var scope = app.Services.CreateScope())
+        {
+            var seeder = scope.ServiceProvider.GetRequiredService<CatalogSeedService>();
+            await seeder.SeedDefaultsAsync();
+        }
+
         app.MapMaintainArrAuthEndpoints();
         app.MapStlProductLaunchEndpoints();
         app.MapMaintainArrSettingsEndpoints();
         app.MapMaintainArrAssetClassEndpoints();
         app.MapMaintainArrAssetTypeEndpoints();
         app.MapMaintainArrAssetEndpoints();
+        app.MapMaintainArrCatalogEndpoints();
+        app.MapMaintainArrFieldsetEndpoints();
+        app.MapMaintainArrReferenceEndpoints();
         app.MapMaintainArrPreventiveMaintenanceEndpoints();
         app.MapMaintainArrPmProgramEndpoints();
         app.MapMaintainArrInspectionTemplateEndpoints();

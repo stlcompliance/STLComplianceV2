@@ -120,6 +120,19 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
     public DbSet<MaintenanceInboundPlatformEvent> MaintenanceInboundPlatformEvents =>
         Set<MaintenanceInboundPlatformEvent>();
 
+    public DbSet<CatalogDefinition> CatalogDefinitions => Set<CatalogDefinition>();
+    public DbSet<CatalogOption> CatalogOptions => Set<CatalogOption>();
+    public DbSet<CatalogOptionDependency> CatalogOptionDependencies => Set<CatalogOptionDependency>();
+    public DbSet<FieldsetDefinition> FieldsetDefinitions => Set<FieldsetDefinition>();
+    public DbSet<FieldsetField> FieldsetFields => Set<FieldsetField>();
+    public DbSet<PendingCatalogValue> PendingCatalogValues => Set<PendingCatalogValue>();
+    public DbSet<ReferenceCacheEntry> ReferenceCacheEntries => Set<ReferenceCacheEntry>();
+    public DbSet<AssetCustomFieldValue> AssetCustomFieldValues => Set<AssetCustomFieldValue>();
+    public DbSet<AssetSpec> AssetSpecs => Set<AssetSpec>();
+    public DbSet<AssetComponent> AssetComponents => Set<AssetComponent>();
+    public DbSet<AssetDocumentRef> AssetDocumentRefs => Set<AssetDocumentRef>();
+    public DbSet<AssetComplianceState> AssetComplianceStates => Set<AssetComplianceState>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -889,6 +902,121 @@ public sealed class MaintainArrDbContext(DbContextOptions<MaintainArrDbContext> 
                 .WithMany()
                 .HasForeignKey(x => x.CreatedDefectId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<CatalogDefinition>(entity =>
+        {
+            entity.ToTable("maintainarr_catalogs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Key).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Label).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.Owner).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Scope).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.Scope, x.Key }).IsUnique();
+        });
+
+        modelBuilder.Entity<CatalogOption>(entity =>
+        {
+            entity.ToTable("maintainarr_catalog_options");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Key).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Label).HasMaxLength(256).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.CatalogId, x.Key, x.OptionTenantId }).IsUnique();
+        });
+
+        modelBuilder.Entity<CatalogOptionDependency>(entity =>
+        {
+            entity.ToTable("maintainarr_catalog_option_dependencies");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DependsOnCatalogKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.DependsOnOptionKey).HasMaxLength(128).IsRequired();
+        });
+
+        modelBuilder.Entity<FieldsetDefinition>(entity =>
+        {
+            entity.ToTable("maintainarr_fieldset_definitions");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Key).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.EntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Purpose).HasMaxLength(64).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.Key, x.Purpose }).IsUnique();
+        });
+
+        modelBuilder.Entity<FieldsetField>(entity =>
+        {
+            entity.ToTable("maintainarr_fieldset_fields");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Key).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.DataType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ControlType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceOfTruth).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.FieldsetId, x.Key }).IsUnique();
+        });
+
+        modelBuilder.Entity<PendingCatalogValue>(entity =>
+        {
+            entity.ToTable("maintainarr_pending_catalog_values");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.CatalogKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ProposedKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ProposedLabel).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.ProposedByPersonId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.SourceEntityType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.SourceEntityId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
+        });
+
+        modelBuilder.Entity<ReferenceCacheEntry>(entity =>
+        {
+            entity.ToTable("maintainarr_reference_cache_entries");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SourceOfTruth).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ReferenceKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ExternalKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ExternalId).HasMaxLength(128);
+            entity.Property(x => x.Label).HasMaxLength(256).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.SourceOfTruth, x.ReferenceKey, x.ExternalKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<AssetCustomFieldValue>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_custom_field_values");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.FieldKey).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.FieldKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<AssetSpec>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_specs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SpecKey).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.SpecKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<AssetComponent>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_components");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ComponentKey).HasMaxLength(128).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.AssetId, x.ComponentKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<AssetDocumentRef>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_documents");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.DocumentTypeKey).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.ExternalDocumentId).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.StatusKey).HasMaxLength(64).IsRequired();
+        });
+
+        modelBuilder.Entity<AssetComplianceState>(entity =>
+        {
+            entity.ToTable("maintainarr_asset_compliance_state");
+            entity.HasKey(x => x.Id);
+            entity.HasIndex(x => new { x.TenantId, x.AssetId }).IsUnique();
         });
     }
 }

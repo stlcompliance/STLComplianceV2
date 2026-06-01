@@ -9,6 +9,8 @@ import {
   Gauge,
   BarChart3,
   Settings,
+  ListCollapse,
+  StickyNote,
 } from 'lucide-react'
 import type { ProductNavItem } from '@stl/shared-ui'
 
@@ -20,8 +22,8 @@ export const supplyarrNavItems: ProductNavItem[] = [
     to: '/parties/drawer',
     icon: Building2 as NavIcon,
     children: [
-      { label: 'Details', to: '/parties/details' },
-      { label: 'Create', to: '/parties/create' },
+      { label: 'Details', to: '/parties/details', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/parties/create', icon: StickyNote as NavIcon },
     ],
   },
   { label: 'Catalog', to: '/catalog', icon: PackageSearch as NavIcon },

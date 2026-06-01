@@ -39,20 +39,45 @@ public static class AssetEndpoints
         })
         .WithName($"GetAsset{nameSuffix}");
 
-        group.MapPost("/", async (
-            CreateAssetRequest request,
-            HttpContext context,
-            MaintainArrAuthorizationService authorization,
-            AssetService service,
-            CancellationToken cancellationToken) =>
+        if (nameSuffix == "V1")
         {
-            authorization.RequireAssetsManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
-            return Results.Created($"/api/assets/{created.AssetId}", created);
-        })
-        .WithName($"CreateAsset{nameSuffix}");
+            group.MapPost("/", async (
+                AssetUpsertV1Request request,
+                HttpContext context,
+                MaintainArrAuthorizationService authorization,
+                AssetService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireAssetsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var created = await service.CreateV1Async(
+                    tenantId,
+                    actorUserId,
+                    context.User.GetPersonId().ToString("D"),
+                    request,
+                    cancellationToken);
+                return Results.Created($"/api/v1/assets/{created.AssetId}", created);
+            })
+            .WithName("CreateAssetV1");
+        }
+        else
+        {
+            group.MapPost("/", async (
+                CreateAssetRequest request,
+                HttpContext context,
+                MaintainArrAuthorizationService authorization,
+                AssetService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireAssetsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
+                return Results.Created($"/api/assets/{created.AssetId}", created);
+            })
+            .WithName($"CreateAsset{nameSuffix}");
+        }
 
         group.MapPut("/{assetId:guid}", async (
             Guid assetId,
@@ -69,6 +94,44 @@ public static class AssetEndpoints
             return Results.Ok(updated);
         })
         .WithName($"UpdateAsset{nameSuffix}");
+
+        if (nameSuffix == "V1")
+        {
+            group.MapPatch("/{assetId:guid}", async (
+                Guid assetId,
+                AssetUpsertV1Request request,
+                HttpContext context,
+                MaintainArrAuthorizationService authorization,
+                AssetService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireAssetsManage(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var updated = await service.UpdateV1Async(
+                    tenantId,
+                    actorUserId,
+                    context.User.GetPersonId().ToString("D"),
+                    assetId,
+                    request,
+                    cancellationToken);
+                return Results.Ok(updated);
+            })
+            .WithName("UpdateAssetControlledV1");
+
+            group.MapGet("/{assetId:guid}/field-context", async (
+                Guid assetId,
+                HttpContext context,
+                MaintainArrAuthorizationService authorization,
+                AssetService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireAssetsRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                return Results.Ok(await service.GetFieldContextAsync(tenantId, assetId, cancellationToken));
+            })
+            .WithName("GetAssetFieldContextV1");
+        }
 
         group.MapPatch("/{assetId:guid}/lifecycle-status", async (
             Guid assetId,

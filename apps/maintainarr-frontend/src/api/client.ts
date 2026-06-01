@@ -4,6 +4,9 @@ import type {
   AssetTypeResponse,
   CreateAssetClassRequest,
   CreateAssetRequest,
+  AssetUpsertV1Request,
+  CatalogResponse,
+  FieldsetResponse,
   CreateAssetTypeRequest,
   CreateInspectionChecklistItemRequest,
   CreateInspectionTemplateCategoryRequest,
@@ -273,6 +276,39 @@ export async function createAsset(accessToken: string, payload: CreateAssetReque
     body: JSON.stringify(payload),
   })
   return parseJsonResponse<AssetResponse>(response, 'Failed to create asset')
+}
+
+export async function createAssetControlledV1(accessToken: string, payload: AssetUpsertV1Request): Promise<AssetResponse> {
+  const response = await fetch(`${apiBase}/api/v1/assets/controlled`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<AssetResponse>(response, 'Failed to create controlled asset')
+}
+
+export async function updateAssetControlledV1(accessToken: string, assetId: string, payload: AssetUpsertV1Request): Promise<AssetResponse> {
+  const response = await fetch(`${apiBase}/api/v1/assets/${assetId}`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<AssetResponse>(response, 'Failed to update controlled asset')
+}
+
+export async function getAssetCreateFieldset(accessToken: string): Promise<FieldsetResponse> {
+  const response = await fetch(`${apiBase}/api/v1/fieldsets/assets/create`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<FieldsetResponse>(response, 'Failed to load asset create fieldset')
+}
+
+export async function getCatalogs(accessToken: string, keys?: string[]): Promise<CatalogResponse[]> {
+  const query = keys && keys.length > 0 ? `?keys=${encodeURIComponent(keys.join(','))}` : ''
+  const response = await fetch(`${apiBase}/api/v1/catalogs${query}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<CatalogResponse[]>(response, 'Failed to load catalogs')
 }
 
 export async function getDuePmSchedules(accessToken: string): Promise<PmScheduleResponse[]> {

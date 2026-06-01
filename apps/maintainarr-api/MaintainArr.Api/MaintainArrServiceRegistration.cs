@@ -21,6 +21,17 @@ public static class MaintainArrServiceRegistration
         builder.Services.AddScoped<AssetClassService>();
         builder.Services.AddScoped<AssetTypeService>();
         builder.Services.AddScoped<AssetService>();
+        builder.Services.AddScoped<CatalogService>();
+        builder.Services.AddScoped<CatalogSeedService>();
+        builder.Services.AddScoped<FieldsetService>();
+        builder.Services.AddScoped<PendingCatalogValueService>();
+        builder.Services.AddScoped<ControlledValueValidationService>();
+        builder.Services.AddScoped<ComplianceCoreReferenceAdapter>();
+        builder.Services.AddScoped<StaffArrReferenceAdapter>();
+        builder.Services.AddScoped<SupplyArrReferenceAdapter>();
+        builder.Services.AddScoped<IExternalReferenceAdapter>(sp => sp.GetRequiredService<ComplianceCoreReferenceAdapter>());
+        builder.Services.AddScoped<IExternalReferenceAdapter>(sp => sp.GetRequiredService<StaffArrReferenceAdapter>());
+        builder.Services.AddScoped<IExternalReferenceAdapter>(sp => sp.GetRequiredService<SupplyArrReferenceAdapter>());
         builder.Services.AddScoped<PmScheduleService>();
         builder.Services.AddScoped<PmProgramService>();
         builder.Services.AddScoped<PmDueScanService>();

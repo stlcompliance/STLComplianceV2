@@ -9,7 +9,9 @@ namespace MaintainArr.Api.Services;
 public sealed class AssetService(
     MaintainArrDbContext db,
     AssetTypeService assetTypeService,
-    IMaintainArrAuditService audit)
+    IMaintainArrAuditService audit,
+    FieldsetService fieldsetService,
+    ControlledValueValidationService controlledValueValidationService)
 {
     private static readonly HashSet<string> AllowedLifecycleStatuses = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -18,6 +20,114 @@ public sealed class AssetService(
         "retired",
         "out_of_service"
     };
+
+    public async Task<AssetResponse> CreateV1Async(
+        Guid tenantId,
+        Guid actorUserId,
+        string actorPersonId,
+        AssetUpsertV1Request request,
+        CancellationToken cancellationToken = default)
+    {
+        var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "create", cancellationToken);
+        await controlledValueValidationService.ValidateFieldsetValuesAsync(
+            tenantId,
+            fieldset.Fields,
+            request.Values,
+            actorPersonId,
+            "asset",
+            "new",
+            cancellationToken);
+
+        var assetTypeKey = request.Values.TryGetValue("assetType", out var rawType) ? rawType?.ToString() : null;
+        if (string.IsNullOrWhiteSpace(assetTypeKey))
+        {
+            throw new StlApiException("assets.validation", "assetType is required.", 400);
+        }
+
+        var assetType = await db.AssetTypes.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.TypeKey == assetTypeKey.Trim().ToLowerInvariant() && x.Status == "active", cancellationToken)
+            ?? throw new StlApiException("assets.validation", $"assetType '{assetTypeKey}' is invalid.", 400);
+
+        var created = await CreateAsync(
+            tenantId,
+            actorUserId,
+            new CreateAssetRequest(assetType.Id, request.AssetTag, request.Name, request.Description ?? string.Empty, null),
+            cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        foreach (var kvp in request.Values)
+        {
+            db.AssetCustomFieldValues.Add(new AssetCustomFieldValue
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                AssetId = created.AssetId,
+                FieldKey = kvp.Key,
+                ValueJson = System.Text.Json.JsonSerializer.Serialize(kvp.Value),
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return created;
+    }
+
+    public async Task<AssetResponse> UpdateV1Async(
+        Guid tenantId,
+        Guid actorUserId,
+        string actorPersonId,
+        Guid assetId,
+        AssetUpsertV1Request request,
+        CancellationToken cancellationToken = default)
+    {
+        var fieldset = await fieldsetService.GetAssetsFieldsetAsync(tenantId, "edit", cancellationToken);
+        await controlledValueValidationService.ValidateFieldsetValuesAsync(
+            tenantId,
+            fieldset.Fields,
+            request.Values,
+            actorPersonId,
+            "asset",
+            assetId.ToString(),
+            cancellationToken);
+
+        var updated = await UpdateAsync(
+            tenantId,
+            actorUserId,
+            assetId,
+            new UpdateAssetRequest(request.Name, request.Description ?? string.Empty, null),
+            cancellationToken);
+
+        var existing = await db.AssetCustomFieldValues.Where(x => x.TenantId == tenantId && x.AssetId == assetId).ToListAsync(cancellationToken);
+        db.AssetCustomFieldValues.RemoveRange(existing);
+        var now = DateTimeOffset.UtcNow;
+        foreach (var kvp in request.Values)
+        {
+            db.AssetCustomFieldValues.Add(new AssetCustomFieldValue
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                AssetId = assetId,
+                FieldKey = kvp.Key,
+                ValueJson = System.Text.Json.JsonSerializer.Serialize(kvp.Value),
+                CreatedAt = now,
+                UpdatedAt = now,
+            });
+        }
+        await db.SaveChangesAsync(cancellationToken);
+        return updated;
+    }
+
+    public async Task<AssetFieldContextResponse> GetFieldContextAsync(Guid tenantId, Guid assetId, CancellationToken cancellationToken = default)
+    {
+        var values = await db.AssetCustomFieldValues.AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.AssetId == assetId)
+            .ToListAsync(cancellationToken);
+
+        var map = values.ToDictionary(x => x.FieldKey, x => System.Text.Json.JsonSerializer.Deserialize<object>(x.ValueJson));
+        var display = values.ToDictionary(x => x.FieldKey, x => x.ValueJson);
+        return new AssetFieldContextResponse(assetId, map, display);
+    }
 
     public async Task<IReadOnlyList<AssetResponse>> ListAsync(
         Guid tenantId,

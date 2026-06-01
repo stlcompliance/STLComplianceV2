@@ -1,4 +1,4 @@
-import { Radio, Route, Map, UserCheck, Calendar, Settings, Truck, BarChart3 } from 'lucide-react'
+import { Radio, Route, Map, UserCheck, Calendar, Settings, Truck, BarChart3, ListCollapse, StickyNote } from 'lucide-react'
 
 import type { ProductNavItem } from '@stl/shared-ui'
 
@@ -19,8 +19,8 @@ export const routarrNavItems: ProductNavItem[] = [
     to: '/trips/drawer',
     icon: Route as NavIcon,
     children: [
-      { label: 'Details', to: '/trips/details' },
-      { label: 'Create', to: '/trips/create' },
+      { label: 'Details', to: '/trips/details', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/trips/create', icon: StickyNote as NavIcon },
     ],
   },
 
@@ -29,8 +29,8 @@ export const routarrNavItems: ProductNavItem[] = [
     to: '/routes/drawer',
     icon: Map as NavIcon,
     children: [
-      { label: 'Details', to: '/routes/details' },
-      { label: 'Create', to: '/routes/create' },
+      { label: 'Details', to: '/routes/details', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/routes/create', icon: StickyNote as NavIcon },
     ],
   },
 

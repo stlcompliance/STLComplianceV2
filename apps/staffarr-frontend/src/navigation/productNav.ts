@@ -10,8 +10,12 @@ import {
   Award,
   BarChart3,
   Settings,
+  ListCollapse,
+  StickyNote,
 } from 'lucide-react'
 import type { ProductNavItem } from '@stl/shared-ui'
+
+type NavIcon = NonNullable<ProductNavItem['icon']>
 
 export const staffarrNavItems: ProductNavItem[] = [
   { label: 'My profile', to: '/me', icon: UserCircle },
@@ -21,8 +25,8 @@ export const staffarrNavItems: ProductNavItem[] = [
     to: '/people/drawer',
     icon: Users,
     children: [
-      { label: 'Details', to: '/people/details' },
-      { label: 'Create', to: '/people/create' },
+      { label: 'Details', to: '/people/details', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/people/create', icon: StickyNote as NavIcon },
     ],
   },
   { label: 'Org structure', to: '/org', icon: Network },

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Boxes, CalendarClock, Gauge, Wrench, AlertTriangle, ClipboardCheck, FileStack, History, TimerOff, BarChart3, Settings } from 'lucide-react'
+import { LayoutDashboard, Boxes, CalendarClock, Gauge, Wrench, AlertTriangle, ClipboardCheck, FileStack, History, TimerOff, BarChart3, Settings, ListCollapse, StickyNote } from 'lucide-react'
 import type { ProductNavItem } from '@stl/shared-ui'
 
 type NavIcon = NonNullable<ProductNavItem['icon']>
@@ -10,8 +10,8 @@ export const maintainarrNavItems: ProductNavItem[] = [
     to: '/assets/drawer',
     icon: Boxes as NavIcon,
     children: [
-      { label: 'Details', to: '/assets/details' },
-      { label: 'Create', to: '/assets/create' },
+      { label: 'Details', to: '/assets/details', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/assets/create', icon: StickyNote as NavIcon },
     ],
   },
   {
@@ -19,8 +19,8 @@ export const maintainarrNavItems: ProductNavItem[] = [
     to: '/pm-programs/drawer',
     icon: CalendarClock as NavIcon,
     children: [
-      { label: 'Details', to: '/pm-programs/details' },
-      { label: 'Create', to: '/pm-programs/create' },
+      { label: 'Details', to: '/pm-programs/details', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/pm-programs/create', icon: StickyNote as NavIcon },
     ],
   },
   {
@@ -28,8 +28,8 @@ export const maintainarrNavItems: ProductNavItem[] = [
     to: '/meters/drawer',
     icon: Gauge as NavIcon,
     children: [
-      { label: 'Details', to: '/meters/details' },
-      { label: 'Create', to: '/meters/create' },
+      { label: 'Details', to: '/meters/details', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/meters/create', icon: StickyNote as NavIcon },
     ],
   },
   {
@@ -37,8 +37,8 @@ export const maintainarrNavItems: ProductNavItem[] = [
     to: '/work-orders/drawer',
     icon: Wrench as NavIcon,
     children: [
-      { label: 'Details', to: '/work-orders/details' },
-      { label: 'Create', to: '/work-orders/create' },
+      { label: 'Details', to: '/work-orders/details', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/work-orders/create', icon: StickyNote as NavIcon },
     ],
   },
   {
@@ -46,8 +46,8 @@ export const maintainarrNavItems: ProductNavItem[] = [
     to: '/defects/drawer',
     icon: AlertTriangle as NavIcon,
     children: [
-      { label: 'Details', to: '/defects/details' },
-      { label: 'Create', to: '/defects/create' },
+      { label: 'Details', to: '/defects/details', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/defects/create', icon: StickyNote as NavIcon },
     ],
   },
   {
@@ -55,8 +55,8 @@ export const maintainarrNavItems: ProductNavItem[] = [
     to: '/inspections/drawer',
     icon: ClipboardCheck as NavIcon,
     children: [
-      { label: 'Details', to: '/inspections/details' },
-      { label: 'Create', to: '/inspections/create' },
+      { label: 'Details', to: '/inspections/details', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/inspections/create', icon: StickyNote as NavIcon },
     ],
   },
   {
@@ -64,8 +64,8 @@ export const maintainarrNavItems: ProductNavItem[] = [
     to: '/inspection-templates/drawer',
     icon: FileStack as NavIcon,
     children: [
-      { label: 'Details', to: '/inspection-templates/details' },
-      { label: 'Create', to: '/inspection-templates/create' },
+      { label: 'Details', to: '/inspection-templates/details', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/inspection-templates/create', icon: StickyNote as NavIcon },
     ],
   },
   { label: 'History', to: '/history', icon: History as NavIcon },

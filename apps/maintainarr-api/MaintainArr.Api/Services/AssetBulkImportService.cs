@@ -19,6 +19,22 @@ public sealed class AssetBulkImportService(
         "retired",
         "out_of_service",
     };
+    private static readonly Dictionary<string, string> AliasMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["freightliner cascadia"] = "cascadia",
+        ["frtlnr"] = "freightliner",
+        ["disc brake"] = "disc",
+        ["air disc"] = "disc",
+        ["s-cam"] = "drum",
+        ["air drum"] = "drum",
+        ["super singles"] = "super_single",
+        ["wide base"] = "super_single",
+        ["wide-base singles"] = "super_single",
+        ["dual tires"] = "duals",
+        ["dual wheels"] = "duals",
+        ["compressed natural gas"] = "CNG",
+        ["refrigerated trailer"] = "reefer",
+    };
 
     public async Task<AssetBulkImportResponse> ImportAsync(
         Guid tenantId,
@@ -69,7 +85,9 @@ public sealed class AssetBulkImportService(
             try
             {
                 ValidateRow(row);
-                var assetType = ResolveAssetType(typeCache, row.AssetClassKey, row.AssetTypeKey);
+                var normalizedClassKey = NormalizeAlias(row.AssetClassKey);
+                var normalizedTypeKey = NormalizeAlias(row.AssetTypeKey);
+                var assetType = ResolveAssetType(typeCache, normalizedClassKey, normalizedTypeKey);
                 await EnsureTagAvailableAsync(tenantId, normalizedTag, cancellationToken);
 
                 if (dryRun)
@@ -240,6 +258,17 @@ public sealed class AssetBulkImportService(
         }
 
         return assetType;
+    }
+
+    private static string NormalizeAlias(string value)
+    {
+        var trimmed = value.Trim();
+        if (AliasMap.TryGetValue(trimmed, out var mapped))
+        {
+            return mapped;
+        }
+
+        return trimmed;
     }
 
     private async Task<Dictionary<(string ClassKey, string TypeKey), AssetType>> BuildAssetTypeCacheAsync(

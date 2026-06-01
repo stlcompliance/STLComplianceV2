@@ -1,4 +1,4 @@
-import { Library, GitBranch, Search, Play, Database, Terminal, BarChart3, Settings } from 'lucide-react'
+import { Library, GitBranch, Search, Play, Database, Terminal, BarChart3, Settings, ListCollapse, StickyNote } from 'lucide-react'
 
 import type { ProductNavItem } from '@stl/shared-ui'
 
@@ -14,8 +14,8 @@ export const complianceCoreNavItems: ProductNavItem[] = [
     to: '/registry/drawer',
     icon: Library as NavIcon,
     children: [
-      { label: 'Details', to: '/registry/details' },
-      { label: 'Create', to: '/registry/create' },
+      { label: 'Details', to: '/registry/details', icon: ListCollapse as NavIcon },
+      { label: 'Create', to: '/registry/create', icon: StickyNote as NavIcon },
     ],
   },
 

@@ -97,6 +97,67 @@ export interface CreateAssetRequest {
   siteRef?: string | null
 }
 
+export interface CatalogOptionResponse {
+  key: string
+  label: string
+  description: string
+  sortOrder: number
+  parentOptionKey: string | null
+  isActive: boolean
+  dependency: Record<string, string> | null
+}
+
+export interface CatalogResponse {
+  key: string
+  label: string
+  description: string
+  owner: string
+  scope: string
+  isSystem: boolean
+  isTenantExtendable: boolean
+  isActive: boolean
+  options: CatalogOptionResponse[]
+}
+
+export interface FieldMetadataResponse {
+  key: string
+  label: string
+  type: string
+  control: string
+  required: boolean
+  catalogKey: string | null
+  referenceKey: string | null
+  source: string
+  sourceOfTruth: string
+  allowCustom: boolean
+  customRequiresApproval: boolean
+  drivesLogic: boolean
+  drivesInspectionBranching: boolean
+  drivesPMApplicability: boolean
+  drivesCompliance: boolean
+  drivesReporting: boolean
+  drivesReadiness: boolean
+  dependsOn: Record<string, string> | null
+  validation: Record<string, unknown> | null
+  defaultValue: unknown
+  options: CatalogOptionResponse[] | null
+}
+
+export interface FieldsetResponse {
+  key: string
+  label: string
+  entityType: string
+  purpose: string
+  fields: FieldMetadataResponse[]
+}
+
+export interface AssetUpsertV1Request {
+  assetTag: string
+  name: string
+  description?: string | null
+  values: Record<string, unknown>
+}
+
 export interface InspectionTemplateSummaryResponse {
   inspectionTemplateId: string
   templateKey: string

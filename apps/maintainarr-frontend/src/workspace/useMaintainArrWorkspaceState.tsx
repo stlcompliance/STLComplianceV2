@@ -22,7 +22,7 @@ import {
   logWorkOrderLabor,
   publishWorkOrderPartsDemand,
   uploadWorkOrderEvidence,
-  createAsset,
+  createAssetControlledV1,
   createAssetClass,
   createAssetMeter,
   createAssetType,
@@ -30,9 +30,11 @@ import {
   createInspectionTemplate,
   createInspectionTemplateCategory,
   getAssetClasses,
+  getAssetCreateFieldset,
   getAssetMeters,
   getAssets,
   getAssetTypes,
+  getCatalogs,
   getMeterPmForecast,
   getMeterReadings,
   getDefects,
@@ -226,6 +228,18 @@ export function useMaintainArrWorkspaceState() {
   const assetsQuery = useQuery({
     queryKey: ['maintainarr-assets'],
     queryFn: () => getAssets(accessToken),
+    enabled: meQuery.isSuccess,
+  })
+
+  const assetCreateFieldsetQuery = useQuery({
+    queryKey: ['maintainarr-fieldset-assets-create'],
+    queryFn: () => getAssetCreateFieldset(accessToken),
+    enabled: meQuery.isSuccess,
+  })
+
+  const assetCatalogsQuery = useQuery({
+    queryKey: ['maintainarr-catalogs-assets-create'],
+    queryFn: () => getCatalogs(accessToken, ['assetClass', 'assetType', 'make', 'model', 'fuelType', 'brakeType', 'tireConfiguration']),
     enabled: meQuery.isSuccess,
   })
 
@@ -1023,12 +1037,20 @@ export function useMaintainArrWorkspaceState() {
 
   const createAssetMutation = useMutation({
     mutationFn: () =>
-      createAsset(accessToken, {
-        assetTypeId: selectedTypeId,
+      createAssetControlledV1(accessToken, {
         assetTag,
         name: assetName,
-        description: assetDescription,
-        siteRef: siteRef || null,
+        description: assetDescription || null,
+        values: {
+          assetClass: classesQuery.data?.find((c) => c.assetClassId === selectedClassId)?.classKey ?? null,
+          assetType: typesQuery.data?.find((t) => t.assetTypeId === selectedTypeId)?.typeKey ?? null,
+          make: null,
+          model: null,
+          fuelType: null,
+          brakeType: null,
+          tireConfiguration: null,
+          siteId: siteRef || null,
+        },
       }),
     onSuccess: async () => {
       setAssetTag('')
@@ -1332,6 +1354,8 @@ export function useMaintainArrWorkspaceState() {
     classesQuery,
     typesQuery,
     assetsQuery,
+    assetCreateFieldsetQuery,
+    assetCatalogsQuery,
     selectedAssetId,
     assetReadinessFleetQuery,
     assetReadinessDetailQuery,
