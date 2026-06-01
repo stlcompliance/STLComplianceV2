@@ -1,13 +1,31 @@
 import { MeterReadingsPanel } from '../../components/MeterReadingsPanel'
+import { useLocation } from 'react-router-dom'
 import type { MaintainArrWorkspaceState } from '../useMaintainArrWorkspaceState'
 
 type Props = { state: MaintainArrWorkspaceState }
+type MetersViewMode = 'drawer' | 'details' | 'create'
 
 export function MetersSection({ state }: Props) {
   const s = state
+  const location = useLocation()
+  const mode: MetersViewMode = location.pathname.startsWith('/meters/create')
+    ? 'create'
+    : location.pathname.startsWith('/meters/details')
+      ? 'details'
+      : 'drawer'
   return (
     <div className="mb-8">
+      {mode === 'create' ? (
+        <div className="mb-4 rounded-xl border border-amber-700/50 bg-amber-950/20 p-4 text-sm text-amber-100">
+          <ol className="list-decimal space-y-1 pl-5">
+            <li>Step 1: Select the asset and define meter identity with unit and baseline reading.</li>
+            <li>Step 2: Record the first operational reading to initialize trend and PM forecast context.</li>
+            <li>Step 3: Continue recording readings so PM thresholds and due states stay accurate.</li>
+          </ol>
+        </div>
+      ) : null}
       <MeterReadingsPanel
+        mode={mode}
         canManageMeters={s.canManage}
         canRecordReadings={s.canExecuteInspections}
         assets={s.assetsQuery.data ?? []}

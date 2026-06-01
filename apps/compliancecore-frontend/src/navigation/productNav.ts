@@ -14,7 +14,6 @@ export const complianceCoreNavItems: ProductNavItem[] = [
     to: '/registry/drawer',
     icon: Library as NavIcon,
     children: [
-      { label: 'Drawer', to: '/registry/drawer' },
       { label: 'Details', to: '/registry/details' },
       { label: 'Create', to: '/registry/create' },
     ],

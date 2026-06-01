@@ -4,6 +4,7 @@ import { PmProgramBuilderPanel } from './PmProgramBuilderPanel'
 
 describe('PmProgramBuilderPanel', () => {
   const baseProps = {
+    mode: 'details' as const,
     canManage: true,
     programs: [
       {

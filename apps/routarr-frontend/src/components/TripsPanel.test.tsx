@@ -13,6 +13,7 @@ function renderPanel(overrides: Partial<Parameters<typeof TripsPanel>[0]> = {}) 
   render(
     <QueryClientProvider client={client}>
       <TripsPanel
+        mode="create"
         accessToken="token"
         canCreate
         canAssign

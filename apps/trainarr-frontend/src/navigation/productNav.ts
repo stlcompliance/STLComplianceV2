@@ -14,7 +14,6 @@ export const trainarrNavItems: ProductNavItem[] = [
     to: '/programs/drawer',
     icon: GraduationCap as NavIcon,
     children: [
-      { label: 'Drawer', to: '/programs/drawer' },
       { label: 'Details', to: '/programs/details' },
       { label: 'Create', to: '/programs/create' },
     ],
@@ -40,7 +39,6 @@ export const trainarrNavItems: ProductNavItem[] = [
     to: '/rule-packs/drawer',
     icon: Package as NavIcon,
     children: [
-      { label: 'Drawer', to: '/rule-packs/drawer' },
       { label: 'Details', to: '/rule-packs/details' },
       { label: 'Create', to: '/rule-packs/create' },
     ],

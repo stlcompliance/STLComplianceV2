@@ -1,10 +1,18 @@
 import type { RoutArrWorkspaceState } from '../useRoutArrWorkspaceState'
+import { useLocation } from 'react-router-dom'
 import { canCreateTrips, canPerformTrips, canViewAllTrips } from '../../auth/sessionStorage'
 import { RoutesPanel } from '../../components/RoutesPanel'
 
 type Props = { state: RoutArrWorkspaceState }
+type RoutesViewMode = 'drawer' | 'details' | 'create'
 
 export function RoutesSection({ state }: Props) {
+  const location = useLocation()
+  const mode: RoutesViewMode = location.pathname.startsWith('/routes/create')
+    ? 'create'
+    : location.pathname.startsWith('/routes/details')
+      ? 'details'
+      : 'drawer'
   const {
     roleKey,
     isPlatformAdmin,
@@ -33,6 +41,7 @@ export function RoutesSection({ state }: Props) {
   return (
     <div className="mt-8">
       <RoutesPanel
+        mode={mode}
         canCreate={canCreateTrips(roleKey, isPlatformAdmin)}
         canPerform={canPerformTrips(roleKey, isPlatformAdmin)}
         viewAllRoutes={canViewAllTrips(roleKey, isPlatformAdmin)}

@@ -22,6 +22,7 @@ describe('MeterReadingsPanel', () => {
   it('renders meter capture and reading history', () => {
     render(
       <MeterReadingsPanel
+        mode="details"
         canManageMeters
         canRecordReadings
         assets={[sampleAsset]}
@@ -109,6 +110,7 @@ describe('MeterReadingsPanel', () => {
   it('shows empty reading history', () => {
     render(
       <MeterReadingsPanel
+        mode="drawer"
         canManageMeters={false}
         canRecordReadings
         assets={[sampleAsset]}

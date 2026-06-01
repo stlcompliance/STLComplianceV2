@@ -3,6 +3,7 @@ import { buildSemanticKey } from '@stl/shared-ui'
 import type { AssetMeterResponse, AssetResponse, MeterPmForecastResponse, MeterReadingResponse } from '../api/types'
 
 interface MeterReadingsPanelProps {
+  mode: 'drawer' | 'details' | 'create'
   canManageMeters: boolean
   canRecordReadings: boolean
   assets: AssetResponse[]
@@ -32,6 +33,7 @@ interface MeterReadingsPanelProps {
 }
 
 export function MeterReadingsPanel({
+  mode,
   canManageMeters,
   canRecordReadings,
   assets,
@@ -133,7 +135,7 @@ export function MeterReadingsPanel({
             </p>
           ) : null}
 
-          {canManageMeters ? (
+          {mode === 'create' && canManageMeters ? (
             <div className="mb-6 rounded-lg border border-slate-700 bg-slate-950/50 p-4">
               <h3 className="text-sm font-medium text-slate-200">Define meter</h3>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
@@ -168,7 +170,7 @@ export function MeterReadingsPanel({
             </div>
           ) : null}
 
-          {canRecordReadings ? (
+          {mode === 'create' && canRecordReadings ? (
             <div className="mb-6 rounded-lg border border-slate-700 bg-slate-950/50 p-4">
               <h3 className="text-sm font-medium text-slate-200">Record reading</h3>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
@@ -196,7 +198,7 @@ export function MeterReadingsPanel({
             </div>
           ) : null}
 
-          {forecast && forecast.linkedSchedules.length > 0 ? (
+          {mode !== 'drawer' && forecast && forecast.linkedSchedules.length > 0 ? (
             <div className="mb-6 overflow-x-auto">
               <h3 className="mb-2 text-sm font-medium text-slate-200">PM usage forecast</h3>
               <table className="min-w-full text-left text-sm">

@@ -19,7 +19,6 @@ export const routarrNavItems: ProductNavItem[] = [
     to: '/trips/drawer',
     icon: Route as NavIcon,
     children: [
-      { label: 'Drawer', to: '/trips/drawer' },
       { label: 'Details', to: '/trips/details' },
       { label: 'Create', to: '/trips/create' },
     ],
@@ -30,7 +29,6 @@ export const routarrNavItems: ProductNavItem[] = [
     to: '/routes/drawer',
     icon: Map as NavIcon,
     children: [
-      { label: 'Drawer', to: '/routes/drawer' },
       { label: 'Details', to: '/routes/details' },
       { label: 'Create', to: '/routes/create' },
     ],

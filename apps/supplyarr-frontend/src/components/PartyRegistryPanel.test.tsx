@@ -32,6 +32,7 @@ describe('PartyRegistryPanel', () => {
   it('renders party registry list', () => {
     render(
       <PartyRegistryPanel
+        mode="drawer"
         title="Vendors"
         partyType="vendors"
         parties={[sampleParty]}
@@ -60,6 +61,7 @@ describe('PartyRegistryPanel', () => {
   it('shows lifecycle detail and edit controls when a party is selected', () => {
     const { container } = render(
       <PartyRegistryPanel
+        mode="details"
         title="Vendors"
         partyType="vendors"
         parties={[sampleParty]}
@@ -88,6 +90,6 @@ describe('PartyRegistryPanel', () => {
     expect(view.getByTestId('party-registry-lifecycle-timeline')).toBeInTheDocument()
     expect(view.getByTestId('party-registry-edit-form')).toBeInTheDocument()
     expect(view.getByTestId('party-registry-contact-form')).toBeInTheDocument()
-    expect(view.getByTestId('party-registry-create-form')).toBeInTheDocument()
+    expect(view.queryByTestId('party-registry-create-form')).not.toBeInTheDocument()
   })
 })

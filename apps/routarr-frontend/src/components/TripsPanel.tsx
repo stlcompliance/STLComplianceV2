@@ -18,6 +18,7 @@ import {
 } from '../lib/referencePickers'
 
 interface TripsPanelProps {
+  mode: 'drawer' | 'details' | 'create'
   accessToken: string
   canCreate: boolean
   canAssign: boolean
@@ -78,6 +79,7 @@ function statusOptionsFor(currentStatus: string, canManage: boolean): string[] {
 }
 
 export function TripsPanel({
+  mode,
   accessToken,
   canCreate,
   canAssign,
@@ -234,7 +236,7 @@ export function TripsPanel({
         </label>
       </div>
 
-      {canCreate ? (
+      {mode === 'create' && canCreate ? (
         <div className="mb-6 grid gap-3 rounded-lg border border-slate-700/80 bg-slate-950/40 p-4 md:grid-cols-2">
           <label className="text-sm text-slate-300 md:col-span-2" htmlFor="trips-title">
           Title
@@ -371,7 +373,7 @@ export function TripsPanel({
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-700 bg-slate-950/30 p-4">
+        {mode !== 'drawer' ? <div className="rounded-lg border border-slate-700 bg-slate-950/30 p-4">
           {!selectedTripId ? (
             <p className="text-sm text-slate-400">Select a trip to view dispatch details.</p>
           ) : isDetailLoading ? (
@@ -489,7 +491,7 @@ export function TripsPanel({
           ) : (
             <p className="text-sm text-slate-400">Trip detail unavailable.</p>
           )}
-        </div>
+        </div> : null}
       </div>
     </section>
   )

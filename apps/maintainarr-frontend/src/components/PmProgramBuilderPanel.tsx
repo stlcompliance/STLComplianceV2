@@ -10,6 +10,7 @@ import type {
 } from '../api/types'
 
 interface PmProgramBuilderPanelProps {
+  mode: 'drawer' | 'details' | 'create'
   canManage: boolean
   programs: PmProgramSummaryResponse[]
   selectedProgram: PmProgramDetailResponse | null
@@ -43,6 +44,7 @@ interface PmProgramBuilderPanelProps {
 }
 
 export function PmProgramBuilderPanel({
+  mode,
   canManage,
   programs,
   selectedProgram,
@@ -117,7 +119,7 @@ export function PmProgramBuilderPanel({
         Group PM schedules into programs scoped by asset type or individual asset.
       </p>
 
-      {canManage ? (
+      {mode === 'create' && canManage ? (
         <div className="mt-6 grid gap-4 rounded-lg border border-slate-700 bg-slate-950/40 p-4 md:grid-cols-3">
           <div className="space-y-1 text-sm">
             <div className="text-xs text-slate-400">Reference is auto-generated from program name.</div>
@@ -236,7 +238,7 @@ export function PmProgramBuilderPanel({
         )}
       </div>
 
-      {selectedProgramId ? (
+      {mode !== 'drawer' && selectedProgramId ? (
         <div className="mt-6 rounded-lg border border-slate-700 bg-slate-950/40 p-4">
           {isDetailLoading ? (
             <p className="text-sm text-slate-400">Loading program detail…</p>

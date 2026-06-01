@@ -4,15 +4,33 @@ import { StepBuilderPanel } from '../../components/StepBuilderPanel'
 import { CompletionRuleBuilderPanel } from '../../components/CompletionRuleBuilderPanel'
 import { StepBranchBuilderPanel } from '../../components/StepBranchBuilderPanel'
 import { TrainingMatrixPanel } from '../../components/TrainingMatrixPanel'
+import { useLocation } from 'react-router-dom'
 import type { TrainArrWorkspaceState } from '../useTrainArrWorkspaceState'
 
 type Props = { state: TrainArrWorkspaceState }
+type ProgramsViewMode = 'drawer' | 'details' | 'create'
 
 export function ProgramsSection({ state }: Props) {
   const s = state
+  const location = useLocation()
+  const mode: ProgramsViewMode = location.pathname.startsWith('/programs/create')
+    ? 'create'
+    : location.pathname.startsWith('/programs/details')
+      ? 'details'
+      : 'drawer'
   return (
     <div className="space-y-6">
+      {mode === 'create' ? (
+        <div className="rounded-xl border border-violet-700/50 bg-violet-950/20 p-4 text-sm text-violet-100">
+          <ol className="list-decimal space-y-1 pl-5">
+            <li>Step 1: Name the program and define business scope for the training lifecycle.</li>
+            <li>Step 2: Attach training definitions so assignments can inherit required content.</li>
+            <li>Step 3: Save and publish a version to make the program available for assignment.</li>
+          </ol>
+        </div>
+      ) : null}
       <ProgramBuilderPanel
+        mode={mode}
         programs={s.programsQuery.data ?? []}
         definitions={s.definitionsQuery.data ?? []}
         selectedDefinitionIds={s.selectedProgramDefinitionIds}
@@ -39,7 +57,7 @@ export function ProgramsSection({ state }: Props) {
         isStartingRevision={s.startRevisionMutation.isPending}
         canManage={s.canPrograms}
       />
-      <StepBuilderPanel
+      {mode === 'details' ? <StepBuilderPanel
         definitions={s.definitionsQuery.data ?? []}
         selectedDefinitionId={s.selectedDefinitionIdForCitations}
         steps={s.definitionStepsQuery.data ?? []}
@@ -53,8 +71,8 @@ export function ProgramsSection({ state }: Props) {
         onDeleteStep={async (stepId) => {
           await s.deleteDefinitionStepMutation.mutateAsync(stepId)
         }}
-      />
-      <CompletionRuleBuilderPanel
+      /> : null}
+      {mode === 'details' ? <CompletionRuleBuilderPanel
         definitions={s.definitionsQuery.data ?? []}
         selectedDefinitionId={s.selectedDefinitionIdForCitations}
         catalog={s.completionRuleCatalogQuery.data ?? []}
@@ -69,8 +87,8 @@ export function ProgramsSection({ state }: Props) {
         onDeleteRule={async (completionRuleId) => {
           await s.deleteCompletionRuleMutation.mutateAsync(completionRuleId)
         }}
-      />
-      <StepBranchBuilderPanel
+      /> : null}
+      {mode === 'details' ? <StepBranchBuilderPanel
         definitions={s.definitionsQuery.data ?? []}
         selectedDefinitionId={s.selectedDefinitionIdForCitations}
         steps={s.definitionStepsQuery.data ?? []}
@@ -91,8 +109,8 @@ export function ProgramsSection({ state }: Props) {
         onDeleteBranch={async (branchId) => {
           await s.deleteStepBranchMutation.mutateAsync(branchId)
         }}
-      />
-      <TrainingMatrixPanel
+      /> : null}
+      {mode === 'details' ? <TrainingMatrixPanel
         entries={s.trainingMatrixQuery.data?.entries ?? []}
         programs={s.programsQuery.data ?? []}
         definitions={s.definitionsQuery.data ?? []}
@@ -113,8 +131,8 @@ export function ProgramsSection({ state }: Props) {
         isCreating={s.createMatrixEntryMutation.isPending}
         deletingEntryId={s.deletingMatrixEntryId}
         canManage={s.canPrograms}
-      />
-      <ApplicabilityBuilderPanel
+      /> : null}
+      {mode === 'details' ? <ApplicabilityBuilderPanel
         profiles={s.requirementBuilderQuery.data?.profiles ?? []}
         requirements={s.requirementBuilderQuery.data?.requirements ?? []}
         programs={s.programsQuery.data ?? []}
@@ -154,7 +172,7 @@ export function ProgramsSection({ state }: Props) {
         deletingRequirementId={s.deletingRequirementId}
         syncingRequirementId={s.syncingRequirementId}
         canManage={s.canPrograms}
-      />
+      /> : null}
     </div>
   )
 }

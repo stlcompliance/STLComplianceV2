@@ -27,6 +27,7 @@ type PartyColumnKey = 'name' | 'legalName' | 'approval' | 'status' | 'primaryCon
 const PARTY_COLUMN_STORAGE_PREFIX = 'supplyarr.parties.drawer.columns.v1.'
 
 interface PartyRegistryPanelProps {
+  mode: 'drawer' | 'details' | 'create'
   title: string
   partyType: PartyRegistryRoute
   parties: ExternalPartyResponse[]
@@ -74,6 +75,7 @@ function formatTimestamp(value: string | null | undefined): string | null {
 }
 
 export function PartyRegistryPanel({
+  mode,
   title,
   partyType,
   parties,
@@ -258,7 +260,7 @@ export function PartyRegistryPanel({
         </table>
       </div>
 
-      {selected ? (
+      {mode === 'details' && selected ? (
         <div className="mt-4 rounded-lg border border-slate-800 p-4" data-testid="party-registry-detail">
           <h3 className="text-sm font-medium text-slate-200">{selected.displayName}</h3>
 
@@ -460,7 +462,7 @@ export function PartyRegistryPanel({
         </div>
       ) : null}
 
-      {canManage ? (
+      {mode === 'create' && canManage ? (
         <div className="mt-4 space-y-2 border-t border-slate-800 pt-4" data-testid="party-registry-create-form">
           <h3 className="text-sm font-medium text-slate-200">New {title.slice(0, -1).toLowerCase()}</h3>
           <label htmlFor="party-registry-create-display-name" className="block text-sm text-slate-400">

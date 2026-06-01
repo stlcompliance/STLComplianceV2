@@ -35,6 +35,9 @@ export function AssetsSection({ state }: Props) {
       {mode !== 'details' ? (
         <AssetRegistryPanel
           mode={mode}
+          showSourceData={false}
+          showAssetsTable
+          showAssetCreateForm={mode === 'create'}
           canManage={s.canManage}
           classes={s.classesQuery.data ?? []}
           types={s.typesQuery.data ?? []}

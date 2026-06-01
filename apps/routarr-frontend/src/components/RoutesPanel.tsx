@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { RouteDetailResponse, RouteSummaryResponse } from '../api/types'
 
 interface RoutesPanelProps {
+  mode: 'drawer' | 'details' | 'create'
   canCreate: boolean
   canPerform: boolean
   viewAllRoutes: boolean
@@ -41,6 +42,7 @@ function nextStopStatus(currentStatus: string): string | null {
 }
 
 export function RoutesPanel({
+  mode,
   canCreate,
   canPerform,
   viewAllRoutes,
@@ -120,7 +122,7 @@ export function RoutesPanel({
         </p>
       </div>
 
-      {canCreate ? (
+      {mode === 'create' && canCreate ? (
         <div className="mb-6 grid gap-3 rounded-lg border border-slate-700/80 bg-slate-950/40 p-4 md:grid-cols-2">
           <label className="text-sm text-slate-300 md:col-span-2" htmlFor="routes-route-title">
           Route title
@@ -259,7 +261,7 @@ export function RoutesPanel({
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-700 bg-slate-950/30 p-4">
+        {mode !== 'drawer' ? <div className="rounded-lg border border-slate-700 bg-slate-950/30 p-4">
           {!selectedRouteId ? (
             <p className="text-sm text-slate-400">Select a route to view ordered stops.</p>
           ) : isDetailLoading ? (
@@ -327,7 +329,7 @@ export function RoutesPanel({
           ) : (
             <p className="text-sm text-slate-400">Route detail unavailable.</p>
           )}
-        </div>
+        </div> : null}
       </div>
     </section>
   )

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import type { TrainingRulePackRequirementResponse } from '../api/types'
 
 interface RulePackRequirementPanelProps {
+  mode: 'drawer' | 'details' | 'create'
   title: string
   requirements: TrainingRulePackRequirementResponse[]
   rulePackKeyInput: string
@@ -19,6 +20,7 @@ interface RulePackRequirementPanelProps {
 }
 
 export function RulePackRequirementPanel({
+  mode,
   title,
   requirements,
   rulePackKeyInput,
@@ -61,7 +63,7 @@ export function RulePackRequirementPanel({
         References Compliance Core rule pack keys only — TrainArr does not own rule packs.
       </p>
 
-      {canManage ? (
+      {mode === 'create' && canManage ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <ControlledSelect
@@ -132,7 +134,7 @@ export function RulePackRequirementPanel({
                       {allColumns.find((item) => item.key === column)?.label}
                     </th>
                   ))}
-                  {canManage ? <th className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">Actions</th> : null}
+                  {mode !== 'drawer' && canManage ? <th className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">Actions</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -149,7 +151,7 @@ export function RulePackRequirementPanel({
                       {column === 'status' ? requirement.metadata?.status ?? '—' : null}
                     </td>
                   ))}
-                {canManage ? (
+                {mode !== 'drawer' && canManage ? (
                     <td className="px-3 py-2">
                     <button
                     type="button"

@@ -21,7 +21,6 @@ export const staffarrNavItems: ProductNavItem[] = [
     to: '/people/drawer',
     icon: Users,
     children: [
-      { label: 'Drawer', to: '/people/drawer' },
       { label: 'Details', to: '/people/details' },
       { label: 'Create', to: '/people/create' },
     ],

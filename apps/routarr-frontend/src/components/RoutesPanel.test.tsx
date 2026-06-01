@@ -6,6 +6,7 @@ describe('RoutesPanel', () => {
   it('renders route list and create form', () => {
     render(
       <RoutesPanel
+        mode="create"
         canCreate
         canPerform
         viewAllRoutes

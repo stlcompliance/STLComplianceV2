@@ -20,7 +20,6 @@ export const supplyarrNavItems: ProductNavItem[] = [
     to: '/parties/drawer',
     icon: Building2 as NavIcon,
     children: [
-      { label: 'Drawer', to: '/parties/drawer' },
       { label: 'Details', to: '/parties/details' },
       { label: 'Create', to: '/parties/create' },
     ],

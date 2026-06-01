@@ -9,6 +9,7 @@ import type {
 } from '../api/types'
 
 interface ProgramBuilderPanelProps {
+  mode: 'drawer' | 'details' | 'create'
   programs: TrainingProgramSummaryResponse[]
   definitions: TrainingDefinitionResponse[]
   selectedDefinitionIds: string[]
@@ -37,6 +38,7 @@ interface ProgramBuilderPanelProps {
 }
 
 export function ProgramBuilderPanel({
+  mode,
   programs,
   definitions,
   selectedDefinitionIds,
@@ -191,7 +193,7 @@ export function ProgramBuilderPanel({
         Create programs, edit drafts, publish versioned snapshots, and start new revisions.
       </p>
 
-      {!isEditing ? (
+      {mode === 'create' ? (
         <>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
@@ -237,7 +239,7 @@ export function ProgramBuilderPanel({
             {isCreating ? 'Creating…' : 'Create program'}
           </button>
         </>
-      ) : (
+      ) : mode === 'details' ? (
         <div className="mt-4 space-y-3">
           <p className="text-sm text-slate-300">
             Editing <span className="font-medium text-white">{selectedProgramDetail?.name ?? '…'}</span> (
@@ -305,7 +307,7 @@ export function ProgramBuilderPanel({
             </div>
           ) : null}
         </div>
-      )}
+      ) : null}
 
       {programs.length > 0 && (
         <div className="mt-6 border-t border-slate-700 pt-4">

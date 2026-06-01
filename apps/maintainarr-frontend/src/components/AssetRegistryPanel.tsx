@@ -10,6 +10,9 @@ import type {
 
 interface AssetRegistryPanelProps {
   mode: 'drawer' | 'details' | 'create'
+  showSourceData?: boolean
+  showAssetsTable?: boolean
+  showAssetCreateForm?: boolean
   canManage: boolean
   classes: AssetClassResponse[]
   types: AssetTypeResponse[]
@@ -55,6 +58,9 @@ function readinessLabel(status: AssetReadinessSummaryResponse['readinessStatus']
 
 export function AssetRegistryPanel({
   mode,
+  showSourceData,
+  showAssetsTable = true,
+  showAssetCreateForm,
   canManage,
   classes,
   types,
@@ -148,10 +154,13 @@ export function AssetRegistryPanel({
   }))
   void confirmedClassKey
   void confirmedTypeKey
+  const renderSourceData = showSourceData ?? mode === 'create'
+  const renderAssetCreateForm = showAssetCreateForm ?? (mode === 'create' && showAssetsTable)
+  const showAssetsSection = showAssetsTable
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      {mode === 'create' ? (
+      {renderSourceData ? (
         <>
           <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
             <h2 className="text-lg font-medium text-white">Asset classes</h2>
@@ -244,10 +253,8 @@ export function AssetRegistryPanel({
         </>
       ) : null}
 
-      <section
-        className={`rounded-xl border border-slate-700 bg-slate-900/60 p-5 ${mode === 'create' ? 'lg:col-span-2' : 'lg:col-span-2'}`}
-        data-testid="asset-registry-panel"
-      >
+      {showAssetsSection ? (
+        <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5 lg:col-span-2" data-testid="asset-registry-panel">
         <h2 className="text-lg font-medium text-white">Assets</h2>
         <div className="mt-4 rounded-md border border-slate-700 p-2">
           <p className="text-xs text-slate-400">Visible columns (max 5)</p>
@@ -315,7 +322,7 @@ export function AssetRegistryPanel({
             </tbody>
           </table>
         </div>
-        {mode === 'create' && canManage ? (
+        {renderAssetCreateForm && canManage ? (
           <div className="mt-4 grid gap-2 md:grid-cols-2">
             <ControlledSelect
               label="Asset type"
@@ -360,6 +367,7 @@ export function AssetRegistryPanel({
           </div>
         ) : null}
       </section>
+      ) : null}
     </div>
   )
 }

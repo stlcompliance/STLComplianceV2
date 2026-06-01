@@ -26,6 +26,7 @@ const program: TrainingProgramSummaryResponse = {
 }
 
 const baseProps = {
+  mode: 'drawer' as const,
   programs: [program],
   definitions: [definition],
   selectedDefinitionIds: [] as string[],
@@ -64,6 +65,7 @@ describe('ProgramBuilderPanel', () => {
     render(
       <ProgramBuilderPanel
         {...baseProps}
+        mode="create"
         programs={[]}
         selectedDefinitionIds={['d1']}
         programKey="onboarding"
@@ -80,6 +82,7 @@ describe('ProgramBuilderPanel', () => {
     render(
       <ProgramBuilderPanel
         {...baseProps}
+        mode="details"
         selectedProgramId="p1"
         selectedProgramDetail={{
           programId: 'p1',

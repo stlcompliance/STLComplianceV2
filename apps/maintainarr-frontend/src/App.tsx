@@ -85,14 +85,26 @@ export default function App() {
             <Route path="/meters/create" element={<MetersPage />} />
 
             <Route path="/work-orders" element={<WorkOrdersPage />} />
+            <Route path="/work-orders/drawer" element={<WorkOrdersPage />} />
+            <Route path="/work-orders/details" element={<WorkOrdersPage />} />
+            <Route path="/work-orders/create" element={<WorkOrdersPage />} />
 
             <Route path="/work-orders/:workOrderId" element={<WorkOrderWorkspacePage />} />
 
             <Route path="/defects" element={<DefectsPage />} />
+            <Route path="/defects/drawer" element={<DefectsPage />} />
+            <Route path="/defects/details" element={<DefectsPage />} />
+            <Route path="/defects/create" element={<DefectsPage />} />
 
             <Route path="/inspections" element={<InspectionsPage />} />
+            <Route path="/inspections/drawer" element={<InspectionsPage />} />
+            <Route path="/inspections/details" element={<InspectionsPage />} />
+            <Route path="/inspections/create" element={<InspectionsPage />} />
 
             <Route path="/inspection-templates" element={<InspectionTemplatesPage />} />
+            <Route path="/inspection-templates/drawer" element={<InspectionTemplatesPage />} />
+            <Route path="/inspection-templates/details" element={<InspectionTemplatesPage />} />
+            <Route path="/inspection-templates/create" element={<InspectionTemplatesPage />} />
 
             <Route path="/history" element={<HistoryPage />} />
 

@@ -1,4 +1,5 @@
 import type { RoutArrWorkspaceState } from '../useRoutArrWorkspaceState'
+import { useLocation } from 'react-router-dom'
 import {
   canAssignDrivers,
   canCreateTrips,
@@ -9,8 +10,15 @@ import {
 import { TripsPanel } from '../../components/TripsPanel'
 
 type Props = { state: RoutArrWorkspaceState }
+type TripsViewMode = 'drawer' | 'details' | 'create'
 
 export function TripsSection({ state }: Props) {
+  const location = useLocation()
+  const mode: TripsViewMode = location.pathname.startsWith('/trips/create')
+    ? 'create'
+    : location.pathname.startsWith('/trips/details')
+      ? 'details'
+      : 'drawer'
   const {
     accessToken,
     session,
@@ -44,6 +52,7 @@ export function TripsSection({ state }: Props) {
   return (
     <div className="mt-8">
       <TripsPanel
+        mode={mode}
         accessToken={accessToken}
         canCreate={canCreateTrips(roleKey, isPlatformAdmin)}
         canAssign={canAssignDrivers(roleKey, isPlatformAdmin)}

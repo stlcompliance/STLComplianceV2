@@ -10,6 +10,7 @@ describe('RulePackRequirementPanel', () => {
   it('renders save form for managers', () => {
     render(
       <RulePackRequirementPanel
+        mode="create"
         title="Definition rule packs"
         requirements={[]}
         rulePackKeyInput=""
@@ -34,6 +35,7 @@ describe('RulePackRequirementPanel', () => {
   it('lists linked requirements with metadata', () => {
     render(
       <RulePackRequirementPanel
+        mode="details"
         title="Program rule packs"
         requirements={[
           {

@@ -2,10 +2,12 @@ import { PartyRegistryPanel } from '../../components/PartyRegistryPanel'
 import { SupplierOnboardingPanel } from '../../components/SupplierOnboardingPanel'
 import { VendorRestrictionsPanel } from '../../components/VendorRestrictionsPanel'
 import { SupplierIncidentsPanel } from '../../components/SupplierIncidentsPanel'
+import { useLocation } from 'react-router-dom'
 import type { CreatePartyContactRequest, UpdateExternalPartyRequest } from '../../api/types'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
+type PartiesViewMode = 'drawer' | 'details' | 'create'
 
 function partyRegistryHandlers(
   s: SupplyArrWorkspaceState,
@@ -28,6 +30,12 @@ function partyRegistryHandlers(
 }
 
 export function PartiesSection({ state: s }: Props) {
+  const location = useLocation()
+  const mode: PartiesViewMode = location.pathname.startsWith('/parties/create')
+    ? 'create'
+    : location.pathname.startsWith('/parties/details')
+      ? 'details'
+      : 'drawer'
   const onboardableParties = [
     ...s.vendors,
     ...(s.suppliersQuery.data ?? []),
@@ -39,23 +47,28 @@ export function PartiesSection({ state: s }: Props) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2" data-testid="supplyarr-party-registry-workspace">
-      <SupplierOnboardingPanel
-        accessToken={s.accessToken}
-        canManage={s.canManage}
-        canReview={s.canApprovePr}
-        onboardableParties={onboardableParties}
-      />
-      <VendorRestrictionsPanel
-        accessToken={s.accessToken}
-        canManage={s.canManage}
-        restrictableParties={onboardableParties}
-      />
-      <SupplierIncidentsPanel
-        accessToken={s.accessToken}
-        canManage={s.canManage}
-        incidentParties={onboardableParties}
-      />
+      {mode === 'details' ? (
+        <>
+          <SupplierOnboardingPanel
+            accessToken={s.accessToken}
+            canManage={s.canManage}
+            canReview={s.canApprovePr}
+            onboardableParties={onboardableParties}
+          />
+          <VendorRestrictionsPanel
+            accessToken={s.accessToken}
+            canManage={s.canManage}
+            restrictableParties={onboardableParties}
+          />
+          <SupplierIncidentsPanel
+            accessToken={s.accessToken}
+            canManage={s.canManage}
+            incidentParties={onboardableParties}
+          />
+        </>
+      ) : null}
       <PartyRegistryPanel
+        mode={mode}
         title="Vendors"
         partyType="vendors"
         parties={s.vendors}
@@ -76,6 +89,7 @@ export function PartiesSection({ state: s }: Props) {
         {...vendorHandlers}
       />
       <PartyRegistryPanel
+        mode={mode}
         title="Suppliers"
         partyType="suppliers"
         parties={s.suppliersQuery.data ?? []}
@@ -96,6 +110,7 @@ export function PartiesSection({ state: s }: Props) {
         {...supplierHandlers}
       />
       <PartyRegistryPanel
+        mode={mode}
         title="Dealers"
         partyType="dealers"
         parties={s.dealersQuery.data ?? []}
