@@ -1072,9 +1072,11 @@ export function useMaintainArrWorkspaceState() {
       if (!values.siteId && siteRef) {
         values.siteId = siteRef
       }
+      const normalizedAssetTag = assetTag.trim()
+      const normalizedAssetName = assetName.trim() || normalizedAssetTag
       return createAssetControlledV1(accessToken, {
-        assetTag,
-        name: assetName,
+        assetTag: normalizedAssetTag,
+        name: normalizedAssetName,
         description: assetDescription || null,
         values,
       })

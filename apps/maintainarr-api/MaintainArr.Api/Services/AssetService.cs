@@ -112,7 +112,7 @@ public sealed class AssetService(
             cancellationToken);
 
         var assetTag = NormalizeAssetTag(request.AssetTag);
-        var name = NormalizeName(request.Name, "Asset name");
+        var name = NormalizeNameOrFallback(request.Name, assetTag);
         var description = NormalizeDescription(request.Description);
 
         var exists = await db.Assets.AnyAsync(x => x.TenantId == tenantId && x.AssetTag == assetTag, cancellationToken);
@@ -193,7 +193,7 @@ public sealed class AssetService(
             asset.AssetTypeId = projectedType.Id;
         }
 
-        asset.Name = NormalizeName(request.Name, "Asset name");
+        asset.Name = NormalizeNameOrFallback(request.Name, asset.Name);
         asset.Description = NormalizeDescription(request.Description);
         asset.SiteRef = request.Values.TryGetValue("siteId", out var siteIdRaw) ? NormalizeSiteRef(siteIdRaw?.ToString()) : asset.SiteRef;
         if (request.Values.TryGetValue("lifecycleStatus", out var lifecycleRaw) && !string.IsNullOrWhiteSpace(lifecycleRaw?.ToString()))
@@ -459,6 +459,12 @@ public sealed class AssetService(
         }
 
         return trimmed;
+    }
+
+    private static string NormalizeNameOrFallback(string? value, string fallback)
+    {
+        var candidate = string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+        return NormalizeName(candidate, "Asset name");
     }
 
     private static string NormalizeDescription(string? value) =>

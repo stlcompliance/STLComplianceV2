@@ -193,7 +193,7 @@ export function AssetRegistryPanel({
   type AssetColumnKey = 'tag' | 'name' | 'class' | 'type' | 'site' | 'status' | 'readiness'
   const STORAGE_KEY = 'maintainarr.assets.drawer.columns.v1'
   const allColumns: Array<{ key: AssetColumnKey; label: string }> = [
-    { key: 'tag', label: 'Asset tag' },
+    { key: 'tag', label: 'Unit number' },
     { key: 'name', label: 'Asset name' },
     { key: 'class', label: 'Class' },
     { key: 'type', label: 'Type' },
@@ -399,13 +399,13 @@ export function AssetRegistryPanel({
               <div className="grid gap-2 md:grid-cols-2">
                 <input
                   className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-                  placeholder="Asset tag"
+                  placeholder="Unit number or identifier"
                   value={assetTag}
                   onChange={(event) => onAssetTagChange(event.target.value)}
                 />
                 <input
                   className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-                  placeholder="Asset name"
+                  placeholder="Display name (optional)"
                   value={assetName}
                   onChange={(event) => onAssetNameChange(event.target.value)}
                 />

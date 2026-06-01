@@ -81,7 +81,7 @@ export function AssetDetailsPage({ asset, readiness, isReadinessLoading, fieldCo
           <h3 className="text-lg font-semibold text-white">Asset snapshot</h3>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
-              <p className="text-xs text-slate-500">Asset tag</p>
+              <p className="text-xs text-slate-500">Unit number</p>
               <p className="text-sm font-medium text-slate-100">{asset.assetTag}</p>
             </div>
             <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
