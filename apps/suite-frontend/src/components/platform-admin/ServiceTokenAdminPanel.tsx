@@ -10,6 +10,8 @@ import {
 
 import * as nexarr from '../../api/nexarrClient'
 import type { ServiceTokenIssueResult } from '../../api/types'
+import { ServiceClientsCard } from './service-token/ServiceClientsCard'
+import { ServiceTokensCard } from './service-token/ServiceTokensCard'
 
 export function ServiceTokenAdminPanel() {
   const queryClient = useQueryClient()
@@ -21,17 +23,19 @@ export function ServiceTokenAdminPanel() {
   const [issueTenantId, setIssueTenantId] = useState('')
   const [issueActionScope, setIssueActionScope] = useState('')
   const [issueLifetimeMinutes, setIssueLifetimeMinutes] = useState('60')
+  const [clientsPage, setClientsPage] = useState(1)
+  const [tokensPage, setTokensPage] = useState(1)
   const [issuedToken, setIssuedToken] = useState<ServiceTokenIssueResult | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const clientsQuery = useQuery({
-    queryKey: ['platform-service-clients'],
-    queryFn: () => nexarr.listServiceClients(1, 100),
+    queryKey: ['platform-service-clients', clientsPage],
+    queryFn: () => nexarr.listServiceClients(clientsPage, 25),
   })
 
   const tokensQuery = useQuery({
-    queryKey: ['platform-service-tokens'],
-    queryFn: () => nexarr.listServiceTokens(undefined, 1, 50),
+    queryKey: ['platform-service-tokens', tokensPage],
+    queryFn: () => nexarr.listServiceTokens(undefined, tokensPage, 25),
   })
 
   const tenantsQuery = useQuery({
@@ -134,7 +138,6 @@ export function ServiceTokenAdminPanel() {
   })
 
   const clients = clientsQuery.data?.items ?? []
-  const tokens = tokensQuery.data?.items ?? []
 
   return (
     <section
@@ -279,65 +282,29 @@ export function ServiceTokenAdminPanel() {
         ) : null}
       </div>
 
-      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-        <h3 className="text-sm font-medium text-slate-200">Registered clients</h3>
-        {clientsQuery.isLoading ? (
-          <p className="mt-2 text-sm text-slate-500">Loading clients…</p>
-        ) : clients.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500" data-testid="service-token-clients-empty">
-            No service clients registered.
-          </p>
-        ) : (
-          <ul className="mt-3 divide-y divide-slate-800 text-sm" data-testid="service-token-clients-list">
-            {clients.map((client) => (
-              <li key={client.serviceClientId} className="py-2">
-                <span className="font-medium text-slate-100">{client.displayName}</span>
-                <span className="ml-2 font-mono text-xs text-slate-500">{client.clientKey}</span>
-                <p className="text-xs text-slate-400">
-                  source {client.sourceProductKey} · allows {client.allowedProductKeys.join(', ')}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <ServiceClientsCard
+        clientsQuery={clientsQuery}
+        page={clientsPage}
+        onPreviousPage={() => setClientsPage((value) => Math.max(1, value - 1))}
+        onNextPage={() => {
+          if (clientsQuery.data?.hasNextPage) {
+            setClientsPage((value) => value + 1)
+          }
+        }}
+      />
 
-      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-        <h3 className="text-sm font-medium text-slate-200">Issued tokens</h3>
-        {tokensQuery.isLoading ? (
-          <p className="mt-2 text-sm text-slate-500">Loading tokens…</p>
-        ) : tokens.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500" data-testid="service-token-list-empty">
-            No service tokens issued yet.
-          </p>
-        ) : (
-          <ul className="mt-3 divide-y divide-slate-800 text-sm" data-testid="service-token-list">
-            {tokens.map((token) => (
-              <li key={token.tokenId} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                <div>
-                  <span className="font-mono text-xs text-teal-300">{token.clientKey}</span>
-                  <p className="text-xs text-slate-400">
-                    {token.revokedAt ? 'Revoked' : 'Active'} · expires{' '}
-                    {new Date(token.expiresAt).toLocaleString()}
-                    {token.tenantId ? ` · tenant ${token.tenantId}` : ''}
-                  </p>
-                </div>
-                {!token.revokedAt ? (
-                  <button
-                    type="button"
-                    onClick={() => revokeMutation.mutate(token.tokenId)}
-                    disabled={revokeMutation.isPending}
-                    data-testid={`service-token-revoke-${token.tokenId}`}
-                    className="rounded-md bg-rose-700 px-3 py-1 text-xs font-medium text-white hover:bg-rose-600 disabled:opacity-50"
-                  >
-                    Revoke
-                  </button>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <ServiceTokensCard
+        tokensQuery={tokensQuery}
+        revokePending={revokeMutation.isPending}
+        onRevoke={(tokenId) => revokeMutation.mutate(tokenId)}
+        page={tokensPage}
+        onPreviousPage={() => setTokensPage((value) => Math.max(1, value - 1))}
+        onNextPage={() => {
+          if (tokensQuery.data?.hasNextPage) {
+            setTokensPage((value) => value + 1)
+          }
+        }}
+      />
     </section>
   )
 }

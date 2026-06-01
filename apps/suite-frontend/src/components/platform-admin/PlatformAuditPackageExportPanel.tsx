@@ -1,24 +1,16 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ControlledSelect, type PickerOption } from '@stl/shared-ui'
+import { ApiErrorCallout, getErrorMessage, type PickerOption } from '@stl/shared-ui'
 import * as nexarr from '../../api/nexarrClient'
 import type {
   PlatformAuditPackageExportPreview,
   PlatformAuditPackageScope,
 } from '../../api/types'
+import { AuditExportTimelineCard } from './audit-export/AuditExportTimelineCard'
+import { AuditExportActionsBar } from './audit-export/AuditExportActionsBar'
+import { AuditExportFiltersCard } from './audit-export/AuditExportFiltersCard'
+import { dateStamp, downloadBlob } from './audit-export/utils'
 
-function downloadBlob(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = url
-  anchor.download = fileName
-  anchor.click()
-  URL.revokeObjectURL(url)
-}
-
-function dateStamp() {
-  return new Date().toISOString().slice(0, 10)
-}
 
 export function PlatformAuditPackageExportPanel() {
   const [fromDate, setFromDate] = useState('')
@@ -29,6 +21,7 @@ export function PlatformAuditPackageExportPanel() {
   const [targetType, setTargetType] = useState('')
   const [actorUserId, setActorUserId] = useState('')
   const [productKey, setProductKey] = useState('')
+  const [timelinePage, setTimelinePage] = useState(1)
   const [lastJsonExport, setLastJsonExport] = useState<PlatformAuditPackageExportPreview | null>(
     null,
   )
@@ -107,11 +100,11 @@ export function PlatformAuditPackageExportPanel() {
   })
 
   const timelineQuery = useQuery({
-    queryKey: ['platform-audit-package-timeline', scope],
+    queryKey: ['platform-audit-package-timeline', scope, timelinePage],
     queryFn: () =>
       nexarr.getPlatformAuditPackageTimeline({
         ...scope,
-        page: 1,
+        page: timelinePage,
         pageSize: 15,
       }),
   })
@@ -181,6 +174,19 @@ export function PlatformAuditPackageExportPanel() {
     })
   }, [activeJobId, jobStatusQuery.data])
 
+  useEffect(() => {
+    setTimelinePage(1)
+  }, [
+    fromDate,
+    toDate,
+    tenantId,
+    action,
+    result,
+    targetType,
+    actorUserId,
+    productKey,
+  ])
+
   const summary = summaryQuery.data
   const jobStatus = jobStatusQuery.data
   const jobInFlight =
@@ -229,83 +235,30 @@ export function PlatformAuditPackageExportPanel() {
         </ul>
       </div>
 
-      <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-        <h3 className="text-sm font-medium text-slate-200">Export filters</h3>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <ControlledSelect
-            label="Tenant scope (optional)"
-            value={tenantId}
-            onChange={setTenantId}
-            options={tenantOptions}
-            emptyLabel="All tenants"
-            testId="platform-audit-filter-tenant"
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 sm:col-span-2 lg:col-span-3"
-          />
-          <label htmlFor="platform-audit-filter-from" className="block text-sm text-slate-300">
-            Audit events from (optional)
-            <input
-              id="platform-audit-filter-from"
-              type="date"
-              value={fromDate}
-              onChange={(event) => setFromDate(event.target.value)}
-              data-testid="platform-audit-filter-from"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            />
-          </label>
-          <label htmlFor="platform-audit-filter-to" className="block text-sm text-slate-300">
-            Audit events to (optional)
-            <input
-              id="platform-audit-filter-to"
-              type="date"
-              value={toDate}
-              onChange={(event) => setToDate(event.target.value)}
-              data-testid="platform-audit-filter-to"
-              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-            />
-          </label>
-          <ControlledSelect
-            label="Action"
-            value={action}
-            onChange={setAction}
-            options={actionOptions}
-            emptyLabel="All actions"
-            testId="platform-audit-filter-action"
-          />
-          <ControlledSelect
-            label="Result"
-            value={result}
-            onChange={setResult}
-            options={resultOptions}
-            emptyLabel="All results"
-            testId="platform-audit-filter-result"
-          />
-          <ControlledSelect
-            label="Target type"
-            value={targetType}
-            onChange={setTargetType}
-            options={targetTypeOptions}
-            emptyLabel="All target types"
-            testId="platform-audit-filter-target-type"
-          />
-          <ControlledSelect
-            label="Product key"
-            value={productKey}
-            onChange={setProductKey}
-            options={productKeyOptions}
-            emptyLabel="All products"
-            testId="platform-audit-filter-product-key"
-          />
-          <ControlledSelect
-            label="Actor user (optional)"
-            value={actorUserId}
-            onChange={setActorUserId}
-            options={actorOptions}
-            emptyLabel="Any actor"
-            testId="platform-audit-filter-actor"
-            className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 sm:col-span-2"
-          />
-        </div>
-      </div>
+      <AuditExportFiltersCard
+        tenantId={tenantId}
+        fromDate={fromDate}
+        toDate={toDate}
+        action={action}
+        result={result}
+        targetType={targetType}
+        actorUserId={actorUserId}
+        productKey={productKey}
+        tenantOptions={tenantOptions}
+        actionOptions={actionOptions}
+        resultOptions={resultOptions}
+        targetTypeOptions={targetTypeOptions}
+        productKeyOptions={productKeyOptions}
+        actorOptions={actorOptions}
+        onTenantIdChange={setTenantId}
+        onFromDateChange={setFromDate}
+        onToDateChange={setToDate}
+        onActionChange={setAction}
+        onResultChange={setResult}
+        onTargetTypeChange={setTargetType}
+        onActorUserIdChange={setActorUserId}
+        onProductKeyChange={setProductKey}
+      />
 
       <div
         data-testid="platform-audit-summary-section"
@@ -314,6 +267,12 @@ export function PlatformAuditPackageExportPanel() {
         <h3 className="text-sm font-medium text-slate-200">Export summary</h3>
         {summaryQuery.isLoading ? (
           <p className="mt-3 text-sm text-slate-500">Calculating scoped counts…</p>
+        ) : summaryQuery.isError ? (
+          <ApiErrorCallout
+            message={getErrorMessage(summaryQuery.error, 'Failed to load export summary.')}
+            onRetry={() => void summaryQuery.refetch()}
+            retryLabel="Retry summary"
+          />
         ) : summary ? (
           <div className="mt-3 space-y-3 text-sm text-slate-300">
             <p data-testid="platform-audit-summary-counts">
@@ -361,82 +320,39 @@ export function PlatformAuditPackageExportPanel() {
         )}
       </div>
 
-      <div
-        data-testid="platform-audit-timeline-section"
-        className="rounded-lg border border-slate-800 bg-slate-950/50 p-4"
-      >
-        <h3 className="text-sm font-medium text-slate-200">Audit timeline preview</h3>
-        {timelineQuery.isLoading ? (
-          <p className="mt-3 text-sm text-slate-500">Loading audit timeline…</p>
-        ) : timelineQuery.data && timelineQuery.data.items.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">No audit events match these filters.</p>
-        ) : timelineQuery.data ? (
-          <ul className="mt-3 divide-y divide-slate-800 text-sm">
-            {timelineQuery.data.items.map((item) => (
-              <li key={item.auditEventId} className="py-2">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-mono text-teal-300">{item.action}</span>
-                  <span className="text-xs text-slate-500">
-                    {new Date(item.occurredAt).toLocaleString()}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400">
-                  {item.targetType}
-                  {item.targetId ? ` · ${item.targetId}` : ''} · {item.result}
-                  {item.tenantId ? ` · tenant ${item.tenantId}` : ''}
-                </p>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
+      {timelineQuery.isError ? (
+        <ApiErrorCallout
+          message={getErrorMessage(timelineQuery.error, 'Failed to load audit timeline preview.')}
+          onRetry={() => void timelineQuery.refetch()}
+          retryLabel="Retry timeline"
+        />
+      ) : (
+        <AuditExportTimelineCard
+          timeline={timelineQuery.data}
+          isLoading={timelineQuery.isLoading}
+          page={timelinePage}
+          onPreviousPage={() => setTimelinePage((value) => Math.max(1, value - 1))}
+          onNextPage={() => {
+            if (timelineQuery.data?.hasNextPage) {
+              setTimelinePage((value) => value + 1)
+            }
+          }}
+        />
+      )}
 
-      <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={() => zipExportMutation.mutate()}
-          disabled={exportBusy}
-          className="rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500 disabled:opacity-50"
-        >
-          {zipExportMutation.isPending ? 'Exporting…' : 'Download ZIP package'}
-        </button>
-        <button
-          type="button"
-          onClick={() => csvExportMutation.mutate()}
-          disabled={exportBusy}
-          data-testid="platform-audit-download-csv"
-          className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50"
-        >
-          {csvExportMutation.isPending ? 'Exporting…' : 'Download audit CSV'}
-        </button>
-        <button
-          type="button"
-          onClick={() => jsonFileMutation.mutate()}
-          disabled={exportBusy}
-          data-testid="platform-audit-download-json"
-          className="rounded-md bg-slate-600 px-4 py-2 text-sm font-medium text-slate-100 hover:bg-slate-500 disabled:opacity-50"
-        >
-          {jsonFileMutation.isPending ? 'Exporting…' : 'Download JSON package'}
-        </button>
-        <button
-          type="button"
-          onClick={() => backgroundZipMutation.mutate()}
-          disabled={exportBusy}
-          className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 disabled:opacity-50"
-        >
-          {backgroundZipMutation.isPending || jobInFlight
-            ? 'Background export…'
-            : 'Background ZIP export'}
-        </button>
-        <button
-          type="button"
-          onClick={() => jsonExportMutation.mutate()}
-          disabled={jsonExportMutation.isPending}
-          className="rounded-md bg-slate-700 px-4 py-2 text-sm font-medium text-slate-100 hover:bg-slate-600 disabled:opacity-50"
-        >
-          {jsonExportMutation.isPending ? 'Loading…' : 'Preview JSON export'}
-        </button>
-      </div>
+      <AuditExportActionsBar
+        exportBusy={exportBusy}
+        zipPending={zipExportMutation.isPending}
+        csvPending={csvExportMutation.isPending}
+        jsonFilePending={jsonFileMutation.isPending}
+        backgroundPending={backgroundZipMutation.isPending || Boolean(jobInFlight)}
+        previewPending={jsonExportMutation.isPending}
+        onZip={() => zipExportMutation.mutate()}
+        onCsv={() => csvExportMutation.mutate()}
+        onJsonFile={() => jsonFileMutation.mutate()}
+        onBackgroundZip={() => backgroundZipMutation.mutate()}
+        onPreviewJson={() => jsonExportMutation.mutate()}
+      />
 
       {jobStatus ? (
         <div

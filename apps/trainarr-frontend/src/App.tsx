@@ -31,6 +31,9 @@ export default function App() {
           <Route element={<ProductWorkspaceLayout />}>
             <Route index element={<Navigate to="/programs" replace />} />
             <Route path="/programs" element={<ProgramsPage />} />
+            <Route path="/programs/drawer" element={<ProgramsPage />} />
+            <Route path="/programs/details" element={<ProgramsPage />} />
+            <Route path="/programs/create" element={<ProgramsPage />} />
             <Route path="/assignments" element={<AssignmentsPage />} />
             <Route path="/assignments/manual" element={<AssignmentsPage />} />
             <Route path="/assignments/queue" element={<AssignmentsPage />} />
@@ -43,6 +46,9 @@ export default function App() {
             <Route path="/remediation" element={<RemediationPage />} />
             <Route path="/citations" element={<CitationsPage />} />
             <Route path="/rule-packs" element={<RulePacksPage />} />
+            <Route path="/rule-packs/drawer" element={<RulePacksPage />} />
+            <Route path="/rule-packs/details" element={<RulePacksPage />} />
+            <Route path="/rule-packs/create" element={<RulePacksPage />} />
             <Route path="/qualifications" element={<QualificationsPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/settings" element={<SettingsPage />} />

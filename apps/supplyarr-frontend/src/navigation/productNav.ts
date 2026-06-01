@@ -15,7 +15,16 @@ import type { ProductNavItem } from '@stl/shared-ui'
 type NavIcon = NonNullable<ProductNavItem['icon']>
 
 export const supplyarrNavItems: ProductNavItem[] = [
-  { label: 'Parties', to: '/parties', icon: Building2 as NavIcon },
+  {
+    label: 'Parties',
+    to: '/parties/drawer',
+    icon: Building2 as NavIcon,
+    children: [
+      { label: 'Drawer', to: '/parties/drawer' },
+      { label: 'Details', to: '/parties/details' },
+      { label: 'Create', to: '/parties/create' },
+    ],
+  },
   { label: 'Catalog', to: '/catalog', icon: PackageSearch as NavIcon },
   { label: 'Inventory', to: '/inventory', icon: Warehouse as NavIcon },
   {

@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import * as nexarr from '../../api/nexarrClient'
+import { EffectiveDeploymentCard } from './data-plane/EffectiveDeploymentCard'
+import { OverridesCard } from './data-plane/OverridesCard'
 
 const DEPLOYMENT_MODES = [
   { value: 'hosted', label: 'Hosted (Render)' },
@@ -23,6 +25,7 @@ export function HybridDataPlanePanel() {
   const [dataEndpointUrl, setDataEndpointUrl] = useState('')
   const [trustStatus, setTrustStatus] = useState('trusted')
   const [notes, setNotes] = useState('')
+  const [overridesPage, setOverridesPage] = useState(1)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const tenantsQuery = useQuery({
@@ -36,8 +39,8 @@ export function HybridDataPlanePanel() {
   })
 
   const profilesQuery = useQuery({
-    queryKey: ['platform-data-plane-profiles', tenantId],
-    queryFn: () => nexarr.listDataPlaneProfiles({ tenantId, pageSize: 100 }),
+    queryKey: ['platform-data-plane-profiles', tenantId, overridesPage],
+    queryFn: () => nexarr.listDataPlaneProfiles({ tenantId, page: overridesPage, pageSize: 25 }),
     enabled: Boolean(tenantId.trim()),
   })
 
@@ -77,9 +80,13 @@ export function HybridDataPlanePanel() {
 
   const tenants = tenantsQuery.data?.items ?? []
   const products = (productsQuery.data ?? []).filter((product) => product.isActive)
-  const profiles = profilesQuery.data?.items ?? []
+  const profilesPage = profilesQuery.data
   const effectiveProfiles = effectiveQuery.data ?? []
   const endpointRequired = deploymentMode !== 'hosted'
+
+  useEffect(() => {
+    setOverridesPage(1)
+  }, [tenantId])
 
   return (
     <section
@@ -114,25 +121,13 @@ export function HybridDataPlanePanel() {
       </label>
 
       {tenantId ? (
-        <div
-          className="rounded-lg border border-slate-800 bg-slate-950/50 p-4"
-          data-testid="data-plane-effective-section"
-        >
-          <h3 className="text-sm font-medium text-slate-200">Effective deployment map</h3>
-          {effectiveQuery.isLoading ? (
-            <p className="mt-2 text-sm text-slate-500">Loading effective profiles…</p>
-          ) : (
-            <ul className="mt-3 divide-y divide-slate-800 text-sm">
-              {effectiveProfiles.map((profile) => (
-                <li key={profile.productKey} className="py-2">
-                  <span className="font-medium text-slate-100">{profile.productDisplayName}</span>
-                  <span className="ml-2 font-mono text-xs text-teal-300">{profile.deploymentMode}</span>
-                  <span className="ml-2 text-xs text-slate-500">{profile.trustStatus}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <EffectiveDeploymentCard
+          isLoading={effectiveQuery.isLoading}
+          isError={effectiveQuery.isError}
+          error={effectiveQuery.error}
+          profiles={effectiveProfiles}
+          onRetry={() => void effectiveQuery.refetch()}
+        />
       ) : null}
 
       <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
@@ -239,39 +234,22 @@ export function HybridDataPlanePanel() {
       ) : null}
 
       {tenantId ? (
-        <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-          <h3 className="text-sm font-medium text-slate-200">Stored overrides</h3>
-          {profilesQuery.isLoading ? (
-            <p className="mt-2 text-sm text-slate-500">Loading overrides…</p>
-          ) : profiles.length === 0 ? (
-            <p className="mt-2 text-sm text-slate-500" data-testid="data-plane-overrides-empty">
-              No overrides — all products default to hosted/trusted.
-            </p>
-          ) : (
-            <ul className="mt-3 divide-y divide-slate-800 text-sm" data-testid="data-plane-overrides-list">
-              {profiles.map((profile) => (
-                <li key={profile.profileId} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                  <div>
-                    <span className="font-medium text-slate-100">{profile.productDisplayName}</span>
-                    <p className="text-xs text-slate-400">
-                      {profile.deploymentMode} · {profile.trustStatus}
-                      {profile.dataEndpointUrl ? ` · ${profile.dataEndpointUrl}` : ''}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => deleteMutation.mutate(profile.productKey)}
-                    disabled={deleteMutation.isPending}
-                    data-testid={`data-plane-reset-${profile.productKey}`}
-                    className="rounded-md bg-slate-700 px-3 py-1 text-xs font-medium text-white hover:bg-slate-600 disabled:opacity-50"
-                  >
-                    Reset to hosted default
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <OverridesCard
+          isLoading={profilesQuery.isLoading}
+          isError={profilesQuery.isError}
+          error={profilesQuery.error}
+          pagedProfiles={profilesPage}
+          deletePending={deleteMutation.isPending}
+          onDelete={(productKey) => deleteMutation.mutate(productKey)}
+          page={overridesPage}
+          onPreviousPage={() => setOverridesPage((value) => Math.max(1, value - 1))}
+          onNextPage={() => {
+            if (profilesPage?.hasNextPage) {
+              setOverridesPage((value) => value + 1)
+            }
+          }}
+          onRetry={() => void profilesQuery.refetch()}
+        />
       ) : null}
     </section>
   )

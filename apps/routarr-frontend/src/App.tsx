@@ -33,8 +33,14 @@ export default function App() {
             <Route path="/dispatch" element={<DispatchPage />} />
             <Route path="/driver-portal" element={<DriverPortalPage />} />
             <Route path="/trips" element={<TripsPage />} />
+            <Route path="/trips/drawer" element={<TripsPage />} />
+            <Route path="/trips/details" element={<TripsPage />} />
+            <Route path="/trips/create" element={<TripsPage />} />
             <Route path="/trips/:tripId" element={<TripWorkspacePage />} />
             <Route path="/routes" element={<RoutesPage />} />
+            <Route path="/routes/drawer" element={<RoutesPage />} />
+            <Route path="/routes/details" element={<RoutesPage />} />
+            <Route path="/routes/create" element={<RoutesPage />} />
             <Route path="/availability" element={<AvailabilityPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/reports" element={<ReportsPage />} />

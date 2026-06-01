@@ -33,6 +33,9 @@ export default function App() {
           <Route element={<ProductWorkspaceLayout />}>
             <Route index element={<Navigate to="/parties" replace />} />
             <Route path="/parties" element={<PartiesPage />} />
+            <Route path="/parties/drawer" element={<PartiesPage />} />
+            <Route path="/parties/details" element={<PartiesPage />} />
+            <Route path="/parties/create" element={<PartiesPage />} />
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/inventory" element={<InventoryPage />} />
             <Route path="/purchasing" element={<PurchasingPage />} />

@@ -97,4 +97,103 @@ describe('HybridDataPlanePanel', () => {
     expect(screen.getByTestId('data-plane-effective-section')).toBeInTheDocument()
     expect(screen.getByText('hosted')).toBeInTheDocument()
   })
+
+  it('uses backend pagination for stored overrides', async () => {
+    const user = userEvent.setup()
+    vi.mocked(nexarr.getPlatformAdminTenantOverview).mockResolvedValue({
+      items: [
+        {
+          tenantId,
+          slug: 'demo',
+          displayName: 'Demo Tenant',
+          status: 'Active',
+          activeEntitlementCount: 1,
+          membershipCount: 2,
+          createdAt: '2026-01-01T00:00:00Z',
+        },
+      ],
+      page: 1,
+      pageSize: 100,
+      totalCount: 1,
+      hasNextPage: false,
+    })
+    vi.mocked(nexarr.getPlatformAdminProductOverview).mockResolvedValue([])
+    vi.mocked(nexarr.listEffectiveDataPlaneProfiles).mockResolvedValue([])
+    vi.mocked(nexarr.listDataPlaneProfiles)
+      .mockResolvedValueOnce({
+        items: [],
+        page: 1,
+        pageSize: 25,
+        totalCount: 30,
+        hasNextPage: true,
+      })
+      .mockResolvedValueOnce({
+        items: [],
+        page: 2,
+        pageSize: 25,
+        totalCount: 30,
+        hasNextPage: false,
+      })
+
+    renderPanel()
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: /Demo Tenant/ })).toBeInTheDocument()
+    })
+    await user.selectOptions(await screen.findByTestId('data-plane-tenant'), tenantId)
+
+    await waitFor(() => {
+      expect(vi.mocked(nexarr.listDataPlaneProfiles).mock.calls[0]?.[0]).toMatchObject({
+        tenantId,
+        page: 1,
+        pageSize: 25,
+      })
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Next' }))
+
+    await waitFor(() => {
+      expect(vi.mocked(nexarr.listDataPlaneProfiles).mock.calls[1]?.[0]).toMatchObject({
+        tenantId,
+        page: 2,
+        pageSize: 25,
+      })
+    })
+  })
+
+  it('shows retryable error callouts for effective map and overrides', async () => {
+    const user = userEvent.setup()
+    vi.mocked(nexarr.getPlatformAdminTenantOverview).mockResolvedValue({
+      items: [
+        {
+          tenantId,
+          slug: 'demo',
+          displayName: 'Demo Tenant',
+          status: 'Active',
+          activeEntitlementCount: 1,
+          membershipCount: 2,
+          createdAt: '2026-01-01T00:00:00Z',
+        },
+      ],
+      page: 1,
+      pageSize: 100,
+      totalCount: 1,
+      hasNextPage: false,
+    })
+    vi.mocked(nexarr.getPlatformAdminProductOverview).mockResolvedValue([])
+    vi.mocked(nexarr.listDataPlaneProfiles).mockRejectedValue(new Error('overrides unavailable'))
+    vi.mocked(nexarr.listEffectiveDataPlaneProfiles).mockRejectedValue(
+      new Error('effective unavailable'),
+    )
+
+    renderPanel()
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: /Demo Tenant/ })).toBeInTheDocument()
+    })
+    await user.selectOptions(await screen.findByTestId('data-plane-tenant'), tenantId)
+
+    expect(await screen.findByText('effective unavailable')).toBeInTheDocument()
+    expect(await screen.findByText('overrides unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry effective map' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry overrides' })).toBeInTheDocument()
+  })
 })

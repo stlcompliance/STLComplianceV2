@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -28,6 +28,7 @@ function renderPanel() {
 describe('PlatformWorkerHealthOrchestrationPanel', () => {
   afterEach(() => {
     cleanup()
+    vi.clearAllMocks()
   })
 
   it('renders health, tokens, and worker trigger controls', async () => {
@@ -117,5 +118,44 @@ describe('PlatformWorkerHealthOrchestrationPanel', () => {
 
     expect(await screen.findByText('orchestration down')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Retry orchestration' })).toBeTruthy()
+  })
+
+  it('shows mutation error feedback when a trigger fails', async () => {
+    vi.mocked(nexarr.getPlatformWorkerHealthOrchestration).mockResolvedValue({
+      generatedAt: new Date().toISOString(),
+      platformHealthStatus: 'Healthy',
+      productHealth: [],
+      serviceTokens: {
+        activeCount: 2,
+        expiringWithin24HoursCount: 0,
+        expiredRetainedCount: 1,
+        revokedRetainedCount: 0,
+        pendingCleanupCount: 0,
+      },
+      activeServiceClientCount: 1,
+      workers: [
+        {
+          workerKey: 'service_token_cleanup',
+          label: 'Service token cleanup',
+          description: 'Purges expired tokens.',
+          isEnabled: true,
+          pendingCount: 0,
+          latestRun: null,
+          serviceTokenScope: 'nexarr.service_tokens.cleanup.purge',
+          suiteAdminPath: '/app/platform-admin/service-tokens',
+        },
+      ],
+    })
+    vi.mocked(nexarr.triggerPlatformServiceTokenCleanup).mockRejectedValueOnce(
+      new Error('cleanup failed'),
+    )
+
+    renderPanel()
+
+    fireEvent.click(await screen.findByTestId('platform-orchestration-trigger-service-token-cleanup'))
+
+    await waitFor(() => {
+      expect(screen.getByText('cleanup failed')).toBeInTheDocument()
+    })
   })
 })

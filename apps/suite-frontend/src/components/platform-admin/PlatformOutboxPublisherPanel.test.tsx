@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { PlatformOutboxPublisherPanel } from './PlatformOutboxPublisherPanel'
 
@@ -25,6 +25,11 @@ function renderPanel() {
 }
 
 describe('PlatformOutboxPublisherPanel', () => {
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
   it('renders outbox status and recent events', async () => {
     vi.mocked(nexarr.getPlatformOutboxPublisherSettings).mockResolvedValue({
       isEnabled: true,
@@ -80,5 +85,63 @@ describe('PlatformOutboxPublisherPanel', () => {
 
     expect(await screen.findByText('outbox settings unavailable')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Retry settings' })).toBeInTheDocument()
+  })
+
+  it('renders retryable callouts when events/runs fail', async () => {
+    vi.mocked(nexarr.getPlatformOutboxPublisherSettings).mockResolvedValue({
+      isEnabled: true,
+      maxRetryAttempts: 5,
+      retryIntervalMinutes: 5,
+      updatedAt: null,
+    })
+    vi.mocked(nexarr.getPlatformOutboxPublisherStatus).mockResolvedValue({
+      asOfUtc: new Date().toISOString(),
+      isEnabled: true,
+      pendingCount: 0,
+      deadLetterCount: 0,
+      latestRun: null,
+    })
+    vi.mocked(nexarr.getPlatformOutboxPublisherRuns).mockRejectedValueOnce(
+      new Error('runs unavailable'),
+    )
+    vi.mocked(nexarr.getPlatformOutboxEvents).mockRejectedValueOnce(
+      new Error('events unavailable'),
+    )
+
+    renderPanel()
+
+    expect(await screen.findByText('events unavailable')).toBeInTheDocument()
+    expect(await screen.findByText('runs unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry events' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry runs' })).toBeInTheDocument()
+  })
+
+  it('surfaces action error when trigger fails', async () => {
+    vi.mocked(nexarr.getPlatformOutboxPublisherSettings).mockResolvedValue({
+      isEnabled: true,
+      maxRetryAttempts: 5,
+      retryIntervalMinutes: 5,
+      updatedAt: null,
+    })
+    vi.mocked(nexarr.getPlatformOutboxPublisherStatus).mockResolvedValue({
+      asOfUtc: new Date().toISOString(),
+      isEnabled: true,
+      pendingCount: 0,
+      deadLetterCount: 0,
+      latestRun: null,
+    })
+    vi.mocked(nexarr.getPlatformOutboxPublisherRuns).mockResolvedValue({ items: [] })
+    vi.mocked(nexarr.getPlatformOutboxEvents).mockResolvedValue({ items: [] })
+    vi.mocked(nexarr.triggerPlatformOutboxPublisher).mockRejectedValueOnce(
+      new Error('trigger failed'),
+    )
+
+    renderPanel()
+
+    fireEvent.click(await screen.findByTestId('platform-outbox-trigger'))
+
+    await waitFor(() => {
+      expect(screen.getByText('trigger failed')).toBeInTheDocument()
+    })
   })
 })

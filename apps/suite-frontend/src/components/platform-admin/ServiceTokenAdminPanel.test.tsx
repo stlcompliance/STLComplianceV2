@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import * as nexarr from '../../api/nexarrClient'
@@ -85,5 +85,84 @@ describe('ServiceTokenAdminPanel', () => {
 
     expect(screen.getByText('StaffArr Worker')).toBeInTheDocument()
     expect(screen.getByTestId('service-token-list')).toBeInTheDocument()
+  })
+
+  it('uses backend pagination for clients and tokens', async () => {
+    vi.mocked(nexarr.listServiceClients)
+      .mockResolvedValueOnce({
+        items: [],
+        page: 1,
+        pageSize: 25,
+        totalCount: 30,
+        hasNextPage: true,
+      })
+      .mockResolvedValueOnce({
+        items: [],
+        page: 2,
+        pageSize: 25,
+        totalCount: 30,
+        hasNextPage: false,
+      })
+    vi.mocked(nexarr.listServiceTokens)
+      .mockResolvedValueOnce({
+        items: [],
+        page: 1,
+        pageSize: 25,
+        totalCount: 30,
+        hasNextPage: true,
+      })
+      .mockResolvedValueOnce({
+        items: [],
+        page: 2,
+        pageSize: 25,
+        totalCount: 30,
+        hasNextPage: false,
+      })
+    vi.mocked(nexarr.getPlatformAdminTenantOverview).mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 100,
+      totalCount: 0,
+      hasNextPage: false,
+    })
+    vi.mocked(nexarr.getPlatformAdminProductOverview).mockResolvedValue([])
+
+    renderPanel()
+
+    await waitFor(() => {
+      expect(nexarr.listServiceClients).toHaveBeenCalled()
+      expect(nexarr.listServiceTokens).toHaveBeenCalled()
+    })
+    expect(vi.mocked(nexarr.listServiceClients).mock.calls[0]).toEqual([1, 25])
+    expect(vi.mocked(nexarr.listServiceTokens).mock.calls[0]).toEqual([undefined, 1, 25])
+
+    const nextButtons = await screen.findAllByRole('button', { name: 'Next' })
+    fireEvent.click(nextButtons[0]!)
+    fireEvent.click(nextButtons[1]!)
+
+    await waitFor(() => {
+      expect(vi.mocked(nexarr.listServiceClients).mock.calls[1]).toEqual([2, 25])
+      expect(vi.mocked(nexarr.listServiceTokens).mock.calls[1]).toEqual([undefined, 2, 25])
+    })
+  })
+
+  it('shows retryable query errors for clients and tokens', async () => {
+    vi.mocked(nexarr.listServiceClients).mockRejectedValue(new Error('clients unavailable'))
+    vi.mocked(nexarr.listServiceTokens).mockRejectedValue(new Error('tokens unavailable'))
+    vi.mocked(nexarr.getPlatformAdminTenantOverview).mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 100,
+      totalCount: 0,
+      hasNextPage: false,
+    })
+    vi.mocked(nexarr.getPlatformAdminProductOverview).mockResolvedValue([])
+
+    renderPanel()
+
+    expect(await screen.findByText('clients unavailable')).toBeInTheDocument()
+    expect(await screen.findByText('tokens unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry clients' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry tokens' })).toBeInTheDocument()
   })
 })

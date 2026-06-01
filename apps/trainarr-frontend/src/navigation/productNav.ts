@@ -9,8 +9,16 @@ type NavIcon = NonNullable<ProductNavItem['icon']>
 
 
 export const trainarrNavItems: ProductNavItem[] = [
-
-  { label: 'Programs', to: '/programs', icon: GraduationCap as NavIcon },
+  {
+    label: 'Programs',
+    to: '/programs/drawer',
+    icon: GraduationCap as NavIcon,
+    children: [
+      { label: 'Drawer', to: '/programs/drawer' },
+      { label: 'Details', to: '/programs/details' },
+      { label: 'Create', to: '/programs/create' },
+    ],
+  },
 
   {
     label: 'Assignments',
@@ -27,7 +35,16 @@ export const trainarrNavItems: ProductNavItem[] = [
 
   { label: 'Citations', to: '/citations', icon: BookOpen as NavIcon },
 
-  { label: 'Rule packs', to: '/rule-packs', icon: Package as NavIcon },
+  {
+    label: 'Rule packs',
+    to: '/rule-packs/drawer',
+    icon: Package as NavIcon,
+    children: [
+      { label: 'Drawer', to: '/rule-packs/drawer' },
+      { label: 'Details', to: '/rule-packs/details' },
+      { label: 'Create', to: '/rule-packs/create' },
+    ],
+  },
 
   { label: 'Qualifications', to: '/qualifications', icon: BadgeCheck as NavIcon },
 

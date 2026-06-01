@@ -70,10 +70,19 @@ export default function App() {
             <Route path="/overview" element={<OverviewPage />} />
 
             <Route path="/assets" element={<AssetsPage />} />
+            <Route path="/assets/drawer" element={<AssetsPage />} />
+            <Route path="/assets/details" element={<AssetsPage />} />
+            <Route path="/assets/create" element={<AssetsPage />} />
 
             <Route path="/pm-programs" element={<PmProgramsPage />} />
+            <Route path="/pm-programs/drawer" element={<PmProgramsPage />} />
+            <Route path="/pm-programs/details" element={<PmProgramsPage />} />
+            <Route path="/pm-programs/create" element={<PmProgramsPage />} />
 
             <Route path="/meters" element={<MetersPage />} />
+            <Route path="/meters/drawer" element={<MetersPage />} />
+            <Route path="/meters/details" element={<MetersPage />} />
+            <Route path="/meters/create" element={<MetersPage />} />
 
             <Route path="/work-orders" element={<WorkOrdersPage />} />
 

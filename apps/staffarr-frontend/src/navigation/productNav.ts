@@ -18,12 +18,12 @@ export const staffarrNavItems: ProductNavItem[] = [
   { label: 'My team', to: '/my-team', icon: UsersRound },
   {
     label: 'People',
-    to: '/people',
+    to: '/people/drawer',
     icon: Users,
     children: [
-      { label: 'People drawer', to: '/people/drawer' },
-      { label: 'Create new', to: '/people/create' },
-      { label: 'Onboarding blocked', to: '/people/onboarding-blocked' },
+      { label: 'Drawer', to: '/people/drawer' },
+      { label: 'Details', to: '/people/details' },
+      { label: 'Create', to: '/people/create' },
     ],
   },
   { label: 'Org structure', to: '/org', icon: Network },

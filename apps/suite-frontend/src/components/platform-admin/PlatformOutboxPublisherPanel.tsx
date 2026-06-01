@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import * as nexarr from '../../api/nexarrClient'
+import { OutboxRecentEvents } from './outbox/OutboxRecentEvents'
+import { OutboxRecentRuns } from './outbox/OutboxRecentRuns'
+import { OutboxStatusSummary } from './outbox/OutboxStatusSummary'
 
 export function PlatformOutboxPublisherPanel() {
   const queryClient = useQueryClient()
@@ -10,6 +13,8 @@ export function PlatformOutboxPublisherPanel() {
   const [isEnabled, setIsEnabled] = useState(true)
   const [maxRetryAttempts, setMaxRetryAttempts] = useState('5')
   const [retryIntervalMinutes, setRetryIntervalMinutes] = useState('5')
+  const [actionNotice, setActionNotice] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const settingsQuery = useQuery({
     queryKey: ['platform-outbox-publisher-settings'],
@@ -51,20 +56,32 @@ export function PlatformOutboxPublisherPanel() {
         retryIntervalMinutes: Number.parseInt(retryIntervalMinutes, 10) || 5,
       }),
     onSuccess: () => {
+      setActionError(null)
+      setActionNotice('Outbox publisher settings saved.')
       void queryClient.invalidateQueries({ queryKey: ['platform-outbox-publisher-settings'] })
       void queryClient.invalidateQueries({ queryKey: ['platform-outbox-publisher-status'] })
       void queryClient.invalidateQueries({ queryKey: ['platform-outbox-publisher-runs'] })
       void queryClient.invalidateQueries({ queryKey: ['platform-lifecycle-overview'] })
+    },
+    onError: (error: Error) => {
+      setActionNotice(null)
+      setActionError(error.message)
     },
   })
 
   const triggerMutation = useMutation({
     mutationFn: () => nexarr.triggerPlatformOutboxPublisher(),
     onSuccess: () => {
+      setActionError(null)
+      setActionNotice('Outbox publish batch triggered.')
       void queryClient.invalidateQueries({ queryKey: ['platform-outbox-publisher-status'] })
       void queryClient.invalidateQueries({ queryKey: ['platform-outbox-publisher-runs'] })
       void queryClient.invalidateQueries({ queryKey: ['platform-outbox-events'] })
       void queryClient.invalidateQueries({ queryKey: ['platform-lifecycle-overview'] })
+    },
+    onError: (error: Error) => {
+      setActionNotice(null)
+      setActionError(error.message)
     },
   })
 
@@ -82,22 +99,7 @@ export function PlatformOutboxPublisherPanel() {
         APIs.
       </p>
 
-      {status && (
-        <dl className="mt-4 grid gap-2 text-sm text-slate-300 sm:grid-cols-3">
-          <div>
-            <dt className="text-slate-500">Pending</dt>
-            <dd className="font-medium tabular-nums text-white">{status.pendingCount}</dd>
-          </div>
-          <div>
-            <dt className="text-slate-500">Dead letter</dt>
-            <dd className="font-medium tabular-nums text-white">{status.deadLetterCount}</dd>
-          </div>
-          <div>
-            <dt className="text-slate-500">Publisher</dt>
-            <dd className="font-medium text-white">{status.isEnabled ? 'Enabled' : 'Disabled'}</dd>
-          </div>
-        </dl>
-      )}
+      <OutboxStatusSummary status={status} />
 
       {settingsQuery.isError && (
         <ApiErrorCallout
@@ -107,6 +109,25 @@ export function PlatformOutboxPublisherPanel() {
           retryLabel="Retry settings"
         />
       )}
+      {actionError ? (
+        <ApiErrorCallout
+          className="mt-3"
+          message={actionError}
+          onRetry={() => {
+            setActionError(null)
+            setActionNotice(null)
+          }}
+          retryLabel="Dismiss"
+        />
+      ) : null}
+      {actionNotice ? (
+        <p
+          className="mt-3 rounded-md border border-emerald-700/40 bg-emerald-950/20 px-3 py-2 text-sm text-emerald-300"
+          data-testid="platform-outbox-action-notice"
+        >
+          {actionNotice}
+        </p>
+      ) : null}
 
       <div className="mt-4 space-y-3">
         <label htmlFor="platform-outbox-enabled" className="flex items-center gap-2 text-sm text-slate-200">
@@ -170,60 +191,9 @@ export function PlatformOutboxPublisherPanel() {
         </div>
       </div>
 
-      <div className="mt-6">
-        <h3 className="text-sm font-semibold text-white">Recent outbox events</h3>
-        {eventsQuery.isLoading && <p className="mt-2 text-sm text-slate-400">Loading events…</p>}
-        {eventsQuery.data?.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-400" data-testid="platform-outbox-events-empty">
-            No outbox events recorded yet.
-          </p>
-        )}
-        {eventsQuery.data && eventsQuery.data.items.length > 0 && (
-          <ul className="mt-2 space-y-2" data-testid="platform-outbox-events-list">
-            {eventsQuery.data.items.map((event) => (
-              <li
-                key={event.eventId}
-                className="rounded border border-slate-700 px-3 py-2 text-sm text-slate-300"
-              >
-                <span className="font-medium text-white">{event.eventType}</span>
-                {' — '}
-                {event.processingStatus}
-                {event.tenantId ? ` · tenant ${event.tenantId.slice(0, 8)}…` : ''}
-                {' · '}
-                {new Date(event.occurredAt).toLocaleString()}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <OutboxRecentEvents query={eventsQuery} />
 
-      <div className="mt-6">
-        <h3 className="text-sm font-semibold text-white">Recent publish runs</h3>
-        {runsQuery.isLoading && <p className="mt-2 text-sm text-slate-400">Loading runs…</p>}
-        {runsQuery.data?.items.length === 0 && (
-          <p className="mt-2 text-sm text-slate-400" data-testid="platform-outbox-runs-empty">
-            No publish runs recorded yet.
-          </p>
-        )}
-        {runsQuery.data && runsQuery.data.items.length > 0 && (
-          <ul className="mt-2 space-y-2" data-testid="platform-outbox-runs-list">
-            {runsQuery.data.items.map((run) => (
-              <li
-                key={run.runId}
-                className="rounded border border-slate-700 px-3 py-2 text-sm text-slate-300"
-              >
-                <span className="font-medium text-white">{run.outcome}</span>
-                {' — '}
-                published {run.publishedCount}
-                {run.failedCount > 0 ? `, failed ${run.failedCount}` : ''}
-                {run.deadLetterCount > 0 ? `, dead letter ${run.deadLetterCount}` : ''}
-                {' · '}
-                {new Date(run.processedAt).toLocaleString()}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <OutboxRecentRuns query={runsQuery} />
     </section>
   )
 }

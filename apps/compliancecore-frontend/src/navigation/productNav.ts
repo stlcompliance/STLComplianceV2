@@ -9,8 +9,16 @@ type NavIcon = NonNullable<ProductNavItem['icon']>
 
 
 export const complianceCoreNavItems: ProductNavItem[] = [
-
-  { label: 'Registry', to: '/registry', icon: Library as NavIcon },
+  {
+    label: 'Registry',
+    to: '/registry/drawer',
+    icon: Library as NavIcon,
+    children: [
+      { label: 'Drawer', to: '/registry/drawer' },
+      { label: 'Details', to: '/registry/details' },
+      { label: 'Create', to: '/registry/create' },
+    ],
+  },
 
   { label: 'Mappings', to: '/mappings', icon: GitBranch as NavIcon },
 

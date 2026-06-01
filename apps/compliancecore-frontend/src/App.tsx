@@ -30,6 +30,9 @@ export default function App() {
           <Route element={<ProductWorkspaceLayout />}>
             <Route index element={<Navigate to="/registry" replace />} />
             <Route path="/registry" element={<RegistryPage />} />
+            <Route path="/registry/drawer" element={<RegistryPage />} />
+            <Route path="/registry/details" element={<RegistryPage />} />
+            <Route path="/registry/create" element={<RegistryPage />} />
             <Route path="/mappings" element={<MappingsPage />} />
             <Route path="/findings" element={<FindingsPage />} />
             <Route path="/evaluation" element={<EvaluationPage />} />

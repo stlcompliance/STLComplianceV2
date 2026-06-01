@@ -14,9 +14,27 @@ export const routarrNavItems: ProductNavItem[] = [
 
   { label: 'Driver portal', to: '/driver-portal', icon: Truck as NavIcon },
 
-  { label: 'Trips', to: '/trips', icon: Route as NavIcon },
+  {
+    label: 'Trips',
+    to: '/trips/drawer',
+    icon: Route as NavIcon,
+    children: [
+      { label: 'Drawer', to: '/trips/drawer' },
+      { label: 'Details', to: '/trips/details' },
+      { label: 'Create', to: '/trips/create' },
+    ],
+  },
 
-  { label: 'Routes', to: '/routes', icon: Map as NavIcon },
+  {
+    label: 'Routes',
+    to: '/routes/drawer',
+    icon: Map as NavIcon,
+    children: [
+      { label: 'Drawer', to: '/routes/drawer' },
+      { label: 'Details', to: '/routes/details' },
+      { label: 'Create', to: '/routes/create' },
+    ],
+  },
 
   { label: 'Availability', to: '/availability', icon: UserCheck as NavIcon },
 

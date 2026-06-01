@@ -5,9 +5,36 @@ type NavIcon = NonNullable<ProductNavItem['icon']>
 
 export const maintainarrNavItems: ProductNavItem[] = [
   { label: 'Overview', to: '/overview', icon: LayoutDashboard as NavIcon },
-  { label: 'Assets', to: '/assets', icon: Boxes as NavIcon },
-  { label: 'PM programs', to: '/pm-programs', icon: CalendarClock as NavIcon },
-  { label: 'Meters', to: '/meters', icon: Gauge as NavIcon },
+  {
+    label: 'Assets',
+    to: '/assets/drawer',
+    icon: Boxes as NavIcon,
+    children: [
+      { label: 'Drawer', to: '/assets/drawer' },
+      { label: 'Details', to: '/assets/details' },
+      { label: 'Create', to: '/assets/create' },
+    ],
+  },
+  {
+    label: 'PM programs',
+    to: '/pm-programs/drawer',
+    icon: CalendarClock as NavIcon,
+    children: [
+      { label: 'Drawer', to: '/pm-programs/drawer' },
+      { label: 'Details', to: '/pm-programs/details' },
+      { label: 'Create', to: '/pm-programs/create' },
+    ],
+  },
+  {
+    label: 'Meters',
+    to: '/meters/drawer',
+    icon: Gauge as NavIcon,
+    children: [
+      { label: 'Drawer', to: '/meters/drawer' },
+      { label: 'Details', to: '/meters/details' },
+      { label: 'Create', to: '/meters/create' },
+    ],
+  },
   { label: 'Work orders', to: '/work-orders', icon: Wrench as NavIcon },
   { label: 'Defects', to: '/defects', icon: AlertTriangle as NavIcon },
   { label: 'Inspections', to: '/inspections', icon: ClipboardCheck as NavIcon },
