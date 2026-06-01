@@ -4,46 +4,58 @@ import { EvaluationReviewTimelinePanel } from '../../components/EvaluationReview
 import { EvidenceCapturePanel } from '../../components/EvidenceCapturePanel'
 import { ManualAssignmentPanel } from '../../components/ManualAssignmentPanel'
 import { SignoffEvaluationPanel } from '../../components/SignoffEvaluationPanel'
+import { useLocation } from 'react-router-dom'
 import type { TrainArrWorkspaceState } from '../useTrainArrWorkspaceState'
 
 type Props = { state: TrainArrWorkspaceState }
+type AssignmentsViewMode = 'manual' | 'queue' | 'evaluation'
 
 export function AssignmentsSection({ state }: Props) {
   const s = state
   const selectedAssignment = s.selectedAssignment
+  const location = useLocation()
+  const mode: AssignmentsViewMode = location.pathname.startsWith('/assignments/evaluation')
+    ? 'evaluation'
+    : location.pathname.startsWith('/assignments/queue')
+      ? 'queue'
+      : 'manual'
 
   return (
     <div className="space-y-6">
-      <ManualAssignmentPanel
-        definitions={s.definitionsQuery.data ?? []}
-        staffarrPersonId={s.manualAssignmentPersonId}
-        onStaffarrPersonIdChange={(value) => {
-          s.setManualAssignmentPersonId(value)
-          s.setManualQualificationCheck(null)
-        }}
-        selectedDefinitionId={s.manualAssignmentDefinitionId}
-        onSelectDefinition={(value) => {
-          s.setManualAssignmentDefinitionId(value)
-          s.setManualQualificationCheck(null)
-        }}
-        qualificationCheck={s.manualQualificationCheck}
-        isCheckingQualification={s.manualQualificationCheckMutation.isPending}
-        onRunQualificationCheck={() => s.manualQualificationCheckMutation.mutate()}
-        rulePackKey={s.rulePackKey}
-        onRulePackKeyChange={s.setRulePackKey}
-        rulePackOptions={s.rulePackOptions}
-        personPickerOptions={s.personPickerOptions}
-        onCreateAssignment={() => s.createManualAssignmentMutation.mutate()}
-        isCreating={s.createManualAssignmentMutation.isPending}
-        canManage={s.canManage}
-      />
+      {mode !== 'queue' ? (
+        <ManualAssignmentPanel
+          definitions={s.definitionsQuery.data ?? []}
+          staffarrPersonId={s.manualAssignmentPersonId}
+          onStaffarrPersonIdChange={(value) => {
+            s.setManualAssignmentPersonId(value)
+            s.setManualQualificationCheck(null)
+          }}
+          selectedDefinitionId={s.manualAssignmentDefinitionId}
+          onSelectDefinition={(value) => {
+            s.setManualAssignmentDefinitionId(value)
+            s.setManualQualificationCheck(null)
+          }}
+          qualificationCheck={s.manualQualificationCheck}
+          isCheckingQualification={s.manualQualificationCheckMutation.isPending}
+          onRunQualificationCheck={() => s.manualQualificationCheckMutation.mutate()}
+          rulePackKey={s.rulePackKey}
+          onRulePackKeyChange={s.setRulePackKey}
+          rulePackOptions={s.rulePackOptions}
+          personPickerOptions={s.personPickerOptions}
+          onCreateAssignment={() => s.createManualAssignmentMutation.mutate()}
+          isCreating={s.createManualAssignmentMutation.isPending}
+          canManage={s.canManage}
+        />
+      ) : null}
 
-      <EvaluationReviewTimelinePanel
-        accessToken={s.accessToken}
-        canReview={s.canEvaluate}
-        selectedAssignmentId={s.selectedAssignmentId}
-        onSelectAssignment={s.setSelectedAssignmentId}
-      />
+      {mode !== 'manual' ? (
+        <EvaluationReviewTimelinePanel
+          accessToken={s.accessToken}
+          canReview={s.canEvaluate}
+          selectedAssignmentId={s.selectedAssignmentId}
+          onSelectAssignment={s.setSelectedAssignmentId}
+        />
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
       <AssignmentsPanel
@@ -219,42 +231,46 @@ export function AssignmentsSection({ state }: Props) {
           )}
         </section>
 
-        <EvidenceCapturePanel
-          assignment={selectedAssignment ?? null}
-          evidence={s.evidenceQuery.data ?? []}
-          evidenceTypeKey={s.evidenceTypeKey}
-          notes={s.evidenceNotes}
-          selectedFileName={s.evidenceFile?.name ?? null}
-          onEvidenceTypeKeyChange={s.setEvidenceTypeKey}
-          onNotesChange={s.setEvidenceNotes}
-          onSelectFile={s.setEvidenceFile}
-          onUploadEvidence={() => s.uploadEvidenceMutation.mutate()}
-          isUploading={s.uploadEvidenceMutation.isPending}
-          canUpload={Boolean(s.canUploadForAssignment)}
-        />
+        {mode !== 'manual' ? (
+          <EvidenceCapturePanel
+            assignment={selectedAssignment ?? null}
+            evidence={s.evidenceQuery.data ?? []}
+            evidenceTypeKey={s.evidenceTypeKey}
+            notes={s.evidenceNotes}
+            selectedFileName={s.evidenceFile?.name ?? null}
+            onEvidenceTypeKeyChange={s.setEvidenceTypeKey}
+            onNotesChange={s.setEvidenceNotes}
+            onSelectFile={s.setEvidenceFile}
+            onUploadEvidence={() => s.uploadEvidenceMutation.mutate()}
+            isUploading={s.uploadEvidenceMutation.isPending}
+            canUpload={Boolean(s.canUploadForAssignment)}
+          />
+        ) : null}
 
-        <SignoffEvaluationPanel
-          assignment={selectedAssignment ?? null}
-          evaluationHistory={s.evaluationHistoryQuery.data?.items ?? []}
-          isLoadingHistory={s.evaluationHistoryQuery.isLoading}
-          evaluationResult={s.evaluationResult}
-          evaluationScore={s.evaluationScore}
-          evaluationNotes={s.evaluationNotes}
-          signoffNotes={s.signoffNotes}
-          onEvaluationResultChange={s.setEvaluationResult}
-          onEvaluationScoreChange={s.setEvaluationScore}
-          onEvaluationNotesChange={s.setEvaluationNotes}
-          onSignoffNotesChange={s.setSignoffNotes}
-          onSubmitEvaluation={() => s.submitEvaluationMutation.mutate()}
-          onSubmitTraineeSignoff={() => s.submitTraineeSignoffMutation.mutate()}
-          onSubmitTrainerSignoff={() => s.submitTrainerSignoffMutation.mutate()}
-          isSubmittingEvaluation={s.submitEvaluationMutation.isPending}
-          isSubmittingTraineeSignoff={s.submitTraineeSignoffMutation.isPending}
-          isSubmittingTrainerSignoff={s.submitTrainerSignoffMutation.isPending}
-          canSubmitEvaluation={s.canEvaluate}
-          canSubmitTraineeSignoff={Boolean(s.canTraineeSign)}
-          canSubmitTrainerSignoff={s.canTrainerSign}
-        />
+        {mode !== 'queue' ? (
+          <SignoffEvaluationPanel
+            assignment={selectedAssignment ?? null}
+            evaluationHistory={s.evaluationHistoryQuery.data?.items ?? []}
+            isLoadingHistory={s.evaluationHistoryQuery.isLoading}
+            evaluationResult={s.evaluationResult}
+            evaluationScore={s.evaluationScore}
+            evaluationNotes={s.evaluationNotes}
+            signoffNotes={s.signoffNotes}
+            onEvaluationResultChange={s.setEvaluationResult}
+            onEvaluationScoreChange={s.setEvaluationScore}
+            onEvaluationNotesChange={s.setEvaluationNotes}
+            onSignoffNotesChange={s.setSignoffNotes}
+            onSubmitEvaluation={() => s.submitEvaluationMutation.mutate()}
+            onSubmitTraineeSignoff={() => s.submitTraineeSignoffMutation.mutate()}
+            onSubmitTrainerSignoff={() => s.submitTrainerSignoffMutation.mutate()}
+            isSubmittingEvaluation={s.submitEvaluationMutation.isPending}
+            isSubmittingTraineeSignoff={s.submitTraineeSignoffMutation.isPending}
+            isSubmittingTrainerSignoff={s.submitTrainerSignoffMutation.isPending}
+            canSubmitEvaluation={s.canEvaluate}
+            canSubmitTraineeSignoff={Boolean(s.canTraineeSign)}
+            canSubmitTrainerSignoff={s.canTrainerSign}
+          />
+        ) : null}
       </div>
     </div>
     </div>

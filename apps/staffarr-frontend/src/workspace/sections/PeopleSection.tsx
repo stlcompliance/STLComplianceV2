@@ -9,7 +9,7 @@ import { PersonOffboardingPanel } from '../../components/PersonOffboardingPanel'
 import { PersonHistorySummaryPanel } from '../../components/PersonHistorySummaryPanel'
 import { PersonnelNotesPanel } from '../../components/PersonnelNotesPanel'
 import { PersonnelDocumentsPanel } from '../../components/PersonnelDocumentsPanel'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
 
 type Props = { state: StaffArrWorkspaceState }
@@ -160,7 +160,7 @@ export function PeopleSection({ state }: Props) {
                     : 'w-full rounded-md px-1 py-1 text-left'
 
                 return (
-                <li key={person.personId} className="flex items-center justify-between py-3">
+                <li key={person.personId} className="flex items-center justify-between gap-4 py-3">
                   <button
                     type="button"
                     onMouseEnter={() => s.setActiveDirectoryPersonId(person.personId)}
@@ -175,7 +175,36 @@ export function PeopleSection({ state }: Props) {
                       {person.jobTitle ?? 'No title'} · {person.primaryEmail}
                     </p>
                   </button>
-                  <span className="text-xs uppercase tracking-wide text-slate-500">{person.employmentStatus}</span>
+                  {mode === 'drawer' ? (
+                    <div className="flex flex-col items-end gap-1 text-xs">
+                      <span className="uppercase tracking-wide text-slate-500">{person.employmentStatus}</span>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          to="/people/drawer"
+                          onClick={() => s.setSelectedPersonId(person.personId)}
+                          className="text-sky-300 hover:text-sky-200 hover:underline"
+                        >
+                          View
+                        </Link>
+                        <Link
+                          to="/people/create"
+                          onClick={() => s.setSelectedPersonId(person.personId)}
+                          className="text-emerald-300 hover:text-emerald-200 hover:underline"
+                        >
+                          Edit
+                        </Link>
+                        <Link
+                          to="/people/onboarding-blocked"
+                          onClick={() => s.setSelectedPersonId(person.personId)}
+                          className="text-amber-300 hover:text-amber-200 hover:underline"
+                        >
+                          Status
+                        </Link>
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-xs uppercase tracking-wide text-slate-500">{person.employmentStatus}</span>
+                  )}
                 </li>
                 )
               })}
@@ -204,6 +233,7 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
+      {mode !== 'drawer' ? (
       <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
         <h2 className="text-sm font-medium text-slate-300">Selected profile</h2>
         {s.personProfileQuery.isLoading ? (
@@ -239,6 +269,7 @@ export function PeopleSection({ state }: Props) {
           </dl>
         )}
       </section>
+      ) : null}
 
       {s.profile && mode !== 'drawer' ? (
         <PersonProfileEditorPanel
@@ -270,7 +301,7 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
-      {s.selectedPerson && mode === 'drawer' ? (
+      {s.selectedPerson && mode !== 'drawer' ? (
         <PersonnelNotesPanel
           personId={s.selectedPerson.personId}
           personDisplayName={s.selectedPerson.displayName}
@@ -313,7 +344,7 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
-      {s.selectedPerson && mode === 'drawer' ? (
+      {s.selectedPerson && mode !== 'drawer' ? (
         <PersonnelDocumentsPanel
           personId={s.selectedPerson.personId}
           personDisplayName={s.selectedPerson.displayName}
@@ -429,7 +460,7 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
-      {s.selectedPerson && mode === 'drawer' ? (
+      {s.selectedPerson && mode !== 'drawer' ? (
         <PersonLookupPanel
           personId={s.selectedPerson.personId}
           personDisplayName={s.selectedPerson.displayName}
@@ -448,7 +479,7 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
-      {s.selectedPerson && mode === 'drawer' ? (
+      {s.selectedPerson && mode !== 'drawer' ? (
         <PersonHistorySummaryPanel
           personDisplayName={s.selectedPerson.displayName}
           summary={s.personHistorySummaryQuery.data ?? null}
@@ -466,7 +497,7 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
-      {s.selectedPerson && mode === 'drawer' ? (
+      {s.selectedPerson && mode !== 'drawer' ? (
         <PersonTimelinePanel
           personDisplayName={s.selectedPerson.displayName}
           entries={s.personTimelineEntries}
@@ -492,7 +523,7 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
-      {s.selectedPerson && mode === 'drawer' ? (
+      {s.selectedPerson && mode !== 'drawer' ? (
         <PersonTrainarrTrainingHistoryPanel
           personDisplayName={s.selectedPerson.displayName}
           history={s.trainarrTrainingHistoryQuery.data ?? null}

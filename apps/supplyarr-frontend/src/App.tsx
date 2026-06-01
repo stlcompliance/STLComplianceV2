@@ -36,6 +36,9 @@ export default function App() {
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/inventory" element={<InventoryPage />} />
             <Route path="/purchasing" element={<PurchasingPage />} />
+            <Route path="/purchasing/procurement" element={<PurchasingPage />} />
+            <Route path="/purchasing/approvals" element={<PurchasingPage />} />
+            <Route path="/purchasing/exceptions" element={<PurchasingPage />} />
             <Route path="/receiving" element={<ReceivingPage />} />
             <Route path="/receiving/:receivingReceiptId" element={<ReceivingWorkspacePage />} />
             <Route path="/pricing" element={<PricingPage />} />

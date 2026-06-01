@@ -12,7 +12,16 @@ export const trainarrNavItems: ProductNavItem[] = [
 
   { label: 'Programs', to: '/programs', icon: GraduationCap as NavIcon },
 
-  { label: 'Assignments', to: '/assignments', icon: ListChecks as NavIcon },
+  {
+    label: 'Assignments',
+    to: '/assignments',
+    icon: ListChecks as NavIcon,
+    children: [
+      { label: 'Manual', to: '/assignments/manual' },
+      { label: 'Queue', to: '/assignments/queue' },
+      { label: 'Evaluation', to: '/assignments/evaluation' },
+    ],
+  },
 
   { label: 'Remediation', to: '/remediation', icon: RefreshCw as NavIcon },
 

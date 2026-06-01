@@ -90,6 +90,10 @@ export default function App() {
             <Route path="/downtime" element={<DowntimePage />} />
 
             <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/reports/compliance" element={<ReportsPage />} />
+            <Route path="/reports/executive" element={<ReportsPage />} />
+            <Route path="/reports/maintenance" element={<ReportsPage />} />
+            <Route path="/reports/exports" element={<ReportsPage />} />
 
             <Route path="/settings" element={<SettingsPage />} />
 

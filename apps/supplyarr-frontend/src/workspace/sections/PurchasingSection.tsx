@@ -7,11 +7,19 @@ import { ProcurementApprovalAuthorityBanner } from '../../components/Procurement
 import { PurchaseRequestPanel } from '../../components/PurchaseRequestPanel'
 import { RfqPanel } from '../../components/RfqPanel'
 import { EmergencyPurchasePanel } from '../../components/EmergencyPurchasePanel'
+import { useLocation } from 'react-router-dom'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
+type PurchasingViewMode = 'procurement' | 'approvals' | 'exceptions'
 
 export function PurchasingSection({ state: s }: Props) {
+  const location = useLocation()
+  const mode: PurchasingViewMode = location.pathname.startsWith('/purchasing/exceptions')
+    ? 'exceptions'
+    : location.pathname.startsWith('/purchasing/approvals')
+      ? 'approvals'
+      : 'procurement'
   const vendors = s.vendors.map((v) => ({
     partyId: v.partyId,
     displayName: v.displayName,
@@ -20,10 +28,12 @@ export function PurchasingSection({ state: s }: Props) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <ProcurementApprovalAuthorityBanner
-        accessToken={s.accessToken}
-        canRead={s.canCreatePr || s.canApprovePr || s.canCreatePo}
-      />
+      {mode !== 'exceptions' ? (
+        <ProcurementApprovalAuthorityBanner
+          accessToken={s.accessToken}
+          canRead={s.canCreatePr || s.canApprovePr || s.canCreatePo}
+        />
+      ) : null}
       <EmergencyPurchasePanel
         accessToken={s.accessToken}
         canCreate={s.canCreateEmergencyPurchase}
@@ -95,27 +105,33 @@ export function PurchasingSection({ state: s }: Props) {
         isIssuing={s.issuePurchaseOrderMutation.isPending}
         isCancelling={s.cancelPurchaseOrderMutation.isPending}
       />
-      <ProcurementCoordinationPanel
-        accessToken={s.accessToken}
-        canRead={s.canCreatePr || s.canApprovePr || s.canCreatePo}
-      />
-      <ApprovalRemindersPanel
-        accessToken={s.accessToken}
-        canRead={s.canCreatePr || s.canApprovePr || s.canCreatePo}
-      />
+      {mode !== 'procurement' ? (
+        <ProcurementCoordinationPanel
+          accessToken={s.accessToken}
+          canRead={s.canCreatePr || s.canApprovePr || s.canCreatePo}
+        />
+      ) : null}
+      {mode === 'approvals' ? (
+        <ApprovalRemindersPanel
+          accessToken={s.accessToken}
+          canRead={s.canCreatePr || s.canApprovePr || s.canCreatePo}
+        />
+      ) : null}
       <DemandProcessingPanel
         accessToken={s.accessToken}
         canRead={s.canCreatePr || s.canApprovePr}
         canOperate={s.canCreatePr}
       />
-      <ProcurementExceptionsPanel
-        accessToken={s.accessToken}
-        currentUserId={s.session?.userId ?? ''}
-        canManage={s.canCreatePr}
-        canApprove={s.canApprovePr}
-        purchaseRequests={s.purchaseRequestsQuery.data ?? []}
-        purchaseOrders={s.purchaseOrdersQuery.data ?? []}
-      />
+      {mode !== 'approvals' ? (
+        <ProcurementExceptionsPanel
+          accessToken={s.accessToken}
+          currentUserId={s.session?.userId ?? ''}
+          canManage={s.canCreatePr}
+          canApprove={s.canApprovePr}
+          purchaseRequests={s.purchaseRequestsQuery.data ?? []}
+          purchaseOrders={s.purchaseOrdersQuery.data ?? []}
+        />
+      ) : null}
     </div>
   )
 }

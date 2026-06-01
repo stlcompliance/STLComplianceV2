@@ -18,7 +18,16 @@ export const supplyarrNavItems: ProductNavItem[] = [
   { label: 'Parties', to: '/parties', icon: Building2 as NavIcon },
   { label: 'Catalog', to: '/catalog', icon: PackageSearch as NavIcon },
   { label: 'Inventory', to: '/inventory', icon: Warehouse as NavIcon },
-  { label: 'Purchasing', to: '/purchasing', icon: ShoppingCart as NavIcon },
+  {
+    label: 'Purchasing',
+    to: '/purchasing',
+    icon: ShoppingCart as NavIcon,
+    children: [
+      { label: 'Procurement', to: '/purchasing/procurement' },
+      { label: 'Approvals', to: '/purchasing/approvals' },
+      { label: 'Exceptions', to: '/purchasing/exceptions' },
+    ],
+  },
   { label: 'Receiving', to: '/receiving', icon: Truck as NavIcon },
   { label: 'Pricing', to: '/pricing', icon: Tags as NavIcon },
   { label: 'Planning', to: '/planning', icon: LineChart as NavIcon },

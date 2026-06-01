@@ -32,6 +32,9 @@ export default function App() {
             <Route index element={<Navigate to="/programs" replace />} />
             <Route path="/programs" element={<ProgramsPage />} />
             <Route path="/assignments" element={<AssignmentsPage />} />
+            <Route path="/assignments/manual" element={<AssignmentsPage />} />
+            <Route path="/assignments/queue" element={<AssignmentsPage />} />
+            <Route path="/assignments/evaluation" element={<AssignmentsPage />} />
             <Route
               path="/assignments/:assignmentId/evidence"
               element={<AssignmentWorkspacePage focus="evidence" />}
