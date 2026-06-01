@@ -18,6 +18,19 @@ type PeopleViewMode = 'drawer' | 'create' | 'onboarding-blocked'
 export function PeopleSection({ state }: Props) {
   const s = state
   const location = useLocation()
+  const selectedPersonId = s.selectedPerson?.personId ?? null
+  const activeFilteredPersonId = (() => {
+    if (!s.peopleDirectoryQuery.trim() || s.filteredPeople.length === 0) {
+      return null
+    }
+    if (s.activeDirectoryPersonId && s.filteredPeople.some((person) => person.personId === s.activeDirectoryPersonId)) {
+      return s.activeDirectoryPersonId
+    }
+    if (selectedPersonId && s.filteredPeople.some((person) => person.personId === selectedPersonId)) {
+      return selectedPersonId
+    }
+    return s.filteredPeople[0]!.personId
+  })()
   const mode: PeopleViewMode = location.pathname.startsWith('/people/create')
     ? 'create'
     : location.pathname.startsWith('/people/onboarding-blocked')
@@ -89,8 +102,7 @@ export function PeopleSection({ state }: Props) {
                     s.filteredPeople.length > 0
                   ) {
                     event.preventDefault()
-                    const anchorId =
-                      s.activeDirectoryPersonId ?? s.selectedPerson?.personId ?? s.filteredPeople[0]!.personId
+                    const anchorId = activeFilteredPersonId ?? s.filteredPeople[0]!.personId
                     const currentIndex = s.filteredPeople.findIndex((person) => person.personId === anchorId)
                     const startIndex = currentIndex >= 0 ? currentIndex : 0
                     const nextIndex =
@@ -102,7 +114,7 @@ export function PeopleSection({ state }: Props) {
                   }
                   if (event.key === 'Enter' && s.peopleDirectoryQuery.trim() && s.filteredPeople.length > 0) {
                     event.preventDefault()
-                    s.setSelectedPersonId(s.activeDirectoryPersonId ?? s.filteredPeople[0]!.personId)
+                    s.setSelectedPersonId(activeFilteredPersonId ?? s.filteredPeople[0]!.personId)
                   }
                 }}
                 placeholder="Search by name, email, title, org unit, or status"
@@ -152,7 +164,7 @@ export function PeopleSection({ state }: Props) {
               {s.filteredPeople.map((person) => {
                 const isSelected = s.effectivePersonId === person.personId
                 const isActive =
-                  Boolean(s.peopleDirectoryQuery.trim()) && s.activeDirectoryPersonId === person.personId
+                  Boolean(s.peopleDirectoryQuery.trim()) && activeFilteredPersonId === person.personId
                 const buttonClass = isSelected
                   ? 'w-full rounded-md px-1 py-1 text-left text-sky-200'
                   : isActive

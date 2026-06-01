@@ -801,6 +801,18 @@ export function HomePage() {
   const orgUnits = orgUnitsQuery.data ?? []
   const profile = personProfileQuery.data
   const selectedPerson = people.find((person) => person.personId === effectivePersonId) ?? null
+  const activeFilteredPersonId = (() => {
+    if (!peopleDirectoryQuery.trim() || filteredPeople.length === 0) {
+      return null
+    }
+    if (activeDirectoryPersonId && filteredPeople.some((person) => person.personId === activeDirectoryPersonId)) {
+      return activeDirectoryPersonId
+    }
+    if (selectedPerson && filteredPeople.some((person) => person.personId === selectedPerson.personId)) {
+      return selectedPerson.personId
+    }
+    return filteredPeople[0]!.personId
+  })()
   const selectedPersonHiddenByFilter =
     Boolean(peopleDirectoryQuery.trim()) &&
     Boolean(selectedPerson) &&
@@ -955,7 +967,7 @@ export function HomePage() {
                   }
                   if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && peopleDirectoryQuery.trim() && filteredPeople.length > 0) {
                     event.preventDefault()
-                    const anchorId = activeDirectoryPersonId ?? selectedPerson?.personId ?? filteredPeople[0]!.personId
+                    const anchorId = activeFilteredPersonId ?? filteredPeople[0]!.personId
                     const currentIndex = filteredPeople.findIndex((person) => person.personId === anchorId)
                     const startIndex = currentIndex >= 0 ? currentIndex : 0
                     const nextIndex =
@@ -967,7 +979,7 @@ export function HomePage() {
                   }
                   if (event.key === 'Enter' && peopleDirectoryQuery.trim() && filteredPeople.length > 0) {
                     event.preventDefault()
-                    setSelectedPersonId(activeDirectoryPersonId ?? filteredPeople[0]!.personId)
+                    setSelectedPersonId(activeFilteredPersonId ?? filteredPeople[0]!.personId)
                   }
                 }}
                 placeholder="Search by name, email, title, org unit, or status"
@@ -1016,7 +1028,7 @@ export function HomePage() {
             <ul className="mt-4 divide-y divide-slate-700">
               {filteredPeople.map((person) => {
                 const isSelected = effectivePersonId === person.personId
-                const isActive = Boolean(peopleDirectoryQuery.trim()) && activeDirectoryPersonId === person.personId
+                const isActive = Boolean(peopleDirectoryQuery.trim()) && activeFilteredPersonId === person.personId
                 const buttonClass = isSelected
                   ? 'w-full rounded-md px-1 py-1 text-left text-sky-200'
                   : isActive
