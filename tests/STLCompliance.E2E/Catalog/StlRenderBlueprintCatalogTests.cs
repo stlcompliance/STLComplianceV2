@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
 using STLCompliance.Shared.Operations;
 
@@ -42,6 +45,43 @@ public sealed class StlRenderBlueprintCatalogTests
             Assert.True(syncFalseByConsumer.ContainsKey(profile.ConsumerService));
             Assert.Contains(profile.ConfigurationKey, syncFalseByConsumer[profile.ConsumerService]);
         }
+    }
+
+    [Fact]
+    public void Nexarr_worker_auto_provisioning_can_mint_platform_outbox_token_without_http_bootstrap()
+    {
+        const string signingKey = "test-service-token-signing-key-32chars";
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [StlIntegrationTokenProvisioner.AutoProvisionConfigurationKey] = "true",
+                ["STL_SERVICE_NAME"] = "nexarr-worker",
+                ["SERVICE_TOKEN_SIGNING_KEY"] = signingKey,
+                ["SERVICE_TOKEN_ISSUER"] = "stl-compliance-services",
+                ["SERVICE_TOKEN_AUDIENCE"] = "stl-compliance-services",
+            })
+            .Build();
+
+        var tokens = StlIntegrationTokenProvisioner.ProvisionSynchronously(configuration);
+
+        Assert.True(tokens.TryGetValue("NexArrPlatformOutboxPublisher__ServiceToken", out var token));
+
+        var validator = new StlServiceTokenValidator(
+            configuration,
+            Options.Create(new StlServiceTokenOptions()));
+        var validated = validator.ValidateOrThrow(
+            token,
+            new ServiceTokenRequirements
+            {
+                ExpectedSourceProduct = "nexarr-worker",
+                RequiredTargetProduct = "nexarr",
+                TenantId = Guid.Empty,
+                RequiredActionScope = "nexarr.platform_outbox.publish",
+            });
+
+        Assert.Equal("nexarr-worker", validated.SourceProductKey);
+        Assert.Contains("nexarr", validated.AllowedProductKeys);
+        Assert.Equal("nexarr.platform_outbox.publish", validated.ActionScope);
     }
 
     [Fact]

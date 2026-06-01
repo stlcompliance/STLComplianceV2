@@ -1,8 +1,11 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using STLCompliance.Shared.Auth;
 
 namespace STLCompliance.Shared.Integration;
 
@@ -83,6 +86,11 @@ public static class StlIntegrationTokenProvisioner
         {
             throw new InvalidOperationException(
                 $"STL integration token auto-provision has no catalog profiles for consumer '{consumerService}'.");
+        }
+
+        if (string.Equals(consumerService, "nexarr-worker", StringComparison.OrdinalIgnoreCase))
+        {
+            return ProvisionNexArrWorkerTokensLocally(configuration, logger, profiles);
         }
 
         if (HasValidProvisionedTokens(configuration, profiles))
@@ -207,6 +215,55 @@ public static class StlIntegrationTokenProvisioner
         profiles
             .Where(p => !string.IsNullOrWhiteSpace(configuration[p.ConfigurationKey]))
             .ToDictionary(p => p.ConfigurationKey, p => configuration[p.ConfigurationKey]!, StringComparer.Ordinal);
+
+    private static IReadOnlyDictionary<string, string> ProvisionNexArrWorkerTokensLocally(
+        IConfiguration configuration,
+        ILogger? logger,
+        IReadOnlyList<StlIntegrationTokenProfile> profiles)
+    {
+        if (HasValidProvisionedTokens(configuration, profiles))
+        {
+            logger?.LogInformation("Using configured integration tokens for nexarr-worker.");
+            return ReadExistingTokens(configuration, profiles);
+        }
+
+        var options = new StlServiceTokenOptions();
+        var issuer = StlServiceTokenKeyMaterial.ResolveIssuer(configuration, options);
+        var audience = StlServiceTokenKeyMaterial.ResolveAudience(configuration, options);
+        var credentials = StlServiceTokenKeyMaterial.CreateSigningCredentials(configuration, options);
+        var expiresAt = DateTimeOffset.UtcNow.AddDays(365);
+        var handler = new JwtSecurityTokenHandler();
+
+        var tokens = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var profile in profiles)
+        {
+            var tokenId = Guid.NewGuid();
+            var claims = new List<Claim>
+            {
+                new(JwtRegisteredClaimNames.Jti, tokenId.ToString()),
+                new(StlServiceTokenClaimTypes.TokenType, StlServiceTokenClaimTypes.ServiceTokenTypeValue),
+                new(StlServiceTokenClaimTypes.ServiceClientId, Guid.Empty.ToString()),
+                new(StlServiceTokenClaimTypes.SourceProduct, profile.SourceProductKey),
+                new(StlServiceTokenClaimTypes.AllowedProducts, string.Join(',', profile.AllowedProductKeys)),
+                new(StlServiceTokenClaimTypes.TokenId, tokenId.ToString()),
+                new(StlServiceTokenClaimTypes.ActionScope, profile.ActionScope)
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: expiresAt.UtcDateTime,
+                signingCredentials: credentials);
+
+            tokens[profile.ConfigurationKey] = handler.WriteToken(token);
+        }
+
+        logger?.LogInformation(
+            "Locally provisioned {Count} integration token(s) for nexarr-worker.",
+            tokens.Count);
+        return tokens;
+    }
 
     public static bool IsLikelyServiceTokenJwt(string? value)
     {
