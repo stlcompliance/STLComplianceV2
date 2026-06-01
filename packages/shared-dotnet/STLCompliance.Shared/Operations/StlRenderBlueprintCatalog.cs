@@ -22,7 +22,6 @@ public static class StlRenderBlueprintCatalog
     public const string EnvVarsDocRelativePath = "docs/deployment/ENV_VARS_V1.md";
     public const string W89SliceDocRelativePath = "docs/implementation/worker-slices/W89_RENDER_V1_DEPLOYMENT_HARDENING.md";
     public const string ApiHealthCheckPath = "/health/ready";
-    public const int PrivateNetworkPort = 10000;
 
     public static readonly IReadOnlyList<string> EnvGroupNames =
     [
@@ -95,19 +94,16 @@ public static class StlRenderBlueprintCatalog
         "Permissions-Policy",
     ];
 
-    public static readonly IReadOnlyList<(string EnvKey, string ApiServiceName)> InternalApiUrlEnvKeys =
+    public static readonly IReadOnlyList<(string EnvKey, string ApiServiceName, string BaseUrl)> ApiBaseUrlEnvKeys =
     [
-        ("NexArr__BaseUrl", "nexarr-api"),
-        ("StaffArr__BaseUrl", "staffarr-api"),
-        ("TrainArr__BaseUrl", "trainarr-api"),
-        ("MaintainArr__BaseUrl", "maintainarr-api"),
-        ("RoutArr__BaseUrl", "routarr-api"),
-        ("SupplyArr__BaseUrl", "supplyarr-api"),
-        ("ComplianceCore__BaseUrl", "compliancecore-api"),
+        ("NexArr__BaseUrl", "nexarr-api", "https://nexarr-api-jdyi.onrender.com"),
+        ("StaffArr__BaseUrl", "staffarr-api", "https://staffarr-api-srdo.onrender.com"),
+        ("TrainArr__BaseUrl", "trainarr-api", "https://trainarr-api-ae2t.onrender.com"),
+        ("MaintainArr__BaseUrl", "maintainarr-api", "https://maintainarr-api-82rg.onrender.com"),
+        ("RoutArr__BaseUrl", "routarr-api", "https://routarr-api-ut1u.onrender.com"),
+        ("SupplyArr__BaseUrl", "supplyarr-api", "https://supplyarr-api-r963.onrender.com"),
+        ("ComplianceCore__BaseUrl", "compliancecore-api", "https://compliancecore-api-qfu7.onrender.com"),
     ];
-
-    public static string BuildPrivateApiBaseUrl(string apiServiceName) =>
-        $"http://{apiServiceName}:{PrivateNetworkPort}";
 
     public static IReadOnlyDictionary<string, IReadOnlyList<string>> SyncFalseEnvKeysByConsumer() =>
         StlIntegrationTokenCatalog.All

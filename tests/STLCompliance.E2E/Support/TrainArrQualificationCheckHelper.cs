@@ -16,10 +16,9 @@ internal static class TrainArrQualificationCheckHelper
         request.Content = JsonContent.Create(new CreateQualificationCheckRequest(
             staffarrPersonId,
             qualificationKey,
-            null,
-            null,
-            trainingDefinitionId,
-            null));
+            RulePackKey: null,
+            Context: null,
+            TrainingDefinitionId: trainingDefinitionId));
         var response = await trainarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<QualificationCheckResponse>())!;

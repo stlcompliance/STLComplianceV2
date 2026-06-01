@@ -19,16 +19,15 @@ public sealed class StlRenderBlueprintCatalogTests
     }
 
     [Fact]
-    public void Internal_api_url_env_keys_map_to_private_network_base_urls()
+    public void Api_url_env_keys_map_to_deployed_render_base_urls()
     {
-        Assert.Equal(7, StlRenderBlueprintCatalog.InternalApiUrlEnvKeys.Count);
+        Assert.Equal(7, StlRenderBlueprintCatalog.ApiBaseUrlEnvKeys.Count);
 
-        foreach (var (envKey, apiServiceName) in StlRenderBlueprintCatalog.InternalApiUrlEnvKeys)
+        foreach (var (envKey, apiServiceName, baseUrl) in StlRenderBlueprintCatalog.ApiBaseUrlEnvKeys)
         {
-            var expected = StlRenderBlueprintCatalog.BuildPrivateApiBaseUrl(apiServiceName);
-            Assert.StartsWith("http://", expected, StringComparison.OrdinalIgnoreCase);
-            Assert.EndsWith(":10000", expected, StringComparison.Ordinal);
-            Assert.Contains(apiServiceName, expected, StringComparison.Ordinal);
+            Assert.StartsWith("https://", baseUrl, StringComparison.OrdinalIgnoreCase);
+            Assert.EndsWith(".onrender.com", baseUrl, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(apiServiceName, baseUrl, StringComparison.OrdinalIgnoreCase);
             Assert.False(string.IsNullOrWhiteSpace(envKey));
         }
     }
@@ -94,11 +93,10 @@ public sealed class StlRenderBlueprintCatalogTests
             }
         }
 
-        foreach (var (envKey, apiServiceName) in StlRenderBlueprintCatalog.InternalApiUrlEnvKeys)
+        foreach (var (envKey, _, baseUrl) in StlRenderBlueprintCatalog.ApiBaseUrlEnvKeys)
         {
-            var expected = StlRenderBlueprintCatalog.BuildPrivateApiBaseUrl(apiServiceName);
             Assert.Contains($"- key: {envKey}", yaml, StringComparison.Ordinal);
-            Assert.Contains($"value: {expected}", yaml, StringComparison.Ordinal);
+            Assert.Contains($"value: {baseUrl}", yaml, StringComparison.Ordinal);
         }
 
         foreach (var disk in StlRenderBlueprintCatalog.EvidenceDisks)
