@@ -10,14 +10,30 @@ import { PersonHistorySummaryPanel } from '../../components/PersonHistorySummary
 import { PersonnelNotesPanel } from '../../components/PersonnelNotesPanel'
 import { PersonnelDocumentsPanel } from '../../components/PersonnelDocumentsPanel'
 import { Link, useLocation } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
 
 type Props = { state: StaffArrWorkspaceState }
 type PeopleViewMode = 'drawer' | 'details' | 'create'
+type DrawerColumnKey = 'name' | 'email' | 'jobTitle' | 'orgUnit' | 'status' | 'manager'
+
+const PEOPLE_DRAWER_COLUMN_STORAGE_KEY = 'staffarr.people.drawer.columns.v1'
+
+const ALL_DRAWER_COLUMNS: Array<{ key: DrawerColumnKey; label: string }> = [
+  { key: 'name', label: 'Name' },
+  { key: 'email', label: 'Email' },
+  { key: 'jobTitle', label: 'Job title' },
+  { key: 'orgUnit', label: 'Org unit' },
+  { key: 'status', label: 'Status' },
+  { key: 'manager', label: 'Manager' },
+]
+
+const DEFAULT_DRAWER_COLUMNS: DrawerColumnKey[] = ['name', 'email', 'jobTitle', 'orgUnit', 'status']
 
 export function PeopleSection({ state }: Props) {
   const s = state
   const location = useLocation()
+  const [selectedColumns, setSelectedColumns] = useState<DrawerColumnKey[]>(DEFAULT_DRAWER_COLUMNS)
   const managerDisplayName = s.profile?.managerPersonId
     ? s.people.find((person) => person.personId === s.profile!.managerPersonId)?.displayName ?? 'Assigned'
     : 'None'
@@ -39,6 +55,67 @@ export function PeopleSection({ state }: Props) {
     : location.pathname.startsWith('/people/details')
       ? 'details'
       : 'drawer'
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(PEOPLE_DRAWER_COLUMN_STORAGE_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as DrawerColumnKey[]
+      const valid = parsed.filter((column) => ALL_DRAWER_COLUMNS.some((candidate) => candidate.key === column))
+      if (valid.length > 0) {
+        setSelectedColumns(valid.slice(0, 5))
+      }
+    } catch {
+      // Ignore malformed persisted state.
+    }
+  }, [])
+
+  useEffect(() => {
+    window.localStorage.setItem(PEOPLE_DRAWER_COLUMN_STORAGE_KEY, JSON.stringify(selectedColumns))
+  }, [selectedColumns])
+
+  const visibleColumns = useMemo(() => {
+    const picked = selectedColumns
+      .filter((column) => ALL_DRAWER_COLUMNS.some((candidate) => candidate.key === column))
+      .slice(0, 5)
+    return picked.length > 0 ? picked : DEFAULT_DRAWER_COLUMNS
+  }, [selectedColumns])
+
+  const toggleColumn = (column: DrawerColumnKey) => {
+    setSelectedColumns((previous) => {
+      if (previous.includes(column)) {
+        const next = previous.filter((item) => item !== column)
+        return next.length > 0 ? next : previous
+      }
+      if (previous.length >= 5) {
+        return previous
+      }
+      return [...previous, column]
+    })
+  }
+
+  const managerNameByPersonId = useMemo(() => {
+    return new Map(s.people.map((person) => [person.personId, person.displayName]))
+  }, [s.people])
+
+  const cellValue = (person: (typeof s.filteredPeople)[number], column: DrawerColumnKey): string => {
+    switch (column) {
+      case 'name':
+        return person.displayName
+      case 'email':
+        return person.primaryEmail
+      case 'jobTitle':
+        return person.jobTitle ?? 'Unspecified'
+      case 'orgUnit':
+        return person.primaryOrgUnitName ?? 'Unassigned'
+      case 'status':
+        return person.employmentStatus
+      case 'manager':
+        return person.managerPersonId ? managerNameByPersonId.get(person.managerPersonId) ?? 'Assigned' : 'None'
+      default:
+        return ''
+    }
+  }
 
   return (
     <>
@@ -163,6 +240,67 @@ export function PeopleSection({ state }: Props) {
             <p className="mt-4 text-sm text-slate-400" aria-live="polite">
               No people match the current filter. Try a different name, email, or status.
             </p>
+          ) : mode === 'drawer' ? (
+            <div className="mt-4 space-y-3">
+              <div className="rounded-md border border-slate-700 p-2">
+                <p className="text-xs text-slate-400">Visible columns (max 5)</p>
+                <div className="mt-2 flex flex-wrap gap-3">
+                  {ALL_DRAWER_COLUMNS.map((column) => (
+                    <label key={column.key} className="inline-flex items-center gap-2 text-xs text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={visibleColumns.includes(column.key)}
+                        onChange={() => toggleColumn(column.key)}
+                      />
+                      {column.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="overflow-x-auto rounded-md border border-slate-700">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-slate-950/70">
+                    <tr>
+                      {visibleColumns.map((column) => (
+                        <th key={column} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                          {ALL_DRAWER_COLUMNS.find((item) => item.key === column)?.label}
+                        </th>
+                      ))}
+                      <th className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {s.filteredPeople.map((person) => (
+                      <tr key={person.personId} className="border-t border-slate-800">
+                        {visibleColumns.map((column) => (
+                          <td key={`${person.personId}-${column}`} className="px-3 py-2 text-slate-200">
+                            {cellValue(person, column)}
+                          </td>
+                        ))}
+                        <td className="px-3 py-2">
+                          <div className="flex items-center gap-2 text-xs">
+                            <Link
+                              to="/people/details"
+                              onClick={() => s.setSelectedPersonId(person.personId)}
+                              className="text-sky-300 hover:text-sky-200 hover:underline"
+                            >
+                              View
+                            </Link>
+                            <Link
+                              to="/people/create"
+                              onClick={() => s.setSelectedPersonId(person.personId)}
+                              className="text-emerald-300 hover:text-emerald-200 hover:underline"
+                            >
+                              Edit
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           ) : (
             <ul className="mt-4 divide-y divide-slate-700">
               {s.filteredPeople.map((person) => {
@@ -176,45 +314,23 @@ export function PeopleSection({ state }: Props) {
                     : 'w-full rounded-md px-1 py-1 text-left'
 
                 return (
-                <li key={person.personId} className="flex items-center justify-between gap-4 py-3">
-                  <button
-                    type="button"
-                    onMouseEnter={() => s.setActiveDirectoryPersonId(person.personId)}
-                    onClick={() => {
-                      s.setActiveDirectoryPersonId(person.personId)
-                      s.setSelectedPersonId(person.personId)
-                    }}
-                    className={buttonClass}
-                  >
-                    <p className="text-sm text-white">{person.displayName}</p>
-                    <p className="text-xs text-slate-400">
-                      {person.jobTitle ?? 'No title'} · {person.primaryEmail}
-                    </p>
-                  </button>
-                  {mode === 'drawer' ? (
-                    <div className="flex flex-col items-end gap-1 text-xs">
-                      <span className="uppercase tracking-wide text-slate-500">{person.employmentStatus}</span>
-                      <div className="flex items-center gap-2">
-                        <Link
-                          to="/people/details"
-                          onClick={() => s.setSelectedPersonId(person.personId)}
-                          className="text-sky-300 hover:text-sky-200 hover:underline"
-                        >
-                          View
-                        </Link>
-                        <Link
-                          to="/people/create"
-                          onClick={() => s.setSelectedPersonId(person.personId)}
-                          className="text-emerald-300 hover:text-emerald-200 hover:underline"
-                        >
-                          Edit
-                        </Link>
-                      </div>
-                    </div>
-                  ) : (
+                  <li key={person.personId} className="flex items-center justify-between gap-4 py-3">
+                    <button
+                      type="button"
+                      onMouseEnter={() => s.setActiveDirectoryPersonId(person.personId)}
+                      onClick={() => {
+                        s.setActiveDirectoryPersonId(person.personId)
+                        s.setSelectedPersonId(person.personId)
+                      }}
+                      className={buttonClass}
+                    >
+                      <p className="text-sm text-white">{person.displayName}</p>
+                      <p className="text-xs text-slate-400">
+                        {person.jobTitle ?? 'No title'} · {person.primaryEmail}
+                      </p>
+                    </button>
                     <span className="text-xs uppercase tracking-wide text-slate-500">{person.employmentStatus}</span>
-                  )}
-                </li>
+                  </li>
                 )
               })}
             </ul>

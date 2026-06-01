@@ -1,4 +1,5 @@
 import { ControlledSelect } from '@stl/shared-ui'
+import { useEffect, useMemo, useState } from 'react'
 
 import type {
   AssetClassResponse,
@@ -47,12 +48,6 @@ interface AssetRegistryPanelProps {
   isCreatingAsset: boolean
 }
 
-function readinessBadgeClass(status: AssetReadinessSummaryResponse['readinessStatus']): string {
-  return status === 'ready'
-    ? 'bg-emerald-500/20 text-emerald-300 ring-emerald-500/40'
-    : 'bg-amber-500/20 text-amber-200 ring-amber-500/40'
-}
-
 function readinessLabel(status: AssetReadinessSummaryResponse['readinessStatus']): string {
   return status === 'ready' ? 'Ready' : 'Not ready'
 }
@@ -96,6 +91,47 @@ export function AssetRegistryPanel({
   isCreatingType,
   isCreatingAsset,
 }: AssetRegistryPanelProps) {
+  type AssetColumnKey = 'tag' | 'name' | 'class' | 'type' | 'site' | 'status' | 'readiness'
+  const STORAGE_KEY = 'maintainarr.assets.drawer.columns.v1'
+  const allColumns: Array<{ key: AssetColumnKey; label: string }> = [
+    { key: 'tag', label: 'Asset tag' },
+    { key: 'name', label: 'Asset name' },
+    { key: 'class', label: 'Class' },
+    { key: 'type', label: 'Type' },
+    { key: 'site', label: 'Site' },
+    { key: 'status', label: 'Lifecycle status' },
+    { key: 'readiness', label: 'Readiness' },
+  ]
+  const [selectedColumns, setSelectedColumns] = useState<AssetColumnKey[]>(['tag', 'name', 'class', 'status', 'readiness'])
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as AssetColumnKey[]
+      const valid = parsed.filter((column) => allColumns.some((candidate) => candidate.key === column)).slice(0, 5)
+      if (valid.length > 0) setSelectedColumns(valid)
+    } catch {
+      // Ignore malformed stored columns.
+    }
+  }, [])
+
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedColumns))
+  }, [selectedColumns])
+
+  const visibleColumns = useMemo(() => selectedColumns.slice(0, 5), [selectedColumns])
+  const toggleColumn = (column: AssetColumnKey) => {
+    setSelectedColumns((previous) => {
+      if (previous.includes(column)) {
+        const next = previous.filter((item) => item !== column)
+        return next.length > 0 ? next : previous
+      }
+      if (previous.length >= 5) return previous
+      return [...previous, column]
+    })
+  }
+
   if (isLoading) {
     return <p className="text-sm text-slate-400">Loading asset registry…</p>
   }
@@ -207,58 +243,72 @@ export function AssetRegistryPanel({
         data-testid="asset-registry-panel"
       >
         <h2 className="text-lg font-medium text-white">Assets</h2>
-        <ul className="mt-4 space-y-2 text-sm" data-testid="asset-registry-list">
+        <div className="mt-4 rounded-md border border-slate-700 p-2">
+          <p className="text-xs text-slate-400">Visible columns (max 5)</p>
+          <div className="mt-2 flex flex-wrap gap-3">
+            {allColumns.map((column) => (
+              <label key={column.key} className="inline-flex items-center gap-2 text-xs text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={visibleColumns.includes(column.key)}
+                  onChange={() => toggleColumn(column.key)}
+                />
+                {column.label}
+              </label>
+            ))}
+          </div>
+        </div>
+        <div className="mt-3 overflow-x-auto rounded-md border border-slate-700">
+          <table className="min-w-full text-left text-sm" data-testid="asset-registry-list">
+            <thead className="bg-slate-950/70">
+              <tr>
+                {visibleColumns.map((column) => (
+                  <th key={column} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                    {allColumns.find((item) => item.key === column)?.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
           {assets.length === 0 ? (
-            <li className="text-slate-400">No assets registered yet.</li>
+            <tr>
+              <td colSpan={visibleColumns.length} className="px-3 py-4 text-slate-400">No assets registered yet.</td>
+            </tr>
           ) : (
             assets.map((item) => {
               const readiness = readinessByAssetId[item.assetId]
               const isSelected = selectedAssetId === item.assetId
               return (
-                <li key={item.assetId}>
-                  <button
-                    type="button"
-                    data-testid={`asset-registry-row-${item.assetId}`}
-                    className={`w-full rounded-lg border p-3 text-left transition ${
-                      isSelected
-                        ? 'border-amber-500/60 bg-amber-500/10'
-                        : 'border-slate-800 hover:border-slate-600'
-                    }`}
-                    onClick={() => onSelectAsset(item.assetId)}
-                  >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium">{item.assetTag}</span>
-                    <span className="text-slate-300">{item.name}</span>
-                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-300">
-                      {item.lifecycleStatus}
-                    </span>
-                    {isReadinessLoading ? (
-                      <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
-                        Readiness…
-                      </span>
-                    ) : readiness ? (
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs ring-1 ring-inset ${readinessBadgeClass(readiness.readinessStatus)}`}
-                        title={readiness.primaryBlockerMessage ?? undefined}
-                      >
-                        {readinessLabel(readiness.readinessStatus)}
-                        {readiness.blockerCount > 0 ? ` (${readiness.blockerCount})` : ''}
-                      </span>
-                    ) : null}
-                  </div>
-                  <div className="text-slate-400">
-                    {item.className} / {item.typeName}
-                    {item.siteRef ? ` · ${item.siteRef}` : ''}
-                  </div>
-                  {readiness?.primaryBlockerMessage ? (
-                    <p className="mt-2 text-xs text-amber-200/90">{readiness.primaryBlockerMessage}</p>
-                  ) : null}
-                  </button>
-                </li>
+                <tr
+                  key={item.assetId}
+                  data-testid={`asset-registry-row-${item.assetId}`}
+                  className={`border-t border-slate-800 cursor-pointer ${isSelected ? 'bg-amber-500/10' : ''}`}
+                  onClick={() => onSelectAsset(item.assetId)}
+                >
+                  {visibleColumns.map((column) => (
+                    <td key={`${item.assetId}-${column}`} className="px-3 py-2 text-slate-200">
+                      {column === 'tag' ? item.assetTag : null}
+                      {column === 'name' ? item.name : null}
+                      {column === 'class' ? item.className : null}
+                      {column === 'type' ? item.typeName : null}
+                      {column === 'site' ? item.siteRef ?? 'Unassigned' : null}
+                      {column === 'status' ? item.lifecycleStatus : null}
+                      {column === 'readiness'
+                        ? isReadinessLoading
+                          ? 'Loading…'
+                          : readiness
+                            ? `${readinessLabel(readiness.readinessStatus)}${readiness.blockerCount > 0 ? ` (${readiness.blockerCount})` : ''}`
+                            : '—'
+                        : null}
+                    </td>
+                  ))}
+                </tr>
               )
             })
           )}
-        </ul>
+            </tbody>
+          </table>
+        </div>
         {canManage ? (
           <div className="mt-4 grid gap-2 md:grid-cols-2">
             <ControlledSelect

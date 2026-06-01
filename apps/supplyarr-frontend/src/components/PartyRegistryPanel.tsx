@@ -23,6 +23,8 @@ function buildFriendlyReference(source: string, existingRefs: string[]): string 
   }
   return candidate
 }
+type PartyColumnKey = 'name' | 'legalName' | 'approval' | 'status' | 'primaryContact' | 'created'
+const PARTY_COLUMN_STORAGE_PREFIX = 'supplyarr.parties.drawer.columns.v1.'
 
 interface PartyRegistryPanelProps {
   title: string
@@ -64,25 +66,6 @@ const STATUS_OPTIONS = [
   { value: 'inactive', label: 'Inactive' },
 ]
 
-function approvalBadgeClass(status: string): string {
-  switch (status) {
-    case 'approved':
-      return 'bg-emerald-500/20 text-emerald-300 ring-emerald-500/40'
-    case 'restricted':
-      return 'bg-amber-500/20 text-amber-200 ring-amber-500/40'
-    case 'inactive':
-      return 'bg-slate-500/20 text-slate-300 ring-slate-500/40'
-    default:
-      return 'bg-sky-500/20 text-sky-200 ring-sky-500/40'
-  }
-}
-
-function statusBadgeClass(status: string): string {
-  return status === 'active'
-    ? 'bg-emerald-500/20 text-emerald-300 ring-emerald-500/40'
-    : 'bg-slate-500/20 text-slate-300 ring-slate-500/40'
-}
-
 function formatTimestamp(value: string | null | undefined): string | null {
   if (!value) return null
   const date = new Date(value)
@@ -117,6 +100,16 @@ export function PartyRegistryPanel({
   isUpdatingStatus,
   isAddingContact,
 }: PartyRegistryPanelProps) {
+  const storageKey = `${PARTY_COLUMN_STORAGE_PREFIX}${partyType}`
+  const allColumns: Array<{ key: PartyColumnKey; label: string }> = [
+    { key: 'name', label: 'Display name' },
+    { key: 'legalName', label: 'Legal name' },
+    { key: 'approval', label: 'Approval' },
+    { key: 'status', label: 'Status' },
+    { key: 'primaryContact', label: 'Primary contact' },
+    { key: 'created', label: 'Registered' },
+  ]
+  const [selectedColumns, setSelectedColumns] = useState<PartyColumnKey[]>(['name', 'legalName', 'approval', 'status', 'primaryContact'])
   const existingPartyKeys = useMemo(() => parties.map((party) => party.partyKey), [parties])
   const [selectedPartyId, setSelectedPartyId] = useState('')
   const [editDisplayName, setEditDisplayName] = useState('')
@@ -159,6 +152,34 @@ export function PartyRegistryPanel({
   }, [parties, selectedPartyId])
 
   const panelTestId = `party-registry-panel-${partyType}`
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(storageKey)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as PartyColumnKey[]
+      const valid = parsed.filter((column) => allColumns.some((candidate) => candidate.key === column)).slice(0, 5)
+      if (valid.length > 0) setSelectedColumns(valid)
+    } catch {
+      // Ignore malformed persisted columns.
+    }
+  }, [storageKey])
+
+  useEffect(() => {
+    window.localStorage.setItem(storageKey, JSON.stringify(selectedColumns))
+  }, [selectedColumns, storageKey])
+
+  const visibleColumns = selectedColumns.slice(0, 5)
+  const toggleColumn = (column: PartyColumnKey) => {
+    setSelectedColumns((previous) => {
+      if (previous.includes(column)) {
+        const next = previous.filter((item) => item !== column)
+        return next.length > 0 ? next : previous
+      }
+      if (previous.length >= 5) return previous
+      return [...previous, column]
+    })
+  }
+
   if (isLoading) {
     return (
       <section
@@ -181,53 +202,61 @@ export function PartyRegistryPanel({
       data-testid={panelTestId}
     >
       <h2 className="text-lg font-medium text-white">{title}</h2>
-      <ul className="mt-4 space-y-2 text-sm" data-testid="party-registry-list">
+      <div className="mt-4 rounded-md border border-slate-700 p-2">
+        <p className="text-xs text-slate-400">Visible columns (max 5)</p>
+        <div className="mt-2 flex flex-wrap gap-3">
+          {allColumns.map((column) => (
+            <label key={column.key} className="inline-flex items-center gap-2 text-xs text-slate-300">
+              <input
+                type="checkbox"
+                checked={visibleColumns.includes(column.key)}
+                onChange={() => toggleColumn(column.key)}
+              />
+              {column.label}
+            </label>
+          ))}
+        </div>
+      </div>
+      <div className="mt-3 overflow-x-auto rounded-md border border-slate-700">
+        <table className="min-w-full text-left text-sm" data-testid="party-registry-list">
+          <thead className="bg-slate-950/70">
+            <tr>
+              {visibleColumns.map((column) => (
+                <th key={column} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                  {allColumns.find((item) => item.key === column)?.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
         {parties.length === 0 ? (
-          <li className="text-slate-400">No records yet.</li>
+          <tr><td colSpan={visibleColumns.length} className="px-3 py-4 text-slate-400">No records yet.</td></tr>
         ) : (
           parties.map((party) => (
-            <li key={party.partyId}>
-              <button
-                type="button"
-                className={`w-full rounded-lg border p-3 text-left transition ${
-                  selectedPartyId === party.partyId
-                    ? 'border-sky-500 bg-sky-950/30'
-                    : 'border-slate-800 hover:border-slate-600'
-                }`}
-                data-testid={`party-registry-row-${party.partyId}`}
-                onClick={() => setSelectedPartyId(party.partyId)}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="font-medium">{party.displayName}</div>
-                    {party.legalName ? (
-                      <div className="mt-1 text-slate-500">{party.legalName}</div>
-                    ) : null}
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs ring-1 ${approvalBadgeClass(party.approvalStatus)}`}
-                    >
-                      {party.approvalStatus}
-                    </span>
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs ring-1 ${statusBadgeClass(party.status)}`}
-                    >
-                      {party.status}
-                    </span>
-                  </div>
-                </div>
-                {party.contacts.length > 0 ? (
-                  <p className="mt-2 text-slate-400">
-                    Primary contact:{' '}
-                    {party.contacts.find((c) => c.isPrimary)?.contactName ?? party.contacts[0].contactName}
-                  </p>
-                ) : null}
-              </button>
-            </li>
+            <tr
+              key={party.partyId}
+              data-testid={`party-registry-row-${party.partyId}`}
+              className={`border-t border-slate-800 cursor-pointer ${selectedPartyId === party.partyId ? 'bg-sky-950/30' : ''}`}
+              onClick={() => setSelectedPartyId(party.partyId)}
+            >
+              {visibleColumns.map((column) => (
+                <td key={`${party.partyId}-${column}`} className="px-3 py-2 text-slate-200">
+                  {column === 'name' ? party.displayName : null}
+                  {column === 'legalName' ? party.legalName || '—' : null}
+                  {column === 'approval' ? party.approvalStatus : null}
+                  {column === 'status' ? party.status : null}
+                  {column === 'primaryContact'
+                    ? party.contacts.find((c) => c.isPrimary)?.contactName ?? party.contacts[0]?.contactName ?? '—'
+                    : null}
+                  {column === 'created' ? formatTimestamp(party.createdAt) ?? '—' : null}
+                </td>
+              ))}
+            </tr>
           ))
         )}
-      </ul>
+          </tbody>
+        </table>
+      </div>
 
       {selected ? (
         <div className="mt-4 rounded-lg border border-slate-800 p-4" data-testid="party-registry-detail">

@@ -63,7 +63,16 @@ export function ProgramBuilderPanel({
   isStartingRevision,
   canManage,
 }: ProgramBuilderPanelProps) {
+  type ProgramColumnKey = 'name' | 'definitions' | 'status' | 'publishedVersions'
+  const storageKey = 'trainarr.programs.drawer.columns.v1'
+  const allColumns: Array<{ key: ProgramColumnKey; label: string }> = [
+    { key: 'name', label: 'Program name' },
+    { key: 'definitions', label: 'Definitions' },
+    { key: 'status', label: 'Status' },
+    { key: 'publishedVersions', label: 'Published versions' },
+  ]
   const [showProgramKeyPolicy, setShowProgramKeyPolicy] = useState(false)
+  const [selectedColumns, setSelectedColumns] = useState<ProgramColumnKey[]>(['name', 'definitions', 'status', 'publishedVersions'])
   void programKey
   const isEditing = Boolean(selectedProgramId)
   const editStatus = selectedProgramDetail?.status ?? 'draft'
@@ -86,6 +95,18 @@ export function ProgramBuilderPanel({
       onProgramKeyChange(generatedProgramKey)
     }
   }, [generatedProgramKey, isEditing, onProgramKeyChange])
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(storageKey)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as ProgramColumnKey[]
+      const valid = parsed.filter((column) => allColumns.some((candidate) => candidate.key === column)).slice(0, 5)
+      if (valid.length > 0) setSelectedColumns(valid)
+    } catch {}
+  }, [])
+  useEffect(() => {
+    window.localStorage.setItem(storageKey, JSON.stringify(selectedColumns))
+  }, [selectedColumns])
 
   const canPublish =
     isEditing &&
@@ -289,27 +310,59 @@ export function ProgramBuilderPanel({
       {programs.length > 0 && (
         <div className="mt-6 border-t border-slate-700 pt-4">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Programs</h3>
-          <ul className="mt-2 space-y-2">
+          <div className="mt-2 rounded-md border border-slate-700 p-2">
+            <p className="text-xs text-slate-400">Visible columns (max 5)</p>
+            <div className="mt-2 flex flex-wrap gap-3">
+              {allColumns.map((column) => (
+                <label key={column.key} className="inline-flex items-center gap-2 text-xs text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={selectedColumns.includes(column.key)}
+                    onChange={() => {
+                      if (selectedColumns.includes(column.key)) {
+                        const next = selectedColumns.filter((item) => item !== column.key)
+                        if (next.length > 0) setSelectedColumns(next)
+                      } else if (selectedColumns.length < 5) {
+                        setSelectedColumns([...selectedColumns, column.key])
+                      }
+                    }}
+                  />
+                  {column.label}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="mt-3 overflow-x-auto rounded-md border border-slate-700">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-slate-950/70">
+                <tr>
+                  {selectedColumns.map((column) => (
+                    <th key={column} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                      {allColumns.find((item) => item.key === column)?.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
             {programs.map((program) => (
-              <li key={program.programId}>
-                <button
-                  type="button"
-                  className={`w-full rounded-lg border p-3 text-left text-sm ${
-                    selectedProgramId === program.programId
-                      ? 'border-violet-500 bg-violet-950/30'
-                      : 'border-slate-700 bg-slate-950/40'
-                  }`}
+                <tr
+                  key={program.programId}
+                  className={`border-t border-slate-800 cursor-pointer ${selectedProgramId === program.programId ? 'bg-violet-950/30' : ''}`}
                   onClick={() => onSelectProgram(program.programId)}
                 >
-                  <p className="font-medium text-slate-100">{program.name}</p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    {program.definitionCount} definition(s) · {program.status} ·{' '}
-                    {program.publishedVersionCount} published version(s)
-                  </p>
-                </button>
-              </li>
+                  {selectedColumns.map((column) => (
+                    <td key={`${program.programId}-${column}`} className="px-3 py-2 text-slate-200">
+                      {column === 'name' ? program.name : null}
+                      {column === 'definitions' ? String(program.definitionCount) : null}
+                      {column === 'status' ? program.status : null}
+                      {column === 'publishedVersions' ? String(program.publishedVersionCount) : null}
+                    </td>
+                  ))}
+                </tr>
             ))}
-          </ul>
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </section>

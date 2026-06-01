@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   AdvancedReferenceField,
   buildSemanticKey,
@@ -114,6 +114,37 @@ export function TripsPanel({
   onAssignDriver,
   onUpdateStatus,
 }: TripsPanelProps) {
+  type TripColumnKey = 'title' | 'number' | 'status' | 'loads' | 'driver' | 'vehicle'
+  const storageKey = 'routarr.trips.drawer.columns.v1'
+  const allColumns: Array<{ key: TripColumnKey; label: string }> = [
+    { key: 'title', label: 'Title' },
+    { key: 'number', label: 'Trip number' },
+    { key: 'status', label: 'Status' },
+    { key: 'loads', label: 'Loads' },
+    { key: 'driver', label: 'Assigned driver' },
+    { key: 'vehicle', label: 'Vehicle' },
+  ]
+  const [selectedColumns, setSelectedColumns] = useState<TripColumnKey[]>([
+    'title',
+    'number',
+    'status',
+    'loads',
+    'driver',
+  ])
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(storageKey)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as TripColumnKey[]
+      const valid = parsed.filter((column) => allColumns.some((candidate) => candidate.key === column)).slice(0, 5)
+      if (valid.length > 0) setSelectedColumns(valid)
+    } catch {
+      // Ignore malformed stored columns.
+    }
+  }, [])
+  useEffect(() => {
+    window.localStorage.setItem(storageKey, JSON.stringify(selectedColumns))
+  }, [selectedColumns])
   const driversQuery = useQuery({
     queryKey: ['routarr-drivers', accessToken],
     queryFn: () => listDrivers(accessToken),
@@ -278,35 +309,67 @@ export function TripsPanel({
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <ul className="space-y-2">
+        <div className="space-y-2">
+          <div className="rounded-md border border-slate-700 p-2">
+            <p className="text-xs text-slate-400">Visible columns (max 5)</p>
+            <div className="mt-2 flex flex-wrap gap-3">
+              {allColumns.map((column) => (
+                <label key={column.key} className="inline-flex items-center gap-2 text-xs text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={selectedColumns.includes(column.key)}
+                    onChange={() => {
+                      if (selectedColumns.includes(column.key)) {
+                        const next = selectedColumns.filter((item: TripColumnKey) => item !== column.key)
+                        if (next.length > 0) setSelectedColumns(next)
+                      } else if (selectedColumns.length < 5) {
+                        setSelectedColumns([...selectedColumns, column.key])
+                      }
+                    }}
+                  />
+                  {column.label}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="overflow-x-auto rounded-md border border-slate-700">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-slate-950/70">
+                <tr>
+                  {selectedColumns.map((column: TripColumnKey) => (
+                    <th key={column} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                      {allColumns.find((item) => item.key === column)?.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
           {trips.map((trip) => (
-            <li key={trip.tripId}>
-              <button
-                type="button"
-                className={`w-full rounded-lg border px-4 py-3 text-left ${
-                  selectedTripId === trip.tripId
-                    ? 'border-sky-500 bg-sky-950/30'
-                    : 'border-slate-700 bg-slate-950/30 hover:border-slate-500'
-                }`}
-                onClick={() => onSelectedTripIdChange(trip.tripId)}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium text-white">{trip.title}</span>
-                  <span className="rounded bg-slate-800 px-2 py-0.5 text-xs uppercase tracking-wide text-slate-200">
-                    {trip.dispatchStatus}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-slate-400">{trip.tripNumber}</p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {trip.loadCount} load{trip.loadCount === 1 ? '' : 's'}
-                  {trip.assignedDriverPersonId
-                    ? ` · driver ${findDriverLabel(drivers, trip.assignedDriverPersonId) ?? 'assigned'}`
-                    : ' · unassigned'}
-                </p>
-              </button>
-            </li>
+                <tr
+                  key={trip.tripId}
+                  className={`border-t border-slate-800 cursor-pointer ${selectedTripId === trip.tripId ? 'bg-sky-950/30' : ''}`}
+                  onClick={() => onSelectedTripIdChange(trip.tripId)}
+                >
+                  {selectedColumns.map((column: TripColumnKey) => (
+                    <td key={`${trip.tripId}-${column}`} className="px-3 py-2 text-slate-200">
+                      {column === 'title' ? trip.title : null}
+                      {column === 'number' ? trip.tripNumber : null}
+                      {column === 'status' ? trip.dispatchStatus : null}
+                      {column === 'loads' ? `${trip.loadCount}` : null}
+                      {column === 'driver'
+                        ? trip.assignedDriverPersonId
+                          ? (findDriverLabel(drivers, trip.assignedDriverPersonId) ?? 'Assigned')
+                          : 'Unassigned'
+                        : null}
+                      {column === 'vehicle' ? (trip.vehicleRefKey ?? 'Unassigned') : null}
+                    </td>
+                  ))}
+                </tr>
           ))}
-        </ul>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         <div className="rounded-lg border border-slate-700 bg-slate-950/30 p-4">
           {!selectedTripId ? (

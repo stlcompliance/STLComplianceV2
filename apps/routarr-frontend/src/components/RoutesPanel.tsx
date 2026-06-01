@@ -1,4 +1,4 @@
-import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { buildSemanticKey } from '@stl/shared-ui'
 import { useEffect, useMemo, useState } from 'react'
 
 import type { RouteDetailResponse, RouteSummaryResponse } from '../api/types'
@@ -70,7 +70,17 @@ export function RoutesPanel({
   onLinkTrip,
   onUpdateStopStatus,
 }: RoutesPanelProps) {
+  type RouteColumnKey = 'title' | 'number' | 'status' | 'stops' | 'linkedTrip'
+  const storageKey = 'routarr.routes.drawer.columns.v1'
+  const allColumns: Array<{ key: RouteColumnKey; label: string }> = [
+    { key: 'title', label: 'Title' },
+    { key: 'number', label: 'Route number' },
+    { key: 'status', label: 'Status' },
+    { key: 'stops', label: 'Stops' },
+    { key: 'linkedTrip', label: 'Trip link' },
+  ]
   const [showStopKeyPolicy, setShowStopKeyPolicy] = useState(false)
+  const [selectedColumns, setSelectedColumns] = useState<RouteColumnKey[]>(['title', 'number', 'status', 'stops', 'linkedTrip'])
   const stopKeySource = stopLabel.trim() || stopAddress.trim()
   const generatedStopKey = useMemo(
     () =>
@@ -86,6 +96,18 @@ export function RoutesPanel({
   useEffect(() => {
     onStopKeyChange(generatedStopKey)
   }, [generatedStopKey, onStopKeyChange])
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(storageKey)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as RouteColumnKey[]
+      const valid = parsed.filter((column) => allColumns.some((candidate) => candidate.key === column)).slice(0, 5)
+      if (valid.length > 0) setSelectedColumns(valid)
+    } catch {}
+  }, [])
+  useEffect(() => {
+    window.localStorage.setItem(storageKey, JSON.stringify(selectedColumns))
+  }, [selectedColumns])
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
@@ -117,16 +139,7 @@ export function RoutesPanel({
             />
           </label>
           <div className="space-y-1 text-sm text-slate-300">
-            <GeneratedKeyField
-              sourceLabel={`${stopType} ${stopKeySource}`.trim()}
-              generatedKey={generatedStopKey}
-              confirmedKey={stopKey}
-              manualOverride=""
-              onManualOverrideChange={() => {}}
-              showAdvancedKey={showStopKeyPolicy}
-              disabled={isCreating}
-              label="First stop key"
-            />
+            <div className="text-xs text-slate-400">First stop reference is generated automatically.</div>
             {!showStopKeyPolicy ? (
               <button
                 type="button"
@@ -189,33 +202,62 @@ export function RoutesPanel({
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <ul className="space-y-2">
+        <div className="space-y-2">
+          <div className="rounded-md border border-slate-700 p-2">
+            <p className="text-xs text-slate-400">Visible columns (max 5)</p>
+            <div className="mt-2 flex flex-wrap gap-3">
+              {allColumns.map((column) => (
+                <label key={column.key} className="inline-flex items-center gap-2 text-xs text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={selectedColumns.includes(column.key)}
+                    onChange={() => {
+                      if (selectedColumns.includes(column.key)) {
+                        const next = selectedColumns.filter((item) => item !== column.key)
+                        if (next.length > 0) setSelectedColumns(next)
+                      } else if (selectedColumns.length < 5) {
+                        setSelectedColumns([...selectedColumns, column.key])
+                      }
+                    }}
+                  />
+                  {column.label}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="overflow-x-auto rounded-md border border-slate-700">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-slate-950/70">
+                <tr>
+                  {selectedColumns.map((column) => (
+                    <th key={column} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                      {allColumns.find((item) => item.key === column)?.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
           {routes.map((route) => (
-            <li key={route.routeId}>
-              <button
-                type="button"
-                className={`w-full rounded-lg border px-4 py-3 text-left ${
-                  selectedRouteId === route.routeId
-                    ? 'border-emerald-500 bg-emerald-950/30'
-                    : 'border-slate-700 bg-slate-950/30 hover:border-slate-500'
-                }`}
-                onClick={() => onSelectedRouteIdChange(route.routeId)}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium text-white">{route.title}</span>
-                  <span className="rounded bg-slate-800 px-2 py-0.5 text-xs uppercase tracking-wide text-slate-200">
-                    {route.routeStatus}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-slate-400">{route.routeNumber}</p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {route.stopCount} stop{route.stopCount === 1 ? '' : 's'}
-                  {route.tripId ? ' · linked to trip' : ' · unlinked'}
-                </p>
-              </button>
-            </li>
+                <tr
+                  key={route.routeId}
+                  className={`border-t border-slate-800 cursor-pointer ${selectedRouteId === route.routeId ? 'bg-emerald-950/30' : ''}`}
+                  onClick={() => onSelectedRouteIdChange(route.routeId)}
+                >
+                  {selectedColumns.map((column) => (
+                    <td key={`${route.routeId}-${column}`} className="px-3 py-2 text-slate-200">
+                      {column === 'title' ? route.title : null}
+                      {column === 'number' ? route.routeNumber : null}
+                      {column === 'status' ? route.routeStatus : null}
+                      {column === 'stops' ? `${route.stopCount}` : null}
+                      {column === 'linkedTrip' ? (route.tripId ? 'Linked' : 'Unlinked') : null}
+                    </td>
+                  ))}
+                </tr>
           ))}
-        </ul>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
         <div className="rounded-lg border border-slate-700 bg-slate-950/30 p-4">
           {!selectedRouteId ? (
