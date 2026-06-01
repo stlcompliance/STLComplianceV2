@@ -134,30 +134,8 @@ export function PeopleSection({ state }: Props) {
           People details view centers on the selected person and their profile context.
         </div>
       ) : null}
-      <section className="mt-8 grid gap-6 lg:grid-cols-3">
+      <section className="mt-8">
         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
-          <h2 className="text-sm font-medium text-slate-300">Session context</h2>
-          <dl className="mt-4 grid gap-3 text-sm">
-            <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Signed in</dt>
-              <dd className="text-right text-white">{s.me.displayName}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Role</dt>
-              <dd className="text-right text-sky-300">{s.me.tenantRoleKey || 'tenant_member'}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Org unit</dt>
-              <dd className="text-right text-slate-200">{s.me.primaryOrgUnitName ?? 'Unassigned'}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Job title</dt>
-              <dd className="text-right text-slate-200">{s.me.jobTitle ?? 'Unspecified'}</dd>
-            </div>
-          </dl>
-        </div>
-
-        <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-6 lg:col-span-2">
           <h2 className="text-sm font-medium text-slate-300">People directory</h2>
           <div className="mt-3 space-y-2">
             <label className="block text-xs font-medium uppercase tracking-wide text-slate-400" htmlFor="workspace-directory-filter">
