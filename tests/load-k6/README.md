@@ -85,7 +85,7 @@ chmod +x scripts/ops/load-test-run.sh
 ## Render staging soak
 
 ```powershell
-$env:RENDER_STAGING_NEXARR_API_URL = "https://nexarr-api-jdyi.onrender.com"
+$env:RENDER_STAGING_NEXARR_API_URL = "https://nexarr-api-3zlb.onrender.com"
 # ... all seven RENDER_STAGING_*_API_URL values ...
 ./scripts/ops/render-staging-load-soak.ps1
 ```

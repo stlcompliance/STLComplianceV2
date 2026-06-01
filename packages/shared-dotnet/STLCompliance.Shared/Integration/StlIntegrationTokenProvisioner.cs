@@ -38,7 +38,7 @@ public static class StlIntegrationTokenProvisioner
             return string.Empty;
         }
 
-        // Render slugs append a random suffix (e.g. staffarr-api-srdo); catalog uses blueprint names.
+        // Render slugs append a random suffix (e.g. staffarr-api-58w6); catalog uses blueprint names.
         var knownConsumers = StlIntegrationTokenCatalog.All
             .Select(static profile => profile.ConsumerService)
             .Distinct(StringComparer.OrdinalIgnoreCase);

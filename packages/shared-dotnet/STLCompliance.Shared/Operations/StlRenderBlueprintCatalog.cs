@@ -96,13 +96,13 @@ public static class StlRenderBlueprintCatalog
 
     public static readonly IReadOnlyList<(string EnvKey, string ApiServiceName, string BaseUrl)> ApiBaseUrlEnvKeys =
     [
-        ("NexArr__BaseUrl", "nexarr-api", "https://nexarr-api-jdyi.onrender.com"),
-        ("StaffArr__BaseUrl", "staffarr-api", "https://staffarr-api-srdo.onrender.com"),
-        ("TrainArr__BaseUrl", "trainarr-api", "https://trainarr-api-ae2t.onrender.com"),
-        ("MaintainArr__BaseUrl", "maintainarr-api", "https://maintainarr-api-82rg.onrender.com"),
-        ("RoutArr__BaseUrl", "routarr-api", "https://routarr-api-ut1u.onrender.com"),
-        ("SupplyArr__BaseUrl", "supplyarr-api", "https://supplyarr-api-r963.onrender.com"),
-        ("ComplianceCore__BaseUrl", "compliancecore-api", "https://compliancecore-api-qfu7.onrender.com"),
+        ("NexArr__BaseUrl", "nexarr-api", "https://nexarr-api-3zlb.onrender.com"),
+        ("StaffArr__BaseUrl", "staffarr-api", "https://staffarr-api-58w6.onrender.com"),
+        ("TrainArr__BaseUrl", "trainarr-api", "https://trainarr-api-ieni.onrender.com"),
+        ("MaintainArr__BaseUrl", "maintainarr-api", "https://maintainarr-api-gx03.onrender.com"),
+        ("RoutArr__BaseUrl", "routarr-api", "https://routarr-api-nmwr.onrender.com"),
+        ("SupplyArr__BaseUrl", "supplyarr-api", "https://supplyarr-api-gavo.onrender.com"),
+        ("ComplianceCore__BaseUrl", "compliancecore-api", "https://compliancecore-api-h69n.onrender.com"),
     ];
 
     public static IReadOnlyDictionary<string, IReadOnlyList<string>> SyncFalseEnvKeysByConsumer() =>

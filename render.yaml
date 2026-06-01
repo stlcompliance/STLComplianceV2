@@ -37,19 +37,19 @@ envVarGroups:
   - name: stl-internal-api-urls
     envVars:
       - key: NexArr__BaseUrl
-        value: https://nexarr-api-jdyi.onrender.com
+        value: https://nexarr-api-3zlb.onrender.com
       - key: StaffArr__BaseUrl
-        value: https://staffarr-api-srdo.onrender.com
+        value: https://staffarr-api-58w6.onrender.com
       - key: TrainArr__BaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: MaintainArr__BaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
+        value: https://maintainarr-api-gx03.onrender.com
       - key: RoutArr__BaseUrl
-        value: https://routarr-api-ut1u.onrender.com
+        value: https://routarr-api-nmwr.onrender.com
       - key: SupplyArr__BaseUrl
-        value: https://supplyarr-api-r963.onrender.com
+        value: https://supplyarr-api-gavo.onrender.com
       - key: ComplianceCore__BaseUrl
-        value: https://compliancecore-api-qfu7.onrender.com
+        value: https://compliancecore-api-h69n.onrender.com
 
   # Public onrender.com URLs for browser builds and CORS (Render-assigned hostnames).
   - name: stl-public-frontend-urls
@@ -94,19 +94,19 @@ envVarGroups:
   - name: stl-public-api-urls
     envVars:
       - key: NEXARR_PUBLIC_API_URL
-        value: https://nexarr-api-jdyi.onrender.com
+        value: https://nexarr-api-3zlb.onrender.com
       - key: STAFFARR_PUBLIC_API_URL
-        value: https://staffarr-api-srdo.onrender.com
+        value: https://staffarr-api-58w6.onrender.com
       - key: TRAINARR_PUBLIC_API_URL
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: MAINTAINARR_PUBLIC_API_URL
-        value: https://maintainarr-api-82rg.onrender.com
+        value: https://maintainarr-api-gx03.onrender.com
       - key: ROUTARR_PUBLIC_API_URL
-        value: https://routarr-api-ut1u.onrender.com
+        value: https://routarr-api-nmwr.onrender.com
       - key: SUPPLYARR_PUBLIC_API_URL
-        value: https://supplyarr-api-r963.onrender.com
+        value: https://supplyarr-api-gavo.onrender.com
       - key: COMPLIANCECORE_PUBLIC_API_URL
-        value: https://compliancecore-api-qfu7.onrender.com
+        value: https://compliancecore-api-h69n.onrender.com
 
 databases:
   - name: nexarr-db
@@ -425,215 +425,215 @@ services:
       - key: STL_SERVICE_NAME
         value: shared-worker
       - key: TrainArrQualificationExpiration__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: TrainArrQualificationExpiration__ServiceToken
         sync: false
       - key: TrainArrRecertificationAssignment__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: TrainArrRecertificationAssignment__ServiceToken
         sync: false
       - key: TrainArrQualificationRecalculation__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: TrainArrQualificationRecalculation__ServiceToken
         sync: false
       - key: TrainArrStaffarrPublicationRetry__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: TrainArrStaffarrPublicationRetry__ServiceToken
         sync: false
       - key: TrainArrEventProcessing__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: TrainArrEventProcessing__ServiceToken
         sync: false
       - key: TrainArrRulePackImpact__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: TrainArrRulePackImpact__ServiceToken
         sync: false
       - key: TrainArrEvidenceRetention__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: TrainArrEvidenceRetention__ServiceToken
         sync: false
       - key: TrainArrOrphanReference__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: TrainArrOrphanReference__ServiceToken
         sync: false
       - key: TrainArrNotificationDispatch__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: TrainArrNotificationDispatch__ServiceToken
         sync: false
       - key: TrainArrAssignmentDueReminders__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: TrainArrAssignmentDueReminders__ServiceToken
         sync: false
       - key: TrainArrAssignmentEscalation__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: TrainArrAssignmentEscalation__ServiceToken
         sync: false
       - key: TrainArrAuditPackageGeneration__TrainArrBaseUrl
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: TrainArrAuditPackageGeneration__ServiceToken
         sync: false
       - key: StaffArrCertificationExpiration__StaffArrBaseUrl
-        value: https://staffarr-api-srdo.onrender.com
+        value: https://staffarr-api-58w6.onrender.com
       - key: StaffArrCertificationExpiration__ServiceToken
         sync: false
       - key: StaffArrReadinessRollup__StaffArrBaseUrl
-        value: https://staffarr-api-srdo.onrender.com
+        value: https://staffarr-api-58w6.onrender.com
       - key: StaffArrReadinessRollup__ServiceToken
         sync: false
       - key: StaffArrPermissionProjection__StaffArrBaseUrl
-        value: https://staffarr-api-srdo.onrender.com
+        value: https://staffarr-api-58w6.onrender.com
       - key: StaffArrPermissionProjection__ServiceToken
         sync: false
       - key: StaffArrPersonExportDelivery__StaffArrBaseUrl
-        value: https://staffarr-api-srdo.onrender.com
+        value: https://staffarr-api-58w6.onrender.com
       - key: StaffArrPersonExportDelivery__ServiceToken
         sync: false
       - key: StaffArrPersonnelHistoryRollup__StaffArrBaseUrl
-        value: https://staffarr-api-srdo.onrender.com
+        value: https://staffarr-api-58w6.onrender.com
       - key: StaffArrPersonnelHistoryRollup__ServiceToken
         sync: false
       - key: StaffArrAuditPackageGeneration__StaffArrBaseUrl
-        value: https://staffarr-api-srdo.onrender.com
+        value: https://staffarr-api-58w6.onrender.com
       - key: StaffArrAuditPackageGeneration__ServiceToken
         sync: false
       - key: MaintainArrPmDueScan__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
+        value: https://maintainarr-api-gx03.onrender.com
       - key: MaintainArrPmDueScan__ServiceToken
         sync: false
       - key: MaintainArrNotificationDispatch__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
+        value: https://maintainarr-api-gx03.onrender.com
       - key: MaintainArrNotificationDispatch__ServiceToken
         sync: false
       - key: MaintainArrDefectEscalation__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
+        value: https://maintainarr-api-gx03.onrender.com
       - key: MaintainArrDefectEscalation__ServiceToken
         sync: false
       - key: MaintainArrAssetStatusRollup__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
+        value: https://maintainarr-api-gx03.onrender.com
       - key: MaintainArrAssetStatusRollup__ServiceToken
         sync: false
       - key: MaintainArrMaintenanceHistoryRollup__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
+        value: https://maintainarr-api-gx03.onrender.com
       - key: MaintainArrMaintenanceHistoryRollup__ServiceToken
         sync: false
       - key: MaintainArrDowntimeSync__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
+        value: https://maintainarr-api-gx03.onrender.com
       - key: MaintainArrDowntimeSync__ServiceToken
         sync: false
       - key: MaintainArrPlatformEventProcessing__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
+        value: https://maintainarr-api-gx03.onrender.com
       - key: MaintainArrPlatformEventProcessing__ServiceToken
         sync: false
       - key: MaintainArrAuditPackageGeneration__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
+        value: https://maintainarr-api-gx03.onrender.com
       - key: MaintainArrAuditPackageGeneration__ServiceToken
         sync: false
       - key: MaintainArrTechnicianRefRefresh__MaintainArrBaseUrl
-        value: https://maintainarr-api-82rg.onrender.com
+        value: https://maintainarr-api-gx03.onrender.com
       - key: MaintainArrTechnicianRefRefresh__ServiceToken
         sync: false
       - key: RoutArrNotificationDispatch__RoutArrBaseUrl
-        value: https://routarr-api-ut1u.onrender.com
+        value: https://routarr-api-nmwr.onrender.com
       - key: RoutArrNotificationDispatch__ServiceToken
         sync: false
       - key: RoutArrTripCompletionRollup__RoutArrBaseUrl
-        value: https://routarr-api-ut1u.onrender.com
+        value: https://routarr-api-nmwr.onrender.com
       - key: RoutArrTripCompletionRollup__ServiceToken
         sync: false
       - key: RoutArrAttachmentRetention__RoutArrBaseUrl
-        value: https://routarr-api-ut1u.onrender.com
+        value: https://routarr-api-nmwr.onrender.com
       - key: RoutArrAttachmentRetention__ServiceToken
         sync: false
       - key: RoutArrIntegrationEvents__RoutArrBaseUrl
-        value: https://routarr-api-ut1u.onrender.com
+        value: https://routarr-api-nmwr.onrender.com
       - key: RoutArrIntegrationEvents__ServiceToken
         sync: false
       - key: RoutArrAuditPackageGeneration__RoutArrBaseUrl
-        value: https://routarr-api-ut1u.onrender.com
+        value: https://routarr-api-nmwr.onrender.com
       - key: RoutArrAuditPackageGeneration__ServiceToken
         sync: false
       - key: SupplyArrReorderEvaluation__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
+        value: https://supplyarr-api-gavo.onrender.com
       - key: SupplyArrReorderEvaluation__ServiceToken
         sync: false
       - key: SupplyArrPriceSnapshot__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
+        value: https://supplyarr-api-gavo.onrender.com
       - key: SupplyArrPriceSnapshot__ServiceToken
         sync: false
       - key: SupplyArrLeadTimeSnapshot__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
+        value: https://supplyarr-api-gavo.onrender.com
       - key: SupplyArrLeadTimeSnapshot__ServiceToken
         sync: false
       - key: SupplyArrAvailabilitySnapshot__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
+        value: https://supplyarr-api-gavo.onrender.com
       - key: SupplyArrAvailabilitySnapshot__ServiceToken
         sync: false
       - key: SupplyArrProcurementCoordination__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
+        value: https://supplyarr-api-gavo.onrender.com
       - key: SupplyArrProcurementCoordination__ServiceToken
         sync: false
       - key: SupplyArrApprovalReminders__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
+        value: https://supplyarr-api-gavo.onrender.com
       - key: SupplyArrApprovalReminders__ServiceToken
         sync: false
       - key: SupplyArrProcurementExceptionEscalations__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
+        value: https://supplyarr-api-gavo.onrender.com
       - key: SupplyArrProcurementExceptionEscalations__ServiceToken
         sync: false
       - key: SupplyArrDemandProcessing__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
+        value: https://supplyarr-api-gavo.onrender.com
       - key: SupplyArrDemandProcessing__ServiceToken
         sync: false
       - key: SupplyArrNotificationDispatch__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
+        value: https://supplyarr-api-gavo.onrender.com
       - key: SupplyArrNotificationDispatch__ServiceToken
         sync: false
       - key: SupplyArrIntegrationEvents__SupplyArrBaseUrl
-        value: https://supplyarr-api-r963.onrender.com
+        value: https://supplyarr-api-gavo.onrender.com
       - key: SupplyArrIntegrationEvents__ServiceToken
         sync: false
       - key: ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-qfu7.onrender.com
+        value: https://compliancecore-api-h69n.onrender.com
       - key: ComplianceCoreScheduledEvaluation__ServiceToken
         sync: false
       - key: ComplianceCoreRuleChangeMonitor__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-qfu7.onrender.com
+        value: https://compliancecore-api-h69n.onrender.com
       - key: ComplianceCoreRuleChangeMonitor__ServiceToken
         sync: false
       - key: ComplianceCoreWaiverExpiration__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-qfu7.onrender.com
+        value: https://compliancecore-api-h69n.onrender.com
       - key: ComplianceCoreWaiverExpiration__ServiceToken
         sync: false
       - key: ComplianceCoreFactSourceSync__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-qfu7.onrender.com
+        value: https://compliancecore-api-h69n.onrender.com
       - key: ComplianceCoreFactSourceSync__ServiceToken
         sync: false
       - key: ComplianceCoreAuditPackageGeneration__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-qfu7.onrender.com
+        value: https://compliancecore-api-h69n.onrender.com
       - key: ComplianceCoreAuditPackageGeneration__ServiceToken
         sync: false
       - key: ComplianceCoreM12AnalyticsBatch__ComplianceCoreBaseUrl
-        value: https://compliancecore-api-qfu7.onrender.com
+        value: https://compliancecore-api-h69n.onrender.com
       - key: ComplianceCoreM12AnalyticsBatch__ServiceToken
         sync: false
       - key: NexArrCompanionNotificationDispatch__NexArrBaseUrl
-        value: https://nexarr-api-jdyi.onrender.com
+        value: https://nexarr-api-3zlb.onrender.com
       - key: NexArrCompanionNotificationDispatch__ServiceToken
         sync: false
       - key: NexArrPlatformAuditPackageGeneration__NexArrBaseUrl
-        value: https://nexarr-api-jdyi.onrender.com
+        value: https://nexarr-api-3zlb.onrender.com
       - key: NexArrPlatformAuditPackageGeneration__ServiceToken
         sync: false
       - key: NexArrServiceTokenCleanup__NexArrBaseUrl
-        value: https://nexarr-api-jdyi.onrender.com
+        value: https://nexarr-api-3zlb.onrender.com
       - key: NexArrServiceTokenCleanup__ServiceToken
         sync: false
       - key: NexArrEntitlementReconciliation__NexArrBaseUrl
-        value: https://nexarr-api-jdyi.onrender.com
+        value: https://nexarr-api-3zlb.onrender.com
       - key: NexArrEntitlementReconciliation__ServiceToken
         sync: false
       - key: NexArrTenantLifecycle__NexArrBaseUrl
-        value: https://nexarr-api-jdyi.onrender.com
+        value: https://nexarr-api-3zlb.onrender.com
       - key: NexArrTenantLifecycle__ServiceToken
         sync: false
 
@@ -657,7 +657,7 @@ services:
           name: nexarr-db
           property: connectionString
       - key: NexArrPlatformOutboxPublisher__NexArrBaseUrl
-        value: https://nexarr-api-jdyi.onrender.com
+        value: https://nexarr-api-3zlb.onrender.com
       - key: NexArrPlatformOutboxPublisher__ServiceToken
         sync: false
 
@@ -783,7 +783,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_NEXARR_API_URL
-        value: https://nexarr-api-jdyi.onrender.com
+        value: https://nexarr-api-3zlb.onrender.com
     headers:
       - path: /*
         name: X-Content-Type-Options
@@ -811,7 +811,7 @@ services:
     envVars:
       - fromGroup: stl-vite-product-frontend-urls
       - key: VITE_STAFFARR_API_BASE
-        value: https://staffarr-api-srdo.onrender.com
+        value: https://staffarr-api-58w6.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
     headers:
@@ -841,7 +841,7 @@ services:
     envVars:
       - fromGroup: stl-vite-product-frontend-urls
       - key: VITE_TRAINARR_API_BASE
-        value: https://trainarr-api-ae2t.onrender.com
+        value: https://trainarr-api-ieni.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
     headers:
@@ -871,7 +871,7 @@ services:
     envVars:
       - fromGroup: stl-vite-product-frontend-urls
       - key: VITE_MAINTAINARR_API_BASE
-        value: https://maintainarr-api-82rg.onrender.com
+        value: https://maintainarr-api-gx03.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
     headers:
@@ -901,7 +901,7 @@ services:
     envVars:
       - fromGroup: stl-vite-product-frontend-urls
       - key: VITE_ROUTARR_API_BASE
-        value: https://routarr-api-ut1u.onrender.com
+        value: https://routarr-api-nmwr.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
     headers:
@@ -931,7 +931,7 @@ services:
     envVars:
       - fromGroup: stl-vite-product-frontend-urls
       - key: VITE_SUPPLYARR_API_BASE
-        value: https://supplyarr-api-r963.onrender.com
+        value: https://supplyarr-api-gavo.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
     headers:
@@ -961,7 +961,7 @@ services:
     envVars:
       - fromGroup: stl-vite-product-frontend-urls
       - key: VITE_COMPLIANCECORE_API_BASE
-        value: https://compliancecore-api-qfu7.onrender.com
+        value: https://compliancecore-api-h69n.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
     headers:
@@ -991,7 +991,7 @@ services:
     envVars:
       - fromGroup: stl-vite-product-frontend-urls
       - key: VITE_NEXARR_API_BASE
-        value: https://nexarr-api-jdyi.onrender.com
+        value: https://nexarr-api-3zlb.onrender.com
       - key: VITE_SUITE_URL
         value: https://suite-frontend.onrender.com
     headers:

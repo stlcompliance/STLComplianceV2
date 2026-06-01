@@ -30,7 +30,7 @@ Each API URL is the public `https://…onrender.com` base URL from the Render Da
 
 ```powershell
 # 1. Export staging API URLs (one per Render web service)
-$env:RENDER_STAGING_NEXARR_API_URL = "https://nexarr-api-jdyi.onrender.com"
+$env:RENDER_STAGING_NEXARR_API_URL = "https://nexarr-api-3zlb.onrender.com"
 # ... repeat for all seven ...
 
 # 2. Optional: staging demo credentials (defaults match docker-compose demo tenant)
@@ -47,7 +47,7 @@ $env:STL_LOAD_DEMO_PASSWORD = "ChangeMe!Demo2026"
 Linux / GitHub Actions:
 
 ```bash
-export RENDER_STAGING_NEXARR_API_URL="https://nexarr-api-jdyi.onrender.com"
+export RENDER_STAGING_NEXARR_API_URL="https://nexarr-api-3zlb.onrender.com"
 ./scripts/ops/render-staging-load-soak.sh all
 ```
 

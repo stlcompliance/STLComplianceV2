@@ -80,7 +80,7 @@ Runs:
 
 ```powershell
 # Export staging API URLs from Render Dashboard
-$env:RENDER_STAGING_NEXARR_API_URL = "https://nexarr-api-jdyi.onrender.com"
+$env:RENDER_STAGING_NEXARR_API_URL = "https://nexarr-api-3zlb.onrender.com"
 $env:RENDER_STAGING_STAFFARR_API_URL = "https://staffarr-api-jdyi.onrender.com"
 $env:RENDER_STAGING_TRAINARR_API_URL = "https://trainarr-api-jdyi.onrender.com"
 $env:RENDER_STAGING_MAINTAINARR_API_URL = "https://maintainarr-api-jdyi.onrender.com"
@@ -102,7 +102,7 @@ $env:RENDER_STAGING_SUITE_FRONTEND_URL = "https://suite-frontend-jdyi.onrender.c
 Linux / macOS:
 
 ```bash
-export RENDER_STAGING_NEXARR_API_URL="https://nexarr-api-jdyi.onrender.com"
+export RENDER_STAGING_NEXARR_API_URL="https://nexarr-api-3zlb.onrender.com"
 # ... repeat for all seven API URLs ...
 ./scripts/ops/render-staging-ship-gate-validate.sh api-health
 ```

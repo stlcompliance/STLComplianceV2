@@ -74,13 +74,13 @@ Attached to APIs that call other products. These values use the deployed Render 
 
 | Variable | Target |
 |----------|--------|
-| `NexArr__BaseUrl` | `https://nexarr-api-jdyi.onrender.com` |
-| `StaffArr__BaseUrl` | `https://staffarr-api-srdo.onrender.com` |
-| `TrainArr__BaseUrl` | `https://trainarr-api-ae2t.onrender.com` |
-| `MaintainArr__BaseUrl` | `https://maintainarr-api-82rg.onrender.com` |
-| `RoutArr__BaseUrl` | `https://routarr-api-ut1u.onrender.com` |
-| `SupplyArr__BaseUrl` | `https://supplyarr-api-r963.onrender.com` |
-| `ComplianceCore__BaseUrl` | `https://compliancecore-api-qfu7.onrender.com` |
+| `NexArr__BaseUrl` | `https://nexarr-api-3zlb.onrender.com` |
+| `StaffArr__BaseUrl` | `https://staffarr-api-58w6.onrender.com` |
+| `TrainArr__BaseUrl` | `https://trainarr-api-ieni.onrender.com` |
+| `MaintainArr__BaseUrl` | `https://maintainarr-api-gx03.onrender.com` |
+| `RoutArr__BaseUrl` | `https://routarr-api-nmwr.onrender.com` |
+| `SupplyArr__BaseUrl` | `https://supplyarr-api-gavo.onrender.com` |
+| `ComplianceCore__BaseUrl` | `https://compliancecore-api-h69n.onrender.com` |
 
 ## Integration service tokens (`sync: false`)
 
@@ -99,7 +99,7 @@ Issue tokens in NexArr (platform admin / service clients) with the scopes docume
 
 | Variable | Purpose |
 |----------|---------|
-| `TrainArrQualificationExpiration__TrainArrBaseUrl` | `https://trainarr-api-ae2t.onrender.com` |
+| `TrainArrQualificationExpiration__TrainArrBaseUrl` | `https://trainarr-api-ieni.onrender.com` |
 | `TrainArrQualificationExpiration__ServiceToken` | scope `trainarr.qualifications.expire` |
 | `TrainArrRecertificationAssignment__TrainArrBaseUrl` | same TrainArr host |
 | `TrainArrRecertificationAssignment__ServiceToken` | scope `trainarr.recertification.assign` |
@@ -109,47 +109,47 @@ Issue tokens in NexArr (platform admin / service clients) with the scopes docume
 | `TrainArrStaffarrPublicationRetry__ServiceToken` | scope `trainarr.staffarr_publications.retry` |
 | `TrainArrEventProcessing__TrainArrBaseUrl` | same TrainArr host |
 | `TrainArrEventProcessing__ServiceToken` | scope `trainarr.events.process` |
-| `StaffArrCertificationExpiration__StaffArrBaseUrl` | `https://staffarr-api-srdo.onrender.com` |
+| `StaffArrCertificationExpiration__StaffArrBaseUrl` | `https://staffarr-api-58w6.onrender.com` |
 | `StaffArrCertificationExpiration__ServiceToken` | scope `staffarr.certifications.expire` |
 | `StaffArrReadinessRollup__StaffArrBaseUrl` | same StaffArr host |
 | `StaffArrReadinessRollup__ServiceToken` | scope `staffarr.readiness.rollup` |
 | `StaffArrPermissionProjection__StaffArrBaseUrl` | same StaffArr host |
 | `StaffArrPermissionProjection__ServiceToken` | scope `staffarr.permissions.project` |
-| `MaintainArrPmDueScan__MaintainArrBaseUrl` | `https://maintainarr-api-82rg.onrender.com` |
+| `MaintainArrPmDueScan__MaintainArrBaseUrl` | `https://maintainarr-api-gx03.onrender.com` |
 | `MaintainArrPmDueScan__ServiceToken` | scope `maintainarr.pm.scan` |
-| `MaintainArrAssetStatusRollup__MaintainArrBaseUrl` | `https://maintainarr-api-82rg.onrender.com` |
+| `MaintainArrAssetStatusRollup__MaintainArrBaseUrl` | `https://maintainarr-api-gx03.onrender.com` |
 | `MaintainArrAssetStatusRollup__ServiceToken` | scope `maintainarr.asset_status.rollup` |
-| `MaintainArrMaintenanceHistoryRollup__MaintainArrBaseUrl` | `https://maintainarr-api-82rg.onrender.com` |
+| `MaintainArrMaintenanceHistoryRollup__MaintainArrBaseUrl` | `https://maintainarr-api-gx03.onrender.com` |
 | `MaintainArrMaintenanceHistoryRollup__ServiceToken` | scope `maintainarr.maintenance_history.rollup` |
-| `MaintainArrDowntimeSync__MaintainArrBaseUrl` | `https://maintainarr-api-82rg.onrender.com` |
+| `MaintainArrDowntimeSync__MaintainArrBaseUrl` | `https://maintainarr-api-gx03.onrender.com` |
 | `MaintainArrDowntimeSync__ServiceToken` | scope `maintainarr.downtime.sync` |
-| `MaintainArrPlatformEventProcessing__MaintainArrBaseUrl` | `https://maintainarr-api-82rg.onrender.com` |
+| `MaintainArrPlatformEventProcessing__MaintainArrBaseUrl` | `https://maintainarr-api-gx03.onrender.com` |
 | `MaintainArrPlatformEventProcessing__ServiceToken` | scope `maintainarr.platform_events.process` |
-| `MaintainArrDefectEscalation__MaintainArrBaseUrl` | `https://maintainarr-api-82rg.onrender.com` |
+| `MaintainArrDefectEscalation__MaintainArrBaseUrl` | `https://maintainarr-api-gx03.onrender.com` |
 | `MaintainArrDefectEscalation__ServiceToken` | scope `maintainarr.defects.escalate` |
-| `MaintainArrTechnicianRefRefresh__MaintainArrBaseUrl` | `https://maintainarr-api-82rg.onrender.com` |
+| `MaintainArrTechnicianRefRefresh__MaintainArrBaseUrl` | `https://maintainarr-api-gx03.onrender.com` |
 | `MaintainArrTechnicianRefRefresh__ServiceToken` | scope `maintainarr.technician_refs.refresh` |
-| `RoutArrTripCompletionRollup__RoutArrBaseUrl` | `https://routarr-api-ut1u.onrender.com` |
+| `RoutArrTripCompletionRollup__RoutArrBaseUrl` | `https://routarr-api-nmwr.onrender.com` |
 | `RoutArrTripCompletionRollup__ServiceToken` | scope `routarr.trips.completion.rollup` |
-| `RoutArrIntegrationEvents__RoutArrBaseUrl` | `https://routarr-api-ut1u.onrender.com` |
+| `RoutArrIntegrationEvents__RoutArrBaseUrl` | `https://routarr-api-nmwr.onrender.com` |
 | `RoutArrIntegrationEvents__ServiceToken` | scope `routarr.integration.events.process` |
-| `TrainArrOrphanReference__TrainArrBaseUrl` | `https://trainarr-api-ae2t.onrender.com` |
+| `TrainArrOrphanReference__TrainArrBaseUrl` | `https://trainarr-api-ieni.onrender.com` |
 | `TrainArrOrphanReference__ServiceToken` | scope `trainarr.orphan_references.scan` |
-| `SupplyArrReorderEvaluation__SupplyArrBaseUrl` | `https://supplyarr-api-r963.onrender.com` |
+| `SupplyArrReorderEvaluation__SupplyArrBaseUrl` | `https://supplyarr-api-gavo.onrender.com` |
 | `SupplyArrReorderEvaluation__ServiceToken` | scope `supplyarr.reorder.evaluate` |
-| `SupplyArrProcurementCoordination__SupplyArrBaseUrl` | `https://supplyarr-api-r963.onrender.com` |
+| `SupplyArrProcurementCoordination__SupplyArrBaseUrl` | `https://supplyarr-api-gavo.onrender.com` |
 | `SupplyArrProcurementCoordination__ServiceToken` | scope `supplyarr.procurement.coordination` |
-| `SupplyArrApprovalReminders__SupplyArrBaseUrl` | `https://supplyarr-api-r963.onrender.com` |
+| `SupplyArrApprovalReminders__SupplyArrBaseUrl` | `https://supplyarr-api-gavo.onrender.com` |
 | `SupplyArrApprovalReminders__ServiceToken` | scope `supplyarr.approval_reminders.dispatch` |
-| `SupplyArrDemandProcessing__SupplyArrBaseUrl` | `https://supplyarr-api-r963.onrender.com` |
+| `SupplyArrDemandProcessing__SupplyArrBaseUrl` | `https://supplyarr-api-gavo.onrender.com` |
 | `SupplyArrDemandProcessing__ServiceToken` | scope `supplyarr.demand.process` |
-| `ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl` | `https://compliancecore-api-qfu7.onrender.com` |
+| `ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl` | `https://compliancecore-api-h69n.onrender.com` |
 | `ComplianceCoreScheduledEvaluation__ServiceToken` | scope `compliancecore.rules.evaluate.scheduled` |
-| `ComplianceCoreRuleChangeMonitor__ComplianceCoreBaseUrl` | `https://compliancecore-api-qfu7.onrender.com` |
+| `ComplianceCoreRuleChangeMonitor__ComplianceCoreBaseUrl` | `https://compliancecore-api-h69n.onrender.com` |
 | `ComplianceCoreRuleChangeMonitor__ServiceToken` | scope `compliancecore.rule_changes.monitor` |
-| `ComplianceCoreWaiverExpiration__ComplianceCoreBaseUrl` | `https://compliancecore-api-qfu7.onrender.com` |
+| `ComplianceCoreWaiverExpiration__ComplianceCoreBaseUrl` | `https://compliancecore-api-h69n.onrender.com` |
 | `ComplianceCoreWaiverExpiration__ServiceToken` | scope `compliancecore.waivers.expire_batch` |
-| `ComplianceCoreFactSourceSync__ComplianceCoreBaseUrl` | `https://compliancecore-api-qfu7.onrender.com` |
+| `ComplianceCoreFactSourceSync__ComplianceCoreBaseUrl` | `https://compliancecore-api-h69n.onrender.com` |
 | `ComplianceCoreFactSourceSync__ServiceToken` | scope `compliancecore.fact_sources.sync` |
 | `ComplianceCoreM12AnalyticsBatch__ServiceToken` | scope `compliancecore.m12_analytics.process_batch` |
 | `ComplianceCoreAuditPackageGeneration__ServiceToken` | scope `compliancecore.audit_packages.generate` |
@@ -158,15 +158,15 @@ Issue tokens in NexArr (platform admin / service clients) with the scopes docume
 | `SupplyArrLeadTimeSnapshot__ServiceToken` | scope `supplyarr.lead_time.snapshots.capture` |
 | `SupplyArrAvailabilitySnapshot__ServiceToken` | scope `supplyarr.availability.snapshots.capture` |
 | `SupplyArrProcurementExceptionEscalations__ServiceToken` | scope `supplyarr.procurement_exceptions.escalate` |
-| `SupplyArrIntegrationEvents__SupplyArrBaseUrl` | `https://supplyarr-api-r963.onrender.com` |
+| `SupplyArrIntegrationEvents__SupplyArrBaseUrl` | `https://supplyarr-api-gavo.onrender.com` |
 | `SupplyArrIntegrationEvents__ServiceToken` | scope `supplyarr.integration.events.process` |
-| `NexArrServiceTokenCleanup__NexArrBaseUrl` | `https://nexarr-api-jdyi.onrender.com` |
+| `NexArrServiceTokenCleanup__NexArrBaseUrl` | `https://nexarr-api-3zlb.onrender.com` |
 | `NexArrServiceTokenCleanup__ServiceToken` | scope `nexarr.service_tokens.cleanup.purge` |
-| `NexArrEntitlementReconciliation__NexArrBaseUrl` | `https://nexarr-api-jdyi.onrender.com` |
+| `NexArrEntitlementReconciliation__NexArrBaseUrl` | `https://nexarr-api-3zlb.onrender.com` |
 | `NexArrEntitlementReconciliation__ServiceToken` | scope `nexarr.entitlements.reconcile` |
-| `NexArrTenantLifecycle__NexArrBaseUrl` | `https://nexarr-api-jdyi.onrender.com` |
+| `NexArrTenantLifecycle__NexArrBaseUrl` | `https://nexarr-api-3zlb.onrender.com` |
 | `NexArrTenantLifecycle__ServiceToken` | scope `nexarr.tenants.lifecycle.process` |
-| `NexArrPlatformOutboxPublisher__NexArrBaseUrl` | `https://nexarr-api-jdyi.onrender.com` |
+| `NexArrPlatformOutboxPublisher__NexArrBaseUrl` | `https://nexarr-api-3zlb.onrender.com` |
 | `NexArrPlatformOutboxPublisher__ServiceToken` | scope `nexarr.platform_outbox.publish` |
 
 ## CORS (product APIs)
@@ -200,13 +200,13 @@ When unset, subscribe APIs return `503 companion.push.vapid_unavailable` and dis
 
 | Static site | Build variable | Public API |
 |-------------|----------------|------------|
-| `suite-frontend` | `VITE_NEXARR_API_URL` | `https://nexarr-api-jdyi.onrender.com` |
-| `staffarr-frontend` | `VITE_STAFFARR_API_BASE` | `https://staffarr-api-srdo.onrender.com` |
-| `trainarr-frontend` | `VITE_TRAINARR_API_BASE` | `https://trainarr-api-ae2t.onrender.com` |
-| `maintainarr-frontend` | `VITE_MAINTAINARR_API_BASE` | `https://maintainarr-api-82rg.onrender.com` |
-| `routarr-frontend` | `VITE_ROUTARR_API_BASE` | `https://routarr-api-ut1u.onrender.com` |
-| `supplyarr-frontend` | `VITE_SUPPLYARR_API_BASE` | `https://supplyarr-api-r963.onrender.com` |
-| `compliancecore-frontend` | `VITE_COMPLIANCECORE_API_BASE` | `https://compliancecore-api-qfu7.onrender.com` |
+| `suite-frontend` | `VITE_NEXARR_API_URL` | `https://nexarr-api-3zlb.onrender.com` |
+| `staffarr-frontend` | `VITE_STAFFARR_API_BASE` | `https://staffarr-api-58w6.onrender.com` |
+| `trainarr-frontend` | `VITE_TRAINARR_API_BASE` | `https://trainarr-api-ieni.onrender.com` |
+| `maintainarr-frontend` | `VITE_MAINTAINARR_API_BASE` | `https://maintainarr-api-gx03.onrender.com` |
+| `routarr-frontend` | `VITE_ROUTARR_API_BASE` | `https://routarr-api-nmwr.onrender.com` |
+| `supplyarr-frontend` | `VITE_SUPPLYARR_API_BASE` | `https://supplyarr-api-gavo.onrender.com` |
+| `compliancecore-frontend` | `VITE_COMPLIANCECORE_API_BASE` | `https://compliancecore-api-h69n.onrender.com` |
 
 Static sites cannot use private network hostnames; always use public HTTPS URLs (or custom domains — update Blueprint values after DNS cutover).
 
