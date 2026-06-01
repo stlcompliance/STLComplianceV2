@@ -3,6 +3,9 @@ using Microsoft.Extensions.Options;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
 using STLCompliance.Shared.Operations;
+using StaffArrPersonExportDeliveryService = StaffArr.Api.Services.PersonExportDeliveryService;
+using StaffArrPersonnelHistoryService = StaffArr.Api.Services.PersonnelHistoryService;
+using SupplyArrLeadTimeSnapshotWorkerService = SupplyArr.Api.Services.LeadTimeSnapshotWorkerService;
 
 namespace STLCompliance.E2E.Catalog;
 
@@ -45,6 +48,23 @@ public sealed class StlRenderBlueprintCatalogTests
             Assert.True(syncFalseByConsumer.ContainsKey(profile.ConsumerService));
             Assert.Contains(profile.ConfigurationKey, syncFalseByConsumer[profile.ConsumerService]);
         }
+    }
+
+    [Fact]
+    public void Worker_token_catalog_scopes_match_internal_endpoint_requirements()
+    {
+        Assert.Contains(
+            StlIntegrationTokenCatalog.All,
+            profile => profile.ConfigurationKey == "SupplyArrLeadTimeSnapshot__ServiceToken"
+                && profile.ActionScope == SupplyArrLeadTimeSnapshotWorkerService.ProcessLeadTimeSnapshotCapturesActionScope);
+        Assert.Contains(
+            StlIntegrationTokenCatalog.All,
+            profile => profile.ConfigurationKey == "StaffArrPersonExportDelivery__ServiceToken"
+                && profile.ActionScope == StaffArrPersonExportDeliveryService.ProcessDeliveriesActionScope);
+        Assert.Contains(
+            StlIntegrationTokenCatalog.All,
+            profile => profile.ConfigurationKey == "StaffArrPersonnelHistoryRollup__ServiceToken"
+                && profile.ActionScope == StaffArrPersonnelHistoryService.RollupActionScope);
     }
 
     [Fact]

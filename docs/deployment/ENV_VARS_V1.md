@@ -153,9 +153,9 @@ Issue tokens in NexArr (platform admin / service clients) with the scopes docume
 | `ComplianceCoreFactSourceSync__ServiceToken` | scope `compliancecore.fact_sources.sync` |
 | `ComplianceCoreM12AnalyticsBatch__ServiceToken` | scope `compliancecore.m12_analytics.process_batch` |
 | `ComplianceCoreAuditPackageGeneration__ServiceToken` | scope `compliancecore.audit_packages.generate` |
-| `StaffArrPersonExportDelivery__ServiceToken` | scope `staffarr.people.export.deliver` |
-| `StaffArrPersonnelHistoryRollup__ServiceToken` | scope `staffarr.personnel_history.rollup` |
-| `SupplyArrLeadTimeSnapshot__ServiceToken` | scope `supplyarr.lead_time.snapshots.capture` |
+| `StaffArrPersonExportDelivery__ServiceToken` | scope `staffarr.people.export.scheduled` |
+| `StaffArrPersonnelHistoryRollup__ServiceToken` | scope `staffarr.personnel.history.rollup` |
+| `SupplyArrLeadTimeSnapshot__ServiceToken` | scope `supplyarr.leadtime.snapshots.capture` |
 | `SupplyArrAvailabilitySnapshot__ServiceToken` | scope `supplyarr.availability.snapshots.capture` |
 | `SupplyArrProcurementExceptionEscalations__ServiceToken` | scope `supplyarr.procurement_exceptions.escalate` |
 | `SupplyArrIntegrationEvents__SupplyArrBaseUrl` | `https://supplyarr-api-gavo.onrender.com` |

@@ -186,14 +186,14 @@ public static class StlIntegrationTokenCatalog
             "StaffArrPersonExportDelivery__ServiceToken",
             "shared-worker",
             ["staffarr"],
-            "staffarr.people.export.deliver"),
+            "staffarr.people.export.scheduled"),
         Profile(
             "worker-staffarr-personnel-history",
             "shared-worker",
             "StaffArrPersonnelHistoryRollup__ServiceToken",
             "shared-worker",
             ["staffarr"],
-            "staffarr.personnel_history.rollup"),
+            "staffarr.personnel.history.rollup"),
         Profile(
             "worker-staffarr-audit-packages",
             "shared-worker",
@@ -237,7 +237,7 @@ public static class StlIntegrationTokenCatalog
             "SupplyArrLeadTimeSnapshot__ServiceToken",
             "shared-worker",
             ["supplyarr"],
-            "supplyarr.lead_time.snapshots.capture"),
+            "supplyarr.leadtime.snapshots.capture"),
         Profile(
             "worker-supplyarr-availability-snapshot",
             "shared-worker",
