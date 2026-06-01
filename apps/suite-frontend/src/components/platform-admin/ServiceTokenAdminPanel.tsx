@@ -137,8 +137,6 @@ export function ServiceTokenAdminPanel() {
     onError: (error: Error) => setErrorMessage(error.message),
   })
 
-  const clients = clientsQuery.data?.items ?? []
-
   return (
     <section
       data-testid="service-token-admin-panel"

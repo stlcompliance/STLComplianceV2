@@ -191,8 +191,9 @@ export function PlatformAuditPackageExportPanel() {
 
   const summary = summaryQuery.data
   const jobStatus = jobStatusQuery.data
-  const jobInFlight =
-    Boolean(activeJobId) && jobStatus && (jobStatus.status === 'pending' || jobStatus.status === 'processing')
+  const jobInFlight = Boolean(
+    activeJobId && jobStatus && (jobStatus.status === 'pending' || jobStatus.status === 'processing'),
+  )
   const exportBusy =
     zipExportMutation.isPending ||
     csvExportMutation.isPending ||
