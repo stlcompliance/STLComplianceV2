@@ -6,6 +6,7 @@ describe('AssetRegistryPanel', () => {
   it('renders asset registry lists', () => {
     render(
       <AssetRegistryPanel
+        mode="create"
         canManage={false}
         classes={[
           {

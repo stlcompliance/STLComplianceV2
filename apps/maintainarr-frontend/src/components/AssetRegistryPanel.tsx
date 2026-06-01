@@ -9,6 +9,7 @@ import type {
 } from '../api/types'
 
 interface AssetRegistryPanelProps {
+  mode: 'drawer' | 'details' | 'create'
   canManage: boolean
   classes: AssetClassResponse[]
   types: AssetTypeResponse[]
@@ -53,6 +54,7 @@ function readinessLabel(status: AssetReadinessSummaryResponse['readinessStatus']
 }
 
 export function AssetRegistryPanel({
+  mode,
   canManage,
   classes,
   types,
@@ -149,97 +151,101 @@ export function AssetRegistryPanel({
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
-        <h2 className="text-lg font-medium text-white">Asset classes</h2>
-        <ul className="mt-4 space-y-2 text-sm">
-          {classes.length === 0 ? (
-            <li className="text-slate-400">No asset classes yet.</li>
-          ) : (
-            classes.map((item) => (
-              <li key={item.assetClassId} className="rounded-lg border border-slate-800 p-3">
-                <div className="font-medium">{item.name}</div>
-              </li>
-            ))
-          )}
-        </ul>
-        {canManage ? (
-          <div className="mt-4 space-y-2">
-            <input id="assetregistry-input-field-8"
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              placeholder="Class name"
-              value={className}
-              onChange={(event) => onClassNameChange(event.target.value)}
-            />
-            <input id="assetregistry-input-field-7"
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              placeholder="Description"
-              value={classDescription}
-              onChange={(event) => onClassDescriptionChange(event.target.value)}
-            />
-            <button
-              type="button"
-              className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-              disabled={isCreatingClass}
-              onClick={onCreateClass}
-            >
-              {isCreatingClass ? 'Creating…' : 'Create class'}
-            </button>
-          </div>
-        ) : null}
-      </section>
+      {mode === 'create' ? (
+        <>
+          <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
+            <h2 className="text-lg font-medium text-white">Asset classes</h2>
+            <ul className="mt-4 space-y-2 text-sm">
+              {classes.length === 0 ? (
+                <li className="text-slate-400">No asset classes yet.</li>
+              ) : (
+                classes.map((item) => (
+                  <li key={item.assetClassId} className="rounded-lg border border-slate-800 p-3">
+                    <div className="font-medium">{item.name}</div>
+                  </li>
+                ))
+              )}
+            </ul>
+            {canManage ? (
+              <div className="mt-4 space-y-2">
+                <input id="assetregistry-input-field-8"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                  placeholder="Class name"
+                  value={className}
+                  onChange={(event) => onClassNameChange(event.target.value)}
+                />
+                <input id="assetregistry-input-field-7"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                  placeholder="Description"
+                  value={classDescription}
+                  onChange={(event) => onClassDescriptionChange(event.target.value)}
+                />
+                <button
+                  type="button"
+                  className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  disabled={isCreatingClass}
+                  onClick={onCreateClass}
+                >
+                  {isCreatingClass ? 'Creating…' : 'Create class'}
+                </button>
+              </div>
+            ) : null}
+          </section>
 
-      <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
-        <h2 className="text-lg font-medium text-white">Asset types</h2>
-        <ul className="mt-4 space-y-2 text-sm">
-          {types.length === 0 ? (
-            <li className="text-slate-400">No asset types yet.</li>
-          ) : (
-            types.map((item) => (
-              <li key={item.assetTypeId} className="rounded-lg border border-slate-800 p-3">
-                <div className="font-medium">{item.name}</div>
-                <div className="text-slate-400">
-                  {item.className}
-                </div>
-              </li>
-            ))
-          )}
-        </ul>
-        {canManage ? (
-          <div className="mt-4 space-y-2">
-            <ControlledSelect
-              label="Asset class"
-              value={selectedClassId}
-              onChange={onSelectedClassIdChange}
-              options={classOptions}
-              emptyLabel="Select asset class"
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-            />
-            <input id="assetregistry-input-field-6"
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              placeholder="Type name"
-              value={typeName}
-              onChange={(event) => onTypeNameChange(event.target.value)}
-            />
-            <input id="assetregistry-input-field-5"
-              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-              placeholder="Description"
-              value={typeDescription}
-              onChange={(event) => onTypeDescriptionChange(event.target.value)}
-            />
-            <button
-              type="button"
-              className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-              disabled={isCreatingType || !selectedClassId}
-              onClick={onCreateType}
-            >
-              {isCreatingType ? 'Creating…' : 'Create type'}
-            </button>
-          </div>
-        ) : null}
-      </section>
+          <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
+            <h2 className="text-lg font-medium text-white">Asset types</h2>
+            <ul className="mt-4 space-y-2 text-sm">
+              {types.length === 0 ? (
+                <li className="text-slate-400">No asset types yet.</li>
+              ) : (
+                types.map((item) => (
+                  <li key={item.assetTypeId} className="rounded-lg border border-slate-800 p-3">
+                    <div className="font-medium">{item.name}</div>
+                    <div className="text-slate-400">
+                      {item.className}
+                    </div>
+                  </li>
+                ))
+              )}
+            </ul>
+            {canManage ? (
+              <div className="mt-4 space-y-2">
+                <ControlledSelect
+                  label="Asset class"
+                  value={selectedClassId}
+                  onChange={onSelectedClassIdChange}
+                  options={classOptions}
+                  emptyLabel="Select asset class"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                />
+                <input id="assetregistry-input-field-6"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                  placeholder="Type name"
+                  value={typeName}
+                  onChange={(event) => onTypeNameChange(event.target.value)}
+                />
+                <input id="assetregistry-input-field-5"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+                  placeholder="Description"
+                  value={typeDescription}
+                  onChange={(event) => onTypeDescriptionChange(event.target.value)}
+                />
+                <button
+                  type="button"
+                  className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  disabled={isCreatingType || !selectedClassId}
+                  onClick={onCreateType}
+                >
+                  {isCreatingType ? 'Creating…' : 'Create type'}
+                </button>
+              </div>
+            ) : null}
+          </section>
+        </>
+      ) : null}
 
       <section
-        className="rounded-xl border border-slate-700 bg-slate-900/60 p-5 lg:col-span-2"
+        className={`rounded-xl border border-slate-700 bg-slate-900/60 p-5 ${mode === 'create' ? 'lg:col-span-2' : 'lg:col-span-2'}`}
         data-testid="asset-registry-panel"
       >
         <h2 className="text-lg font-medium text-white">Assets</h2>
@@ -309,7 +315,7 @@ export function AssetRegistryPanel({
             </tbody>
           </table>
         </div>
-        {canManage ? (
+        {mode === 'create' && canManage ? (
           <div className="mt-4 grid gap-2 md:grid-cols-2">
             <ControlledSelect
               label="Asset type"
