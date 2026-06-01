@@ -51,7 +51,7 @@ public static class StlJwtAuthenticationExtensions
                         // Internal routes use service tokens validated in endpoint handlers.
                         if (context.Request.Path.StartsWithSegments("/api/internal", StringComparison.OrdinalIgnoreCase))
                         {
-                            context.Token = null;
+                            context.NoResult();
                         }
 
                         return Task.CompletedTask;

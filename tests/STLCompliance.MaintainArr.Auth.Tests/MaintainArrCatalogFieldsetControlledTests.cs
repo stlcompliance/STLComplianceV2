@@ -97,7 +97,7 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
             .Where(x => x.TenantId == tenantId && x.CatalogId == catalogId && x.Key == "dump_trailer")
             .OrderBy(x => x.SortOrder)
             .ToListAsync();
-        var activeDumpTrailer = Assert.Single(dumpTrailerOptions.Where(x => x.IsActive));
+        var activeDumpTrailer = Assert.Single(dumpTrailerOptions, x => x.IsActive);
 
         Assert.Contains(
             await db.CatalogOptionDependencies.ToListAsync(),
