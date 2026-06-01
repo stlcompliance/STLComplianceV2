@@ -23,6 +23,6 @@ export const supplyarrNavItems: ProductNavItem[] = [
   { label: 'Pricing', to: '/pricing', icon: Tags as NavIcon },
   { label: 'Planning', to: '/planning', icon: LineChart as NavIcon },
   { label: 'Readiness', to: '/readiness', icon: Gauge as NavIcon },
-  { label: 'Reports', to: '/reports', icon: BarChart3 as NavIcon },
-  { label: 'Settings', to: '/settings', icon: Settings as NavIcon },
+  { label: 'Reports', to: '/reports', icon: BarChart3 as NavIcon, sectionBreakBefore: true },
+  { label: 'Settings', to: '/settings', icon: Settings as NavIcon, sectionBreakBefore: true },
 ]

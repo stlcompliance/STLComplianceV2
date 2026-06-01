@@ -22,9 +22,9 @@ export const routarrNavItems: ProductNavItem[] = [
 
   { label: 'Calendar', to: '/calendar', icon: Calendar as NavIcon },
 
-  { label: 'Reports', to: '/reports', icon: BarChart3 as NavIcon },
+  { label: 'Reports', to: '/reports', icon: BarChart3 as NavIcon, sectionBreakBefore: true },
 
-  { label: 'Settings', to: '/settings', icon: Settings as NavIcon },
+  { label: 'Settings', to: '/settings', icon: Settings as NavIcon, sectionBreakBefore: true },
 
 ]
 

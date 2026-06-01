@@ -35,6 +35,9 @@ export default function App() {
             <Route path="/me" element={<MePage />} />
             <Route path="/my-team" element={<MyTeamPage />} />
             <Route path="/people" element={<PeoplePage />} />
+            <Route path="/people/drawer" element={<PeoplePage />} />
+            <Route path="/people/create" element={<PeoplePage />} />
+            <Route path="/people/onboarding-blocked" element={<PeoplePage />} />
             <Route path="/org" element={<OrgPage />} />
             <Route path="/permissions" element={<PermissionsPage />} />
             <Route path="/readiness" element={<ReadinessPage />} />

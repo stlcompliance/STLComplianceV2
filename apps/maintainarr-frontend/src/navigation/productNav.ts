@@ -14,6 +14,6 @@ export const maintainarrNavItems: ProductNavItem[] = [
   { label: 'Templates', to: '/inspection-templates', icon: FileStack as NavIcon },
   { label: 'History', to: '/history', icon: History as NavIcon },
   { label: 'Downtime', to: '/downtime', icon: TimerOff as NavIcon },
-  { label: 'Reports', to: '/reports', icon: BarChart3 as NavIcon },
-  { label: 'Settings', to: '/settings', icon: Settings as NavIcon },
+  { label: 'Reports', to: '/reports', icon: BarChart3 as NavIcon, sectionBreakBefore: true },
+  { label: 'Settings', to: '/settings', icon: Settings as NavIcon, sectionBreakBefore: true },
 ]

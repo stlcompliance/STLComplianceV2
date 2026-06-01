@@ -1,8 +1,11 @@
 import { buildProductLaunchUrlMap } from '@stl/shared-ui'
 import { ApiErrorCallout } from '@stl/shared-ui'
+import { useState } from 'react'
+import { createLaunchHandoff } from '../api/client'
 import type { WorkforceOnboardingJourneyResponse } from '../api/types'
 
 type Props = {
+  accessToken: string
   personDisplayName: string
   journey: WorkforceOnboardingJourneyResponse | null
   isLoading: boolean
@@ -40,6 +43,7 @@ function statusClass(status: string) {
 }
 
 export function WorkforceOnboardingJourneyPanel({
+  accessToken,
   personDisplayName,
   journey,
   isLoading,
@@ -49,6 +53,26 @@ export function WorkforceOnboardingJourneyPanel({
 }: Props) {
   const launchUrls = buildProductLaunchUrlMap(import.meta.env)
   const trainarrLaunchUrl = launchUrls.trainarr
+  const [launchError, setLaunchError] = useState<string | null>(null)
+  const [isLaunchingTrainarr, setIsLaunchingTrainarr] = useState(false)
+
+  async function handleOpenTrainArr() {
+    if (isLaunchingTrainarr) {
+      return
+    }
+
+    setLaunchError(null)
+    setIsLaunchingTrainarr(true)
+    try {
+      const callbackUrl = window.location.href
+      const handoff = await createLaunchHandoff(accessToken, 'trainarr', callbackUrl)
+      window.location.assign(handoff.launchUrl)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to launch TrainArr via suite handoff.'
+      setLaunchError(message)
+      setIsLaunchingTrainarr(false)
+    }
+  }
 
   return (
     <section
@@ -74,6 +98,10 @@ export function WorkforceOnboardingJourneyPanel({
           onRetry={onRetryRead}
           retryLabel="Retry journey"
         />
+      ) : null}
+
+      {launchError ? (
+        <ApiErrorCallout className="mt-4" message={launchError} />
       ) : null}
 
       {journey ? (
@@ -113,12 +141,14 @@ export function WorkforceOnboardingJourneyPanel({
                   <p className="mt-2 text-xs text-slate-400">{step.statusReason}</p>
                 ) : null}
                 {step.stepKey.startsWith('trainarr_') && trainarrLaunchUrl ? (
-                  <a
-                    href={trainarrLaunchUrl}
-                    className="mt-2 inline-block text-xs text-sky-400 hover:text-sky-300"
+                  <button
+                    type="button"
+                    onClick={() => void handleOpenTrainArr()}
+                    disabled={isLaunchingTrainarr}
+                    className="mt-2 inline-block text-xs text-sky-400 hover:text-sky-300 disabled:cursor-not-allowed disabled:text-slate-500"
                   >
-                    Open TrainArr (suite handoff)
-                  </a>
+                    {isLaunchingTrainarr ? 'Opening TrainArr…' : 'Open TrainArr (suite handoff)'}
+                  </button>
                 ) : null}
               </li>
             ))}

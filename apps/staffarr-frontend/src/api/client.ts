@@ -87,6 +87,7 @@ import type {
   ReadinessReportSummaryResponse,
   IncidentReportSummaryResponse,
   EntityExportManifestResponse,
+  LaunchHandoffResponse,
 } from './types'
 
 const apiBase = import.meta.env.VITE_STAFFARR_API_BASE ?? ''
@@ -182,6 +183,19 @@ export async function getMe(accessToken: string): Promise<StaffArrMeResponse> {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<StaffArrMeResponse>(response, 'Failed to load profile')
+}
+
+export async function createLaunchHandoff(
+  accessToken: string,
+  productKey: string,
+  callbackUrl: string,
+): Promise<LaunchHandoffResponse> {
+  const response = await fetch(`${apiBase}/api/v1/launch/handoff`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ productKey, callbackUrl }),
+  })
+  return parseJsonResponse<LaunchHandoffResponse>(response, 'Failed to create launch handoff')
 }
 
 export async function getSessionBootstrap(

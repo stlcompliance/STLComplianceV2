@@ -29,6 +29,13 @@ export interface StaffArrMeResponse {
   entitlements: string[]
 }
 
+export interface LaunchHandoffResponse {
+  handoffCode: string
+  handoffId: string
+  expiresAt: string
+  launchUrl: string
+}
+
 export interface StaffArrSessionBootstrapResponse {
   userId: string
   personId: string

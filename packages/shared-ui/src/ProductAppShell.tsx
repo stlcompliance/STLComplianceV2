@@ -9,6 +9,8 @@ export type ProductNavItem = {
   label: string
   to: string
   icon?: LucideIcon
+  sectionBreakBefore?: boolean
+  children?: ProductNavItem[]
 }
 
 export type ProductAppShellProps = {
@@ -107,6 +109,13 @@ export function ProductAppShell({
 }: ProductAppShellProps) {
   const showSidebar = layoutVariant === 'standard'
   const ProductIcon = getSuiteProductIcon(productKey)
+  const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
+    [
+      'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+      isActive
+        ? 'border-l-2 border-teal-400 bg-slate-800/80 pl-[10px] text-white'
+        : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
+    ].join(' ')
 
   if (!showSidebar) {
     return (
@@ -149,22 +158,25 @@ export function ProductAppShell({
           {navItems.map((item) => {
             const Icon = item.icon ?? ProductIcon
             return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === '/'}
-                className={({ isActive }) =>
-                  [
-                    'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                    isActive
-                      ? 'border-l-2 border-teal-400 bg-slate-800/80 pl-[10px] text-white'
-                      : 'border-l-2 border-transparent text-slate-300 hover:bg-slate-800/50 hover:text-white',
-                  ].join(' ')
-                }
-              >
-                <Icon className="h-4 w-4 shrink-0" aria-hidden />
-                <span>{item.label}</span>
-              </NavLink>
+              <div key={item.to} className={item.sectionBreakBefore ? 'mt-2 border-t border-slate-700/70 pt-2' : ''}>
+                <NavLink to={item.to} end={item.to === '/'} className={navLinkClassName}>
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden />
+                  <span>{item.label}</span>
+                </NavLink>
+                {item.children?.length ? (
+                  <div className="ml-5 mt-1 flex flex-col gap-1 border-l border-slate-700/60 pl-2">
+                    {item.children.map((child) => {
+                      const ChildIcon = child.icon ?? Icon
+                      return (
+                        <NavLink key={child.to} to={child.to} end={child.to === '/'} className={navLinkClassName}>
+                          <ChildIcon className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+                          <span>{child.label}</span>
+                        </NavLink>
+                      )
+                    })}
+                  </div>
+                ) : null}
+              </div>
             )
           })}
         </nav>

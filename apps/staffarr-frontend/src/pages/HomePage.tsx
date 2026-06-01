@@ -1532,6 +1532,7 @@ export function HomePage() {
 
       {effectivePersonId && (selectedPerson ?? personProfileQuery.data) ? (
         <WorkforceOnboardingJourneyPanel
+          accessToken={session!.accessToken}
           personDisplayName={selectedPerson?.displayName ?? personProfileQuery.data!.displayName}
           journey={workforceOnboardingJourneyQuery.data ?? null}
           isLoading={workforceOnboardingJourneyQuery.isLoading}

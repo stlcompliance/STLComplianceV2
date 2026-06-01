@@ -22,9 +22,9 @@ export const trainarrNavItems: ProductNavItem[] = [
 
   { label: 'Qualifications', to: '/qualifications', icon: BadgeCheck as NavIcon },
 
-  { label: 'Reports', to: '/reports', icon: BarChart3 as NavIcon },
+  { label: 'Reports', to: '/reports', icon: BarChart3 as NavIcon, sectionBreakBefore: true },
 
-  { label: 'Settings', to: '/settings', icon: Settings as NavIcon },
+  { label: 'Settings', to: '/settings', icon: Settings as NavIcon, sectionBreakBefore: true },
 
 ]
 

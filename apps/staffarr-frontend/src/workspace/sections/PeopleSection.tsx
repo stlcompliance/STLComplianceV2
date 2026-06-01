@@ -9,14 +9,33 @@ import { PersonOffboardingPanel } from '../../components/PersonOffboardingPanel'
 import { PersonHistorySummaryPanel } from '../../components/PersonHistorySummaryPanel'
 import { PersonnelNotesPanel } from '../../components/PersonnelNotesPanel'
 import { PersonnelDocumentsPanel } from '../../components/PersonnelDocumentsPanel'
+import { useLocation } from 'react-router-dom'
 import type { StaffArrWorkspaceState } from '../useStaffArrWorkspaceState'
 
 type Props = { state: StaffArrWorkspaceState }
+type PeopleViewMode = 'drawer' | 'create' | 'onboarding-blocked'
 
 export function PeopleSection({ state }: Props) {
   const s = state
+  const location = useLocation()
+  const mode: PeopleViewMode = location.pathname.startsWith('/people/create')
+    ? 'create'
+    : location.pathname.startsWith('/people/onboarding-blocked')
+      ? 'onboarding-blocked'
+      : 'drawer'
+
   return (
     <>
+      {mode === 'create' ? (
+        <div className="rounded-xl border border-teal-700/50 bg-teal-950/20 p-4 text-sm text-teal-100">
+          Create and update person profiles in a focused workflow.
+        </div>
+      ) : null}
+      {mode === 'onboarding-blocked' ? (
+        <div className="rounded-xl border border-amber-700/50 bg-amber-950/20 p-4 text-sm text-amber-100">
+          Onboarding blocked view focuses on onboarding journey and offboarding blockers for the selected person.
+        </div>
+      ) : null}
       <section className="mt-8 grid gap-6 lg:grid-cols-3">
         <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
           <h2 className="text-sm font-medium text-slate-300">Session context</h2>
@@ -165,23 +184,25 @@ export function PeopleSection({ state }: Props) {
         </div>
       </section>
 
-      <CreatePersonPanel
-        orgUnits={s.orgUnits}
-        peopleOptions={s.people.map((person) => ({
-          personId: person.personId,
-          displayName: person.displayName,
-        }))}
-        canManage={s.canManagePeopleProfiles}
-        isSubmitting={s.createPersonMutation.isPending}
-        errorMessage={
-          s.createPersonMutation.error
-            ? getErrorMessage(s.createPersonMutation.error, 'Failed to create person profile.')
-            : null
-        }
-        onCreate={async (request) => {
-          await s.createPersonMutation.mutateAsync(request)
-        }}
-      />
+      {mode !== 'drawer' ? (
+        <CreatePersonPanel
+          orgUnits={s.orgUnits}
+          peopleOptions={s.people.map((person) => ({
+            personId: person.personId,
+            displayName: person.displayName,
+          }))}
+          canManage={s.canManagePeopleProfiles}
+          isSubmitting={s.createPersonMutation.isPending}
+          errorMessage={
+            s.createPersonMutation.error
+              ? getErrorMessage(s.createPersonMutation.error, 'Failed to create person profile.')
+              : null
+          }
+          onCreate={async (request) => {
+            await s.createPersonMutation.mutateAsync(request)
+          }}
+        />
+      ) : null}
 
       <section className="mt-6 rounded-xl border border-slate-700 bg-slate-900/60 p-6">
         <h2 className="text-sm font-medium text-slate-300">Selected profile</h2>
@@ -219,7 +240,7 @@ export function PeopleSection({ state }: Props) {
         )}
       </section>
 
-      {s.profile ? (
+      {s.profile && mode !== 'drawer' ? (
         <PersonProfileEditorPanel
           profile={s.profile}
           orgUnits={s.orgUnits}
@@ -249,7 +270,7 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
-      {s.selectedPerson ? (
+      {s.selectedPerson && mode === 'drawer' ? (
         <PersonnelNotesPanel
           personId={s.selectedPerson.personId}
           personDisplayName={s.selectedPerson.displayName}
@@ -292,7 +313,7 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
-      {s.selectedPerson ? (
+      {s.selectedPerson && mode === 'drawer' ? (
         <PersonnelDocumentsPanel
           personId={s.selectedPerson.personId}
           personDisplayName={s.selectedPerson.displayName}
@@ -339,8 +360,9 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
-      {s.effectivePersonId && (s.selectedPerson ?? s.personProfileQuery.data) ? (
+      {mode === 'onboarding-blocked' && s.effectivePersonId && (s.selectedPerson ?? s.personProfileQuery.data) ? (
         <WorkforceOnboardingJourneyPanel
+          accessToken={s.accessToken}
           personDisplayName={
             s.selectedPerson?.displayName ?? s.personProfileQuery.data!.displayName
           }
@@ -359,7 +381,7 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
-      {s.selectedPerson ? (
+      {s.selectedPerson && mode === 'onboarding-blocked' ? (
         <PersonOffboardingPanel
           personId={s.selectedPerson.personId}
           personDisplayName={s.selectedPerson.displayName}
@@ -407,7 +429,7 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
-      {s.selectedPerson ? (
+      {s.selectedPerson && mode === 'drawer' ? (
         <PersonLookupPanel
           personId={s.selectedPerson.personId}
           personDisplayName={s.selectedPerson.displayName}
@@ -426,7 +448,7 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
-      {s.selectedPerson ? (
+      {s.selectedPerson && mode === 'drawer' ? (
         <PersonHistorySummaryPanel
           personDisplayName={s.selectedPerson.displayName}
           summary={s.personHistorySummaryQuery.data ?? null}
@@ -444,7 +466,7 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
-      {s.selectedPerson ? (
+      {s.selectedPerson && mode === 'drawer' ? (
         <PersonTimelinePanel
           personDisplayName={s.selectedPerson.displayName}
           entries={s.personTimelineEntries}
@@ -470,7 +492,7 @@ export function PeopleSection({ state }: Props) {
         />
       ) : null}
 
-      {s.selectedPerson ? (
+      {s.selectedPerson && mode === 'drawer' ? (
         <PersonTrainarrTrainingHistoryPanel
           personDisplayName={s.selectedPerson.displayName}
           history={s.trainarrTrainingHistoryQuery.data ?? null}
