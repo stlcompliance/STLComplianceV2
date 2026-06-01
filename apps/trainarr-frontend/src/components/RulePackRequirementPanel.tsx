@@ -42,7 +42,7 @@ export function RulePackRequirementPanel({
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <ControlledSelect
-              label="Rule pack key"
+              label="Rule pack"
               value={rulePackKeyInput}
               onChange={onRulePackKeyChange}
               options={rulePackOptions}
@@ -85,10 +85,9 @@ export function RulePackRequirementPanel({
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <p className="font-mono font-medium text-slate-100">{requirement.rulePackKey}</p>
+                  <p className="font-medium text-slate-100">{requirement.metadata?.label ?? 'Rule pack'}</p>
                   {requirement.metadata ? (
                     <>
-                      <p className="mt-1 text-slate-300">{requirement.metadata.label}</p>
                       <p className="mt-1 text-xs text-slate-400">
                         {requirement.metadata.regulatoryProgramLabel} · v{requirement.metadata.versionNumber} ·{' '}
                         {requirement.metadata.status}

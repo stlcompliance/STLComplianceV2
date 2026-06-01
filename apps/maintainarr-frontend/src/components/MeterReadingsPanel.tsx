@@ -1,4 +1,4 @@
-import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { buildSemanticKey } from '@stl/shared-ui'
 
 import type { AssetMeterResponse, AssetResponse, MeterPmForecastResponse, MeterReadingResponse } from '../api/types'
 
@@ -67,6 +67,8 @@ export function MeterReadingsPanel({
     existingKeys: meters.map((meter) => meter.meterKey),
     maxLength: 128,
   })
+  void confirmedMeterKey
+  void generatedMeterKey
 
   return (
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-6">
@@ -109,7 +111,7 @@ export function MeterReadingsPanel({
                 <option value="">Select meter…</option>
                 {meters.map((meter) => (
                   <option key={meter.assetMeterId} value={meter.assetMeterId}>
-                    {meter.meterKey} ({meter.currentReading} {meter.unit})
+                    {meter.name} ({meter.currentReading} {meter.unit})
                   </option>
                 ))}
               </select>
@@ -135,14 +137,7 @@ export function MeterReadingsPanel({
             <div className="mb-6 rounded-lg border border-slate-700 bg-slate-950/50 p-4">
               <h3 className="text-sm font-medium text-slate-200">Define meter</h3>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
-                <GeneratedKeyField
-                  sourceLabel={meterName}
-                  generatedKey={generatedMeterKey}
-                  confirmedKey={confirmedMeterKey}
-                  manualOverride=""
-                  onManualOverrideChange={() => {}}
-                  label="Meter key"
-                />
+                <div className="text-xs text-slate-400 md:col-span-2">Reference is auto-generated from meter name.</div>
                 <input id="meterreadings-input-field-5"
                   className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-white"
                   placeholder="Display name"

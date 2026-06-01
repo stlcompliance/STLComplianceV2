@@ -1,4 +1,4 @@
-import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { buildSemanticKey } from '@stl/shared-ui'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type {
   TrainingDefinitionResponse,
@@ -127,7 +127,7 @@ export function StepBranchBuilderPanel({
           <option value="">Select definition…</option>
           {definitions.map((definition) => (
             <option key={definition.trainingDefinitionId} value={definition.trainingDefinitionId}>
-              {definition.name} ({definition.definitionKey})
+              {definition.name}
             </option>
           ))}
         </select>
@@ -157,7 +157,7 @@ export function StepBranchBuilderPanel({
               {selectedStep ? (
                 <p className="mt-2 text-xs text-slate-500">
                   Branch rules attach to <span className="text-slate-300">{selectedStep.name}</span> (
-                  {selectedStep.stepKey}).
+                  {selectedStep.stepType}).
                 </p>
               ) : null}
 
@@ -197,15 +197,7 @@ export function StepBranchBuilderPanel({
 
               {canManage ? (
                 <form className="mt-6 grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-                  <div className="md:col-span-2">
-                    <GeneratedKeyField
-                      label="Generated branch key"
-                      sourceLabel={label}
-                      generatedKey={generatedBranchKey}
-                      manualOverride=""
-                      onManualOverrideChange={() => {}}
-                    />
-                  </div>
+                  <div className="md:col-span-2 text-xs text-slate-400">Branch reference is generated automatically from label.</div>
                   <label htmlFor="branch-builder-sort-order" className="block text-sm text-slate-300">
                     Sort order
                     <input

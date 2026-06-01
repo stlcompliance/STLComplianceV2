@@ -1,4 +1,4 @@
-import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { buildSemanticKey } from '@stl/shared-ui'
 import { useEffect, useMemo, useState } from 'react'
 
 import type {
@@ -64,6 +64,7 @@ export function ProgramBuilderPanel({
   canManage,
 }: ProgramBuilderPanelProps) {
   const [showProgramKeyPolicy, setShowProgramKeyPolicy] = useState(false)
+  void programKey
   const isEditing = Boolean(selectedProgramId)
   const editStatus = selectedProgramDetail?.status ?? 'draft'
   const existingProgramKeys = programs.map((program) => program.programKey)
@@ -173,16 +174,7 @@ export function ProgramBuilderPanel({
         <>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <GeneratedKeyField
-                sourceLabel={programKeySource}
-                generatedKey={generatedProgramKey}
-                confirmedKey={programKey}
-                manualOverride=""
-                onManualOverrideChange={() => {}}
-                showAdvancedKey={showProgramKeyPolicy}
-                disabled={isCreating}
-                label="Program key"
-              />
+              <p className="text-xs text-slate-400">Reference is auto-generated from program name.</p>
               {!showProgramKeyPolicy ? (
                 <button
                   type="button"
@@ -218,7 +210,7 @@ export function ProgramBuilderPanel({
           <button
             type="button"
             className="mt-4 rounded bg-sky-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-600 disabled:opacity-50"
-            disabled={isCreating || selectedDefinitionIds.length === 0 || !programKey.trim()}
+            disabled={isCreating || selectedDefinitionIds.length === 0 || !programName.trim()}
             onClick={onCreateProgram}
           >
             {isCreating ? 'Creating…' : 'Create program'}
@@ -229,9 +221,6 @@ export function ProgramBuilderPanel({
           <p className="text-sm text-slate-300">
             Editing <span className="font-medium text-white">{selectedProgramDetail?.name ?? '…'}</span> (
             {editStatus})
-            {selectedProgramDetail?.programKey ? (
-              <span className="ml-2 font-mono text-xs text-slate-500">{selectedProgramDetail.programKey}</span>
-            ) : null}
           </p>
           <label htmlFor="program-builder-edit-name" className="block text-xs text-slate-400">
             Program name
@@ -314,7 +303,7 @@ export function ProgramBuilderPanel({
                 >
                   <p className="font-medium text-slate-100">{program.name}</p>
                   <p className="mt-1 text-xs text-slate-400">
-                    {program.programKey} · {program.definitionCount} definition(s) · {program.status} ·{' '}
+                    {program.definitionCount} definition(s) · {program.status} ·{' '}
                     {program.publishedVersionCount} published version(s)
                   </p>
                 </button>

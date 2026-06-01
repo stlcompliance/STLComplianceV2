@@ -1,5 +1,5 @@
-import { buildSemanticKey, ControlledSelect, GeneratedKeyField, type PickerOption } from '@stl/shared-ui'
-import { useEffect, useMemo, useState } from 'react'
+import { buildSemanticKey, ControlledSelect, type PickerOption } from '@stl/shared-ui'
+import { useEffect, useMemo } from 'react'
 
 import type {
   CreateTrainingRequirementRequest,
@@ -106,8 +106,6 @@ export function ApplicabilityBuilderPanel({
   syncingRequirementId,
   canManage,
 }: ApplicabilityBuilderPanelProps) {
-  const [showProfileScopeKeyPolicy, setShowProfileScopeKeyPolicy] = useState(false)
-  const [showRequirementKeyPolicy, setShowRequirementKeyPolicy] = useState(false)
   const generatedProfileScopeKey = useMemo(
     () =>
       buildSemanticKey({
@@ -223,34 +221,15 @@ export function ApplicabilityBuilderPanel({
                 </select>
               </label>
               <div className="space-y-1 text-xs text-slate-400">
-                <GeneratedKeyField
-                  sourceLabel={profileLabel.trim()}
-                  generatedKey={generatedProfileScopeKey}
-                  confirmedKey={profileScopeKey}
-                  manualOverride=""
-                  onManualOverrideChange={() => {}}
-                  showAdvancedKey={showProfileScopeKeyPolicy}
-                  disabled={isCreatingProfile}
-                  label="Scope key"
-                />
-                {!showProfileScopeKeyPolicy ? (
-                  <button
-                    type="button"
-                    className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
-                    onClick={() => setShowProfileScopeKeyPolicy(true)}
-                    disabled={isCreatingProfile}
-                  >
-                    Key policy
-                  </button>
-                ) : null}
+                <p>Scope reference is generated automatically from the profile label.</p>
                 <ControlledSelect
-                  label="Known scope key references"
+                  label="Known scope references"
                   value={profileScopeKey}
                   onChange={onProfileScopeKeyChange}
                   options={scopeKeyOptions}
                   emptyLabel="Use generated key"
                   testId="applicability-profile-scope-key-picker"
-                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
+                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
                 />
               </div>
               <label htmlFor="applicability-profile-description" className="block text-xs text-slate-400 sm:col-span-2">
@@ -278,28 +257,7 @@ export function ApplicabilityBuilderPanel({
           <div className="border-t border-slate-700 pt-4">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-violet-300">Step 2 — Requirement mapping</h3>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1 text-xs text-slate-400">
-                <GeneratedKeyField
-                  sourceLabel={requirementLabel.trim()}
-                  generatedKey={generatedRequirementKey}
-                  confirmedKey={requirementKey}
-                  manualOverride=""
-                  onManualOverrideChange={() => {}}
-                  showAdvancedKey={showRequirementKeyPolicy}
-                  disabled={isCreatingRequirement}
-                  label="Requirement key"
-                />
-                {!showRequirementKeyPolicy ? (
-                  <button
-                    type="button"
-                    className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
-                    onClick={() => setShowRequirementKeyPolicy(true)}
-                    disabled={isCreatingRequirement}
-                  >
-                    Key policy
-                  </button>
-                ) : null}
-              </div>
+              <div className="space-y-1 text-xs text-slate-400">Requirement reference is generated automatically from the requirement label.</div>
               <label htmlFor="requirement-mapping-label" className="block text-xs text-slate-400">
                 Label
                 <input
@@ -326,13 +284,13 @@ export function ApplicabilityBuilderPanel({
               </label>
               {requirementSource === 'internal' ? null : (
                 <ControlledSelect
-                  label="Source key"
+                  label="Source reference"
                   value={requirementSourceKey}
                   onChange={onRequirementSourceKeyChange}
                   options={sourceKeyOptions}
-                  emptyLabel="Select source key…"
+                  emptyLabel="Select source reference…"
                   testId="requirement-mapping-source-key"
-                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 font-mono text-sm text-slate-100"
+                  className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-2 py-1 text-sm text-slate-100"
                 />
               )}
               <label htmlFor="requirement-mapping-profile" className="block text-xs text-slate-400">
@@ -346,7 +304,7 @@ export function ApplicabilityBuilderPanel({
                   <option value="">Select profile…</option>
                   {profiles.map((profile) => (
                     <option key={profile.applicabilityProfileId} value={profile.applicabilityProfileId}>
-                      {profile.label} ({profile.profileKey})
+                      {profile.label}
                     </option>
                   ))}
                 </select>
@@ -426,7 +384,6 @@ export function ApplicabilityBuilderPanel({
                 >
                   <div>
                     <p className="font-medium text-slate-100">{profile.label}</p>
-                    <p className="font-mono text-xs text-slate-400">{profile.profileKey}</p>
                     {profile.description ? <p className="mt-1 text-xs text-slate-500">{profile.description}</p> : null}
                   </div>
                   {canManage ? (

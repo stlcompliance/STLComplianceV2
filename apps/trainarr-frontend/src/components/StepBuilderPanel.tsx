@@ -1,4 +1,4 @@
-import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { buildSemanticKey } from '@stl/shared-ui'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type { TrainingDefinitionResponse, TrainingDefinitionStepResponse } from '../api/types'
 
@@ -138,7 +138,7 @@ export function StepBuilderPanel({
           <option value="">Select definition…</option>
           {definitions.map((definition) => (
             <option key={definition.trainingDefinitionId} value={definition.trainingDefinitionId}>
-              {definition.name} ({definition.definitionKey})
+              {definition.name}
             </option>
           ))}
         </select>
@@ -180,15 +180,7 @@ export function StepBuilderPanel({
 
           {canManage ? (
             <form className="mt-6 grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-              <div className="md:col-span-2">
-                <GeneratedKeyField
-                  label="Generated step key"
-                  sourceLabel={name}
-                  generatedKey={generatedStepKey}
-                  manualOverride=""
-                  onManualOverrideChange={() => {}}
-                />
-              </div>
+              <div className="md:col-span-2 text-xs text-slate-400">Step reference is generated automatically from the step name.</div>
               <label htmlFor="step-builder-sort-order" className="block text-sm text-slate-300">
                 Sort order
                 <input

@@ -9,6 +9,8 @@ import type {
 import { AuditExportTimelineCard } from './audit-export/AuditExportTimelineCard'
 import { AuditExportActionsBar } from './audit-export/AuditExportActionsBar'
 import { AuditExportFiltersCard } from './audit-export/AuditExportFiltersCard'
+import { AuditExportManifestCard } from './audit-export/AuditExportManifestCard'
+import { AuditExportSummaryCard } from './audit-export/AuditExportSummaryCard'
 import { dateStamp, downloadBlob } from './audit-export/utils'
 
 
@@ -213,27 +215,31 @@ export function PlatformAuditPackageExportPanel() {
         </p>
       </header>
 
-      <div
-        data-testid="platform-audit-manifest-section"
-        className="rounded-lg border border-slate-800 bg-slate-950/50 p-4"
-      >
-        <h3 className="text-sm font-medium text-slate-200">
-          Package sections
-          {manifestQuery.data?.packageVersion ? (
-            <span className="ml-2 font-mono text-xs text-slate-500">
-              v{manifestQuery.data.packageVersion}
-            </span>
-          ) : null}
-        </h3>
-        <ul className="mt-2 list-inside list-disc text-sm text-slate-400">
-          {(manifestQuery.data?.sections ?? []).map((section) => (
-            <li key={section.key}>
-              <span className="font-mono text-slate-300">{section.fileName}</span>
-              <span className="text-slate-500"> — {section.label}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <AuditExportManifestCard
+        manifest={manifestQuery.data}
+        isError={manifestQuery.isError}
+        error={manifestQuery.error}
+        onRetry={() => void manifestQuery.refetch()}
+      />
+
+      {(filterOptionsQuery.isError || tenantsQuery.isError) ? (
+        <ApiErrorCallout
+          message={
+            filterOptionsQuery.isError
+              ? getErrorMessage(filterOptionsQuery.error, 'Failed to load filter options.')
+              : getErrorMessage(tenantsQuery.error, 'Failed to load tenant filter data.')
+          }
+          onRetry={() => {
+            if (filterOptionsQuery.isError) {
+              void filterOptionsQuery.refetch()
+            }
+            if (tenantsQuery.isError) {
+              void tenantsQuery.refetch()
+            }
+          }}
+          retryLabel="Retry filters"
+        />
+      ) : null}
 
       <AuditExportFiltersCard
         tenantId={tenantId}
@@ -260,65 +266,13 @@ export function PlatformAuditPackageExportPanel() {
         onProductKeyChange={setProductKey}
       />
 
-      <div
-        data-testid="platform-audit-summary-section"
-        className="rounded-lg border border-slate-800 bg-slate-950/50 p-4"
-      >
-        <h3 className="text-sm font-medium text-slate-200">Export summary</h3>
-        {summaryQuery.isLoading ? (
-          <p className="mt-3 text-sm text-slate-500">Calculating scoped counts…</p>
-        ) : summaryQuery.isError ? (
-          <ApiErrorCallout
-            message={getErrorMessage(summaryQuery.error, 'Failed to load export summary.')}
-            onRetry={() => void summaryQuery.refetch()}
-            retryLabel="Retry summary"
-          />
-        ) : summary ? (
-          <div className="mt-3 space-y-3 text-sm text-slate-300">
-            <p data-testid="platform-audit-summary-counts">
-              {summary.counts.auditEvents} audit events · {summary.counts.tenants} tenants ·{' '}
-              {summary.counts.serviceClients} service clients · {summary.counts.tenantEntitlements}{' '}
-              entitlements
-            </p>
-            {summary.byResult.length > 0 ? (
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                  By result
-                </p>
-                <ul className="mt-1 flex flex-wrap gap-2">
-                  {summary.byResult.map((item) => (
-                    <li
-                      key={item.key}
-                      className="rounded-md bg-slate-800 px-2 py-1 font-mono text-xs text-slate-200"
-                    >
-                      {item.key}: {item.count}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            {summary.byAction.length > 0 ? (
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                  Top actions
-                </p>
-                <ul className="mt-1 flex flex-wrap gap-2">
-                  {summary.byAction.map((item) => (
-                    <li
-                      key={item.key}
-                      className="rounded-md bg-slate-800 px-2 py-1 font-mono text-xs text-teal-200"
-                    >
-                      {item.key}: {item.count}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </div>
-        ) : (
-          <p className="mt-3 text-sm text-slate-500">Summary unavailable.</p>
-        )}
-      </div>
+      <AuditExportSummaryCard
+        isLoading={summaryQuery.isLoading}
+        isError={summaryQuery.isError}
+        error={summaryQuery.error}
+        summary={summary}
+        onRetry={() => void summaryQuery.refetch()}
+      />
 
       {timelineQuery.isError ? (
         <ApiErrorCallout

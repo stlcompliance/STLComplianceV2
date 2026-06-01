@@ -248,4 +248,117 @@ describe('PlatformAuditPackageExportPanel', () => {
     expect(screen.getByRole('button', { name: 'Retry summary' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Retry timeline' })).toBeInTheDocument()
   })
+
+  it('shows retryable filter-source callout when filter queries fail', async () => {
+    vi.mocked(nexarr.getPlatformAuditPackageManifest).mockResolvedValue({
+      packageVersion: '2',
+      sections: [],
+    })
+    vi.mocked(nexarr.getPlatformAuditPackageFilterOptions).mockRejectedValue(
+      new Error('filter options unavailable'),
+    )
+    vi.mocked(nexarr.getPlatformAdminTenantOverview).mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 200,
+      totalCount: 0,
+      hasNextPage: false,
+    })
+    vi.mocked(nexarr.getPlatformAuditPackageExportSummary).mockResolvedValue({
+      filters: {
+        tenantId: null,
+        from: null,
+        to: null,
+        action: null,
+        result: null,
+        targetType: null,
+        actorUserId: null,
+        productKey: null,
+      },
+      counts: {
+        auditEvents: 1,
+        tenants: 1,
+        tenantEntitlements: 1,
+        productCatalog: 1,
+        platformUsers: 1,
+        serviceClients: 1,
+        serviceTokens: 1,
+        launchProfiles: 1,
+        callbackAllowlist: 1,
+      },
+      byResult: [],
+      byAction: [],
+      generatedAt: '2026-05-28T14:00:00Z',
+    })
+    vi.mocked(nexarr.getPlatformAuditPackageTimeline).mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 15,
+      totalCount: 0,
+      hasNextPage: false,
+    })
+
+    renderPanel()
+
+    expect(await screen.findByText('filter options unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry filters' })).toBeInTheDocument()
+  })
+
+  it('shows retryable manifest callout when manifest query fails', async () => {
+    vi.mocked(nexarr.getPlatformAuditPackageManifest).mockRejectedValue(
+      new Error('manifest unavailable'),
+    )
+    vi.mocked(nexarr.getPlatformAuditPackageFilterOptions).mockResolvedValue({
+      actions: [],
+      results: [],
+      targetTypes: [],
+      productKeys: [],
+      actorUserIds: [],
+    })
+    vi.mocked(nexarr.getPlatformAdminTenantOverview).mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 200,
+      totalCount: 0,
+      hasNextPage: false,
+    })
+    vi.mocked(nexarr.getPlatformAuditPackageExportSummary).mockResolvedValue({
+      filters: {
+        tenantId: null,
+        from: null,
+        to: null,
+        action: null,
+        result: null,
+        targetType: null,
+        actorUserId: null,
+        productKey: null,
+      },
+      counts: {
+        auditEvents: 1,
+        tenants: 1,
+        tenantEntitlements: 1,
+        productCatalog: 1,
+        platformUsers: 1,
+        serviceClients: 1,
+        serviceTokens: 1,
+        launchProfiles: 1,
+        callbackAllowlist: 1,
+      },
+      byResult: [],
+      byAction: [],
+      generatedAt: '2026-05-28T14:00:00Z',
+    })
+    vi.mocked(nexarr.getPlatformAuditPackageTimeline).mockResolvedValue({
+      items: [],
+      page: 1,
+      pageSize: 15,
+      totalCount: 0,
+      hasNextPage: false,
+    })
+
+    renderPanel()
+
+    expect(await screen.findByText('manifest unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry manifest' })).toBeInTheDocument()
+  })
 })

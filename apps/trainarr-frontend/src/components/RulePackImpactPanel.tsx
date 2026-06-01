@@ -61,7 +61,7 @@ export function RulePackImpactPanel({
         <div className="mt-4 flex flex-wrap items-end gap-3">
           <div className="min-w-[16rem] flex-1">
             <ControlledSelect
-              label="Rule pack key"
+              label="Rule pack"
               value={rulePackKeyInput}
               onChange={onRulePackKeyChange}
               options={rulePackOptions}
@@ -87,7 +87,7 @@ export function RulePackImpactPanel({
         <div className="mt-5 space-y-4">
           <div className="rounded-lg border border-slate-700 bg-slate-950/40 p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="font-mono text-sm font-medium text-slate-100">{assessment.rulePackKey}</p>
+              <p className="text-sm font-medium text-slate-100">{assessment.currentState?.label ?? 'Rule pack'}</p>
               <span
                 className={
                   assessment.summary.requiresAttention
@@ -171,13 +171,13 @@ export function RulePackImpactPanel({
             </div>
           ) : null}
 
-          {assessment.affectedAssignments.length > 0 ? (
+              {assessment.affectedAssignments.length > 0 ? (
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Affected assignments</h3>
               <ul className="mt-2 space-y-1 text-sm text-slate-300">
                 {assessment.affectedAssignments.slice(0, 5).map((assignment) => (
-                  <li key={assignment.assignmentId} className="font-mono text-xs">
-                    {assignment.trainingDefinitionName} · {assignment.status} · {assignment.staffarrPersonId.slice(0, 8)}
+                  <li key={assignment.assignmentId} className="text-xs">
+                    {assignment.trainingDefinitionName} · {assignment.status}
                   </li>
                 ))}
                 {assessment.affectedAssignments.length > 5 ? (

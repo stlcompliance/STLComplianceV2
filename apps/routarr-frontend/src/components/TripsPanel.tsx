@@ -3,7 +3,6 @@ import { useEffect, useMemo } from 'react'
 import {
   AdvancedReferenceField,
   buildSemanticKey,
-  GeneratedKeyField,
   StaticSearchPicker,
   type PickerOption,
 } from '@stl/shared-ui'
@@ -236,19 +235,12 @@ export function TripsPanel({
             <AdvancedReferenceField
               value={vehicleRefKey}
               onChange={onVehicleRefKeyChange}
-              label="Vehicle reference (advanced)"
+              label="Vehicle reference"
               testId="trip-create-vehicle-advanced"
             />
           </div>
           <div>
-            <GeneratedKeyField
-              label="Initial load key"
-              sourceLabel={loadSourceLabel}
-              generatedKey={generatedLoadKey}
-              confirmedKey={effectiveLoadKey}
-              manualOverride=""
-              onManualOverrideChange={() => {}}
-            />
+            <div className="text-xs text-slate-400">Load reference is generated automatically from origin and destination.</div>
           </div>
           <label className="text-sm text-slate-300" htmlFor="trips-load-origin">
           Load origin
@@ -393,7 +385,7 @@ export function TripsPanel({
                   <AdvancedReferenceField
                     value={driverPersonId}
                     onChange={onDriverPersonIdChange}
-                    label="Driver person (advanced)"
+                    label="Driver reference"
                     testId="trip-assign-driver-advanced"
                   />
                   <button

@@ -1,4 +1,4 @@
-import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { buildSemanticKey } from '@stl/shared-ui'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import type {
   TrainingCompletionRuleCatalogItemResponse,
@@ -120,7 +120,7 @@ export function CompletionRuleBuilderPanel({
           <option value="">Select definition…</option>
           {definitions.map((definition) => (
             <option key={definition.trainingDefinitionId} value={definition.trainingDefinitionId}>
-              {definition.name} ({definition.definitionKey})
+              {definition.name}
             </option>
           ))}
         </select>
@@ -146,7 +146,6 @@ export function CompletionRuleBuilderPanel({
                       {rule.sortOrder}. {rule.label}{' '}
                       <span className="text-xs uppercase tracking-wide text-emerald-300">{rule.ruleType}</span>
                     </p>
-                    <p className="font-mono text-xs text-slate-500">{rule.ruleKey}</p>
                   </div>
                   {canManage ? (
                     <button
@@ -164,15 +163,7 @@ export function CompletionRuleBuilderPanel({
 
           {canManage ? (
             <form className="mt-6 grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-              <div className="md:col-span-2">
-                <GeneratedKeyField
-                  label="Generated rule key"
-                  sourceLabel={label}
-                  generatedKey={generatedRuleKey}
-                  manualOverride=""
-                  onManualOverrideChange={() => {}}
-                />
-              </div>
+              <div className="md:col-span-2 text-xs text-slate-400">Completion rule reference is generated automatically from label.</div>
               <label htmlFor="completion-rule-label" className="block text-sm text-slate-300 md:col-span-2">
                 Label
                 <input

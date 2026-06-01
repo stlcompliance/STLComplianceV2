@@ -1,5 +1,5 @@
-import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
-import { useEffect, useMemo, useState } from 'react'
+import { buildSemanticKey } from '@stl/shared-ui'
+import { useEffect, useMemo } from 'react'
 
 import type {
   CreateTrainingMatrixEntryRequest,
@@ -53,7 +53,6 @@ export function TrainingMatrixPanel({
   deletingEntryId,
   canManage,
 }: TrainingMatrixPanelProps) {
-  const [showApplicabilityKeyPolicy, setShowApplicabilityKeyPolicy] = useState(false)
   const generatedApplicabilityKey = useMemo(
     () =>
       buildSemanticKey({
@@ -94,28 +93,7 @@ export function TrainingMatrixPanel({
         <p className="mt-3 text-sm text-slate-400">Matrix editing requires trainarr admin access.</p>
       ) : (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1">
-            <GeneratedKeyField
-              sourceLabel={applicabilityLabel.trim()}
-              generatedKey={generatedApplicabilityKey}
-              confirmedKey={applicabilityKey}
-              manualOverride=""
-              onManualOverrideChange={() => {}}
-              showAdvancedKey={showApplicabilityKeyPolicy}
-              disabled={isCreating}
-              label="Applicability key"
-            />
-            {!showApplicabilityKeyPolicy ? (
-              <button
-                type="button"
-                className="text-xs text-slate-500 underline-offset-2 hover:text-slate-300 hover:underline"
-                onClick={() => setShowApplicabilityKeyPolicy(true)}
-                disabled={isCreating}
-              >
-                Key policy
-              </button>
-            ) : null}
-          </div>
+          <div className="space-y-1 text-xs text-slate-400">Applicability reference is generated automatically from label.</div>
           <label htmlFor="training-matrix-label" className="block text-xs text-slate-400">
             Label
             <input

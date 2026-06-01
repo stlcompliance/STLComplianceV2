@@ -1,4 +1,4 @@
-import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { buildSemanticKey } from '@stl/shared-ui'
 import { useEffect, useMemo, useState } from 'react'
 
 import type {
@@ -75,6 +75,7 @@ export function PmProgramBuilderPanel({
   isSavingSchedules,
 }: PmProgramBuilderPanelProps) {
   const [showProgramKeyPolicy, setShowProgramKeyPolicy] = useState(false)
+  void programKey
   const existingProgramKeys = programs.map((program) => program.programKey)
   const generatedProgramKey = useMemo(
     () =>
@@ -119,16 +120,7 @@ export function PmProgramBuilderPanel({
       {canManage ? (
         <div className="mt-6 grid gap-4 rounded-lg border border-slate-700 bg-slate-950/40 p-4 md:grid-cols-3">
           <div className="space-y-1 text-sm">
-            <GeneratedKeyField
-              sourceLabel={programName.trim()}
-              generatedKey={generatedProgramKey}
-              confirmedKey={programKey}
-              manualOverride=""
-              onManualOverrideChange={() => {}}
-              showAdvancedKey={showProgramKeyPolicy}
-              disabled={isCreatingProgram}
-              label="Program key"
-            />
+            <div className="text-xs text-slate-400">Reference is auto-generated from program name.</div>
             {!showProgramKeyPolicy ? (
               <button
                 type="button"
@@ -178,7 +170,7 @@ export function PmProgramBuilderPanel({
                 <option value="">Select asset type…</option>
                 {assetTypes.map((type) => (
                   <option key={type.assetTypeId} value={type.assetTypeId}>
-                    {type.name} ({type.typeKey})
+                    {type.name}
                   </option>
                 ))}
               </select>
@@ -204,7 +196,7 @@ export function PmProgramBuilderPanel({
             <button
               type="button"
               className="rounded bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-600 disabled:opacity-50"
-              disabled={isCreatingProgram || !programKey.trim()}
+              disabled={isCreatingProgram || !programName.trim()}
               onClick={onCreateProgram}
             >
               {isCreatingProgram ? 'Creating…' : 'Create PM program'}
@@ -230,7 +222,6 @@ export function PmProgramBuilderPanel({
                 >
                   <span>
                     <span className="font-medium text-white">{program.name}</span>
-                    <span className="ml-2 text-slate-500">({program.programKey})</span>
                   </span>
                   <span className="text-slate-400">
                     {program.scopeType === 'asset_type'
@@ -259,7 +250,7 @@ export function PmProgramBuilderPanel({
               <p className="mt-1 text-xs text-slate-500">
                 Scope:{' '}
                 {selectedProgram.scopeType === 'asset_type'
-                  ? `Asset type ${selectedProgram.assetTypeName ?? selectedProgram.assetTypeKey ?? ''}`
+                  ? `Asset type ${selectedProgram.assetTypeName ?? ''}`
                   : `Asset ${selectedProgram.assetTag ?? ''} — ${selectedProgram.assetName ?? ''}`}
               </p>
 
@@ -270,8 +261,8 @@ export function PmProgramBuilderPanel({
                 ) : (
                   <ul className="mt-2 space-y-1 text-sm text-slate-300">
                     {selectedProgram.schedules.map((schedule) => (
-                      <li key={schedule.pmScheduleId}>
-                        {schedule.scheduleKey} — {schedule.name} ({schedule.assetTag}) · {schedule.dueStatus}
+                        <li key={schedule.pmScheduleId}>
+                        {schedule.name} ({schedule.assetTag}) · {schedule.dueStatus}
                       </li>
                     ))}
                   </ul>
@@ -295,7 +286,7 @@ export function PmProgramBuilderPanel({
                               checked={selectedScheduleIds.includes(schedule.pmScheduleId)}
                               onChange={() => toggleSchedule(schedule.pmScheduleId)}
                             />
-                            {schedule.scheduleKey} — {schedule.name} ({schedule.assetTag})
+                            {schedule.name} ({schedule.assetTag})
                           </label>
                         </li>
                       ))}

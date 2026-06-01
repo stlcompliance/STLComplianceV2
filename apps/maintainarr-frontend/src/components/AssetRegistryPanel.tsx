@@ -1,4 +1,4 @@
-import { buildSemanticKey, ControlledSelect, GeneratedKeyField } from '@stl/shared-ui'
+import { ControlledSelect } from '@stl/shared-ui'
 
 import type {
   AssetClassResponse,
@@ -102,26 +102,14 @@ export function AssetRegistryPanel({
 
   const classOptions = classes.map((item) => ({
     value: item.assetClassId,
-    label: `${item.name} (${item.classKey})`,
+    label: item.name,
   }))
   const typeOptions = types.map((item) => ({
     value: item.assetTypeId,
     label: `${item.className} / ${item.name}`,
   }))
-  const generatedClassKey = buildSemanticKey({
-    domain: 'asset',
-    kind: 'category',
-    title: className,
-    existingKeys: classes.map((item) => item.classKey),
-    maxLength: 128,
-  })
-  const generatedTypeKey = buildSemanticKey({
-    domain: 'asset',
-    kind: 'type',
-    title: typeName,
-    existingKeys: types.map((item) => item.typeKey),
-    maxLength: 128,
-  })
+  void confirmedClassKey
+  void confirmedTypeKey
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -134,21 +122,12 @@ export function AssetRegistryPanel({
             classes.map((item) => (
               <li key={item.assetClassId} className="rounded-lg border border-slate-800 p-3">
                 <div className="font-medium">{item.name}</div>
-                <div className="text-slate-400">{item.classKey}</div>
               </li>
             ))
           )}
         </ul>
         {canManage ? (
           <div className="mt-4 space-y-2">
-            <GeneratedKeyField
-              sourceLabel={className}
-              generatedKey={generatedClassKey}
-              confirmedKey={confirmedClassKey}
-              manualOverride=""
-              onManualOverrideChange={() => {}}
-              label="Class key"
-            />
             <input id="assetregistry-input-field-8"
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
               placeholder="Class name"
@@ -183,7 +162,7 @@ export function AssetRegistryPanel({
               <li key={item.assetTypeId} className="rounded-lg border border-slate-800 p-3">
                 <div className="font-medium">{item.name}</div>
                 <div className="text-slate-400">
-                  {item.className} · {item.typeKey}
+                  {item.className}
                 </div>
               </li>
             ))
@@ -198,14 +177,6 @@ export function AssetRegistryPanel({
               options={classOptions}
               emptyLabel="Select asset class"
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
-            />
-            <GeneratedKeyField
-              sourceLabel={typeName}
-              generatedKey={generatedTypeKey}
-              confirmedKey={confirmedTypeKey}
-              manualOverride=""
-              onManualOverrideChange={() => {}}
-              label="Type key"
             />
             <input id="assetregistry-input-field-6"
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"

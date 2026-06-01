@@ -18,6 +18,9 @@ type PeopleViewMode = 'drawer' | 'details' | 'create'
 export function PeopleSection({ state }: Props) {
   const s = state
   const location = useLocation()
+  const managerDisplayName = s.profile?.managerPersonId
+    ? s.people.find((person) => person.personId === s.profile!.managerPersonId)?.displayName ?? 'Assigned'
+    : 'None'
   const selectedPersonId = s.selectedPerson?.personId ?? null
   const activeFilteredPersonId = (() => {
     if (!s.peopleDirectoryQuery.trim() || s.filteredPeople.length === 0) {
@@ -41,7 +44,12 @@ export function PeopleSection({ state }: Props) {
     <>
       {mode === 'create' ? (
         <div className="rounded-xl border border-teal-700/50 bg-teal-950/20 p-4 text-sm text-teal-100">
-          Create and update person profiles in a focused workflow.
+          <p>Create people in a guided flow using friendly business fields only.</p>
+          <ol className="mt-2 list-decimal space-y-1 pl-5">
+            <li>Step 1: Add identity fields so this person can be recognized in staffing workflows.</li>
+            <li>Step 2: Set organization placement to route assignments and approvals correctly.</li>
+            <li>Step 3: Confirm role and status so readiness and training logic stays accurate.</li>
+          </ol>
         </div>
       ) : null}
       {mode === 'details' ? (
@@ -68,10 +76,6 @@ export function PeopleSection({ state }: Props) {
             <div className="flex justify-between gap-4">
               <dt className="text-slate-500">Job title</dt>
               <dd className="text-right text-slate-200">{s.me.jobTitle ?? 'Unspecified'}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-slate-500">Person ID</dt>
-              <dd className="text-right font-mono text-xs text-slate-300">{s.me.personId}</dd>
             </div>
           </dl>
         </div>
@@ -261,7 +265,7 @@ export function PeopleSection({ state }: Props) {
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-slate-500">Manager</dt>
-              <dd className="text-right font-mono text-xs text-slate-300">{s.profile.managerPersonId ?? 'None'}</dd>
+              <dd className="text-right text-white">{managerDisplayName}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="text-slate-500">Created</dt>

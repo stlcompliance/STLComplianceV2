@@ -7,7 +7,22 @@ import type {
   PartyRegistryRoute,
   UpdateExternalPartyRequest,
 } from '../api/types'
-import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
+
+function buildFriendlyReference(source: string, existingRefs: string[]): string {
+  const base = source
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 24) || 'party'
+  if (!existingRefs.includes(base)) return base
+  let index = 2
+  let candidate = `${base}-${index}`
+  while (existingRefs.includes(candidate)) {
+    index += 1
+    candidate = `${base}-${index}`
+  }
+  return candidate
+}
 
 interface PartyRegistryPanelProps {
   title: string
@@ -81,7 +96,7 @@ export function PartyRegistryPanel({
   parties,
   canManage,
   isLoading,
-  partyKey,
+  partyKey: _partyKey,
   displayName,
   legalName,
   taxIdentifier,
@@ -144,8 +159,6 @@ export function PartyRegistryPanel({
   }, [parties, selectedPartyId])
 
   const panelTestId = `party-registry-panel-${partyType}`
-  const partyKeyKind = partyType.endsWith('s') ? partyType.slice(0, -1) : partyType
-
   if (isLoading) {
     return (
       <section
@@ -187,7 +200,6 @@ export function PartyRegistryPanel({
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="font-medium">{party.displayName}</div>
-                    <div className="text-slate-400">{party.partyKey}</div>
                     {party.legalName ? (
                       <div className="mt-1 text-slate-500">{party.legalName}</div>
                     ) : null}
@@ -220,7 +232,6 @@ export function PartyRegistryPanel({
       {selected ? (
         <div className="mt-4 rounded-lg border border-slate-800 p-4" data-testid="party-registry-detail">
           <h3 className="text-sm font-medium text-slate-200">{selected.displayName}</h3>
-          <p className="mt-1 text-xs text-slate-500">{selected.partyKey}</p>
 
           <div
             className="mt-3 space-y-1 text-xs text-slate-400"
@@ -429,17 +440,13 @@ export function PartyRegistryPanel({
               id="party-registry-create-display-name"
               className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
               value={displayName}
-              onChange={(e) => onDisplayNameChange(e.target.value)}
+              onChange={(e) => {
+                const nextName = e.target.value
+                onDisplayNameChange(nextName)
+                onPartyKeyChange(buildFriendlyReference(nextName, existingPartyKeys))
+              }}
             />
           </label>
-          <GeneratedKeyFieldGroup
-            sourceLabel={displayName}
-            existingKeys={existingPartyKeys}
-            onKeyChange={onPartyKeyChange}
-            domain="vendor"
-            kind={partyKeyKind}
-            label="Party key"
-          />
           <label htmlFor="party-registry-create-legal-name" className="block text-sm text-slate-400">
             Legal name
             <input
@@ -471,7 +478,7 @@ export function PartyRegistryPanel({
           <button
             type="button"
             className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
-            disabled={isCreating || !partyKey.trim() || !displayName.trim()}
+            disabled={isCreating || !displayName.trim()}
             onClick={onCreate}
             data-testid="party-registry-create-button"
           >
