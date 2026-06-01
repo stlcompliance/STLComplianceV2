@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MaintainArr.Api.Contracts;
 using MaintainArr.Api.Data;
+using MaintainArr.Api.Entities;
 using MaintainArr.Api.Services;
 using STLCompliance.Shared.Contracts;
 
@@ -30,6 +31,79 @@ public sealed class MaintainArrCatalogFieldsetControlledTests
         Assert.Contains(catalogs, x => x.Key == "fuelType");
         Assert.Contains(catalogs, x => x.Key == "brakeType");
         Assert.Contains(catalogs, x => x.Key == "telematicsProvider");
+    }
+
+    [Fact]
+    public async Task Seeding_deactivates_duplicate_catalog_options_before_dependency_mapping()
+    {
+        await using var db = CreateDbContext();
+        var tenantId = Guid.NewGuid();
+        var catalogId = Guid.NewGuid();
+        var createdAt = DateTimeOffset.UtcNow.AddDays(-1);
+
+        db.CatalogDefinitions.Add(new CatalogDefinition
+        {
+            Id = catalogId,
+            TenantId = tenantId,
+            Key = "assetType",
+            Label = "Asset Type",
+            Description = "Asset Type",
+            Owner = "maintainarr",
+            Scope = "tenant",
+            IsSystem = true,
+            IsTenantExtendable = false,
+            IsActive = true,
+            CreatedAt = createdAt,
+            UpdatedAt = createdAt,
+        });
+
+        db.CatalogOptions.AddRange(
+            new CatalogOption
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                CatalogId = catalogId,
+                Key = "dump_trailer",
+                Label = "Dump Trailer",
+                Description = "Dump Trailer",
+                SortOrder = 10,
+                MetadataJson = "{}",
+                IsSystem = true,
+                IsActive = true,
+                CreatedAt = createdAt,
+                UpdatedAt = createdAt,
+            },
+            new CatalogOption
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                CatalogId = catalogId,
+                Key = "dump_trailer",
+                Label = "Dump Trailer Duplicate",
+                Description = "Dump Trailer Duplicate",
+                SortOrder = 11,
+                MetadataJson = "{}",
+                IsSystem = true,
+                IsActive = true,
+                CreatedAt = createdAt.AddMinutes(1),
+                UpdatedAt = createdAt.AddMinutes(1),
+            });
+        await db.SaveChangesAsync();
+
+        var seed = new CatalogSeedService(db);
+        await seed.EnsureSeededForTenantAsync(tenantId);
+
+        var dumpTrailerOptions = await db.CatalogOptions
+            .Where(x => x.TenantId == tenantId && x.CatalogId == catalogId && x.Key == "dump_trailer")
+            .OrderBy(x => x.SortOrder)
+            .ToListAsync();
+        var activeDumpTrailer = Assert.Single(dumpTrailerOptions.Where(x => x.IsActive));
+
+        Assert.Contains(
+            await db.CatalogOptionDependencies.ToListAsync(),
+            x => x.CatalogOptionId == activeDumpTrailer.Id
+                && x.DependsOnCatalogKey == "assetClass"
+                && x.DependsOnOptionKey == "trailer");
     }
 
     [Fact]

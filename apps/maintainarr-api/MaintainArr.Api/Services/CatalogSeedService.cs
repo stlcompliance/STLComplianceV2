@@ -97,7 +97,14 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
             var optionKey = NormalizeOptionKey(label);
             expectedKeys.Add(optionKey);
 
-            var option = existingOptions.FirstOrDefault(x => string.Equals(x.Key, optionKey, StringComparison.OrdinalIgnoreCase));
+            var matchingOptions = existingOptions
+                .Where(x => string.Equals(x.Key, optionKey, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(x => x.IsActive)
+                .ThenBy(x => x.SortOrder)
+                .ThenBy(x => x.CreatedAt)
+                .ThenBy(x => x.Id)
+                .ToList();
+            var option = matchingOptions.FirstOrDefault();
             if (option is null)
             {
                 db.CatalogOptions.Add(new CatalogOption
@@ -126,6 +133,12 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
             option.SortOrder = index;
             option.IsActive = true;
             option.UpdatedAt = now;
+
+            foreach (var duplicate in matchingOptions.Skip(1))
+            {
+                duplicate.IsActive = false;
+                duplicate.UpdatedAt = now;
+            }
         }
 
         foreach (var option in existingOptions.Where(x => !expectedKeys.Contains(x.Key)))
@@ -154,9 +167,16 @@ public sealed class CatalogSeedService(MaintainArrDbContext db)
 
         var optionIdByCatalogAndKey = catalogOptions
             .Where(x => catalogById.ContainsKey(x.CatalogId))
-            .ToDictionary(
+            .GroupBy(
                 x => $"{catalogById[x.CatalogId]}::{x.Key}",
-                x => x.Id,
+                StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                x => x.Key,
+                x => x
+                    .OrderBy(x => x.SortOrder)
+                    .ThenBy(x => x.CreatedAt)
+                    .ThenBy(x => x.Id)
+                    .First().Id,
                 StringComparer.OrdinalIgnoreCase);
 
         var existing = await db.CatalogOptionDependencies
