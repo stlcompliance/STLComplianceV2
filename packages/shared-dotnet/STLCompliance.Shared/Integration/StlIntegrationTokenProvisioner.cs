@@ -55,6 +55,20 @@ public static class StlIntegrationTokenProvisioner
         return renderName;
     }
 
+    public static IReadOnlyList<string> ExpandConfigurationKeys(string configurationKey)
+    {
+        var normalizedKey = NormalizeConfigurationKey(configurationKey);
+        if (string.Equals(configurationKey, normalizedKey, StringComparison.Ordinal))
+        {
+            return [configurationKey];
+        }
+
+        return [configurationKey, normalizedKey];
+    }
+
+    public static string NormalizeConfigurationKey(string configurationKey) =>
+        configurationKey.Replace("__", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
+
     public static IReadOnlyDictionary<string, string> ProvisionSynchronously(
         IConfiguration configuration,
         ILogger? logger = null)
@@ -192,7 +206,7 @@ public static class StlIntegrationTokenProvisioner
     {
         foreach (var profile in profiles)
         {
-            var value = configuration[profile.ConfigurationKey];
+            var value = ReadConfigurationValue(configuration, profile.ConfigurationKey);
             if (!IsLikelyServiceTokenJwt(value))
             {
                 return false;
@@ -206,15 +220,31 @@ public static class StlIntegrationTokenProvisioner
         StlIntegrationTokenCatalog.All
             .Select(p => p.ConfigurationKey)
             .Distinct(StringComparer.Ordinal)
-            .Where(key => !string.IsNullOrWhiteSpace(configuration[key]))
-            .ToDictionary(key => key, key => configuration[key]!, StringComparer.Ordinal);
+            .Select(key => (Key: key, Value: ReadConfigurationValue(configuration, key)))
+            .Where(pair => !string.IsNullOrWhiteSpace(pair.Value))
+            .ToDictionary(pair => pair.Key, pair => pair.Value!, StringComparer.Ordinal);
 
     private static IReadOnlyDictionary<string, string> ReadExistingTokens(
         IConfiguration configuration,
         IReadOnlyList<StlIntegrationTokenProfile> profiles) =>
         profiles
-            .Where(p => !string.IsNullOrWhiteSpace(configuration[p.ConfigurationKey]))
-            .ToDictionary(p => p.ConfigurationKey, p => configuration[p.ConfigurationKey]!, StringComparer.Ordinal);
+            .Select(profile => (profile.ConfigurationKey, Value: ReadConfigurationValue(configuration, profile.ConfigurationKey)))
+            .Where(pair => !string.IsNullOrWhiteSpace(pair.Value))
+            .ToDictionary(pair => pair.ConfigurationKey, pair => pair.Value!, StringComparer.Ordinal);
+
+    private static string? ReadConfigurationValue(IConfiguration configuration, string configurationKey)
+    {
+        foreach (var lookupKey in ExpandConfigurationKeys(configurationKey))
+        {
+            var value = configuration[lookupKey];
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+        }
+
+        return null;
+    }
 
     private static IReadOnlyDictionary<string, string> ProvisionNexArrWorkerTokensLocally(
         IConfiguration configuration,

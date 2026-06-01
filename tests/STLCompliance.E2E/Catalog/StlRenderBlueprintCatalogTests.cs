@@ -85,6 +85,41 @@ public sealed class StlRenderBlueprintCatalogTests
     }
 
     [Fact]
+    public void Integration_token_configuration_keys_support_options_binding_aliases()
+    {
+        const string token = "header.payload.signature";
+        var values = StlIntegrationTokenProvisioner
+            .ExpandConfigurationKeys("TrainArrQualificationExpiration__ServiceToken")
+            .ToDictionary(key => key, _ => (string?)token, StringComparer.OrdinalIgnoreCase);
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(values)
+            .Build();
+
+        Assert.Equal(token, configuration["TrainArrQualificationExpiration__ServiceToken"]);
+        Assert.Equal(token, configuration["TrainArrQualificationExpiration:ServiceToken"]);
+        Assert.Equal(token, configuration.GetSection("TrainArrQualificationExpiration")["ServiceToken"]);
+    }
+
+    [Fact]
+    public void Existing_normalized_service_token_config_skips_worker_http_bootstrap()
+    {
+        const string token = "header.payload.signature";
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [StlIntegrationTokenProvisioner.AutoProvisionConfigurationKey] = "true",
+                ["STL_SERVICE_NAME"] = "nexarr-worker",
+                ["NexArrPlatformOutboxPublisher:ServiceToken"] = token,
+            })
+            .Build();
+
+        var tokens = StlIntegrationTokenProvisioner.ProvisionSynchronously(configuration);
+
+        Assert.Equal(token, tokens["NexArrPlatformOutboxPublisher__ServiceToken"]);
+    }
+
+    [Fact]
     public void Render_yaml_declares_blueprint_inventory_health_checks_private_urls_and_sync_false_tokens()
     {
         var repoRoot = FindRepoRoot();

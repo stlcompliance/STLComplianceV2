@@ -21,8 +21,16 @@ public static class StlIntegrationTokenServiceCollectionExtensions
             var tokens = StlIntegrationTokenProvisioner.ProvisionSynchronously(builder.Configuration, logger);
             if (tokens.Count > 0)
             {
-                builder.Configuration.AddInMemoryCollection(
-                    tokens.Select(static pair => new KeyValuePair<string, string?>(pair.Key, pair.Value)));
+                var provisionedConfiguration = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+                foreach (var (key, value) in tokens)
+                {
+                    foreach (var lookupKey in StlIntegrationTokenProvisioner.ExpandConfigurationKeys(key))
+                    {
+                        provisionedConfiguration[lookupKey] = value;
+                    }
+                }
+
+                builder.Configuration.AddInMemoryCollection(provisionedConfiguration);
             }
         }
         finally
