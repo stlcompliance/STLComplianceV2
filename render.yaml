@@ -202,9 +202,9 @@ services:
       - key: CompanionWebPush__Subject
         value: mailto:companion-push@stlcompliance.com
       - key: CompanionWebPush__PublicKey
-        sync: false
+        sync: true
       - key: CompanionWebPush__PrivateKey
-        sync: false
+        sync: true
 
   - type: web
     name: staffarr-api
@@ -228,13 +228,13 @@ services:
       - key: Cors__StaffArrFrontendOrigin
         value: https://staffarr-frontend.onrender.com
       - key: Handoff__ServiceToken
-        sync: false
+        sync: true
       - key: TrainArr__ServiceToken
-        sync: false
+        sync: true
       - key: SupplyArr__ServiceToken
-        sync: false
+        sync: true
       - key: MaintainArr__ServiceToken
-        sync: false
+        sync: true
 
   - type: web
     name: trainarr-api
@@ -266,13 +266,13 @@ services:
       - key: EvidenceStorage__RootPath
         value: /var/data/trainarr-evidence
       - key: Handoff__ServiceToken
-        sync: false
+        sync: true
       - key: StaffArr__ServiceToken
-        sync: false
+        sync: true
       - key: ComplianceCore__ServiceToken
-        sync: false
+        sync: true
       - key: SupplyArr__ServiceToken
-        sync: false
+        sync: true
 
   - type: web
     name: maintainarr-api
@@ -304,11 +304,11 @@ services:
       - key: EvidenceStorage__RootPath
         value: /var/data/maintainarr-evidence
       - key: Handoff__ServiceToken
-        sync: false
+        sync: true
       - key: SupplyArr__ServiceToken
-        sync: false
+        sync: true
       - key: StaffArr__ServiceToken
-        sync: false
+        sync: true
 
   - type: web
     name: routarr-api
@@ -334,17 +334,17 @@ services:
       - key: RoutArr__FrontendBaseUrl
         value: https://routarr-frontend.onrender.com
       - key: Handoff__ServiceToken
-        sync: false
+        sync: true
       - key: TrainArr__ServiceToken
-        sync: false
+        sync: true
       - key: StaffArr__ServiceToken
-        sync: false
+        sync: true
       - key: MaintainArr__ServiceToken
-        sync: false
+        sync: true
       - key: ComplianceCore__ServiceToken
-        sync: false
+        sync: true
       - key: SupplyArr__ServiceToken
-        sync: false
+        sync: true
 
   - type: web
     name: supplyarr-api
@@ -370,17 +370,17 @@ services:
       - key: SupplyArr__FrontendBaseUrl
         value: https://supplyarr-frontend.onrender.com
       - key: Handoff__ServiceToken
-        sync: false
+        sync: true
       - key: MaintainArr__ServiceToken
-        sync: false
+        sync: true
       - key: RoutArr__ServiceToken
-        sync: false
+        sync: true
       - key: TrainArr__ServiceToken
-        sync: false
+        sync: true
       - key: StaffArr__ServiceToken
-        sync: false
+        sync: true
       - key: ComplianceCore__ServiceToken
-        sync: false
+        sync: true
 
   - type: web
     name: compliancecore-api
@@ -404,7 +404,7 @@ services:
       - key: Cors__ComplianceCoreFrontendOrigin
         value: https://compliancecore-frontend.onrender.com
       - key: Handoff__ServiceToken
-        sync: false
+        sync: true
 
   # --- Cross-product scheduled jobs ---
   - type: worker
@@ -424,215 +424,215 @@ services:
       - key: TrainArrQualificationExpiration__TrainArrBaseUrl
         value: http://trainarr-api:10000
       - key: TrainArrQualificationExpiration__ServiceToken
-        sync: false
+        sync: true
       - key: TrainArrRecertificationAssignment__TrainArrBaseUrl
         value: http://trainarr-api:10000
       - key: TrainArrRecertificationAssignment__ServiceToken
-        sync: false
+        sync: true
       - key: TrainArrQualificationRecalculation__TrainArrBaseUrl
         value: http://trainarr-api:10000
       - key: TrainArrQualificationRecalculation__ServiceToken
-        sync: false
+        sync: true
       - key: TrainArrStaffarrPublicationRetry__TrainArrBaseUrl
         value: http://trainarr-api:10000
       - key: TrainArrStaffarrPublicationRetry__ServiceToken
-        sync: false
+        sync: true
       - key: TrainArrEventProcessing__TrainArrBaseUrl
         value: http://trainarr-api:10000
       - key: TrainArrEventProcessing__ServiceToken
-        sync: false
+        sync: true
       - key: TrainArrRulePackImpact__TrainArrBaseUrl
         value: http://trainarr-api:10000
       - key: TrainArrRulePackImpact__ServiceToken
-        sync: false
+        sync: true
       - key: TrainArrEvidenceRetention__TrainArrBaseUrl
         value: http://trainarr-api:10000
       - key: TrainArrEvidenceRetention__ServiceToken
-        sync: false
+        sync: true
       - key: TrainArrOrphanReference__TrainArrBaseUrl
         value: http://trainarr-api:10000
       - key: TrainArrOrphanReference__ServiceToken
-        sync: false
+        sync: true
       - key: TrainArrNotificationDispatch__TrainArrBaseUrl
         value: http://trainarr-api:10000
       - key: TrainArrNotificationDispatch__ServiceToken
-        sync: false
+        sync: true
       - key: TrainArrAssignmentDueReminders__TrainArrBaseUrl
         value: http://trainarr-api:10000
       - key: TrainArrAssignmentDueReminders__ServiceToken
-        sync: false
+        sync: true
       - key: TrainArrAssignmentEscalation__TrainArrBaseUrl
         value: http://trainarr-api:10000
       - key: TrainArrAssignmentEscalation__ServiceToken
-        sync: false
+        sync: true
       - key: TrainArrAuditPackageGeneration__TrainArrBaseUrl
         value: http://trainarr-api:10000
       - key: TrainArrAuditPackageGeneration__ServiceToken
-        sync: false
+        sync: true
       - key: StaffArrCertificationExpiration__StaffArrBaseUrl
         value: http://staffarr-api:10000
       - key: StaffArrCertificationExpiration__ServiceToken
-        sync: false
+        sync: true
       - key: StaffArrReadinessRollup__StaffArrBaseUrl
         value: http://staffarr-api:10000
       - key: StaffArrReadinessRollup__ServiceToken
-        sync: false
+        sync: true
       - key: StaffArrPermissionProjection__StaffArrBaseUrl
         value: http://staffarr-api:10000
       - key: StaffArrPermissionProjection__ServiceToken
-        sync: false
+        sync: true
       - key: StaffArrPersonExportDelivery__StaffArrBaseUrl
         value: http://staffarr-api:10000
       - key: StaffArrPersonExportDelivery__ServiceToken
-        sync: false
+        sync: true
       - key: StaffArrPersonnelHistoryRollup__StaffArrBaseUrl
         value: http://staffarr-api:10000
       - key: StaffArrPersonnelHistoryRollup__ServiceToken
-        sync: false
+        sync: true
       - key: StaffArrAuditPackageGeneration__StaffArrBaseUrl
         value: http://staffarr-api:10000
       - key: StaffArrAuditPackageGeneration__ServiceToken
-        sync: false
+        sync: true
       - key: MaintainArrPmDueScan__MaintainArrBaseUrl
         value: http://maintainarr-api:10000
       - key: MaintainArrPmDueScan__ServiceToken
-        sync: false
+        sync: true
       - key: MaintainArrNotificationDispatch__MaintainArrBaseUrl
         value: http://maintainarr-api:10000
       - key: MaintainArrNotificationDispatch__ServiceToken
-        sync: false
+        sync: true
       - key: MaintainArrDefectEscalation__MaintainArrBaseUrl
         value: http://maintainarr-api:10000
       - key: MaintainArrDefectEscalation__ServiceToken
-        sync: false
+        sync: true
       - key: MaintainArrAssetStatusRollup__MaintainArrBaseUrl
         value: http://maintainarr-api:10000
       - key: MaintainArrAssetStatusRollup__ServiceToken
-        sync: false
+        sync: true
       - key: MaintainArrMaintenanceHistoryRollup__MaintainArrBaseUrl
         value: http://maintainarr-api:10000
       - key: MaintainArrMaintenanceHistoryRollup__ServiceToken
-        sync: false
+        sync: true
       - key: MaintainArrDowntimeSync__MaintainArrBaseUrl
         value: http://maintainarr-api:10000
       - key: MaintainArrDowntimeSync__ServiceToken
-        sync: false
+        sync: true
       - key: MaintainArrPlatformEventProcessing__MaintainArrBaseUrl
         value: http://maintainarr-api:10000
       - key: MaintainArrPlatformEventProcessing__ServiceToken
-        sync: false
+        sync: true
       - key: MaintainArrAuditPackageGeneration__MaintainArrBaseUrl
         value: http://maintainarr-api:10000
       - key: MaintainArrAuditPackageGeneration__ServiceToken
-        sync: false
+        sync: true
       - key: MaintainArrTechnicianRefRefresh__MaintainArrBaseUrl
         value: http://maintainarr-api:10000
       - key: MaintainArrTechnicianRefRefresh__ServiceToken
-        sync: false
+        sync: true
       - key: RoutArrNotificationDispatch__RoutArrBaseUrl
         value: http://routarr-api:10000
       - key: RoutArrNotificationDispatch__ServiceToken
-        sync: false
+        sync: true
       - key: RoutArrTripCompletionRollup__RoutArrBaseUrl
         value: http://routarr-api:10000
       - key: RoutArrTripCompletionRollup__ServiceToken
-        sync: false
+        sync: true
       - key: RoutArrAttachmentRetention__RoutArrBaseUrl
         value: http://routarr-api:10000
       - key: RoutArrAttachmentRetention__ServiceToken
-        sync: false
+        sync: true
       - key: RoutArrIntegrationEvents__RoutArrBaseUrl
         value: http://routarr-api:10000
       - key: RoutArrIntegrationEvents__ServiceToken
-        sync: false
+        sync: true
       - key: RoutArrAuditPackageGeneration__RoutArrBaseUrl
         value: http://routarr-api:10000
       - key: RoutArrAuditPackageGeneration__ServiceToken
-        sync: false
+        sync: true
       - key: SupplyArrReorderEvaluation__SupplyArrBaseUrl
         value: http://supplyarr-api:10000
       - key: SupplyArrReorderEvaluation__ServiceToken
-        sync: false
+        sync: true
       - key: SupplyArrPriceSnapshot__SupplyArrBaseUrl
         value: http://supplyarr-api:10000
       - key: SupplyArrPriceSnapshot__ServiceToken
-        sync: false
+        sync: true
       - key: SupplyArrLeadTimeSnapshot__SupplyArrBaseUrl
         value: http://supplyarr-api:10000
       - key: SupplyArrLeadTimeSnapshot__ServiceToken
-        sync: false
+        sync: true
       - key: SupplyArrAvailabilitySnapshot__SupplyArrBaseUrl
         value: http://supplyarr-api:10000
       - key: SupplyArrAvailabilitySnapshot__ServiceToken
-        sync: false
+        sync: true
       - key: SupplyArrProcurementCoordination__SupplyArrBaseUrl
         value: http://supplyarr-api:10000
       - key: SupplyArrProcurementCoordination__ServiceToken
-        sync: false
+        sync: true
       - key: SupplyArrApprovalReminders__SupplyArrBaseUrl
         value: http://supplyarr-api:10000
       - key: SupplyArrApprovalReminders__ServiceToken
-        sync: false
+        sync: true
       - key: SupplyArrProcurementExceptionEscalations__SupplyArrBaseUrl
         value: http://supplyarr-api:10000
       - key: SupplyArrProcurementExceptionEscalations__ServiceToken
-        sync: false
+        sync: true
       - key: SupplyArrDemandProcessing__SupplyArrBaseUrl
         value: http://supplyarr-api:10000
       - key: SupplyArrDemandProcessing__ServiceToken
-        sync: false
+        sync: true
       - key: SupplyArrNotificationDispatch__SupplyArrBaseUrl
         value: http://supplyarr-api:10000
       - key: SupplyArrNotificationDispatch__ServiceToken
-        sync: false
+        sync: true
       - key: SupplyArrIntegrationEvents__SupplyArrBaseUrl
         value: http://supplyarr-api:10000
       - key: SupplyArrIntegrationEvents__ServiceToken
-        sync: false
+        sync: true
       - key: ComplianceCoreScheduledEvaluation__ComplianceCoreBaseUrl
         value: http://compliancecore-api:10000
       - key: ComplianceCoreScheduledEvaluation__ServiceToken
-        sync: false
+        sync: true
       - key: ComplianceCoreRuleChangeMonitor__ComplianceCoreBaseUrl
         value: http://compliancecore-api:10000
       - key: ComplianceCoreRuleChangeMonitor__ServiceToken
-        sync: false
+        sync: true
       - key: ComplianceCoreWaiverExpiration__ComplianceCoreBaseUrl
         value: http://compliancecore-api:10000
       - key: ComplianceCoreWaiverExpiration__ServiceToken
-        sync: false
+        sync: true
       - key: ComplianceCoreFactSourceSync__ComplianceCoreBaseUrl
         value: http://compliancecore-api:10000
       - key: ComplianceCoreFactSourceSync__ServiceToken
-        sync: false
+        sync: true
       - key: ComplianceCoreAuditPackageGeneration__ComplianceCoreBaseUrl
         value: http://compliancecore-api:10000
       - key: ComplianceCoreAuditPackageGeneration__ServiceToken
-        sync: false
+        sync: true
       - key: ComplianceCoreM12AnalyticsBatch__ComplianceCoreBaseUrl
         value: http://compliancecore-api:10000
       - key: ComplianceCoreM12AnalyticsBatch__ServiceToken
-        sync: false
+        sync: true
       - key: NexArrCompanionNotificationDispatch__NexArrBaseUrl
         value: http://nexarr-api:10000
       - key: NexArrCompanionNotificationDispatch__ServiceToken
-        sync: false
+        sync: true
       - key: NexArrPlatformAuditPackageGeneration__NexArrBaseUrl
         value: http://nexarr-api:10000
       - key: NexArrPlatformAuditPackageGeneration__ServiceToken
-        sync: false
+        sync: true
       - key: NexArrServiceTokenCleanup__NexArrBaseUrl
         value: http://nexarr-api:10000
       - key: NexArrServiceTokenCleanup__ServiceToken
-        sync: false
+        sync: true
       - key: NexArrEntitlementReconciliation__NexArrBaseUrl
         value: http://nexarr-api:10000
       - key: NexArrEntitlementReconciliation__ServiceToken
-        sync: false
+        sync: true
       - key: NexArrTenantLifecycle__NexArrBaseUrl
         value: http://nexarr-api:10000
       - key: NexArrTenantLifecycle__ServiceToken
-        sync: false
+        sync: true
 
   # --- Product heartbeat workers (reserved for product-local jobs) ---
   - type: worker
